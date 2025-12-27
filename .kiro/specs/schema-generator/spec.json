@@ -1,0 +1,22 @@
+{
+  "feature_name": "schema-generator",
+  "created_at": "2025-12-27T11:56:21Z",
+  "updated_at": "2025-12-27T14:30:00Z",
+  "language": "ja",
+  "phase": "implementation",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "ready_for_implementation": true
+}
