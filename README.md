@@ -3,7 +3,7 @@
 gqlkit is a convention-driven code generator for GraphQL servers in TypeScript.
 
 You define GraphQL types and resolver signatures in TypeScript.
-Then gqlkit gen generates a graphql-js GraphQLSchema (and the wiring code) from your codebase.
+Then gqlkit gen generates GraphQL schema AST and a resolver map from your codebase.
 
 ## Quick start
 
@@ -57,16 +57,20 @@ export const userResolver: UserResolver = {
 
 `gqlkit gen`
 
-### 4. Use the generated schema in your runtime (example only).
+### 4. Use the generated schema and resolvers in your runtime (example only).
 
-```
+```ts
 // src/schema.ts (or wherever you want)
-import { schema } from "./gqlkit/generated/schema";
+import { makeExecutableSchema } from "@graphql-tools/schema";
+import { typeDefs } from "./gqlkit/generated/schema";
+import { resolvers } from "./gqlkit/generated/resolvers";
 
-export { schema };
+export const schema = makeExecutableSchema({ typeDefs, resolvers });
 ```
 
-Generated output is a `GraphQLSchema` compatible with standard GraphQL tooling.
+Generated outputs are:
+- `typeDefs`: GraphQL schema AST (DocumentNode)
+- `resolvers`: Resolver map object compatible with graphql-tools
 
 ## Conventions
 
@@ -164,17 +168,28 @@ This is the recommended convention because it enables a strict 1:1 mapping witho
   - resolver groups match known GraphQL roots/types
   - no extra fields / missing fields (depending on policy)
 4. Generates:
-  - `GraphQLObjectType` / `GraphQLInterfaceType` / `GraphQLUnionType` definitions
-  - field configs with resolve functions pointing to your exported implementations
-  - an exported GraphQLSchema
+  - GraphQL schema AST (DocumentNode) representing type definitions
+  - Resolver map object aggregating all resolver implementations
 
-Example generated entrypoint (illustrative):
+Example generated output (illustrative):
 
-```
+```ts
 // src/gqlkit/generated/schema.ts
-import { GraphQLSchema } from "graphql";
+import type { DocumentNode } from "graphql";
 
-export const schema: GraphQLSchema = /* ... */;
+export const typeDefs: DocumentNode = /* parsed schema AST */;
+```
+
+```ts
+// src/gqlkit/generated/resolvers.ts
+export const resolvers = {
+  Query: {
+    me: queryResolver.me,
+  },
+  User: {
+    profileUrl: userResolver.profileUrl,
+  },
+};
 ```
 
 Output directory
@@ -202,4 +217,4 @@ This is part of the “kit” value: consistent conventions + consistent diagnos
 - Runtime schema mutation / dynamic schema building is out of scope.
 - Decorator-based metadata is out of scope.
 
-gqlkit’s focus is a deterministic, convention-driven path from TypeScript code to graphql-js schema.
+gqlkit's focus is a deterministic, convention-driven path from TypeScript code to GraphQL schema AST and resolver maps.

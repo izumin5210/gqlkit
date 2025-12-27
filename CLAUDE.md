@@ -1,26 +1,74 @@
-# AI-DLC and Spec-Driven Development
+# CLAUDE.md
 
-Kiro-style Spec Driven Development implementation on AI-DLC (AI Development Life Cycle)
+This file provides guidance to Claude Code (claude.ai/code) when working with code in this repository.
 
-## Project Context
+## Project Overview
 
-### Paths
-- Steering: `.kiro/steering/`
-- Specs: `.kiro/specs/`
+gqlkit is a convention-driven code generator for GraphQL servers in TypeScript.
 
-### Steering vs Specification
+**Core concept**: Define GraphQL types and resolver signatures in TypeScript → `gqlkit gen` generates GraphQL schema AST and a resolver map from your codebase.
 
-**Steering** (`.kiro/steering/`) - Guide AI with project-wide rules and context
-**Specs** (`.kiro/specs/`) - Formalize development process for individual features
+## Common Commands
 
-### Active Specifications
-- Check `.kiro/specs/` for active specifications
-- Use `/kiro:spec-status [feature-name]` to check progress
+- **Lint/Format**: `pnpm check` - Runs Biome check with auto-fix
+- **Package manager**: pnpm (v10.26.1)
 
-## Development Guidelines
-- Think in English, generate responses in Japanese. All Markdown content written to project files (e.g., requirements.md, design.md, tasks.md, research.md, validation reports) MUST be written in the target language configured for this specification (see spec.json.language).
+## Project Architecture
 
-## Minimal Workflow
+### Convention-Driven Design
+
+gqlkit relies on strict conventions to enable deterministic schema generation without configuration:
+
+1. **Source directories**:
+   - Types: `src/gql/types` - TypeScript type/interface exports
+   - Resolvers: `src/gql/resolvers` - Resolver signatures and implementations
+
+2. **Type definitions**:
+   - Plain TypeScript type exports (object/interface/union)
+   - Field nullability and list-ness inferred from TypeScript types
+   - Only exports from `src/gql/types` are considered
+
+3. **Resolver naming conventions** (strict 1:1 mapping):
+   - Type: `QueryResolver` → Value: `queryResolver` → GraphQL: `Query`
+   - Type: `MutationResolver` → Value: `mutationResolver` → GraphQL: `Mutation`
+   - Type: `<TypeName>Resolver` → Value: `<typeName>Resolver` → GraphQL: `<TypeName>`
+   - Example: `UserResolver` type + `userResolver` value → User type resolvers
+
+4. **Resolver function signatures**:
+   - Root fields (Query/Mutation): `field: () => Return`
+   - Object fields: `field: (parent: Parent) => Return`
+   - Later: support for args, context, info parameters
+
+### Code Generation Flow
+
+`gqlkit gen` (to be implemented):
+1. Scans `src/gql/types` and `src/gql/resolvers`
+2. Builds internal type graph from TypeScript types
+3. Validates resolver signatures (parent/return types exist, resolver groups match)
+4. Generates:
+   - `typeDefs`: GraphQL schema AST (DocumentNode) representing type definitions
+   - `resolvers`: Resolver map object aggregating all resolver implementations
+5. Outputs to `src/gqlkit/generated/**` (schema.ts, resolvers.ts)
+
+### Design Principles
+
+- **Fail fast with actionable errors**: Invalid resolver references, type mismatches, etc.
+- **No decorators, no runtime schema mutation**: Pure static analysis of TypeScript code
+- **HTTP server integration is out of scope**: Focus on TS → schema AST + resolver map transformation
+- **Deterministic**: Same code → same outputs, always
+- **GraphQL-tools compatible**: Generated outputs work seamlessly with makeExecutableSchema
+
+## Development Workflow
+
+### AI-DLC and Spec-Driven Development
+
+This project follows Kiro-style Spec-Driven Development.
+
+**Paths**:
+- Steering: `.kiro/steering/` - Project-wide rules and context
+- Specs: `.kiro/specs/` - Individual feature specifications
+
+**Minimal workflow**:
 - Phase 0 (optional): `/kiro:steering`, `/kiro:steering-custom`
 - Phase 1 (Specification):
   - `/kiro:spec-init "description"`
@@ -31,15 +79,19 @@ Kiro-style Spec Driven Development implementation on AI-DLC (AI Development Life
   - `/kiro:spec-tasks {feature} [-y]`
 - Phase 2 (Implementation): `/kiro:spec-impl {feature} [tasks]`
   - `/kiro:validate-impl {feature}` (optional: after implementation)
-- Progress check: `/kiro:spec-status {feature}` (use anytime)
+- Progress check: `/kiro:spec-status {feature}`
 
-## Development Rules
+**Development rules**:
 - 3-phase approval workflow: Requirements → Design → Tasks → Implementation
 - Human review required each phase; use `-y` only for intentional fast-track
 - Keep steering current and verify alignment with `/kiro:spec-status`
-- Follow the user's instructions precisely, and within that scope act autonomously: gather the necessary context and complete the requested work end-to-end in this run, asking questions only when essential information is missing or the instructions are critically ambiguous.
+- Follow user instructions precisely; act autonomously within that scope; ask questions only when essential information is missing or instructions are critically ambiguous
 
-## Steering Configuration
-- Load entire `.kiro/steering/` as project memory
-- Default files: `product.md`, `tech.md`, `structure.md`
-- Custom files are supported (managed via `/kiro:steering-custom`)
+**Language**: Think in English, generate responses in Japanese. All Markdown content written to project files (e.g., requirements.md, design.md, tasks.md) MUST be written in the target language configured for the specification (see spec.json.language).
+
+## Code Quality
+
+- **Linter/Formatter**: Biome (configured in biome.jsonc)
+  - Double quotes for JS/TS
+  - Space indentation
+  - Auto organize imports
