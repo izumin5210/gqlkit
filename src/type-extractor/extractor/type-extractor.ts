@@ -1,6 +1,7 @@
 import ts from "typescript";
 import type {
   Diagnostic,
+  EnumMemberInfo,
   ExtractedTypeInfo,
   FieldDefinition,
   TSTypeReference,
@@ -176,7 +177,129 @@ function extractFieldsFromType(
   return fields;
 }
 
-function determineTypeKind(node: ts.Node, type: ts.Type): TypeKind {
+export function isStringEnum(node: ts.Node): boolean {
+  if (!ts.isEnumDeclaration(node)) return false;
+  const members = node.members;
+  if (members.length === 0) return false;
+
+  return members.every((member) => {
+    const initializer = member.initializer;
+    return initializer !== undefined && ts.isStringLiteral(initializer);
+  });
+}
+
+export function isNumericEnum(node: ts.Node): boolean {
+  if (!ts.isEnumDeclaration(node)) return false;
+  const members = node.members;
+  if (members.length === 0) return true;
+
+  return members.every((member) => {
+    const initializer = member.initializer;
+    if (initializer === undefined) return true;
+    return (
+      ts.isNumericLiteral(initializer) ||
+      ts.isPrefixUnaryExpression(initializer)
+    );
+  });
+}
+
+export function isHeterogeneousEnum(node: ts.Node): boolean {
+  if (!ts.isEnumDeclaration(node)) return false;
+  const members = node.members;
+  if (members.length <= 1) return false;
+
+  let hasString = false;
+  let hasNumeric = false;
+
+  for (const member of members) {
+    const initializer = member.initializer;
+    if (initializer === undefined) {
+      hasNumeric = true;
+    } else if (ts.isStringLiteral(initializer)) {
+      hasString = true;
+    } else if (
+      ts.isNumericLiteral(initializer) ||
+      ts.isPrefixUnaryExpression(initializer)
+    ) {
+      hasNumeric = true;
+    }
+
+    if (hasString && hasNumeric) return true;
+  }
+
+  return false;
+}
+
+export function isConstEnum(node: ts.Node): boolean {
+  if (!ts.isEnumDeclaration(node)) return false;
+  const modifiers = ts.getCombinedModifierFlags(node);
+  return (modifiers & ts.ModifierFlags.Const) !== 0;
+}
+
+export function isStringLiteralUnion(
+  type: ts.Type,
+  _checker: ts.TypeChecker,
+): boolean {
+  if (!type.isUnion()) return false;
+
+  const nonNullTypes = type.types.filter(
+    (t) =>
+      !(t.flags & ts.TypeFlags.Null) && !(t.flags & ts.TypeFlags.Undefined),
+  );
+
+  if (nonNullTypes.length === 0) return false;
+
+  return nonNullTypes.every((t) => t.flags & ts.TypeFlags.StringLiteral);
+}
+
+function extractEnumMembers(
+  node: ts.EnumDeclaration,
+): ReadonlyArray<EnumMemberInfo> {
+  const members: EnumMemberInfo[] = [];
+
+  for (const member of node.members) {
+    const name = member.name.getText();
+    const initializer = member.initializer;
+    if (initializer && ts.isStringLiteral(initializer)) {
+      members.push({
+        name,
+        value: initializer.text,
+      });
+    }
+  }
+
+  return members;
+}
+
+function extractStringLiteralUnionMembers(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+): ReadonlyArray<EnumMemberInfo> {
+  if (!type.isUnion()) return [];
+
+  const members: EnumMemberInfo[] = [];
+
+  for (const t of type.types) {
+    if (t.flags & ts.TypeFlags.Null || t.flags & ts.TypeFlags.Undefined) {
+      continue;
+    }
+    if (t.flags & ts.TypeFlags.StringLiteral) {
+      const value = checker.typeToString(t).replace(/^"|"$/g, "");
+      members.push({
+        name: value,
+        value: value,
+      });
+    }
+  }
+
+  return members;
+}
+
+function determineTypeKind(
+  node: ts.Node,
+  type: ts.Type,
+  checker: ts.TypeChecker,
+): TypeKind {
   if (ts.isInterfaceDeclaration(node)) {
     return "interface";
   }
@@ -187,6 +310,11 @@ function determineTypeKind(node: ts.Node, type: ts.Type): TypeKind {
         (t) =>
           !(t.flags & ts.TypeFlags.Null) && !(t.flags & ts.TypeFlags.Undefined),
       );
+
+      if (isStringLiteralUnion(type, checker)) {
+        return "enum";
+      }
+
       const allObjectTypes = nonNullTypes.every(
         (t) => t.flags & ts.TypeFlags.Object || t.symbol !== undefined,
       );
@@ -245,6 +373,66 @@ export function extractTypesFromProgram(
     }
 
     ts.forEachChild(sourceFile, (node) => {
+      if (ts.isEnumDeclaration(node)) {
+        const hasExport = isExported(node);
+        const hasDefaultExport = isDefaultExport(node, sourceFile);
+
+        if (!hasExport && !hasDefaultExport) {
+          return;
+        }
+
+        const name = node.name.getText(sourceFile);
+        const { line, character } = sourceFile.getLineAndCharacterOfPosition(
+          node.getStart(sourceFile),
+        );
+        const location = {
+          file: filePath,
+          line: line + 1,
+          column: character + 1,
+        };
+
+        if (isConstEnum(node)) {
+          diagnostics.push({
+            code: "UNSUPPORTED_ENUM_TYPE",
+            message: `Const enum '${name}' is not supported. Use a regular enum instead.`,
+            severity: "error",
+            location,
+          });
+          return;
+        }
+
+        if (isHeterogeneousEnum(node)) {
+          diagnostics.push({
+            code: "UNSUPPORTED_ENUM_TYPE",
+            message: `Heterogeneous enum '${name}' is not supported. Use a string enum instead.`,
+            severity: "error",
+            location,
+          });
+          return;
+        }
+
+        if (isNumericEnum(node)) {
+          diagnostics.push({
+            code: "UNSUPPORTED_ENUM_TYPE",
+            message: `Numeric enum '${name}' is not supported. Use a string enum instead.`,
+            severity: "error",
+            location,
+          });
+          return;
+        }
+
+        const enumMembers = extractEnumMembers(node);
+        const metadata: TypeMetadata = {
+          name,
+          kind: "enum",
+          sourceFile: filePath,
+          exportKind: hasDefaultExport ? "default" : "named",
+        };
+
+        types.push({ metadata, fields: [], enumMembers });
+        return;
+      }
+
       if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
         const hasExport = isExported(node);
         const hasDefaultExport = isDefaultExport(node, sourceFile);
@@ -273,7 +461,7 @@ export function extractTypesFromProgram(
         }
 
         const type = checker.getDeclaredTypeOfSymbol(symbol);
-        const kind = determineTypeKind(node, type);
+        const kind = determineTypeKind(node, type, checker);
         const unionMembers = extractUnionMembers(type);
 
         const metadata: TypeMetadata = {
@@ -282,6 +470,12 @@ export function extractTypesFromProgram(
           sourceFile: filePath,
           exportKind: hasDefaultExport ? "default" : "named",
         };
+
+        if (kind === "enum") {
+          const enumMembers = extractStringLiteralUnionMembers(type, checker);
+          types.push({ metadata, fields: [], enumMembers });
+          return;
+        }
 
         const fields =
           kind === "union" ? [] : extractFieldsFromType(type, checker);

@@ -1,6 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import type {
+  EnumValueInfo,
   FieldInfo,
   GraphQLFieldType,
   GraphQLTypeInfo,
@@ -17,6 +18,11 @@ describe("GraphQL types", () => {
     it("should support Union kind", () => {
       const kind: GraphQLTypeKind = "Union";
       assert.strictEqual(kind, "Union");
+    });
+
+    it("should support Enum kind", () => {
+      const kind: GraphQLTypeKind = "Enum";
+      assert.strictEqual(kind, "Enum");
     });
   });
 
@@ -118,6 +124,47 @@ describe("GraphQL types", () => {
       assert.strictEqual(typeInfo.kind, "Union");
       assert.deepStrictEqual(typeInfo.unionMembers, ["User", "Post"]);
       assert.strictEqual(typeInfo.fields, undefined);
+    });
+
+    it("should represent an Enum type with values", () => {
+      const typeInfo: GraphQLTypeInfo = {
+        name: "Status",
+        kind: "Enum",
+        enumValues: [
+          { name: "ACTIVE", originalValue: "active" },
+          { name: "INACTIVE", originalValue: "inactive" },
+        ],
+        sourceFile: "/path/to/status.ts",
+      };
+
+      assert.strictEqual(typeInfo.name, "Status");
+      assert.strictEqual(typeInfo.kind, "Enum");
+      assert.strictEqual(typeInfo.enumValues?.length, 2);
+      assert.strictEqual(typeInfo.enumValues?.[0]?.name, "ACTIVE");
+      assert.strictEqual(typeInfo.enumValues?.[0]?.originalValue, "active");
+      assert.strictEqual(typeInfo.fields, undefined);
+    });
+  });
+
+  describe("EnumValueInfo", () => {
+    it("should have name and originalValue properties", () => {
+      const enumValue: EnumValueInfo = {
+        name: "ACTIVE",
+        originalValue: "active",
+      };
+
+      assert.strictEqual(enumValue.name, "ACTIVE");
+      assert.strictEqual(enumValue.originalValue, "active");
+    });
+
+    it("should preserve original value for SCREAMING_SNAKE_CASE conversion", () => {
+      const enumValue: EnumValueInfo = {
+        name: "MY_STATUS",
+        originalValue: "myStatus",
+      };
+
+      assert.strictEqual(enumValue.name, "MY_STATUS");
+      assert.strictEqual(enumValue.originalValue, "myStatus");
     });
   });
 });

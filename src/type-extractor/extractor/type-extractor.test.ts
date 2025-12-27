@@ -6,6 +6,11 @@ import { afterEach, beforeEach, describe, it } from "node:test";
 import {
   createProgramFromFiles,
   extractTypesFromProgram,
+  isConstEnum,
+  isHeterogeneousEnum,
+  isNumericEnum,
+  isStringEnum,
+  isStringLiteralUnion,
 } from "./type-extractor.js";
 
 describe("TypeExtractor", () => {
@@ -403,6 +408,442 @@ describe("TypeExtractor", () => {
           result.diagnostics.some((d) => d.code === "UNSUPPORTED_SYNTAX"),
         );
         assert.ok(result.diagnostics.some((d) => d.severity === "warning"));
+      });
+    });
+  });
+
+  describe("enum detection functions", () => {
+    describe("isStringEnum", () => {
+      it("should return true for enum with all string values", async () => {
+        await writeFile(
+          join(tempDir, "status.ts"),
+          `export enum Status { Active = "active", Inactive = "inactive" }`,
+        );
+        const files = [join(tempDir, "status.ts")];
+        const program = createProgramFromFiles(files);
+        const sourceFile = program.getSourceFile(files[0]!);
+        const enumNode = sourceFile?.statements[0];
+
+        assert.ok(enumNode);
+        assert.strictEqual(isStringEnum(enumNode), true);
+      });
+
+      it("should return false for numeric enum", async () => {
+        await writeFile(
+          join(tempDir, "priority.ts"),
+          `export enum Priority { Low, Medium, High }`,
+        );
+        const files = [join(tempDir, "priority.ts")];
+        const program = createProgramFromFiles(files);
+        const sourceFile = program.getSourceFile(files[0]!);
+        const enumNode = sourceFile?.statements[0];
+
+        assert.ok(enumNode);
+        assert.strictEqual(isStringEnum(enumNode), false);
+      });
+    });
+
+    describe("isNumericEnum", () => {
+      it("should return true for enum with all numeric values", async () => {
+        await writeFile(
+          join(tempDir, "priority.ts"),
+          `export enum Priority { Low = 0, Medium = 1, High = 2 }`,
+        );
+        const files = [join(tempDir, "priority.ts")];
+        const program = createProgramFromFiles(files);
+        const sourceFile = program.getSourceFile(files[0]!);
+        const enumNode = sourceFile?.statements[0];
+
+        assert.ok(enumNode);
+        assert.strictEqual(isNumericEnum(enumNode), true);
+      });
+
+      it("should return true for implicit numeric enum", async () => {
+        await writeFile(
+          join(tempDir, "priority.ts"),
+          `export enum Priority { Low, Medium, High }`,
+        );
+        const files = [join(tempDir, "priority.ts")];
+        const program = createProgramFromFiles(files);
+        const sourceFile = program.getSourceFile(files[0]!);
+        const enumNode = sourceFile?.statements[0];
+
+        assert.ok(enumNode);
+        assert.strictEqual(isNumericEnum(enumNode), true);
+      });
+
+      it("should return false for string enum", async () => {
+        await writeFile(
+          join(tempDir, "status.ts"),
+          `export enum Status { Active = "active" }`,
+        );
+        const files = [join(tempDir, "status.ts")];
+        const program = createProgramFromFiles(files);
+        const sourceFile = program.getSourceFile(files[0]!);
+        const enumNode = sourceFile?.statements[0];
+
+        assert.ok(enumNode);
+        assert.strictEqual(isNumericEnum(enumNode), false);
+      });
+    });
+
+    describe("isHeterogeneousEnum", () => {
+      it("should return true for enum with mixed values", async () => {
+        await writeFile(
+          join(tempDir, "mixed.ts"),
+          `export enum Mixed { Num = 1, Str = "str" }`,
+        );
+        const files = [join(tempDir, "mixed.ts")];
+        const program = createProgramFromFiles(files);
+        const sourceFile = program.getSourceFile(files[0]!);
+        const enumNode = sourceFile?.statements[0];
+
+        assert.ok(enumNode);
+        assert.strictEqual(isHeterogeneousEnum(enumNode), true);
+      });
+
+      it("should return false for pure string enum", async () => {
+        await writeFile(
+          join(tempDir, "status.ts"),
+          `export enum Status { A = "a", B = "b" }`,
+        );
+        const files = [join(tempDir, "status.ts")];
+        const program = createProgramFromFiles(files);
+        const sourceFile = program.getSourceFile(files[0]!);
+        const enumNode = sourceFile?.statements[0];
+
+        assert.ok(enumNode);
+        assert.strictEqual(isHeterogeneousEnum(enumNode), false);
+      });
+    });
+
+    describe("isConstEnum", () => {
+      it("should return true for const enum", async () => {
+        await writeFile(
+          join(tempDir, "const.ts"),
+          `export const enum Direction { Up, Down, Left, Right }`,
+        );
+        const files = [join(tempDir, "const.ts")];
+        const program = createProgramFromFiles(files);
+        const sourceFile = program.getSourceFile(files[0]!);
+        const enumNode = sourceFile?.statements[0];
+
+        assert.ok(enumNode);
+        assert.strictEqual(isConstEnum(enumNode), true);
+      });
+
+      it("should return false for regular enum", async () => {
+        await writeFile(
+          join(tempDir, "regular.ts"),
+          `export enum Direction { Up, Down }`,
+        );
+        const files = [join(tempDir, "regular.ts")];
+        const program = createProgramFromFiles(files);
+        const sourceFile = program.getSourceFile(files[0]!);
+        const enumNode = sourceFile?.statements[0];
+
+        assert.ok(enumNode);
+        assert.strictEqual(isConstEnum(enumNode), false);
+      });
+    });
+
+    describe("enum extraction in extractTypesFromProgram", () => {
+      it("should extract string enum as enum type", async () => {
+        await writeFile(
+          join(tempDir, "status.ts"),
+          `export enum Status { Active = "active", Inactive = "inactive" }`,
+        );
+        const files = [join(tempDir, "status.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.strictEqual(result.types.length, 1);
+        assert.strictEqual(result.types[0]?.metadata.kind, "enum");
+        assert.strictEqual(result.types[0]?.metadata.name, "Status");
+        assert.strictEqual(result.types[0]?.enumMembers?.length, 2);
+        assert.strictEqual(result.types[0]?.enumMembers?.[0]?.name, "Active");
+        assert.strictEqual(result.types[0]?.enumMembers?.[0]?.value, "active");
+        assert.strictEqual(result.types[0]?.enumMembers?.[1]?.name, "Inactive");
+        assert.strictEqual(
+          result.types[0]?.enumMembers?.[1]?.value,
+          "inactive",
+        );
+      });
+
+      it("should extract default exported string enum", async () => {
+        await writeFile(
+          join(tempDir, "role.ts"),
+          `enum Role { Admin = "admin", User = "user" }\nexport default Role;`,
+        );
+        const files = [join(tempDir, "role.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.strictEqual(result.types.length, 1);
+        assert.strictEqual(result.types[0]?.metadata.kind, "enum");
+        assert.strictEqual(result.types[0]?.metadata.exportKind, "default");
+      });
+
+      it("should preserve enum member order", async () => {
+        await writeFile(
+          join(tempDir, "order.ts"),
+          `export enum Order { Third = "third", First = "first", Second = "second" }`,
+        );
+        const files = [join(tempDir, "order.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.strictEqual(result.types[0]?.enumMembers?.[0]?.name, "Third");
+        assert.strictEqual(result.types[0]?.enumMembers?.[1]?.name, "First");
+        assert.strictEqual(result.types[0]?.enumMembers?.[2]?.name, "Second");
+      });
+
+      it("should report diagnostic for numeric enum", async () => {
+        await writeFile(
+          join(tempDir, "numeric.ts"),
+          `export enum Priority { Low, Medium, High }`,
+        );
+        const files = [join(tempDir, "numeric.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.strictEqual(result.types.length, 0);
+        assert.ok(
+          result.diagnostics.some((d) => d.code === "UNSUPPORTED_ENUM_TYPE"),
+        );
+        assert.ok(
+          result.diagnostics.some((d) => d.message.includes("string enum")),
+        );
+      });
+
+      it("should report diagnostic for const enum", async () => {
+        await writeFile(
+          join(tempDir, "const.ts"),
+          `export const enum Direction { Up = "up", Down = "down" }`,
+        );
+        const files = [join(tempDir, "const.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.strictEqual(result.types.length, 0);
+        assert.ok(
+          result.diagnostics.some((d) => d.code === "UNSUPPORTED_ENUM_TYPE"),
+        );
+        assert.ok(
+          result.diagnostics.some((d) => d.message.includes("regular enum")),
+        );
+      });
+
+      it("should report diagnostic for heterogeneous enum", async () => {
+        await writeFile(
+          join(tempDir, "mixed.ts"),
+          `export enum Mixed { Num = 1, Str = "str" }`,
+        );
+        const files = [join(tempDir, "mixed.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.strictEqual(result.types.length, 0);
+        assert.ok(
+          result.diagnostics.some((d) => d.code === "UNSUPPORTED_ENUM_TYPE"),
+        );
+      });
+
+      it("should extract enum and interface from same file", async () => {
+        await writeFile(
+          join(tempDir, "combined.ts"),
+          `
+          export enum Status { Active = "active" }
+          export interface User { id: string; status: Status; }
+          `,
+        );
+        const files = [join(tempDir, "combined.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.strictEqual(result.types.length, 2);
+        const enumType = result.types.find((t) => t.metadata.name === "Status");
+        const interfaceType = result.types.find(
+          (t) => t.metadata.name === "User",
+        );
+        assert.ok(enumType);
+        assert.ok(interfaceType);
+        assert.strictEqual(enumType.metadata.kind, "enum");
+        assert.strictEqual(interfaceType.metadata.kind, "interface");
+      });
+    });
+
+    describe("isStringLiteralUnion", () => {
+      it("should return true for string literal union type", async () => {
+        await writeFile(
+          join(tempDir, "status.ts"),
+          `export type Status = "active" | "inactive";`,
+        );
+        const files = [join(tempDir, "status.ts")];
+        const program = createProgramFromFiles(files);
+        const checker = program.getTypeChecker();
+        const sourceFile = program.getSourceFile(files[0]!);
+        const typeAliasNode = sourceFile?.statements[0];
+
+        assert.ok(typeAliasNode);
+        const symbol = checker.getSymbolAtLocation(
+          (typeAliasNode as { name: { getText: () => string } }).name,
+        );
+        const type = checker.getDeclaredTypeOfSymbol(symbol!);
+        assert.strictEqual(isStringLiteralUnion(type, checker), true);
+      });
+
+      it("should return true for nullable string literal union", async () => {
+        await writeFile(
+          join(tempDir, "status.ts"),
+          `export type Status = "active" | "inactive" | null;`,
+        );
+        const files = [join(tempDir, "status.ts")];
+        const program = createProgramFromFiles(files);
+        const checker = program.getTypeChecker();
+        const sourceFile = program.getSourceFile(files[0]!);
+        const typeAliasNode = sourceFile?.statements[0];
+
+        assert.ok(typeAliasNode);
+        const symbol = checker.getSymbolAtLocation(
+          (typeAliasNode as { name: { getText: () => string } }).name,
+        );
+        const type = checker.getDeclaredTypeOfSymbol(symbol!);
+        assert.strictEqual(isStringLiteralUnion(type, checker), true);
+      });
+
+      it("should return false for object union", async () => {
+        await writeFile(
+          join(tempDir, "result.ts"),
+          `
+          interface A { a: string; }
+          interface B { b: string; }
+          export type Result = A | B;
+          `,
+        );
+        const files = [join(tempDir, "result.ts")];
+        const program = createProgramFromFiles(files);
+        const checker = program.getTypeChecker();
+        const sourceFile = program.getSourceFile(files[0]!);
+        const typeAliasNode = sourceFile?.statements[2];
+
+        assert.ok(typeAliasNode);
+        const symbol = checker.getSymbolAtLocation(
+          (typeAliasNode as { name: { getText: () => string } }).name,
+        );
+        const type = checker.getDeclaredTypeOfSymbol(symbol!);
+        assert.strictEqual(isStringLiteralUnion(type, checker), false);
+      });
+
+      it("should return false for mixed string and number literals", async () => {
+        await writeFile(
+          join(tempDir, "mixed.ts"),
+          `export type Mixed = "a" | 1;`,
+        );
+        const files = [join(tempDir, "mixed.ts")];
+        const program = createProgramFromFiles(files);
+        const checker = program.getTypeChecker();
+        const sourceFile = program.getSourceFile(files[0]!);
+        const typeAliasNode = sourceFile?.statements[0];
+
+        assert.ok(typeAliasNode);
+        const symbol = checker.getSymbolAtLocation(
+          (typeAliasNode as { name: { getText: () => string } }).name,
+        );
+        const type = checker.getDeclaredTypeOfSymbol(symbol!);
+        assert.strictEqual(isStringLiteralUnion(type, checker), false);
+      });
+    });
+
+    describe("string literal union extraction in extractTypesFromProgram", () => {
+      it("should extract string literal union as enum type", async () => {
+        await writeFile(
+          join(tempDir, "status.ts"),
+          `export type Status = "active" | "inactive" | "pending";`,
+        );
+        const files = [join(tempDir, "status.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.strictEqual(result.types.length, 1);
+        assert.strictEqual(result.types[0]?.metadata.kind, "enum");
+        assert.strictEqual(result.types[0]?.metadata.name, "Status");
+        assert.strictEqual(result.types[0]?.enumMembers?.length, 3);
+        assert.strictEqual(result.types[0]?.enumMembers?.[0]?.name, "active");
+        assert.strictEqual(result.types[0]?.enumMembers?.[0]?.value, "active");
+      });
+
+      it("should extract nullable string literal union excluding null/undefined", async () => {
+        await writeFile(
+          join(tempDir, "status.ts"),
+          `export type Status = "active" | "inactive" | null | undefined;`,
+        );
+        const files = [join(tempDir, "status.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.strictEqual(result.types.length, 1);
+        assert.strictEqual(result.types[0]?.metadata.kind, "enum");
+        assert.strictEqual(result.types[0]?.enumMembers?.length, 2);
+      });
+
+      it("should preserve string literal union member order", async () => {
+        await writeFile(
+          join(tempDir, "order.ts"),
+          `export type Order = "third" | "first" | "second";`,
+        );
+        const files = [join(tempDir, "order.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.strictEqual(result.types[0]?.enumMembers?.[0]?.name, "third");
+        assert.strictEqual(result.types[0]?.enumMembers?.[1]?.name, "first");
+        assert.strictEqual(result.types[0]?.enumMembers?.[2]?.name, "second");
+      });
+
+      it("should not treat mixed type union as enum", async () => {
+        await writeFile(
+          join(tempDir, "mixed.ts"),
+          `export type Mixed = "a" | 1 | true;`,
+        );
+        const files = [join(tempDir, "mixed.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.strictEqual(result.types.length, 1);
+        assert.strictEqual(result.types[0]?.metadata.kind, "object");
+      });
+
+      it("should not treat object union as enum", async () => {
+        await writeFile(
+          join(tempDir, "result.ts"),
+          `
+          interface Success { data: string; }
+          interface Error { message: string; }
+          export type Result = Success | Error;
+          `,
+        );
+        const files = [join(tempDir, "result.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        const resultType = result.types.find(
+          (t) => t.metadata.name === "Result",
+        );
+        assert.ok(resultType);
+        assert.strictEqual(resultType.metadata.kind, "union");
       });
     });
   });

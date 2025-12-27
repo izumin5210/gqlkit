@@ -1,6 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import type {
+  EnumMemberInfo,
   ExtractedTypeInfo,
   FieldDefinition,
   TSTypeReference,
@@ -23,6 +24,11 @@ describe("TypeScript types", () => {
     it("should support union kind", () => {
       const kind: TypeKind = "union";
       assert.strictEqual(kind, "union");
+    });
+
+    it("should support enum kind", () => {
+      const kind: TypeKind = "enum";
+      assert.strictEqual(kind, "enum");
     });
   });
 
@@ -204,6 +210,49 @@ describe("TypeScript types", () => {
       assert.strictEqual(typeInfo.metadata.kind, "union");
       assert.deepStrictEqual(typeInfo.unionMembers, ["User", "Post"]);
       assert.strictEqual(typeInfo.fields.length, 0);
+    });
+
+    it("should represent enum type with members", () => {
+      const typeInfo: ExtractedTypeInfo = {
+        metadata: {
+          name: "Status",
+          kind: "enum",
+          sourceFile: "/path/to/status.ts",
+          exportKind: "named",
+        },
+        fields: [],
+        enumMembers: [
+          { name: "Active", value: "active" },
+          { name: "Inactive", value: "inactive" },
+        ],
+      };
+
+      assert.strictEqual(typeInfo.metadata.kind, "enum");
+      assert.strictEqual(typeInfo.enumMembers?.length, 2);
+      assert.strictEqual(typeInfo.enumMembers?.[0]?.name, "Active");
+      assert.strictEqual(typeInfo.enumMembers?.[0]?.value, "active");
+    });
+  });
+
+  describe("EnumMemberInfo", () => {
+    it("should have name and value properties", () => {
+      const member: EnumMemberInfo = {
+        name: "Active",
+        value: "active",
+      };
+
+      assert.strictEqual(member.name, "Active");
+      assert.strictEqual(member.value, "active");
+    });
+
+    it("should support string enum values", () => {
+      const member: EnumMemberInfo = {
+        name: "StatusActive",
+        value: "ACTIVE",
+      };
+
+      assert.strictEqual(member.name, "StatusActive");
+      assert.strictEqual(member.value, "ACTIVE");
     });
   });
 });

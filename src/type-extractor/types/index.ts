@@ -6,6 +6,7 @@ export type {
 } from "./diagnostics.js";
 
 export type {
+  EnumValueInfo,
   FieldInfo,
   GraphQLFieldType,
   GraphQLTypeInfo,
@@ -13,6 +14,7 @@ export type {
 } from "./graphql.js";
 
 export type {
+  EnumMemberInfo,
   ExtractedTypeInfo,
   FieldDefinition,
   TSTypeReference,

@@ -1,7 +1,11 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import type { ExtractedTypeInfo } from "../types/index.js";
-import { convertToGraphQL } from "./graphql-converter.js";
+import {
+  convertToGraphQL,
+  isValidGraphQLEnumValue,
+  toScreamingSnakeCase,
+} from "./graphql-converter.js";
 
 describe("GraphQLConverter", () => {
   describe("convertToGraphQL", () => {
@@ -393,6 +397,190 @@ describe("GraphQLConverter", () => {
 
         assert.ok(result.diagnostics[0]?.message.includes("String"));
       });
+    });
+
+    describe("Enum type conversion", () => {
+      it("should convert enum type to GraphQL Enum", () => {
+        const input: ExtractedTypeInfo[] = [
+          {
+            metadata: {
+              name: "Status",
+              kind: "enum",
+              sourceFile: "/path/to/status.ts",
+              exportKind: "named",
+            },
+            fields: [],
+            enumMembers: [
+              { name: "Active", value: "active" },
+              { name: "Inactive", value: "inactive" },
+            ],
+          },
+        ];
+
+        const result = convertToGraphQL(input);
+
+        assert.strictEqual(result.types.length, 1);
+        assert.strictEqual(result.types[0]?.kind, "Enum");
+        assert.strictEqual(result.types[0]?.name, "Status");
+        assert.strictEqual(result.types[0]?.enumValues?.length, 2);
+        assert.strictEqual(result.types[0]?.enumValues?.[0]?.name, "ACTIVE");
+        assert.strictEqual(
+          result.types[0]?.enumValues?.[0]?.originalValue,
+          "active",
+        );
+      });
+
+      it("should convert enum member names to SCREAMING_SNAKE_CASE", () => {
+        const input: ExtractedTypeInfo[] = [
+          {
+            metadata: {
+              name: "UserRole",
+              kind: "enum",
+              sourceFile: "/path/to/role.ts",
+              exportKind: "named",
+            },
+            fields: [],
+            enumMembers: [
+              { name: "superAdmin", value: "superAdmin" },
+              { name: "regularUser", value: "regularUser" },
+            ],
+          },
+        ];
+
+        const result = convertToGraphQL(input);
+
+        assert.strictEqual(
+          result.types[0]?.enumValues?.[0]?.name,
+          "SUPER_ADMIN",
+        );
+        assert.strictEqual(
+          result.types[0]?.enumValues?.[1]?.name,
+          "REGULAR_USER",
+        );
+      });
+
+      it("should preserve original value", () => {
+        const input: ExtractedTypeInfo[] = [
+          {
+            metadata: {
+              name: "Color",
+              kind: "enum",
+              sourceFile: "/path/to/color.ts",
+              exportKind: "named",
+            },
+            fields: [],
+            enumMembers: [{ name: "darkBlue", value: "dark-blue" }],
+          },
+        ];
+
+        const result = convertToGraphQL(input);
+
+        assert.strictEqual(
+          result.types[0]?.enumValues?.[0]?.originalValue,
+          "dark-blue",
+        );
+      });
+
+      it("should report error for invalid GraphQL enum member name", () => {
+        const input: ExtractedTypeInfo[] = [
+          {
+            metadata: {
+              name: "Invalid",
+              kind: "enum",
+              sourceFile: "/path/to/invalid.ts",
+              exportKind: "named",
+            },
+            fields: [],
+            enumMembers: [{ name: "123invalid", value: "123invalid" }],
+          },
+        ];
+
+        const result = convertToGraphQL(input);
+
+        assert.ok(
+          result.diagnostics.some((d) => d.code === "INVALID_ENUM_MEMBER"),
+        );
+      });
+
+      it("should check reserved type names for enum", () => {
+        const input: ExtractedTypeInfo[] = [
+          {
+            metadata: {
+              name: "Int",
+              kind: "enum",
+              sourceFile: "/path/to/int.ts",
+              exportKind: "named",
+            },
+            fields: [],
+            enumMembers: [{ name: "One", value: "one" }],
+          },
+        ];
+
+        const result = convertToGraphQL(input);
+
+        assert.ok(
+          result.diagnostics.some((d) => d.code === "RESERVED_TYPE_NAME"),
+        );
+      });
+    });
+  });
+
+  describe("toScreamingSnakeCase", () => {
+    it("should convert camelCase to SCREAMING_SNAKE_CASE", () => {
+      assert.strictEqual(toScreamingSnakeCase("camelCase"), "CAMEL_CASE");
+    });
+
+    it("should convert PascalCase to SCREAMING_SNAKE_CASE", () => {
+      assert.strictEqual(toScreamingSnakeCase("PascalCase"), "PASCAL_CASE");
+    });
+
+    it("should convert kebab-case to SCREAMING_SNAKE_CASE", () => {
+      assert.strictEqual(toScreamingSnakeCase("kebab-case"), "KEBAB_CASE");
+    });
+
+    it("should convert lowercase to UPPERCASE", () => {
+      assert.strictEqual(toScreamingSnakeCase("active"), "ACTIVE");
+    });
+
+    it("should preserve existing SCREAMING_SNAKE_CASE", () => {
+      assert.strictEqual(
+        toScreamingSnakeCase("ALREADY_SNAKE"),
+        "ALREADY_SNAKE",
+      );
+    });
+
+    it("should handle spaces", () => {
+      assert.strictEqual(toScreamingSnakeCase("space case"), "SPACE_CASE");
+    });
+
+    it("should handle consecutive uppercase letters", () => {
+      assert.strictEqual(toScreamingSnakeCase("XMLParser"), "XML_PARSER");
+    });
+  });
+
+  describe("isValidGraphQLEnumValue", () => {
+    it("should return true for valid uppercase name", () => {
+      assert.strictEqual(isValidGraphQLEnumValue("VALID_NAME"), true);
+    });
+
+    it("should return true for name starting with underscore", () => {
+      assert.strictEqual(isValidGraphQLEnumValue("_VALID"), true);
+    });
+
+    it("should return true for name with numbers", () => {
+      assert.strictEqual(isValidGraphQLEnumValue("VALUE_123"), true);
+    });
+
+    it("should return false for name starting with number", () => {
+      assert.strictEqual(isValidGraphQLEnumValue("123_INVALID"), false);
+    });
+
+    it("should return false for empty string", () => {
+      assert.strictEqual(isValidGraphQLEnumValue(""), false);
+    });
+
+    it("should return false for name with special characters", () => {
+      assert.strictEqual(isValidGraphQLEnumValue("INVALID@NAME"), false);
     });
   });
 });

@@ -1,5 +1,7 @@
 import type {
   Diagnostic,
+  EnumMemberInfo,
+  EnumValueInfo,
   ExtractedTypeInfo,
   FieldInfo,
   GraphQLFieldType,
@@ -28,6 +30,53 @@ const PRIMITIVE_TYPE_MAP: Record<string, string> = {
   number: "Int",
   boolean: "Boolean",
 };
+
+const GRAPHQL_ENUM_VALUE_PATTERN = /^[_A-Za-z][_0-9A-Za-z]*$/;
+
+export function toScreamingSnakeCase(value: string): string {
+  return value
+    .replace(/[-\s]+/g, "_")
+    .replace(/([a-z])([A-Z])/g, "$1_$2")
+    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
+    .toUpperCase();
+}
+
+export function isValidGraphQLEnumValue(value: string): boolean {
+  if (value.length === 0) return false;
+  return GRAPHQL_ENUM_VALUE_PATTERN.test(value);
+}
+
+function convertEnumMembers(
+  members: ReadonlyArray<EnumMemberInfo>,
+  sourceFile: string,
+): {
+  values: ReadonlyArray<EnumValueInfo>;
+  diagnostics: ReadonlyArray<Diagnostic>;
+} {
+  const values: EnumValueInfo[] = [];
+  const diagnostics: Diagnostic[] = [];
+
+  for (const member of members) {
+    const convertedName = toScreamingSnakeCase(member.name);
+
+    if (!isValidGraphQLEnumValue(convertedName)) {
+      diagnostics.push({
+        code: "INVALID_ENUM_MEMBER",
+        message: `Enum member '${member.name}' converts to '${convertedName}' which is not a valid GraphQL identifier`,
+        severity: "error",
+        location: { file: sourceFile, line: 1, column: 1 },
+      });
+      continue;
+    }
+
+    values.push({
+      name: convertedName,
+      originalValue: member.value,
+    });
+  }
+
+  return { values, diagnostics };
+}
 
 function convertTsTypeToGraphQL(
   tsType: TSTypeReference,
@@ -109,7 +158,18 @@ export function convertToGraphQL(
       });
     }
 
-    if (metadata.kind === "union") {
+    if (metadata.kind === "enum") {
+      const { values: enumValues, diagnostics: enumDiagnostics } =
+        convertEnumMembers(extracted.enumMembers ?? [], metadata.sourceFile);
+      diagnostics.push(...enumDiagnostics);
+
+      types.push({
+        name: metadata.name,
+        kind: "Enum",
+        enumValues,
+        sourceFile: metadata.sourceFile,
+      });
+    } else if (metadata.kind === "union") {
       const unionMembers = extracted.unionMembers
         ? [...extracted.unionMembers].sort()
         : [];

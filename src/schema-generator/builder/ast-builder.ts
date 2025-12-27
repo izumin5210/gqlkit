@@ -1,6 +1,8 @@
 import {
   type DefinitionNode,
   type DocumentNode,
+  type EnumTypeDefinitionNode,
+  type EnumValueDefinitionNode,
   type FieldDefinitionNode,
   type InputValueDefinitionNode,
   Kind,
@@ -14,7 +16,10 @@ import {
   type UnionTypeDefinitionNode,
 } from "graphql";
 import type { GraphQLInputValue } from "../../resolver-extractor/index.js";
-import type { GraphQLFieldType } from "../../type-extractor/types/index.js";
+import type {
+  EnumValueInfo,
+  GraphQLFieldType,
+} from "../../type-extractor/types/index.js";
 import type {
   BaseField,
   BaseType,
@@ -130,6 +135,26 @@ export function buildUnionTypeDefinitionNode(
   };
 }
 
+export function buildEnumValueDefinitionNode(
+  value: EnumValueInfo,
+): EnumValueDefinitionNode {
+  return {
+    kind: Kind.ENUM_VALUE_DEFINITION,
+    name: buildNameNode(value.name),
+  };
+}
+
+export function buildEnumTypeDefinitionNode(
+  baseType: BaseType,
+): EnumTypeDefinitionNode {
+  const enumValues = baseType.enumValues ?? [];
+  return {
+    kind: Kind.ENUM_TYPE_DEFINITION,
+    name: buildNameNode(baseType.name),
+    values: enumValues.map(buildEnumValueDefinitionNode),
+  };
+}
+
 export function buildObjectTypeExtensionNode(
   typeExtension: TypeExtension,
 ): ObjectTypeExtensionNode {
@@ -153,8 +178,10 @@ export function buildDocumentNode(
   for (const baseType of sortedBaseTypes) {
     if (baseType.kind === "Object") {
       definitions.push(buildObjectTypeDefinitionNode(baseType));
-    } else {
+    } else if (baseType.kind === "Union") {
       definitions.push(buildUnionTypeDefinitionNode(baseType));
+    } else if (baseType.kind === "Enum") {
+      definitions.push(buildEnumTypeDefinitionNode(baseType));
     }
   }
 

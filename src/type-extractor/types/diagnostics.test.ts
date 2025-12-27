@@ -47,6 +47,16 @@ describe("Diagnostics types", () => {
       const code: DiagnosticCode = "UNRESOLVED_REFERENCE";
       assert.strictEqual(code, "UNRESOLVED_REFERENCE");
     });
+
+    it("should support UNSUPPORTED_ENUM_TYPE code", () => {
+      const code: DiagnosticCode = "UNSUPPORTED_ENUM_TYPE";
+      assert.strictEqual(code, "UNSUPPORTED_ENUM_TYPE");
+    });
+
+    it("should support INVALID_ENUM_MEMBER code", () => {
+      const code: DiagnosticCode = "INVALID_ENUM_MEMBER";
+      assert.strictEqual(code, "INVALID_ENUM_MEMBER");
+    });
   });
 
   describe("Diagnostic", () => {

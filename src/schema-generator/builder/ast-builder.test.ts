@@ -2,7 +2,10 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import { Kind, print } from "graphql";
 import type { GraphQLInputValue } from "../../resolver-extractor/index.js";
-import type { GraphQLFieldType } from "../../type-extractor/types/index.js";
+import type {
+  EnumValueInfo,
+  GraphQLFieldType,
+} from "../../type-extractor/types/index.js";
 import type {
   BaseType,
   ExtensionField,
@@ -11,6 +14,8 @@ import type {
 } from "../integrator/result-integrator.js";
 import {
   buildDocumentNode,
+  buildEnumTypeDefinitionNode,
+  buildEnumValueDefinitionNode,
   buildFieldDefinitionNode,
   buildFieldTypeNode,
   buildInputValueDefinitionNode,
@@ -278,6 +283,56 @@ describe("ASTBuilder", () => {
     });
   });
 
+  describe("buildEnumValueDefinitionNode", () => {
+    it("should create EnumValueDefinitionNode from EnumValueInfo", () => {
+      const enumValue: EnumValueInfo = {
+        name: "ACTIVE",
+        originalValue: "active",
+      };
+      const node = buildEnumValueDefinitionNode(enumValue);
+
+      assert.strictEqual(node.kind, Kind.ENUM_VALUE_DEFINITION);
+      assert.strictEqual(node.name.value, "ACTIVE");
+    });
+  });
+
+  describe("buildEnumTypeDefinitionNode", () => {
+    it("should create EnumTypeDefinitionNode from BaseType", () => {
+      const baseType: BaseType = {
+        name: "Status",
+        kind: "Enum",
+        enumValues: [
+          { name: "ACTIVE", originalValue: "active" },
+          { name: "INACTIVE", originalValue: "inactive" },
+        ],
+      };
+      const node = buildEnumTypeDefinitionNode(baseType);
+
+      assert.strictEqual(node.kind, Kind.ENUM_TYPE_DEFINITION);
+      assert.strictEqual(node.name.value, "Status");
+      assert.strictEqual(node.values?.length, 2);
+      assert.strictEqual(node.values?.[0]?.name.value, "ACTIVE");
+      assert.strictEqual(node.values?.[1]?.name.value, "INACTIVE");
+    });
+
+    it("should preserve enum value order", () => {
+      const baseType: BaseType = {
+        name: "Priority",
+        kind: "Enum",
+        enumValues: [
+          { name: "LOW", originalValue: "low" },
+          { name: "HIGH", originalValue: "high" },
+          { name: "MEDIUM", originalValue: "medium" },
+        ],
+      };
+      const node = buildEnumTypeDefinitionNode(baseType);
+
+      assert.strictEqual(node.values?.[0]?.name.value, "LOW");
+      assert.strictEqual(node.values?.[1]?.name.value, "HIGH");
+      assert.strictEqual(node.values?.[2]?.name.value, "MEDIUM");
+    });
+  });
+
   describe("buildObjectTypeExtensionNode", () => {
     it("should create ObjectTypeExtensionNode from TypeExtension", () => {
       const typeExtension: TypeExtension = {
@@ -528,6 +583,58 @@ describe("ASTBuilder", () => {
 
       assert.strictEqual(doc.definitions.length, 1);
       assert.strictEqual(doc.definitions[0]?.kind, Kind.UNION_TYPE_DEFINITION);
+    });
+
+    it("should handle Enum types", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "Status",
+            kind: "Enum",
+            enumValues: [
+              { name: "ACTIVE", originalValue: "active" },
+              { name: "INACTIVE", originalValue: "inactive" },
+            ],
+          },
+        ],
+        typeExtensions: [],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+
+      assert.strictEqual(doc.definitions.length, 1);
+      assert.strictEqual(doc.definitions[0]?.kind, Kind.ENUM_TYPE_DEFINITION);
+    });
+
+    it("should produce valid GraphQL SDL with enum", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "Status",
+            kind: "Enum",
+            enumValues: [
+              { name: "ACTIVE", originalValue: "active" },
+              { name: "PENDING", originalValue: "pending" },
+            ],
+          },
+        ],
+        typeExtensions: [],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      assert.ok(sdl.includes("enum Status"));
+      assert.ok(sdl.includes("ACTIVE"));
+      assert.ok(sdl.includes("PENDING"));
     });
 
     it("should produce valid GraphQL SDL", () => {

@@ -1,4 +1,4 @@
-export type TypeKind = "object" | "interface" | "union";
+export type TypeKind = "object" | "interface" | "union" | "enum";
 
 export interface TypeMetadata {
   readonly name: string;
@@ -21,8 +21,14 @@ export interface FieldDefinition {
   readonly optional: boolean;
 }
 
+export interface EnumMemberInfo {
+  readonly name: string;
+  readonly value: string;
+}
+
 export interface ExtractedTypeInfo {
   readonly metadata: TypeMetadata;
   readonly fields: ReadonlyArray<FieldDefinition>;
   readonly unionMembers?: ReadonlyArray<string>;
+  readonly enumMembers?: ReadonlyArray<EnumMemberInfo>;
 }

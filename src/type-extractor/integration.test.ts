@@ -223,4 +223,124 @@ describe("Integration Tests", () => {
       );
     });
   });
+
+  describe("enum type extraction", () => {
+    it("should extract TypeScript string enum as GraphQL enum", async () => {
+      await writeFile(
+        join(tempDir, "status.ts"),
+        `export enum Status { Active = "active", Inactive = "inactive", Pending = "pending" }`,
+      );
+
+      const result = await extractTypes({ directory: tempDir });
+
+      assert.strictEqual(result.types.length, 1);
+      assert.strictEqual(result.types[0]?.kind, "Enum");
+      assert.strictEqual(result.types[0]?.name, "Status");
+      assert.strictEqual(result.types[0]?.enumValues?.length, 3);
+      assert.strictEqual(result.types[0]?.enumValues?.[0]?.name, "ACTIVE");
+      assert.strictEqual(
+        result.types[0]?.enumValues?.[0]?.originalValue,
+        "active",
+      );
+    });
+
+    it("should extract string literal union as GraphQL enum", async () => {
+      await writeFile(
+        join(tempDir, "role.ts"),
+        `export type Role = "admin" | "user" | "guest";`,
+      );
+
+      const result = await extractTypes({ directory: tempDir });
+
+      assert.strictEqual(result.types.length, 1);
+      assert.strictEqual(result.types[0]?.kind, "Enum");
+      assert.strictEqual(result.types[0]?.name, "Role");
+      assert.strictEqual(result.types[0]?.enumValues?.length, 3);
+    });
+
+    it("should convert enum member names to SCREAMING_SNAKE_CASE", async () => {
+      await writeFile(
+        join(tempDir, "case.ts"),
+        `export enum UserStatus { superAdmin = "superAdmin", normalUser = "normalUser" }`,
+      );
+
+      const result = await extractTypes({ directory: tempDir });
+
+      assert.strictEqual(result.types[0]?.enumValues?.[0]?.name, "SUPER_ADMIN");
+      assert.strictEqual(result.types[0]?.enumValues?.[1]?.name, "NORMAL_USER");
+    });
+
+    it("should report error for numeric enum", async () => {
+      await writeFile(
+        join(tempDir, "numeric.ts"),
+        `export enum Priority { Low, Medium, High }`,
+      );
+
+      const result = await extractTypes({ directory: tempDir });
+
+      assert.strictEqual(result.types.length, 0);
+      assert.ok(
+        result.diagnostics.errors.some(
+          (e) => e.code === "UNSUPPORTED_ENUM_TYPE",
+        ),
+      );
+    });
+
+    it("should report error for const enum", async () => {
+      await writeFile(
+        join(tempDir, "const.ts"),
+        `export const enum Direction { Up = "up", Down = "down" }`,
+      );
+
+      const result = await extractTypes({ directory: tempDir });
+
+      assert.strictEqual(result.types.length, 0);
+      assert.ok(
+        result.diagnostics.errors.some(
+          (e) => e.code === "UNSUPPORTED_ENUM_TYPE",
+        ),
+      );
+    });
+
+    it("should handle enum alongside other types", async () => {
+      await writeFile(
+        join(tempDir, "mixed.ts"),
+        `
+        export enum Status { Active = "active", Inactive = "inactive" }
+        export interface User { id: string; name: string; }
+        export type SearchResult = User | Post;
+        export interface Post { title: string; }
+        `,
+      );
+
+      const result = await extractTypes({ directory: tempDir });
+
+      assert.strictEqual(result.types.length, 4);
+
+      const status = result.types.find((t) => t.name === "Status");
+      assert.ok(status);
+      assert.strictEqual(status.kind, "Enum");
+
+      const user = result.types.find((t) => t.name === "User");
+      assert.ok(user);
+      assert.strictEqual(user.kind, "Object");
+
+      const searchResult = result.types.find((t) => t.name === "SearchResult");
+      assert.ok(searchResult);
+      assert.strictEqual(searchResult.kind, "Union");
+    });
+
+    it("should report error for invalid enum member name", async () => {
+      await writeFile(
+        join(tempDir, "invalid.ts"),
+        `export type Invalid = "123abc" | "valid";`,
+      );
+
+      const result = await extractTypes({ directory: tempDir });
+
+      assert.ok(
+        result.diagnostics.errors.some((e) => e.code === "INVALID_ENUM_MEMBER"),
+      );
+    });
+  });
 });

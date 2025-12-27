@@ -7,6 +7,7 @@ import type {
 import type { ExtractTypesResult } from "../../type-extractor/index.js";
 import type {
   Diagnostic,
+  EnumValueInfo,
   GraphQLFieldType,
 } from "../../type-extractor/types/index.js";
 
@@ -17,9 +18,10 @@ export interface BaseField {
 
 export interface BaseType {
   readonly name: string;
-  readonly kind: "Object" | "Union";
+  readonly kind: "Object" | "Union" | "Enum";
   readonly fields?: ReadonlyArray<BaseField>;
   readonly unionMembers?: ReadonlyArray<string>;
+  readonly enumValues?: ReadonlyArray<EnumValueInfo>;
 }
 
 export interface ExtensionField {
@@ -75,6 +77,13 @@ export function integrate(
   diagnostics.push(...resolversResult.diagnostics.warnings);
 
   const baseTypes: BaseType[] = typesResult.types.map((type) => {
+    if (type.kind === "Enum") {
+      return {
+        name: type.name,
+        kind: type.kind,
+        enumValues: type.enumValues,
+      };
+    }
     if (type.kind === "Object") {
       return {
         name: type.name,
