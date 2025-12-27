@@ -8,5 +8,10 @@
   "author": "izumin5210 <m@izum.in>",
   "license": "MIT",
   "packageManager": "pnpm@10.26.1",
-  "scripts": {}
+  "scripts": {
+    "check": "biome check --write"
+  },
+  "devDependencies": {
+    "@biomejs/biome": "2.3.10"
+  }
 }
