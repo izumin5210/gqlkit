@@ -95,3 +95,7 @@ This project follows Kiro-style Spec-Driven Development.
   - Double quotes for JS/TS
   - Space indentation
   - Auto organize imports
+
+## CLI Development
+
+When creating command-line interfaces, use the `use-gunshi-cli` skill.
