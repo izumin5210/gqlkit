@@ -1,0 +1,68 @@
+import type {
+  IntegratedResult,
+  TypeExtension,
+} from "../integrator/result-integrator.js";
+
+export interface FieldResolver {
+  readonly fieldName: string;
+  readonly sourceFile: string;
+  readonly resolverValueName: string;
+}
+
+export interface TypeResolvers {
+  readonly typeName: string;
+  readonly fields: ReadonlyArray<FieldResolver>;
+}
+
+export interface ResolverInfo {
+  readonly types: ReadonlyArray<TypeResolvers>;
+  readonly sourceFiles: ReadonlyArray<string>;
+}
+
+function getResolverValueName(typeName: string): string {
+  return `${typeName.charAt(0).toLowerCase()}${typeName.slice(1)}Resolver`;
+}
+
+function collectFieldResolvers(ext: TypeExtension): FieldResolver[] {
+  const resolverValueName = getResolverValueName(ext.targetTypeName);
+
+  return ext.fields.map((field) => ({
+    fieldName: field.name,
+    sourceFile: field.resolverSourceFile,
+    resolverValueName,
+  }));
+}
+
+export function collectResolverInfo(
+  integratedResult: IntegratedResult,
+): ResolverInfo {
+  const typeMap = new Map<string, FieldResolver[]>();
+  const sourceFilesSet = new Set<string>();
+
+  for (const ext of integratedResult.typeExtensions) {
+    const fieldResolvers = collectFieldResolvers(ext);
+
+    for (const resolver of fieldResolvers) {
+      sourceFilesSet.add(resolver.sourceFile);
+    }
+
+    const existing = typeMap.get(ext.targetTypeName) ?? [];
+    typeMap.set(ext.targetTypeName, [...existing, ...fieldResolvers]);
+  }
+
+  const types: TypeResolvers[] = [...typeMap.entries()]
+    .map(([typeName, fields]) => ({
+      typeName,
+      fields: [...fields].sort((a, b) =>
+        a.fieldName.localeCompare(b.fieldName),
+      ),
+    }))
+    .sort((a, b) => a.typeName.localeCompare(b.typeName));
+
+  const sourceFiles = [...sourceFilesSet].sort((a, b) => a.localeCompare(b));
+
+  return {
+    types,
+    sourceFiles,
+  };
+}
