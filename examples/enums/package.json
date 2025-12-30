@@ -8,10 +8,11 @@
     "dev": "pnpm gen && pnpm start"
   },
   "dependencies": {
-    "gqlkit": "link:../..",
+    "@gqlkit-ts/cli": "workspace:*",
+    "@gqlkit-ts/runtime": "workspace:*",
+    "@graphql-tools/schema": "^10.0.0",
     "graphql": "^16.12.0",
-    "graphql-yoga": "^5.0.0",
-    "@graphql-tools/schema": "^10.0.0"
+    "graphql-yoga": "^5.0.0"
   },
   "devDependencies": {
     "tsx": "^4.21.0",
