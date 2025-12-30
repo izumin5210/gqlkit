@@ -18,7 +18,7 @@ gqlkit is a convention-driven code generator for GraphQL servers in TypeScript. 
 
 ## Value Proposition
 
-gqlkit provides a "kit" experience: consistent conventions paired with consistent diagnostics. By enforcing strict naming patterns (e.g., `UserResolver` + `userResolver` -> `User`), it eliminates configuration while maintaining full type safety. The output is compatible with graphql-tools' `makeExecutableSchema`, integrating seamlessly with any GraphQL runtime.
+gqlkit provides a "kit" experience: consistent conventions paired with consistent diagnostics. By using the Define API (`defineQuery`, `defineMutation`, `defineField`), it enables explicit, type-safe resolver definitions while maintaining full type safety. The output is compatible with graphql-tools' `makeExecutableSchema`, integrating seamlessly with any GraphQL runtime.
 
 ---
 _Focus on patterns and purpose, not exhaustive feature lists_

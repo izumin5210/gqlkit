@@ -20,5 +20,5 @@ export const createUser = defineMutation<{ input: CreateUserInput }, User>(
     };
     users.push(newUser);
     return newUser;
-  }
+  },
 );

@@ -1,201 +1,144 @@
 import type { DocumentNode } from "graphql";
 
 export const typeDefs: DocumentNode = {
-  "kind": "Document",
-  "definitions": [
+  kind: "Document",
+  definitions: [
     {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
+      kind: "EnumTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "Role",
       },
-      "fields": []
+      values: [
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "ADMIN",
+          },
+        },
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "USER",
+          },
+        },
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "GUEST",
+          },
+        },
+      ],
     },
     {
-      "kind": "EnumTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "Role"
+      kind: "EnumTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "Status",
       },
-      "values": [
+      values: [
         {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "ADMIN"
-          }
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "ACTIVE",
+          },
         },
         {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "USER"
-          }
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "INACTIVE",
+          },
         },
         {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "GUEST"
-          }
-        }
-      ]
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "PENDING",
+          },
+        },
+      ],
     },
     {
-      "kind": "EnumTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "Status"
+      kind: "ObjectTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "User",
       },
-      "values": [
+      fields: [
         {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "ACTIVE"
-          }
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "id",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "String",
+              },
+            },
+          },
         },
         {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "INACTIVE"
-          }
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "name",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "String",
+              },
+            },
+          },
         },
         {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "PENDING"
-          }
-        }
-      ]
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "role",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "String",
+              },
+            },
+          },
+        },
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "status",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "String",
+              },
+            },
+          },
+        },
+      ],
     },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "User"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "name"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "role"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "status"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "kind": "ObjectTypeExtension",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "user"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "User"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "users"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "ListType",
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "User"
-                  }
-                }
-              }
-            }
-          }
-        }
-      ]
-    }
-  ]
+  ],
 } as DocumentNode;

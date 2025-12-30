@@ -1,32 +1,26 @@
+import { defineMutation, defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
 import type { User } from "../types/user.js";
 
-export type QueryResolver = {
-  users: () => User[];
-};
+export const users = defineQuery<NoArgs, User[]>(() => [
+  { id: "1", name: "Alice", email: "alice@example.com" },
+  { id: "2", name: "Bob", email: "bob@example.com" },
+]);
 
-export const queryResolver: QueryResolver = {
-  users: () => [
-    { id: "1", name: "Alice", email: "alice@example.com" },
-    { id: "2", name: "Bob", email: "bob@example.com" },
-  ],
-};
-
-export type MutationResolver = {
-  createUser: (args: { name: string; email: string }) => User;
-  updateUser: (args: { id: string; name: string | null }) => User | null;
-  deleteUser: (args: { id: string }) => boolean;
-};
-
-export const mutationResolver: MutationResolver = {
-  createUser: (args) => ({
+export const createUser = defineMutation<{ name: string; email: string }, User>(
+  (_root, args) => ({
     id: crypto.randomUUID(),
     name: args.name,
     email: args.email,
   }),
-  updateUser: (args) => ({
-    id: args.id,
-    name: args.name ?? "Unknown",
-    email: "updated@example.com",
-  }),
-  deleteUser: () => true,
-};
+);
+
+export const updateUser = defineMutation<
+  { id: string; name: string | null },
+  User | null
+>((_root, args) => ({
+  id: args.id,
+  name: args.name ?? "Unknown",
+  email: "updated@example.com",
+}));
+
+export const deleteUser = defineMutation<{ id: string }, boolean>(() => true);

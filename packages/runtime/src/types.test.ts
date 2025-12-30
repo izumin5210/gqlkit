@@ -6,18 +6,18 @@
  * Runtime assertions verify the tests are actually executed.
  */
 
-import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import type { GraphQLResolveInfo } from "graphql";
 import {
-  defineQuery,
-  defineMutation,
   defineField,
-  type NoArgs,
-  type GqlkitContext,
-  type QueryResolverFn,
-  type MutationResolverFn,
+  defineMutation,
+  defineQuery,
   type FieldResolverFn,
+  type GqlkitContext,
+  type MutationResolverFn,
+  type NoArgs,
+  type QueryResolverFn,
 } from "./index.js";
 
 type User = {
@@ -55,7 +55,7 @@ describe("Type inference tests", () => {
   describe("defineQuery type inference", () => {
     it("should infer return type correctly for sync resolver", () => {
       const users = defineQuery<NoArgs, User[]>(
-        (_root, _args, _ctx, _info) => []
+        (_root, _args, _ctx, _info) => [],
       );
 
       const result: QueryResolverFn<NoArgs, User[]> = users;
@@ -63,8 +63,8 @@ describe("Type inference tests", () => {
     });
 
     it("should infer return type correctly for async resolver", () => {
-      const users = defineQuery<NoArgs, User[]>(async (_root, _args, _ctx, _info) =>
-        Promise.resolve([])
+      const users = defineQuery<NoArgs, User[]>(
+        async (_root, _args, _ctx, _info) => Promise.resolve([]),
       );
 
       const result: QueryResolverFn<NoArgs, User[]> = users;
@@ -77,7 +77,7 @@ describe("Type inference tests", () => {
         (_root, args, _ctx, _info) => {
           const _id: string = args.id;
           return null;
-        }
+        },
       );
 
       const result: QueryResolverFn<GetUserArgs, User | null> = user;
@@ -85,12 +85,10 @@ describe("Type inference tests", () => {
     });
 
     it("should enforce root parameter type as undefined", () => {
-      defineQuery<NoArgs, string>(
-        (root, _args, _ctx, _info) => {
-          const _r: undefined = root;
-          return "ok";
-        }
-      );
+      defineQuery<NoArgs, string>((root, _args, _ctx, _info) => {
+        const _r: undefined = root;
+        return "ok";
+      });
       assert.ok(true);
     });
   });
@@ -102,7 +100,7 @@ describe("Type inference tests", () => {
           id: "new",
           name: args.input.name,
           email: args.input.email,
-        })
+        }),
       );
 
       const result: MutationResolverFn<{ input: CreateUserInput }, User> =
@@ -117,7 +115,7 @@ describe("Type inference tests", () => {
             id: "new",
             name: args.input.name,
             email: args.input.email,
-          })
+          }),
       );
 
       const result: MutationResolverFn<{ input: CreateUserInput }, User> =
@@ -127,7 +125,7 @@ describe("Type inference tests", () => {
 
     it("should support NoArgs for mutations without args", () => {
       const deleteAllUsers = defineMutation<NoArgs, boolean>(
-        (_root, _args, _ctx, _info) => true
+        (_root, _args, _ctx, _info) => true,
       );
 
       const result: MutationResolverFn<NoArgs, boolean> = deleteAllUsers;
@@ -142,7 +140,7 @@ describe("Type inference tests", () => {
           const _name: string = parent.name;
           const _email: string = parent.email;
           return parent.name;
-        }
+        },
       );
 
       const result: FieldResolverFn<User, NoArgs, string> = fullName;
@@ -156,7 +154,7 @@ describe("Type inference tests", () => {
           const _limit: number = args.limit;
           const _authorId: string = parent.id;
           return [];
-        }
+        },
       );
 
       const result: FieldResolverFn<User, PostsArgs, Post[]> = posts;
@@ -166,7 +164,7 @@ describe("Type inference tests", () => {
     it("should infer return type correctly for async resolver", () => {
       const posts = defineField<User, NoArgs, Post[]>(
         async (parent, _args, _ctx, _info) =>
-          Promise.resolve([{ id: "1", title: "Post", authorId: parent.id }])
+          Promise.resolve([{ id: "1", title: "Post", authorId: parent.id }]),
       );
 
       const result: FieldResolverFn<User, NoArgs, Post[]> = posts;
@@ -175,7 +173,7 @@ describe("Type inference tests", () => {
 
     it("should support nullable return types", () => {
       const avatar = defineField<User, NoArgs, string | null>(
-        (_parent, _args, _ctx, _info) => null
+        (_parent, _args, _ctx, _info) => null,
       );
 
       const result: FieldResolverFn<User, NoArgs, string | null> = avatar;
@@ -189,7 +187,7 @@ describe("Type inference tests", () => {
         root,
         args,
         context,
-        info
+        info,
       ) => {
         const _root: undefined = root;
         const _id: string = args.id;
@@ -205,7 +203,7 @@ describe("Type inference tests", () => {
         root,
         args,
         context,
-        info
+        info,
       ) => {
         const _root: undefined = root;
         const _name: string = args.name;
@@ -221,7 +219,7 @@ describe("Type inference tests", () => {
         parent,
         args,
         context,
-        info
+        info,
       ) => {
         const _user: User = parent;
         const _format: string = args.format;

@@ -55,6 +55,7 @@ Static code generation tool that analyzes TypeScript source files and produces G
 3. **gunshi for CLI**: Provides type-safe command definitions with built-in help generation
 4. **No decorators**: Design decision to keep schema generation based purely on type analysis
 5. **graphql-tools compatible output**: Generated resolvers work directly with `makeExecutableSchema`
+6. **Define API**: Explicit resolver definition using `defineQuery`, `defineMutation`, `defineField` from `@gqlkit-ts/runtime` for clear, type-safe resolver definitions
 
 ---
 _Document standards and patterns, not every dependency_

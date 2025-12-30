@@ -11,7 +11,11 @@
       "import": "./dist/index.js"
     }
   },
-  "keywords": ["graphql", "resolver", "typescript"],
+  "keywords": [
+    "graphql",
+    "resolver",
+    "typescript"
+  ],
   "author": "izumin5210 <m@izum.in>",
   "license": "MIT",
   "scripts": {

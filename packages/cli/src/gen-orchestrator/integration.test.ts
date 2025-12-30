@@ -48,20 +48,19 @@ describe("Integration Tests", () => {
       await writeFile(
         join(resolversDir, "query.ts"),
         `
+          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
           interface User { id: string; name: string; email: string | null; }
           interface Post { id: string; title: string; content: string; }
 
-          export type QueryResolver = {
-            user: (args: { id: string }) => User | null;
-            users: () => User[];
-            post: (args: { id: string }) => Post | null;
-          };
-
-          export const queryResolver: QueryResolver = {
-            user: (args) => ({ id: args.id, name: "test", email: null }),
-            users: () => [],
-            post: (args) => ({ id: args.id, title: "test", content: "test" }),
-          };
+          export const user = defineQuery<{ id: string }, User | null>(
+            function(_root, args) { return { id: args.id, name: "test", email: null }; }
+          );
+          export const users = defineQuery<NoArgs, User[]>(
+            function() { return []; }
+          );
+          export const post = defineQuery<{ id: string }, Post | null>(
+            function(_root, args) { return { id: args.id, title: "test", content: "test" }; }
+          );
         `,
         "utf-8",
       );
@@ -69,16 +68,13 @@ describe("Integration Tests", () => {
       await writeFile(
         join(resolversDir, "user.ts"),
         `
+          import { defineField, type NoArgs } from "@gqlkit-ts/runtime";
           interface User { id: string; name: string; email: string | null; }
           interface Post { id: string; title: string; content: string; }
 
-          export type UserResolver = {
-            posts: (parent: User) => Post[];
-          };
-
-          export const userResolver: UserResolver = {
-            posts: (parent) => [],
-          };
+          export const posts = defineField<User, NoArgs, Post[]>(
+            function() { return []; }
+          );
         `,
         "utf-8",
       );
@@ -130,9 +126,9 @@ describe("Integration Tests", () => {
       await writeFile(
         join(resolversDir, "query.ts"),
         `
+          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
           interface User { id: string; }
-          export type QueryResolver = { user: () => User };
-          export const queryResolver: QueryResolver = { user: () => ({ id: "1" }) };
+          export const user = defineQuery<NoArgs, User>(function() { return { id: "1" }; });
         `,
         "utf-8",
       );
@@ -173,13 +169,11 @@ describe("Integration Tests", () => {
       await writeFile(
         join(resolversDir, "mutation.ts"),
         `
+          import { defineMutation } from "@gqlkit-ts/runtime";
           interface User { id: string; name: string; }
-          export type MutationResolver = {
-            createUser: (args: { name: string }) => User;
-          };
-          export const mutationResolver: MutationResolver = {
-            createUser: (args) => ({ id: "1", name: args.name }),
-          };
+          export const createUser = defineMutation<{ name: string }, User>(
+            function(_root, args) { return { id: "1", name: args.name }; }
+          );
         `,
         "utf-8",
       );
@@ -187,9 +181,9 @@ describe("Integration Tests", () => {
       await writeFile(
         join(resolversDir, "query.ts"),
         `
+          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
           interface User { id: string; name: string; }
-          export type QueryResolver = { users: () => User[] };
-          export const queryResolver: QueryResolver = { users: () => [] };
+          export const users = defineQuery<NoArgs, User[]>(function() { return []; });
         `,
         "utf-8",
       );
@@ -222,9 +216,9 @@ describe("Integration Tests", () => {
       await writeFile(
         join(resolversDir, "query.ts"),
         `
-          export type QueryResolver = { user: () => User };
-          export const queryResolver: QueryResolver = { user: () => ({} as User) };
+          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
           interface User { id: string; }
+          export const user = defineQuery<NoArgs, User>(function() { return { id: "1" }; });
         `,
         "utf-8",
       );
@@ -267,79 +261,6 @@ describe("Integration Tests", () => {
       assert.ok(
         result.diagnostics.some((d) => d.code === "DIRECTORY_NOT_FOUND"),
       );
-    });
-
-    it("should collect diagnostics for missing resolver value", async () => {
-      const typesDir = join(testDir, "src/gql/types");
-      const resolversDir = join(testDir, "src/gql/resolvers");
-
-      await mkdir(typesDir, { recursive: true });
-      await mkdir(resolversDir, { recursive: true });
-
-      await writeFile(
-        join(typesDir, "user.ts"),
-        "export interface User { id: string; }",
-        "utf-8",
-      );
-
-      await writeFile(
-        join(resolversDir, "query.ts"),
-        `
-          interface User { id: string; }
-          export type QueryResolver = { user: () => User };
-        `,
-        "utf-8",
-      );
-
-      const config: GenerationConfig = {
-        cwd: testDir,
-        typesDir,
-        resolversDir,
-        outputDir: join(testDir, "src/gqlkit/generated"),
-      };
-
-      const result = await executeGeneration(config);
-
-      assert.strictEqual(result.success, false);
-      assert.ok(
-        result.diagnostics.some((d) => d.code === "MISSING_RESOLVER_VALUE"),
-      );
-    });
-
-    it("should not write files when there are errors", async () => {
-      const typesDir = join(testDir, "src/gql/types");
-      const resolversDir = join(testDir, "src/gql/resolvers");
-      const outputDir = join(testDir, "src/gqlkit/generated");
-
-      await mkdir(typesDir, { recursive: true });
-      await mkdir(resolversDir, { recursive: true });
-
-      await writeFile(
-        join(typesDir, "user.ts"),
-        "export interface User { id: string; }",
-        "utf-8",
-      );
-
-      await writeFile(
-        join(resolversDir, "query.ts"),
-        `
-          interface User { id: string; }
-          export type QueryResolver = { user: () => User };
-        `,
-        "utf-8",
-      );
-
-      const config: GenerationConfig = {
-        cwd: testDir,
-        typesDir,
-        resolversDir,
-        outputDir,
-      };
-
-      const result = await executeGeneration(config);
-
-      assert.strictEqual(result.success, false);
-      assert.strictEqual(result.filesWritten.length, 0);
     });
   });
 });

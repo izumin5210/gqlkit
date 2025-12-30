@@ -21,12 +21,8 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "query.ts"),
         `
-        export type QueryResolver = {
-          hello: () => string;
-        };
-        export const queryResolver: QueryResolver = {
-          hello: () => "world",
-        };
+        import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+        export const hello = defineQuery<NoArgs, string>(function() { return "world"; });
         `,
       );
 
@@ -43,37 +39,27 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "resolvers", "query.ts"),
         `
-        export type QueryResolver = {
-          users: () => string[];
-        };
-        export const queryResolver: QueryResolver = {
-          users: () => [],
-        };
+        import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+        export const users = defineQuery<NoArgs, string[]>(function() { return []; });
         `,
       );
 
       await writeFile(
         join(tempDir, "resolvers", "mutation.ts"),
         `
-        export type MutationResolver = {
-          createUser: () => string;
-        };
-        export const mutationResolver: MutationResolver = {
-          createUser: () => "user-id",
-        };
+        import { defineMutation, type NoArgs } from "@gqlkit-ts/runtime";
+        export const createUser = defineMutation<NoArgs, string>(function() { return "user-id"; });
         `,
       );
 
       await writeFile(
         join(tempDir, "resolvers", "user.ts"),
         `
+        import { defineField, type NoArgs } from "@gqlkit-ts/runtime";
         interface User { id: string; firstName: string; lastName: string; }
-        export type UserResolver = {
-          fullName: (parent: User) => string;
-        };
-        export const userResolver: UserResolver = {
-          fullName: (parent) => parent.firstName + " " + parent.lastName,
-        };
+        export const fullName = defineField<User, NoArgs, string>(
+          function(parent) { return parent.firstName + " " + parent.lastName; }
+        );
         `,
       );
 
@@ -107,34 +93,6 @@ describe("extractResolvers", () => {
       assert.strictEqual(result.typeExtensions.length, 0);
       assert.strictEqual(result.diagnostics.errors.length, 0);
     });
-
-    it("should return partial results with errors", async () => {
-      await writeFile(
-        join(tempDir, "query.ts"),
-        `
-        export type QueryResolver = {
-          hello: () => string;
-        };
-        export const queryResolver: QueryResolver = {
-          hello: () => "world",
-        };
-        `,
-      );
-
-      await writeFile(
-        join(tempDir, "orphan.ts"),
-        `
-        export const orphanResolver = {
-          missing: () => "no type",
-        };
-        `,
-      );
-
-      const result = await extractResolvers({ directory: tempDir });
-
-      assert.strictEqual(result.queryFields.fields.length, 1);
-      assert.ok(result.diagnostics.errors.length > 0);
-    });
   });
 
   describe("output structure (Requirement 7.1, 7.2, 7.3)", () => {
@@ -142,25 +100,11 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "all.ts"),
         `
-        export type QueryResolver = {
-          query: () => string;
-        };
-        export const queryResolver: QueryResolver = {
-          query: () => "q",
-        };
-        export type MutationResolver = {
-          mutation: () => string;
-        };
-        export const mutationResolver: MutationResolver = {
-          mutation: () => "m",
-        };
+        import { defineQuery, defineMutation, defineField, type NoArgs } from "@gqlkit-ts/runtime";
         interface User { id: string; }
-        export type UserResolver = {
-          name: (parent: User) => string;
-        };
-        export const userResolver: UserResolver = {
-          name: (parent) => "user",
-        };
+        export const query = defineQuery<NoArgs, string>(function() { return "q"; });
+        export const mutation = defineMutation<NoArgs, string>(function() { return "m"; });
+        export const name = defineField<User, NoArgs, string>(function() { return "user"; });
         `,
       );
 
@@ -176,12 +120,8 @@ describe("extractResolvers", () => {
       await writeFile(
         filePath,
         `
-        export type QueryResolver = {
-          hello: () => string;
-        };
-        export const queryResolver: QueryResolver = {
-          hello: () => "world",
-        };
+        import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+        export const hello = defineQuery<NoArgs, string>(function() { return "world"; });
         `,
       );
 
@@ -195,15 +135,6 @@ describe("extractResolvers", () => {
     });
 
     it("should separate errors and warnings in diagnostics", async () => {
-      await writeFile(
-        join(tempDir, "orphan.ts"),
-        `
-        export const orphanResolver = {
-          missing: () => "no type",
-        };
-        `,
-      );
-
       const result = await extractResolvers({ directory: tempDir });
 
       assert.ok(Array.isArray(result.diagnostics.errors));
@@ -216,17 +147,17 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "zebra.ts"),
         `
+        import { defineField, type NoArgs } from "@gqlkit-ts/runtime";
         interface Zebra { id: string; }
-        export type ZebraResolver = { name: (parent: Zebra) => string; };
-        export const zebraResolver: ZebraResolver = { name: (p) => "z" };
+        export const name = defineField<Zebra, NoArgs, string>(function() { return "z"; });
         `,
       );
       await writeFile(
         join(tempDir, "apple.ts"),
         `
+        import { defineField, type NoArgs } from "@gqlkit-ts/runtime";
         interface Apple { id: string; }
-        export type AppleResolver = { name: (parent: Apple) => string; };
-        export const appleResolver: AppleResolver = { name: (p) => "a" };
+        export const name = defineField<Apple, NoArgs, string>(function() { return "a"; });
         `,
       );
 
@@ -242,12 +173,8 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "query.ts"),
         `
-        export type QueryResolver = {
-          hello: () => string;
-        };
-        export const queryResolver: QueryResolver = {
-          hello: () => "world",
-        };
+        import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+        export const hello = defineQuery<NoArgs, string>(function() { return "world"; });
         `,
       );
 
@@ -264,13 +191,13 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "queries.ts"),
         `
-        import { defineQuery, NoArgs } from "@gqlkit-ts/runtime";
+        import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
         type User = { id: string; name: string };
         export const me = defineQuery<NoArgs, User>(
-          (root, args, ctx, info) => ({ id: "1", name: "Me" })
+          function() { return { id: "1", name: "Me" }; }
         );
         export const users = defineQuery<NoArgs, User[]>(
-          (root, args, ctx, info) => []
+          function() { return []; }
         );
         `,
       );
@@ -292,7 +219,7 @@ describe("extractResolvers", () => {
         type User = { id: string; name: string };
         type CreateUserInput = { name: string };
         export const createUser = defineMutation<{ input: CreateUserInput }, User>(
-          (root, args, ctx, info) => ({ id: "new", name: args.input.name })
+          function(_root, args) { return { id: "new", name: args.input.name }; }
         );
         `,
       );
@@ -308,10 +235,10 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "user-fields.ts"),
         `
-        import { defineField, NoArgs } from "@gqlkit-ts/runtime";
+        import { defineField, type NoArgs } from "@gqlkit-ts/runtime";
         type User = { id: string; firstName: string; lastName: string };
         export const fullName = defineField<User, NoArgs, string>(
-          (parent, args, ctx, info) => parent.firstName + " " + parent.lastName
+          function(parent) { return parent.firstName + " " + parent.lastName; }
         );
         `,
       );
@@ -332,7 +259,7 @@ describe("extractResolvers", () => {
         import { defineQuery } from "@gqlkit-ts/runtime";
         type User = { id: string; name: string };
         export const user = defineQuery<{ id: string }, User | null>(
-          (root, args, ctx, info) => null
+          function() { return null; }
         );
         `,
       );
@@ -345,41 +272,6 @@ describe("extractResolvers", () => {
       assert.ok(result.queryFields.fields[0]?.args);
       assert.strictEqual(result.queryFields.fields[0]?.args.length, 1);
       assert.strictEqual(result.queryFields.fields[0]?.args[0]?.name, "id");
-    });
-  });
-
-  describe("mixed API detection", () => {
-    it("should error when legacy and define* API are mixed", async () => {
-      await writeFile(
-        join(tempDir, "legacy.ts"),
-        `
-        export type QueryResolver = {
-          hello: () => string;
-        };
-        export const queryResolver: QueryResolver = {
-          hello: () => "world",
-        };
-        `,
-      );
-
-      await writeFile(
-        join(tempDir, "define-api.ts"),
-        `
-        import { defineQuery, NoArgs } from "@gqlkit-ts/runtime";
-        type User = { id: string };
-        export const me = defineQuery<NoArgs, User>(
-          (root, args, ctx, info) => ({ id: "1" })
-        );
-        `,
-      );
-
-      const result = await extractResolvers({ directory: tempDir });
-
-      assert.ok(result.diagnostics.errors.length > 0);
-      const mixedApiError = result.diagnostics.errors.find(
-        (e) => e.code === "LEGACY_API_DETECTED",
-      );
-      assert.ok(mixedApiError);
     });
   });
 });

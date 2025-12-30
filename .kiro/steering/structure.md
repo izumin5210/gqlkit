@@ -41,8 +41,8 @@ export const genCommand = define({
 
 - **Files**: kebab-case for commands (e.g., `gen.ts`, `main.ts`)
 - **Exports**: camelCase for values (e.g., `genCommand`, `mainCommand`)
-- **Type exports**: PascalCase (e.g., `QueryResolver`, `UserResolver`)
-- **Resolver values**: camelCase matching type (e.g., `queryResolver` for `QueryResolver`)
+- **Type exports**: PascalCase (e.g., `User`, `Post`)
+- **Resolver exports**: camelCase field names (e.g., `users`, `createUser`, `fullName`)
 
 ## Import Organization
 

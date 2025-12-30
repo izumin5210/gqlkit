@@ -72,9 +72,9 @@ describe("E2E Tests (Task 7)", () => {
       await writeFile(
         join(resolversDir, "query.ts"),
         `
+          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
           interface User { id: string; name: string; }
-          export type QueryResolver = { users: () => User[] };
-          export const queryResolver: QueryResolver = { users: () => [] };
+          export const users = defineQuery<NoArgs, User[]>(function() { return []; });
         `,
         "utf-8",
       );
@@ -102,9 +102,9 @@ describe("E2E Tests (Task 7)", () => {
       await writeFile(
         join(resolversDir, "query.ts"),
         `
+          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
           interface User { id: string; }
-          export type QueryResolver = { user: () => User };
-          export const queryResolver: QueryResolver = { user: () => ({ id: "1" }) };
+          export const user = defineQuery<NoArgs, User>(function() { return { id: "1" }; });
         `,
         "utf-8",
       );
@@ -138,9 +138,9 @@ describe("E2E Tests (Task 7)", () => {
       await writeFile(
         join(resolversDir, "query.ts"),
         `
+          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
           interface User { id: string; name: string; }
-          export type QueryResolver = { users: () => User[] };
-          export const queryResolver: QueryResolver = { users: () => [] };
+          export const users = defineQuery<NoArgs, User[]>(function() { return []; });
         `,
         "utf-8",
       );
@@ -172,36 +172,6 @@ describe("E2E Tests (Task 7)", () => {
       assert.strictEqual(exitCode, 1);
       assert.ok(
         stderr.includes("DIRECTORY_NOT_FOUND") || stderr.includes("error"),
-      );
-    });
-
-    it("should exit with code 1 when there are resolver errors", async () => {
-      const typesDir = join(testDir, "src/gql/types");
-      const resolversDir = join(testDir, "src/gql/resolvers");
-
-      await mkdir(typesDir, { recursive: true });
-      await mkdir(resolversDir, { recursive: true });
-
-      await writeFile(
-        join(typesDir, "user.ts"),
-        "export interface User { id: string; }",
-        "utf-8",
-      );
-
-      await writeFile(
-        join(resolversDir, "query.ts"),
-        `
-          interface User { id: string; }
-          export type QueryResolver = { user: () => User };
-        `,
-        "utf-8",
-      );
-
-      const { exitCode, stderr } = await runCli(testDir);
-
-      assert.strictEqual(exitCode, 1);
-      assert.ok(
-        stderr.includes("MISSING_RESOLVER_VALUE") || stderr.includes("error"),
       );
     });
 

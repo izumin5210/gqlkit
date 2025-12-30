@@ -124,9 +124,7 @@ function convertTypeToTSTypeReference(
 
   if (type.isUnion()) {
     const types = type.types;
-    const hasNull = types.some(
-      (t) => (t.flags & ts.TypeFlags.Null) !== 0,
-    );
+    const hasNull = types.some((t) => (t.flags & ts.TypeFlags.Null) !== 0);
     const hasUndefined = types.some(
       (t) => (t.flags & ts.TypeFlags.Undefined) !== 0,
     );
@@ -146,7 +144,9 @@ function convertTypeToTSTypeReference(
     if (nonNullTypes.length > 1) {
       return {
         kind: "union",
-        members: nonNullTypes.map((t) => convertTypeToTSTypeReference(t, checker)),
+        members: nonNullTypes.map((t) =>
+          convertTypeToTSTypeReference(t, checker),
+        ),
         nullable,
       };
     }
@@ -371,9 +371,9 @@ export function extractDefineApiResolvers(
             ts.isConditionalExpression(initializer) ||
             ts.isBinaryExpression(initializer)
           ) {
-            const hasDefineCall = initializer.getText(sourceFile).match(
-              /define(Query|Mutation|Field)/,
-            );
+            const hasDefineCall = initializer
+              .getText(sourceFile)
+              .match(/define(Query|Mutation|Field)/);
             if (hasDefineCall) {
               const { line, character } =
                 sourceFile.getLineAndCharacterOfPosition(
@@ -411,10 +411,9 @@ export function extractDefineApiResolvers(
         );
 
         if (!typeInfo) {
-          const { line, character } =
-            sourceFile.getLineAndCharacterOfPosition(
-              declaration.name.getStart(sourceFile),
-            );
+          const { line, character } = sourceFile.getLineAndCharacterOfPosition(
+            declaration.name.getStart(sourceFile),
+          );
           diagnostics.push({
             code: "INVALID_DEFINE_CALL",
             message: `Failed to extract type arguments from ${funcName} call for '${fieldName}'`,

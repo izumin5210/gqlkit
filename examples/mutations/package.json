@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "gen": "gqlkit gen",
-    "start": "node --import tsx server.ts",
+    "start": "node --import tsx src/server.ts",
     "dev": "pnpm gen && pnpm start"
   },
   "dependencies": {

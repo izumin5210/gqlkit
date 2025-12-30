@@ -1,5 +1,5 @@
-import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import type { ExtractedTypeInfo } from "../../type-extractor/types/index.js";
 import { resolveParentType } from "./parent-type-resolver.js";
 

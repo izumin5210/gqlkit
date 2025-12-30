@@ -2,25 +2,42 @@ import { createProgramFromFiles } from "../type-extractor/extractor/type-extract
 import type {
   Diagnostic,
   Diagnostics,
+  GraphQLFieldType,
+  SourceLocation,
   TSTypeReference,
 } from "../type-extractor/types/index.js";
-import { analyzeSignatures } from "./analyzer/signature-analyzer.js";
 import {
-  convertToFields,
-  type GraphQLFieldDefinition,
-  type GraphQLInputValue,
-  type MutationFieldDefinitions,
-  type QueryFieldDefinitions,
-  type TypeExtension,
-} from "./converter/field-converter.js";
-import {
-  extractDefineApiResolvers,
   type ArgumentDefinition,
   type DefineApiResolverInfo,
+  extractDefineApiResolvers,
 } from "./extractor/define-api-extractor.js";
-import { validateApiStyleConsistency } from "./extractor/mixed-api-validator.js";
-import { extractResolversFromProgram } from "./extractor/resolver-extractor.js";
 import { scanResolverDirectory } from "./scanner/file-scanner.js";
+
+export interface GraphQLInputValue {
+  readonly name: string;
+  readonly type: GraphQLFieldType;
+}
+
+export interface GraphQLFieldDefinition {
+  readonly name: string;
+  readonly type: GraphQLFieldType;
+  readonly args?: ReadonlyArray<GraphQLInputValue>;
+  readonly sourceLocation: SourceLocation;
+  readonly resolverExportName?: string;
+}
+
+export interface QueryFieldDefinitions {
+  readonly fields: ReadonlyArray<GraphQLFieldDefinition>;
+}
+
+export interface MutationFieldDefinitions {
+  readonly fields: ReadonlyArray<GraphQLFieldDefinition>;
+}
+
+export interface TypeExtension {
+  readonly targetTypeName: string;
+  readonly fields: ReadonlyArray<GraphQLFieldDefinition>;
+}
 
 export interface ExtractResolversOptions {
   readonly directory: string;
@@ -154,9 +171,7 @@ function convertDefineApiToFields(
     const fieldDef: GraphQLFieldDefinition = {
       name: resolver.fieldName,
       type: convertTsTypeToGraphQLType(resolver.returnType),
-      args: resolver.args
-        ? convertArgsToInputValues(resolver.args)
-        : undefined,
+      args: resolver.args ? convertArgsToInputValues(resolver.args) : undefined,
       sourceLocation: {
         file: resolver.sourceFile,
         line: 1,
@@ -213,13 +228,6 @@ export async function extractResolvers(
   }
 
   const program = createProgramFromFiles(scanResult.files);
-  const checker = program.getTypeChecker();
-
-  const legacyExtractionResult = extractResolversFromProgram(
-    program,
-    scanResult.files,
-  );
-  allDiagnostics.push(...legacyExtractionResult.diagnostics);
 
   const defineApiExtractionResult = extractDefineApiResolvers(
     program,
@@ -227,36 +235,11 @@ export async function extractResolvers(
   );
   allDiagnostics.push(...defineApiExtractionResult.diagnostics);
 
-  const mixedApiValidation = validateApiStyleConsistency(
-    legacyExtractionResult,
-    defineApiExtractionResult,
-  );
-
-  if (!mixedApiValidation.valid && mixedApiValidation.diagnostic) {
-    allDiagnostics.push(mixedApiValidation.diagnostic);
-    return createEmptyResult(collectDiagnostics(allDiagnostics));
-  }
-
-  if (defineApiExtractionResult.resolvers.length > 0) {
-    const result = convertDefineApiToFields(defineApiExtractionResult.resolvers);
-    return {
-      queryFields: result.queryFields,
-      mutationFields: result.mutationFields,
-      typeExtensions: result.typeExtensions,
-      diagnostics: collectDiagnostics(allDiagnostics),
-    };
-  }
-
-  const analysisResult = analyzeSignatures(legacyExtractionResult, checker);
-  allDiagnostics.push(...analysisResult.diagnostics);
-
-  const conversionResult = convertToFields(analysisResult);
-  allDiagnostics.push(...conversionResult.diagnostics);
-
+  const result = convertDefineApiToFields(defineApiExtractionResult.resolvers);
   return {
-    queryFields: conversionResult.queryFields,
-    mutationFields: conversionResult.mutationFields,
-    typeExtensions: conversionResult.typeExtensions,
+    queryFields: result.queryFields,
+    mutationFields: result.mutationFields,
+    typeExtensions: result.typeExtensions,
     diagnostics: collectDiagnostics(allDiagnostics),
   };
 }

@@ -1,10 +1,10 @@
-import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import type { GraphQLResolveInfo } from "graphql";
 import {
-  defineQuery,
-  defineMutation,
   defineField,
+  defineMutation,
+  defineQuery,
   type NoArgs,
 } from "./index.js";
 
@@ -23,7 +23,7 @@ describe("@gqlkit-ts/runtime", () => {
         _root: undefined,
         _args: NoArgs,
         _ctx: unknown,
-        _info: GraphQLResolveInfo
+        _info: GraphQLResolveInfo,
       ): User => ({
         id: "1",
         name: "Test User",
@@ -39,7 +39,7 @@ describe("@gqlkit-ts/runtime", () => {
         _root: undefined,
         _args: NoArgs,
         _ctx: unknown,
-        _info: GraphQLResolveInfo
+        _info: GraphQLResolveInfo,
       ): Promise<User> => ({
         id: "1",
         name: "Async User",
@@ -52,7 +52,7 @@ describe("@gqlkit-ts/runtime", () => {
         undefined,
         {},
         {},
-        {} as GraphQLResolveInfo
+        {} as GraphQLResolveInfo,
       );
       assert.deepEqual(resolvedValue, { id: "1", name: "Async User" });
     });
@@ -64,7 +64,7 @@ describe("@gqlkit-ts/runtime", () => {
         _root: undefined,
         args: GetUserArgs,
         _ctx: unknown,
-        _info: GraphQLResolveInfo
+        _info: GraphQLResolveInfo,
       ): User => ({
         id: args.id,
         name: "User",
@@ -83,7 +83,7 @@ describe("@gqlkit-ts/runtime", () => {
         _root: undefined,
         args: { input: CreateUserInput },
         _ctx: unknown,
-        _info: GraphQLResolveInfo
+        _info: GraphQLResolveInfo,
       ): User => ({
         id: "new-id",
         name: args.input.name,
@@ -99,7 +99,7 @@ describe("@gqlkit-ts/runtime", () => {
         _root: undefined,
         _args: NoArgs,
         _ctx: unknown,
-        _info: GraphQLResolveInfo
+        _info: GraphQLResolveInfo,
       ): Promise<User> => ({
         id: "1",
         name: "Deleted User",
@@ -112,7 +112,7 @@ describe("@gqlkit-ts/runtime", () => {
         undefined,
         {},
         {},
-        {} as GraphQLResolveInfo
+        {} as GraphQLResolveInfo,
       );
       assert.deepEqual(resolvedValue, { id: "1", name: "Deleted User" });
     });
@@ -125,7 +125,7 @@ describe("@gqlkit-ts/runtime", () => {
         parent: User,
         _args: NoArgs,
         _ctx: unknown,
-        _info: GraphQLResolveInfo
+        _info: GraphQLResolveInfo,
       ): string => `${parent.firstName} ${parent.lastName}`;
 
       const result = defineField<User, NoArgs, string>(resolver);
@@ -139,10 +139,8 @@ describe("@gqlkit-ts/runtime", () => {
         parent: User,
         _args: NoArgs,
         _ctx: unknown,
-        _info: GraphQLResolveInfo
-      ): Promise<Post[]> => [
-        { id: "1", title: `Post by ${parent.id}` },
-      ];
+        _info: GraphQLResolveInfo,
+      ): Promise<Post[]> => [{ id: "1", title: `Post by ${parent.id}` }];
 
       const result = defineField<User, NoArgs, Post[]>(resolver);
       assert.strictEqual(result, resolver);
@@ -151,7 +149,7 @@ describe("@gqlkit-ts/runtime", () => {
         { id: "user-1" },
         {},
         {},
-        {} as GraphQLResolveInfo
+        {} as GraphQLResolveInfo,
       );
       assert.deepEqual(resolvedValue, [{ id: "1", title: "Post by user-1" }]);
     });
@@ -164,7 +162,7 @@ describe("@gqlkit-ts/runtime", () => {
         _parent: User,
         args: PostsArgs,
         _ctx: unknown,
-        _info: GraphQLResolveInfo
+        _info: GraphQLResolveInfo,
       ): Post[] =>
         Array.from({ length: args.limit }, (_, i) => ({
           id: `${i}`,

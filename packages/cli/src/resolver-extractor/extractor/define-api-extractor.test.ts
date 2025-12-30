@@ -1,11 +1,12 @@
-import { describe, it } from "node:test";
 import assert from "node:assert/strict";
+import { describe, it } from "node:test";
 import ts from "typescript";
 import { extractDefineApiResolvers } from "./define-api-extractor.js";
 
-function createTestProgram(
-  files: Record<string, string>,
-): { program: ts.Program; filePaths: string[] } {
+function createTestProgram(files: Record<string, string>): {
+  program: ts.Program;
+  filePaths: string[];
+} {
   const fileNames = Object.keys(files);
   const compilerHost = ts.createCompilerHost({});
 
@@ -36,13 +37,17 @@ function createTestProgram(
     return files[fileName] ?? ts.sys.readFile(fileName);
   };
 
-  const program = ts.createProgram(fileNames, {
-    target: ts.ScriptTarget.ES2022,
-    module: ts.ModuleKind.NodeNext,
-    moduleResolution: ts.ModuleResolutionKind.Node16,
-    strict: true,
-    noEmit: true,
-  }, compilerHost);
+  const program = ts.createProgram(
+    fileNames,
+    {
+      target: ts.ScriptTarget.ES2022,
+      module: ts.ModuleKind.NodeNext,
+      moduleResolution: ts.ModuleResolutionKind.Node16,
+      strict: true,
+      noEmit: true,
+    },
+    compilerHost,
+  );
 
   return { program, filePaths: fileNames };
 }

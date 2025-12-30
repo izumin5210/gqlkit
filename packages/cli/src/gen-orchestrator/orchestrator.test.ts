@@ -3,11 +3,7 @@ import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, it } from "node:test";
-import {
-  executeGeneration,
-  type GenerationConfig,
-  type GenerationResult,
-} from "./orchestrator.js";
+import { executeGeneration, type GenerationConfig } from "./orchestrator.js";
 
 describe("GenCommandOrchestrator", () => {
   let testDir: string;
@@ -85,13 +81,9 @@ describe("GenCommandOrchestrator", () => {
       });
       await setupResolversDir({
         "query.ts": `
-          export type QueryResolver = {
-            users: () => User[];
-          };
-          export const queryResolver: QueryResolver = {
-            users: () => [],
-          };
+          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
           interface User { id: string; name: string; }
+          export const users = defineQuery<NoArgs, User[]>(function() { return []; });
         `,
       });
 
@@ -114,13 +106,9 @@ describe("GenCommandOrchestrator", () => {
       });
       await setupResolversDir({
         "query.ts": `
-          export type QueryResolver = {
-            user: () => User;
-          };
-          export const queryResolver: QueryResolver = {
-            user: () => ({} as User),
-          };
+          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
           interface User { id: string; }
+          export const user = defineQuery<NoArgs, User>(function() { return {} as User; });
         `,
       });
 
@@ -144,13 +132,9 @@ describe("GenCommandOrchestrator", () => {
       });
       await setupResolversDir({
         "query.ts": `
-          export type QueryResolver = {
-            users: () => User[];
-          };
-          export const queryResolver: QueryResolver = {
-            users: () => [],
-          };
+          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
           interface User { id: string; name: string; }
+          export const users = defineQuery<NoArgs, User[]>(function() { return []; });
         `,
       });
 
@@ -170,28 +154,6 @@ describe("GenCommandOrchestrator", () => {
   });
 
   describe("error handling and exit code (Task 4.4)", () => {
-    it("should return success=false when there are errors", async () => {
-      await setupTypesDir({});
-      await setupResolversDir({
-        "query.ts": `
-          export type QueryResolver = {
-            user: () => User;
-          };
-        `,
-      });
-
-      const config: GenerationConfig = {
-        cwd: testDir,
-        typesDir: join(testDir, "src/gql/types"),
-        resolversDir: join(testDir, "src/gql/resolvers"),
-        outputDir: join(testDir, "generated"),
-      };
-
-      const result = await executeGeneration(config);
-
-      assert.strictEqual(result.success, false);
-    });
-
     it("should skip file output when there are critical errors", async () => {
       const config: GenerationConfig = {
         cwd: testDir,
@@ -212,13 +174,9 @@ describe("GenCommandOrchestrator", () => {
       });
       await setupResolversDir({
         "query.ts": `
-          export type QueryResolver = {
-            user: () => User;
-          };
-          export const queryResolver: QueryResolver = {
-            user: () => ({} as User),
-          };
+          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
           interface User { id: string; }
+          export const user = defineQuery<NoArgs, User>(function() { return { id: "1" }; });
         `,
       });
 

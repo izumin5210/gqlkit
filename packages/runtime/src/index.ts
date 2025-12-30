@@ -27,9 +27,8 @@ declare global {
  * If user has extended Gqlkit.Context, uses that type.
  * Otherwise falls back to `unknown`.
  */
-export type GqlkitContext = Gqlkit.Context extends Record<string, never>
-  ? unknown
-  : Gqlkit.Context;
+export type GqlkitContext =
+  Gqlkit.Context extends Record<string, never> ? unknown : Gqlkit.Context;
 
 /**
  * Type alias representing no arguments for a resolver.
@@ -46,7 +45,7 @@ export type QueryResolverFn<TArgs, TResult> = (
   root: undefined,
   args: TArgs,
   context: GqlkitContext,
-  info: GraphQLResolveInfo
+  info: GraphQLResolveInfo,
 ) => TResult | Promise<TResult>;
 
 /**
@@ -58,7 +57,7 @@ export type MutationResolverFn<TArgs, TResult> = (
   root: undefined,
   args: TArgs,
   context: GqlkitContext,
-  info: GraphQLResolveInfo
+  info: GraphQLResolveInfo,
 ) => TResult | Promise<TResult>;
 
 /**
@@ -71,7 +70,7 @@ export type FieldResolverFn<TParent, TArgs, TResult> = (
   parent: TParent,
   args: TArgs,
   context: GqlkitContext,
-  info: GraphQLResolveInfo
+  info: GraphQLResolveInfo,
 ) => TResult | Promise<TResult>;
 
 /**
@@ -95,7 +94,7 @@ export type FieldResolverFn<TParent, TArgs, TResult> = (
  * ```
  */
 export function defineQuery<TArgs, TResult>(
-  resolver: QueryResolverFn<TArgs, TResult>
+  resolver: QueryResolverFn<TArgs, TResult>,
 ): QueryResolverFn<TArgs, TResult> {
   return resolver;
 }
@@ -117,7 +116,7 @@ export function defineQuery<TArgs, TResult>(
  * ```
  */
 export function defineMutation<TArgs, TResult>(
-  resolver: MutationResolverFn<TArgs, TResult>
+  resolver: MutationResolverFn<TArgs, TResult>,
 ): MutationResolverFn<TArgs, TResult> {
   return resolver;
 }
@@ -144,7 +143,7 @@ export function defineMutation<TArgs, TResult>(
  * ```
  */
 export function defineField<TParent, TArgs, TResult>(
-  resolver: FieldResolverFn<TParent, TArgs, TResult>
+  resolver: FieldResolverFn<TParent, TArgs, TResult>,
 ): FieldResolverFn<TParent, TArgs, TResult> {
   return resolver;
 }

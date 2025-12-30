@@ -28,16 +28,16 @@ gqlkit relies on strict conventions to enable deterministic schema generation wi
    - Field nullability and list-ness inferred from TypeScript types
    - Only exports from `src/gql/types` are considered
 
-3. **Resolver naming conventions** (strict 1:1 mapping):
-   - Type: `QueryResolver` → Value: `queryResolver` → GraphQL: `Query`
-   - Type: `MutationResolver` → Value: `mutationResolver` → GraphQL: `Mutation`
-   - Type: `<TypeName>Resolver` → Value: `<typeName>Resolver` → GraphQL: `<TypeName>`
-   - Example: `UserResolver` type + `userResolver` value → User type resolvers
+3. **Define API for resolvers** (using `@gqlkit-ts/runtime`):
+   - `defineQuery<Args, Return>(resolver)` - Define Query field resolvers
+   - `defineMutation<Args, Return>(resolver)` - Define Mutation field resolvers
+   - `defineField<Parent, Args, Return>(resolver)` - Define type field resolvers
+   - Export name becomes the GraphQL field name
 
 4. **Resolver function signatures**:
-   - Root fields (Query/Mutation): `field: () => Return`
-   - Object fields: `field: (parent: Parent) => Return`
-   - Later: support for args, context, info parameters
+   - Query/Mutation: `(root, args, ctx, info) => Return`
+   - Field: `(parent, args, ctx, info) => Return`
+   - Use `NoArgs` type for fields without arguments
 
 ### Code Generation Flow
 
