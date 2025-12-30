@@ -7,6 +7,12 @@ settings:
 importers:
 
   .:
+    devDependencies:
+      '@biomejs/biome':
+        specifier: 2.3.10
+        version: 2.3.10
+
+  packages/cli:
     dependencies:
       graphql:
         specifier: ^16.12.0
@@ -15,12 +21,6 @@ importers:
         specifier: ^0.27.5
         version: 0.27.5
     devDependencies:
-      '@biomejs/biome':
-        specifier: 2.3.10
-        version: 2.3.10
-      '@gunshi/docs':
-        specifier: 0.27.5
-        version: 0.27.5
       '@types/node':
         specifier: ^22.19.3
         version: 22.19.3
@@ -32,9 +32,6 @@ importers:
         version: 5.9.3
 
 packages:
-
-  '@antfu/install-pkg@1.1.0':
-    resolution: {integrity: sha512-MGQsmw10ZyI+EJo45CdSER4zEb+p31LpDAFp2Z3gkSd1yqVZGi0Ebx++YTEMonJy4oChEMLsxZ64j8FH6sSqtQ==}
 
   '@biomejs/biome@2.3.10':
     resolution: {integrity: sha512-/uWSUd1MHX2fjqNLHNL6zLYWBbrJeG412/8H7ESuK8ewoRoMPUgHDebqKrPTx/5n6f17Xzqc9hdg3MEqA5hXnQ==}
@@ -245,10 +242,6 @@ packages:
     cpu: [x64]
     os: [win32]
 
-  '@gunshi/docs@0.27.5':
-    resolution: {integrity: sha512-u2m4FtssSli8Z3xWxICG0nGQpycPaxEs3/zWkvqLNAPAiHQlWg/Sbr7/RIO3A6hmf2BXG0I2wKN75SHlL1PIkw==}
-    hasBin: true
-
   '@types/node@22.19.3':
     resolution: {integrity: sha512-1N9SBnWYOJTrNZCdh/yJE+t910Y128BoyY+zBLWhL3r0TYzlTmFdXrPwHL9DyFZmlEXNQQolTZh3KHV31QDhyA==}
 
@@ -277,15 +270,8 @@ packages:
     resolution: {integrity: sha512-ExdnmI90hQ/eR1wnUc5rVom+K16F1hSpbYrplpt6rrJhXLprVGK9/E63bk7Rju27hAqc3WvpCa8PeY95R165fw==}
     engines: {node: '>= 20'}
 
-  package-manager-detector@1.6.0:
-    resolution: {integrity: sha512-61A5ThoTiDG/C8s8UMZwSorAGwMJ0ERVGj2OjoW5pAalsNOg15+iQiPzrLJ4jhZ1HJzmC2PIHT2oEiH3R5fzNA==}
-
   resolve-pkg-maps@1.0.0:
     resolution: {integrity: sha512-seS2Tj26TBVOC2NIc2rOe2y2ZO7efxITtLZcGSOnHHNOQ7CkiUBfw0Iw2ck6xkIhPwLhKNLS8BO+hEpngQlqzw==}
-
-  tinyexec@1.0.2:
-    resolution: {integrity: sha512-W/KYk+NFhkmsYpuHq5JykngiOCnxeVL8v8dFnqxSD8qEEdRfXk1SDM6JzNqcERbcGYj9tMrDQBYV9cjgnunFIg==}
-    engines: {node: '>=18'}
 
   tsx@4.21.0:
     resolution: {integrity: sha512-5C1sg4USs1lfG0GFb2RLXsdpXqBSEhAaA/0kPL01wxzpMqLILNxIxIOKiILz+cdg/pLnOUxFYOR5yhHU666wbw==}
@@ -301,11 +287,6 @@ packages:
     resolution: {integrity: sha512-iwDZqg0QAGrg9Rav5H4n0M64c3mkR59cJ6wQp+7C4nI0gsmExaedaYLNO44eT4AtBBwjbTiGPMlt2Md0T9H9JQ==}
 
 snapshots:
-
-  '@antfu/install-pkg@1.1.0':
-    dependencies:
-      package-manager-detector: 1.6.0
-      tinyexec: 1.0.2
 
   '@biomejs/biome@2.3.10':
     optionalDependencies:
@@ -420,11 +401,6 @@ snapshots:
   '@esbuild/win32-x64@0.27.2':
     optional: true
 
-  '@gunshi/docs@0.27.5':
-    dependencies:
-      '@antfu/install-pkg': 1.1.0
-      tinyexec: 1.0.2
-
   '@types/node@22.19.3':
     dependencies:
       undici-types: 6.21.0
@@ -473,11 +449,7 @@ snapshots:
     dependencies:
       args-tokens: 0.23.0
 
-  package-manager-detector@1.6.0: {}
-
   resolve-pkg-maps@1.0.0: {}
-
-  tinyexec@1.0.2: {}
 
   tsx@4.21.0:
     dependencies:

@@ -1,30 +1,13 @@
 {
   "name": "gqlkit",
-  "version": "0.0.1",
-  "description": "gqlkit is a toolkit for building GraphQL servers by following simple TypeScript conventions. Write types and resolvers, and you get a complete GraphQL API — schema included.",
-  "type": "module",
-  "main": "dist/index.js",
-  "bin": {
-    "gqlkit": "./dist/cli.js"
-  },
-  "keywords": [],
-  "author": "izumin5210 <m@izum.in>",
-  "license": "MIT",
+  "private": true,
   "packageManager": "pnpm@10.26.1",
   "scripts": {
-    "build": "tsc --build",
+    "build": "pnpm -r build",
     "check": "biome check --write",
-    "test": "node --import tsx --test 'src/**/*.test.ts'"
-  },
-  "dependencies": {
-    "graphql": "^16.12.0",
-    "gunshi": "^0.27.5"
+    "test": "pnpm -r test"
   },
   "devDependencies": {
-    "@biomejs/biome": "2.3.10",
-    "@gunshi/docs": "0.27.5",
-    "@types/node": "^22.19.3",
-    "tsx": "^4.21.0",
-    "typescript": "5.9.3"
+    "@biomejs/biome": "2.3.10"
   }
 }
