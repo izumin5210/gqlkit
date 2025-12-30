@@ -806,5 +806,157 @@ describe("ResultIntegrator", () => {
         assert.strictEqual(result.hasErrors, false);
       });
     });
+
+    describe("resolverExportName propagation", () => {
+      it("should propagate resolverExportName for Query fields from Define API", () => {
+        const typesResult: ExtractTypesResult = {
+          types: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              {
+                name: "users",
+                type: { typeName: "User", nullable: false, list: true },
+                sourceLocation: {
+                  file: "/path/to/query.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "users",
+              },
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const result = integrate(typesResult, resolversResult);
+
+        const queryExtension = result.typeExtensions.find(
+          (t) => t.targetTypeName === "Query",
+        );
+        assert.ok(queryExtension);
+        assert.strictEqual(queryExtension.fields[0]?.resolverExportName, "users");
+      });
+
+      it("should propagate resolverExportName for Mutation fields from Define API", () => {
+        const typesResult: ExtractTypesResult = {
+          types: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: {
+            fields: [
+              {
+                name: "createUser",
+                type: { typeName: "User", nullable: false, list: false },
+                sourceLocation: {
+                  file: "/path/to/mutation.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "createUser",
+              },
+            ],
+          },
+          typeExtensions: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const result = integrate(typesResult, resolversResult);
+
+        const mutationExtension = result.typeExtensions.find(
+          (t) => t.targetTypeName === "Mutation",
+        );
+        assert.ok(mutationExtension);
+        assert.strictEqual(mutationExtension.fields[0]?.resolverExportName, "createUser");
+      });
+
+      it("should propagate resolverExportName for field resolvers from Define API", () => {
+        const typesResult: ExtractTypesResult = {
+          types: [
+            {
+              name: "User",
+              kind: "Object",
+              fields: [
+                {
+                  name: "id",
+                  type: { typeName: "ID", nullable: false, list: false },
+                },
+              ],
+              sourceFile: "/path/to/user.ts",
+            },
+          ],
+          diagnostics: { errors: [], warnings: [] },
+        };
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: { fields: [] },
+          typeExtensions: [
+            {
+              targetTypeName: "User",
+              fields: [
+                {
+                  name: "posts",
+                  type: { typeName: "Post", nullable: false, list: true },
+                  sourceLocation: {
+                    file: "/path/to/user-resolver.ts",
+                    line: 1,
+                    column: 1,
+                  },
+                  resolverExportName: "posts",
+                },
+              ],
+            },
+          ],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const result = integrate(typesResult, resolversResult);
+
+        const userExtension = result.typeExtensions.find(
+          (t) => t.targetTypeName === "User",
+        );
+        assert.ok(userExtension);
+        assert.strictEqual(userExtension.fields[0]?.resolverExportName, "posts");
+      });
+
+      it("should preserve undefined resolverExportName for non-Define API resolvers", () => {
+        const typesResult: ExtractTypesResult = {
+          types: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              {
+                name: "users",
+                type: { typeName: "User", nullable: false, list: true },
+                sourceLocation: {
+                  file: "/path/to/query.ts",
+                  line: 1,
+                  column: 1,
+                },
+              },
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const result = integrate(typesResult, resolversResult);
+
+        const queryExtension = result.typeExtensions.find(
+          (t) => t.targetTypeName === "Query",
+        );
+        assert.ok(queryExtension);
+        assert.strictEqual(queryExtension.fields[0]?.resolverExportName, undefined);
+      });
+    });
   });
 });
