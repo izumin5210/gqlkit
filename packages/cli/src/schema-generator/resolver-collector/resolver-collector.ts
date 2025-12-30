@@ -1,4 +1,5 @@
 import type {
+  ExtensionField,
   IntegratedResult,
   TypeExtension,
 } from "../integrator/result-integrator.js";
@@ -7,6 +8,7 @@ export interface FieldResolver {
   readonly fieldName: string;
   readonly sourceFile: string;
   readonly resolverValueName: string;
+  readonly isDirectExport: boolean;
 }
 
 export interface TypeResolvers {
@@ -23,14 +25,29 @@ function getResolverValueName(typeName: string): string {
   return `${typeName.charAt(0).toLowerCase()}${typeName.slice(1)}Resolver`;
 }
 
-function collectFieldResolvers(ext: TypeExtension): FieldResolver[] {
-  const resolverValueName = getResolverValueName(ext.targetTypeName);
+function collectFieldResolver(
+  field: ExtensionField,
+  fallbackResolverValueName: string,
+): FieldResolver {
+  const isDirectExport = field.resolverExportName !== undefined;
+  const resolverValueName = isDirectExport
+    ? field.resolverExportName!
+    : fallbackResolverValueName;
 
-  return ext.fields.map((field) => ({
+  return {
     fieldName: field.name,
     sourceFile: field.resolverSourceFile,
     resolverValueName,
-  }));
+    isDirectExport,
+  };
+}
+
+function collectFieldResolvers(ext: TypeExtension): FieldResolver[] {
+  const fallbackResolverValueName = getResolverValueName(ext.targetTypeName);
+
+  return ext.fields.map((field) =>
+    collectFieldResolver(field, fallbackResolverValueName),
+  );
 }
 
 export function collectResolverInfo(

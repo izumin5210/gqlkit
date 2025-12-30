@@ -258,4 +258,128 @@ describe("extractResolvers", () => {
       assert.ok("warnings" in result.diagnostics);
     });
   });
+
+  describe("define* API support", () => {
+    it("should extract Query resolver from defineQuery", async () => {
+      await writeFile(
+        join(tempDir, "queries.ts"),
+        `
+        import { defineQuery, NoArgs } from "@gqlkit-ts/runtime";
+        type User = { id: string; name: string };
+        export const me = defineQuery<NoArgs, User>(
+          (root, args, ctx, info) => ({ id: "1", name: "Me" })
+        );
+        export const users = defineQuery<NoArgs, User[]>(
+          (root, args, ctx, info) => []
+        );
+        `,
+      );
+
+      const result = await extractResolvers({ directory: tempDir });
+
+      assert.strictEqual(result.diagnostics.errors.length, 0);
+      assert.strictEqual(result.queryFields.fields.length, 2);
+      const fieldNames = result.queryFields.fields.map((f) => f.name);
+      assert.ok(fieldNames.includes("me"));
+      assert.ok(fieldNames.includes("users"));
+    });
+
+    it("should extract Mutation resolver from defineMutation", async () => {
+      await writeFile(
+        join(tempDir, "mutations.ts"),
+        `
+        import { defineMutation } from "@gqlkit-ts/runtime";
+        type User = { id: string; name: string };
+        type CreateUserInput = { name: string };
+        export const createUser = defineMutation<{ input: CreateUserInput }, User>(
+          (root, args, ctx, info) => ({ id: "new", name: args.input.name })
+        );
+        `,
+      );
+
+      const result = await extractResolvers({ directory: tempDir });
+
+      assert.strictEqual(result.diagnostics.errors.length, 0);
+      assert.strictEqual(result.mutationFields.fields.length, 1);
+      assert.strictEqual(result.mutationFields.fields[0]?.name, "createUser");
+    });
+
+    it("should extract type field resolver from defineField", async () => {
+      await writeFile(
+        join(tempDir, "user-fields.ts"),
+        `
+        import { defineField, NoArgs } from "@gqlkit-ts/runtime";
+        type User = { id: string; firstName: string; lastName: string };
+        export const fullName = defineField<User, NoArgs, string>(
+          (parent, args, ctx, info) => parent.firstName + " " + parent.lastName
+        );
+        `,
+      );
+
+      const result = await extractResolvers({ directory: tempDir });
+
+      assert.strictEqual(result.diagnostics.errors.length, 0);
+      assert.strictEqual(result.typeExtensions.length, 1);
+      assert.strictEqual(result.typeExtensions[0]?.targetTypeName, "User");
+      assert.strictEqual(result.typeExtensions[0]?.fields.length, 1);
+      assert.strictEqual(result.typeExtensions[0]?.fields[0]?.name, "fullName");
+    });
+
+    it("should extract resolver with args", async () => {
+      await writeFile(
+        join(tempDir, "queries.ts"),
+        `
+        import { defineQuery } from "@gqlkit-ts/runtime";
+        type User = { id: string; name: string };
+        export const user = defineQuery<{ id: string }, User | null>(
+          (root, args, ctx, info) => null
+        );
+        `,
+      );
+
+      const result = await extractResolvers({ directory: tempDir });
+
+      assert.strictEqual(result.diagnostics.errors.length, 0);
+      assert.strictEqual(result.queryFields.fields.length, 1);
+      assert.strictEqual(result.queryFields.fields[0]?.name, "user");
+      assert.ok(result.queryFields.fields[0]?.args);
+      assert.strictEqual(result.queryFields.fields[0]?.args.length, 1);
+      assert.strictEqual(result.queryFields.fields[0]?.args[0]?.name, "id");
+    });
+  });
+
+  describe("mixed API detection", () => {
+    it("should error when legacy and define* API are mixed", async () => {
+      await writeFile(
+        join(tempDir, "legacy.ts"),
+        `
+        export type QueryResolver = {
+          hello: () => string;
+        };
+        export const queryResolver: QueryResolver = {
+          hello: () => "world",
+        };
+        `,
+      );
+
+      await writeFile(
+        join(tempDir, "define-api.ts"),
+        `
+        import { defineQuery, NoArgs } from "@gqlkit-ts/runtime";
+        type User = { id: string };
+        export const me = defineQuery<NoArgs, User>(
+          (root, args, ctx, info) => ({ id: "1" })
+        );
+        `,
+      );
+
+      const result = await extractResolvers({ directory: tempDir });
+
+      assert.ok(result.diagnostics.errors.length > 0);
+      const mixedApiError = result.diagnostics.errors.find(
+        (e) => e.code === "LEGACY_API_DETECTED",
+      );
+      assert.ok(mixedApiError);
+    });
+  });
 });

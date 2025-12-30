@@ -67,10 +67,12 @@ export function emitResolversCode(
 
   const typeEntries: string[] = [];
   for (const type of resolverInfo.types) {
-    const fieldEntries = type.fields.map(
-      (field) =>
-        `      ${field.fieldName}: ${field.resolverValueName}.${field.fieldName},`,
-    );
+    const fieldEntries = type.fields.map((field) => {
+      if (field.isDirectExport) {
+        return `      ${field.fieldName}: ${field.resolverValueName},`;
+      }
+      return `      ${field.fieldName}: ${field.resolverValueName}.${field.fieldName},`;
+    });
     typeEntries.push(
       `    ${type.typeName}: {\n${fieldEntries.join("\n")}\n    },`,
     );

@@ -29,6 +29,7 @@ export interface ExtensionField {
   readonly type: GraphQLFieldType;
   readonly args?: ReadonlyArray<GraphQLInputValue>;
   readonly resolverSourceFile: string;
+  readonly resolverExportName?: string;
 }
 
 export interface TypeExtension {
@@ -53,6 +54,7 @@ function convertToExtensionField(
     type: field.type,
     args: field.args,
     resolverSourceFile: field.sourceLocation.file,
+    resolverExportName: field.resolverExportName,
   };
 }
 

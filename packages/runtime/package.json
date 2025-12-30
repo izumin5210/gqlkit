@@ -1,0 +1,30 @@
+{
+  "name": "@gqlkit-ts/runtime",
+  "version": "0.0.1",
+  "description": "Runtime utilities for gqlkit - type-safe resolver definition functions",
+  "type": "module",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "keywords": ["graphql", "resolver", "typescript"],
+  "author": "izumin5210 <m@izum.in>",
+  "license": "MIT",
+  "scripts": {
+    "build": "tsc --build",
+    "test": "node --import tsx --test 'src/**/*.test.ts'"
+  },
+  "peerDependencies": {
+    "graphql": "^16.0.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.19.3",
+    "graphql": "^16.12.0",
+    "tsx": "^4.21.0",
+    "typescript": "5.9.3"
+  }
+}

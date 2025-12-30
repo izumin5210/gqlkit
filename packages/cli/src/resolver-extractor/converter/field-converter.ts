@@ -21,6 +21,7 @@ export interface GraphQLFieldDefinition {
   readonly type: GraphQLFieldType;
   readonly args?: ReadonlyArray<GraphQLInputValue>;
   readonly sourceLocation: SourceLocation;
+  readonly resolverExportName?: string;
 }
 
 export interface QueryFieldDefinitions {

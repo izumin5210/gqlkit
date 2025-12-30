@@ -1,0 +1,20 @@
+{
+  "name": "@gqlkit-examples/define-api",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "gen": "node --import tsx ../../packages/cli/src/cli.ts gen",
+    "start": "node --import tsx server.ts",
+    "dev": "pnpm gen && pnpm start"
+  },
+  "dependencies": {
+    "@gqlkit-ts/runtime": "workspace:*",
+    "graphql": "^16.12.0",
+    "graphql-yoga": "^5.0.0",
+    "@graphql-tools/schema": "^10.0.0"
+  },
+  "devDependencies": {
+    "tsx": "^4.21.0",
+    "typescript": "^5.9.0"
+  }
+}
