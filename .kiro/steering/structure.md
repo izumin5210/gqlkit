@@ -2,47 +2,52 @@
 
 ## Organization Philosophy
 
-Feature-by-purpose organization where code is grouped by its role in the generation pipeline. The project itself follows the same conventions it enforces on user codebases.
+Monorepo with feature-by-purpose organization. Each package has a clear responsibility, and code is grouped by its role in the generation pipeline.
 
-## Directory Patterns
+## Monorepo Layout
 
-### CLI Entry Point
-**Location**: `src/cli.ts`
-**Purpose**: Application entry point, wires commands to gunshi CLI
-**Pattern**: Single file that imports and registers all commands
-
-### Commands
-**Location**: `src/commands/`
-**Purpose**: CLI command definitions using gunshi
-**Pattern**: One file per command, exports `xyzCommand` using `define()`
-
-```typescript
-// src/commands/gen.ts
-import { define } from "gunshi";
-
-export const genCommand = define({
-  name: "gen",
-  run: (ctx) => { /* implementation */ },
-});
+```
+packages/
+  cli/       - @gqlkit-ts/cli - Code generation CLI
+  runtime/   - @gqlkit-ts/runtime - Define API and type utilities
+examples/    - Example projects demonstrating usage
 ```
 
-### User Convention Directories (gqlkit-managed)
-**Types Location**: `src/gql/types/`
-**Resolvers Location**: `src/gql/resolvers/`
-**Purpose**: User-defined GraphQL types and resolver implementations
-**Pattern**: gqlkit scans these directories for schema generation
+**Package Manager**: pnpm with workspaces (`pnpm-workspace.yaml`)
 
-### Generated Output (gqlkit-managed)
-**Location**: `src/gqlkit/generated/`
-**Purpose**: Generated schema AST and resolver maps
-**Pattern**: Auto-generated, may or may not be committed
+## Package Patterns
+
+### @gqlkit-ts/cli (`packages/cli/`)
+
+Pipeline-based architecture for code generation:
+
+- **Entry**: `src/cli.ts` - Wires commands to gunshi CLI
+- **Commands**: `src/commands/` - CLI command definitions using gunshi's `define()`
+- **Type Extraction**: `src/type-extractor/` - Scans and analyzes TypeScript types
+- **Resolver Extraction**: `src/resolver-extractor/` - Scans and analyzes resolver definitions
+- **Schema Generation**: `src/schema-generator/` - Builds GraphQL AST and resolver maps
+- **Orchestration**: `src/gen-orchestrator/` - Coordinates pipeline stages (reporter, writer)
+
+**Pattern**: Each pipeline stage has internal modules (scanner, extractor, collector, etc.)
+
+### @gqlkit-ts/runtime (`packages/runtime/`)
+
+Minimal runtime utilities for user codebases:
+- `createGqlkitApis<TContext>()` factory function
+- Type definitions for resolvers (`QueryResolver`, `MutationResolver`, `FieldResolver`)
+- `NoArgs` helper type
+
+### User Convention Directories (gqlkit-managed)
+**Types**: `src/gql/types/` - User-defined GraphQL types
+**Resolvers**: `src/gql/resolvers/` - Resolver implementations
+**Output**: `src/gqlkit/generated/` - Generated schema.ts and resolvers.ts
 
 ## Naming Conventions
 
-- **Files**: kebab-case for commands (e.g., `gen.ts`, `main.ts`)
-- **Exports**: camelCase for values (e.g., `genCommand`, `mainCommand`)
-- **Type exports**: PascalCase (e.g., `User`, `Post`)
-- **Resolver exports**: camelCase field names (e.g., `users`, `createUser`, `fullName`)
+- **Files**: kebab-case (e.g., `gen.ts`, `file-scanner.ts`, `ast-builder.ts`)
+- **Exports**: camelCase for values (e.g., `genCommand`, `extractTypes`)
+- **Type exports**: PascalCase (e.g., `User`, `GenerationConfig`)
+- **Test files**: Colocated with source (e.g., `foo.ts` + `foo.test.ts`)
 
 ## Import Organization
 
@@ -51,17 +56,19 @@ export const genCommand = define({
 import { cli, define } from "gunshi";
 
 // Internal imports with .js extension (ESM requirement)
-import { genCommand } from "./commands/gen.js";
+import { extractTypes } from "../type-extractor/index.js";
 ```
 
 **Path Aliases**: None configured; use relative imports with `.js` extension
 
 ## Code Organization Principles
 
-1. **Command pattern**: Each CLI command is a self-contained module using gunshi's `define()`
-2. **Explicit extensions**: All relative imports must include `.js` extension for ESM compatibility
-3. **Single responsibility**: One command per file, one type per file in user conventions
-4. **Convention over configuration**: Directory structure determines behavior (e.g., `src/gql/types/` is scanned automatically)
+1. **Pipeline architecture**: Clear separation of concerns (extract -> validate -> generate -> write)
+2. **Module boundaries**: Each stage exposes via `index.ts`, internal structure is encapsulated
+3. **Explicit extensions**: All relative imports must include `.js` extension for ESM compatibility
+4. **Colocated tests**: Test files live alongside source files (`*.test.ts`)
+5. **Convention over configuration**: Directory structure determines behavior
 
 ---
 _Document patterns, not file trees. New files following patterns shouldn't require updates_
+_Updated: 2024-12-31 - Monorepo structure and pipeline architecture_

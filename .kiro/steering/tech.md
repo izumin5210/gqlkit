@@ -32,7 +32,10 @@ Static code generation tool that analyzes TypeScript source files and produces G
 
 ### Testing
 
-(To be established)
+- **Test Runner**: Node.js built-in test runner (`node --test`)
+- **Loader**: tsx for TypeScript execution
+- **Pattern**: Colocated tests (`*.test.ts` alongside source files)
+- **Command**: `pnpm test` (runs tests across all packages)
 
 ## Development Environment
 
@@ -55,7 +58,8 @@ Static code generation tool that analyzes TypeScript source files and produces G
 3. **gunshi for CLI**: Provides type-safe command definitions with built-in help generation
 4. **No decorators**: Design decision to keep schema generation based purely on type analysis
 5. **graphql-tools compatible output**: Generated resolvers work directly with `makeExecutableSchema`
-6. **Define API**: Explicit resolver definition using `defineQuery`, `defineMutation`, `defineField` from `@gqlkit-ts/runtime` for clear, type-safe resolver definitions
+6. **Define API**: Factory-based resolver definition via `createGqlkitApis<TContext>()` from `@gqlkit-ts/runtime`, returning typed `defineQuery`, `defineMutation`, `defineField` functions with custom context support
 
 ---
 _Document standards and patterns, not every dependency_
+_Updated: 2024-12-31 - Testing established, Define API factory pattern_
