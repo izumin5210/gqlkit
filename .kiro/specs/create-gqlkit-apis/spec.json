@@ -1,0 +1,22 @@
+{
+  "feature_name": "create-gqlkit-apis",
+  "created_at": "2025-12-30T13:25:34Z",
+  "updated_at": "2025-12-30T13:48:23Z",
+  "language": "ja",
+  "phase": "tasks-generated",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "ready_for_implementation": true
+}

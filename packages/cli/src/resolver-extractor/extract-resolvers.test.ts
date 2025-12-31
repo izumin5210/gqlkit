@@ -21,7 +21,9 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "query.ts"),
         `
-        import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+        import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+        type Context = unknown;
+        const { defineQuery } = createGqlkitApis<Context>();
         export const hello = defineQuery<NoArgs, string>(function() { return "world"; });
         `,
       );
@@ -39,7 +41,9 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "resolvers", "query.ts"),
         `
-        import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+        import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+        type Context = unknown;
+        const { defineQuery } = createGqlkitApis<Context>();
         export const users = defineQuery<NoArgs, string[]>(function() { return []; });
         `,
       );
@@ -47,7 +51,9 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "resolvers", "mutation.ts"),
         `
-        import { defineMutation, type NoArgs } from "@gqlkit-ts/runtime";
+        import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+        type Context = unknown;
+        const { defineMutation } = createGqlkitApis<Context>();
         export const createUser = defineMutation<NoArgs, string>(function() { return "user-id"; });
         `,
       );
@@ -55,8 +61,10 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "resolvers", "user.ts"),
         `
-        import { defineField, type NoArgs } from "@gqlkit-ts/runtime";
+        import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+        type Context = unknown;
         interface User { id: string; firstName: string; lastName: string; }
+        const { defineField } = createGqlkitApis<Context>();
         export const fullName = defineField<User, NoArgs, string>(
           function(parent) { return parent.firstName + " " + parent.lastName; }
         );
@@ -100,8 +108,10 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "all.ts"),
         `
-        import { defineQuery, defineMutation, defineField, type NoArgs } from "@gqlkit-ts/runtime";
+        import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+        type Context = unknown;
         interface User { id: string; }
+        const { defineQuery, defineMutation, defineField } = createGqlkitApis<Context>();
         export const query = defineQuery<NoArgs, string>(function() { return "q"; });
         export const mutation = defineMutation<NoArgs, string>(function() { return "m"; });
         export const name = defineField<User, NoArgs, string>(function() { return "user"; });
@@ -120,7 +130,9 @@ describe("extractResolvers", () => {
       await writeFile(
         filePath,
         `
-        import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+        import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+        type Context = unknown;
+        const { defineQuery } = createGqlkitApis<Context>();
         export const hello = defineQuery<NoArgs, string>(function() { return "world"; });
         `,
       );
@@ -147,16 +159,20 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "zebra.ts"),
         `
-        import { defineField, type NoArgs } from "@gqlkit-ts/runtime";
+        import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+        type Context = unknown;
         interface Zebra { id: string; }
+        const { defineField } = createGqlkitApis<Context>();
         export const name = defineField<Zebra, NoArgs, string>(function() { return "z"; });
         `,
       );
       await writeFile(
         join(tempDir, "apple.ts"),
         `
-        import { defineField, type NoArgs } from "@gqlkit-ts/runtime";
+        import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+        type Context = unknown;
         interface Apple { id: string; }
+        const { defineField } = createGqlkitApis<Context>();
         export const name = defineField<Apple, NoArgs, string>(function() { return "a"; });
         `,
       );
@@ -173,7 +189,9 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "query.ts"),
         `
-        import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+        import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+        type Context = unknown;
+        const { defineQuery } = createGqlkitApis<Context>();
         export const hello = defineQuery<NoArgs, string>(function() { return "world"; });
         `,
       );
@@ -191,8 +209,10 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "queries.ts"),
         `
-        import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+        import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+        type Context = unknown;
         type User = { id: string; name: string };
+        const { defineQuery } = createGqlkitApis<Context>();
         export const me = defineQuery<NoArgs, User>(
           function() { return { id: "1", name: "Me" }; }
         );
@@ -215,9 +235,11 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "mutations.ts"),
         `
-        import { defineMutation } from "@gqlkit-ts/runtime";
+        import { createGqlkitApis } from "@gqlkit-ts/runtime";
+        type Context = unknown;
         type User = { id: string; name: string };
         type CreateUserInput = { name: string };
+        const { defineMutation } = createGqlkitApis<Context>();
         export const createUser = defineMutation<{ input: CreateUserInput }, User>(
           function(_root, args) { return { id: "new", name: args.input.name }; }
         );
@@ -235,8 +257,10 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "user-fields.ts"),
         `
-        import { defineField, type NoArgs } from "@gqlkit-ts/runtime";
+        import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+        type Context = unknown;
         type User = { id: string; firstName: string; lastName: string };
+        const { defineField } = createGqlkitApis<Context>();
         export const fullName = defineField<User, NoArgs, string>(
           function(parent) { return parent.firstName + " " + parent.lastName; }
         );
@@ -256,8 +280,10 @@ describe("extractResolvers", () => {
       await writeFile(
         join(tempDir, "queries.ts"),
         `
-        import { defineQuery } from "@gqlkit-ts/runtime";
+        import { createGqlkitApis } from "@gqlkit-ts/runtime";
+        type Context = unknown;
         type User = { id: string; name: string };
+        const { defineQuery } = createGqlkitApis<Context>();
         export const user = defineQuery<{ id: string }, User | null>(
           function() { return null; }
         );

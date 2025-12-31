@@ -1,4 +1,4 @@
-import { defineField, type NoArgs } from "@gqlkit-ts/runtime";
+import { defineField, type NoArgs } from "../gqlkit.js";
 import type { Post } from "../types/post.js";
 import type { User } from "../types/user.js";
 

@@ -1,4 +1,4 @@
-import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery, type NoArgs } from "../gqlkit.js";
 import { Status } from "../types/status.js";
 import type { User } from "../types/user.js";
 

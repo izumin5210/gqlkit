@@ -340,9 +340,21 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        assert.ok(code.includes('import { createUser } from "../resolvers/mutations.js";'));
-        assert.ok(code.includes('import { allUsers, me } from "../resolvers/queries.js";'));
-        assert.ok(code.includes('import { displayName, posts_ } from "../resolvers/user-fields.js";'));
+        assert.ok(
+          code.includes(
+            'import { createUser } from "../resolvers/mutations.js";',
+          ),
+        );
+        assert.ok(
+          code.includes(
+            'import { allUsers, me } from "../resolvers/queries.js";',
+          ),
+        );
+        assert.ok(
+          code.includes(
+            'import { displayName, posts_ } from "../resolvers/user-fields.js";',
+          ),
+        );
 
         assert.ok(code.includes("Mutation: {"));
         assert.ok(code.includes("createUser: createUser,"));
@@ -429,7 +441,9 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        const importMatches = code.match(/import \{.*\} from "\.\.\/resolvers\/query\.js";/g);
+        const importMatches = code.match(
+          /import \{.*\} from "\.\.\/resolvers\/query\.js";/g,
+        );
         assert.strictEqual(importMatches?.length, 1);
         assert.ok(code.includes("import { posts, users }"));
       });
@@ -455,7 +469,10 @@ describe("CodeEmitter", () => {
               ],
             },
           ],
-          sourceFiles: ["/src/resolvers/a-query.ts", "/src/resolvers/z-query.ts"],
+          sourceFiles: [
+            "/src/resolvers/a-query.ts",
+            "/src/resolvers/z-query.ts",
+          ],
         };
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");

@@ -34,86 +34,42 @@ export interface ExtractDefineApiResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
-const DEFINE_API_FUNCTIONS = new Set([
-  "defineQuery",
-  "defineMutation",
-  "defineField",
-]);
-
-const RUNTIME_PACKAGE = "@gqlkit-ts/runtime";
-
-function isExported(node: ts.Node): boolean {
-  const modifiers = ts.getCombinedModifierFlags(node as ts.Declaration);
-  return (modifiers & ts.ModifierFlags.Export) !== 0;
-}
-
-function isDefineApiImport(
-  node: ts.CallExpression,
+function detectResolverFromBrandedType(
+  callExpr: ts.CallExpression,
   checker: ts.TypeChecker,
-): string | undefined {
-  if (!ts.isIdentifier(node.expression)) {
+): DefineApiResolverType | undefined {
+  const returnType = checker.getTypeAtLocation(callExpr);
+
+  const properties = returnType.getProperties();
+  const brandProp = properties.find((p) => {
+    const name = p.getName();
+    return name.includes("ResolverBrandSymbol");
+  });
+
+  if (!brandProp) {
     return undefined;
   }
 
-  const funcName = node.expression.text;
-  if (!DEFINE_API_FUNCTIONS.has(funcName)) {
+  const brandType = checker.getTypeOfSymbol(brandProp);
+  const kindProp = brandType.getProperty("kind");
+  if (!kindProp) {
     return undefined;
   }
 
-  const symbol = checker.getSymbolAtLocation(node.expression);
-  if (!symbol) {
-    return undefined;
-  }
-
-  const declarations = symbol.getDeclarations();
-  if (!declarations || declarations.length === 0) {
-    return undefined;
-  }
-
-  const declaration = declarations[0];
-  if (!declaration) {
-    return undefined;
-  }
-
-  const sourceFile = declaration.getSourceFile();
-  const fileName = sourceFile.fileName;
-
-  if (
-    fileName.includes(RUNTIME_PACKAGE) ||
-    fileName.includes("@gqlkit-ts/runtime")
-  ) {
-    return funcName;
-  }
-
-  if (ts.isImportSpecifier(declaration)) {
-    const importDecl = declaration.parent.parent.parent;
-    if (ts.isImportDeclaration(importDecl)) {
-      const moduleSpecifier = importDecl.moduleSpecifier;
-      if (
-        ts.isStringLiteral(moduleSpecifier) &&
-        moduleSpecifier.text === RUNTIME_PACKAGE
-      ) {
-        return funcName;
-      }
+  const kindType = checker.getTypeOfSymbol(kindProp);
+  if (kindType.isStringLiteral()) {
+    const kind = kindType.value;
+    if (kind === "query" || kind === "mutation" || kind === "field") {
+      return kind;
     }
   }
 
   return undefined;
 }
 
-function getResolverTypeFromFuncName(
-  funcName: string,
-): DefineApiResolverType | undefined {
-  switch (funcName) {
-    case "defineQuery":
-      return "query";
-    case "defineMutation":
-      return "mutation";
-    case "defineField":
-      return "field";
-    default:
-      return undefined;
-  }
+function isExported(node: ts.Node): boolean {
+  const modifiers = ts.getCombinedModifierFlags(node as ts.Declaration);
+  return (modifiers & ts.ModifierFlags.Export) !== 0;
 }
 
 function convertTypeToTSTypeReference(
@@ -394,15 +350,15 @@ export function extractDefineApiResolvers(
           continue;
         }
 
-        const funcName = isDefineApiImport(initializer, checker);
-        if (!funcName) {
-          continue;
-        }
+        const resolverType = detectResolverFromBrandedType(initializer, checker);
 
-        const resolverType = getResolverTypeFromFuncName(funcName);
         if (!resolverType) {
           continue;
         }
+
+        const funcName = ts.isIdentifier(initializer.expression)
+          ? initializer.expression.text
+          : undefined;
 
         const typeInfo = extractTypeArgumentsFromCall(
           initializer,
@@ -416,7 +372,7 @@ export function extractDefineApiResolvers(
           );
           diagnostics.push({
             code: "INVALID_DEFINE_CALL",
-            message: `Failed to extract type arguments from ${funcName} call for '${fieldName}'`,
+            message: `Failed to extract type arguments from ${funcName ?? "define*"} call for '${fieldName}'`,
             severity: "error",
             location: {
               file: filePath,

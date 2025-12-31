@@ -839,7 +839,10 @@ describe("ResultIntegrator", () => {
           (t) => t.targetTypeName === "Query",
         );
         assert.ok(queryExtension);
-        assert.strictEqual(queryExtension.fields[0]?.resolverExportName, "users");
+        assert.strictEqual(
+          queryExtension.fields[0]?.resolverExportName,
+          "users",
+        );
       });
 
       it("should propagate resolverExportName for Mutation fields from Define API", () => {
@@ -873,7 +876,10 @@ describe("ResultIntegrator", () => {
           (t) => t.targetTypeName === "Mutation",
         );
         assert.ok(mutationExtension);
-        assert.strictEqual(mutationExtension.fields[0]?.resolverExportName, "createUser");
+        assert.strictEqual(
+          mutationExtension.fields[0]?.resolverExportName,
+          "createUser",
+        );
       });
 
       it("should propagate resolverExportName for field resolvers from Define API", () => {
@@ -922,7 +928,10 @@ describe("ResultIntegrator", () => {
           (t) => t.targetTypeName === "User",
         );
         assert.ok(userExtension);
-        assert.strictEqual(userExtension.fields[0]?.resolverExportName, "posts");
+        assert.strictEqual(
+          userExtension.fields[0]?.resolverExportName,
+          "posts",
+        );
       });
 
       it("should preserve undefined resolverExportName for non-Define API resolvers", () => {
@@ -955,7 +964,10 @@ describe("ResultIntegrator", () => {
           (t) => t.targetTypeName === "Query",
         );
         assert.ok(queryExtension);
-        assert.strictEqual(queryExtension.fields[0]?.resolverExportName, undefined);
+        assert.strictEqual(
+          queryExtension.fields[0]?.resolverExportName,
+          undefined,
+        );
       });
     });
   });

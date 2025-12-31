@@ -1,4 +1,4 @@
-import { defineQuery } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit.js";
 import type { User } from "../types/user.js";
 
 export const user = defineQuery<{ id: string }, User | null>((_root, args) => ({

@@ -357,7 +357,10 @@ describe("ResolverCollector", () => {
         const queryType = info.types.find((t) => t.typeName === "Query");
         assert.ok(queryType);
         assert.strictEqual(queryType.fields[0]?.isDirectExport, false);
-        assert.strictEqual(queryType.fields[0]?.resolverValueName, "queryResolver");
+        assert.strictEqual(
+          queryType.fields[0]?.resolverValueName,
+          "queryResolver",
+        );
       });
 
       it("should use resolverExportName as resolverValueName when available", () => {
@@ -415,7 +418,10 @@ describe("ResolverCollector", () => {
 
         const userType = info.types.find((t) => t.typeName === "User");
         assert.ok(userType);
-        assert.strictEqual(userType.fields[0]?.resolverValueName, "userResolver");
+        assert.strictEqual(
+          userType.fields[0]?.resolverValueName,
+          "userResolver",
+        );
         assert.strictEqual(userType.fields[0]?.isDirectExport, false);
       });
 
@@ -451,12 +457,16 @@ describe("ResolverCollector", () => {
         const queryType = info.types.find((t) => t.typeName === "Query");
         assert.ok(queryType);
 
-        const directField = queryType.fields.find((f) => f.fieldName === "directField");
+        const directField = queryType.fields.find(
+          (f) => f.fieldName === "directField",
+        );
         assert.ok(directField);
         assert.strictEqual(directField.isDirectExport, true);
         assert.strictEqual(directField.resolverValueName, "directField");
 
-        const indirectField = queryType.fields.find((f) => f.fieldName === "indirectField");
+        const indirectField = queryType.fields.find(
+          (f) => f.fieldName === "indirectField",
+        );
         assert.ok(indirectField);
         assert.strictEqual(indirectField.isDirectExport, false);
         assert.strictEqual(indirectField.resolverValueName, "queryResolver");

@@ -1,4 +1,4 @@
-import { defineMutation } from "@gqlkit-ts/runtime";
+import { defineMutation } from "../gqlkit.js";
 import type { User } from "../types/user.js";
 
 const users: User[] = [

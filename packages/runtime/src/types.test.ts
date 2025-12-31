@@ -10,14 +10,17 @@ import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { GraphQLResolveInfo } from "graphql";
 import {
-  defineField,
-  defineMutation,
-  defineQuery,
+  createGqlkitApis,
+  type FieldResolver,
   type FieldResolverFn,
-  type GqlkitContext,
+  type GqlkitApis,
+  type MutationResolver,
   type MutationResolverFn,
   type NoArgs,
+  type QueryResolver,
   type QueryResolverFn,
+  type ResolverBrand,
+  type ResolverKind,
 } from "./index.js";
 
 type User = {
@@ -32,11 +35,6 @@ type Post = {
   authorId: string;
 };
 
-type CreateUserInput = {
-  name: string;
-  email: string;
-};
-
 describe("Type inference tests", () => {
   describe("NoArgs type", () => {
     it("should represent empty args", () => {
@@ -45,153 +43,16 @@ describe("Type inference tests", () => {
     });
   });
 
-  describe("GqlkitContext type", () => {
-    it("should be unknown by default (when Context is empty)", () => {
-      const ctx: GqlkitContext = { anything: "is allowed" };
-      assert.ok(ctx !== undefined);
-    });
-  });
-
-  describe("defineQuery type inference", () => {
-    it("should infer return type correctly for sync resolver", () => {
-      const users = defineQuery<NoArgs, User[]>(
-        (_root, _args, _ctx, _info) => [],
-      );
-
-      const result: QueryResolverFn<NoArgs, User[]> = users;
-      assert.ok(result);
-    });
-
-    it("should infer return type correctly for async resolver", () => {
-      const users = defineQuery<NoArgs, User[]>(
-        async (_root, _args, _ctx, _info) => Promise.resolve([]),
-      );
-
-      const result: QueryResolverFn<NoArgs, User[]> = users;
-      assert.ok(result);
-    });
-
-    it("should infer args type correctly", () => {
-      type GetUserArgs = { id: string };
-      const user = defineQuery<GetUserArgs, User | null>(
-        (_root, args, _ctx, _info) => {
-          const _id: string = args.id;
-          return null;
-        },
-      );
-
-      const result: QueryResolverFn<GetUserArgs, User | null> = user;
-      assert.ok(result);
-    });
-
-    it("should enforce root parameter type as undefined", () => {
-      defineQuery<NoArgs, string>((root, _args, _ctx, _info) => {
-        const _r: undefined = root;
-        return "ok";
-      });
-      assert.ok(true);
-    });
-  });
-
-  describe("defineMutation type inference", () => {
-    it("should infer return type correctly for sync resolver", () => {
-      const createUser = defineMutation<{ input: CreateUserInput }, User>(
-        (_root, args, _ctx, _info) => ({
-          id: "new",
-          name: args.input.name,
-          email: args.input.email,
-        }),
-      );
-
-      const result: MutationResolverFn<{ input: CreateUserInput }, User> =
-        createUser;
-      assert.ok(result);
-    });
-
-    it("should infer return type correctly for async resolver", () => {
-      const createUser = defineMutation<{ input: CreateUserInput }, User>(
-        async (_root, args, _ctx, _info) =>
-          Promise.resolve({
-            id: "new",
-            name: args.input.name,
-            email: args.input.email,
-          }),
-      );
-
-      const result: MutationResolverFn<{ input: CreateUserInput }, User> =
-        createUser;
-      assert.ok(result);
-    });
-
-    it("should support NoArgs for mutations without args", () => {
-      const deleteAllUsers = defineMutation<NoArgs, boolean>(
-        (_root, _args, _ctx, _info) => true,
-      );
-
-      const result: MutationResolverFn<NoArgs, boolean> = deleteAllUsers;
-      assert.ok(result);
-    });
-  });
-
-  describe("defineField type inference", () => {
-    it("should infer parent type correctly", () => {
-      const fullName = defineField<User, NoArgs, string>(
-        (parent, _args, _ctx, _info) => {
-          const _name: string = parent.name;
-          const _email: string = parent.email;
-          return parent.name;
-        },
-      );
-
-      const result: FieldResolverFn<User, NoArgs, string> = fullName;
-      assert.ok(result);
-    });
-
-    it("should infer args type correctly for field with args", () => {
-      type PostsArgs = { limit: number; offset?: number };
-      const posts = defineField<User, PostsArgs, Post[]>(
-        (parent, args, _ctx, _info) => {
-          const _limit: number = args.limit;
-          const _authorId: string = parent.id;
-          return [];
-        },
-      );
-
-      const result: FieldResolverFn<User, PostsArgs, Post[]> = posts;
-      assert.ok(result);
-    });
-
-    it("should infer return type correctly for async resolver", () => {
-      const posts = defineField<User, NoArgs, Post[]>(
-        async (parent, _args, _ctx, _info) =>
-          Promise.resolve([{ id: "1", title: "Post", authorId: parent.id }]),
-      );
-
-      const result: FieldResolverFn<User, NoArgs, Post[]> = posts;
-      assert.ok(result);
-    });
-
-    it("should support nullable return types", () => {
-      const avatar = defineField<User, NoArgs, string | null>(
-        (_parent, _args, _ctx, _info) => null,
-      );
-
-      const result: FieldResolverFn<User, NoArgs, string | null> = avatar;
-      assert.ok(result);
-    });
-  });
-
   describe("Resolver function types", () => {
     it("should have correct 4-parameter signature for QueryResolverFn", () => {
       const fn: QueryResolverFn<{ id: string }, User> = (
         root,
         args,
-        context,
+        _context,
         info,
       ) => {
         const _root: undefined = root;
         const _id: string = args.id;
-        const _ctx: GqlkitContext = context;
         const _info: GraphQLResolveInfo = info;
         return { id: _id, name: "", email: "" };
       };
@@ -202,12 +63,11 @@ describe("Type inference tests", () => {
       const fn: MutationResolverFn<{ name: string }, User> = (
         root,
         args,
-        context,
+        _context,
         info,
       ) => {
         const _root: undefined = root;
         const _name: string = args.name;
-        const _ctx: GqlkitContext = context;
         const _info: GraphQLResolveInfo = info;
         return { id: "1", name: _name, email: "" };
       };
@@ -218,16 +78,527 @@ describe("Type inference tests", () => {
       const fn: FieldResolverFn<User, { format: string }, string> = (
         parent,
         args,
-        context,
+        _context,
         info,
       ) => {
         const _user: User = parent;
         const _format: string = args.format;
-        const _ctx: GqlkitContext = context;
         const _info: GraphQLResolveInfo = info;
         return _user.name;
       };
       assert.ok(fn);
+    });
+  });
+
+  describe("Resolver function types with custom Context (Task 1)", () => {
+    type CustomContext = {
+      userId: string;
+      db: { query: (sql: string) => unknown };
+    };
+
+    it("should accept custom Context type for QueryResolverFn", () => {
+      const fn: QueryResolverFn<{ id: string }, User, CustomContext> = (
+        root,
+        args,
+        context,
+        info,
+      ) => {
+        const _root: undefined = root;
+        const _id: string = args.id;
+        const _userId: string = context.userId;
+        const _db: { query: (sql: string) => unknown } = context.db;
+        const _info: GraphQLResolveInfo = info;
+        return { id: _id, name: "", email: "" };
+      };
+      assert.ok(fn);
+    });
+
+    it("should accept custom Context type for MutationResolverFn", () => {
+      const fn: MutationResolverFn<{ name: string }, User, CustomContext> = (
+        root,
+        args,
+        context,
+        info,
+      ) => {
+        const _root: undefined = root;
+        const _name: string = args.name;
+        const _userId: string = context.userId;
+        const _info: GraphQLResolveInfo = info;
+        return { id: "1", name: _name, email: "" };
+      };
+      assert.ok(fn);
+    });
+
+    it("should accept custom Context type for FieldResolverFn", () => {
+      const fn: FieldResolverFn<
+        User,
+        { format: string },
+        string,
+        CustomContext
+      > = (parent, args, context, info) => {
+        const _user: User = parent;
+        const _format: string = args.format;
+        const _userId: string = context.userId;
+        const _info: GraphQLResolveInfo = info;
+        return _user.name;
+      };
+      assert.ok(fn);
+    });
+
+    it("should default to unknown when Context type is not specified", () => {
+      const fnWithDefault: QueryResolverFn<NoArgs, User> = (
+        _root,
+        _args,
+        _ctx,
+        _info,
+      ) => ({ id: "1", name: "", email: "" });
+
+      const fnWithExplicit: QueryResolverFn<NoArgs, User, unknown> =
+        fnWithDefault;
+      assert.ok(fnWithExplicit);
+    });
+  });
+
+  describe("Branded Types (Task 2)", () => {
+    it("should define ResolverKind as union of query/mutation/field", () => {
+      const queryKind: ResolverKind = "query";
+      const mutationKind: ResolverKind = "mutation";
+      const fieldKind: ResolverKind = "field";
+      assert.equal(queryKind, "query");
+      assert.equal(mutationKind, "mutation");
+      assert.equal(fieldKind, "field");
+    });
+
+    it("should define QueryResolver as intersection of function and brand", () => {
+      type TestQueryResolver = QueryResolver<{ id: string }, User>;
+
+      const resolver: TestQueryResolver = ((_root, _args, _ctx, _info) => ({
+        id: "1",
+        name: "",
+        email: "",
+      })) as TestQueryResolver;
+
+      const result = resolver(
+        undefined,
+        { id: "1" },
+        {},
+        {} as GraphQLResolveInfo,
+      );
+      assert.deepEqual(result, { id: "1", name: "", email: "" });
+    });
+
+    it("should define MutationResolver as intersection of function and brand", () => {
+      type TestMutationResolver = MutationResolver<{ name: string }, User>;
+
+      const resolver: TestMutationResolver = ((_root, _args, _ctx, _info) => ({
+        id: "1",
+        name: "",
+        email: "",
+      })) as TestMutationResolver;
+
+      const result = resolver(
+        undefined,
+        { name: "test" },
+        {},
+        {} as GraphQLResolveInfo,
+      );
+      assert.deepEqual(result, { id: "1", name: "", email: "" });
+    });
+
+    it("should define FieldResolver as intersection of function and brand", () => {
+      type TestFieldResolver = FieldResolver<User, NoArgs, string>;
+
+      const resolver: TestFieldResolver = ((_parent, _args, _ctx, _info) =>
+        "test") as TestFieldResolver;
+
+      const result = resolver(
+        { id: "1", name: "Test", email: "" },
+        {},
+        {},
+        {} as GraphQLResolveInfo,
+      );
+      assert.equal(result, "test");
+    });
+
+    it("should include kind in QueryResolver brand", () => {
+      type BrandType = QueryResolver<NoArgs, User>[ResolverBrand];
+      const brand: BrandType = { kind: "query", args: {}, result: {} as User };
+      assert.equal(brand.kind, "query");
+    });
+
+    it("should include kind in MutationResolver brand", () => {
+      type BrandType = MutationResolver<NoArgs, User>[ResolverBrand];
+      const brand: BrandType = {
+        kind: "mutation",
+        args: {},
+        result: {} as User,
+      };
+      assert.equal(brand.kind, "mutation");
+    });
+
+    it("should include kind and parent in FieldResolver brand", () => {
+      type BrandType = FieldResolver<User, NoArgs, string>[ResolverBrand];
+      const brand: BrandType = {
+        kind: "field",
+        parent: {} as User,
+        args: {},
+        result: "",
+      };
+      assert.equal(brand.kind, "field");
+    });
+
+    it("should support custom Context in branded types", () => {
+      type CustomContext = { userId: string };
+      type TestResolver = QueryResolver<NoArgs, User, CustomContext>;
+
+      const resolver: TestResolver = ((_root, _args, ctx, _info) => {
+        const _userId: string = ctx.userId;
+        return { id: "1", name: "", email: "" };
+      }) as TestResolver;
+
+      assert.ok(resolver);
+    });
+  });
+
+  describe("Context type inference (Task 5.1)", () => {
+    it("should infer context type in generated defineQuery", () => {
+      type MyContext = { userId: string; db: unknown };
+      const apis = createGqlkitApis<MyContext>();
+
+      const query = apis.defineQuery<NoArgs, User>(
+        (_root, _args, ctx, _info) => {
+          const userId: string = ctx.userId;
+          const _db: unknown = ctx.db;
+          return { id: userId, name: "", email: "" };
+        },
+      );
+
+      assert.ok(query);
+    });
+
+    it("should infer context type in generated defineMutation", () => {
+      type MyContext = { userId: string; db: unknown };
+      const apis = createGqlkitApis<MyContext>();
+
+      const mutation = apis.defineMutation<{ name: string }, User>(
+        (_root, args, ctx, _info) => {
+          const userId: string = ctx.userId;
+          return { id: userId, name: args.name, email: "" };
+        },
+      );
+
+      assert.ok(mutation);
+    });
+
+    it("should infer context type in generated defineField", () => {
+      type MyContext = { userId: string; db: unknown };
+      const apis = createGqlkitApis<MyContext>();
+
+      const field = apis.defineField<User, NoArgs, string>(
+        (parent, _args, ctx, _info) => {
+          const _userId: string = ctx.userId;
+          return parent.name;
+        },
+      );
+
+      assert.ok(field);
+    });
+
+    it("should use unknown as default Context when not specified", () => {
+      const apis = createGqlkitApis();
+
+      const query = apis.defineQuery<NoArgs, User>(
+        (_root, _args, ctx, _info) => {
+          const _ctxAsUnknown: unknown = ctx;
+          return { id: "1", name: "", email: "" };
+        },
+      );
+
+      assert.ok(query);
+    });
+  });
+
+  describe("Type mismatch detection (Task 5.2)", () => {
+    it("should enforce correct args type", () => {
+      type MyContext = { userId: string };
+      const apis = createGqlkitApis<MyContext>();
+
+      type GetUserArgs = { id: string };
+      const query = apis.defineQuery<GetUserArgs, User>(
+        (_root, args, _ctx, _info) => {
+          const id: string = args.id;
+          return { id, name: "", email: "" };
+        },
+      );
+
+      assert.ok(query);
+    });
+
+    it("should enforce correct return type", () => {
+      type MyContext = { userId: string };
+      const apis = createGqlkitApis<MyContext>();
+
+      const query = apis.defineQuery<NoArgs, User>(
+        (_root, _args, _ctx, _info) => {
+          const user: User = { id: "1", name: "", email: "" };
+          return user;
+        },
+      );
+
+      assert.ok(query);
+    });
+
+    it("should enforce correct parent type in field resolver", () => {
+      type MyContext = { userId: string };
+      const apis = createGqlkitApis<MyContext>();
+
+      const field = apis.defineField<User, NoArgs, string>(
+        (parent, _args, _ctx, _info) => {
+          const email: string = parent.email;
+          return email;
+        },
+      );
+
+      assert.ok(field);
+    });
+  });
+
+  describe("Resolver types with default context", () => {
+    it("should work with QueryResolverFn without context type parameter", () => {
+      const fn: QueryResolverFn<{ id: string }, User> = (
+        _root,
+        args,
+        _ctx,
+        _info,
+      ) => {
+        return { id: args.id, name: "", email: "" };
+      };
+      assert.ok(fn);
+    });
+
+    it("should work with MutationResolverFn without context type parameter", () => {
+      const fn: MutationResolverFn<{ name: string }, User> = (
+        _root,
+        args,
+        _ctx,
+        _info,
+      ) => {
+        return { id: "1", name: args.name, email: "" };
+      };
+      assert.ok(fn);
+    });
+
+    it("should work with FieldResolverFn without context type parameter", () => {
+      const fn: FieldResolverFn<User, NoArgs, string> = (
+        parent,
+        _args,
+        _ctx,
+        _info,
+      ) => {
+        return parent.name;
+      };
+      assert.ok(fn);
+    });
+  });
+
+  describe("Branded Type verification (Task 5.4)", () => {
+    it("should return branded type from createGqlkitApis.defineQuery", () => {
+      const apis = createGqlkitApis<{ userId: string }>();
+
+      const query = apis.defineQuery<NoArgs, User>(
+        (_root, _args, _ctx, _info) => ({
+          id: "1",
+          name: "",
+          email: "",
+        }),
+      );
+
+      type QueryType = typeof query;
+      type BrandInfo = QueryType[ResolverBrand];
+      const _kindCheck: "query" = {} as BrandInfo["kind"];
+
+      assert.ok(query);
+    });
+
+    it("should return branded type from createGqlkitApis.defineMutation", () => {
+      const apis = createGqlkitApis<{ userId: string }>();
+
+      const mutation = apis.defineMutation<{ name: string }, User>(
+        (_root, _args, _ctx, _info) => ({
+          id: "1",
+          name: "",
+          email: "",
+        }),
+      );
+
+      type MutationType = typeof mutation;
+      type BrandInfo = MutationType[ResolverBrand];
+      const _kindCheck: "mutation" = {} as BrandInfo["kind"];
+
+      assert.ok(mutation);
+    });
+
+    it("should return branded type from createGqlkitApis.defineField", () => {
+      const apis = createGqlkitApis<{ userId: string }>();
+
+      const field = apis.defineField<User, NoArgs, string>(
+        (parent, _args, _ctx, _info) => {
+          return parent.name;
+        },
+      );
+
+      type FieldType = typeof field;
+      type BrandInfo = FieldType[ResolverBrand];
+      const _kindCheck: "field" = {} as BrandInfo["kind"];
+
+      assert.ok(field);
+    });
+
+    it("should be callable as a function", () => {
+      const apis = createGqlkitApis<{ userId: string }>();
+
+      const query = apis.defineQuery<NoArgs, User>(
+        (_root, _args, _ctx, _info) => ({
+          id: "1",
+          name: "",
+          email: "",
+        }),
+      );
+
+      const result = query(
+        undefined,
+        {},
+        { userId: "u1" },
+        {} as GraphQLResolveInfo,
+      );
+      assert.deepEqual(result, { id: "1", name: "", email: "" });
+    });
+  });
+
+  describe("GqlkitApis type (Task 3.1 additional)", () => {
+    it("should correctly type GqlkitApis interface", () => {
+      type MyContext = { userId: string };
+      const apis: GqlkitApis<MyContext> = createGqlkitApis<MyContext>();
+
+      assert.ok(apis.defineQuery);
+      assert.ok(apis.defineMutation);
+      assert.ok(apis.defineField);
+    });
+  });
+
+  describe("Package exports (Task 8)", () => {
+    it("should export NoArgs type (Task 8.1)", () => {
+      const args: NoArgs = {};
+      assert.deepEqual(args, {});
+    });
+
+    it("should export NoArgs usable with createGqlkitApis (Task 8.1)", () => {
+      type MyContext = { userId: string };
+      const apis = createGqlkitApis<MyContext>();
+
+      const query = apis.defineQuery<NoArgs, User>(
+        (_root, _args, _ctx, _info) => ({
+          id: "1",
+          name: "",
+          email: "",
+        }),
+      );
+
+      assert.ok(query);
+    });
+
+    it("should export createGqlkitApis (Task 8.2)", () => {
+      assert.ok(typeof createGqlkitApis === "function");
+    });
+
+    it("should export GqlkitApis type (Task 8.2)", () => {
+      type MyContext = { userId: string };
+      const apis: GqlkitApis<MyContext> = createGqlkitApis<MyContext>();
+      assert.ok(apis);
+    });
+
+    it("should export QueryResolver branded type (Task 8.2)", () => {
+      type MyContext = { userId: string };
+      const apis = createGqlkitApis<MyContext>();
+
+      const query: QueryResolver<NoArgs, User, MyContext> = apis.defineQuery<
+        NoArgs,
+        User
+      >((_root, _args, _ctx, _info) => ({ id: "1", name: "", email: "" }));
+
+      assert.ok(query);
+    });
+
+    it("should export MutationResolver branded type (Task 8.2)", () => {
+      type MyContext = { userId: string };
+      const apis = createGqlkitApis<MyContext>();
+
+      const mutation: MutationResolver<{ name: string }, User, MyContext> =
+        apis.defineMutation<{ name: string }, User>(
+          (_root, _args, _ctx, _info) => ({ id: "1", name: "", email: "" }),
+        );
+
+      assert.ok(mutation);
+    });
+
+    it("should export FieldResolver branded type (Task 8.2)", () => {
+      type MyContext = { userId: string };
+      const apis = createGqlkitApis<MyContext>();
+
+      const field: FieldResolver<User, NoArgs, string, MyContext> =
+        apis.defineField<User, NoArgs, string>(
+          (parent, _args, _ctx, _info) => parent.name,
+        );
+
+      assert.ok(field);
+    });
+
+    it("should export QueryResolverFn type (Task 8.2)", () => {
+      const fn: QueryResolverFn<{ id: string }, User> = (
+        _root,
+        args,
+        _ctx,
+        _info,
+      ) => ({
+        id: args.id,
+        name: "",
+        email: "",
+      });
+      assert.ok(fn);
+    });
+
+    it("should export MutationResolverFn type (Task 8.2)", () => {
+      const fn: MutationResolverFn<{ name: string }, User> = (
+        _root,
+        args,
+        _ctx,
+        _info,
+      ) => ({
+        id: "1",
+        name: args.name,
+        email: "",
+      });
+      assert.ok(fn);
+    });
+
+    it("should export FieldResolverFn type (Task 8.2)", () => {
+      const fn: FieldResolverFn<User, NoArgs, string> = (
+        parent,
+        _args,
+        _ctx,
+        _info,
+      ) => parent.name;
+      assert.ok(fn);
+    });
+
+    it("should export ResolverBrand and ResolverKind types (Task 8.2)", () => {
+      const queryKind: ResolverKind = "query";
+      const mutationKind: ResolverKind = "mutation";
+      const fieldKind: ResolverKind = "field";
+
+      assert.equal(queryKind, "query");
+      assert.equal(mutationKind, "mutation");
+      assert.equal(fieldKind, "field");
     });
   });
 });

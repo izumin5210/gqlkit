@@ -1,12 +1,7 @@
 import assert from "node:assert/strict";
 import { describe, it } from "node:test";
 import type { GraphQLResolveInfo } from "graphql";
-import {
-  defineField,
-  defineMutation,
-  defineQuery,
-  type NoArgs,
-} from "./index.js";
+import { createGqlkitApis, type GqlkitApis, type NoArgs } from "./index.js";
 
 describe("@gqlkit-ts/runtime", () => {
   describe("NoArgs type", () => {
@@ -16,161 +11,143 @@ describe("@gqlkit-ts/runtime", () => {
     });
   });
 
-  describe("defineQuery", () => {
-    it("should return the resolver function as-is (identity function)", () => {
-      type User = { id: string; name: string };
-      const resolver = (
-        _root: undefined,
-        _args: NoArgs,
-        _ctx: unknown,
-        _info: GraphQLResolveInfo,
-      ): User => ({
-        id: "1",
-        name: "Test User",
+  describe("createGqlkitApis (Task 3 & 4)", () => {
+    type TestContext = {
+      userId: string;
+      db: { query: (sql: string) => unknown };
+    };
+
+    describe("factory function behavior (Task 4.1)", () => {
+      it("should return an object with defineQuery, defineMutation, defineField", () => {
+        const apis = createGqlkitApis<TestContext>();
+
+        assert.ok(apis);
+        assert.ok(typeof apis.defineQuery === "function");
+        assert.ok(typeof apis.defineMutation === "function");
+        assert.ok(typeof apis.defineField === "function");
       });
 
-      const result = defineQuery<NoArgs, User>(resolver);
-      assert.strictEqual(result, resolver);
-    });
+      it("should return resolvers as identity functions", () => {
+        const apis = createGqlkitApis<TestContext>();
 
-    it("should support async resolver functions", async () => {
-      type User = { id: string; name: string };
-      const resolver = async (
-        _root: undefined,
-        _args: NoArgs,
-        _ctx: unknown,
-        _info: GraphQLResolveInfo,
-      ): Promise<User> => ({
-        id: "1",
-        name: "Async User",
+        type User = { id: string; name: string };
+        const queryResolver = (
+          _root: undefined,
+          _args: NoArgs,
+          _ctx: TestContext,
+          _info: GraphQLResolveInfo,
+        ): User => ({ id: "1", name: "Test" });
+
+        const mutationResolver = (
+          _root: undefined,
+          _args: { name: string },
+          _ctx: TestContext,
+          _info: GraphQLResolveInfo,
+        ): User => ({ id: "2", name: "Created" });
+
+        const fieldResolver = (
+          parent: User,
+          _args: NoArgs,
+          _ctx: TestContext,
+          _info: GraphQLResolveInfo,
+        ): string => parent.name.toUpperCase();
+
+        const query = apis.defineQuery<NoArgs, User>(queryResolver);
+        const mutation = apis.defineMutation<{ name: string }, User>(
+          mutationResolver,
+        );
+        const field = apis.defineField<User, NoArgs, string>(fieldResolver);
+
+        assert.strictEqual(query, queryResolver);
+        assert.strictEqual(mutation, mutationResolver);
+        assert.strictEqual(field, fieldResolver);
       });
 
-      const result = defineQuery<NoArgs, User>(resolver);
-      assert.strictEqual(result, resolver);
+      it("should support async resolvers", async () => {
+        const apis = createGqlkitApis<TestContext>();
 
-      const resolvedValue = await result(
-        undefined,
-        {},
-        {},
-        {} as GraphQLResolveInfo,
-      );
-      assert.deepEqual(resolvedValue, { id: "1", name: "Async User" });
+        type User = { id: string; name: string };
+        const asyncResolver = async (
+          _root: undefined,
+          _args: NoArgs,
+          _ctx: TestContext,
+          _info: GraphQLResolveInfo,
+        ): Promise<User> => ({ id: "1", name: "Async User" });
+
+        const query = apis.defineQuery<NoArgs, User>(asyncResolver);
+
+        assert.strictEqual(query, asyncResolver);
+        const result = await query(
+          undefined,
+          {},
+          { userId: "u1", db: { query: () => null } },
+          {} as GraphQLResolveInfo,
+        );
+        assert.deepEqual(result, { id: "1", name: "Async User" });
+      });
     });
 
-    it("should support resolver with args", () => {
-      type GetUserArgs = { id: string };
-      type User = { id: string; name: string };
-      const resolver = (
-        _root: undefined,
-        args: GetUserArgs,
-        _ctx: unknown,
-        _info: GraphQLResolveInfo,
-      ): User => ({
-        id: args.id,
-        name: "User",
+    describe("multiple schema support (Task 4.2)", () => {
+      it("should return independent API sets for different Context types", () => {
+        type AdminContext = { adminId: string; permissions: string[] };
+        type PublicContext = { sessionId: string };
+
+        const adminApis = createGqlkitApis<AdminContext>();
+        const publicApis = createGqlkitApis<PublicContext>();
+
+        assert.ok(adminApis);
+        assert.ok(publicApis);
+        assert.notStrictEqual(adminApis, publicApis);
       });
 
-      const result = defineQuery<GetUserArgs, User>(resolver);
-      assert.strictEqual(result, resolver);
-    });
-  });
+      it("should bind each API set to its Context type", () => {
+        type AdminContext = { adminId: string };
+        type PublicContext = { sessionId: string };
 
-  describe("defineMutation", () => {
-    it("should return the resolver function as-is (identity function)", () => {
-      type CreateUserInput = { name: string };
-      type User = { id: string; name: string };
-      const resolver = (
-        _root: undefined,
-        args: { input: CreateUserInput },
-        _ctx: unknown,
-        _info: GraphQLResolveInfo,
-      ): User => ({
-        id: "new-id",
-        name: args.input.name,
+        const adminApis = createGqlkitApis<AdminContext>();
+        const publicApis = createGqlkitApis<PublicContext>();
+
+        type User = { id: string };
+
+        const adminQuery = adminApis.defineQuery<NoArgs, User>(
+          (_root, _args, ctx, _info) => {
+            const _adminId: string = ctx.adminId;
+            return { id: "admin-user" };
+          },
+        );
+
+        const publicQuery = publicApis.defineQuery<NoArgs, User>(
+          (_root, _args, ctx, _info) => {
+            const _sessionId: string = ctx.sessionId;
+            return { id: "public-user" };
+          },
+        );
+
+        assert.ok(adminQuery);
+        assert.ok(publicQuery);
       });
-
-      const result = defineMutation<{ input: CreateUserInput }, User>(resolver);
-      assert.strictEqual(result, resolver);
     });
 
-    it("should support async resolver functions", async () => {
-      type User = { id: string; name: string };
-      const resolver = async (
-        _root: undefined,
-        _args: NoArgs,
-        _ctx: unknown,
-        _info: GraphQLResolveInfo,
-      ): Promise<User> => ({
-        id: "1",
-        name: "Deleted User",
+    describe("GqlkitApis type (Task 3.1)", () => {
+      it("should be correctly typed", () => {
+        const apis: GqlkitApis<TestContext> = createGqlkitApis<TestContext>();
+        assert.ok(apis);
       });
-
-      const result = defineMutation<NoArgs, User>(resolver);
-      assert.strictEqual(result, resolver);
-
-      const resolvedValue = await result(
-        undefined,
-        {},
-        {},
-        {} as GraphQLResolveInfo,
-      );
-      assert.deepEqual(resolvedValue, { id: "1", name: "Deleted User" });
-    });
-  });
-
-  describe("defineField", () => {
-    it("should return the resolver function as-is (identity function)", () => {
-      type User = { id: string; firstName: string; lastName: string };
-      const resolver = (
-        parent: User,
-        _args: NoArgs,
-        _ctx: unknown,
-        _info: GraphQLResolveInfo,
-      ): string => `${parent.firstName} ${parent.lastName}`;
-
-      const result = defineField<User, NoArgs, string>(resolver);
-      assert.strictEqual(result, resolver);
     });
 
-    it("should support async resolver functions", async () => {
-      type User = { id: string };
-      type Post = { id: string; title: string };
-      const resolver = async (
-        parent: User,
-        _args: NoArgs,
-        _ctx: unknown,
-        _info: GraphQLResolveInfo,
-      ): Promise<Post[]> => [{ id: "1", title: `Post by ${parent.id}` }];
+    describe("default Context type (Task 3.2)", () => {
+      it("should use unknown as default Context when not specified", () => {
+        const apis = createGqlkitApis();
 
-      const result = defineField<User, NoArgs, Post[]>(resolver);
-      assert.strictEqual(result, resolver);
+        type User = { id: string };
+        const query = apis.defineQuery<NoArgs, User>(
+          (_root, _args, _ctx, _info) => {
+            return { id: "1" };
+          },
+        );
 
-      const resolvedValue = await result(
-        { id: "user-1" },
-        {},
-        {},
-        {} as GraphQLResolveInfo,
-      );
-      assert.deepEqual(resolvedValue, [{ id: "1", title: "Post by user-1" }]);
-    });
-
-    it("should support resolver with args", () => {
-      type User = { id: string };
-      type Post = { id: string; title: string };
-      type PostsArgs = { limit: number };
-      const resolver = (
-        _parent: User,
-        args: PostsArgs,
-        _ctx: unknown,
-        _info: GraphQLResolveInfo,
-      ): Post[] =>
-        Array.from({ length: args.limit }, (_, i) => ({
-          id: `${i}`,
-          title: `Post ${i}`,
-        }));
-
-      const result = defineField<User, PostsArgs, Post[]>(resolver);
-      assert.strictEqual(result, resolver);
+        assert.ok(query);
+      });
     });
   });
 });

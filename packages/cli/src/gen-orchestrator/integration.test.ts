@@ -48,9 +48,11 @@ describe("Integration Tests", () => {
       await writeFile(
         join(resolversDir, "query.ts"),
         `
-          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
           interface User { id: string; name: string; email: string | null; }
           interface Post { id: string; title: string; content: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
 
           export const user = defineQuery<{ id: string }, User | null>(
             function(_root, args) { return { id: args.id, name: "test", email: null }; }
@@ -68,9 +70,11 @@ describe("Integration Tests", () => {
       await writeFile(
         join(resolversDir, "user.ts"),
         `
-          import { defineField, type NoArgs } from "@gqlkit-ts/runtime";
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
           interface User { id: string; name: string; email: string | null; }
           interface Post { id: string; title: string; content: string; }
+          const { defineField } = createGqlkitApis<Context>();
 
           export const posts = defineField<User, NoArgs, Post[]>(
             function() { return []; }
@@ -126,8 +130,10 @@ describe("Integration Tests", () => {
       await writeFile(
         join(resolversDir, "query.ts"),
         `
-          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
           interface User { id: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
           export const user = defineQuery<NoArgs, User>(function() { return { id: "1" }; });
         `,
         "utf-8",
@@ -169,8 +175,10 @@ describe("Integration Tests", () => {
       await writeFile(
         join(resolversDir, "mutation.ts"),
         `
-          import { defineMutation } from "@gqlkit-ts/runtime";
+          import { createGqlkitApis } from "@gqlkit-ts/runtime";
+          type Context = unknown;
           interface User { id: string; name: string; }
+          const { defineMutation } = createGqlkitApis<Context>();
           export const createUser = defineMutation<{ name: string }, User>(
             function(_root, args) { return { id: "1", name: args.name }; }
           );
@@ -181,8 +189,10 @@ describe("Integration Tests", () => {
       await writeFile(
         join(resolversDir, "query.ts"),
         `
-          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
           interface User { id: string; name: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
           export const users = defineQuery<NoArgs, User[]>(function() { return []; });
         `,
         "utf-8",
@@ -216,8 +226,10 @@ describe("Integration Tests", () => {
       await writeFile(
         join(resolversDir, "query.ts"),
         `
-          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
           interface User { id: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
           export const user = defineQuery<NoArgs, User>(function() { return { id: "1" }; });
         `,
         "utf-8",

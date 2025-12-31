@@ -1,4 +1,4 @@
-import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery, type NoArgs } from "../gqlkit.js";
 import type { Post } from "../types/post.js";
 
 export const posts = defineQuery<NoArgs, Post[]>(() => [

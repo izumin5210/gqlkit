@@ -81,8 +81,10 @@ describe("GenCommandOrchestrator", () => {
       });
       await setupResolversDir({
         "query.ts": `
-          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
           interface User { id: string; name: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
           export const users = defineQuery<NoArgs, User[]>(function() { return []; });
         `,
       });
@@ -106,8 +108,10 @@ describe("GenCommandOrchestrator", () => {
       });
       await setupResolversDir({
         "query.ts": `
-          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
           interface User { id: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
           export const user = defineQuery<NoArgs, User>(function() { return {} as User; });
         `,
       });
@@ -132,8 +136,10 @@ describe("GenCommandOrchestrator", () => {
       });
       await setupResolversDir({
         "query.ts": `
-          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
           interface User { id: string; name: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
           export const users = defineQuery<NoArgs, User[]>(function() { return []; });
         `,
       });
@@ -174,8 +180,10 @@ describe("GenCommandOrchestrator", () => {
       });
       await setupResolversDir({
         "query.ts": `
-          import { defineQuery, type NoArgs } from "@gqlkit-ts/runtime";
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
           interface User { id: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
           export const user = defineQuery<NoArgs, User>(function() { return { id: "1" }; });
         `,
       });
