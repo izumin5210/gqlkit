@@ -27,8 +27,9 @@ Pipeline-based architecture for code generation:
 - **Resolver Extraction**: `src/resolver-extractor/` - Scans and analyzes resolver definitions
 - **Schema Generation**: `src/schema-generator/` - Builds GraphQL AST and resolver maps
 - **Orchestration**: `src/gen-orchestrator/` - Coordinates pipeline stages (reporter, writer)
+- **Shared Utilities**: `src/shared/` - Cross-cutting utilities used by multiple pipeline stages (e.g., TSDoc parsing)
 
-**Pattern**: Each pipeline stage has internal modules (scanner, extractor, collector, etc.)
+**Pattern**: Each pipeline stage has internal modules (scanner, extractor, collector, validator, etc.)
 
 ### @gqlkit-ts/runtime (`packages/runtime/`)
 
@@ -48,6 +49,7 @@ Minimal runtime utilities for user codebases:
 - **Exports**: camelCase for values (e.g., `genCommand`, `extractTypes`)
 - **Type exports**: PascalCase (e.g., `User`, `GenerationConfig`)
 - **Test files**: Colocated with source (e.g., `foo.ts` + `foo.test.ts`)
+- **E2E tests**: In `e2e/` subdirectory within relevant module (e.g., `schema-generator/e2e/`)
 
 ## Import Organization
 
@@ -71,4 +73,4 @@ import { extractTypes } from "../type-extractor/index.js";
 
 ---
 _Document patterns, not file trees. New files following patterns shouldn't require updates_
-_Updated: 2024-12-31 - Monorepo structure and pipeline architecture_
+_Updated: 2025-01-01 - Added shared utilities, e2e test patterns, validator pattern_

@@ -59,7 +59,9 @@ Static code generation tool that analyzes TypeScript source files and produces G
 4. **No decorators**: Design decision to keep schema generation based purely on type analysis
 5. **graphql-tools compatible output**: Generated resolvers work directly with `makeExecutableSchema`
 6. **Define API**: Factory-based resolver definition via `createGqlkitApis<TContext>()` from `@gqlkit-ts/runtime`, returning typed `defineQuery`, `defineMutation`, `defineField` functions with custom context support
+7. **TSDoc to GraphQL descriptions**: TSDoc comments are automatically extracted and converted to GraphQL schema descriptions, supporting `@deprecated` directives
+8. **Input Object convention**: Types with `*Input` suffix are recognized as GraphQL Input Object types for resolver arguments
 
 ---
 _Document standards and patterns, not every dependency_
-_Updated: 2024-12-31 - Testing established, Define API factory pattern_
+_Updated: 2025-01-01 - TSDoc description extraction, Input Object convention_

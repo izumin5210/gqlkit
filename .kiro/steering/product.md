@@ -8,6 +8,7 @@ gqlkit is a convention-driven code generator for GraphQL servers in TypeScript. 
 - **Deterministic output**: Same code always produces same schema AST and resolver maps
 - **Static analysis only**: Pure TypeScript analysis without decorators or runtime metadata
 - **Fail-fast validation**: Actionable errors for type mismatches, missing references, and convention violations
+- **Documentation extraction**: TSDoc comments automatically become GraphQL schema descriptions with `@deprecated` support
 
 ## Target Use Cases
 
@@ -22,4 +23,4 @@ gqlkit provides a "kit" experience: consistent conventions paired with consisten
 
 ---
 _Focus on patterns and purpose, not exhaustive feature lists_
-_Updated: 2024-12-31 - Define API factory pattern_
+_Updated: 2025-01-01 - Documentation extraction capability_
