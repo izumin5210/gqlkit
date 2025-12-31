@@ -745,7 +745,9 @@ describe("extractDefineApiResolvers", () => {
         `,
       });
 
-      const userFieldsFile = filePaths.find((f) => f.includes("user-fields.ts"))!;
+      const userFieldsFile = filePaths.find((f) =>
+        f.includes("user-fields.ts"),
+      )!;
       const result = extractDefineApiResolvers(program, [userFieldsFile]);
 
       assert.equal(result.resolvers.length, 1);
@@ -806,7 +808,10 @@ describe("extractDefineApiResolvers", () => {
 
       const queriesFile = filePaths.find((f) => f.includes("queries.ts"))!;
       const mutationsFile = filePaths.find((f) => f.includes("mutations.ts"))!;
-      const result = extractDefineApiResolvers(program, [queriesFile, mutationsFile]);
+      const result = extractDefineApiResolvers(program, [
+        queriesFile,
+        mutationsFile,
+      ]);
 
       assert.equal(result.resolvers.length, 2);
       const fieldNames = result.resolvers.map((r) => r.fieldName);

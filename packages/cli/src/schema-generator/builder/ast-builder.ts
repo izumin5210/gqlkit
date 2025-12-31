@@ -4,6 +4,7 @@ import {
   type EnumTypeDefinitionNode,
   type EnumValueDefinitionNode,
   type FieldDefinitionNode,
+  type InputObjectTypeDefinitionNode,
   type InputValueDefinitionNode,
   Kind,
   type ListTypeNode,
@@ -24,6 +25,7 @@ import type {
   BaseField,
   BaseType,
   ExtensionField,
+  InputType,
   IntegratedResult,
   TypeExtension,
 } from "../integrator/result-integrator.js";
@@ -155,6 +157,27 @@ export function buildEnumTypeDefinitionNode(
   };
 }
 
+function buildInputFieldDefinitionNode(
+  field: BaseField,
+): InputValueDefinitionNode {
+  return {
+    kind: Kind.INPUT_VALUE_DEFINITION,
+    name: buildNameNode(field.name),
+    type: buildFieldTypeNode(field.type),
+  };
+}
+
+export function buildInputObjectTypeDefinitionNode(
+  inputType: InputType,
+): InputObjectTypeDefinitionNode {
+  const sortedFields = sortByName(inputType.fields);
+  return {
+    kind: Kind.INPUT_OBJECT_TYPE_DEFINITION,
+    name: buildNameNode(inputType.name),
+    fields: sortedFields.map(buildInputFieldDefinitionNode),
+  };
+}
+
 export function buildObjectTypeExtensionNode(
   typeExtension: TypeExtension,
 ): ObjectTypeExtensionNode {
@@ -183,6 +206,14 @@ export function buildDocumentNode(
     } else if (baseType.kind === "Enum") {
       definitions.push(buildEnumTypeDefinitionNode(baseType));
     }
+  }
+
+  const sortedInputTypes = [...integratedResult.inputTypes].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+
+  for (const inputType of sortedInputTypes) {
+    definitions.push(buildInputObjectTypeDefinitionNode(inputType));
   }
 
   const sortedExtensions = [...integratedResult.typeExtensions].sort((a, b) =>

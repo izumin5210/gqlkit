@@ -17,7 +17,11 @@ export type DiagnosticCode =
   | "UNKNOWN_TARGET_TYPE"
   | "PARENT_TYPE_MISMATCH"
   | "UNSUPPORTED_ENUM_TYPE"
-  | "INVALID_ENUM_MEMBER";
+  | "INVALID_ENUM_MEMBER"
+  | "INVALID_INPUT_TYPE"
+  | "UNKNOWN_ARGUMENT_TYPE"
+  | "OUTPUT_TYPE_IN_INPUT"
+  | "CIRCULAR_INPUT_REFERENCE";
 
 export interface Diagnostic {
   readonly code: DiagnosticCode;

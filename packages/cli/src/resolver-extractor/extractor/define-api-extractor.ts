@@ -350,7 +350,10 @@ export function extractDefineApiResolvers(
           continue;
         }
 
-        const resolverType = detectResolverFromBrandedType(initializer, checker);
+        const resolverType = detectResolverFromBrandedType(
+          initializer,
+          checker,
+        );
 
         if (!resolverType) {
           continue;

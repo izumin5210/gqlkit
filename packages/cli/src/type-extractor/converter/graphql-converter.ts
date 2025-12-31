@@ -33,6 +33,10 @@ const PRIMITIVE_TYPE_MAP: Record<string, string> = {
 
 const GRAPHQL_ENUM_VALUE_PATTERN = /^[_A-Za-z][_0-9A-Za-z]*$/;
 
+function isInputTypeName(name: string): boolean {
+  return name.endsWith("Input");
+}
+
 export function toScreamingSnakeCase(value: string): string {
   return value
     .replace(/[-\s]+/g, "_")
@@ -159,6 +163,15 @@ export function convertToGraphQL(
     }
 
     if (metadata.kind === "enum") {
+      if (isInputTypeName(metadata.name)) {
+        diagnostics.push({
+          code: "INVALID_INPUT_TYPE",
+          message: `Type '${metadata.name}' ends with 'Input' but is an enum type. Input types must be object types.`,
+          severity: "error",
+          location: { file: metadata.sourceFile, line: 1, column: 1 },
+        });
+      }
+
       const { values: enumValues, diagnostics: enumDiagnostics } =
         convertEnumMembers(extracted.enumMembers ?? [], metadata.sourceFile);
       diagnostics.push(...enumDiagnostics);
@@ -170,6 +183,15 @@ export function convertToGraphQL(
         sourceFile: metadata.sourceFile,
       });
     } else if (metadata.kind === "union") {
+      if (isInputTypeName(metadata.name)) {
+        diagnostics.push({
+          code: "INVALID_INPUT_TYPE",
+          message: `Type '${metadata.name}' ends with 'Input' but is a union type. Input types must be object types.`,
+          severity: "error",
+          location: { file: metadata.sourceFile, line: 1, column: 1 },
+        });
+      }
+
       const unionMembers = extracted.unionMembers
         ? [...extracted.unionMembers].sort()
         : [];
@@ -182,10 +204,11 @@ export function convertToGraphQL(
       });
     } else {
       const fields = convertFields(extracted);
+      const isInput = isInputTypeName(metadata.name);
 
       types.push({
         name: metadata.name,
-        kind: "Object",
+        kind: isInput ? "InputObject" : "Object",
         fields,
         sourceFile: metadata.sourceFile,
       });

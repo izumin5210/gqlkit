@@ -678,6 +678,135 @@ describe("ResultIntegrator", () => {
       });
     });
 
+    describe("Input Object type handling", () => {
+      it("should separate InputObject types into inputTypes array", () => {
+        const typesResult: ExtractTypesResult = {
+          types: [
+            {
+              name: "User",
+              kind: "Object",
+              fields: [
+                {
+                  name: "id",
+                  type: { typeName: "ID", nullable: false, list: false },
+                },
+              ],
+              sourceFile: "/path/to/user.ts",
+            },
+            {
+              name: "CreateUserInput",
+              kind: "InputObject",
+              fields: [
+                {
+                  name: "name",
+                  type: { typeName: "String", nullable: false, list: false },
+                },
+                {
+                  name: "email",
+                  type: { typeName: "String", nullable: true, list: false },
+                },
+              ],
+              sourceFile: "/path/to/create-user-input.ts",
+            },
+          ],
+          diagnostics: { errors: [], warnings: [] },
+        };
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const result = integrate(typesResult, resolversResult);
+
+        assert.strictEqual(result.baseTypes.length, 1);
+        assert.strictEqual(result.baseTypes[0]?.name, "User");
+        assert.strictEqual(result.baseTypes[0]?.kind, "Object");
+
+        assert.ok(result.inputTypes);
+        assert.strictEqual(result.inputTypes.length, 1);
+        assert.strictEqual(result.inputTypes[0]?.name, "CreateUserInput");
+        assert.strictEqual(result.inputTypes[0]?.fields?.length, 2);
+      });
+
+      it("should include all InputObject types from type-extractor", () => {
+        const typesResult: ExtractTypesResult = {
+          types: [
+            {
+              name: "CreateUserInput",
+              kind: "InputObject",
+              fields: [
+                {
+                  name: "name",
+                  type: { typeName: "String", nullable: false, list: false },
+                },
+              ],
+              sourceFile: "/path/to/create-user-input.ts",
+            },
+            {
+              name: "UpdateUserInput",
+              kind: "InputObject",
+              fields: [
+                {
+                  name: "id",
+                  type: { typeName: "ID", nullable: false, list: false },
+                },
+                {
+                  name: "name",
+                  type: { typeName: "String", nullable: true, list: false },
+                },
+              ],
+              sourceFile: "/path/to/update-user-input.ts",
+            },
+          ],
+          diagnostics: { errors: [], warnings: [] },
+        };
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const result = integrate(typesResult, resolversResult);
+
+        assert.strictEqual(result.inputTypes.length, 2);
+        const inputNames = result.inputTypes.map((t) => t.name);
+        assert.ok(inputNames.includes("CreateUserInput"));
+        assert.ok(inputNames.includes("UpdateUserInput"));
+      });
+
+      it("should have empty inputTypes when no InputObject types exist", () => {
+        const typesResult: ExtractTypesResult = {
+          types: [
+            {
+              name: "User",
+              kind: "Object",
+              fields: [
+                {
+                  name: "id",
+                  type: { typeName: "ID", nullable: false, list: false },
+                },
+              ],
+              sourceFile: "/path/to/user.ts",
+            },
+          ],
+          diagnostics: { errors: [], warnings: [] },
+        };
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const result = integrate(typesResult, resolversResult);
+
+        assert.strictEqual(result.inputTypes.length, 0);
+      });
+    });
+
     describe("error diagnostics and hasErrors flag", () => {
       it("should set hasErrors to false when no error diagnostics exist", () => {
         const typesResult: ExtractTypesResult = {

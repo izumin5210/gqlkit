@@ -24,6 +24,12 @@ export interface BaseType {
   readonly enumValues?: ReadonlyArray<EnumValueInfo>;
 }
 
+export interface InputType {
+  readonly name: string;
+  readonly fields: ReadonlyArray<BaseField>;
+  readonly sourceFile: string;
+}
+
 export interface ExtensionField {
   readonly name: string;
   readonly type: GraphQLFieldType;
@@ -39,6 +45,7 @@ export interface TypeExtension {
 
 export interface IntegratedResult {
   readonly baseTypes: ReadonlyArray<BaseType>;
+  readonly inputTypes: ReadonlyArray<InputType>;
   readonly typeExtensions: ReadonlyArray<TypeExtension>;
   readonly hasQuery: boolean;
   readonly hasMutation: boolean;
@@ -78,30 +85,43 @@ export function integrate(
   diagnostics.push(...resolversResult.diagnostics.errors);
   diagnostics.push(...resolversResult.diagnostics.warnings);
 
-  const baseTypes: BaseType[] = typesResult.types.map((type) => {
-    if (type.kind === "Enum") {
-      return {
+  const baseTypes: BaseType[] = [];
+  const inputTypes: InputType[] = [];
+
+  for (const type of typesResult.types) {
+    if (type.kind === "InputObject") {
+      inputTypes.push({
+        name: type.name,
+        fields:
+          type.fields?.map((field) => ({
+            name: field.name,
+            type: field.type,
+          })) ?? [],
+        sourceFile: type.sourceFile,
+      });
+    } else if (type.kind === "Enum") {
+      baseTypes.push({
         name: type.name,
         kind: type.kind,
         enumValues: type.enumValues,
-      };
-    }
-    if (type.kind === "Object") {
-      return {
+      });
+    } else if (type.kind === "Object") {
+      baseTypes.push({
         name: type.name,
         kind: type.kind,
         fields: type.fields?.map((field) => ({
           name: field.name,
           type: field.type,
         })),
-      };
+      });
+    } else {
+      baseTypes.push({
+        name: type.name,
+        kind: type.kind,
+        unionMembers: type.unionMembers,
+      });
     }
-    return {
-      name: type.name,
-      kind: type.kind,
-      unionMembers: type.unionMembers,
-    };
-  });
+  }
 
   const hasQuery = resolversResult.queryFields.fields.length > 0;
   const hasMutation = resolversResult.mutationFields.fields.length > 0;
@@ -113,7 +133,10 @@ export function integrate(
     baseTypes.push({ name: "Mutation", kind: "Object", fields: [] });
   }
 
-  const knownTypeNames = new Set(baseTypes.map((t) => t.name));
+  const knownTypeNames = new Set([
+    ...baseTypes.map((t) => t.name),
+    ...inputTypes.map((t) => t.name),
+  ]);
 
   const typeExtensions: TypeExtension[] = [];
 
@@ -157,6 +180,7 @@ export function integrate(
 
   return {
     baseTypes,
+    inputTypes,
     typeExtensions,
     hasQuery,
     hasMutation,

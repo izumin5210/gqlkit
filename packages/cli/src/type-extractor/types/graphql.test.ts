@@ -24,6 +24,11 @@ describe("GraphQL types", () => {
       const kind: GraphQLTypeKind = "Enum";
       assert.strictEqual(kind, "Enum");
     });
+
+    it("should support InputObject kind", () => {
+      const kind: GraphQLTypeKind = "InputObject";
+      assert.strictEqual(kind, "InputObject");
+    });
   });
 
   describe("GraphQLFieldType", () => {
@@ -143,6 +148,30 @@ describe("GraphQL types", () => {
       assert.strictEqual(typeInfo.enumValues?.[0]?.name, "ACTIVE");
       assert.strictEqual(typeInfo.enumValues?.[0]?.originalValue, "active");
       assert.strictEqual(typeInfo.fields, undefined);
+    });
+
+    it("should represent an InputObject type with fields", () => {
+      const typeInfo: GraphQLTypeInfo = {
+        name: "CreateUserInput",
+        kind: "InputObject",
+        fields: [
+          {
+            name: "name",
+            type: { typeName: "String", nullable: false, list: false },
+          },
+          {
+            name: "email",
+            type: { typeName: "String", nullable: true, list: false },
+          },
+        ],
+        sourceFile: "/path/to/create-user-input.ts",
+      };
+
+      assert.strictEqual(typeInfo.name, "CreateUserInput");
+      assert.strictEqual(typeInfo.kind, "InputObject");
+      assert.strictEqual(typeInfo.fields?.length, 2);
+      assert.strictEqual(typeInfo.sourceFile, "/path/to/create-user-input.ts");
+      assert.strictEqual(typeInfo.unionMembers, undefined);
     });
   });
 

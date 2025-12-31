@@ -1,4 +1,4 @@
-export type GraphQLTypeKind = "Object" | "Union" | "Enum";
+export type GraphQLTypeKind = "Object" | "Union" | "Enum" | "InputObject";
 
 export interface GraphQLFieldType {
   readonly typeName: string;

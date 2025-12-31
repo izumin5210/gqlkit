@@ -9,6 +9,7 @@ import type {
 import type {
   BaseType,
   ExtensionField,
+  InputType,
   IntegratedResult,
   TypeExtension,
 } from "../integrator/result-integrator.js";
@@ -18,6 +19,7 @@ import {
   buildEnumValueDefinitionNode,
   buildFieldDefinitionNode,
   buildFieldTypeNode,
+  buildInputObjectTypeDefinitionNode,
   buildInputValueDefinitionNode,
   buildListTypeNode,
   buildNamedTypeNode,
@@ -227,6 +229,163 @@ describe("ASTBuilder", () => {
 
       assert.strictEqual(node.arguments?.length ?? 0, 0);
     });
+
+    it("should handle multiple arguments with different nullability", () => {
+      const field: ExtensionField = {
+        name: "searchUsers",
+        type: { typeName: "User", nullable: false, list: true },
+        args: [
+          {
+            name: "query",
+            type: { typeName: "String", nullable: false, list: false },
+          },
+          {
+            name: "limit",
+            type: { typeName: "Int", nullable: true, list: false },
+          },
+        ],
+        resolverSourceFile: "/path/to/resolver.ts",
+      };
+      const node = buildFieldDefinitionNode(field);
+
+      assert.strictEqual(node.arguments?.length, 2);
+
+      const queryArg = node.arguments?.[0];
+      assert.strictEqual(queryArg?.name.value, "query");
+      assert.strictEqual(queryArg?.type.kind, Kind.NON_NULL_TYPE);
+
+      const limitArg = node.arguments?.[1];
+      assert.strictEqual(limitArg?.name.value, "limit");
+      assert.strictEqual(limitArg?.type.kind, Kind.NAMED_TYPE);
+    });
+
+    it("should handle list argument types", () => {
+      const field: ExtensionField = {
+        name: "getUsersByIds",
+        type: { typeName: "User", nullable: false, list: true },
+        args: [
+          {
+            name: "ids",
+            type: {
+              typeName: "ID",
+              nullable: false,
+              list: true,
+              listItemNullable: false,
+            },
+          },
+        ],
+        resolverSourceFile: "/path/to/resolver.ts",
+      };
+      const node = buildFieldDefinitionNode(field);
+
+      assert.strictEqual(node.arguments?.length, 1);
+      const idsArg = node.arguments?.[0];
+      assert.strictEqual(idsArg?.type.kind, Kind.NON_NULL_TYPE);
+      if (idsArg?.type.kind === Kind.NON_NULL_TYPE) {
+        assert.strictEqual(idsArg.type.type.kind, Kind.LIST_TYPE);
+      }
+    });
+
+    it("should handle Input Object type arguments", () => {
+      const field: ExtensionField = {
+        name: "createUser",
+        type: { typeName: "User", nullable: false, list: false },
+        args: [
+          {
+            name: "input",
+            type: { typeName: "CreateUserInput", nullable: false, list: false },
+          },
+        ],
+        resolverSourceFile: "/path/to/resolver.ts",
+      };
+      const node = buildFieldDefinitionNode(field);
+
+      assert.strictEqual(node.arguments?.length, 1);
+      const inputArg = node.arguments?.[0];
+      assert.strictEqual(inputArg?.name.value, "input");
+      assert.strictEqual(inputArg?.type.kind, Kind.NON_NULL_TYPE);
+      if (inputArg?.type.kind === Kind.NON_NULL_TYPE) {
+        const namedType = inputArg.type.type;
+        if (namedType.kind === Kind.NAMED_TYPE) {
+          assert.strictEqual(namedType.name.value, "CreateUserInput");
+        }
+      }
+    });
+
+    it("should handle Enum type arguments", () => {
+      const field: ExtensionField = {
+        name: "usersByStatus",
+        type: { typeName: "User", nullable: false, list: true },
+        args: [
+          {
+            name: "status",
+            type: { typeName: "Status", nullable: false, list: false },
+          },
+        ],
+        resolverSourceFile: "/path/to/resolver.ts",
+      };
+      const node = buildFieldDefinitionNode(field);
+
+      assert.strictEqual(node.arguments?.length, 1);
+      const statusArg = node.arguments?.[0];
+      assert.strictEqual(statusArg?.name.value, "status");
+      assert.strictEqual(statusArg?.type.kind, Kind.NON_NULL_TYPE);
+      if (statusArg?.type.kind === Kind.NON_NULL_TYPE) {
+        const namedType = statusArg.type.type;
+        if (namedType.kind === Kind.NAMED_TYPE) {
+          assert.strictEqual(namedType.name.value, "Status");
+        }
+      }
+    });
+
+    it("should handle all scalar types in arguments", () => {
+      const field: ExtensionField = {
+        name: "query",
+        type: { typeName: "Result", nullable: false, list: false },
+        args: [
+          {
+            name: "text",
+            type: { typeName: "String", nullable: false, list: false },
+          },
+          {
+            name: "count",
+            type: { typeName: "Int", nullable: false, list: false },
+          },
+          {
+            name: "price",
+            type: { typeName: "Float", nullable: false, list: false },
+          },
+          {
+            name: "active",
+            type: { typeName: "Boolean", nullable: false, list: false },
+          },
+          {
+            name: "id",
+            type: { typeName: "ID", nullable: false, list: false },
+          },
+        ],
+        resolverSourceFile: "/path/to/resolver.ts",
+      };
+      const node = buildFieldDefinitionNode(field);
+
+      assert.strictEqual(node.arguments?.length, 5);
+      const argTypeNames = node.arguments?.map((arg) => {
+        if (
+          arg.type.kind === Kind.NON_NULL_TYPE &&
+          arg.type.type.kind === Kind.NAMED_TYPE
+        ) {
+          return arg.type.type.name.value;
+        }
+        return null;
+      });
+      assert.deepStrictEqual(argTypeNames, [
+        "String",
+        "Int",
+        "Float",
+        "Boolean",
+        "ID",
+      ]);
+    });
   });
 
   describe("buildObjectTypeDefinitionNode", () => {
@@ -333,6 +492,173 @@ describe("ASTBuilder", () => {
     });
   });
 
+  describe("buildInputObjectTypeDefinitionNode", () => {
+    it("should create InputObjectTypeDefinitionNode from InputType", () => {
+      const inputType: InputType = {
+        name: "CreateUserInput",
+        fields: [
+          {
+            name: "name",
+            type: { typeName: "String", nullable: false, list: false },
+          },
+          {
+            name: "email",
+            type: { typeName: "String", nullable: true, list: false },
+          },
+        ],
+        sourceFile: "/path/to/input.ts",
+      };
+      const node = buildInputObjectTypeDefinitionNode(inputType);
+
+      assert.strictEqual(node.kind, Kind.INPUT_OBJECT_TYPE_DEFINITION);
+      assert.strictEqual(node.name.value, "CreateUserInput");
+      assert.strictEqual(node.fields?.length, 2);
+    });
+
+    it("should sort fields by name alphabetically", () => {
+      const inputType: InputType = {
+        name: "TestInput",
+        fields: [
+          {
+            name: "zulu",
+            type: { typeName: "String", nullable: false, list: false },
+          },
+          {
+            name: "alpha",
+            type: { typeName: "String", nullable: false, list: false },
+          },
+          {
+            name: "bravo",
+            type: { typeName: "String", nullable: false, list: false },
+          },
+        ],
+        sourceFile: "/path/to/input.ts",
+      };
+      const node = buildInputObjectTypeDefinitionNode(inputType);
+
+      const fieldNames = node.fields?.map((f) => f.name.value);
+      assert.deepStrictEqual(fieldNames, ["alpha", "bravo", "zulu"]);
+    });
+
+    it("should handle non-nullable fields correctly", () => {
+      const inputType: InputType = {
+        name: "RequiredFieldsInput",
+        fields: [
+          {
+            name: "required",
+            type: { typeName: "String", nullable: false, list: false },
+          },
+        ],
+        sourceFile: "/path/to/input.ts",
+      };
+      const node = buildInputObjectTypeDefinitionNode(inputType);
+
+      assert.strictEqual(node.fields?.[0]?.type.kind, Kind.NON_NULL_TYPE);
+    });
+
+    it("should handle nullable fields correctly", () => {
+      const inputType: InputType = {
+        name: "OptionalFieldsInput",
+        fields: [
+          {
+            name: "optional",
+            type: { typeName: "String", nullable: true, list: false },
+          },
+        ],
+        sourceFile: "/path/to/input.ts",
+      };
+      const node = buildInputObjectTypeDefinitionNode(inputType);
+
+      assert.strictEqual(node.fields?.[0]?.type.kind, Kind.NAMED_TYPE);
+    });
+
+    it("should handle list fields correctly", () => {
+      const inputType: InputType = {
+        name: "ListFieldsInput",
+        fields: [
+          {
+            name: "tags",
+            type: {
+              typeName: "String",
+              nullable: false,
+              list: true,
+              listItemNullable: false,
+            },
+          },
+        ],
+        sourceFile: "/path/to/input.ts",
+      };
+      const node = buildInputObjectTypeDefinitionNode(inputType);
+
+      assert.strictEqual(node.fields?.[0]?.type.kind, Kind.NON_NULL_TYPE);
+      if (node.fields?.[0]?.type.kind === Kind.NON_NULL_TYPE) {
+        assert.strictEqual(node.fields[0].type.type.kind, Kind.LIST_TYPE);
+      }
+    });
+
+    it("should handle nested Input type references", () => {
+      const inputType: InputType = {
+        name: "CreatePostInput",
+        fields: [
+          {
+            name: "title",
+            type: { typeName: "String", nullable: false, list: false },
+          },
+          {
+            name: "author",
+            type: { typeName: "AuthorInput", nullable: false, list: false },
+          },
+        ],
+        sourceFile: "/path/to/input.ts",
+      };
+      const node = buildInputObjectTypeDefinitionNode(inputType);
+
+      const authorField = node.fields?.find((f) => f.name.value === "author");
+      assert.ok(authorField);
+      if (authorField?.type.kind === Kind.NON_NULL_TYPE) {
+        const namedType = authorField.type.type;
+        if (namedType.kind === Kind.NAMED_TYPE) {
+          assert.strictEqual(namedType.name.value, "AuthorInput");
+        }
+      }
+    });
+
+    it("should handle Enum type fields in Input Object", () => {
+      const inputType: InputType = {
+        name: "UpdateUserInput",
+        fields: [
+          {
+            name: "status",
+            type: { typeName: "Status", nullable: false, list: false },
+          },
+          {
+            name: "role",
+            type: { typeName: "Role", nullable: true, list: false },
+          },
+        ],
+        sourceFile: "/path/to/input.ts",
+      };
+      const node = buildInputObjectTypeDefinitionNode(inputType);
+
+      const statusField = node.fields?.find((f) => f.name.value === "status");
+      assert.ok(statusField);
+      assert.strictEqual(statusField?.type.kind, Kind.NON_NULL_TYPE);
+      if (statusField?.type.kind === Kind.NON_NULL_TYPE) {
+        const namedType = statusField.type.type;
+        if (namedType.kind === Kind.NAMED_TYPE) {
+          assert.strictEqual(namedType.name.value, "Status");
+        }
+      }
+
+      const roleField = node.fields?.find((f) => f.name.value === "role");
+      assert.ok(roleField);
+      assert.strictEqual(roleField?.type.kind, Kind.NAMED_TYPE);
+      if (roleField?.type.kind === Kind.NAMED_TYPE) {
+        assert.strictEqual(roleField.type.name.value, "Role");
+      }
+    });
+  });
+
   describe("buildObjectTypeExtensionNode", () => {
     it("should create ObjectTypeExtensionNode from TypeExtension", () => {
       const typeExtension: TypeExtension = {
@@ -399,6 +725,7 @@ describe("ASTBuilder", () => {
             ],
           },
         ],
+        inputTypes: [],
         typeExtensions: [],
         hasQuery: false,
         hasMutation: false,
@@ -432,6 +759,7 @@ describe("ASTBuilder", () => {
             ],
           },
         ],
+        inputTypes: [],
         typeExtensions: [
           {
             targetTypeName: "Query",
@@ -462,6 +790,7 @@ describe("ASTBuilder", () => {
           { name: "Apple", kind: "Object", fields: [] },
           { name: "Mango", kind: "Object", fields: [] },
         ],
+        inputTypes: [],
         typeExtensions: [],
         hasQuery: false,
         hasMutation: false,
@@ -486,6 +815,7 @@ describe("ASTBuilder", () => {
           { name: "Apple", kind: "Object", fields: [] },
           { name: "Zebra", kind: "Object", fields: [] },
         ],
+        inputTypes: [],
         typeExtensions: [
           {
             targetTypeName: "Zebra",
@@ -546,6 +876,7 @@ describe("ASTBuilder", () => {
             ],
           },
         ],
+        inputTypes: [],
         typeExtensions: [],
         hasQuery: false,
         hasMutation: false,
@@ -572,6 +903,7 @@ describe("ASTBuilder", () => {
             unionMembers: ["User", "Post"],
           },
         ],
+        inputTypes: [],
         typeExtensions: [],
         hasQuery: false,
         hasMutation: false,
@@ -597,6 +929,7 @@ describe("ASTBuilder", () => {
             ],
           },
         ],
+        inputTypes: [],
         typeExtensions: [],
         hasQuery: false,
         hasMutation: false,
@@ -622,6 +955,7 @@ describe("ASTBuilder", () => {
             ],
           },
         ],
+        inputTypes: [],
         typeExtensions: [],
         hasQuery: false,
         hasMutation: false,
@@ -660,6 +994,7 @@ describe("ASTBuilder", () => {
             ],
           },
         ],
+        inputTypes: [],
         typeExtensions: [
           {
             targetTypeName: "Query",
@@ -690,6 +1025,175 @@ describe("ASTBuilder", () => {
       assert.ok(sdl.includes("type User"));
       assert.ok(sdl.includes("extend type Query"));
       assert.ok(sdl.includes("users: [User!]!"));
+    });
+
+    it("should include Input Object types in DocumentNode", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "User",
+            kind: "Object",
+            fields: [
+              {
+                name: "id",
+                type: { typeName: "ID", nullable: false, list: false },
+              },
+              {
+                name: "name",
+                type: { typeName: "String", nullable: false, list: false },
+              },
+            ],
+          },
+        ],
+        inputTypes: [
+          {
+            name: "CreateUserInput",
+            fields: [
+              {
+                name: "name",
+                type: { typeName: "String", nullable: false, list: false },
+              },
+              {
+                name: "email",
+                type: { typeName: "String", nullable: true, list: false },
+              },
+            ],
+            sourceFile: "/path/to/input.ts",
+          },
+        ],
+        typeExtensions: [],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      assert.ok(sdl.includes("input CreateUserInput"));
+      assert.ok(sdl.includes("name: String!"));
+      assert.ok(sdl.includes("email: String"));
+    });
+
+    it("should sort Input Object types alphabetically", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [],
+        inputTypes: [
+          {
+            name: "ZInput",
+            fields: [
+              {
+                name: "value",
+                type: { typeName: "String", nullable: false, list: false },
+              },
+            ],
+            sourceFile: "/path/to/z.ts",
+          },
+          {
+            name: "AInput",
+            fields: [
+              {
+                name: "value",
+                type: { typeName: "String", nullable: false, list: false },
+              },
+            ],
+            sourceFile: "/path/to/a.ts",
+          },
+        ],
+        typeExtensions: [],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const inputTypes = doc.definitions.filter(
+        (d) => d.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION,
+      );
+
+      assert.strictEqual(inputTypes.length, 2);
+      if (
+        inputTypes[0]?.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION &&
+        inputTypes[1]?.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION
+      ) {
+        assert.strictEqual(inputTypes[0].name.value, "AInput");
+        assert.strictEqual(inputTypes[1].name.value, "ZInput");
+      }
+    });
+
+    it("should produce complete schema with Input types and arguments", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "Mutation",
+            kind: "Object",
+            fields: [],
+          },
+          {
+            name: "User",
+            kind: "Object",
+            fields: [
+              {
+                name: "id",
+                type: { typeName: "ID", nullable: false, list: false },
+              },
+              {
+                name: "name",
+                type: { typeName: "String", nullable: false, list: false },
+              },
+            ],
+          },
+        ],
+        inputTypes: [
+          {
+            name: "CreateUserInput",
+            fields: [
+              {
+                name: "name",
+                type: { typeName: "String", nullable: false, list: false },
+              },
+            ],
+            sourceFile: "/path/to/input.ts",
+          },
+        ],
+        typeExtensions: [
+          {
+            targetTypeName: "Mutation",
+            fields: [
+              {
+                name: "createUser",
+                type: { typeName: "User", nullable: false, list: false },
+                args: [
+                  {
+                    name: "input",
+                    type: {
+                      typeName: "CreateUserInput",
+                      nullable: false,
+                      list: false,
+                    },
+                  },
+                ],
+                resolverSourceFile: "/path/to/mutation.ts",
+              },
+            ],
+          },
+        ],
+        hasQuery: false,
+        hasMutation: true,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      assert.ok(sdl.includes("input CreateUserInput"));
+      assert.ok(sdl.includes("type Mutation"));
+      assert.ok(sdl.includes("type User"));
+      assert.ok(sdl.includes("extend type Mutation"));
+      assert.ok(sdl.includes("createUser(input: CreateUserInput!): User!"));
     });
   });
 });

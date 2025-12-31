@@ -24,6 +24,7 @@ describe("CodeEmitter", () => {
             ],
           },
         ],
+        inputTypes: [],
         typeExtensions: [],
         hasQuery: false,
         hasMutation: false,
@@ -57,6 +58,7 @@ describe("CodeEmitter", () => {
             ],
           },
         ],
+        inputTypes: [],
         typeExtensions: [
           {
             targetTypeName: "Query",
@@ -96,6 +98,7 @@ describe("CodeEmitter", () => {
             unionMembers: ["User", "Post"],
           },
         ],
+        inputTypes: [],
         typeExtensions: [],
         hasQuery: false,
         hasMutation: false,

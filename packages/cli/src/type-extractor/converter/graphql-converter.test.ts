@@ -525,6 +525,204 @@ describe("GraphQLConverter", () => {
     });
   });
 
+  describe("Input Object type classification", () => {
+    it("should convert type with *Input suffix to InputObject kind", () => {
+      const input: ExtractedTypeInfo[] = [
+        {
+          metadata: {
+            name: "CreateUserInput",
+            kind: "interface",
+            sourceFile: "/path/to/create-user-input.ts",
+            exportKind: "named",
+          },
+          fields: [
+            {
+              name: "name",
+              tsType: { kind: "primitive", name: "string", nullable: false },
+              optional: false,
+            },
+            {
+              name: "email",
+              tsType: { kind: "primitive", name: "string", nullable: true },
+              optional: false,
+            },
+          ],
+        },
+      ];
+
+      const result = convertToGraphQL(input);
+
+      assert.strictEqual(result.types.length, 1);
+      assert.strictEqual(result.types[0]?.kind, "InputObject");
+      assert.strictEqual(result.types[0]?.name, "CreateUserInput");
+      assert.strictEqual(result.types[0]?.fields?.length, 2);
+    });
+
+    it("should convert object type with *Input suffix to InputObject kind", () => {
+      const input: ExtractedTypeInfo[] = [
+        {
+          metadata: {
+            name: "UpdateUserInput",
+            kind: "object",
+            sourceFile: "/path/to/update-user-input.ts",
+            exportKind: "named",
+          },
+          fields: [
+            {
+              name: "id",
+              tsType: { kind: "primitive", name: "string", nullable: false },
+              optional: false,
+            },
+          ],
+        },
+      ];
+
+      const result = convertToGraphQL(input);
+
+      assert.strictEqual(result.types[0]?.kind, "InputObject");
+    });
+
+    it("should not convert non-*Input types to InputObject", () => {
+      const input: ExtractedTypeInfo[] = [
+        {
+          metadata: {
+            name: "User",
+            kind: "interface",
+            sourceFile: "/path/to/user.ts",
+            exportKind: "named",
+          },
+          fields: [
+            {
+              name: "id",
+              tsType: { kind: "primitive", name: "string", nullable: false },
+              optional: false,
+            },
+          ],
+        },
+      ];
+
+      const result = convertToGraphQL(input);
+
+      assert.strictEqual(result.types[0]?.kind, "Object");
+    });
+
+    it("should handle nested Input type references in fields", () => {
+      const input: ExtractedTypeInfo[] = [
+        {
+          metadata: {
+            name: "CreatePostInput",
+            kind: "interface",
+            sourceFile: "/path/to/create-post-input.ts",
+            exportKind: "named",
+          },
+          fields: [
+            {
+              name: "title",
+              tsType: { kind: "primitive", name: "string", nullable: false },
+              optional: false,
+            },
+            {
+              name: "author",
+              tsType: {
+                kind: "reference",
+                name: "AuthorInput",
+                nullable: false,
+              },
+              optional: false,
+            },
+          ],
+        },
+      ];
+
+      const result = convertToGraphQL(input);
+
+      assert.strictEqual(result.types[0]?.kind, "InputObject");
+      const authorField = result.types[0]?.fields?.find(
+        (f) => f.name === "author",
+      );
+      assert.ok(authorField);
+      assert.strictEqual(authorField.type.typeName, "AuthorInput");
+    });
+
+    it("should report error for union type with *Input suffix", () => {
+      const input: ExtractedTypeInfo[] = [
+        {
+          metadata: {
+            name: "StatusInput",
+            kind: "union",
+            sourceFile: "/path/to/status-input.ts",
+            exportKind: "named",
+          },
+          fields: [],
+          unionMembers: ["Success", "Error"],
+        },
+      ];
+
+      const result = convertToGraphQL(input);
+
+      assert.ok(
+        result.diagnostics.some((d) => d.code === "INVALID_INPUT_TYPE"),
+        "Expected INVALID_INPUT_TYPE error",
+      );
+      const error = result.diagnostics.find(
+        (d) => d.code === "INVALID_INPUT_TYPE",
+      );
+      assert.ok(error?.message.includes("StatusInput"));
+      assert.ok(error?.message.includes("union"));
+      assert.strictEqual(error?.location?.file, "/path/to/status-input.ts");
+    });
+
+    it("should report error for enum type with *Input suffix", () => {
+      const input: ExtractedTypeInfo[] = [
+        {
+          metadata: {
+            name: "ColorInput",
+            kind: "enum",
+            sourceFile: "/path/to/color-input.ts",
+            exportKind: "named",
+          },
+          fields: [],
+          enumMembers: [
+            { name: "Red", value: "red" },
+            { name: "Blue", value: "blue" },
+          ],
+        },
+      ];
+
+      const result = convertToGraphQL(input);
+
+      assert.ok(
+        result.diagnostics.some((d) => d.code === "INVALID_INPUT_TYPE"),
+        "Expected INVALID_INPUT_TYPE error",
+      );
+      const error = result.diagnostics.find(
+        (d) => d.code === "INVALID_INPUT_TYPE",
+      );
+      assert.ok(error?.message.includes("ColorInput"));
+      assert.ok(error?.message.includes("enum"));
+    });
+
+    it("should not add invalid Input types to result types", () => {
+      const input: ExtractedTypeInfo[] = [
+        {
+          metadata: {
+            name: "StatusInput",
+            kind: "union",
+            sourceFile: "/path/to/status-input.ts",
+            exportKind: "named",
+          },
+          fields: [],
+          unionMembers: ["Success", "Error"],
+        },
+      ];
+
+      const result = convertToGraphQL(input);
+
+      assert.strictEqual(result.types.length, 1);
+      assert.strictEqual(result.types[0]?.kind, "Union");
+    });
+  });
+
   describe("toScreamingSnakeCase", () => {
     it("should convert camelCase to SCREAMING_SNAKE_CASE", () => {
       assert.strictEqual(toScreamingSnakeCase("camelCase"), "CAMEL_CASE");
