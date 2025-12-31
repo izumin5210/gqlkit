@@ -846,5 +846,263 @@ describe("TypeExtractor", () => {
         assert.strictEqual(resultType.metadata.kind, "union");
       });
     });
+
+    describe("description extraction", () => {
+      it("should extract description from interface TSDoc", async () => {
+        await writeFile(
+          join(tempDir, "user.ts"),
+          `
+          /** A user in the system */
+          export interface User {
+            id: string;
+          }
+          `,
+        );
+        const files = [join(tempDir, "user.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.strictEqual(
+          result.types[0]?.metadata.description,
+          "A user in the system",
+        );
+      });
+
+      it("should extract description from type alias TSDoc", async () => {
+        await writeFile(
+          join(tempDir, "status.ts"),
+          `
+          /** Current status of the operation */
+          export type Status = { code: number; message: string };
+          `,
+        );
+        const files = [join(tempDir, "status.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.strictEqual(
+          result.types[0]?.metadata.description,
+          "Current status of the operation",
+        );
+      });
+
+      it("should extract description from union type TSDoc", async () => {
+        await writeFile(
+          join(tempDir, "result.ts"),
+          `
+          interface Success { data: string; }
+          interface Failure { error: string; }
+          /** Result of an operation that can succeed or fail */
+          export type Result = Success | Failure;
+          `,
+        );
+        const files = [join(tempDir, "result.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        const resultType = result.types.find(
+          (t) => t.metadata.name === "Result",
+        );
+        assert.strictEqual(
+          resultType?.metadata.description,
+          "Result of an operation that can succeed or fail",
+        );
+      });
+
+      it("should return undefined description when no TSDoc exists", async () => {
+        await writeFile(
+          join(tempDir, "user.ts"),
+          `export interface User { id: string; }`,
+        );
+        const files = [join(tempDir, "user.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.strictEqual(result.types[0]?.metadata.description, undefined);
+      });
+
+      it("should extract deprecated from type TSDoc", async () => {
+        await writeFile(
+          join(tempDir, "user.ts"),
+          `
+          /**
+           * A user in the system
+           * @deprecated Use Member instead
+           */
+          export interface User {
+            id: string;
+          }
+          `,
+        );
+        const files = [join(tempDir, "user.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.ok(result.types[0]?.metadata.deprecated);
+        assert.strictEqual(
+          result.types[0]?.metadata.deprecated?.isDeprecated,
+          true,
+        );
+        assert.strictEqual(
+          result.types[0]?.metadata.deprecated?.reason,
+          "Use Member instead",
+        );
+      });
+
+      it("should extract description from field TSDoc", async () => {
+        await writeFile(
+          join(tempDir, "user.ts"),
+          `
+          export interface User {
+            /** The unique identifier */
+            id: string;
+            /** The display name */
+            name: string;
+          }
+          `,
+        );
+        const files = [join(tempDir, "user.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        const idField = result.types[0]?.fields.find((f) => f.name === "id");
+        const nameField = result.types[0]?.fields.find(
+          (f) => f.name === "name",
+        );
+        assert.strictEqual(idField?.description, "The unique identifier");
+        assert.strictEqual(nameField?.description, "The display name");
+      });
+
+      it("should extract deprecated from field TSDoc", async () => {
+        await writeFile(
+          join(tempDir, "user.ts"),
+          `
+          export interface User {
+            /**
+             * The unique identifier
+             * @deprecated Use uuid instead
+             */
+            id: string;
+          }
+          `,
+        );
+        const files = [join(tempDir, "user.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        const idField = result.types[0]?.fields.find((f) => f.name === "id");
+        assert.ok(idField?.deprecated);
+        assert.strictEqual(idField?.deprecated?.isDeprecated, true);
+        assert.strictEqual(idField?.deprecated?.reason, "Use uuid instead");
+      });
+
+      it("should return undefined field description when no TSDoc exists", async () => {
+        await writeFile(
+          join(tempDir, "user.ts"),
+          `
+          export interface User {
+            id: string;
+          }
+          `,
+        );
+        const files = [join(tempDir, "user.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        const idField = result.types[0]?.fields.find((f) => f.name === "id");
+        assert.strictEqual(idField?.description, undefined);
+        assert.strictEqual(idField?.deprecated, undefined);
+      });
+
+      it("should extract description from enum TSDoc", async () => {
+        await writeFile(
+          join(tempDir, "status.ts"),
+          `
+          /** The status of a user account */
+          export enum Status {
+            Active = "active",
+            Inactive = "inactive"
+          }
+          `,
+        );
+        const files = [join(tempDir, "status.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        assert.strictEqual(
+          result.types[0]?.metadata.description,
+          "The status of a user account",
+        );
+      });
+
+      it("should extract description from enum member TSDoc", async () => {
+        await writeFile(
+          join(tempDir, "status.ts"),
+          `
+          export enum Status {
+            /** User is currently active */
+            Active = "active",
+            /** User account is deactivated */
+            Inactive = "inactive"
+          }
+          `,
+        );
+        const files = [join(tempDir, "status.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        const activeEnum = result.types[0]?.enumMembers?.find(
+          (m) => m.name === "Active",
+        );
+        const inactiveEnum = result.types[0]?.enumMembers?.find(
+          (m) => m.name === "Inactive",
+        );
+        assert.strictEqual(activeEnum?.description, "User is currently active");
+        assert.strictEqual(
+          inactiveEnum?.description,
+          "User account is deactivated",
+        );
+      });
+
+      it("should extract deprecated from enum member TSDoc", async () => {
+        await writeFile(
+          join(tempDir, "status.ts"),
+          `
+          export enum Status {
+            Active = "active",
+            /**
+             * User account is deactivated
+             * @deprecated Use Suspended instead
+             */
+            Inactive = "inactive"
+          }
+          `,
+        );
+        const files = [join(tempDir, "status.ts")];
+        const program = createProgramFromFiles(files);
+
+        const result = extractTypesFromProgram(program, files);
+
+        const inactiveEnum = result.types[0]?.enumMembers?.find(
+          (m) => m.name === "Inactive",
+        );
+        assert.ok(inactiveEnum?.deprecated);
+        assert.strictEqual(inactiveEnum?.deprecated?.isDeprecated, true);
+        assert.strictEqual(
+          inactiveEnum?.deprecated?.reason,
+          "Use Suspended instead",
+        );
+      });
+    });
   });
 });

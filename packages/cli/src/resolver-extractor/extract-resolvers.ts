@@ -1,3 +1,4 @@
+import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
 import { createProgramFromFiles } from "../type-extractor/extractor/type-extractor.js";
 import type {
   Diagnostic,
@@ -16,6 +17,8 @@ import { scanResolverDirectory } from "./scanner/file-scanner.js";
 export interface GraphQLInputValue {
   readonly name: string;
   readonly type: GraphQLFieldType;
+  readonly description?: string;
+  readonly deprecated?: DeprecationInfo;
 }
 
 export interface GraphQLFieldDefinition {
@@ -24,6 +27,8 @@ export interface GraphQLFieldDefinition {
   readonly args?: ReadonlyArray<GraphQLInputValue>;
   readonly sourceLocation: SourceLocation;
   readonly resolverExportName?: string;
+  readonly description?: string;
+  readonly deprecated?: DeprecationInfo;
 }
 
 export interface QueryFieldDefinitions {
@@ -178,6 +183,8 @@ function convertDefineApiToFields(
         column: 1,
       },
       resolverExportName: resolver.fieldName,
+      description: resolver.description,
+      deprecated: resolver.deprecated,
     };
 
     if (resolver.resolverType === "query") {
@@ -212,6 +219,8 @@ function convertArgsToInputValues(
       ...convertTsTypeToGraphQLType(arg.tsType),
       nullable: arg.tsType.nullable || arg.optional,
     },
+    description: arg.description,
+    deprecated: arg.deprecated,
   }));
 }
 

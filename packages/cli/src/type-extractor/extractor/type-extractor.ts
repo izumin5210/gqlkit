@@ -1,6 +1,10 @@
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import {
+  extractTSDocFromSymbol,
+  extractTSDocInfo,
+} from "../../shared/tsdoc-parser.js";
 import type {
   Diagnostic,
   EnumMemberInfo,
@@ -179,10 +183,14 @@ function extractFieldsFromType(
       optional = declaration.questionToken !== undefined;
     }
 
+    const tsdocInfo = extractTSDocFromSymbol(prop, checker);
+
     fields.push({
       name: prop.getName(),
       tsType: convertTsTypeToReference(propType, checker),
       optional,
+      description: tsdocInfo.description,
+      deprecated: tsdocInfo.deprecated,
     });
   }
 
@@ -266,6 +274,7 @@ export function isStringLiteralUnion(
 
 function extractEnumMembers(
   node: ts.EnumDeclaration,
+  checker: ts.TypeChecker,
 ): ReadonlyArray<EnumMemberInfo> {
   const members: EnumMemberInfo[] = [];
 
@@ -273,9 +282,16 @@ function extractEnumMembers(
     const name = member.name.getText();
     const initializer = member.initializer;
     if (initializer && ts.isStringLiteral(initializer)) {
+      const symbol = checker.getSymbolAtLocation(member.name);
+      const tsdocInfo = symbol
+        ? extractTSDocFromSymbol(symbol, checker)
+        : { description: undefined, deprecated: undefined };
+
       members.push({
         name,
         value: initializer.text,
+        description: tsdocInfo.description,
+        deprecated: tsdocInfo.deprecated,
       });
     }
   }
@@ -433,12 +449,15 @@ export function extractTypesFromProgram(
           return;
         }
 
-        const enumMembers = extractEnumMembers(node);
+        const enumMembers = extractEnumMembers(node, checker);
+        const tsdocInfo = extractTSDocInfo(node, checker);
         const metadata: TypeMetadata = {
           name,
           kind: "enum",
           sourceFile: filePath,
           exportKind: hasDefaultExport ? "default" : "named",
+          description: tsdocInfo.description,
+          deprecated: tsdocInfo.deprecated,
         };
 
         types.push({ metadata, fields: [], enumMembers });
@@ -475,12 +494,15 @@ export function extractTypesFromProgram(
         const type = checker.getDeclaredTypeOfSymbol(symbol);
         const kind = determineTypeKind(node, type, checker);
         const unionMembers = extractUnionMembers(type);
+        const tsdocInfo = extractTSDocInfo(node, checker);
 
         const metadata: TypeMetadata = {
           name,
           kind,
           sourceFile: filePath,
           exportKind: hasDefaultExport ? "default" : "named",
+          description: tsdocInfo.description,
+          deprecated: tsdocInfo.deprecated,
         };
 
         if (kind === "enum") {

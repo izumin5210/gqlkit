@@ -92,6 +92,76 @@ describe("ASTBuilder", () => {
 
       assert.strictEqual(node.type.kind, Kind.NAMED_TYPE);
     });
+
+    it("should add description when provided", () => {
+      const inputValue: GraphQLInputValue = {
+        name: "id",
+        type: { typeName: "ID", nullable: false, list: false },
+        description: "The unique identifier",
+      };
+      const node = buildInputValueDefinitionNode(inputValue);
+
+      assert.ok(node.description);
+      assert.strictEqual(node.description.kind, Kind.STRING);
+      assert.strictEqual(node.description.value, "The unique identifier");
+    });
+
+    it("should not add description when not provided", () => {
+      const inputValue: GraphQLInputValue = {
+        name: "id",
+        type: { typeName: "ID", nullable: false, list: false },
+      };
+      const node = buildInputValueDefinitionNode(inputValue);
+
+      assert.strictEqual(node.description, undefined);
+    });
+
+    it("should add @deprecated directive when provided", () => {
+      const inputValue: GraphQLInputValue = {
+        name: "id",
+        type: { typeName: "ID", nullable: false, list: false },
+        deprecated: { isDeprecated: true, reason: "Use uuid instead" },
+      };
+      const node = buildInputValueDefinitionNode(inputValue);
+
+      assert.ok(node.directives);
+      assert.strictEqual(node.directives.length, 1);
+      assert.strictEqual(node.directives[0]?.name.value, "deprecated");
+      assert.strictEqual(node.directives[0]?.arguments?.length, 1);
+      assert.strictEqual(
+        node.directives[0]?.arguments?.[0]?.name.value,
+        "reason",
+      );
+    });
+
+    it("should add @deprecated directive without reason", () => {
+      const inputValue: GraphQLInputValue = {
+        name: "id",
+        type: { typeName: "ID", nullable: false, list: false },
+        deprecated: { isDeprecated: true },
+      };
+      const node = buildInputValueDefinitionNode(inputValue);
+
+      assert.ok(node.directives);
+      assert.strictEqual(node.directives.length, 1);
+      assert.strictEqual(node.directives[0]?.name.value, "deprecated");
+      assert.strictEqual(node.directives[0]?.arguments?.length ?? 0, 0);
+    });
+
+    it("should add both description and deprecated", () => {
+      const inputValue: GraphQLInputValue = {
+        name: "id",
+        type: { typeName: "ID", nullable: false, list: false },
+        description: "The unique identifier",
+        deprecated: { isDeprecated: true, reason: "Use uuid instead" },
+      };
+      const node = buildInputValueDefinitionNode(inputValue);
+
+      assert.ok(node.description);
+      assert.strictEqual(node.description.value, "The unique identifier");
+      assert.ok(node.directives);
+      assert.strictEqual(node.directives.length, 1);
+    });
   });
 
   describe("buildFieldTypeNode", () => {
@@ -1194,6 +1264,313 @@ describe("ASTBuilder", () => {
       assert.ok(sdl.includes("type User"));
       assert.ok(sdl.includes("extend type Mutation"));
       assert.ok(sdl.includes("createUser(input: CreateUserInput!): User!"));
+    });
+  });
+
+  describe("description and deprecated support", () => {
+    it("should add description to type definition", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "User",
+            kind: "Object",
+            description: "A user in the system",
+            fields: [
+              {
+                name: "id",
+                type: { typeName: "ID", nullable: false, list: false },
+              },
+            ],
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      assert.ok(sdl.includes('"A user in the system"'));
+      assert.ok(sdl.includes("type User"));
+    });
+
+    it("should add description to field definition", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "User",
+            kind: "Object",
+            fields: [
+              {
+                name: "id",
+                type: { typeName: "ID", nullable: false, list: false },
+                description: "The unique identifier",
+              },
+            ],
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      assert.ok(sdl.includes('"The unique identifier"'));
+    });
+
+    it("should add @deprecated directive to type definition", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "User",
+            kind: "Object",
+            deprecated: { isDeprecated: true, reason: "Use Member instead" },
+            fields: [],
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      assert.ok(sdl.includes('@deprecated(reason: "Use Member instead")'));
+    });
+
+    it("should add @deprecated directive without reason", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "User",
+            kind: "Object",
+            deprecated: { isDeprecated: true },
+            fields: [],
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      assert.ok(sdl.includes("@deprecated"));
+    });
+
+    it("should add @deprecated directive to field definition", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "User",
+            kind: "Object",
+            fields: [
+              {
+                name: "id",
+                type: { typeName: "ID", nullable: false, list: false },
+                deprecated: { isDeprecated: true, reason: "Use uuid instead" },
+              },
+            ],
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      assert.ok(sdl.includes('@deprecated(reason: "Use uuid instead")'));
+    });
+
+    it("should add description to enum type", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "Status",
+            kind: "Enum",
+            description: "The status of an item",
+            enumValues: [{ name: "ACTIVE", originalValue: "active" }],
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      assert.ok(sdl.includes('"The status of an item"'));
+    });
+
+    it("should add description to enum value", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "Status",
+            kind: "Enum",
+            enumValues: [
+              {
+                name: "ACTIVE",
+                originalValue: "active",
+                description: "The item is active",
+              },
+            ],
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      assert.ok(sdl.includes('"The item is active"'));
+    });
+
+    it("should add @deprecated directive to enum value", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "Status",
+            kind: "Enum",
+            enumValues: [
+              {
+                name: "INACTIVE",
+                originalValue: "inactive",
+                deprecated: { isDeprecated: true, reason: "Use SUSPENDED" },
+              },
+            ],
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      assert.ok(sdl.includes('@deprecated(reason: "Use SUSPENDED")'));
+    });
+
+    it("should add description to extension field", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [{ name: "Query", kind: "Object", fields: [] }],
+        inputTypes: [],
+        typeExtensions: [
+          {
+            targetTypeName: "Query",
+            fields: [
+              {
+                name: "me",
+                type: { typeName: "User", nullable: false, list: false },
+                description: "Get the current user",
+                resolverSourceFile: "/path/to/resolver.ts",
+              },
+            ],
+          },
+        ],
+        hasQuery: true,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      assert.ok(sdl.includes('"Get the current user"'));
+    });
+
+    it("should add @deprecated directive to extension field", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [{ name: "Query", kind: "Object", fields: [] }],
+        inputTypes: [],
+        typeExtensions: [
+          {
+            targetTypeName: "Query",
+            fields: [
+              {
+                name: "me",
+                type: { typeName: "User", nullable: false, list: false },
+                deprecated: { isDeprecated: true, reason: "Use currentUser" },
+                resolverSourceFile: "/path/to/resolver.ts",
+              },
+            ],
+          },
+        ],
+        hasQuery: true,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      assert.ok(sdl.includes('@deprecated(reason: "Use currentUser")'));
+    });
+
+    it("should add description to input type", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [],
+        inputTypes: [
+          {
+            name: "CreateUserInput",
+            description: "Input for creating a user",
+            fields: [
+              {
+                name: "name",
+                type: { typeName: "String", nullable: false, list: false },
+              },
+            ],
+            sourceFile: "/path/to/input.ts",
+          },
+        ],
+        typeExtensions: [],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      assert.ok(sdl.includes('"Input for creating a user"'));
     });
   });
 });

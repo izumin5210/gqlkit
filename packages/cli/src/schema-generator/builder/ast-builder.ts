@@ -1,4 +1,6 @@
 import {
+  type ConstArgumentNode,
+  type ConstDirectiveNode,
   type DefinitionNode,
   type DocumentNode,
   type EnumTypeDefinitionNode,
@@ -13,10 +15,12 @@ import {
   type NonNullTypeNode,
   type ObjectTypeDefinitionNode,
   type ObjectTypeExtensionNode,
+  type StringValueNode,
   type TypeNode,
   type UnionTypeDefinitionNode,
 } from "graphql";
 import type { GraphQLInputValue } from "../../resolver-extractor/index.js";
+import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 import type {
   EnumValueInfo,
   GraphQLFieldType,
@@ -34,6 +38,34 @@ export function buildNameNode(value: string): NameNode {
   return {
     kind: Kind.NAME,
     value,
+  };
+}
+
+export function buildStringValueNode(value: string): StringValueNode {
+  return {
+    kind: Kind.STRING,
+    value,
+    block: false,
+  };
+}
+
+export function buildDeprecatedDirective(
+  deprecated: DeprecationInfo,
+): ConstDirectiveNode {
+  const args: ConstArgumentNode[] = [];
+
+  if (deprecated.reason) {
+    args.push({
+      kind: Kind.ARGUMENT,
+      name: buildNameNode("reason"),
+      value: buildStringValueNode(deprecated.reason),
+    });
+  }
+
+  return {
+    kind: Kind.DIRECTIVE,
+    name: buildNameNode("deprecated"),
+    arguments: args.length > 0 ? args : undefined,
   };
 }
 
@@ -83,10 +115,19 @@ export function buildFieldTypeNode(fieldType: GraphQLFieldType): TypeNode {
 export function buildInputValueDefinitionNode(
   inputValue: GraphQLInputValue,
 ): InputValueDefinitionNode {
+  const directives: ConstDirectiveNode[] = [];
+  if (inputValue.deprecated) {
+    directives.push(buildDeprecatedDirective(inputValue.deprecated));
+  }
+
   return {
     kind: Kind.INPUT_VALUE_DEFINITION,
     name: buildNameNode(inputValue.name),
     type: buildFieldTypeNode(inputValue.type),
+    description: inputValue.description
+      ? buildStringValueNode(inputValue.description)
+      : undefined,
+    directives: directives.length > 0 ? directives : undefined,
   };
 }
 
@@ -95,21 +136,39 @@ function sortByName<T extends { name: string }>(items: ReadonlyArray<T>): T[] {
 }
 
 function buildBaseFieldDefinitionNode(field: BaseField): FieldDefinitionNode {
+  const directives: ConstDirectiveNode[] = [];
+  if (field.deprecated) {
+    directives.push(buildDeprecatedDirective(field.deprecated));
+  }
+
   return {
     kind: Kind.FIELD_DEFINITION,
     name: buildNameNode(field.name),
     type: buildFieldTypeNode(field.type),
+    description: field.description
+      ? buildStringValueNode(field.description)
+      : undefined,
+    directives: directives.length > 0 ? directives : undefined,
   };
 }
 
 export function buildFieldDefinitionNode(
   field: ExtensionField,
 ): FieldDefinitionNode {
+  const directives: ConstDirectiveNode[] = [];
+  if (field.deprecated) {
+    directives.push(buildDeprecatedDirective(field.deprecated));
+  }
+
   return {
     kind: Kind.FIELD_DEFINITION,
     name: buildNameNode(field.name),
     arguments: field.args?.map(buildInputValueDefinitionNode),
     type: buildFieldTypeNode(field.type),
+    description: field.description
+      ? buildStringValueNode(field.description)
+      : undefined,
+    directives: directives.length > 0 ? directives : undefined,
   };
 }
 
@@ -117,10 +176,19 @@ export function buildObjectTypeDefinitionNode(
   baseType: BaseType,
 ): ObjectTypeDefinitionNode {
   const sortedFields = baseType.fields ? sortByName(baseType.fields) : [];
+  const directives: ConstDirectiveNode[] = [];
+  if (baseType.deprecated) {
+    directives.push(buildDeprecatedDirective(baseType.deprecated));
+  }
+
   return {
     kind: Kind.OBJECT_TYPE_DEFINITION,
     name: buildNameNode(baseType.name),
     fields: sortedFields.map(buildBaseFieldDefinitionNode),
+    description: baseType.description
+      ? buildStringValueNode(baseType.description)
+      : undefined,
+    directives: directives.length > 0 ? directives : undefined,
   };
 }
 
@@ -130,19 +198,32 @@ export function buildUnionTypeDefinitionNode(
   const sortedMembers = baseType.unionMembers
     ? [...baseType.unionMembers].sort((a, b) => a.localeCompare(b))
     : [];
+
   return {
     kind: Kind.UNION_TYPE_DEFINITION,
     name: buildNameNode(baseType.name),
     types: sortedMembers.map(buildNamedTypeNode),
+    description: baseType.description
+      ? buildStringValueNode(baseType.description)
+      : undefined,
   };
 }
 
 export function buildEnumValueDefinitionNode(
   value: EnumValueInfo,
 ): EnumValueDefinitionNode {
+  const directives: ConstDirectiveNode[] = [];
+  if (value.deprecated) {
+    directives.push(buildDeprecatedDirective(value.deprecated));
+  }
+
   return {
     kind: Kind.ENUM_VALUE_DEFINITION,
     name: buildNameNode(value.name),
+    description: value.description
+      ? buildStringValueNode(value.description)
+      : undefined,
+    directives: directives.length > 0 ? directives : undefined,
   };
 }
 
@@ -150,10 +231,14 @@ export function buildEnumTypeDefinitionNode(
   baseType: BaseType,
 ): EnumTypeDefinitionNode {
   const enumValues = baseType.enumValues ?? [];
+
   return {
     kind: Kind.ENUM_TYPE_DEFINITION,
     name: buildNameNode(baseType.name),
     values: enumValues.map(buildEnumValueDefinitionNode),
+    description: baseType.description
+      ? buildStringValueNode(baseType.description)
+      : undefined,
   };
 }
 
@@ -164,6 +249,9 @@ function buildInputFieldDefinitionNode(
     kind: Kind.INPUT_VALUE_DEFINITION,
     name: buildNameNode(field.name),
     type: buildFieldTypeNode(field.type),
+    description: field.description
+      ? buildStringValueNode(field.description)
+      : undefined,
   };
 }
 
@@ -171,10 +259,14 @@ export function buildInputObjectTypeDefinitionNode(
   inputType: InputType,
 ): InputObjectTypeDefinitionNode {
   const sortedFields = sortByName(inputType.fields);
+
   return {
     kind: Kind.INPUT_OBJECT_TYPE_DEFINITION,
     name: buildNameNode(inputType.name),
     fields: sortedFields.map(buildInputFieldDefinitionNode),
+    description: inputType.description
+      ? buildStringValueNode(inputType.description)
+      : undefined,
   };
 }
 

@@ -1,4 +1,9 @@
 import ts from "typescript";
+import {
+  type DeprecationInfo,
+  extractTSDocFromSymbol,
+  extractTSDocInfo,
+} from "../../shared/tsdoc-parser.js";
 import type {
   Diagnostic,
   TSTypeReference,
@@ -16,6 +21,8 @@ export interface ArgumentDefinition {
   readonly name: string;
   readonly tsType: TSTypeReference;
   readonly optional: boolean;
+  readonly description?: string;
+  readonly deprecated?: DeprecationInfo;
 }
 
 export interface DefineApiResolverInfo {
@@ -27,6 +34,8 @@ export interface DefineApiResolverInfo {
   readonly returnType: TSTypeReference;
   readonly sourceFile: string;
   readonly exportedInputTypes: ReadonlyArray<ExportedInputType>;
+  readonly description?: string;
+  readonly deprecated?: DeprecationInfo;
 }
 
 export interface ExtractDefineApiResult {
@@ -162,6 +171,50 @@ function getTypeNameFromNode(typeNode: ts.TypeNode): string | undefined {
   return undefined;
 }
 
+function isInlineTypeLiteralDeclaration(declaration: ts.Declaration): boolean {
+  if (!ts.isPropertySignature(declaration)) {
+    return false;
+  }
+
+  const parent = declaration.parent;
+  if (!ts.isTypeLiteralNode(parent)) {
+    return false;
+  }
+
+  const grandparent = parent.parent;
+  if (ts.isTypeAliasDeclaration(grandparent)) {
+    return false;
+  }
+  if (ts.isInterfaceDeclaration(grandparent)) {
+    return false;
+  }
+
+  return true;
+}
+
+function extractTSDocFromPropertyWithPriority(
+  prop: ts.Symbol,
+  checker: ts.TypeChecker,
+): { description?: string; deprecated?: DeprecationInfo } {
+  const declarations = prop.getDeclarations();
+  if (!declarations || declarations.length === 0) {
+    return {};
+  }
+
+  const inlineDeclaration = declarations.find(isInlineTypeLiteralDeclaration);
+
+  if (inlineDeclaration) {
+    const inlineSymbol = checker.getSymbolAtLocation(
+      (inlineDeclaration as ts.PropertySignature).name,
+    );
+    if (inlineSymbol) {
+      return extractTSDocFromSymbol(inlineSymbol, checker);
+    }
+  }
+
+  return extractTSDocFromSymbol(prop, checker);
+}
+
 function extractArgsFromType(
   argsType: ts.Type,
   checker: ts.TypeChecker,
@@ -179,10 +232,14 @@ function extractArgsFromType(
       optional = declaration.questionToken !== undefined;
     }
 
+    const tsdocInfo = extractTSDocFromPropertyWithPriority(prop, checker);
+
     args.push({
       name: prop.getName(),
       tsType: convertTypeToTSTypeReference(propType, checker),
       optional,
+      description: tsdocInfo.description,
+      deprecated: tsdocInfo.deprecated,
     });
   }
 
@@ -386,6 +443,8 @@ export function extractDefineApiResolvers(
           continue;
         }
 
+        const tsdocInfo = extractTSDocInfo(node, checker);
+
         resolvers.push({
           fieldName,
           resolverType,
@@ -395,6 +454,8 @@ export function extractDefineApiResolvers(
           returnType: typeInfo.returnType,
           sourceFile: filePath,
           exportedInputTypes,
+          description: tsdocInfo.description,
+          deprecated: tsdocInfo.deprecated,
         });
       }
     });

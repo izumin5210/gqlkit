@@ -1,3 +1,5 @@
+import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
+
 export type TypeKind = "object" | "interface" | "union" | "enum";
 
 export interface TypeMetadata {
@@ -5,6 +7,8 @@ export interface TypeMetadata {
   readonly kind: TypeKind;
   readonly sourceFile: string;
   readonly exportKind: "named" | "default";
+  readonly description?: string;
+  readonly deprecated?: DeprecationInfo;
 }
 
 export interface TSTypeReference {
@@ -19,11 +23,15 @@ export interface FieldDefinition {
   readonly name: string;
   readonly tsType: TSTypeReference;
   readonly optional: boolean;
+  readonly description?: string;
+  readonly deprecated?: DeprecationInfo;
 }
 
 export interface EnumMemberInfo {
   readonly name: string;
   readonly value: string;
+  readonly description?: string;
+  readonly deprecated?: DeprecationInfo;
 }
 
 export interface ExtractedTypeInfo {

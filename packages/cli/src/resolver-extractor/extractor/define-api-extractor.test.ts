@@ -819,4 +819,334 @@ describe("extractDefineApiResolvers", () => {
       assert.ok(fieldNames.includes("createUser"));
     });
   });
+
+  describe("description extraction", () => {
+    it("should extract description from query resolver TSDoc", () => {
+      const { program, filePaths } = createTestProgram({
+        "queries.ts": `
+          import { createGqlkitApis, NoArgs } from "@gqlkit-ts/runtime";
+          type Context = { userId: string };
+          type User = { id: string; name: string };
+          const { defineQuery } = createGqlkitApis<Context>();
+          /** Get the currently authenticated user */
+          export const me = defineQuery<NoArgs, User>(
+            (root, args, ctx, info) => ({ id: "1", name: "Me" })
+          );
+        `,
+      });
+
+      const result = extractDefineApiResolvers(program, filePaths);
+
+      assert.equal(result.resolvers.length, 1);
+      assert.equal(
+        result.resolvers[0]!.description,
+        "Get the currently authenticated user",
+      );
+    });
+
+    it("should extract description from mutation resolver TSDoc", () => {
+      const { program, filePaths } = createTestProgram({
+        "mutations.ts": `
+          import { createGqlkitApis } from "@gqlkit-ts/runtime";
+          type Context = { userId: string };
+          type User = { id: string; name: string };
+          const { defineMutation } = createGqlkitApis<Context>();
+          /** Create a new user with the given name */
+          export const createUser = defineMutation<{ name: string }, User>(
+            (root, args, ctx, info) => ({ id: "new", name: args.name })
+          );
+        `,
+      });
+
+      const result = extractDefineApiResolvers(program, filePaths);
+
+      assert.equal(result.resolvers.length, 1);
+      assert.equal(
+        result.resolvers[0]!.description,
+        "Create a new user with the given name",
+      );
+    });
+
+    it("should extract description from field resolver TSDoc", () => {
+      const { program, filePaths } = createTestProgram({
+        "fields.ts": `
+          import { createGqlkitApis, NoArgs } from "@gqlkit-ts/runtime";
+          type Context = { userId: string };
+          type User = { id: string; firstName: string; lastName: string };
+          const { defineField } = createGqlkitApis<Context>();
+          /** The user's full name computed from first and last name */
+          export const fullName = defineField<User, NoArgs, string>(
+            (parent, args, ctx, info) => parent.firstName + " " + parent.lastName
+          );
+        `,
+      });
+
+      const result = extractDefineApiResolvers(program, filePaths);
+
+      assert.equal(result.resolvers.length, 1);
+      assert.equal(
+        result.resolvers[0]!.description,
+        "The user's full name computed from first and last name",
+      );
+    });
+
+    it("should return undefined description when no TSDoc exists", () => {
+      const { program, filePaths } = createTestProgram({
+        "queries.ts": `
+          import { createGqlkitApis, NoArgs } from "@gqlkit-ts/runtime";
+          type Context = { userId: string };
+          type User = { id: string; name: string };
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const me = defineQuery<NoArgs, User>(
+            (root, args, ctx, info) => ({ id: "1", name: "Me" })
+          );
+        `,
+      });
+
+      const result = extractDefineApiResolvers(program, filePaths);
+
+      assert.equal(result.resolvers.length, 1);
+      assert.equal(result.resolvers[0]!.description, undefined);
+    });
+
+    it("should extract deprecated from resolver TSDoc", () => {
+      const { program, filePaths } = createTestProgram({
+        "queries.ts": `
+          import { createGqlkitApis, NoArgs } from "@gqlkit-ts/runtime";
+          type Context = { userId: string };
+          type User = { id: string; name: string };
+          const { defineQuery } = createGqlkitApis<Context>();
+          /**
+           * Get the currently authenticated user
+           * @deprecated Use currentUser instead
+           */
+          export const me = defineQuery<NoArgs, User>(
+            (root, args, ctx, info) => ({ id: "1", name: "Me" })
+          );
+        `,
+      });
+
+      const result = extractDefineApiResolvers(program, filePaths);
+
+      assert.equal(result.resolvers.length, 1);
+      assert.equal(
+        result.resolvers[0]!.description,
+        "Get the currently authenticated user",
+      );
+      assert.ok(result.resolvers[0]!.deprecated);
+      assert.equal(result.resolvers[0]!.deprecated!.isDeprecated, true);
+      assert.equal(
+        result.resolvers[0]!.deprecated!.reason,
+        "Use currentUser instead",
+      );
+    });
+
+    it("should extract deprecated without reason", () => {
+      const { program, filePaths } = createTestProgram({
+        "queries.ts": `
+          import { createGqlkitApis, NoArgs } from "@gqlkit-ts/runtime";
+          type Context = { userId: string };
+          type User = { id: string; name: string };
+          const { defineQuery } = createGqlkitApis<Context>();
+          /**
+           * Get the currently authenticated user
+           * @deprecated
+           */
+          export const me = defineQuery<NoArgs, User>(
+            (root, args, ctx, info) => ({ id: "1", name: "Me" })
+          );
+        `,
+      });
+
+      const result = extractDefineApiResolvers(program, filePaths);
+
+      assert.equal(result.resolvers.length, 1);
+      assert.ok(result.resolvers[0]!.deprecated);
+      assert.equal(result.resolvers[0]!.deprecated!.isDeprecated, true);
+      assert.equal(result.resolvers[0]!.deprecated!.reason, undefined);
+    });
+  });
+
+  describe("argument description extraction", () => {
+    it("should extract description from inline type literal argument", () => {
+      const { program, filePaths } = createTestProgram({
+        "queries.ts": `
+          import { createGqlkitApis } from "@gqlkit-ts/runtime";
+          type Context = { userId: string };
+          type User = { id: string; name: string };
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const user = defineQuery<{
+            /** The unique identifier of the user */
+            id: string;
+          }, User>(
+            (root, args, ctx, info) => ({ id: args.id, name: "User" })
+          );
+        `,
+      });
+
+      const result = extractDefineApiResolvers(program, filePaths);
+
+      assert.equal(result.resolvers.length, 1);
+      const resolver = result.resolvers[0]!;
+      assert.ok(resolver.args);
+      assert.equal(resolver.args.length, 1);
+      assert.equal(resolver.args[0]!.name, "id");
+      assert.equal(
+        resolver.args[0]!.description,
+        "The unique identifier of the user",
+      );
+    });
+
+    it("should extract description from referenced type definition", () => {
+      const { program, filePaths } = createTestProgram({
+        "queries.ts": `
+          import { createGqlkitApis } from "@gqlkit-ts/runtime";
+          type Context = { userId: string };
+          type User = { id: string; name: string };
+          type GetUserArgs = {
+            /** The unique identifier of the user */
+            id: string;
+          };
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const user = defineQuery<GetUserArgs, User>(
+            (root, args, ctx, info) => ({ id: args.id, name: "User" })
+          );
+        `,
+      });
+
+      const result = extractDefineApiResolvers(program, filePaths);
+
+      assert.equal(result.resolvers.length, 1);
+      const resolver = result.resolvers[0]!;
+      assert.ok(resolver.args);
+      assert.equal(resolver.args.length, 1);
+      assert.equal(resolver.args[0]!.name, "id");
+      assert.equal(
+        resolver.args[0]!.description,
+        "The unique identifier of the user",
+      );
+    });
+
+    it("should prioritize inline type literal over referenced type definition", () => {
+      const { program, filePaths } = createTestProgram({
+        "queries.ts": `
+          import { createGqlkitApis } from "@gqlkit-ts/runtime";
+          type Context = { userId: string };
+          type User = { id: string; name: string };
+          type GetUserArgs = {
+            /** Description from referenced type */
+            id: string;
+          };
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const user = defineQuery<{
+            /** Description from inline type */
+            id: string;
+          } & GetUserArgs, User>(
+            (root, args, ctx, info) => ({ id: args.id, name: "User" })
+          );
+        `,
+      });
+
+      const result = extractDefineApiResolvers(program, filePaths);
+
+      assert.equal(result.resolvers.length, 1);
+      const resolver = result.resolvers[0]!;
+      assert.ok(resolver.args);
+      assert.equal(resolver.args.length, 1);
+      assert.equal(resolver.args[0]!.name, "id");
+      assert.equal(
+        resolver.args[0]!.description,
+        "Description from inline type",
+      );
+    });
+
+    it("should return undefined description when argument has no TSDoc", () => {
+      const { program, filePaths } = createTestProgram({
+        "queries.ts": `
+          import { createGqlkitApis } from "@gqlkit-ts/runtime";
+          type Context = { userId: string };
+          type User = { id: string; name: string };
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const user = defineQuery<{ id: string }, User>(
+            (root, args, ctx, info) => ({ id: args.id, name: "User" })
+          );
+        `,
+      });
+
+      const result = extractDefineApiResolvers(program, filePaths);
+
+      assert.equal(result.resolvers.length, 1);
+      const resolver = result.resolvers[0]!;
+      assert.ok(resolver.args);
+      assert.equal(resolver.args.length, 1);
+      assert.equal(resolver.args[0]!.name, "id");
+      assert.equal(resolver.args[0]!.description, undefined);
+    });
+
+    it("should extract deprecated from argument TSDoc", () => {
+      const { program, filePaths } = createTestProgram({
+        "queries.ts": `
+          import { createGqlkitApis } from "@gqlkit-ts/runtime";
+          type Context = { userId: string };
+          type User = { id: string; name: string };
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const user = defineQuery<{
+            /**
+             * The unique identifier
+             * @deprecated Use uuid instead
+             */
+            id: string;
+          }, User>(
+            (root, args, ctx, info) => ({ id: args.id, name: "User" })
+          );
+        `,
+      });
+
+      const result = extractDefineApiResolvers(program, filePaths);
+
+      assert.equal(result.resolvers.length, 1);
+      const resolver = result.resolvers[0]!;
+      assert.ok(resolver.args);
+      assert.equal(resolver.args.length, 1);
+      assert.equal(resolver.args[0]!.name, "id");
+      assert.equal(resolver.args[0]!.description, "The unique identifier");
+      assert.ok(resolver.args[0]!.deprecated);
+      assert.equal(resolver.args[0]!.deprecated!.isDeprecated, true);
+      assert.equal(resolver.args[0]!.deprecated!.reason, "Use uuid instead");
+    });
+
+    it("should extract description from multiple arguments", () => {
+      const { program, filePaths } = createTestProgram({
+        "queries.ts": `
+          import { createGqlkitApis } from "@gqlkit-ts/runtime";
+          type Context = { userId: string };
+          type User = { id: string; name: string };
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const searchUsers = defineQuery<{
+            /** Search query string */
+            query: string;
+            /** Maximum number of results */
+            limit?: number;
+          }, User[]>(
+            (root, args, ctx, info) => []
+          );
+        `,
+      });
+
+      const result = extractDefineApiResolvers(program, filePaths);
+
+      assert.equal(result.resolvers.length, 1);
+      const resolver = result.resolvers[0]!;
+      assert.ok(resolver.args);
+      assert.equal(resolver.args.length, 2);
+
+      const queryArg = resolver.args.find((a) => a.name === "query");
+      assert.ok(queryArg);
+      assert.equal(queryArg.description, "Search query string");
+
+      const limitArg = resolver.args.find((a) => a.name === "limit");
+      assert.ok(limitArg);
+      assert.equal(limitArg.description, "Maximum number of results");
+    });
+  });
 });

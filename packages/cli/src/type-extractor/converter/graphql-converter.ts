@@ -76,6 +76,8 @@ function convertEnumMembers(
     values.push({
       name: convertedName,
       originalValue: member.value,
+      description: member.description,
+      deprecated: member.deprecated,
     });
   }
 
@@ -141,6 +143,8 @@ function convertFields(extracted: ExtractedTypeInfo): FieldInfo[] {
   return extracted.fields.map((field) => ({
     name: field.name,
     type: convertTsTypeToGraphQL(field.tsType, field.optional),
+    description: field.description,
+    deprecated: field.deprecated,
   }));
 }
 
@@ -181,6 +185,8 @@ export function convertToGraphQL(
         kind: "Enum",
         enumValues,
         sourceFile: metadata.sourceFile,
+        description: metadata.description,
+        deprecated: metadata.deprecated,
       });
     } else if (metadata.kind === "union") {
       if (isInputTypeName(metadata.name)) {
@@ -201,6 +207,7 @@ export function convertToGraphQL(
         kind: "Union",
         unionMembers,
         sourceFile: metadata.sourceFile,
+        description: metadata.description,
       });
     } else {
       const fields = convertFields(extracted);
@@ -211,6 +218,8 @@ export function convertToGraphQL(
         kind: isInput ? "InputObject" : "Object",
         fields,
         sourceFile: metadata.sourceFile,
+        description: metadata.description,
+        deprecated: metadata.deprecated,
       });
     }
   }

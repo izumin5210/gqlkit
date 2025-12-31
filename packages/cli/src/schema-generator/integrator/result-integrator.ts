@@ -4,6 +4,7 @@ import type {
   GraphQLInputValue,
   TypeExtension as ResolverTypeExtension,
 } from "../../resolver-extractor/index.js";
+import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 import type { ExtractTypesResult } from "../../type-extractor/index.js";
 import type {
   Diagnostic,
@@ -14,6 +15,8 @@ import type {
 export interface BaseField {
   readonly name: string;
   readonly type: GraphQLFieldType;
+  readonly description?: string;
+  readonly deprecated?: DeprecationInfo;
 }
 
 export interface BaseType {
@@ -22,12 +25,15 @@ export interface BaseType {
   readonly fields?: ReadonlyArray<BaseField>;
   readonly unionMembers?: ReadonlyArray<string>;
   readonly enumValues?: ReadonlyArray<EnumValueInfo>;
+  readonly description?: string;
+  readonly deprecated?: DeprecationInfo;
 }
 
 export interface InputType {
   readonly name: string;
   readonly fields: ReadonlyArray<BaseField>;
   readonly sourceFile: string;
+  readonly description?: string;
 }
 
 export interface ExtensionField {
@@ -36,6 +42,8 @@ export interface ExtensionField {
   readonly args?: ReadonlyArray<GraphQLInputValue>;
   readonly resolverSourceFile: string;
   readonly resolverExportName?: string;
+  readonly description?: string;
+  readonly deprecated?: DeprecationInfo;
 }
 
 export interface TypeExtension {
@@ -62,6 +70,8 @@ function convertToExtensionField(
     args: field.args,
     resolverSourceFile: field.sourceLocation.file,
     resolverExportName: field.resolverExportName,
+    description: field.description,
+    deprecated: field.deprecated,
   };
 }
 
@@ -96,14 +106,19 @@ export function integrate(
           type.fields?.map((field) => ({
             name: field.name,
             type: field.type,
+            description: field.description,
+            deprecated: field.deprecated,
           })) ?? [],
         sourceFile: type.sourceFile,
+        description: type.description,
       });
     } else if (type.kind === "Enum") {
       baseTypes.push({
         name: type.name,
         kind: type.kind,
         enumValues: type.enumValues,
+        description: type.description,
+        deprecated: type.deprecated,
       });
     } else if (type.kind === "Object") {
       baseTypes.push({
@@ -112,13 +127,18 @@ export function integrate(
         fields: type.fields?.map((field) => ({
           name: field.name,
           type: field.type,
+          description: field.description,
+          deprecated: field.deprecated,
         })),
+        description: type.description,
+        deprecated: type.deprecated,
       });
     } else {
       baseTypes.push({
         name: type.name,
         kind: type.kind,
         unionMembers: type.unionMembers,
+        description: type.description,
       });
     }
   }
