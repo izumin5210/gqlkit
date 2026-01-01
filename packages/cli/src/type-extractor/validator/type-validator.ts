@@ -5,21 +5,37 @@ export interface ValidationResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
+export interface ValidateTypesOptions {
+  readonly types: ReadonlyArray<GraphQLTypeInfo>;
+  readonly customScalarNames?: ReadonlyArray<string>;
+}
+
 const BUILT_IN_SCALARS = new Set(["String", "Int", "Float", "Boolean", "ID"]);
 
 export function validateTypes(
-  types: ReadonlyArray<GraphQLTypeInfo>,
+  typesOrOptions: ReadonlyArray<GraphQLTypeInfo> | ValidateTypesOptions,
 ): ValidationResult {
+  const types = Array.isArray(typesOrOptions)
+    ? typesOrOptions
+    : typesOrOptions.types;
+  const customScalarNames = Array.isArray(typesOrOptions)
+    ? undefined
+    : typesOrOptions.customScalarNames;
+
   const diagnostics: Diagnostic[] = [];
 
   const typeNames = new Set(types.map((t) => t.name));
+  const knownScalars = new Set([
+    ...BUILT_IN_SCALARS,
+    ...(customScalarNames ?? []),
+  ]);
 
   for (const type of types) {
     if (type.kind === "Object" && type.fields) {
       for (const field of type.fields) {
         const typeName = field.type.typeName;
 
-        if (!typeNames.has(typeName) && !BUILT_IN_SCALARS.has(typeName)) {
+        if (!typeNames.has(typeName) && !knownScalars.has(typeName)) {
           diagnostics.push({
             code: "UNRESOLVED_REFERENCE",
             message: `Field '${field.name}' references unresolved type '${typeName}'`,
@@ -32,7 +48,7 @@ export function validateTypes(
 
     if (type.kind === "Union" && type.unionMembers) {
       for (const member of type.unionMembers) {
-        if (!typeNames.has(member) && !BUILT_IN_SCALARS.has(member)) {
+        if (!typeNames.has(member) && !knownScalars.has(member)) {
           diagnostics.push({
             code: "UNRESOLVED_REFERENCE",
             message: `Union '${type.name}' references unresolved type '${member}'`,

@@ -195,6 +195,9 @@ importers:
       gunshi:
         specifier: ^0.27.5
         version: 0.27.5
+      jiti:
+        specifier: ^2.4.2
+        version: 2.6.1
     devDependencies:
       '@types/node':
         specifier: ^22.19.3
@@ -553,6 +556,10 @@ packages:
     resolution: {integrity: sha512-ExdnmI90hQ/eR1wnUc5rVom+K16F1hSpbYrplpt6rrJhXLprVGK9/E63bk7Rju27hAqc3WvpCa8PeY95R165fw==}
     engines: {node: '>= 20'}
 
+  jiti@2.6.1:
+    resolution: {integrity: sha512-ekilCSN1jwRvIbgeg/57YFh8qQDNbwDb9xT/qu2DAHbFFZUicIl4ygVaAvzveMhMVr3LnpSKTNnwt8PoOfmKhQ==}
+    hasBin: true
+
   lru-cache@10.4.3:
     resolution: {integrity: sha512-JNAzZcXrCt42VGLuYz0zfAzDfAvJWW6AfYlDBQyDV5DClI2m5sAmK+OIO7s59XfsRsWHp02jAJrRadPRGTt6SQ==}
 
@@ -865,6 +872,8 @@ snapshots:
   gunshi@0.27.5:
     dependencies:
       args-tokens: 0.23.0
+
+  jiti@2.6.1: {}
 
   lru-cache@10.4.3: {}
 

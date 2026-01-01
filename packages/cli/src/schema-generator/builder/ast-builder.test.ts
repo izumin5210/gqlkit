@@ -27,6 +27,7 @@ import {
   buildNonNullTypeNode,
   buildObjectTypeDefinitionNode,
   buildObjectTypeExtensionNode,
+  buildScalarTypeDefinitionNode,
   buildUnionTypeDefinitionNode,
 } from "./ast-builder.js";
 
@@ -522,6 +523,31 @@ describe("ASTBuilder", () => {
 
       assert.strictEqual(node.kind, Kind.ENUM_VALUE_DEFINITION);
       assert.strictEqual(node.name.value, "ACTIVE");
+    });
+  });
+
+  describe("buildScalarTypeDefinitionNode", () => {
+    it("should create ScalarTypeDefinitionNode with name only", () => {
+      const node = buildScalarTypeDefinitionNode("DateTime");
+
+      assert.strictEqual(node.kind, Kind.SCALAR_TYPE_DEFINITION);
+      assert.strictEqual(node.name.value, "DateTime");
+      assert.strictEqual(node.description, undefined);
+    });
+
+    it("should create ScalarTypeDefinitionNode with description", () => {
+      const node = buildScalarTypeDefinitionNode(
+        "DateTime",
+        "An ISO-8601 encoded datetime",
+      );
+
+      assert.strictEqual(node.kind, Kind.SCALAR_TYPE_DEFINITION);
+      assert.strictEqual(node.name.value, "DateTime");
+      assert.ok(node.description);
+      assert.strictEqual(
+        node.description.value,
+        "An ISO-8601 encoded datetime",
+      );
     });
   });
 
@@ -1571,6 +1597,96 @@ describe("ASTBuilder", () => {
       const sdl = print(doc);
 
       assert.ok(sdl.includes('"Input for creating a user"'));
+    });
+  });
+
+  describe("custom scalar support", () => {
+    it("should include custom scalar definitions in DocumentNode", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "User",
+            kind: "Object",
+            fields: [
+              {
+                name: "createdAt",
+                type: { typeName: "DateTime", nullable: false, list: false },
+              },
+            ],
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [],
+        customScalarNames: ["DateTime"],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      assert.ok(sdl.includes("scalar DateTime"));
+      assert.ok(sdl.includes("type User"));
+    });
+
+    it("should sort custom scalar definitions alphabetically", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [],
+        inputTypes: [],
+        typeExtensions: [],
+        customScalarNames: ["UUID", "DateTime", "URL"],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const scalarDefs = doc.definitions.filter(
+        (d) => d.kind === Kind.SCALAR_TYPE_DEFINITION,
+      );
+
+      assert.strictEqual(scalarDefs.length, 3);
+      if (
+        scalarDefs[0]?.kind === Kind.SCALAR_TYPE_DEFINITION &&
+        scalarDefs[1]?.kind === Kind.SCALAR_TYPE_DEFINITION &&
+        scalarDefs[2]?.kind === Kind.SCALAR_TYPE_DEFINITION
+      ) {
+        assert.strictEqual(scalarDefs[0].name.value, "DateTime");
+        assert.strictEqual(scalarDefs[1].name.value, "URL");
+        assert.strictEqual(scalarDefs[2].name.value, "UUID");
+      }
+    });
+
+    it("should place custom scalar definitions before other types", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "User",
+            kind: "Object",
+            fields: [
+              {
+                name: "id",
+                type: { typeName: "ID", nullable: false, list: false },
+              },
+            ],
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [],
+        customScalarNames: ["DateTime"],
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+
+      assert.strictEqual(doc.definitions[0]?.kind, Kind.SCALAR_TYPE_DEFINITION);
+      assert.strictEqual(doc.definitions[1]?.kind, Kind.OBJECT_TYPE_DEFINITION);
     });
   });
 });

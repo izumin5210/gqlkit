@@ -15,6 +15,7 @@ import {
   type NonNullTypeNode,
   type ObjectTypeDefinitionNode,
   type ObjectTypeExtensionNode,
+  type ScalarTypeDefinitionNode,
   type StringValueNode,
   type TypeNode,
   type UnionTypeDefinitionNode,
@@ -242,6 +243,17 @@ export function buildEnumTypeDefinitionNode(
   };
 }
 
+export function buildScalarTypeDefinitionNode(
+  name: string,
+  description?: string,
+): ScalarTypeDefinitionNode {
+  return {
+    kind: Kind.SCALAR_TYPE_DEFINITION,
+    name: buildNameNode(name),
+    description: description ? buildStringValueNode(description) : undefined,
+  };
+}
+
 function buildInputFieldDefinitionNode(
   field: BaseField,
 ): InputValueDefinitionNode {
@@ -285,6 +297,15 @@ export function buildDocumentNode(
   integratedResult: IntegratedResult,
 ): DocumentNode {
   const definitions: DefinitionNode[] = [];
+
+  if (integratedResult.customScalarNames) {
+    const sortedScalarNames = [...integratedResult.customScalarNames].sort(
+      (a, b) => a.localeCompare(b),
+    );
+    for (const scalarName of sortedScalarNames) {
+      definitions.push(buildScalarTypeDefinitionNode(scalarName));
+    }
+  }
 
   const sortedBaseTypes = [...integratedResult.baseTypes].sort((a, b) =>
     a.name.localeCompare(b.name),

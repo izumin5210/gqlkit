@@ -16,7 +16,8 @@
   },
   "dependencies": {
     "graphql": "^16.12.0",
-    "gunshi": "^0.27.5"
+    "gunshi": "^0.27.5",
+    "jiti": "^2.4.2"
   },
   "devDependencies": {
     "@types/node": "^22.19.3",

@@ -44,6 +44,17 @@ describe("gen command", () => {
     );
   }
 
+  async function setupProjectWithConfig(
+    configContent: string,
+    additionalSetup?: () => Promise<void>,
+  ): Promise<void> {
+    await setupProject();
+    await writeFile(join(testDir, "gqlkit.config.ts"), configContent, "utf-8");
+    if (additionalSetup) {
+      await additionalSetup();
+    }
+  }
+
   describe("successful generation", () => {
     it("should generate schema.ts file", async () => {
       await setupProject();
@@ -98,6 +109,118 @@ describe("gen command", () => {
       const result = await runGenCommand({ cwd: testDir });
 
       assert.strictEqual(result.exitCode, 1);
+    });
+  });
+
+  describe("config file integration (Task 7)", () => {
+    it("should continue with default config when config file is not present", async () => {
+      await setupProject();
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      assert.strictEqual(result.exitCode, 0);
+    });
+
+    it("should load config file when present", async () => {
+      await setupProjectWithConfig(`
+        export default {
+          scalars: [],
+        };
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      assert.strictEqual(result.exitCode, 0);
+    });
+
+    it("should return exit code 1 when config file has syntax error", async () => {
+      await setupProjectWithConfig(`
+        export default {
+          scalars: [
+        // invalid syntax
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      assert.strictEqual(result.exitCode, 1);
+    });
+
+    it("should return exit code 1 when config file has validation error", async () => {
+      await setupProjectWithConfig(`
+        export default {
+          scalars: [
+            {
+              graphqlName: "String",
+              type: { from: "./scalars", name: "MyString" },
+            },
+          ],
+        };
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      assert.strictEqual(result.exitCode, 1);
+    });
+
+    it("should generate schema with custom scalar definitions", async () => {
+      const scalarsDir = join(testDir, "src/scalars");
+      await mkdir(scalarsDir, { recursive: true });
+      await writeFile(
+        join(scalarsDir, "index.ts"),
+        `export type DateTime = string & { readonly __brand: unique symbol };`,
+        "utf-8",
+      );
+
+      const typesDir = join(testDir, "src/gql/types");
+      await mkdir(typesDir, { recursive: true });
+      await writeFile(
+        join(typesDir, "event.ts"),
+        `
+          import type { DateTime } from "../../scalars/index.js";
+          export interface Event { id: string; createdAt: DateTime; }
+        `,
+        "utf-8",
+      );
+
+      const resolversDir = join(testDir, "src/gql/resolvers");
+      await mkdir(resolversDir, { recursive: true });
+      await writeFile(
+        join(resolversDir, "query.ts"),
+        `
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
+          interface Event { id: string; createdAt: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const events = defineQuery<NoArgs, Event[]>(function() { return []; });
+        `,
+        "utf-8",
+      );
+
+      await writeFile(
+        join(testDir, "gqlkit.config.ts"),
+        `
+          export default {
+            scalars: [
+              {
+                graphqlName: "DateTime",
+                type: { from: "./src/scalars", name: "DateTime" },
+              },
+            ],
+          };
+        `,
+        "utf-8",
+      );
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      assert.strictEqual(result.exitCode, 0);
+      const schemaPath = join(testDir, "src/gqlkit/generated/schema.ts");
+      const content = await readFile(schemaPath, "utf-8");
+      assert.ok(
+        content.includes('"kind": "ScalarTypeDefinition"') &&
+          content.includes('"value": "DateTime"'),
+        "Schema should include custom scalar definition",
+      );
     });
   });
 });

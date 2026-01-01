@@ -13,6 +13,7 @@ import { validateTypes } from "./validator/type-validator.js";
 
 export interface ExtractTypesOptions {
   readonly directory: string;
+  readonly customScalarNames?: ReadonlyArray<string>;
 }
 
 export type { ExtractTypesResult };
@@ -37,7 +38,10 @@ export async function extractTypes(
   const conversionResult = convertToGraphQL(extractionResult.types);
   allDiagnostics.push(...conversionResult.diagnostics);
 
-  const validationResult = validateTypes(conversionResult.types);
+  const validationResult = validateTypes({
+    types: conversionResult.types,
+    customScalarNames: options.customScalarNames,
+  });
   allDiagnostics.push(...validationResult.diagnostics);
 
   return collectResults(conversionResult.types, allDiagnostics);

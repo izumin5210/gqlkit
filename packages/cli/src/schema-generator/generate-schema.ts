@@ -12,6 +12,7 @@ export interface GenerateSchemaInput {
   readonly typesResult: ExtractTypesResult;
   readonly resolversResult: ExtractResolversResult;
   readonly outputDir: string;
+  readonly customScalarNames?: ReadonlyArray<string>;
 }
 
 export interface GenerateSchemaResult {
@@ -24,9 +25,13 @@ export interface GenerateSchemaResult {
 export function generateSchema(
   input: GenerateSchemaInput,
 ): GenerateSchemaResult {
-  const { typesResult, resolversResult, outputDir } = input;
+  const { typesResult, resolversResult, outputDir, customScalarNames } = input;
 
-  const integratedResult = integrate(typesResult, resolversResult);
+  const integratedResult = integrate(
+    typesResult,
+    resolversResult,
+    customScalarNames,
+  );
 
   const typeDefsCode = emitTypeDefsCode(integratedResult);
 

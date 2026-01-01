@@ -55,6 +55,7 @@ export interface IntegratedResult {
   readonly baseTypes: ReadonlyArray<BaseType>;
   readonly inputTypes: ReadonlyArray<InputType>;
   readonly typeExtensions: ReadonlyArray<TypeExtension>;
+  readonly customScalarNames?: ReadonlyArray<string>;
   readonly hasQuery: boolean;
   readonly hasMutation: boolean;
   readonly hasErrors: boolean;
@@ -87,6 +88,7 @@ function convertResolverTypeExtension(
 export function integrate(
   typesResult: ExtractTypesResult,
   resolversResult: ExtractResolversResult,
+  customScalarNames?: ReadonlyArray<string>,
 ): IntegratedResult {
   const diagnostics: Diagnostic[] = [];
 
@@ -202,6 +204,10 @@ export function integrate(
     baseTypes,
     inputTypes,
     typeExtensions,
+    customScalarNames:
+      customScalarNames && customScalarNames.length > 0
+        ? customScalarNames
+        : undefined,
     hasQuery,
     hasMutation,
     hasErrors,

@@ -1,5 +1,6 @@
-import { join } from "node:path";
+import { dirname, join } from "node:path";
 import { define } from "gunshi";
+import { loadConfig } from "../config-loader/index.js";
 import {
   executeGeneration,
   type GenerationConfig,
@@ -26,11 +27,25 @@ export async function runGenCommand(
   const progressReporter = createProgressReporter(writer);
   const diagnosticReporter = createDiagnosticReporter(writer);
 
+  const configResult = await loadConfig({ cwd: options.cwd });
+
+  if (configResult.diagnostics.length > 0) {
+    diagnosticReporter.reportDiagnostics(configResult.diagnostics);
+    diagnosticReporter.reportError("Config load failed");
+    return { exitCode: 1 };
+  }
+
+  const configDir = configResult.configPath
+    ? dirname(configResult.configPath)
+    : options.cwd;
+
   const config: GenerationConfig = {
     cwd: options.cwd,
     typesDir: join(options.cwd, "src/gql/types"),
     resolversDir: join(options.cwd, "src/gql/resolvers"),
     outputDir: join(options.cwd, "src/gqlkit/generated"),
+    configDir,
+    customScalars: configResult.config.scalars,
   };
 
   progressReporter.startPhase("Extracting types");

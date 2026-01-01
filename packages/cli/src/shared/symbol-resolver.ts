@@ -17,6 +17,8 @@ export interface SymbolOrigin {
   readonly symbolName: string;
   /** Whether the symbol is from @gqlkit-ts/runtime */
   readonly isFromRuntime: boolean;
+  /** The absolute file path where the symbol is declared */
+  readonly sourceFilePath: string | undefined;
 }
 
 const GQLKIT_RUNTIME_MODULE = "@gqlkit-ts/runtime";
@@ -43,6 +45,7 @@ export function resolveSymbolOrigin(
       moduleName: "",
       symbolName,
       isFromRuntime: false,
+      sourceFilePath: undefined,
     };
   }
 
@@ -59,6 +62,7 @@ export function resolveSymbolOrigin(
         moduleName: GQLKIT_RUNTIME_MODULE,
         symbolName,
         isFromRuntime: true,
+        sourceFilePath: fileName,
       };
     }
 
@@ -73,6 +77,7 @@ export function resolveSymbolOrigin(
               moduleName: GQLKIT_RUNTIME_MODULE,
               symbolName,
               isFromRuntime: true,
+              sourceFilePath: fileName,
             };
           }
         }
@@ -102,6 +107,7 @@ export function resolveSymbolOrigin(
               moduleName: GQLKIT_RUNTIME_MODULE,
               symbolName,
               isFromRuntime: true,
+              sourceFilePath: fileName,
             };
           }
         }
@@ -115,10 +121,16 @@ export function resolveSymbolOrigin(
     }
   }
 
+  const firstDeclaration = declarations[0];
+  const sourceFilePath = firstDeclaration
+    ? firstDeclaration.getSourceFile().fileName
+    : undefined;
+
   return {
     moduleName: "",
     symbolName,
     isFromRuntime: false,
+    sourceFilePath,
   };
 }
 

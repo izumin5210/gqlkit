@@ -1,0 +1,22 @@
+{
+  "feature_name": "0016-custom-scalar-config",
+  "created_at": "2026-01-01T02:38:41Z",
+  "updated_at": "2026-01-01T05:30:00Z",
+  "language": "ja",
+  "phase": "implementation",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "ready_for_implementation": true
+}

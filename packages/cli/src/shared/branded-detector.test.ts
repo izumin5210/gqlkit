@@ -10,6 +10,7 @@ import {
   isBrandedScalarType,
   type ScalarTypeInfo,
 } from "./branded-detector.js";
+import { createScalarRegistry } from "./scalar-registry.js";
 
 describe("BrandedDetector", () => {
   let tempDir: string;
@@ -338,31 +339,50 @@ export type User = { age: number };
   });
 
   describe("ScalarTypeInfo type", () => {
-    it("should have correct shape", () => {
+    it("should have correct shape for standard scalar", () => {
       const info: ScalarTypeInfo = {
         scalarName: "ID",
         brandName: "IDString",
         baseType: "string",
+        isCustom: false,
       };
       assert.ok(info);
       assert.equal(info.scalarName, "ID");
       assert.equal(info.brandName, "IDString");
       assert.equal(info.baseType, "string");
+      assert.equal(info.isCustom, false);
+    });
+
+    it("should have correct shape for custom scalar", () => {
+      const info: ScalarTypeInfo = {
+        scalarName: "DateTime",
+        brandName: "DateTime",
+        baseType: undefined,
+        isCustom: true,
+      };
+      assert.ok(info);
+      assert.equal(info.scalarName, "DateTime");
+      assert.equal(info.brandName, "DateTime");
+      assert.equal(info.baseType, undefined);
+      assert.equal(info.isCustom, true);
     });
 
     it("should support all valid scalarName values", () => {
-      const scalars: Array<ScalarTypeInfo["scalarName"]> = [
+      const scalars: string[] = [
         "ID",
         "Int",
         "Float",
         "String",
         "Boolean",
+        "DateTime",
+        "UUID",
       ];
       for (const scalar of scalars) {
         const info: ScalarTypeInfo = {
           scalarName: scalar,
           brandName: "Test",
           baseType: "string",
+          isCustom: false,
         };
         assert.ok(info);
       }
@@ -376,6 +396,7 @@ export type User = { age: number };
           scalarName: "ID",
           brandName: "IDString",
           baseType: "string",
+          isCustom: false,
         },
         unknownBrand: undefined,
         diagnostics: [],
@@ -458,6 +479,96 @@ export type User = { custom: CustomType };
       const result = detectBrandedScalar(fieldType, checker);
       assert.equal(result.scalarInfo, undefined);
       assert.equal(result.unknownBrand, undefined);
+    });
+  });
+
+  describe("custom scalar detection with ScalarRegistry", () => {
+    it("should detect custom scalar when registry is provided", () => {
+      const program = createProgram({
+        "src/scalars.ts": `
+export type DateTime = string & { __brand: 'DateTime' };
+`,
+        "src/types.ts": `
+import type { DateTime } from "./scalars.js";
+export type Event = { createdAt: DateTime };
+`,
+      });
+
+      const registry = createScalarRegistry({
+        program,
+        configDir: tempDir,
+        customScalars: [
+          {
+            graphqlName: "DateTime",
+            typeName: "DateTime",
+            importPath: "./src/scalars",
+          },
+        ],
+      });
+
+      const checker = program.getTypeChecker();
+      const fieldType = getFieldType(
+        program,
+        "src/types.ts",
+        "Event",
+        "createdAt",
+      );
+      assert.ok(fieldType);
+
+      const result = detectBrandedScalar(fieldType, checker, { registry });
+      assert.ok(result.scalarInfo);
+      assert.equal(result.scalarInfo.scalarName, "DateTime");
+      assert.equal(result.scalarInfo.brandName, "DateTime");
+      assert.equal(result.scalarInfo.isCustom, true);
+    });
+
+    it("should not detect custom scalar when registry is not provided", () => {
+      const program = createProgram({
+        "src/scalars.ts": `
+export type DateTime = string & { __brand: 'DateTime' };
+`,
+        "src/types.ts": `
+import type { DateTime } from "./scalars.js";
+export type Event = { createdAt: DateTime };
+`,
+      });
+
+      const checker = program.getTypeChecker();
+      const fieldType = getFieldType(
+        program,
+        "src/types.ts",
+        "Event",
+        "createdAt",
+      );
+      assert.ok(fieldType);
+
+      const result = detectBrandedScalar(fieldType, checker);
+      assert.equal(result.scalarInfo, undefined);
+    });
+
+    it("should still detect standard branded types when registry is provided", () => {
+      const program = createProgram({
+        "src/types.ts": `
+import { IDString } from "@gqlkit-ts/runtime";
+export type User = { id: IDString };
+`,
+      });
+
+      const registry = createScalarRegistry({
+        program,
+        configDir: tempDir,
+        customScalars: [],
+      });
+
+      const checker = program.getTypeChecker();
+      const fieldType = getFieldType(program, "src/types.ts", "User", "id");
+      assert.ok(fieldType);
+
+      const result = detectBrandedScalar(fieldType, checker, { registry });
+      assert.ok(result.scalarInfo);
+      assert.equal(result.scalarInfo.scalarName, "ID");
+      assert.equal(result.scalarInfo.brandName, "IDString");
+      assert.equal(result.scalarInfo.isCustom, false);
     });
   });
 });

@@ -7,7 +7,11 @@
 
 import type ts from "typescript";
 import type { Diagnostic } from "../type-extractor/types/index.js";
-import { getScalarMapping, isKnownBrandedScalar } from "./scalar-registry.js";
+import {
+  getScalarMapping,
+  isKnownBrandedScalar,
+  type ScalarRegistry,
+} from "./scalar-registry.js";
 import {
   isSymbolFromGqlkitRuntime,
   resolveSymbolOrigin,
@@ -17,12 +21,14 @@ import {
  * Information about a detected scalar type.
  */
 export interface ScalarTypeInfo {
-  /** The GraphQL scalar type name (ID, Int, Float, String, Boolean) */
-  readonly scalarName: "ID" | "Int" | "Float" | "String" | "Boolean";
-  /** The branded type name (e.g., "IDString", "Int") */
+  /** The GraphQL scalar type name (ID, Int, Float, String, Boolean, or custom scalar name) */
+  readonly scalarName: string;
+  /** The branded type name (e.g., "IDString", "Int", "DateTime") */
   readonly brandName: string;
-  /** The underlying TypeScript primitive type */
-  readonly baseType: "string" | "number";
+  /** The underlying TypeScript primitive type (undefined for custom scalars) */
+  readonly baseType: "string" | "number" | undefined;
+  /** Whether this is a custom scalar */
+  readonly isCustom: boolean;
 }
 
 /**
@@ -48,75 +54,131 @@ export interface DetectionResult {
 }
 
 /**
- * Detects if a TypeScript type is a branded scalar type from @gqlkit-ts/runtime.
+ * Options for detecting branded scalars.
+ */
+export interface DetectBrandedScalarOptions {
+  /** Optional ScalarRegistry for custom scalar detection */
+  readonly registry?: ScalarRegistry;
+}
+
+/**
+ * Detects if a TypeScript type is a branded scalar type from @gqlkit-ts/runtime
+ * or a custom scalar defined in the configuration.
  *
  * @param type - The TypeScript type to check
  * @param checker - The TypeScript type checker
+ * @param options - Optional detection options including ScalarRegistry
  * @returns Detection result with scalar info if found
  */
 export function detectBrandedScalar(
   type: ts.Type,
   checker: ts.TypeChecker,
+  options?: DetectBrandedScalarOptions,
 ): DetectionResult {
   const diagnostics: Diagnostic[] = [];
+  const registry = options?.registry;
 
   const aliasSymbol = type.aliasSymbol;
-  if (aliasSymbol && isSymbolFromGqlkitRuntime(aliasSymbol, checker)) {
+  if (aliasSymbol) {
     const origin = resolveSymbolOrigin(aliasSymbol, checker);
-    if (origin && origin.isFromRuntime) {
-      const brandName = origin.symbolName;
-      if (isKnownBrandedScalar(brandName)) {
-        const mapping = getScalarMapping(brandName);
-        if (mapping) {
+    if (origin) {
+      if (origin.isFromRuntime) {
+        const brandName = origin.symbolName;
+        if (isKnownBrandedScalar(brandName)) {
+          const mapping = getScalarMapping(brandName);
+          if (mapping) {
+            return {
+              scalarInfo: {
+                scalarName: mapping.graphqlScalar,
+                brandName: mapping.brandName,
+                baseType: mapping.baseType,
+                isCustom: false,
+              },
+              unknownBrand: undefined,
+              diagnostics: [],
+            };
+          }
+        }
+        return {
+          scalarInfo: undefined,
+          unknownBrand: {
+            typeName: brandName,
+            importSource: origin.moduleName,
+          },
+          diagnostics,
+        };
+      }
+
+      if (registry && origin.sourceFilePath) {
+        const customMapping = registry.getMapping(
+          origin.symbolName,
+          origin.sourceFilePath,
+        );
+        if (customMapping) {
           return {
             scalarInfo: {
-              scalarName: mapping.graphqlScalar,
-              brandName: mapping.brandName,
-              baseType: mapping.baseType,
+              scalarName: customMapping.graphqlScalar,
+              brandName: customMapping.typeName,
+              baseType: undefined,
+              isCustom: true,
             },
             unknownBrand: undefined,
             diagnostics: [],
           };
         }
       }
-      return {
-        scalarInfo: undefined,
-        unknownBrand: {
-          typeName: brandName,
-          importSource: origin.moduleName,
-        },
-        diagnostics,
-      };
     }
   }
 
   const symbol = type.getSymbol();
-  if (symbol && isSymbolFromGqlkitRuntime(symbol, checker)) {
+  if (symbol) {
     const origin = resolveSymbolOrigin(symbol, checker);
-    if (origin && origin.isFromRuntime) {
-      const brandName = origin.symbolName;
-      if (isKnownBrandedScalar(brandName)) {
-        const mapping = getScalarMapping(brandName);
-        if (mapping) {
+    if (origin) {
+      if (origin.isFromRuntime) {
+        const brandName = origin.symbolName;
+        if (isKnownBrandedScalar(brandName)) {
+          const mapping = getScalarMapping(brandName);
+          if (mapping) {
+            return {
+              scalarInfo: {
+                scalarName: mapping.graphqlScalar,
+                brandName: mapping.brandName,
+                baseType: mapping.baseType,
+                isCustom: false,
+              },
+              unknownBrand: undefined,
+              diagnostics: [],
+            };
+          }
+        }
+        return {
+          scalarInfo: undefined,
+          unknownBrand: {
+            typeName: brandName,
+            importSource: origin.moduleName,
+          },
+          diagnostics,
+        };
+      }
+
+      if (registry && origin.sourceFilePath) {
+        const customMapping = registry.getMapping(
+          origin.symbolName,
+          origin.sourceFilePath,
+        );
+        if (customMapping) {
           return {
             scalarInfo: {
-              scalarName: mapping.graphqlScalar,
-              brandName: mapping.brandName,
-              baseType: mapping.baseType,
+              scalarName: customMapping.graphqlScalar,
+              brandName: customMapping.typeName,
+              baseType: undefined,
+              isCustom: true,
             },
             unknownBrand: undefined,
             diagnostics: [],
           };
         }
       }
-      return {
-        scalarInfo: undefined,
-        unknownBrand: {
-          typeName: brandName,
-          importSource: origin.moduleName,
-        },
-        diagnostics,
-      };
     }
   }
 

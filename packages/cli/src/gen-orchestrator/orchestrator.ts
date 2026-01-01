@@ -1,3 +1,4 @@
+import type { ResolvedScalarMapping } from "../config-loader/index.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import { extractResolvers } from "../resolver-extractor/index.js";
 import { generateSchema } from "../schema-generator/index.js";
@@ -13,6 +14,8 @@ export interface GenerationConfig {
   readonly typesDir: string;
   readonly resolversDir: string;
   readonly outputDir: string;
+  readonly configDir?: string;
+  readonly customScalars?: ReadonlyArray<ResolvedScalarMapping>;
 }
 
 export interface GenerationResult {
@@ -48,7 +51,13 @@ function hasErrors(
 export async function executeGeneration(
   config: GenerationConfig,
 ): Promise<GenerationResult> {
-  const typesResult = await extractTypes({ directory: config.typesDir });
+  const customScalarNames =
+    config.customScalars?.map((s) => s.graphqlName) ?? [];
+
+  const typesResult = await extractTypes({
+    directory: config.typesDir,
+    customScalarNames,
+  });
   const resolversResult = await extractResolvers({
     directory: config.resolversDir,
   });
@@ -67,6 +76,7 @@ export async function executeGeneration(
     typesResult,
     resolversResult,
     outputDir: config.outputDir,
+    customScalarNames,
   });
 
   allDiagnostics.push(...schemaResult.diagnostics);

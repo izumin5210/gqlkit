@@ -218,6 +218,233 @@ describe("Integration Tests", () => {
     });
   });
 
+  describe("custom scalar configuration (Task 8.1)", () => {
+    it("should generate schema with custom scalar definitions", async () => {
+      const typesDir = join(testDir, "src/gql/types");
+      const resolversDir = join(testDir, "src/gql/resolvers");
+      const outputDir = join(testDir, "src/gqlkit/generated");
+
+      await mkdir(typesDir, { recursive: true });
+      await mkdir(resolversDir, { recursive: true });
+
+      await writeFile(
+        join(typesDir, "event.ts"),
+        `export interface Event {
+          id: string;
+          createdAt: DateTime;
+        }
+        type DateTime = string & { readonly __brand: unique symbol };`,
+        "utf-8",
+      );
+
+      await writeFile(
+        join(resolversDir, "query.ts"),
+        `
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
+          interface Event { id: string; createdAt: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const events = defineQuery<NoArgs, Event[]>(function() { return []; });
+        `,
+        "utf-8",
+      );
+
+      const config: GenerationConfig = {
+        cwd: testDir,
+        typesDir,
+        resolversDir,
+        outputDir,
+        customScalars: [
+          {
+            graphqlName: "DateTime",
+            typeName: "DateTime",
+            importPath: "./src/scalars",
+          },
+        ],
+      };
+
+      const result = await executeGeneration(config);
+
+      assert.strictEqual(result.success, true);
+
+      const schemaContent = await readFile(
+        join(outputDir, "schema.ts"),
+        "utf-8",
+      );
+      assert.ok(
+        schemaContent.includes('"kind": "ScalarTypeDefinition"'),
+        "Schema should include scalar type definition",
+      );
+      assert.ok(
+        schemaContent.includes('"value": "DateTime"'),
+        "Schema should include DateTime scalar",
+      );
+    });
+
+    it("should generate schema with multiple custom scalars", async () => {
+      const typesDir = join(testDir, "src/gql/types");
+      const resolversDir = join(testDir, "src/gql/resolvers");
+      const outputDir = join(testDir, "src/gqlkit/generated");
+
+      await mkdir(typesDir, { recursive: true });
+      await mkdir(resolversDir, { recursive: true });
+
+      await writeFile(
+        join(typesDir, "event.ts"),
+        `export interface Event {
+          id: string;
+          createdAt: DateTime;
+          metadata: JSON;
+        }
+        type DateTime = string & { readonly __brand: unique symbol };
+        type JSON = object & { readonly __brand: unique symbol };`,
+        "utf-8",
+      );
+
+      await writeFile(
+        join(resolversDir, "query.ts"),
+        `
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
+          interface Event { id: string; createdAt: string; metadata: object; }
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const events = defineQuery<NoArgs, Event[]>(function() { return []; });
+        `,
+        "utf-8",
+      );
+
+      const config: GenerationConfig = {
+        cwd: testDir,
+        typesDir,
+        resolversDir,
+        outputDir,
+        customScalars: [
+          {
+            graphqlName: "DateTime",
+            typeName: "DateTime",
+            importPath: "./src/scalars",
+          },
+          {
+            graphqlName: "JSON",
+            typeName: "JSON",
+            importPath: "./src/scalars",
+          },
+        ],
+      };
+
+      const result = await executeGeneration(config);
+
+      assert.strictEqual(result.success, true);
+
+      const schemaContent = await readFile(
+        join(outputDir, "schema.ts"),
+        "utf-8",
+      );
+      assert.ok(schemaContent.includes('"value": "DateTime"'));
+      assert.ok(schemaContent.includes('"value": "JSON"'));
+    });
+
+    it("should pass validation when custom scalar is referenced in type", async () => {
+      const typesDir = join(testDir, "src/gql/types");
+      const resolversDir = join(testDir, "src/gql/resolvers");
+      const outputDir = join(testDir, "src/gqlkit/generated");
+
+      await mkdir(typesDir, { recursive: true });
+      await mkdir(resolversDir, { recursive: true });
+
+      await writeFile(
+        join(typesDir, "user.ts"),
+        `export interface User {
+          id: string;
+          createdAt: DateTime;
+        }
+        type DateTime = string;`,
+        "utf-8",
+      );
+
+      await writeFile(
+        join(resolversDir, "query.ts"),
+        `
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
+          interface User { id: string; createdAt: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const user = defineQuery<NoArgs, User>(function() { return { id: "1", createdAt: "2024-01-01" }; });
+        `,
+        "utf-8",
+      );
+
+      const config: GenerationConfig = {
+        cwd: testDir,
+        typesDir,
+        resolversDir,
+        outputDir,
+        customScalars: [
+          {
+            graphqlName: "DateTime",
+            typeName: "DateTime",
+            importPath: "./src/scalars",
+          },
+        ],
+      };
+
+      const result = await executeGeneration(config);
+
+      assert.strictEqual(result.success, true);
+      assert.strictEqual(
+        result.diagnostics.filter((d) => d.code === "UNRESOLVED_REFERENCE")
+          .length,
+        0,
+        "Should not have unresolved reference errors for custom scalars",
+      );
+    });
+
+    it("should fail validation for unknown type reference when not in custom scalars", async () => {
+      const typesDir = join(testDir, "src/gql/types");
+      const resolversDir = join(testDir, "src/gql/resolvers");
+      const outputDir = join(testDir, "src/gqlkit/generated");
+
+      await mkdir(typesDir, { recursive: true });
+      await mkdir(resolversDir, { recursive: true });
+
+      await writeFile(
+        join(typesDir, "user.ts"),
+        `export interface User {
+          id: string;
+          relation: NonExistentType;
+        }`,
+        "utf-8",
+      );
+
+      await writeFile(
+        join(resolversDir, "query.ts"),
+        `
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
+          interface User { id: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const user = defineQuery<NoArgs, User>(function() { return { id: "1" }; });
+        `,
+        "utf-8",
+      );
+
+      const config: GenerationConfig = {
+        cwd: testDir,
+        typesDir,
+        resolversDir,
+        outputDir,
+      };
+
+      const result = await executeGeneration(config);
+
+      assert.strictEqual(result.success, false);
+      assert.ok(
+        result.diagnostics.some((d) => d.code === "UNRESOLVED_REFERENCE"),
+        "Should have unresolved reference error for unknown type",
+      );
+    });
+  });
+
   describe("error handling (Task 6.2)", () => {
     it("should fail when types directory does not exist", async () => {
       const resolversDir = join(testDir, "src/gql/resolvers");

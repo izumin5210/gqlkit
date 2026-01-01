@@ -1,9 +1,15 @@
 import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import fs from "node:fs";
+import os from "node:os";
+import path from "node:path";
+import { afterEach, beforeEach, describe, it } from "node:test";
+import ts from "typescript";
 import {
+  createScalarRegistry,
   getScalarMapping,
   isKnownBrandedScalar,
   type ScalarMappingInfo,
+  type ScalarRegistry,
   STANDARD_SCALAR_MAPPINGS,
 } from "./scalar-registry.js";
 
@@ -170,6 +176,217 @@ describe("ScalarRegistry", () => {
         };
         assert.ok(info);
       }
+    });
+  });
+
+  describe("createScalarRegistry", () => {
+    let tempDir: string;
+
+    beforeEach(() => {
+      tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "scalar-registry-test-"));
+    });
+
+    afterEach(() => {
+      fs.rmSync(tempDir, { recursive: true });
+    });
+
+    function createTestProgram(files: Record<string, string>): ts.Program {
+      const filePaths: string[] = [];
+      for (const [name, content] of Object.entries(files)) {
+        const filePath = path.join(tempDir, name);
+        fs.mkdirSync(path.dirname(filePath), { recursive: true });
+        fs.writeFileSync(filePath, content);
+        filePaths.push(filePath);
+      }
+
+      const options: ts.CompilerOptions = {
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.NodeNext,
+        moduleResolution: ts.ModuleResolutionKind.Node16,
+        strict: true,
+        baseUrl: tempDir,
+      };
+
+      return ts.createProgram(filePaths, options);
+    }
+
+    describe("without custom scalars", () => {
+      it("should return standard branded type mappings", () => {
+        const program = createTestProgram({
+          "src/dummy.ts": "export {}",
+        });
+        const registry = createScalarRegistry({ program });
+
+        const idStringMapping = registry.getMapping(
+          "IDString",
+          "@gqlkit-ts/runtime",
+        );
+        assert.ok(idStringMapping);
+        assert.equal(idStringMapping.graphqlScalar, "ID");
+        assert.equal(idStringMapping.typeName, "IDString");
+        assert.equal(idStringMapping.isCustom, false);
+      });
+
+      it("should return undefined for unknown types", () => {
+        const program = createTestProgram({
+          "src/dummy.ts": "export {}",
+        });
+        const registry = createScalarRegistry({ program });
+
+        const mapping = registry.getMapping("Unknown", "./src/scalars");
+        assert.equal(mapping, undefined);
+      });
+
+      it("should return empty custom scalar names", () => {
+        const program = createTestProgram({
+          "src/dummy.ts": "export {}",
+        });
+        const registry = createScalarRegistry({ program });
+
+        const names = registry.getCustomScalarNames();
+        assert.deepEqual(names, []);
+      });
+    });
+
+    describe("with custom scalars", () => {
+      it("should return custom scalar mapping", () => {
+        fs.mkdirSync(path.join(tempDir, "src"), { recursive: true });
+        fs.writeFileSync(
+          path.join(tempDir, "src/scalars.ts"),
+          "export type DateTime = string & { __brand: 'DateTime' };",
+        );
+
+        const program = createTestProgram({
+          "src/dummy.ts": "export {}",
+        });
+
+        const registry = createScalarRegistry({
+          program,
+          configDir: tempDir,
+          customScalars: [
+            {
+              graphqlName: "DateTime",
+              typeName: "DateTime",
+              importPath: "./src/scalars",
+            },
+          ],
+        });
+
+        const mapping = registry.getMapping(
+          "DateTime",
+          path.join(tempDir, "src/scalars.ts"),
+        );
+        assert.ok(mapping);
+        assert.equal(mapping.graphqlScalar, "DateTime");
+        assert.equal(mapping.typeName, "DateTime");
+        assert.equal(mapping.isCustom, true);
+      });
+
+      it("should return custom scalar names", () => {
+        fs.mkdirSync(path.join(tempDir, "src"), { recursive: true });
+        fs.writeFileSync(
+          path.join(tempDir, "src/scalars.ts"),
+          `
+export type DateTime = string & { __brand: 'DateTime' };
+export type UUID = string & { __brand: 'UUID' };
+`,
+        );
+
+        const program = createTestProgram({
+          "src/dummy.ts": "export {}",
+        });
+
+        const registry = createScalarRegistry({
+          program,
+          configDir: tempDir,
+          customScalars: [
+            {
+              graphqlName: "DateTime",
+              typeName: "DateTime",
+              importPath: "./src/scalars",
+            },
+            {
+              graphqlName: "UUID",
+              typeName: "UUID",
+              importPath: "./src/scalars",
+            },
+          ],
+        });
+
+        const names = registry.getCustomScalarNames();
+        assert.deepEqual(names.sort(), ["DateTime", "UUID"]);
+      });
+
+      it("should resolve ./src/scalars and ./src/scalars/index.ts to same module", () => {
+        fs.mkdirSync(path.join(tempDir, "src/scalars"), { recursive: true });
+        fs.writeFileSync(
+          path.join(tempDir, "src/scalars/index.ts"),
+          "export type DateTime = string & { __brand: 'DateTime' };",
+        );
+
+        const program = createTestProgram({
+          "src/dummy.ts": "export {}",
+        });
+
+        const registry = createScalarRegistry({
+          program,
+          configDir: tempDir,
+          customScalars: [
+            {
+              graphqlName: "DateTime",
+              typeName: "DateTime",
+              importPath: "./src/scalars",
+            },
+          ],
+        });
+
+        const mappingViaDir = registry.getMapping(
+          "DateTime",
+          path.join(tempDir, "src/scalars/index.ts"),
+        );
+        assert.ok(mappingViaDir);
+        assert.equal(mappingViaDir.graphqlScalar, "DateTime");
+      });
+
+      it("should prioritize custom scalars over standard branded types", () => {
+        fs.mkdirSync(path.join(tempDir, "src"), { recursive: true });
+        fs.writeFileSync(
+          path.join(tempDir, "src/scalars.ts"),
+          "export type IDString = string & { __brand: 'custom' };",
+        );
+
+        const program = createTestProgram({
+          "src/dummy.ts": "export {}",
+        });
+
+        const registry = createScalarRegistry({
+          program,
+          configDir: tempDir,
+          customScalars: [
+            {
+              graphqlName: "CustomID",
+              typeName: "IDString",
+              importPath: "./src/scalars",
+            },
+          ],
+        });
+
+        const runtimeMapping = registry.getMapping(
+          "IDString",
+          "@gqlkit-ts/runtime",
+        );
+        assert.ok(runtimeMapping);
+        assert.equal(runtimeMapping.graphqlScalar, "ID");
+        assert.equal(runtimeMapping.isCustom, false);
+
+        const customMapping = registry.getMapping(
+          "IDString",
+          path.join(tempDir, "src/scalars.ts"),
+        );
+        assert.ok(customMapping);
+        assert.equal(customMapping.graphqlScalar, "CustomID");
+        assert.equal(customMapping.isCustom, true);
+      });
     });
   });
 });
