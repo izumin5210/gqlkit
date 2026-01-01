@@ -2,6 +2,10 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import {
+  detectBrandedScalar,
+  type UnknownBrandInfo,
+} from "../../shared/branded-detector.js";
+import {
   extractTSDocFromSymbol,
   extractTSDocInfo,
 } from "../../shared/tsdoc-parser.js";
@@ -82,10 +86,39 @@ function isBooleanUnion(type: ts.Type): boolean {
   );
 }
 
-function convertTsTypeToReference(
+interface TypeReferenceResult {
+  readonly tsType: TSTypeReference;
+  readonly unknownBrand: UnknownBrandInfo | undefined;
+}
+
+function convertTsTypeToReferenceWithBrandInfo(
   type: ts.Type,
   checker: ts.TypeChecker,
-): TSTypeReference {
+): TypeReferenceResult {
+  const brandedResult = detectBrandedScalar(type, checker);
+  if (brandedResult.scalarInfo) {
+    return {
+      tsType: {
+        kind: "scalar",
+        name: brandedResult.scalarInfo.scalarName,
+        nullable: false,
+        scalarInfo: brandedResult.scalarInfo,
+      },
+      unknownBrand: undefined,
+    };
+  }
+
+  if (brandedResult.unknownBrand) {
+    return {
+      tsType: {
+        kind: "primitive",
+        name: "string",
+        nullable: false,
+      },
+      unknownBrand: brandedResult.unknownBrand,
+    };
+  }
+
   if (isBooleanUnion(type)) {
     const hasNull =
       type.isUnion() && type.types.some((t) => t.flags & ts.TypeFlags.Null);
@@ -93,9 +126,12 @@ function convertTsTypeToReference(
       type.isUnion() &&
       type.types.some((t) => t.flags & ts.TypeFlags.Undefined);
     return {
-      kind: "primitive",
-      name: "boolean",
-      nullable: hasNull || hasUndefined,
+      tsType: {
+        kind: "primitive",
+        name: "boolean",
+        nullable: hasNull || hasUndefined,
+      },
+      unknownBrand: undefined,
     };
   }
 
@@ -111,66 +147,138 @@ function convertTsTypeToReference(
     const nullable = hasNull || hasUndefined;
 
     if (nonNullTypes.length === 1) {
-      const innerType = convertTsTypeToReference(nonNullTypes[0]!, checker);
-      return { ...innerType, nullable };
+      const innerResult = convertTsTypeToReferenceWithBrandInfo(
+        nonNullTypes[0]!,
+        checker,
+      );
+      return {
+        tsType: { ...innerResult.tsType, nullable },
+        unknownBrand: innerResult.unknownBrand,
+      };
     }
 
+    const memberResults = nonNullTypes.map((t) =>
+      convertTsTypeToReferenceWithBrandInfo(t, checker),
+    );
+    const unknownBrands = memberResults
+      .map((r) => r.unknownBrand)
+      .filter((b): b is UnknownBrandInfo => b !== undefined);
+
     return {
-      kind: "union",
-      members: nonNullTypes.map((t) => convertTsTypeToReference(t, checker)),
-      nullable,
+      tsType: {
+        kind: "union",
+        members: memberResults.map((r) => r.tsType),
+        nullable,
+      },
+      unknownBrand: unknownBrands[0],
     };
   }
 
   if (checker.isArrayType(type)) {
     const typeArgs = (type as ts.TypeReference).typeArguments;
     const elementType = typeArgs?.[0];
+    const elementResult = elementType
+      ? convertTsTypeToReferenceWithBrandInfo(elementType, checker)
+      : {
+          tsType: {
+            kind: "primitive" as const,
+            name: "unknown",
+            nullable: false,
+          },
+          unknownBrand: undefined,
+        };
+
     return {
-      kind: "array",
-      elementType: elementType
-        ? convertTsTypeToReference(elementType, checker)
-        : { kind: "primitive", name: "unknown", nullable: false },
-      nullable: false,
+      tsType: {
+        kind: "array",
+        elementType: elementResult.tsType,
+        nullable: false,
+      },
+      unknownBrand: elementResult.unknownBrand,
     };
   }
 
   const typeString = checker.typeToString(type);
 
   if (type.flags & ts.TypeFlags.String) {
-    return { kind: "primitive", name: "string", nullable: false };
+    return {
+      tsType: { kind: "primitive", name: "string", nullable: false },
+      unknownBrand: undefined,
+    };
   }
   if (type.flags & ts.TypeFlags.Number) {
-    return { kind: "primitive", name: "number", nullable: false };
+    return {
+      tsType: { kind: "primitive", name: "number", nullable: false },
+      unknownBrand: undefined,
+    };
   }
   if (
     type.flags & ts.TypeFlags.Boolean ||
     type.flags & ts.TypeFlags.BooleanLiteral
   ) {
-    return { kind: "primitive", name: "boolean", nullable: false };
+    return {
+      tsType: { kind: "primitive", name: "boolean", nullable: false },
+      unknownBrand: undefined,
+    };
   }
   if (type.flags & ts.TypeFlags.StringLiteral) {
     return {
-      kind: "literal",
-      name: typeString.replace(/"/g, ""),
-      nullable: false,
+      tsType: {
+        kind: "literal",
+        name: typeString.replace(/"/g, ""),
+        nullable: false,
+      },
+      unknownBrand: undefined,
     };
   }
   if (type.flags & ts.TypeFlags.NumberLiteral) {
-    return { kind: "literal", name: typeString, nullable: false };
+    return {
+      tsType: { kind: "literal", name: typeString, nullable: false },
+      unknownBrand: undefined,
+    };
   }
 
   if (type.symbol) {
-    return { kind: "reference", name: type.symbol.getName(), nullable: false };
+    return {
+      tsType: {
+        kind: "reference",
+        name: type.symbol.getName(),
+        nullable: false,
+      },
+      unknownBrand: undefined,
+    };
   }
 
-  return { kind: "reference", name: typeString, nullable: false };
+  return {
+    tsType: { kind: "reference", name: typeString, nullable: false },
+    unknownBrand: undefined,
+  };
+}
+
+function convertTsTypeToReference(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+): TSTypeReference {
+  return convertTsTypeToReferenceWithBrandInfo(type, checker).tsType;
+}
+
+interface FieldExtractionResult {
+  readonly fields: FieldDefinition[];
+  readonly unknownBrands: ReadonlyArray<{
+    readonly fieldName: string;
+    readonly brandInfo: UnknownBrandInfo;
+  }>;
 }
 
 function extractFieldsFromType(
   type: ts.Type,
   checker: ts.TypeChecker,
-): FieldDefinition[] {
+): FieldExtractionResult {
   const fields: FieldDefinition[] = [];
+  const unknownBrands: Array<{
+    fieldName: string;
+    brandInfo: UnknownBrandInfo;
+  }> = [];
   const properties = type.getProperties();
 
   for (const prop of properties) {
@@ -184,17 +292,25 @@ function extractFieldsFromType(
     }
 
     const tsdocInfo = extractTSDocFromSymbol(prop, checker);
+    const typeResult = convertTsTypeToReferenceWithBrandInfo(propType, checker);
+
+    if (typeResult.unknownBrand) {
+      unknownBrands.push({
+        fieldName: prop.getName(),
+        brandInfo: typeResult.unknownBrand,
+      });
+    }
 
     fields.push({
       name: prop.getName(),
-      tsType: convertTsTypeToReference(propType, checker),
+      tsType: typeResult.tsType,
       optional,
       description: tsdocInfo.description,
       deprecated: tsdocInfo.deprecated,
     });
   }
 
-  return fields;
+  return { fields, unknownBrands };
 }
 
 export function isStringEnum(node: ts.Node): boolean {
@@ -511,12 +627,26 @@ export function extractTypesFromProgram(
           return;
         }
 
-        const fields =
-          kind === "union" ? [] : extractFieldsFromType(type, checker);
+        const fieldResult =
+          kind === "union"
+            ? { fields: [], unknownBrands: [] }
+            : extractFieldsFromType(type, checker);
+
+        for (const { fieldName, brandInfo } of fieldResult.unknownBrands) {
+          const { line, character } = sourceFile.getLineAndCharacterOfPosition(
+            node.getStart(sourceFile),
+          );
+          diagnostics.push({
+            code: "UNKNOWN_BRANDED_SCALAR",
+            message: `Unknown branded scalar type '${brandInfo.typeName}' from '${brandInfo.importSource}' in field '${fieldName}' of type '${name}'. Falling back to String type.`,
+            severity: "warning",
+            location: { file: filePath, line: line + 1, column: character + 1 },
+          });
+        }
 
         const typeInfo: ExtractedTypeInfo = unionMembers
-          ? { metadata, fields, unionMembers }
-          : { metadata, fields };
+          ? { metadata, fields: fieldResult.fields, unionMembers }
+          : { metadata, fields: fieldResult.fields };
 
         types.push(typeInfo);
       }

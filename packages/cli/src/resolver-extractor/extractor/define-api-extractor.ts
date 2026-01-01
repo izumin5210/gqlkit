@@ -1,4 +1,5 @@
 import ts from "typescript";
+import { detectBrandedScalar } from "../../shared/branded-detector.js";
 import {
   type DeprecationInfo,
   extractTSDocFromSymbol,
@@ -85,6 +86,16 @@ function convertTypeToTSTypeReference(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): TSTypeReference {
+  const brandedResult = detectBrandedScalar(type, checker);
+  if (brandedResult.scalarInfo) {
+    return {
+      kind: "scalar",
+      name: brandedResult.scalarInfo.scalarName,
+      nullable: false,
+      scalarInfo: brandedResult.scalarInfo,
+    };
+  }
+
   const typeString = checker.typeToString(type);
 
   if (type.isUnion()) {

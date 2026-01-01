@@ -1,3 +1,4 @@
+import type { ScalarTypeInfo } from "../../shared/branded-detector.js";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 
 export type TypeKind = "object" | "interface" | "union" | "enum";
@@ -12,11 +13,18 @@ export interface TypeMetadata {
 }
 
 export interface TSTypeReference {
-  readonly kind: "primitive" | "reference" | "array" | "union" | "literal";
+  readonly kind:
+    | "primitive"
+    | "reference"
+    | "array"
+    | "union"
+    | "literal"
+    | "scalar";
   readonly name?: string;
   readonly elementType?: TSTypeReference;
   readonly members?: ReadonlyArray<TSTypeReference>;
   readonly nullable: boolean;
+  readonly scalarInfo?: ScalarTypeInfo;
 }
 
 export interface FieldDefinition {

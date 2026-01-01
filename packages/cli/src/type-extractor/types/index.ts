@@ -1,3 +1,4 @@
+export type { ScalarTypeInfo } from "../../shared/branded-detector.js";
 export type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 export type {
   Diagnostic,

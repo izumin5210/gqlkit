@@ -36,6 +36,7 @@ Pipeline-based architecture for code generation:
 Minimal runtime utilities for user codebases:
 - `createGqlkitApis<TContext>()` factory function
 - Type definitions for resolvers (`QueryResolver`, `MutationResolver`, `FieldResolver`)
+- Branded scalar types (`IDString`, `IDNumber`, `Int`, `Float`) for explicit GraphQL scalar mapping
 - `NoArgs` helper type
 
 ### User Convention Directories (gqlkit-managed)
@@ -73,4 +74,4 @@ import { extractTypes } from "../type-extractor/index.js";
 
 ---
 _Document patterns, not file trees. New files following patterns shouldn't require updates_
-_Updated: 2025-01-01 - Added shared utilities, e2e test patterns, validator pattern_
+_Updated: 2025-01-01 - Runtime branded scalar types_

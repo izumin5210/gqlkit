@@ -1,6 +1,47 @@
 import type { GraphQLResolveInfo } from "graphql";
 
 /**
+ * Type-level symbol for identifying scalar types.
+ * This symbol only exists at the type level and has no runtime representation.
+ * Used by CLI to detect branded scalar types through type analysis.
+ */
+declare const ScalarBrandSymbol: unique symbol;
+
+/**
+ * Branded type for scalar types.
+ * This type is used to create distinct types for GraphQL scalar types.
+ * @typeParam K - The name of the scalar type brand
+ */
+export type ScalarBrand<K extends string> = {
+  readonly [ScalarBrandSymbol]: K;
+};
+
+/**
+ * Branded type for GraphQL ID scalar (string-based).
+ * Use this when the ID is represented as a string in your system.
+ */
+export type IDString = string & ScalarBrand<"IDString">;
+
+/**
+ * Branded type for GraphQL ID scalar (number-based).
+ * Use this when the ID is represented as a number in your system.
+ */
+export type IDNumber = number & ScalarBrand<"IDNumber">;
+
+/**
+ * Branded type for GraphQL Int scalar.
+ * Use this to explicitly mark a field as an integer.
+ */
+export type Int = number & ScalarBrand<"Int">;
+
+/**
+ * Branded type for GraphQL Float scalar.
+ * Use this to explicitly mark a field as a floating-point number.
+ * Note: Plain `number` type will also map to Float by default.
+ */
+export type Float = number & ScalarBrand<"Float">;
+
+/**
  * Type alias representing no arguments for a resolver.
  * Use this when defining resolvers that don't accept any arguments.
  */

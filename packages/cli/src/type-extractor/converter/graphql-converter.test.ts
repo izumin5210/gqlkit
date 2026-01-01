@@ -61,7 +61,7 @@ describe("GraphQLConverter", () => {
 
         const field = result.types[0]?.fields?.[0];
         assert.ok(field);
-        assert.strictEqual(field.type.typeName, "Int");
+        assert.strictEqual(field.type.typeName, "Float");
       });
 
       it("should convert boolean to GraphQL Boolean", () => {

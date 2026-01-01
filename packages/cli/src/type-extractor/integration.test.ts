@@ -130,7 +130,7 @@ describe("Integration Tests", () => {
       assert.strictEqual(stringField?.type.list, false);
 
       const numberField = type.fields.find((f) => f.name === "numberField");
-      assert.strictEqual(numberField?.type.typeName, "Int");
+      assert.strictEqual(numberField?.type.typeName, "Float");
 
       const booleanField = type.fields.find((f) => f.name === "booleanField");
       assert.strictEqual(booleanField?.type.typeName, "Boolean");
@@ -341,6 +341,126 @@ describe("Integration Tests", () => {
       assert.ok(
         result.diagnostics.errors.some((e) => e.code === "INVALID_ENUM_MEMBER"),
       );
+    });
+  });
+
+  describe("branded scalar type extraction", () => {
+    it("should convert IDString to GraphQL ID scalar", async () => {
+      await writeFile(
+        join(tempDir, "user.ts"),
+        `
+import type { IDString } from "@gqlkit-ts/runtime";
+export interface User {
+  id: IDString;
+  name: string;
+}
+`,
+      );
+
+      const result = await extractTypes({ directory: tempDir });
+
+      assert.strictEqual(result.types.length, 1);
+      const user = result.types[0];
+      assert.ok(user);
+
+      const idField = user.fields?.find((f) => f.name === "id");
+      assert.ok(idField);
+      assert.strictEqual(idField.type.typeName, "ID");
+      assert.strictEqual(idField.type.nullable, false);
+    });
+
+    it("should convert Int and Float to corresponding GraphQL scalars", async () => {
+      await writeFile(
+        join(tempDir, "product.ts"),
+        `
+import type { Int, Float } from "@gqlkit-ts/runtime";
+export interface Product {
+  count: Int;
+  price: Float;
+  regularNumber: number;
+}
+`,
+      );
+
+      const result = await extractTypes({ directory: tempDir });
+
+      assert.strictEqual(result.types.length, 1);
+      const product = result.types[0];
+      assert.ok(product);
+
+      const countField = product.fields?.find((f) => f.name === "count");
+      assert.ok(countField);
+      assert.strictEqual(countField.type.typeName, "Int");
+
+      const priceField = product.fields?.find((f) => f.name === "price");
+      assert.ok(priceField);
+      assert.strictEqual(priceField.type.typeName, "Float");
+
+      const regularNumberField = product.fields?.find(
+        (f) => f.name === "regularNumber",
+      );
+      assert.ok(regularNumberField);
+      assert.strictEqual(regularNumberField.type.typeName, "Float");
+    });
+
+    it("should handle branded scalar types in arrays", async () => {
+      await writeFile(
+        join(tempDir, "collection.ts"),
+        `
+import type { IDString, Int } from "@gqlkit-ts/runtime";
+export interface Collection {
+  ids: IDString[];
+  counts: Int[];
+}
+`,
+      );
+
+      const result = await extractTypes({ directory: tempDir });
+
+      assert.strictEqual(result.types.length, 1);
+      const collection = result.types[0];
+      assert.ok(collection);
+
+      const idsField = collection.fields?.find((f) => f.name === "ids");
+      assert.ok(idsField);
+      assert.strictEqual(idsField.type.list, true);
+      assert.strictEqual(idsField.type.typeName, "ID");
+
+      const countsField = collection.fields?.find((f) => f.name === "counts");
+      assert.ok(countsField);
+      assert.strictEqual(countsField.type.list, true);
+      assert.strictEqual(countsField.type.typeName, "Int");
+    });
+
+    it("should handle nullable branded scalar types", async () => {
+      await writeFile(
+        join(tempDir, "nullable.ts"),
+        `
+import type { IDString, Float } from "@gqlkit-ts/runtime";
+export interface NullableFields {
+  optionalId?: IDString;
+  nullablePrice: Float | null;
+}
+`,
+      );
+
+      const result = await extractTypes({ directory: tempDir });
+
+      assert.strictEqual(result.types.length, 1);
+      const type = result.types[0];
+      assert.ok(type);
+
+      const optionalIdField = type.fields?.find((f) => f.name === "optionalId");
+      assert.ok(optionalIdField);
+      assert.strictEqual(optionalIdField.type.typeName, "ID");
+      assert.strictEqual(optionalIdField.type.nullable, true);
+
+      const nullablePriceField = type.fields?.find(
+        (f) => f.name === "nullablePrice",
+      );
+      assert.ok(nullablePriceField);
+      assert.strictEqual(nullablePriceField.type.typeName, "Float");
+      assert.strictEqual(nullablePriceField.type.nullable, true);
     });
   });
 });

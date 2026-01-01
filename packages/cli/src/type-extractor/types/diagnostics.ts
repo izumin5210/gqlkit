@@ -21,7 +21,10 @@ export type DiagnosticCode =
   | "INVALID_INPUT_TYPE"
   | "UNKNOWN_ARGUMENT_TYPE"
   | "OUTPUT_TYPE_IN_INPUT"
-  | "CIRCULAR_INPUT_REFERENCE";
+  | "CIRCULAR_INPUT_REFERENCE"
+  | "UNKNOWN_BRANDED_SCALAR"
+  | "INVALID_SCALAR_IMPORT"
+  | "CONFLICTING_SCALAR_TYPE";
 
 export interface Diagnostic {
   readonly code: DiagnosticCode;

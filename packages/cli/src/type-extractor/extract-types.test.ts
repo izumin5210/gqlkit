@@ -67,7 +67,7 @@ describe("extractTypes", () => {
       assert.strictEqual(idField?.type.typeName, "String");
 
       const ageField = user.fields.find((f) => f.name === "age");
-      assert.strictEqual(ageField?.type.typeName, "Int");
+      assert.strictEqual(ageField?.type.typeName, "Float");
 
       const activeField = user.fields.find((f) => f.name === "active");
       assert.strictEqual(activeField?.type.typeName, "Boolean");

@@ -100,7 +100,7 @@ function collectDiagnostics(
 
 const PRIMITIVE_TYPE_MAP: Record<string, string> = {
   string: "String",
-  number: "Int",
+  number: "Float",
   boolean: "Boolean",
 };
 

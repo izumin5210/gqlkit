@@ -27,7 +27,7 @@ const RESERVED_TYPE_NAMES = new Set([
 
 const PRIMITIVE_TYPE_MAP: Record<string, string> = {
   string: "String",
-  number: "Int",
+  number: "Float",
   boolean: "Boolean",
 };
 
@@ -105,6 +105,14 @@ function convertTsTypeToGraphQL(
     };
   }
 
+  if (tsType.kind === "scalar") {
+    return {
+      typeName: tsType.scalarInfo?.scalarName ?? tsType.name ?? "String",
+      nullable,
+      list: false,
+    };
+  }
+
   if (tsType.kind === "primitive") {
     const graphqlType = PRIMITIVE_TYPE_MAP[tsType.name ?? ""] ?? "String";
     return {
@@ -130,6 +138,9 @@ function convertTsTypeToGraphQL(
 }
 
 function convertElementTypeName(elementType: TSTypeReference): string {
+  if (elementType.kind === "scalar") {
+    return elementType.scalarInfo?.scalarName ?? elementType.name ?? "String";
+  }
   if (elementType.kind === "primitive") {
     return PRIMITIVE_TYPE_MAP[elementType.name ?? ""] ?? "String";
   }
