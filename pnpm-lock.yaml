@@ -12,7 +12,7 @@ importers:
         specifier: 2.3.10
         version: 2.3.10
 
-  examples/basic-types:
+  examples/full-featured:
     dependencies:
       '@gqlkit-ts/cli':
         specifier: workspace:*
@@ -37,132 +37,7 @@ importers:
         specifier: ^5.9.0
         version: 5.9.3
 
-  examples/define-api:
-    dependencies:
-      '@gqlkit-ts/cli':
-        specifier: workspace:*
-        version: link:../../packages/cli
-      '@gqlkit-ts/runtime':
-        specifier: workspace:*
-        version: link:../../packages/runtime
-      '@graphql-tools/schema':
-        specifier: ^10.0.0
-        version: 10.0.30(graphql@16.12.0)
-      graphql:
-        specifier: ^16.12.0
-        version: 16.12.0
-      graphql-yoga:
-        specifier: ^5.0.0
-        version: 5.18.0(graphql@16.12.0)
-    devDependencies:
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-
-  examples/enums:
-    dependencies:
-      '@gqlkit-ts/cli':
-        specifier: workspace:*
-        version: link:../../packages/cli
-      '@gqlkit-ts/runtime':
-        specifier: workspace:*
-        version: link:../../packages/runtime
-      '@graphql-tools/schema':
-        specifier: ^10.0.0
-        version: 10.0.30(graphql@16.12.0)
-      graphql:
-        specifier: ^16.12.0
-        version: 16.12.0
-      graphql-yoga:
-        specifier: ^5.0.0
-        version: 5.18.0(graphql@16.12.0)
-    devDependencies:
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-
-  examples/field-arguments:
-    dependencies:
-      '@gqlkit-ts/cli':
-        specifier: workspace:*
-        version: link:../../packages/cli
-      '@gqlkit-ts/runtime':
-        specifier: workspace:*
-        version: link:../../packages/runtime
-      '@graphql-tools/schema':
-        specifier: ^10.0.0
-        version: 10.0.30(graphql@16.12.0)
-      graphql:
-        specifier: ^16.12.0
-        version: 16.12.0
-      graphql-yoga:
-        specifier: ^5.0.0
-        version: 5.18.0(graphql@16.12.0)
-    devDependencies:
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-
-  examples/mutations:
-    dependencies:
-      '@gqlkit-ts/cli':
-        specifier: workspace:*
-        version: link:../../packages/cli
-      '@gqlkit-ts/runtime':
-        specifier: workspace:*
-        version: link:../../packages/runtime
-      '@graphql-tools/schema':
-        specifier: ^10.0.0
-        version: 10.0.30(graphql@16.12.0)
-      graphql:
-        specifier: ^16.12.0
-        version: 16.12.0
-      graphql-yoga:
-        specifier: ^5.0.0
-        version: 5.18.0(graphql@16.12.0)
-    devDependencies:
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-
-  examples/type-extensions:
-    dependencies:
-      '@gqlkit-ts/cli':
-        specifier: workspace:*
-        version: link:../../packages/cli
-      '@gqlkit-ts/runtime':
-        specifier: workspace:*
-        version: link:../../packages/runtime
-      '@graphql-tools/schema':
-        specifier: ^10.0.0
-        version: 10.0.30(graphql@16.12.0)
-      graphql:
-        specifier: ^16.12.0
-        version: 16.12.0
-      graphql-yoga:
-        specifier: ^5.0.0
-        version: 5.18.0(graphql@16.12.0)
-    devDependencies:
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
-      typescript:
-        specifier: ^5.9.0
-        version: 5.9.3
-
-  examples/type-relations:
+  examples/minimal:
     dependencies:
       '@gqlkit-ts/cli':
         specifier: workspace:*
