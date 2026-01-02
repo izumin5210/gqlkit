@@ -29,9 +29,9 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      expect(result.queryFields.fields.length, 1);
-      expect(result.queryFields.fields[0]?.name, "hello");
-      expect(result.diagnostics.errors.length, 0);
+      expect(result.queryFields.fields.length).toBe(1);
+      expect(result.queryFields.fields[0]?.name).toBe("hello");
+      expect(result.diagnostics.errors.length).toBe(0);
     });
 
     it("should extract Query, Mutation, and type resolvers", async () => {
@@ -72,10 +72,10 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      expect(result.queryFields.fields.length, 1);
-      expect(result.mutationFields.fields.length, 1);
-      expect(result.typeExtensions.length, 1);
-      expect(result.typeExtensions[0]?.targetTypeName, "User");
+      expect(result.queryFields.fields.length).toBe(1);
+      expect(result.mutationFields.fields.length).toBe(1);
+      expect(result.typeExtensions.length).toBe(1);
+      expect(result.typeExtensions[0]?.targetTypeName).toBe("User");
     });
   });
 
@@ -85,17 +85,17 @@ describe("extractResolvers", () => {
         directory: join(tempDir, "non-existent"),
       });
 
-      expect(result.diagnostics.errors.length, 1);
-      expect(result.diagnostics.errors[0]?.code, "DIRECTORY_NOT_FOUND");
+      expect(result.diagnostics.errors.length).toBe(1);
+      expect(result.diagnostics.errors[0]?.code).toBe("DIRECTORY_NOT_FOUND");
     });
 
     it("should return empty result for empty directory", async () => {
       const result = await extractResolvers({ directory: tempDir });
 
-      expect(result.queryFields.fields.length, 0);
-      expect(result.mutationFields.fields.length, 0);
-      expect(result.typeExtensions.length, 0);
-      expect(result.diagnostics.errors.length, 0);
+      expect(result.queryFields.fields.length).toBe(0);
+      expect(result.mutationFields.fields.length).toBe(0);
+      expect(result.typeExtensions.length).toBe(0);
+      expect(result.diagnostics.errors.length).toBe(0);
     });
   });
 
@@ -116,9 +116,9 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      expect(result.queryFields.fields.length > 0);
-      expect(result.mutationFields.fields.length > 0);
-      expect(result.typeExtensions.length > 0);
+      expect(result.queryFields.fields.length > 0).toBe(true);
+      expect(result.mutationFields.fields.length > 0).toBe(true);
+      expect(result.typeExtensions.length > 0).toBe(true);
     });
 
     it("should include source file location in field definitions", async () => {
@@ -135,15 +135,15 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      expect(result.queryFields.fields[0]?.sourceLocation);
-      expect(result.queryFields.fields[0]?.sourceLocation.file, filePath);
+      expect(result.queryFields.fields[0]?.sourceLocation).toBeTruthy();
+      expect(result.queryFields.fields[0]?.sourceLocation.file).toBe(filePath);
     });
 
     it("should separate errors and warnings in diagnostics", async () => {
       const result = await extractResolvers({ directory: tempDir });
 
-      expect(Array.isArray(result.diagnostics.errors));
-      expect(Array.isArray(result.diagnostics.warnings));
+      expect(Array.isArray(result.diagnostics.errors)).toBe(true);
+      expect(Array.isArray(result.diagnostics.warnings)).toBe(true);
     });
   });
 
@@ -173,7 +173,7 @@ describe("extractResolvers", () => {
       const result1 = await extractResolvers({ directory: tempDir });
       const result2 = await extractResolvers({ directory: tempDir });
 
-      expect(result1, result2);
+      expect(result1).toEqual(result2);
     });
   });
 
@@ -191,9 +191,9 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      expect("diagnostics" in result);
-      expect("errors" in result.diagnostics);
-      expect("warnings" in result.diagnostics);
+      expect("diagnostics" in result).toBe(true);
+      expect("errors" in result.diagnostics).toBe(true);
+      expect("warnings" in result.diagnostics).toBe(true);
     });
   });
 
@@ -217,11 +217,11 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      expect(result.diagnostics.errors.length, 0);
-      expect(result.queryFields.fields.length, 2);
+      expect(result.diagnostics.errors.length).toBe(0);
+      expect(result.queryFields.fields.length).toBe(2);
       const fieldNames = result.queryFields.fields.map((f) => f.name);
-      expect(fieldNames.includes("me"));
-      expect(fieldNames.includes("users"));
+      expect(fieldNames.includes("me")).toBe(true);
+      expect(fieldNames.includes("users")).toBe(true);
     });
 
     it("should extract Mutation resolver from defineMutation", async () => {
@@ -241,9 +241,9 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      expect(result.diagnostics.errors.length, 0);
-      expect(result.mutationFields.fields.length, 1);
-      expect(result.mutationFields.fields[0]?.name, "createUser");
+      expect(result.diagnostics.errors.length).toBe(0);
+      expect(result.mutationFields.fields.length).toBe(1);
+      expect(result.mutationFields.fields[0]?.name).toBe("createUser");
     });
 
     it("should extract type field resolver from defineField", async () => {
@@ -262,11 +262,11 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      expect(result.diagnostics.errors.length, 0);
-      expect(result.typeExtensions.length, 1);
-      expect(result.typeExtensions[0]?.targetTypeName, "User");
-      expect(result.typeExtensions[0]?.fields.length, 1);
-      expect(result.typeExtensions[0]?.fields[0]?.name, "fullName");
+      expect(result.diagnostics.errors.length).toBe(0);
+      expect(result.typeExtensions.length).toBe(1);
+      expect(result.typeExtensions[0]?.targetTypeName).toBe("User");
+      expect(result.typeExtensions[0]?.fields.length).toBe(1);
+      expect(result.typeExtensions[0]?.fields[0]?.name).toBe("fullName");
     });
 
     it("should extract resolver with args", async () => {
@@ -285,12 +285,12 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      expect(result.diagnostics.errors.length, 0);
-      expect(result.queryFields.fields.length, 1);
-      expect(result.queryFields.fields[0]?.name, "user");
-      expect(result.queryFields.fields[0]?.args);
-      expect(result.queryFields.fields[0]?.args.length, 1);
-      expect(result.queryFields.fields[0]?.args[0]?.name, "id");
+      expect(result.diagnostics.errors.length).toBe(0);
+      expect(result.queryFields.fields.length).toBe(1);
+      expect(result.queryFields.fields[0]?.name).toBe("user");
+      expect(result.queryFields.fields[0]?.args).toBeTruthy();
+      expect(result.queryFields.fields[0]?.args?.length).toBe(1);
+      expect(result.queryFields.fields[0]?.args?.[0]?.name).toBe("id");
     });
   });
 });

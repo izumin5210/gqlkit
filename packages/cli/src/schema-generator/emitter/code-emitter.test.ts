@@ -10,6 +10,7 @@ describe("CodeEmitter", () => {
         baseTypes: [],
         inputTypes: [],
         typeExtensions: [],
+        customScalarNames: null,
         hasQuery: false,
         hasMutation: false,
         hasErrors: false,
@@ -34,17 +35,36 @@ describe("CodeEmitter", () => {
             fields: [
               {
                 name: "id",
-                type: { typeName: "ID", nullable: false, list: false },
+                type: {
+                  typeName: "ID",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
               {
                 name: "name",
-                type: { typeName: "String", nullable: false, list: false },
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumValues: null,
+            description: null,
+            deprecated: null,
           },
         ],
         inputTypes: [],
         typeExtensions: [],
+        customScalarNames: null,
         hasQuery: false,
         hasMutation: false,
         hasErrors: false,
@@ -53,9 +73,9 @@ describe("CodeEmitter", () => {
 
       const code = emitTypeDefsCode(integratedResult);
 
-      expect(code.includes("import type { DocumentNode }"));
-      expect(code.includes("export const typeDefs: DocumentNode"));
-      expect(code.includes('"User"'));
+      expect(code.includes("import type { DocumentNode }")).toBeTruthy();
+      expect(code.includes("export const typeDefs: DocumentNode")).toBeTruthy();
+      expect(code.includes('"User"')).toBeTruthy();
     });
 
     it("should include all type definitions", () => {
@@ -65,6 +85,10 @@ describe("CodeEmitter", () => {
             name: "Query",
             kind: "Object",
             fields: [],
+            unionMembers: null,
+            enumValues: null,
+            description: null,
+            deprecated: null,
           },
           {
             name: "User",
@@ -72,9 +96,20 @@ describe("CodeEmitter", () => {
             fields: [
               {
                 name: "id",
-                type: { typeName: "ID", nullable: false, list: false },
+                type: {
+                  typeName: "ID",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumValues: null,
+            description: null,
+            deprecated: null,
           },
         ],
         inputTypes: [],
@@ -90,11 +125,16 @@ describe("CodeEmitter", () => {
                   list: true,
                   listItemNullable: false,
                 },
+                args: null,
                 resolverSourceFile: "/path/to/resolver.ts",
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
         ],
+        customScalarNames: null,
         hasQuery: true,
         hasMutation: false,
         hasErrors: false,
@@ -103,9 +143,9 @@ describe("CodeEmitter", () => {
 
       const code = emitTypeDefsCode(integratedResult);
 
-      expect(code.includes("Query"));
-      expect(code.includes("User"));
-      expect(code.includes("ObjectTypeExtension"));
+      expect(code.includes("Query")).toBeTruthy();
+      expect(code.includes("User")).toBeTruthy();
+      expect(code.includes("ObjectTypeExtension")).toBeTruthy();
     });
 
     it("should handle union types", () => {
@@ -114,11 +154,16 @@ describe("CodeEmitter", () => {
           {
             name: "SearchResult",
             kind: "Union",
+            fields: null,
             unionMembers: ["User", "Post"],
+            enumValues: null,
+            description: null,
+            deprecated: null,
           },
         ],
         inputTypes: [],
         typeExtensions: [],
+        customScalarNames: null,
         hasQuery: false,
         hasMutation: false,
         hasErrors: false,
@@ -127,8 +172,8 @@ describe("CodeEmitter", () => {
 
       const code = emitTypeDefsCode(integratedResult);
 
-      expect(code.includes("UnionTypeDefinition"));
-      expect(code.includes("SearchResult"));
+      expect(code.includes("UnionTypeDefinition")).toBeTruthy();
+      expect(code.includes("SearchResult")).toBeTruthy();
     });
   });
 
@@ -169,9 +214,9 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        expect(code.includes("import"));
-        expect(code.includes("queryResolver"));
-        expect(code.includes("export const resolvers"));
+        expect(code.includes("import")).toBeTruthy();
+        expect(code.includes("queryResolver")).toBeTruthy();
+        expect(code.includes("export const resolvers")).toBeTruthy();
       });
 
       it("should generate correct import paths", () => {
@@ -194,7 +239,7 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        expect(code.includes("../resolvers/query.js"));
+        expect(code.includes("../resolvers/query.js")).toBeTruthy();
       });
 
       it("should include all types in resolver map", () => {
@@ -228,8 +273,8 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        expect(code.includes("Query:"));
-        expect(code.includes("User:"));
+        expect(code.includes("Query:")).toBeTruthy();
+        expect(code.includes("User:")).toBeTruthy();
       });
     });
 
@@ -260,8 +305,8 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        expect(code.includes("users: queryResolver.users"));
-        expect(code.includes("user: queryResolver.user"));
+        expect(code.includes("users: queryResolver.users")).toBeTruthy();
+        expect(code.includes("user: queryResolver.user")).toBeTruthy();
       });
     });
 
@@ -286,8 +331,8 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        expect(code.includes("users: users,"));
-        expect(!code.includes("users: users.users"));
+        expect(code.includes("users: users,")).toBeTruthy();
+        expect(!code.includes("users: users.users")).toBeTruthy();
       });
 
       it("should import direct export names correctly", () => {
@@ -316,7 +361,7 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        expect(code.includes("import { allUsers, me }"));
+        expect(code.includes("import { allUsers, me }")).toBeTruthy();
       });
 
       it("should generate complete resolver map for Define API resolvers", () => {
@@ -381,26 +426,26 @@ describe("CodeEmitter", () => {
           code.includes(
             'import { createUser } from "../resolvers/mutations.js";',
           ),
-        );
+        ).toBeTruthy();
         expect(
           code.includes(
             'import { allUsers, me } from "../resolvers/queries.js";',
           ),
-        );
+        ).toBeTruthy();
         expect(
           code.includes(
             'import { displayName, posts_ } from "../resolvers/user-fields.js";',
           ),
-        );
+        ).toBeTruthy();
 
-        expect(code.includes("Mutation: {"));
-        expect(code.includes("createUser: createUser,"));
-        expect(code.includes("Query: {"));
-        expect(code.includes("allUsers: allUsers,"));
-        expect(code.includes("me: me,"));
-        expect(code.includes("User: {"));
-        expect(code.includes("displayName: displayName,"));
-        expect(code.includes("posts_: posts_,"));
+        expect(code.includes("Mutation: {")).toBeTruthy();
+        expect(code.includes("createUser: createUser,")).toBeTruthy();
+        expect(code.includes("Query: {")).toBeTruthy();
+        expect(code.includes("allUsers: allUsers,")).toBeTruthy();
+        expect(code.includes("me: me,")).toBeTruthy();
+        expect(code.includes("User: {")).toBeTruthy();
+        expect(code.includes("displayName: displayName,")).toBeTruthy();
+        expect(code.includes("posts_: posts_,")).toBeTruthy();
       });
     });
 
@@ -425,7 +470,7 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        expect(code.includes('./resolvers/query.js"'));
+        expect(code.includes('./resolvers/query.js"')).toBeTruthy();
       });
 
       it("should convert .ts extension to .js for ESM compatibility", () => {
@@ -448,8 +493,8 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        expect(code.includes(".js"));
-        expect(!code.includes(".ts"));
+        expect(code.includes(".js")).toBeTruthy();
+        expect(!code.includes(".ts")).toBeTruthy();
       });
 
       it("should combine multiple imports from same file", () => {
@@ -481,8 +526,8 @@ describe("CodeEmitter", () => {
         const importMatches = code.match(
           /import \{.*\} from "\.\.\/resolvers\/query\.js";/g,
         );
-        expect(importMatches?.length, 1);
-        expect(code.includes("import { posts, users }"));
+        expect(importMatches?.length).toBe(1);
+        expect(code.includes("import { posts, users }")).toBeTruthy();
       });
 
       it("should sort import statements by path", () => {
@@ -516,7 +561,7 @@ describe("CodeEmitter", () => {
 
         const aQueryIndex = code.indexOf("a-query.js");
         const zQueryIndex = code.indexOf("z-query.js");
-        expect(aQueryIndex < zQueryIndex);
+        expect(aQueryIndex < zQueryIndex).toBeTruthy();
       });
     });
 
@@ -542,7 +587,7 @@ describe("CodeEmitter", () => {
         const code1 = emitResolversCode(resolverInfo, "/src/gqlkit");
         const code2 = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        expect(code1, code2);
+        expect(code1).toBe(code2);
       });
     });
   });

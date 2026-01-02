@@ -38,6 +38,8 @@ describe("TypeScript types", () => {
         kind: "interface",
         sourceFile: "/path/to/user.ts",
         exportKind: "named",
+        description: null,
+        deprecated: null,
       };
 
       expect(metadata.name).toBe("User");
@@ -52,6 +54,8 @@ describe("TypeScript types", () => {
         kind: "object",
         sourceFile: "/path/to/config.ts",
         exportKind: "default",
+        description: null,
+        deprecated: null,
       };
 
       expect(metadata.exportKind).toBe("default");
@@ -64,6 +68,9 @@ describe("TypeScript types", () => {
         kind: "primitive",
         name: "string",
         nullable: false,
+        elementType: null,
+        members: null,
+        scalarInfo: null,
       };
 
       expect(ref.kind).toBe("primitive");
@@ -76,6 +83,9 @@ describe("TypeScript types", () => {
         kind: "reference",
         name: "User",
         nullable: false,
+        elementType: null,
+        members: null,
+        scalarInfo: null,
       };
 
       expect(ref.kind).toBe("reference");
@@ -89,8 +99,14 @@ describe("TypeScript types", () => {
           kind: "reference",
           name: "Post",
           nullable: false,
+          elementType: null,
+          members: null,
+          scalarInfo: null,
         },
         nullable: false,
+        name: null,
+        members: null,
+        scalarInfo: null,
       };
 
       expect(ref.kind).toBe("array");
@@ -102,10 +118,27 @@ describe("TypeScript types", () => {
       const ref: TSTypeReference = {
         kind: "union",
         members: [
-          { kind: "reference", name: "User", nullable: false },
-          { kind: "reference", name: "Post", nullable: false },
+          {
+            kind: "reference",
+            name: "User",
+            nullable: false,
+            elementType: null,
+            members: null,
+            scalarInfo: null,
+          },
+          {
+            kind: "reference",
+            name: "Post",
+            nullable: false,
+            elementType: null,
+            members: null,
+            scalarInfo: null,
+          },
         ],
         nullable: false,
+        name: null,
+        elementType: null,
+        scalarInfo: null,
       };
 
       expect(ref.kind).toBe("union");
@@ -117,6 +150,9 @@ describe("TypeScript types", () => {
         kind: "literal",
         name: "active",
         nullable: false,
+        elementType: null,
+        members: null,
+        scalarInfo: null,
       };
 
       expect(ref.kind).toBe("literal");
@@ -128,6 +164,9 @@ describe("TypeScript types", () => {
         kind: "primitive",
         name: "string",
         nullable: true,
+        elementType: null,
+        members: null,
+        scalarInfo: null,
       };
 
       expect(ref.nullable).toBe(true);
@@ -142,8 +181,13 @@ describe("TypeScript types", () => {
           kind: "primitive",
           name: "string",
           nullable: false,
+          elementType: null,
+          members: null,
+          scalarInfo: null,
         },
         optional: false,
+        description: null,
+        deprecated: null,
       };
 
       expect(field.name).toBe("id");
@@ -158,8 +202,13 @@ describe("TypeScript types", () => {
           kind: "primitive",
           name: "string",
           nullable: false,
+          elementType: null,
+          members: null,
+          scalarInfo: null,
         },
         optional: true,
+        description: null,
+        deprecated: null,
       };
 
       expect(field.optional).toBe(true);
@@ -174,24 +223,46 @@ describe("TypeScript types", () => {
           kind: "interface",
           sourceFile: "/path/to/user.ts",
           exportKind: "named",
+          description: null,
+          deprecated: null,
         },
         fields: [
           {
             name: "id",
-            tsType: { kind: "primitive", name: "string", nullable: false },
+            tsType: {
+              kind: "primitive",
+              name: "string",
+              nullable: false,
+              elementType: null,
+              members: null,
+              scalarInfo: null,
+            },
             optional: false,
+            description: null,
+            deprecated: null,
           },
           {
             name: "name",
-            tsType: { kind: "primitive", name: "string", nullable: true },
+            tsType: {
+              kind: "primitive",
+              name: "string",
+              nullable: true,
+              elementType: null,
+              members: null,
+              scalarInfo: null,
+            },
             optional: false,
+            description: null,
+            deprecated: null,
           },
         ],
+        unionMembers: null,
+        enumMembers: null,
       };
 
       expect(typeInfo.metadata.name).toBe("User");
       expect(typeInfo.fields.length).toBe(2);
-      expect(typeInfo.unionMembers).toBe(undefined);
+      expect(typeInfo.unionMembers).toBe(null);
     });
 
     it("should represent union type with members", () => {
@@ -201,9 +272,12 @@ describe("TypeScript types", () => {
           kind: "union",
           sourceFile: "/path/to/search-result.ts",
           exportKind: "named",
+          description: null,
+          deprecated: null,
         },
         fields: [],
         unionMembers: ["User", "Post"],
+        enumMembers: null,
       };
 
       expect(typeInfo.metadata.kind).toBe("union");
@@ -218,11 +292,24 @@ describe("TypeScript types", () => {
           kind: "enum",
           sourceFile: "/path/to/status.ts",
           exportKind: "named",
+          description: null,
+          deprecated: null,
         },
         fields: [],
+        unionMembers: null,
         enumMembers: [
-          { name: "Active", value: "active" },
-          { name: "Inactive", value: "inactive" },
+          {
+            name: "Active",
+            value: "active",
+            description: null,
+            deprecated: null,
+          },
+          {
+            name: "Inactive",
+            value: "inactive",
+            description: null,
+            deprecated: null,
+          },
         ],
       };
 
@@ -238,6 +325,8 @@ describe("TypeScript types", () => {
       const member: EnumMemberInfo = {
         name: "Active",
         value: "active",
+        description: null,
+        deprecated: null,
       };
 
       expect(member.name).toBe("Active");
@@ -248,6 +337,8 @@ describe("TypeScript types", () => {
       const member: EnumMemberInfo = {
         name: "StatusActive",
         value: "ACTIVE",
+        description: null,
+        deprecated: null,
       };
 
       expect(member.name).toBe("StatusActive");

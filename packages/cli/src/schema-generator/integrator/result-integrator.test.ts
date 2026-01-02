@@ -18,12 +18,12 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
         expect(Array.isArray(result.baseTypes));
         expect(Array.isArray(result.typeExtensions));
-        expect(typeof result.hasQuery, "boolean");
-        expect(typeof result.hasMutation, "boolean");
+        expect(typeof result.hasQuery).toBe("boolean");
+        expect(typeof result.hasMutation).toBe("boolean");
         expect(Array.isArray(result.diagnostics));
       });
 
@@ -36,14 +36,32 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
                 {
                   name: "name",
-                  type: { typeName: "String", nullable: false, list: false },
+                  type: {
+                    typeName: "String",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
               sourceFile: "/path/to/user.ts",
+              description: null,
+              deprecated: null,
             },
           ],
           diagnostics: { errors: [], warnings: [] },
@@ -55,12 +73,12 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
-        expect(result.baseTypes.length, 1);
-        expect(result.baseTypes[0]?.name, "User");
-        expect(result.baseTypes[0]?.kind, "Object");
-        expect(result.baseTypes[0]?.fields?.length, 2);
+        expect(result.baseTypes.length).toBe(1);
+        expect(result.baseTypes[0]?.name).toBe("User");
+        expect(result.baseTypes[0]?.kind).toBe("Object");
+        expect(result.baseTypes[0]?.fields?.length).toBe(2);
       });
 
       it("should convert Union types to baseTypes", () => {
@@ -69,8 +87,12 @@ describe("ResultIntegrator", () => {
             {
               name: "SearchResult",
               kind: "Union",
+              fields: null,
               unionMembers: ["User", "Post"],
+              enumValues: null,
               sourceFile: "/path/to/search-result.ts",
+              description: null,
+              deprecated: null,
             },
           ],
           diagnostics: { errors: [], warnings: [] },
@@ -82,12 +104,12 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
-        expect(result.baseTypes.length, 1);
-        expect(result.baseTypes[0]?.name, "SearchResult");
-        expect(result.baseTypes[0]?.kind, "Union");
-        expect(result.baseTypes[0]?.unionMembers, ["User", "Post"]);
+        expect(result.baseTypes.length).toBe(1);
+        expect(result.baseTypes[0]?.name).toBe("SearchResult");
+        expect(result.baseTypes[0]?.kind).toBe("Union");
+        expect(result.baseTypes[0]?.unionMembers).toEqual(["User", "Post"]);
       });
     });
 
@@ -114,10 +136,10 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
-        expect(result.diagnostics.length, 1);
-        expect(result.diagnostics[0]?.code, "UNRESOLVED_REFERENCE");
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("UNRESOLVED_REFERENCE");
       });
 
       it("should propagate diagnostics from resolver-extractor", () => {
@@ -135,16 +157,17 @@ describe("ResultIntegrator", () => {
                 code: "INVALID_RESOLVER_SIGNATURE",
                 message: "Invalid signature",
                 severity: "error",
+                location: null,
               },
             ],
             warnings: [],
           },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
-        expect(result.diagnostics.length, 1);
-        expect(result.diagnostics[0]?.code, "INVALID_RESOLVER_SIGNATURE");
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("INVALID_RESOLVER_SIGNATURE");
       });
 
       it("should combine diagnostics from both sources", () => {
@@ -156,6 +179,7 @@ describe("ResultIntegrator", () => {
                 code: "UNRESOLVED_REFERENCE",
                 message: "Error 1",
                 severity: "error",
+                location: null,
               },
             ],
             warnings: [
@@ -163,6 +187,7 @@ describe("ResultIntegrator", () => {
                 code: "UNSUPPORTED_SYNTAX",
                 message: "Warning 1",
                 severity: "warning",
+                location: null,
               },
             ],
           },
@@ -177,19 +202,20 @@ describe("ResultIntegrator", () => {
                 code: "INVALID_RESOLVER_SIGNATURE",
                 message: "Error 2",
                 severity: "error",
+                location: null,
               },
             ],
             warnings: [],
           },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
-        expect(result.diagnostics.length, 3);
+        expect(result.diagnostics.length).toBe(3);
         const codes = result.diagnostics.map((d) => d.code);
-        expect(codes.includes("UNRESOLVED_REFERENCE"));
-        expect(codes.includes("UNSUPPORTED_SYNTAX"));
-        expect(codes.includes("INVALID_RESOLVER_SIGNATURE"));
+        expect(codes.includes("UNRESOLVED_REFERENCE")).toBeTruthy();
+        expect(codes.includes("UNSUPPORTED_SYNTAX")).toBeTruthy();
+        expect(codes.includes("INVALID_RESOLVER_SIGNATURE")).toBeTruthy();
       });
     });
 
@@ -210,11 +236,15 @@ describe("ResultIntegrator", () => {
                   list: true,
                   listItemNullable: false,
                 },
+                args: null,
                 sourceLocation: {
                   file: "/path/to/query.ts",
                   line: 1,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -223,10 +253,10 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
-        expect(result.hasQuery, true);
-        expect(result.hasMutation, false);
+        expect(result.hasQuery).toBe(true);
+        expect(result.hasMutation).toBe(false);
       });
 
       it("should set hasMutation true when mutationFields exist", () => {
@@ -240,12 +270,21 @@ describe("ResultIntegrator", () => {
             fields: [
               {
                 name: "createUser",
-                type: { typeName: "User", nullable: false, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                args: null,
                 sourceLocation: {
                   file: "/path/to/mutation.ts",
                   line: 1,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -253,10 +292,10 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
-        expect(result.hasQuery, false);
-        expect(result.hasMutation, true);
+        expect(result.hasQuery).toBe(false);
+        expect(result.hasMutation).toBe(true);
       });
 
       it("should add Query base type when hasQuery is true", () => {
@@ -269,12 +308,21 @@ describe("ResultIntegrator", () => {
             fields: [
               {
                 name: "users",
-                type: { typeName: "User", nullable: false, list: true },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: true,
+                  listItemNullable: null,
+                },
+                args: null,
                 sourceLocation: {
                   file: "/path/to/query.ts",
                   line: 1,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -283,12 +331,12 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
         const queryType = result.baseTypes.find((t) => t.name === "Query");
-        expect(queryType);
-        expect(queryType.kind, "Object");
-        expect(queryType.fields?.length, 0);
+        expect(queryType).toBeTruthy();
+        expect(queryType!.kind).toBe("Object");
+        expect(queryType!.fields?.length).toBe(0);
       });
 
       it("should add Mutation base type when hasMutation is true", () => {
@@ -302,12 +350,21 @@ describe("ResultIntegrator", () => {
             fields: [
               {
                 name: "createUser",
-                type: { typeName: "User", nullable: false, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                args: null,
                 sourceLocation: {
                   file: "/path/to/mutation.ts",
                   line: 1,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -315,14 +372,14 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
         const mutationType = result.baseTypes.find(
           (t) => t.name === "Mutation",
         );
-        expect(mutationType);
-        expect(mutationType.kind, "Object");
-        expect(mutationType.fields?.length, 0);
+        expect(mutationType).toBeTruthy();
+        expect(mutationType!.kind).toBe("Object");
+        expect(mutationType!.fields?.length).toBe(0);
       });
 
       it("should not add Query base type when queryFields is empty", () => {
@@ -337,10 +394,10 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
         const queryType = result.baseTypes.find((t) => t.name === "Query");
-        expect(queryType, undefined);
+        expect(queryType).toBe(undefined);
       });
 
       it("should not add Mutation base type when mutationFields is empty", () => {
@@ -355,12 +412,12 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
         const mutationType = result.baseTypes.find(
           (t) => t.name === "Mutation",
         );
-        expect(mutationType, undefined);
+        expect(mutationType).toBe(undefined);
       });
 
       it("should create Query typeExtension with fields", () => {
@@ -373,11 +430,23 @@ describe("ResultIntegrator", () => {
             fields: [
               {
                 name: "users",
-                type: { typeName: "User", nullable: false, list: true },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: true,
+                  listItemNullable: null,
+                },
                 args: [
                   {
                     name: "limit",
-                    type: { typeName: "Int", nullable: true, list: false },
+                    type: {
+                      typeName: "Int",
+                      nullable: true,
+                      list: false,
+                      listItemNullable: null,
+                    },
+                    description: null,
+                    deprecated: null,
                   },
                 ],
                 sourceLocation: {
@@ -385,14 +454,29 @@ describe("ResultIntegrator", () => {
                   line: 1,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
               {
                 name: "user",
-                type: { typeName: "User", nullable: true, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: true,
+                  list: false,
+                  listItemNullable: null,
+                },
                 args: [
                   {
                     name: "id",
-                    type: { typeName: "ID", nullable: false, list: false },
+                    type: {
+                      typeName: "ID",
+                      nullable: false,
+                      list: false,
+                      listItemNullable: null,
+                    },
+                    description: null,
+                    deprecated: null,
                   },
                 ],
                 sourceLocation: {
@@ -400,6 +484,9 @@ describe("ResultIntegrator", () => {
                   line: 5,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -408,21 +495,21 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
         const queryExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "Query",
         );
-        expect(queryExtension);
-        expect(queryExtension.fields.length, 2);
+        expect(queryExtension).toBeTruthy();
+        expect(queryExtension!.fields.length).toBe(2);
 
-        const usersField = queryExtension.fields.find(
+        const usersField = queryExtension!.fields.find(
           (f) => f.name === "users",
         );
-        expect(usersField);
-        expect(usersField.type.typeName, "User");
-        expect(usersField.args?.length, 1);
-        expect(usersField.args?.[0]?.name, "limit");
+        expect(usersField).toBeTruthy();
+        expect(usersField!.type.typeName).toBe("User");
+        expect(usersField!.args?.length).toBe(1);
+        expect(usersField!.args?.[0]?.name).toBe("limit");
       });
 
       it("should create Mutation typeExtension with fields", () => {
@@ -436,11 +523,23 @@ describe("ResultIntegrator", () => {
             fields: [
               {
                 name: "createUser",
-                type: { typeName: "User", nullable: false, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
                 args: [
                   {
                     name: "name",
-                    type: { typeName: "String", nullable: false, list: false },
+                    type: {
+                      typeName: "String",
+                      nullable: false,
+                      list: false,
+                      listItemNullable: null,
+                    },
+                    description: null,
+                    deprecated: null,
                   },
                 ],
                 sourceLocation: {
@@ -448,6 +547,9 @@ describe("ResultIntegrator", () => {
                   line: 1,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -455,14 +557,14 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
         const mutationExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "Mutation",
         );
-        expect(mutationExtension);
-        expect(mutationExtension.fields.length, 1);
-        expect(mutationExtension.fields[0]?.name, "createUser");
+        expect(mutationExtension).toBeTruthy();
+        expect(mutationExtension!.fields.length).toBe(1);
+        expect(mutationExtension!.fields[0]?.name).toBe("createUser");
       });
     });
 
@@ -476,10 +578,21 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
               sourceFile: "/path/to/user.ts",
+              description: null,
+              deprecated: null,
             },
           ],
           diagnostics: { errors: [], warnings: [] },
@@ -493,12 +606,21 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "posts",
-                  type: { typeName: "Post", nullable: false, list: true },
+                  type: {
+                    typeName: "Post",
+                    nullable: false,
+                    list: true,
+                    listItemNullable: null,
+                  },
+                  args: null,
                   sourceLocation: {
                     file: "/path/to/user-resolver.ts",
                     line: 1,
                     column: 1,
                   },
+                  resolverExportName: null,
+                  description: null,
+                  deprecated: null,
                 },
               ],
             },
@@ -506,16 +628,15 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
         const userExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "User",
         );
-        expect(userExtension);
-        expect(userExtension.fields.length, 1);
-        expect(userExtension.fields[0]?.name, "posts");
-        expect(
-          userExtension.fields[0]?.resolverSourceFile,
+        expect(userExtension).toBeTruthy();
+        expect(userExtension!.fields.length).toBe(1);
+        expect(userExtension!.fields[0]?.name).toBe("posts");
+        expect(userExtension!.fields[0]?.resolverSourceFile).toBe(
           "/path/to/user-resolver.ts",
         );
       });
@@ -534,12 +655,21 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "field",
-                  type: { typeName: "String", nullable: false, list: false },
+                  type: {
+                    typeName: "String",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  args: null,
                   sourceLocation: {
                     file: "/path/to/resolver.ts",
                     line: 10,
                     column: 5,
                   },
+                  resolverExportName: null,
+                  description: null,
+                  deprecated: null,
                 },
               ],
             },
@@ -547,16 +677,18 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
         const unknownTypeError = result.diagnostics.find(
           (d) => d.code === "UNKNOWN_TARGET_TYPE",
         );
-        expect(unknownTypeError);
-        expect(unknownTypeError.severity, "error");
-        expect(unknownTypeError.message.includes("NonExistentType"));
-        expect(unknownTypeError.location);
-        expect(unknownTypeError.location?.file, "/path/to/resolver.ts");
+        expect(unknownTypeError).toBeTruthy();
+        expect(unknownTypeError!.severity).toBe("error");
+        expect(
+          unknownTypeError!.message.includes("NonExistentType"),
+        ).toBeTruthy();
+        expect(unknownTypeError!.location).toBeTruthy();
+        expect(unknownTypeError!.location?.file).toBe("/path/to/resolver.ts");
       });
 
       it("should not report error when typeExtension targets existing type", () => {
@@ -568,10 +700,21 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
               sourceFile: "/path/to/user.ts",
+              description: null,
+              deprecated: null,
             },
           ],
           diagnostics: { errors: [], warnings: [] },
@@ -585,12 +728,21 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "posts",
-                  type: { typeName: "Post", nullable: false, list: true },
+                  type: {
+                    typeName: "Post",
+                    nullable: false,
+                    list: true,
+                    listItemNullable: null,
+                  },
+                  args: null,
                   sourceLocation: {
                     file: "/path/to/user-resolver.ts",
                     line: 1,
                     column: 1,
                   },
+                  resolverExportName: null,
+                  description: null,
+                  deprecated: null,
                 },
               ],
             },
@@ -598,12 +750,12 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
         const unknownTypeError = result.diagnostics.find(
           (d) => d.code === "UNKNOWN_TARGET_TYPE",
         );
-        expect(unknownTypeError, undefined);
+        expect(unknownTypeError).toBe(undefined);
       });
 
       it("should keep base types and type extensions separate", () => {
@@ -615,14 +767,32 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
                 {
                   name: "name",
-                  type: { typeName: "String", nullable: false, list: false },
+                  type: {
+                    typeName: "String",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
               sourceFile: "/path/to/user.ts",
+              description: null,
+              deprecated: null,
             },
           ],
           diagnostics: { errors: [], warnings: [] },
@@ -636,12 +806,21 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "posts",
-                  type: { typeName: "Post", nullable: false, list: true },
+                  type: {
+                    typeName: "Post",
+                    nullable: false,
+                    list: true,
+                    listItemNullable: null,
+                  },
+                  args: null,
                   sourceLocation: {
                     file: "/path/to/user-resolver.ts",
                     line: 1,
                     column: 1,
                   },
+                  resolverExportName: null,
+                  description: null,
+                  deprecated: null,
                 },
               ],
             },
@@ -649,22 +828,22 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
         const userBaseType = result.baseTypes.find((t) => t.name === "User");
-        expect(userBaseType);
-        expect(userBaseType.fields?.length, 2);
-        const baseFieldNames = userBaseType.fields?.map((f) => f.name);
-        expect(baseFieldNames?.includes("id"));
-        expect(baseFieldNames?.includes("name"));
-        expect(!baseFieldNames?.includes("posts"));
+        expect(userBaseType).toBeTruthy();
+        expect(userBaseType!.fields?.length).toBe(2);
+        const baseFieldNames = userBaseType!.fields?.map((f) => f.name);
+        expect(baseFieldNames?.includes("id")).toBeTruthy();
+        expect(baseFieldNames?.includes("name")).toBeTruthy();
+        expect(!baseFieldNames?.includes("posts")).toBeTruthy();
 
         const userExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "User",
         );
-        expect(userExtension);
-        expect(userExtension.fields.length, 1);
-        expect(userExtension.fields[0]?.name, "posts");
+        expect(userExtension).toBeTruthy();
+        expect(userExtension!.fields.length).toBe(1);
+        expect(userExtension!.fields[0]?.name).toBe("posts");
       });
     });
 
@@ -678,10 +857,21 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
               sourceFile: "/path/to/user.ts",
+              description: null,
+              deprecated: null,
             },
             {
               name: "CreateUserInput",
@@ -689,14 +879,32 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "name",
-                  type: { typeName: "String", nullable: false, list: false },
+                  type: {
+                    typeName: "String",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
                 {
                   name: "email",
-                  type: { typeName: "String", nullable: true, list: false },
+                  type: {
+                    typeName: "String",
+                    nullable: true,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
               sourceFile: "/path/to/create-user-input.ts",
+              description: null,
+              deprecated: null,
             },
           ],
           diagnostics: { errors: [], warnings: [] },
@@ -708,16 +916,16 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
-        expect(result.baseTypes.length, 1);
-        expect(result.baseTypes[0]?.name, "User");
-        expect(result.baseTypes[0]?.kind, "Object");
+        expect(result.baseTypes.length).toBe(1);
+        expect(result.baseTypes[0]?.name).toBe("User");
+        expect(result.baseTypes[0]?.kind).toBe("Object");
 
-        expect(result.inputTypes);
-        expect(result.inputTypes.length, 1);
-        expect(result.inputTypes[0]?.name, "CreateUserInput");
-        expect(result.inputTypes[0]?.fields?.length, 2);
+        expect(result.inputTypes).toBeTruthy();
+        expect(result.inputTypes.length).toBe(1);
+        expect(result.inputTypes[0]?.name).toBe("CreateUserInput");
+        expect(result.inputTypes[0]?.fields?.length).toBe(2);
       });
 
       it("should include all InputObject types from type-extractor", () => {
@@ -729,10 +937,21 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "name",
-                  type: { typeName: "String", nullable: false, list: false },
+                  type: {
+                    typeName: "String",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
               sourceFile: "/path/to/create-user-input.ts",
+              description: null,
+              deprecated: null,
             },
             {
               name: "UpdateUserInput",
@@ -740,14 +959,32 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
                 {
                   name: "name",
-                  type: { typeName: "String", nullable: true, list: false },
+                  type: {
+                    typeName: "String",
+                    nullable: true,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
               sourceFile: "/path/to/update-user-input.ts",
+              description: null,
+              deprecated: null,
             },
           ],
           diagnostics: { errors: [], warnings: [] },
@@ -759,12 +996,12 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
-        expect(result.inputTypes.length, 2);
+        expect(result.inputTypes.length).toBe(2);
         const inputNames = result.inputTypes.map((t) => t.name);
-        expect(inputNames.includes("CreateUserInput"));
-        expect(inputNames.includes("UpdateUserInput"));
+        expect(inputNames.includes("CreateUserInput")).toBeTruthy();
+        expect(inputNames.includes("UpdateUserInput")).toBeTruthy();
       });
 
       it("should have empty inputTypes when no InputObject types exist", () => {
@@ -776,10 +1013,21 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
               sourceFile: "/path/to/user.ts",
+              description: null,
+              deprecated: null,
             },
           ],
           diagnostics: { errors: [], warnings: [] },
@@ -791,9 +1039,9 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
-        expect(result.inputTypes.length, 0);
+        expect(result.inputTypes.length).toBe(0);
       });
     });
 
@@ -810,9 +1058,9 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
-        expect(result.hasErrors, false);
+        expect(result.hasErrors).toBe(false);
       });
 
       it("should set hasErrors to true when error diagnostics exist in types", () => {
@@ -824,6 +1072,7 @@ describe("ResultIntegrator", () => {
                 code: "UNRESOLVED_REFERENCE",
                 message: "Error",
                 severity: "error",
+                location: null,
               },
             ],
             warnings: [],
@@ -836,9 +1085,9 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
-        expect(result.hasErrors, true);
+        expect(result.hasErrors).toBe(true);
       });
 
       it("should set hasErrors to true when error diagnostics exist in resolvers", () => {
@@ -856,15 +1105,16 @@ describe("ResultIntegrator", () => {
                 code: "INVALID_RESOLVER_SIGNATURE",
                 message: "Error",
                 severity: "error",
+                location: null,
               },
             ],
             warnings: [],
           },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
-        expect(result.hasErrors, true);
+        expect(result.hasErrors).toBe(true);
       });
 
       it("should set hasErrors to true when UNKNOWN_TARGET_TYPE error is generated", () => {
@@ -881,12 +1131,21 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "field",
-                  type: { typeName: "String", nullable: false, list: false },
+                  type: {
+                    typeName: "String",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  args: null,
                   sourceLocation: {
                     file: "/path/to/file.ts",
                     line: 1,
                     column: 1,
                   },
+                  resolverExportName: null,
+                  description: null,
+                  deprecated: null,
                 },
               ],
             },
@@ -894,9 +1153,9 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
-        expect(result.hasErrors, true);
+        expect(result.hasErrors).toBe(true);
       });
 
       it("should not set hasErrors to true for warnings only", () => {
@@ -909,6 +1168,7 @@ describe("ResultIntegrator", () => {
                 code: "UNSUPPORTED_SYNTAX",
                 message: "Warning",
                 severity: "warning",
+                location: null,
               },
             ],
           },
@@ -920,9 +1180,9 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
-        expect(result.hasErrors, false);
+        expect(result.hasErrors).toBe(false);
       });
     });
 
@@ -937,13 +1197,21 @@ describe("ResultIntegrator", () => {
             fields: [
               {
                 name: "users",
-                type: { typeName: "User", nullable: false, list: true },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: true,
+                  listItemNullable: null,
+                },
+                args: null,
                 sourceLocation: {
                   file: "/path/to/query.ts",
                   line: 1,
                   column: 1,
                 },
                 resolverExportName: "users",
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -952,13 +1220,13 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
         const queryExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "Query",
         );
-        expect(queryExtension);
-        expect(queryExtension.fields[0]?.resolverExportName, "users");
+        expect(queryExtension).toBeTruthy();
+        expect(queryExtension!.fields[0]?.resolverExportName).toBe("users");
       });
 
       it("should propagate resolverExportName for Mutation fields from Define API", () => {
@@ -972,13 +1240,21 @@ describe("ResultIntegrator", () => {
             fields: [
               {
                 name: "createUser",
-                type: { typeName: "User", nullable: false, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                args: null,
                 sourceLocation: {
                   file: "/path/to/mutation.ts",
                   line: 1,
                   column: 1,
                 },
                 resolverExportName: "createUser",
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -986,13 +1262,15 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
         const mutationExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "Mutation",
         );
-        expect(mutationExtension);
-        expect(mutationExtension.fields[0]?.resolverExportName, "createUser");
+        expect(mutationExtension).toBeTruthy();
+        expect(mutationExtension!.fields[0]?.resolverExportName).toBe(
+          "createUser",
+        );
       });
 
       it("should propagate resolverExportName for field resolvers from Define API", () => {
@@ -1004,10 +1282,21 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
               sourceFile: "/path/to/user.ts",
+              description: null,
+              deprecated: null,
             },
           ],
           diagnostics: { errors: [], warnings: [] },
@@ -1021,13 +1310,21 @@ describe("ResultIntegrator", () => {
               fields: [
                 {
                   name: "posts",
-                  type: { typeName: "Post", nullable: false, list: true },
+                  type: {
+                    typeName: "Post",
+                    nullable: false,
+                    list: true,
+                    listItemNullable: null,
+                  },
+                  args: null,
                   sourceLocation: {
                     file: "/path/to/user-resolver.ts",
                     line: 1,
                     column: 1,
                   },
                   resolverExportName: "posts",
+                  description: null,
+                  deprecated: null,
                 },
               ],
             },
@@ -1035,13 +1332,13 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
         const userExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "User",
         );
-        expect(userExtension);
-        expect(userExtension.fields[0]?.resolverExportName, "posts");
+        expect(userExtension).toBeTruthy();
+        expect(userExtension!.fields[0]?.resolverExportName).toBe("posts");
       });
 
       it("should preserve undefined resolverExportName for non-Define API resolvers", () => {
@@ -1054,12 +1351,21 @@ describe("ResultIntegrator", () => {
             fields: [
               {
                 name: "users",
-                type: { typeName: "User", nullable: false, list: true },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: true,
+                  listItemNullable: null,
+                },
+                args: null,
                 sourceLocation: {
                   file: "/path/to/query.ts",
                   line: 1,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -1068,13 +1374,13 @@ describe("ResultIntegrator", () => {
           diagnostics: { errors: [], warnings: [] },
         };
 
-        const result = integrate(typesResult, resolversResult);
+        const result = integrate(typesResult, resolversResult, null);
 
         const queryExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "Query",
         );
-        expect(queryExtension);
-        expect(queryExtension.fields[0]?.resolverExportName, undefined);
+        expect(queryExtension).toBeTruthy();
+        expect(queryExtension!.fields[0]?.resolverExportName).toBe(null);
       });
     });
   });

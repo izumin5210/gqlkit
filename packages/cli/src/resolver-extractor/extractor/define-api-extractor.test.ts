@@ -130,12 +130,12 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.fieldName, "me");
-      expect(resolver.resolverType, "query");
-      expect(resolver.parentTypeName, undefined);
-      expect(result.diagnostics.length, 0);
+      expect(resolver.fieldName).toBe("me");
+      expect(resolver.resolverType).toBe("query");
+      expect(resolver.parentTypeName).toBeNull();
+      expect(result.diagnostics.length).toBe(0);
     });
 
     it("should detect defineQuery export with args", () => {
@@ -154,13 +154,13 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.fieldName, "user");
-      expect(resolver.resolverType, "query");
-      expect(resolver.argsType);
-      expect(resolver.argsType.kind, "reference");
-      expect(resolver.argsType.name, "GetUserArgs");
+      expect(resolver.fieldName).toBe("user");
+      expect(resolver.resolverType).toBe("query");
+      expect(resolver.argsType).toBeTruthy();
+      expect(resolver.argsType?.kind).toBe("reference");
+      expect(resolver.argsType?.name).toBe("GetUserArgs");
     });
 
     it("should detect multiple defineQuery exports", () => {
@@ -181,9 +181,9 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 2);
-      expect(result.resolvers[0]!.fieldName, "me");
-      expect(result.resolvers[1]!.fieldName, "users");
+      expect(result.resolvers.length).toBe(2);
+      expect(result.resolvers[0]!.fieldName).toBe("me");
+      expect(result.resolvers[1]!.fieldName).toBe("users");
     });
   });
 
@@ -204,11 +204,11 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.fieldName, "createUser");
-      expect(resolver.resolverType, "mutation");
-      expect(resolver.parentTypeName, undefined);
+      expect(resolver.fieldName).toBe("createUser");
+      expect(resolver.resolverType).toBe("mutation");
+      expect(resolver.parentTypeName).toBeNull();
     });
   });
 
@@ -228,11 +228,11 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.fieldName, "fullName");
-      expect(resolver.resolverType, "field");
-      expect(resolver.parentTypeName, "User");
+      expect(resolver.fieldName).toBe("fullName");
+      expect(resolver.resolverType).toBe("field");
+      expect(resolver.parentTypeName).toBe("User");
     });
 
     it("should detect defineField export with args", () => {
@@ -252,14 +252,14 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.fieldName, "posts");
-      expect(resolver.resolverType, "field");
-      expect(resolver.parentTypeName, "User");
-      expect(resolver.argsType);
-      expect(resolver.argsType.kind, "reference");
-      expect(resolver.argsType.name, "PostsArgs");
+      expect(resolver.fieldName).toBe("posts");
+      expect(resolver.resolverType).toBe("field");
+      expect(resolver.parentTypeName).toBe("User");
+      expect(resolver.argsType).toBeTruthy();
+      expect(resolver.argsType?.kind).toBe("reference");
+      expect(resolver.argsType?.name).toBe("PostsArgs");
     });
   });
 
@@ -297,11 +297,11 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 3);
+      expect(result.resolvers.length).toBe(3);
       const types = result.resolvers.map((r) => r.resolverType);
-      expect(types.includes("query"));
-      expect(types.includes("mutation"));
-      expect(types.includes("field"));
+      expect(types.includes("query")).toBeTruthy();
+      expect(types.includes("mutation")).toBeTruthy();
+      expect(types.includes("field")).toBeTruthy();
     });
   });
 
@@ -328,8 +328,8 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
-      expect(result.resolvers[0]!.fieldName, "me");
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.fieldName).toBe("me");
     });
   });
 
@@ -349,11 +349,11 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.returnType);
-      expect(resolver.returnType.kind, "reference");
-      expect(resolver.returnType.name, "User");
+      expect(resolver.returnType).toBeTruthy();
+      expect(resolver.returnType?.kind).toBe("reference");
+      expect(resolver.returnType?.name).toBe("User");
     });
 
     it("should extract array return type", () => {
@@ -371,13 +371,13 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.returnType);
-      expect(resolver.returnType.kind, "array");
-      expect(resolver.returnType.elementType);
-      expect(resolver.returnType.elementType.kind, "reference");
-      expect(resolver.returnType.elementType.name, "User");
+      expect(resolver.returnType).toBeTruthy();
+      expect(resolver.returnType?.kind).toBe("array");
+      expect(resolver.returnType?.elementType).toBeTruthy();
+      expect(resolver.returnType?.elementType?.kind).toBe("reference");
+      expect(resolver.returnType?.elementType?.name).toBe("User");
     });
 
     it("should extract nullable return type", () => {
@@ -396,10 +396,10 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.returnType);
-      expect(resolver.returnType.nullable, true);
+      expect(resolver.returnType).toBeTruthy();
+      expect(resolver.returnType?.nullable).toBe(true);
     });
   });
 
@@ -420,11 +420,11 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.exportedInputTypes);
-      expect(resolver.exportedInputTypes.length, 1);
-      expect(resolver.exportedInputTypes[0]!.name, "CreateUserInput");
+      expect(resolver.exportedInputTypes).toBeTruthy();
+      expect(resolver.exportedInputTypes?.length).toBe(1);
+      expect(resolver.exportedInputTypes?.[0]?.name).toBe("CreateUserInput");
     });
   });
 
@@ -445,10 +445,10 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 0);
-      expect(result.diagnostics.length > 0);
+      expect(result.resolvers.length).toBe(0);
+      expect(result.diagnostics.length > 0).toBeTruthy();
       const diagnostic = result.diagnostics[0]!;
-      expect(diagnostic.code, "INVALID_DEFINE_CALL");
+      expect(diagnostic.code).toBe("INVALID_DEFINE_CALL");
     });
   });
 
@@ -470,10 +470,10 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.fieldName, "me");
-      expect(resolver.resolverType, "query");
+      expect(resolver.fieldName).toBe("me");
+      expect(resolver.resolverType).toBe("query");
     });
 
     it("should detect mutation resolver from createGqlkitApis", () => {
@@ -493,10 +493,10 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.fieldName, "createUser");
-      expect(resolver.resolverType, "mutation");
+      expect(resolver.fieldName).toBe("createUser");
+      expect(resolver.resolverType).toBe("mutation");
     });
 
     it("should detect field resolver from createGqlkitApis", () => {
@@ -516,11 +516,11 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.fieldName, "fullName");
-      expect(resolver.resolverType, "field");
-      expect(resolver.parentTypeName, "User");
+      expect(resolver.fieldName).toBe("fullName");
+      expect(resolver.resolverType).toBe("field");
+      expect(resolver.parentTypeName).toBe("User");
     });
 
     it("should detect resolvers from multiple createGqlkitApis calls", () => {
@@ -551,10 +551,10 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 2);
+      expect(result.resolvers.length).toBe(2);
       const fieldNames = result.resolvers.map((r) => r.fieldName);
-      expect(fieldNames.includes("adminUsers"));
-      expect(fieldNames.includes("publicUser"));
+      expect(fieldNames.includes("adminUsers")).toBeTruthy();
+      expect(fieldNames.includes("publicUser")).toBeTruthy();
     });
 
     it("should not detect non-resolver exports", () => {
@@ -578,8 +578,8 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
-      expect(result.resolvers[0]!.fieldName, "me");
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.fieldName).toBe("me");
     });
 
     it("should support renamed destructured bindings", () => {
@@ -599,9 +599,9 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
-      expect(result.resolvers[0]!.fieldName, "me");
-      expect(result.resolvers[0]!.resolverType, "query");
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.fieldName).toBe("me");
+      expect(result.resolvers[0]!.resolverType).toBe("query");
     });
   });
 
@@ -621,8 +621,8 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
-      expect(result.resolvers[0]!.resolverType, "query");
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.resolverType).toBe("query");
     });
 
     it("should detect MutationResolver branded type", () => {
@@ -640,8 +640,8 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
-      expect(result.resolvers[0]!.resolverType, "mutation");
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.resolverType).toBe("mutation");
     });
 
     it("should detect FieldResolver branded type", () => {
@@ -659,8 +659,8 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
-      expect(result.resolvers[0]!.resolverType, "field");
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.resolverType).toBe("field");
     });
 
     it("should return undefined for non-resolver functions", () => {
@@ -673,7 +673,7 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 0);
+      expect(result.resolvers.length).toBe(0);
     });
   });
 
@@ -698,9 +698,9 @@ describe("extractDefineApiResolvers", () => {
       const queriesFile = filePaths.find((f) => f.includes("queries.ts"))!;
       const result = extractDefineApiResolvers(program, [queriesFile]);
 
-      expect(result.resolvers.length, 1);
-      expect(result.resolvers[0]!.fieldName, "me");
-      expect(result.resolvers[0]!.resolverType, "query");
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.fieldName).toBe("me");
+      expect(result.resolvers[0]!.resolverType).toBe("query");
     });
 
     it("should detect mutation resolver from re-export", () => {
@@ -722,9 +722,9 @@ describe("extractDefineApiResolvers", () => {
       const mutationsFile = filePaths.find((f) => f.includes("mutations.ts"))!;
       const result = extractDefineApiResolvers(program, [mutationsFile]);
 
-      expect(result.resolvers.length, 1);
-      expect(result.resolvers[0]!.fieldName, "createUser");
-      expect(result.resolvers[0]!.resolverType, "mutation");
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.fieldName).toBe("createUser");
+      expect(result.resolvers[0]!.resolverType).toBe("mutation");
     });
 
     it("should detect field resolver from re-export", () => {
@@ -749,10 +749,10 @@ describe("extractDefineApiResolvers", () => {
       )!;
       const result = extractDefineApiResolvers(program, [userFieldsFile]);
 
-      expect(result.resolvers.length, 1);
-      expect(result.resolvers[0]!.fieldName, "fullName");
-      expect(result.resolvers[0]!.resolverType, "field");
-      expect(result.resolvers[0]!.parentTypeName, "User");
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.fieldName).toBe("fullName");
+      expect(result.resolvers[0]!.resolverType).toBe("field");
+      expect(result.resolvers[0]!.parentTypeName).toBe("User");
     });
 
     it("should detect resolver with renamed re-export", () => {
@@ -776,9 +776,9 @@ describe("extractDefineApiResolvers", () => {
       const queriesFile = filePaths.find((f) => f.includes("queries.ts"))!;
       const result = extractDefineApiResolvers(program, [queriesFile]);
 
-      expect(result.resolvers.length, 1);
-      expect(result.resolvers[0]!.fieldName, "me");
-      expect(result.resolvers[0]!.resolverType, "query");
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.fieldName).toBe("me");
+      expect(result.resolvers[0]!.resolverType).toBe("query");
     });
 
     it("should detect multiple resolvers from different re-export files", () => {
@@ -812,10 +812,10 @@ describe("extractDefineApiResolvers", () => {
         mutationsFile,
       ]);
 
-      expect(result.resolvers.length, 2);
+      expect(result.resolvers.length).toBe(2);
       const fieldNames = result.resolvers.map((r) => r.fieldName);
-      expect(fieldNames.includes("me"));
-      expect(fieldNames.includes("createUser"));
+      expect(fieldNames.includes("me")).toBeTruthy();
+      expect(fieldNames.includes("createUser")).toBeTruthy();
     });
   });
 
@@ -836,9 +836,8 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
-      expect(
-        result.resolvers[0]!.description,
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.description).toBe(
         "Get the currently authenticated user",
       );
     });
@@ -859,9 +858,8 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
-      expect(
-        result.resolvers[0]!.description,
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.description).toBe(
         "Create a new user with the given name",
       );
     });
@@ -882,9 +880,8 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
-      expect(
-        result.resolvers[0]!.description,
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.description).toBe(
         "The user's full name computed from first and last name",
       );
     });
@@ -904,8 +901,8 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
-      expect(result.resolvers[0]!.description, undefined);
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.description).toBeNull();
     });
 
     it("should extract deprecated from resolver TSDoc", () => {
@@ -927,15 +924,13 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
-      expect(
-        result.resolvers[0]!.description,
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.description).toBe(
         "Get the currently authenticated user",
       );
-      expect(result.resolvers[0]!.deprecated);
-      expect(result.resolvers[0]!.deprecated!.isDeprecated, true);
-      expect(
-        result.resolvers[0]!.deprecated!.reason,
+      expect(result.resolvers[0]!.deprecated).toBeTruthy();
+      expect(result.resolvers[0]!.deprecated?.isDeprecated).toBe(true);
+      expect(result.resolvers[0]!.deprecated?.reason).toBe(
         "Use currentUser instead",
       );
     });
@@ -959,10 +954,10 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
-      expect(result.resolvers[0]!.deprecated);
-      expect(result.resolvers[0]!.deprecated!.isDeprecated, true);
-      expect(result.resolvers[0]!.deprecated!.reason, undefined);
+      expect(result.resolvers.length).toBe(1);
+      expect(result.resolvers[0]!.deprecated).toBeTruthy();
+      expect(result.resolvers[0]!.deprecated?.isDeprecated).toBe(true);
+      expect(result.resolvers[0]!.deprecated?.reason).toBeNull();
     });
   });
 
@@ -985,13 +980,12 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.args);
-      expect(resolver.args.length, 1);
-      expect(resolver.args[0]!.name, "id");
-      expect(
-        resolver.args[0]!.description,
+      expect(resolver.args).toBeTruthy();
+      expect(resolver.args?.length).toBe(1);
+      expect(resolver.args?.[0]?.name).toBe("id");
+      expect(resolver.args?.[0]?.description).toBe(
         "The unique identifier of the user",
       );
     });
@@ -1015,13 +1009,12 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.args);
-      expect(resolver.args.length, 1);
-      expect(resolver.args[0]!.name, "id");
-      expect(
-        resolver.args[0]!.description,
+      expect(resolver.args).toBeTruthy();
+      expect(resolver.args?.length).toBe(1);
+      expect(resolver.args?.[0]?.name).toBe("id");
+      expect(resolver.args?.[0]?.description).toBe(
         "The unique identifier of the user",
       );
     });
@@ -1048,12 +1041,14 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.args);
-      expect(resolver.args.length, 1);
-      expect(resolver.args[0]!.name, "id");
-      expect(resolver.args[0]!.description, "Description from inline type");
+      expect(resolver.args).toBeTruthy();
+      expect(resolver.args?.length).toBe(1);
+      expect(resolver.args?.[0]?.name).toBe("id");
+      expect(resolver.args?.[0]?.description).toBe(
+        "Description from inline type",
+      );
     });
 
     it("should return undefined description when argument has no TSDoc", () => {
@@ -1071,12 +1066,12 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.args);
-      expect(resolver.args.length, 1);
-      expect(resolver.args[0]!.name, "id");
-      expect(resolver.args[0]!.description, undefined);
+      expect(resolver.args).toBeTruthy();
+      expect(resolver.args?.length).toBe(1);
+      expect(resolver.args?.[0]?.name).toBe("id");
+      expect(resolver.args?.[0]?.description).toBeNull();
     });
 
     it("should extract deprecated from argument TSDoc", () => {
@@ -1100,15 +1095,15 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.args);
-      expect(resolver.args.length, 1);
-      expect(resolver.args[0]!.name, "id");
-      expect(resolver.args[0]!.description, "The unique identifier");
-      expect(resolver.args[0]!.deprecated);
-      expect(resolver.args[0]!.deprecated!.isDeprecated, true);
-      expect(resolver.args[0]!.deprecated!.reason, "Use uuid instead");
+      expect(resolver.args).toBeTruthy();
+      expect(resolver.args?.length).toBe(1);
+      expect(resolver.args?.[0]?.name).toBe("id");
+      expect(resolver.args?.[0]?.description).toBe("The unique identifier");
+      expect(resolver.args?.[0]?.deprecated).toBeTruthy();
+      expect(resolver.args?.[0]?.deprecated?.isDeprecated).toBe(true);
+      expect(resolver.args?.[0]?.deprecated?.reason).toBe("Use uuid instead");
     });
 
     it("should extract description from multiple arguments", () => {
@@ -1131,18 +1126,18 @@ describe("extractDefineApiResolvers", () => {
 
       const result = extractDefineApiResolvers(program, filePaths);
 
-      expect(result.resolvers.length, 1);
+      expect(result.resolvers.length).toBe(1);
       const resolver = result.resolvers[0]!;
-      expect(resolver.args);
-      expect(resolver.args.length, 2);
+      expect(resolver.args).toBeTruthy();
+      expect(resolver.args?.length).toBe(2);
 
-      const queryArg = resolver.args.find((a) => a.name === "query");
-      expect(queryArg);
-      expect(queryArg.description, "Search query string");
+      const queryArg = resolver.args?.find((a) => a.name === "query");
+      expect(queryArg).toBeTruthy();
+      expect(queryArg?.description).toBe("Search query string");
 
-      const limitArg = resolver.args.find((a) => a.name === "limit");
-      expect(limitArg);
-      expect(limitArg.description, "Maximum number of results");
+      const limitArg = resolver.args?.find((a) => a.name === "limit");
+      expect(limitArg).toBeTruthy();
+      expect(limitArg?.description).toBe("Maximum number of results");
     });
   });
 });

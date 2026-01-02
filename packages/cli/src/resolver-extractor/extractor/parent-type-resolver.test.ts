@@ -7,10 +7,14 @@ function createMockTypeInfo(name: string): ExtractedTypeInfo {
     metadata: {
       name,
       kind: "object",
-      sourceFile: "types/" + name.toLowerCase() + ".ts",
+      sourceFile: `types/${name.toLowerCase()}.ts`,
       exportKind: "named",
+      description: null,
+      deprecated: null,
     },
     fields: [],
+    unionMembers: null,
+    enumMembers: null,
   };
 }
 
@@ -21,6 +25,9 @@ describe("resolveParentType", () => {
         kind: "reference" as const,
         name: "User",
         nullable: false,
+        elementType: null,
+        members: null,
+        scalarInfo: null,
       };
       const typeDefinitions = [
         createMockTypeInfo("User"),
@@ -43,6 +50,9 @@ describe("resolveParentType", () => {
         kind: "reference" as const,
         name: "Post",
         nullable: false,
+        elementType: null,
+        members: null,
+        scalarInfo: null,
       };
       const typeDefinitions = [
         createMockTypeInfo("User"),
@@ -66,6 +76,9 @@ describe("resolveParentType", () => {
         kind: "reference" as const,
         name: "Comment",
         nullable: false,
+        elementType: null,
+        members: null,
+        scalarInfo: null,
       };
       const typeDefinitions = [
         createMockTypeInfo("User"),
@@ -88,7 +101,11 @@ describe("resolveParentType", () => {
     it("should return diagnostic when type reference has no name", () => {
       const parentTsType = {
         kind: "reference" as const,
+        name: null,
         nullable: false,
+        elementType: null,
+        members: null,
+        scalarInfo: null,
       };
       const typeDefinitions = [createMockTypeInfo("User")];
 
@@ -110,6 +127,9 @@ describe("resolveParentType", () => {
         kind: "reference" as const,
         name: "User",
         nullable: false,
+        elementType: null,
+        members: null,
+        scalarInfo: null,
       };
       const typeDefinitions: ExtractedTypeInfo[] = [];
 
@@ -128,6 +148,9 @@ describe("resolveParentType", () => {
         kind: "reference" as const,
         name: "User",
         nullable: true,
+        elementType: null,
+        members: null,
+        scalarInfo: null,
       };
       const typeDefinitions = [createMockTypeInfo("User")];
 

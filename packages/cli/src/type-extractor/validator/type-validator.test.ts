@@ -13,10 +13,21 @@ describe("TypeValidator", () => {
             fields: [
               {
                 name: "id",
-                type: { typeName: "String", nullable: false, list: false },
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumValues: null,
             sourceFile: "/path/to/user.ts",
+            description: null,
+            deprecated: null,
           },
           {
             name: "Post",
@@ -24,10 +35,21 @@ describe("TypeValidator", () => {
             fields: [
               {
                 name: "author",
-                type: { typeName: "User", nullable: false, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumValues: null,
             sourceFile: "/path/to/post.ts",
+            description: null,
+            deprecated: null,
           },
         ];
 
@@ -45,18 +67,43 @@ describe("TypeValidator", () => {
             fields: [
               {
                 name: "id",
-                type: { typeName: "String", nullable: false, list: false },
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
               {
                 name: "age",
-                type: { typeName: "Int", nullable: false, list: false },
+                type: {
+                  typeName: "Int",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
               {
                 name: "active",
-                type: { typeName: "Boolean", nullable: false, list: false },
+                type: {
+                  typeName: "Boolean",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumValues: null,
             sourceFile: "/path/to/user.ts",
+            description: null,
+            deprecated: null,
           },
         ];
 
@@ -74,10 +121,21 @@ describe("TypeValidator", () => {
             fields: [
               {
                 name: "author",
-                type: { typeName: "User", nullable: false, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumValues: null,
             sourceFile: "/path/to/post.ts",
+            description: null,
+            deprecated: null,
           },
         ];
 
@@ -96,10 +154,21 @@ describe("TypeValidator", () => {
             fields: [
               {
                 name: "author",
-                type: { typeName: "User", nullable: false, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumValues: null,
             sourceFile: "/path/to/post.ts",
+            description: null,
+            deprecated: null,
           },
         ];
 
@@ -117,17 +186,28 @@ describe("TypeValidator", () => {
             fields: [
               {
                 name: "author",
-                type: { typeName: "User", nullable: false, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumValues: null,
             sourceFile: "/path/to/post.ts",
+            description: null,
+            deprecated: null,
           },
         ];
 
         const result = validateTypes(types);
 
         expect(result.diagnostics[0]?.location).toBeTruthy();
-        expect(result.diagnostics[0]?.location!.file).toBe("/path/to/post.ts");
+        expect(result.diagnostics[0]!.location!.file).toBe("/path/to/post.ts");
       });
 
       it("should validate union member references", () => {
@@ -136,13 +216,21 @@ describe("TypeValidator", () => {
             name: "User",
             kind: "Object",
             fields: [],
+            unionMembers: null,
+            enumValues: null,
             sourceFile: "/path/to/user.ts",
+            description: null,
+            deprecated: null,
           },
           {
             name: "SearchResult",
             kind: "Union",
+            fields: null,
             unionMembers: ["User", "Post"],
+            enumValues: null,
             sourceFile: "/path/to/search.ts",
+            description: null,
+            deprecated: null,
           },
         ];
 
@@ -162,14 +250,32 @@ describe("TypeValidator", () => {
             fields: [
               {
                 name: "author",
-                type: { typeName: "User", nullable: false, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
               {
                 name: "category",
-                type: { typeName: "Category", nullable: false, list: false },
+                type: {
+                  typeName: "Category",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumValues: null,
             sourceFile: "/path/to/post.ts",
+            description: null,
+            deprecated: null,
           },
         ];
 
@@ -193,9 +299,15 @@ describe("TypeValidator", () => {
                   list: true,
                   listItemNullable: false,
                 },
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumValues: null,
             sourceFile: "/path/to/blog.ts",
+            description: null,
+            deprecated: null,
           },
         ];
 

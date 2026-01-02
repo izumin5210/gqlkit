@@ -35,14 +35,29 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "user",
-                type: { typeName: "User", nullable: true, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: true,
+                  list: false,
+                  listItemNullable: null,
+                },
                 args: [
                   {
                     name: "id",
-                    type: { typeName: "ID", nullable: false, list: false },
+                    type: {
+                      typeName: "ID",
+                      nullable: false,
+                      list: false,
+                      listItemNullable: null,
+                    },
+                    description: null,
+                    deprecated: null,
                   },
                 ],
                 resolverSourceFile: "/path/to/query.ts",
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -54,8 +69,8 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        expect(result.isValid, true);
-        expect(result.diagnostics.length, 0);
+        expect(result.isValid).toBe(true);
+        expect(result.diagnostics.length).toBe(0);
       });
 
       it("should pass for valid Input Object argument types", () => {
@@ -65,7 +80,12 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "createUser",
-                type: { typeName: "User", nullable: false, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
                 args: [
                   {
                     name: "input",
@@ -73,10 +93,16 @@ describe("ArgumentValidator", () => {
                       typeName: "CreateUserInput",
                       nullable: false,
                       list: false,
+                      listItemNullable: null,
                     },
+                    description: null,
+                    deprecated: null,
                   },
                 ],
                 resolverSourceFile: "/path/to/mutation.ts",
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -87,10 +113,18 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "name",
-                type: { typeName: "String", nullable: false, list: false },
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
             sourceFile: "/path/to/input.ts",
+            description: null,
           },
         ];
         const context = createContext({
@@ -100,8 +134,8 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        expect(result.isValid, true);
-        expect(result.diagnostics.length, 0);
+        expect(result.isValid).toBe(true);
+        expect(result.diagnostics.length).toBe(0);
       });
 
       it("should pass for valid Enum argument types", () => {
@@ -111,14 +145,29 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "usersByStatus",
-                type: { typeName: "User", nullable: false, list: true },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: true,
+                  listItemNullable: false,
+                },
                 args: [
                   {
                     name: "status",
-                    type: { typeName: "Status", nullable: false, list: false },
+                    type: {
+                      typeName: "Status",
+                      nullable: false,
+                      list: false,
+                      listItemNullable: null,
+                    },
+                    description: null,
+                    deprecated: null,
                   },
                 ],
                 resolverSourceFile: "/path/to/query.ts",
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -131,8 +180,8 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        expect(result.isValid, true);
-        expect(result.diagnostics.length, 0);
+        expect(result.isValid).toBe(true);
+        expect(result.diagnostics.length).toBe(0);
       });
 
       it("should report error for unknown argument type", () => {
@@ -142,7 +191,12 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "user",
-                type: { typeName: "User", nullable: true, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: true,
+                  list: false,
+                  listItemNullable: null,
+                },
                 args: [
                   {
                     name: "filter",
@@ -150,10 +204,16 @@ describe("ArgumentValidator", () => {
                       typeName: "UnknownType",
                       nullable: false,
                       list: false,
+                      listItemNullable: null,
                     },
+                    description: null,
+                    deprecated: null,
                   },
                 ],
                 resolverSourceFile: "/path/to/query.ts",
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -165,14 +225,14 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        expect(result.isValid, false);
+        expect(result.isValid).toBe(false);
         expect(
           result.diagnostics.some((d) => d.code === "UNKNOWN_ARGUMENT_TYPE"),
         );
         const error = result.diagnostics.find(
           (d) => d.code === "UNKNOWN_ARGUMENT_TYPE",
         );
-        expect(error?.message.includes("UnknownType"));
+        expect(error?.message.includes("UnknownType")).toBeTruthy();
       });
 
       it("should report error when argument uses Output type", () => {
@@ -182,14 +242,29 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "users",
-                type: { typeName: "User", nullable: false, list: true },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: true,
+                  listItemNullable: false,
+                },
                 args: [
                   {
                     name: "filter",
-                    type: { typeName: "User", nullable: false, list: false },
+                    type: {
+                      typeName: "User",
+                      nullable: false,
+                      list: false,
+                      listItemNullable: null,
+                    },
+                    description: null,
+                    deprecated: null,
                   },
                 ],
                 resolverSourceFile: "/path/to/query.ts",
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -201,14 +276,14 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        expect(result.isValid, false);
+        expect(result.isValid).toBe(false);
         expect(
           result.diagnostics.some((d) => d.code === "OUTPUT_TYPE_IN_INPUT"),
         );
         const error = result.diagnostics.find(
           (d) => d.code === "OUTPUT_TYPE_IN_INPUT",
         );
-        expect(error?.message.includes("User"));
+        expect(error?.message.includes("User")).toBeTruthy();
       });
     });
 
@@ -221,14 +296,29 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "name",
-                type: { typeName: "String", nullable: false, list: false },
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
               {
                 name: "parent",
-                type: { typeName: "NodeInput", nullable: false, list: false },
+                type: {
+                  typeName: "NodeInput",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
             sourceFile: "/path/to/node-input.ts",
+            description: null,
           },
         ];
         const context = createContext({
@@ -237,14 +327,14 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        expect(result.isValid, false);
+        expect(result.isValid).toBe(false);
         expect(
           result.diagnostics.some((d) => d.code === "CIRCULAR_INPUT_REFERENCE"),
         );
         const error = result.diagnostics.find(
           (d) => d.code === "CIRCULAR_INPUT_REFERENCE",
         );
-        expect(error?.message.includes("NodeInput"));
+        expect(error?.message.includes("NodeInput")).toBeTruthy();
       });
 
       it("should detect indirect circular reference (A -> B -> A)", () => {
@@ -255,7 +345,14 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "name",
-                type: { typeName: "String", nullable: false, list: false },
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
               {
                 name: "address",
@@ -263,17 +360,28 @@ describe("ArgumentValidator", () => {
                   typeName: "AddressInput",
                   nullable: false,
                   list: false,
+                  listItemNullable: null,
                 },
+                description: null,
+                deprecated: null,
               },
             ],
             sourceFile: "/path/to/create-user-input.ts",
+            description: null,
           },
           {
             name: "AddressInput",
             fields: [
               {
                 name: "city",
-                type: { typeName: "String", nullable: false, list: false },
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
               {
                 name: "owner",
@@ -281,10 +389,14 @@ describe("ArgumentValidator", () => {
                   typeName: "CreateUserInput",
                   nullable: false,
                   list: false,
+                  listItemNullable: null,
                 },
+                description: null,
+                deprecated: null,
               },
             ],
             sourceFile: "/path/to/address-input.ts",
+            description: null,
           },
         ];
         const context = createContext({
@@ -293,15 +405,15 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        expect(result.isValid, false);
+        expect(result.isValid).toBe(false);
         expect(
           result.diagnostics.some((d) => d.code === "CIRCULAR_INPUT_REFERENCE"),
         );
         const error = result.diagnostics.find(
           (d) => d.code === "CIRCULAR_INPUT_REFERENCE",
         );
-        expect(error?.message.includes("CreateUserInput"));
-        expect(error?.message.includes("AddressInput"));
+        expect(error?.message.includes("CreateUserInput")).toBeTruthy();
+        expect(error?.message.includes("AddressInput")).toBeTruthy();
       });
 
       it("should allow nullable self-reference without error", () => {
@@ -312,14 +424,29 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "name",
-                type: { typeName: "String", nullable: false, list: false },
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
               {
                 name: "children",
-                type: { typeName: "NodeInput", nullable: true, list: true },
+                type: {
+                  typeName: "NodeInput",
+                  nullable: true,
+                  list: true,
+                  listItemNullable: true,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
             sourceFile: "/path/to/node-input.ts",
+            description: null,
           },
         ];
         const context = createContext({
@@ -328,13 +455,12 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        expect(result.isValid, true);
+        expect(result.isValid).toBe(true);
         expect(
           result.diagnostics.filter(
             (d) => d.code === "CIRCULAR_INPUT_REFERENCE",
           ).length,
-          0,
-        );
+        ).toBe(0);
       });
 
       it("should detect long circular chain (A -> B -> C -> A)", () => {
@@ -345,30 +471,54 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "next",
-                type: { typeName: "BInput", nullable: false, list: false },
+                type: {
+                  typeName: "BInput",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
             sourceFile: "/path/to/a-input.ts",
+            description: null,
           },
           {
             name: "BInput",
             fields: [
               {
                 name: "next",
-                type: { typeName: "CInput", nullable: false, list: false },
+                type: {
+                  typeName: "CInput",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
             sourceFile: "/path/to/b-input.ts",
+            description: null,
           },
           {
             name: "CInput",
             fields: [
               {
                 name: "next",
-                type: { typeName: "AInput", nullable: false, list: false },
+                type: {
+                  typeName: "AInput",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
             sourceFile: "/path/to/c-input.ts",
+            description: null,
           },
         ];
         const context = createContext({
@@ -377,7 +527,7 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        expect(result.isValid, false);
+        expect(result.isValid).toBe(false);
         expect(
           result.diagnostics.some((d) => d.code === "CIRCULAR_INPUT_REFERENCE"),
         );
@@ -392,7 +542,12 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "search",
-                type: { typeName: "Result", nullable: false, list: true },
+                type: {
+                  typeName: "Result",
+                  nullable: false,
+                  list: true,
+                  listItemNullable: false,
+                },
                 args: [
                   {
                     name: "filter",
@@ -400,10 +555,16 @@ describe("ArgumentValidator", () => {
                       typeName: "UnknownFilter",
                       nullable: false,
                       list: false,
+                      listItemNullable: null,
                     },
+                    description: null,
+                    deprecated: null,
                   },
                 ],
                 resolverSourceFile: "/path/to/query.ts",
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -414,14 +575,29 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "name",
-                type: { typeName: "String", nullable: false, list: false },
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
               {
                 name: "profile",
-                type: { typeName: "User", nullable: false, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
             sourceFile: "/path/to/create-user-input.ts",
+            description: null,
           },
         ];
         const context = createContext({
@@ -431,14 +607,14 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        expect(result.isValid, false);
-        expect(result.diagnostics.length >= 2, "Expected at least 2 errors");
+        expect(result.isValid).toBe(false);
+        expect(result.diagnostics.length).toBeGreaterThanOrEqual(2);
         expect(
           result.diagnostics.some((d) => d.code === "UNKNOWN_ARGUMENT_TYPE"),
-        );
+        ).toBeTruthy();
         expect(
           result.diagnostics.some((d) => d.code === "OUTPUT_TYPE_IN_INPUT"),
-        );
+        ).toBeTruthy();
       });
 
       it("should include source file location in all errors", () => {
@@ -448,7 +624,12 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "search",
-                type: { typeName: "Result", nullable: false, list: true },
+                type: {
+                  typeName: "Result",
+                  nullable: false,
+                  list: true,
+                  listItemNullable: false,
+                },
                 args: [
                   {
                     name: "filter",
@@ -456,10 +637,16 @@ describe("ArgumentValidator", () => {
                       typeName: "UnknownType",
                       nullable: false,
                       list: false,
+                      listItemNullable: null,
                     },
+                    description: null,
+                    deprecated: null,
                   },
                 ],
                 resolverSourceFile: "/path/to/specific-query.ts",
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -471,12 +658,12 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        expect(result.isValid, false);
+        expect(result.isValid).toBe(false);
         for (const diagnostic of result.diagnostics) {
-          expect(diagnostic.location, "Expected location on all diagnostics");
-          expect(diagnostic.location.file, "Expected file path in location");
-          expect(typeof diagnostic.location.line, "number");
-          expect(typeof diagnostic.location.column, "number");
+          expect(diagnostic.location).toBeTruthy();
+          expect(diagnostic.location?.file).toBeTruthy();
+          expect(typeof diagnostic.location?.line).toBe("number");
+          expect(typeof diagnostic.location?.column).toBe("number");
         }
       });
 
@@ -488,10 +675,18 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "field1",
-                type: { typeName: "UnknownType", nullable: false, list: false },
+                type: {
+                  typeName: "UnknownType",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
             sourceFile: "/path/to/test-input.ts",
+            description: null,
           },
         ];
         const context = createContext({
@@ -503,7 +698,7 @@ describe("ArgumentValidator", () => {
         const errors = result.diagnostics.filter((d) =>
           d.message.includes("UnknownType"),
         );
-        expect(errors.length, 1, "Expected exactly 1 error for UnknownType");
+        expect(errors.length).toBe(1);
       });
     });
 
@@ -516,14 +711,29 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "name",
-                type: { typeName: "String", nullable: false, list: false },
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
               {
                 name: "age",
-                type: { typeName: "Int", nullable: true, list: false },
+                type: {
+                  typeName: "Int",
+                  nullable: true,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
             sourceFile: "/path/to/input.ts",
+            description: null,
           },
         ];
         const context = createContext({
@@ -532,8 +742,8 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        expect(result.isValid, true);
-        expect(result.diagnostics.length, 0);
+        expect(result.isValid).toBe(true);
+        expect(result.diagnostics.length).toBe(0);
       });
 
       it("should pass for nested Input Object references", () => {
@@ -544,24 +754,47 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "name",
-                type: { typeName: "String", nullable: false, list: false },
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
               {
                 name: "address",
-                type: { typeName: "AddressInput", nullable: true, list: false },
+                type: {
+                  typeName: "AddressInput",
+                  nullable: true,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
             sourceFile: "/path/to/create-user-input.ts",
+            description: null,
           },
           {
             name: "AddressInput",
             fields: [
               {
                 name: "city",
-                type: { typeName: "String", nullable: false, list: false },
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
             sourceFile: "/path/to/address-input.ts",
+            description: null,
           },
         ];
         const context = createContext({
@@ -570,8 +803,8 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        expect(result.isValid, true);
-        expect(result.diagnostics.length, 0);
+        expect(result.isValid).toBe(true);
+        expect(result.diagnostics.length).toBe(0);
       });
 
       it("should report error when Input Object references Output type", () => {
@@ -582,14 +815,29 @@ describe("ArgumentValidator", () => {
             fields: [
               {
                 name: "title",
-                type: { typeName: "String", nullable: false, list: false },
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
               {
                 name: "author",
-                type: { typeName: "User", nullable: false, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
             sourceFile: "/path/to/create-post-input.ts",
+            description: null,
           },
         ];
         const context = createContext({
@@ -599,15 +847,15 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        expect(result.isValid, false);
+        expect(result.isValid).toBe(false);
         expect(
           result.diagnostics.some((d) => d.code === "OUTPUT_TYPE_IN_INPUT"),
         );
         const error = result.diagnostics.find(
           (d) => d.code === "OUTPUT_TYPE_IN_INPUT",
         );
-        expect(error?.message.includes("CreatePostInput"));
-        expect(error?.message.includes("User"));
+        expect(error?.message.includes("CreatePostInput")).toBeTruthy();
+        expect(error?.message.includes("User")).toBeTruthy();
       });
     });
   });

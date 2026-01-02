@@ -29,7 +29,7 @@ function collectFieldResolver(
   field: ExtensionField,
   fallbackResolverValueName: string,
 ): FieldResolver {
-  const isDirectExport = field.resolverExportName !== undefined;
+  const isDirectExport = field.resolverExportName !== null;
   const resolverValueName = isDirectExport
     ? field.resolverExportName!
     : fallbackResolverValueName;

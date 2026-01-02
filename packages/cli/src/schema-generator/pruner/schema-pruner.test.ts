@@ -42,7 +42,10 @@ describe("SchemaPruner", () => {
         ],
       };
 
-      const result = pruneDocumentNode({ documentNode: doc });
+      const result = pruneDocumentNode({
+        documentNode: doc,
+        customScalarNames: null,
+      });
       const sdl = print(result.documentNode);
 
       expect(sdl).toContain("type Query");
@@ -85,7 +88,10 @@ describe("SchemaPruner", () => {
         ],
       };
 
-      const result = pruneDocumentNode({ documentNode: doc });
+      const result = pruneDocumentNode({
+        documentNode: doc,
+        customScalarNames: null,
+      });
       const sdl = print(result.documentNode);
 
       expect(sdl).toContain("type Query");
@@ -158,7 +164,10 @@ describe("SchemaPruner", () => {
         ],
       };
 
-      const result = pruneDocumentNode({ documentNode: doc });
+      const result = pruneDocumentNode({
+        documentNode: doc,
+        customScalarNames: null,
+      });
       const sdl = print(result.documentNode);
 
       expect(sdl).toContain("type Mutation");
@@ -254,7 +263,10 @@ describe("SchemaPruner", () => {
         ],
       };
 
-      const result = pruneDocumentNode({ documentNode: doc });
+      const result = pruneDocumentNode({
+        documentNode: doc,
+        customScalarNames: null,
+      });
       const sdl = print(result.documentNode);
 
       expect(sdl).toContain("type Query");
@@ -303,7 +315,10 @@ describe("SchemaPruner", () => {
         ],
       };
 
-      const result = pruneDocumentNode({ documentNode: doc });
+      const result = pruneDocumentNode({
+        documentNode: doc,
+        customScalarNames: null,
+      });
       const sdl = print(result.documentNode);
 
       expect(sdl).toContain("Query");
@@ -346,7 +361,10 @@ describe("SchemaPruner", () => {
         ],
       };
 
-      const result = pruneDocumentNode({ documentNode: doc });
+      const result = pruneDocumentNode({
+        documentNode: doc,
+        customScalarNames: null,
+      });
       const sdl = print(result.documentNode);
 
       expect(sdl).toContain("enum Status");
@@ -417,7 +435,10 @@ describe("SchemaPruner", () => {
         ],
       };
 
-      const result = pruneDocumentNode({ documentNode: doc });
+      const result = pruneDocumentNode({
+        documentNode: doc,
+        customScalarNames: null,
+      });
       const sdl = print(result.documentNode);
 
       expect(sdl).toContain("union SearchResult");

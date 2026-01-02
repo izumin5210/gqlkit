@@ -22,7 +22,10 @@ describe("extractTypes", () => {
         `export interface User { id: string; name: string; }`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(1);
       expect(result.types[0]?.name).toBe("User");
@@ -39,7 +42,10 @@ describe("extractTypes", () => {
         `export interface Post { title: string; }`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(2);
       const names = result.types.map((t) => t.name);
@@ -57,18 +63,21 @@ describe("extractTypes", () => {
         }`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       const user = result.types[0];
       expect(user?.fields).toBeDefined();
 
-      const idField = user.fields.find((f) => f.name === "id");
+      const idField = user?.fields?.find((f) => f.name === "id");
       expect(idField?.type.typeName).toBe("String");
 
-      const ageField = user.fields.find((f) => f.name === "age");
+      const ageField = user?.fields?.find((f) => f.name === "age");
       expect(ageField?.type.typeName).toBe("Float");
 
-      const activeField = user.fields.find((f) => f.name === "active");
+      const activeField = user?.fields?.find((f) => f.name === "active");
       expect(activeField?.type.typeName).toBe("Boolean");
     });
   });
@@ -81,7 +90,10 @@ describe("extractTypes", () => {
         `export interface User { id: string; }`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(1);
       expect(result.types[0]?.name).toBe("User");
@@ -99,12 +111,15 @@ describe("extractTypes", () => {
         `import type { User } from './user';\nexport interface Post { author: User; }`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(2);
       const post = result.types.find((t) => t.name === "Post");
       expect(post?.fields).toBeDefined();
-      const authorField = post.fields.find((f) => f.name === "author");
+      const authorField = post?.fields?.find((f) => f.name === "author");
       expect(authorField?.type.typeName).toBe("User");
     });
 
@@ -118,13 +133,16 @@ describe("extractTypes", () => {
         `,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       const unionType = result.types.find((t) => t.name === "Result");
       expect(unionType).toBeDefined();
-      expect(unionType.kind).toBe("Union");
-      expect(unionType.unionMembers?.includes("Success")).toBeTruthy();
-      expect(unionType.unionMembers?.includes("Failure")).toBeTruthy();
+      expect(unionType?.kind).toBe("Union");
+      expect(unionType?.unionMembers?.includes("Success")).toBeTruthy();
+      expect(unionType?.unionMembers?.includes("Failure")).toBeTruthy();
     });
   });
 
@@ -139,7 +157,10 @@ describe("extractTypes", () => {
         `export interface Apple { name: string; }`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types[0]?.name).toBe("Apple");
       expect(result.types[1]?.name).toBe("Zebra");
@@ -151,18 +172,24 @@ describe("extractTypes", () => {
         `export interface User { zulu: string; alpha: string; }`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       const fields = result.types[0]?.fields;
       expect(fields).toBeDefined();
-      expect(fields[0]?.name).toBe("alpha");
-      expect(fields[1]?.name).toBe("zulu");
+      expect(fields?.[0]?.name).toBe("alpha");
+      expect(fields?.[1]?.name).toBe("zulu");
     });
   });
 
   describe("error handling", () => {
     it("should report error for non-existent directory", async () => {
-      const result = await extractTypes({ directory: "/non/existent/path" });
+      const result = await extractTypes({
+        directory: "/non/existent/path",
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(0);
       expect(result.diagnostics.errors.length > 0).toBeTruthy();
@@ -170,7 +197,10 @@ describe("extractTypes", () => {
     });
 
     it("should return empty result for empty directory", async () => {
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(0);
       expect(result.diagnostics.errors.length).toBe(0);
@@ -182,7 +212,10 @@ describe("extractTypes", () => {
         `export interface Post { author: User; }`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(
         result.diagnostics.errors.some(
@@ -197,7 +230,10 @@ describe("extractTypes", () => {
         `export interface Container<T> { value: T; }`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(
         result.diagnostics.warnings.some(
@@ -209,7 +245,10 @@ describe("extractTypes", () => {
 
   describe("async behavior", () => {
     it("should return a Promise", async () => {
-      const result = extractTypes({ directory: tempDir });
+      const result = extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result instanceof Promise).toBeTruthy();
       await result;

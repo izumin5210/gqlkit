@@ -16,19 +16,41 @@ describe("E2E: Input Types and Resolver Arguments", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/user.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "id",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
             {
               name: "name",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
         {
           metadata: {
@@ -36,26 +58,48 @@ describe("E2E: Input Types and Resolver Arguments", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/create-user-input.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "name",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
             {
               name: "email",
-              tsType: { kind: "primitive", name: "string", nullable: true },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: true,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: true,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
       ];
 
       const conversionResult = convertToGraphQL(extractedTypes);
 
-      expect(conversionResult.diagnostics.length, 0);
-      expect(conversionResult.types.length, 2);
+      expect(conversionResult.diagnostics.length).toBe(0);
+      expect(conversionResult.types.length).toBe(2);
       expect(
         conversionResult.types.some(
           (t) => t.kind === "Object" && t.name === "User",
@@ -73,7 +117,12 @@ describe("E2E: Input Types and Resolver Arguments", () => {
           fields: [
             {
               name: "createUser",
-              type: { typeName: "User", nullable: false, list: false },
+              type: {
+                typeName: "User",
+                nullable: false,
+                list: false,
+                listItemNullable: null,
+              },
               args: [
                 {
                   name: "input",
@@ -81,7 +130,10 @@ describe("E2E: Input Types and Resolver Arguments", () => {
                     typeName: "CreateUserInput",
                     nullable: false,
                     list: false,
+                    listItemNullable: null,
                   },
+                  description: null,
+                  deprecated: null,
                 },
               ],
               sourceLocation: {
@@ -89,6 +141,9 @@ describe("E2E: Input Types and Resolver Arguments", () => {
                 line: 1,
                 column: 1,
               },
+              resolverExportName: null,
+              description: null,
+              deprecated: null,
             },
           ],
         },
@@ -102,21 +157,22 @@ describe("E2E: Input Types and Resolver Arguments", () => {
           diagnostics: { errors: [], warnings: [] },
         },
         resolversResult,
+        null,
       );
 
-      expect(integratedResult.baseTypes.length, 2);
-      expect(integratedResult.inputTypes.length, 1);
-      expect(integratedResult.hasErrors, false);
+      expect(integratedResult.baseTypes.length).toBe(2);
+      expect(integratedResult.inputTypes.length).toBe(1);
+      expect(integratedResult.hasErrors).toBe(false);
 
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      expect(sdl.includes("type User"));
-      expect(sdl.includes("type Mutation"));
-      expect(sdl.includes("input CreateUserInput"));
+      expect(sdl.includes("type User")).toBeTruthy();
+      expect(sdl.includes("type Mutation")).toBeTruthy();
+      expect(sdl.includes("input CreateUserInput")).toBeTruthy();
       expect(sdl.includes("createUser(input: CreateUserInput!): User!"));
-      expect(sdl.includes("name: String!"));
-      expect(sdl.includes("email: String"));
+      expect(sdl.includes("name: String!")).toBeTruthy();
+      expect(sdl.includes("email: String")).toBeTruthy();
     });
 
     it("should generate schema with nested Input types", () => {
@@ -127,19 +183,41 @@ describe("E2E: Input Types and Resolver Arguments", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/post.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "id",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
             {
               name: "title",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
         {
           metadata: {
@@ -147,25 +225,44 @@ describe("E2E: Input Types and Resolver Arguments", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/create-post-input.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "title",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
             {
               name: "tags",
               tsType: {
                 kind: "array",
+                name: null,
                 elementType: {
                   kind: "primitive",
                   name: "string",
                   nullable: false,
+                  elementType: null,
+                  members: null,
+                  scalarInfo: null,
                 },
+                members: null,
                 nullable: false,
+                scalarInfo: null,
               },
               optional: false,
+              description: null,
+              deprecated: null,
             },
             {
               name: "metadata",
@@ -173,10 +270,17 @@ describe("E2E: Input Types and Resolver Arguments", () => {
                 kind: "reference",
                 name: "MetadataInput",
                 nullable: true,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
               },
               optional: true,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
         {
           metadata: {
@@ -184,24 +288,46 @@ describe("E2E: Input Types and Resolver Arguments", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/metadata-input.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "key",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
             {
               name: "value",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
       ];
 
       const conversionResult = convertToGraphQL(extractedTypes);
-      expect(conversionResult.diagnostics.length, 0);
+      expect(conversionResult.diagnostics.length).toBe(0);
 
       const resolversResult: ExtractResolversResult = {
         queryFields: { fields: [] },
@@ -209,7 +335,12 @@ describe("E2E: Input Types and Resolver Arguments", () => {
           fields: [
             {
               name: "createPost",
-              type: { typeName: "Post", nullable: false, list: false },
+              type: {
+                typeName: "Post",
+                nullable: false,
+                list: false,
+                listItemNullable: null,
+              },
               args: [
                 {
                   name: "input",
@@ -217,7 +348,10 @@ describe("E2E: Input Types and Resolver Arguments", () => {
                     typeName: "CreatePostInput",
                     nullable: false,
                     list: false,
+                    listItemNullable: null,
                   },
+                  description: null,
+                  deprecated: null,
                 },
               ],
               sourceLocation: {
@@ -225,6 +359,9 @@ describe("E2E: Input Types and Resolver Arguments", () => {
                 line: 1,
                 column: 1,
               },
+              resolverExportName: null,
+              description: null,
+              deprecated: null,
             },
           ],
         },
@@ -238,15 +375,16 @@ describe("E2E: Input Types and Resolver Arguments", () => {
           diagnostics: { errors: [], warnings: [] },
         },
         resolversResult,
+        null,
       );
 
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      expect(sdl.includes("input CreatePostInput"));
-      expect(sdl.includes("input MetadataInput"));
-      expect(sdl.includes("metadata: MetadataInput"));
-      expect(sdl.includes("tags: [String!]!"));
+      expect(sdl.includes("input CreatePostInput")).toBeTruthy();
+      expect(sdl.includes("input MetadataInput")).toBeTruthy();
+      expect(sdl.includes("metadata: MetadataInput")).toBeTruthy();
+      expect(sdl.includes("tags: [String!]!")).toBeTruthy();
     });
 
     it("should handle Enum types in Input fields and arguments", () => {
@@ -257,11 +395,24 @@ describe("E2E: Input Types and Resolver Arguments", () => {
             kind: "enum",
             sourceFile: "/src/gql/types/status.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [],
+          unionMembers: null,
           enumMembers: [
-            { name: "ACTIVE", value: "active" },
-            { name: "INACTIVE", value: "inactive" },
+            {
+              name: "ACTIVE",
+              value: "active",
+              description: null,
+              deprecated: null,
+            },
+            {
+              name: "INACTIVE",
+              value: "inactive",
+              description: null,
+              deprecated: null,
+            },
           ],
         },
         {
@@ -270,19 +421,41 @@ describe("E2E: Input Types and Resolver Arguments", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/user.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "id",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
             {
               name: "status",
-              tsType: { kind: "reference", name: "Status", nullable: false },
+              tsType: {
+                kind: "reference",
+                name: "Status",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
         {
           metadata: {
@@ -290,19 +463,32 @@ describe("E2E: Input Types and Resolver Arguments", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/update-user-input.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "status",
-              tsType: { kind: "reference", name: "Status", nullable: true },
+              tsType: {
+                kind: "reference",
+                name: "Status",
+                nullable: true,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: true,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
       ];
 
       const conversionResult = convertToGraphQL(extractedTypes);
-      expect(conversionResult.diagnostics.length, 0);
+      expect(conversionResult.diagnostics.length).toBe(0);
 
       const resolversResult: ExtractResolversResult = {
         queryFields: {
@@ -318,7 +504,14 @@ describe("E2E: Input Types and Resolver Arguments", () => {
               args: [
                 {
                   name: "status",
-                  type: { typeName: "Status", nullable: false, list: false },
+                  type: {
+                    typeName: "Status",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
               sourceLocation: {
@@ -326,6 +519,9 @@ describe("E2E: Input Types and Resolver Arguments", () => {
                 line: 1,
                 column: 1,
               },
+              resolverExportName: null,
+              description: null,
+              deprecated: null,
             },
           ],
         },
@@ -340,15 +536,16 @@ describe("E2E: Input Types and Resolver Arguments", () => {
           diagnostics: { errors: [], warnings: [] },
         },
         resolversResult,
+        null,
       );
 
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      expect(sdl.includes("enum Status"));
-      expect(sdl.includes("ACTIVE"));
-      expect(sdl.includes("INACTIVE"));
-      expect(sdl.includes("input UpdateUserInput"));
+      expect(sdl.includes("enum Status")).toBeTruthy();
+      expect(sdl.includes("ACTIVE")).toBeTruthy();
+      expect(sdl.includes("INACTIVE")).toBeTruthy();
+      expect(sdl.includes("input UpdateUserInput")).toBeTruthy();
       expect(sdl.includes("usersByStatus(status: Status!): [User!]!"));
     });
   });
@@ -362,9 +559,12 @@ describe("E2E: Input Types and Resolver Arguments", () => {
             kind: "union",
             sourceFile: "/src/gql/types/result-input.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [],
           unionMembers: ["Success", "Error"],
+          enumMembers: null,
         },
       ];
 
@@ -385,11 +585,14 @@ describe("E2E: Input Types and Resolver Arguments", () => {
             kind: "enum",
             sourceFile: "/src/gql/types/status-input.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [],
+          unionMembers: null,
           enumMembers: [
-            { name: "A", value: "a" },
-            { name: "B", value: "b" },
+            { name: "A", value: "a", description: null, deprecated: null },
+            { name: "B", value: "b", description: null, deprecated: null },
           ],
         },
       ];

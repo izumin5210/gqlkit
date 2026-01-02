@@ -213,7 +213,11 @@ describe("ScalarRegistry", () => {
         const program = createTestProgram({
           "src/dummy.ts": "export {}",
         });
-        const registry = createScalarRegistry({ program });
+        const registry = createScalarRegistry({
+          program,
+          configDir: tempDir,
+          customScalars: [],
+        });
 
         const idStringMapping = registry.getMapping(
           "IDString",
@@ -229,7 +233,11 @@ describe("ScalarRegistry", () => {
         const program = createTestProgram({
           "src/dummy.ts": "export {}",
         });
-        const registry = createScalarRegistry({ program });
+        const registry = createScalarRegistry({
+          program,
+          configDir: tempDir,
+          customScalars: [],
+        });
 
         const mapping = registry.getMapping("Unknown", "./src/scalars");
         expect(mapping).toBe(undefined);
@@ -239,7 +247,11 @@ describe("ScalarRegistry", () => {
         const program = createTestProgram({
           "src/dummy.ts": "export {}",
         });
-        const registry = createScalarRegistry({ program });
+        const registry = createScalarRegistry({
+          program,
+          configDir: tempDir,
+          customScalars: [],
+        });
 
         const names = registry.getCustomScalarNames();
         expect(names).toEqual([]);

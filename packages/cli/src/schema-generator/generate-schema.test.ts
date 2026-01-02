@@ -16,14 +16,16 @@ describe("generateSchema", () => {
           diagnostics: { errors: [], warnings: [] },
         },
         outputDir: "/src/gqlkit",
+        customScalarNames: null,
+        enablePruning: null,
       };
 
       const result = generateSchema(input);
 
-      expect(typeof result.typeDefsCode, "string");
-      expect(typeof result.resolversCode, "string");
+      expect(typeof result.typeDefsCode).toBe("string");
+      expect(typeof result.resolversCode).toBe("string");
       expect(Array.isArray(result.diagnostics));
-      expect(typeof result.hasErrors, "boolean");
+      expect(typeof result.hasErrors).toBe("boolean");
     });
 
     it("should generate typeDefs code", () => {
@@ -36,9 +38,20 @@ describe("generateSchema", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
+              description: null,
+              deprecated: null,
               sourceFile: "/src/types/user.ts",
             },
           ],
@@ -51,12 +64,14 @@ describe("generateSchema", () => {
           diagnostics: { errors: [], warnings: [] },
         },
         outputDir: "/src/gqlkit",
+        customScalarNames: null,
+        enablePruning: null,
       };
 
       const result = generateSchema(input);
 
-      expect(result.typeDefsCode.includes("typeDefs"));
-      expect(result.typeDefsCode.includes("User"));
+      expect(result.typeDefsCode.includes("typeDefs")).toBeTruthy();
+      expect(result.typeDefsCode.includes("User")).toBeTruthy();
     });
 
     it("should generate resolvers code", () => {
@@ -70,12 +85,21 @@ describe("generateSchema", () => {
             fields: [
               {
                 name: "users",
-                type: { typeName: "User", nullable: false, list: true },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: true,
+                  listItemNullable: false,
+                },
+                args: null,
                 sourceLocation: {
                   file: "/src/resolvers/query.ts",
                   line: 1,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -84,12 +108,14 @@ describe("generateSchema", () => {
           diagnostics: { errors: [], warnings: [] },
         },
         outputDir: "/src/gqlkit",
+        customScalarNames: null,
+        enablePruning: null,
       };
 
       const result = generateSchema(input);
 
-      expect(result.resolversCode.includes("resolvers"));
-      expect(result.resolversCode.includes("queryResolver"));
+      expect(result.resolversCode.includes("resolvers")).toBeTruthy();
+      expect(result.resolversCode.includes("queryResolver")).toBeTruthy();
     });
   });
 
@@ -104,6 +130,7 @@ describe("generateSchema", () => {
                 code: "UNRESOLVED_REFERENCE",
                 message: "Type error",
                 severity: "error",
+                location: null,
               },
             ],
             warnings: [],
@@ -116,12 +143,14 @@ describe("generateSchema", () => {
           diagnostics: { errors: [], warnings: [] },
         },
         outputDir: "/src/gqlkit",
+        customScalarNames: null,
+        enablePruning: null,
       };
 
       const result = generateSchema(input);
 
-      expect(result.hasErrors, true);
-      expect(result.diagnostics.length, 1);
+      expect(result.hasErrors).toBe(true);
+      expect(result.diagnostics.length).toBe(1);
     });
 
     it("should report hasErrors when resolver errors exist", () => {
@@ -140,17 +169,20 @@ describe("generateSchema", () => {
                 code: "INVALID_RESOLVER_SIGNATURE",
                 message: "Resolver error",
                 severity: "error",
+                location: null,
               },
             ],
             warnings: [],
           },
         },
         outputDir: "/src/gqlkit",
+        customScalarNames: null,
+        enablePruning: null,
       };
 
       const result = generateSchema(input);
 
-      expect(result.hasErrors, true);
+      expect(result.hasErrors).toBe(true);
     });
 
     it("should report UNKNOWN_TARGET_TYPE for invalid type extensions", () => {
@@ -168,12 +200,21 @@ describe("generateSchema", () => {
               fields: [
                 {
                   name: "field",
-                  type: { typeName: "String", nullable: false, list: false },
+                  type: {
+                    typeName: "String",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  args: null,
                   sourceLocation: {
                     file: "/src/resolver.ts",
                     line: 1,
                     column: 1,
                   },
+                  resolverExportName: null,
+                  description: null,
+                  deprecated: null,
                 },
               ],
             },
@@ -181,11 +222,13 @@ describe("generateSchema", () => {
           diagnostics: { errors: [], warnings: [] },
         },
         outputDir: "/src/gqlkit",
+        customScalarNames: null,
+        enablePruning: null,
       };
 
       const result = generateSchema(input);
 
-      expect(result.hasErrors, true);
+      expect(result.hasErrors).toBe(true);
       expect(result.diagnostics.some((d) => d.code === "UNKNOWN_TARGET_TYPE"));
     });
 
@@ -199,9 +242,20 @@ describe("generateSchema", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
+              description: null,
+              deprecated: null,
               sourceFile: "/src/types/user.ts",
             },
           ],
@@ -211,6 +265,7 @@ describe("generateSchema", () => {
                 code: "UNRESOLVED_REFERENCE",
                 message: "Some error",
                 severity: "error",
+                location: null,
               },
             ],
             warnings: [],
@@ -223,12 +278,14 @@ describe("generateSchema", () => {
           diagnostics: { errors: [], warnings: [] },
         },
         outputDir: "/src/gqlkit",
+        customScalarNames: null,
+        enablePruning: null,
       };
 
       const result = generateSchema(input);
 
-      expect(result.hasErrors, true);
-      expect(result.typeDefsCode.length > 0);
+      expect(result.hasErrors).toBe(true);
+      expect(result.typeDefsCode.length > 0).toBeTruthy();
     });
   });
 
@@ -243,13 +300,31 @@ describe("generateSchema", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
                 {
                   name: "name",
-                  type: { typeName: "String", nullable: false, list: false },
+                  type: {
+                    typeName: "String",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
+              description: null,
+              deprecated: null,
               sourceFile: "/src/types/user.ts",
             },
             {
@@ -258,13 +333,31 @@ describe("generateSchema", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
                 {
                   name: "title",
-                  type: { typeName: "String", nullable: false, list: false },
+                  type: {
+                    typeName: "String",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
+              description: null,
+              deprecated: null,
               sourceFile: "/src/types/post.ts",
             },
           ],
@@ -281,19 +374,35 @@ describe("generateSchema", () => {
                   list: true,
                   listItemNullable: false,
                 },
+                args: null,
                 sourceLocation: {
                   file: "/src/resolvers/query.ts",
                   line: 1,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
               {
                 name: "user",
-                type: { typeName: "User", nullable: true, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: true,
+                  list: false,
+                  listItemNullable: null,
+                },
                 args: [
                   {
                     name: "id",
-                    type: { typeName: "ID", nullable: false, list: false },
+                    type: {
+                      typeName: "ID",
+                      nullable: false,
+                      list: false,
+                      listItemNullable: null,
+                    },
+                    description: null,
+                    deprecated: null,
                   },
                 ],
                 sourceLocation: {
@@ -301,6 +410,9 @@ describe("generateSchema", () => {
                   line: 5,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -308,11 +420,23 @@ describe("generateSchema", () => {
             fields: [
               {
                 name: "createUser",
-                type: { typeName: "User", nullable: false, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
                 args: [
                   {
                     name: "name",
-                    type: { typeName: "String", nullable: false, list: false },
+                    type: {
+                      typeName: "String",
+                      nullable: false,
+                      list: false,
+                      listItemNullable: null,
+                    },
+                    description: null,
+                    deprecated: null,
                   },
                 ],
                 sourceLocation: {
@@ -320,6 +444,9 @@ describe("generateSchema", () => {
                   line: 1,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -335,11 +462,15 @@ describe("generateSchema", () => {
                     list: true,
                     listItemNullable: false,
                   },
+                  args: null,
                   sourceLocation: {
                     file: "/src/resolvers/user.ts",
                     line: 1,
                     column: 1,
                   },
+                  resolverExportName: null,
+                  description: null,
+                  deprecated: null,
                 },
               ],
             },
@@ -347,18 +478,20 @@ describe("generateSchema", () => {
           diagnostics: { errors: [], warnings: [] },
         },
         outputDir: "/src/gqlkit",
+        customScalarNames: null,
+        enablePruning: null,
       };
 
       const result = generateSchema(input);
 
-      expect(result.hasErrors, false);
-      expect(result.typeDefsCode.includes("Query"));
-      expect(result.typeDefsCode.includes("Mutation"));
-      expect(result.typeDefsCode.includes("User"));
-      expect(result.typeDefsCode.includes("Post"));
-      expect(result.resolversCode.includes("queryResolver"));
-      expect(result.resolversCode.includes("mutationResolver"));
-      expect(result.resolversCode.includes("userResolver"));
+      expect(result.hasErrors).toBe(false);
+      expect(result.typeDefsCode.includes("Query")).toBeTruthy();
+      expect(result.typeDefsCode.includes("Mutation")).toBeTruthy();
+      expect(result.typeDefsCode.includes("User")).toBeTruthy();
+      expect(result.typeDefsCode.includes("Post")).toBeTruthy();
+      expect(result.resolversCode.includes("queryResolver")).toBeTruthy();
+      expect(result.resolversCode.includes("mutationResolver")).toBeTruthy();
+      expect(result.resolversCode.includes("userResolver")).toBeTruthy();
     });
 
     it("should produce deterministic output", () => {
@@ -371,9 +504,20 @@ describe("generateSchema", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
+              description: null,
+              deprecated: null,
               sourceFile: "/src/types/zebra.ts",
             },
             {
@@ -382,9 +526,20 @@ describe("generateSchema", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
+              description: null,
+              deprecated: null,
               sourceFile: "/src/types/apple.ts",
             },
           ],
@@ -397,17 +552,19 @@ describe("generateSchema", () => {
           diagnostics: { errors: [], warnings: [] },
         },
         outputDir: "/src/gqlkit",
+        customScalarNames: null,
+        enablePruning: null,
       };
 
       const result1 = generateSchema(input);
       const result2 = generateSchema(input);
 
-      expect(result1.typeDefsCode, result2.typeDefsCode);
-      expect(result1.resolversCode, result2.resolversCode);
+      expect(result1.typeDefsCode).toBe(result2.typeDefsCode);
+      expect(result1.resolversCode).toBe(result2.resolversCode);
 
       const appleIndex = result1.typeDefsCode.indexOf("Apple");
       const zebraIndex = result1.typeDefsCode.indexOf("Zebra");
-      expect(appleIndex < zebraIndex);
+      expect(appleIndex < zebraIndex).toBeTruthy();
     });
   });
 
@@ -422,9 +579,20 @@ describe("generateSchema", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
+              description: null,
+              deprecated: null,
               sourceFile: "/src/types/user.ts",
             },
           ],
@@ -435,12 +603,21 @@ describe("generateSchema", () => {
             fields: [
               {
                 name: "user",
-                type: { typeName: "User", nullable: true, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: true,
+                  list: false,
+                  listItemNullable: null,
+                },
+                args: null,
                 sourceLocation: {
                   file: "/src/resolvers/query.ts",
                   line: 1,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -449,14 +626,16 @@ describe("generateSchema", () => {
           diagnostics: { errors: [], warnings: [] },
         },
         outputDir: "/src/gqlkit",
+        customScalarNames: null,
+        enablePruning: null,
       };
 
       const result = generateSchema(input);
 
-      expect(result.sdlContent);
-      expect(result.sdlContent.includes("type User"));
-      expect(result.sdlContent.includes("type Query"));
-      expect(result.sdlContent.includes("id: ID!"));
+      expect(result.sdlContent).toBeTruthy();
+      expect(result.sdlContent.includes("type User")).toBeTruthy();
+      expect(result.sdlContent.includes("type Query")).toBeTruthy();
+      expect(result.sdlContent.includes("id: ID!")).toBeTruthy();
     });
 
     it("should include descriptions in SDL", () => {
@@ -470,10 +649,19 @@ describe("generateSchema", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
                   description: "Unique identifier",
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
+              deprecated: null,
               sourceFile: "/src/types/user.ts",
             },
           ],
@@ -486,11 +674,13 @@ describe("generateSchema", () => {
           diagnostics: { errors: [], warnings: [] },
         },
         outputDir: "/src/gqlkit",
+        customScalarNames: null,
+        enablePruning: null,
       };
 
       const result = generateSchema(input);
 
-      expect(result.sdlContent);
+      expect(result.sdlContent).toBeTruthy();
       expect(
         result.sdlContent.includes("A user in the system") ||
           result.sdlContent.includes('"A user in the system"'),
@@ -509,9 +699,20 @@ describe("generateSchema", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
+              description: null,
+              deprecated: null,
               sourceFile: "/src/types/user.ts",
             },
             {
@@ -520,9 +721,20 @@ describe("generateSchema", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
+              description: null,
+              deprecated: null,
               sourceFile: "/src/types/unused.ts",
             },
           ],
@@ -533,12 +745,21 @@ describe("generateSchema", () => {
             fields: [
               {
                 name: "user",
-                type: { typeName: "User", nullable: true, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: true,
+                  list: false,
+                  listItemNullable: null,
+                },
+                args: null,
                 sourceLocation: {
                   file: "/src/resolvers/query.ts",
                   line: 1,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -547,12 +768,14 @@ describe("generateSchema", () => {
           diagnostics: { errors: [], warnings: [] },
         },
         outputDir: "/src/gqlkit",
+        customScalarNames: null,
+        enablePruning: null,
       };
 
       const result = generateSchema(input);
 
-      expect(result.sdlContent?.includes("UnusedType"));
-      expect(result.prunedTypes, undefined);
+      expect(result.sdlContent?.includes("UnusedType")).toBeTruthy();
+      expect(result.prunedTypes == null).toBeTruthy();
     });
 
     it("should prune unused types when enablePruning is true", () => {
@@ -565,9 +788,20 @@ describe("generateSchema", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
+              description: null,
+              deprecated: null,
               sourceFile: "/src/types/user.ts",
             },
             {
@@ -576,9 +810,20 @@ describe("generateSchema", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
+              description: null,
+              deprecated: null,
               sourceFile: "/src/types/unused.ts",
             },
           ],
@@ -589,12 +834,21 @@ describe("generateSchema", () => {
             fields: [
               {
                 name: "user",
-                type: { typeName: "User", nullable: true, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: true,
+                  list: false,
+                  listItemNullable: null,
+                },
+                args: null,
                 sourceLocation: {
                   file: "/src/resolvers/query.ts",
                   line: 1,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -603,15 +857,16 @@ describe("generateSchema", () => {
           diagnostics: { errors: [], warnings: [] },
         },
         outputDir: "/src/gqlkit",
+        customScalarNames: null,
         enablePruning: true,
       };
 
       const result = generateSchema(input);
 
-      expect(result.sdlContent);
-      expect(!result.sdlContent.includes("UnusedType"));
-      expect(result.prunedTypes);
-      expect(result.prunedTypes.includes("UnusedType"));
+      expect(result.sdlContent).toBeTruthy();
+      expect(!result.sdlContent.includes("UnusedType")).toBeTruthy();
+      expect(result.prunedTypes).toBeTruthy();
+      expect(result.prunedTypes?.includes("UnusedType")).toBeTruthy();
     });
 
     it("should keep custom scalars when pruning", () => {
@@ -624,9 +879,20 @@ describe("generateSchema", () => {
               fields: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
+              unionMembers: null,
+              enumValues: null,
+              description: null,
+              deprecated: null,
               sourceFile: "/src/types/user.ts",
             },
           ],
@@ -637,12 +903,21 @@ describe("generateSchema", () => {
             fields: [
               {
                 name: "user",
-                type: { typeName: "User", nullable: true, list: false },
+                type: {
+                  typeName: "User",
+                  nullable: true,
+                  list: false,
+                  listItemNullable: null,
+                },
+                args: null,
                 sourceLocation: {
                   file: "/src/resolvers/query.ts",
                   line: 1,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -657,7 +932,7 @@ describe("generateSchema", () => {
 
       const result = generateSchema(input);
 
-      expect(result.sdlContent?.includes("scalar DateTime"));
+      expect(result.sdlContent?.includes("scalar DateTime")).toBeTruthy();
     });
   });
 });

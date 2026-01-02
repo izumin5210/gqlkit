@@ -17,14 +17,27 @@ describe("GraphQLConverter", () => {
               kind: "interface",
               sourceFile: "/path/to/user.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [
               {
                 name: "name",
-                tsType: { kind: "primitive", name: "string", nullable: false },
+                tsType: {
+                  kind: "primitive",
+                  name: "string",
+                  nullable: false,
+                  elementType: null,
+                  members: null,
+                  scalarInfo: null,
+                },
                 optional: false,
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumMembers: null,
           },
         ];
 
@@ -45,14 +58,27 @@ describe("GraphQLConverter", () => {
               kind: "interface",
               sourceFile: "/path/to/user.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [
               {
                 name: "age",
-                tsType: { kind: "primitive", name: "number", nullable: false },
+                tsType: {
+                  kind: "primitive",
+                  name: "number",
+                  nullable: false,
+                  elementType: null,
+                  members: null,
+                  scalarInfo: null,
+                },
                 optional: false,
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumMembers: null,
           },
         ];
 
@@ -71,14 +97,27 @@ describe("GraphQLConverter", () => {
               kind: "interface",
               sourceFile: "/path/to/user.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [
               {
                 name: "active",
-                tsType: { kind: "primitive", name: "boolean", nullable: false },
+                tsType: {
+                  kind: "primitive",
+                  name: "boolean",
+                  nullable: false,
+                  elementType: null,
+                  members: null,
+                  scalarInfo: null,
+                },
                 optional: false,
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumMembers: null,
           },
         ];
 
@@ -97,14 +136,27 @@ describe("GraphQLConverter", () => {
               kind: "interface",
               sourceFile: "/path/to/post.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [
               {
                 name: "author",
-                tsType: { kind: "reference", name: "User", nullable: false },
+                tsType: {
+                  kind: "reference",
+                  name: "User",
+                  nullable: false,
+                  elementType: null,
+                  members: null,
+                  scalarInfo: null,
+                },
                 optional: false,
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumMembers: null,
           },
         ];
 
@@ -125,14 +177,27 @@ describe("GraphQLConverter", () => {
               kind: "interface",
               sourceFile: "/path/to/user.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [
               {
                 name: "id",
-                tsType: { kind: "primitive", name: "string", nullable: false },
+                tsType: {
+                  kind: "primitive",
+                  name: "string",
+                  nullable: false,
+                  elementType: null,
+                  members: null,
+                  scalarInfo: null,
+                },
                 optional: false,
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumMembers: null,
           },
         ];
 
@@ -150,14 +215,27 @@ describe("GraphQLConverter", () => {
               kind: "object",
               sourceFile: "/path/to/status.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [
               {
                 name: "code",
-                tsType: { kind: "primitive", name: "number", nullable: false },
+                tsType: {
+                  kind: "primitive",
+                  name: "number",
+                  nullable: false,
+                  elementType: null,
+                  members: null,
+                  scalarInfo: null,
+                },
                 optional: false,
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumMembers: null,
           },
         ];
 
@@ -175,8 +253,12 @@ describe("GraphQLConverter", () => {
               kind: "interface",
               sourceFile: "/path/to/user.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [],
+            unionMembers: null,
+            enumMembers: null,
           },
         ];
 
@@ -195,9 +277,12 @@ describe("GraphQLConverter", () => {
               kind: "union",
               sourceFile: "/path/to/search.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [],
             unionMembers: ["User", "Post"],
+            enumMembers: null,
           },
         ];
 
@@ -216,9 +301,12 @@ describe("GraphQLConverter", () => {
               kind: "union",
               sourceFile: "/path/to/result.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [],
             unionMembers: ["Success", "Error"],
+            enumMembers: null,
           },
         ];
 
@@ -237,14 +325,27 @@ describe("GraphQLConverter", () => {
               kind: "interface",
               sourceFile: "/path/to/user.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [
               {
                 name: "nickname",
-                tsType: { kind: "primitive", name: "string", nullable: true },
+                tsType: {
+                  kind: "primitive",
+                  name: "string",
+                  nullable: true,
+                  elementType: null,
+                  members: null,
+                  scalarInfo: null,
+                },
                 optional: false,
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumMembers: null,
           },
         ];
 
@@ -263,14 +364,27 @@ describe("GraphQLConverter", () => {
               kind: "interface",
               sourceFile: "/path/to/user.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [
               {
                 name: "bio",
-                tsType: { kind: "primitive", name: "string", nullable: false },
+                tsType: {
+                  kind: "primitive",
+                  name: "string",
+                  nullable: false,
+                  elementType: null,
+                  members: null,
+                  scalarInfo: null,
+                },
                 optional: true,
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumMembers: null,
           },
         ];
 
@@ -289,6 +403,8 @@ describe("GraphQLConverter", () => {
               kind: "interface",
               sourceFile: "/path/to/user.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [
               {
@@ -299,12 +415,22 @@ describe("GraphQLConverter", () => {
                     kind: "primitive",
                     name: "string",
                     nullable: false,
+                    elementType: null,
+                    members: null,
+                    scalarInfo: null,
                   },
                   nullable: false,
+                  name: null,
+                  members: null,
+                  scalarInfo: null,
                 },
                 optional: false,
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumMembers: null,
           },
         ];
 
@@ -325,6 +451,8 @@ describe("GraphQLConverter", () => {
               kind: "interface",
               sourceFile: "/path/to/user.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [
               {
@@ -335,12 +463,22 @@ describe("GraphQLConverter", () => {
                     kind: "primitive",
                     name: "string",
                     nullable: true,
+                    elementType: null,
+                    members: null,
+                    scalarInfo: null,
                   },
                   nullable: false,
+                  name: null,
+                  members: null,
+                  scalarInfo: null,
                 },
                 optional: false,
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumMembers: null,
           },
         ];
 
@@ -365,8 +503,12 @@ describe("GraphQLConverter", () => {
                 kind: "interface",
                 sourceFile: "/path/to/types.ts",
                 exportKind: "named",
+                description: null,
+                deprecated: null,
               },
               fields: [],
+              unionMembers: null,
+              enumMembers: null,
             },
           ];
 
@@ -386,8 +528,12 @@ describe("GraphQLConverter", () => {
               kind: "interface",
               sourceFile: "/path/to/types.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [],
+            unionMembers: null,
+            enumMembers: null,
           },
         ];
 
@@ -406,11 +552,24 @@ describe("GraphQLConverter", () => {
               kind: "enum",
               sourceFile: "/path/to/status.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [],
+            unionMembers: null,
             enumMembers: [
-              { name: "Active", value: "active" },
-              { name: "Inactive", value: "inactive" },
+              {
+                name: "Active",
+                value: "active",
+                description: null,
+                deprecated: null,
+              },
+              {
+                name: "Inactive",
+                value: "inactive",
+                description: null,
+                deprecated: null,
+              },
             ],
           },
         ];
@@ -433,11 +592,24 @@ describe("GraphQLConverter", () => {
               kind: "enum",
               sourceFile: "/path/to/role.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [],
+            unionMembers: null,
             enumMembers: [
-              { name: "superAdmin", value: "superAdmin" },
-              { name: "regularUser", value: "regularUser" },
+              {
+                name: "superAdmin",
+                value: "superAdmin",
+                description: null,
+                deprecated: null,
+              },
+              {
+                name: "regularUser",
+                value: "regularUser",
+                description: null,
+                deprecated: null,
+              },
             ],
           },
         ];
@@ -456,9 +628,19 @@ describe("GraphQLConverter", () => {
               kind: "enum",
               sourceFile: "/path/to/color.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [],
-            enumMembers: [{ name: "darkBlue", value: "dark-blue" }],
+            unionMembers: null,
+            enumMembers: [
+              {
+                name: "darkBlue",
+                value: "dark-blue",
+                description: null,
+                deprecated: null,
+              },
+            ],
           },
         ];
 
@@ -477,9 +659,19 @@ describe("GraphQLConverter", () => {
               kind: "enum",
               sourceFile: "/path/to/invalid.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [],
-            enumMembers: [{ name: "123invalid", value: "123invalid" }],
+            unionMembers: null,
+            enumMembers: [
+              {
+                name: "123invalid",
+                value: "123invalid",
+                description: null,
+                deprecated: null,
+              },
+            ],
           },
         ];
 
@@ -498,9 +690,19 @@ describe("GraphQLConverter", () => {
               kind: "enum",
               sourceFile: "/path/to/int.ts",
               exportKind: "named",
+              description: null,
+              deprecated: null,
             },
             fields: [],
-            enumMembers: [{ name: "One", value: "one" }],
+            unionMembers: null,
+            enumMembers: [
+              {
+                name: "One",
+                value: "one",
+                description: null,
+                deprecated: null,
+              },
+            ],
           },
         ];
 
@@ -522,19 +724,41 @@ describe("GraphQLConverter", () => {
             kind: "interface",
             sourceFile: "/path/to/create-user-input.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "name",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
             {
               name: "email",
-              tsType: { kind: "primitive", name: "string", nullable: true },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: true,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
       ];
 
@@ -554,14 +778,27 @@ describe("GraphQLConverter", () => {
             kind: "object",
             sourceFile: "/path/to/update-user-input.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "id",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
       ];
 
@@ -578,14 +815,27 @@ describe("GraphQLConverter", () => {
             kind: "interface",
             sourceFile: "/path/to/user.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "id",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
       ];
 
@@ -602,12 +852,23 @@ describe("GraphQLConverter", () => {
             kind: "interface",
             sourceFile: "/path/to/create-post-input.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "title",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
             {
               name: "author",
@@ -615,10 +876,17 @@ describe("GraphQLConverter", () => {
                 kind: "reference",
                 name: "AuthorInput",
                 nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
               },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
       ];
 
@@ -640,9 +908,12 @@ describe("GraphQLConverter", () => {
             kind: "union",
             sourceFile: "/path/to/status-input.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [],
           unionMembers: ["Success", "Error"],
+          enumMembers: null,
         },
       ];
 
@@ -667,11 +938,24 @@ describe("GraphQLConverter", () => {
             kind: "enum",
             sourceFile: "/path/to/color-input.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [],
+          unionMembers: null,
           enumMembers: [
-            { name: "Red", value: "red" },
-            { name: "Blue", value: "blue" },
+            {
+              name: "Red",
+              value: "red",
+              description: null,
+              deprecated: null,
+            },
+            {
+              name: "Blue",
+              value: "blue",
+              description: null,
+              deprecated: null,
+            },
           ],
         },
       ];
@@ -696,9 +980,12 @@ describe("GraphQLConverter", () => {
             kind: "union",
             sourceFile: "/path/to/status-input.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [],
           unionMembers: ["Success", "Error"],
+          enumMembers: null,
         },
       ];
 

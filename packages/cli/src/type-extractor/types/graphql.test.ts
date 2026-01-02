@@ -36,6 +36,7 @@ describe("GraphQL types", () => {
         typeName: "String",
         nullable: false,
         list: false,
+        listItemNullable: null,
       };
 
       expect(fieldType.typeName).toBe("String");
@@ -48,6 +49,7 @@ describe("GraphQL types", () => {
         typeName: "Int",
         nullable: true,
         list: false,
+        listItemNullable: null,
       };
 
       expect(fieldType.nullable).toBe(true);
@@ -58,6 +60,7 @@ describe("GraphQL types", () => {
         typeName: "User",
         nullable: false,
         list: true,
+        listItemNullable: null,
       };
 
       expect(fieldType.list).toBe(true);
@@ -83,7 +86,10 @@ describe("GraphQL types", () => {
           typeName: "String",
           nullable: false,
           list: false,
+          listItemNullable: null,
         },
+        description: null,
+        deprecated: null,
       };
 
       expect(field.name).toBe("id");
@@ -99,21 +105,39 @@ describe("GraphQL types", () => {
         fields: [
           {
             name: "id",
-            type: { typeName: "String", nullable: false, list: false },
+            type: {
+              typeName: "String",
+              nullable: false,
+              list: false,
+              listItemNullable: null,
+            },
+            description: null,
+            deprecated: null,
           },
           {
             name: "name",
-            type: { typeName: "String", nullable: true, list: false },
+            type: {
+              typeName: "String",
+              nullable: true,
+              list: false,
+              listItemNullable: null,
+            },
+            description: null,
+            deprecated: null,
           },
         ],
         sourceFile: "/path/to/user.ts",
+        unionMembers: null,
+        enumValues: null,
+        description: null,
+        deprecated: null,
       };
 
       expect(typeInfo.name).toBe("User");
       expect(typeInfo.kind).toBe("Object");
       expect(typeInfo.fields?.length).toBe(2);
       expect(typeInfo.sourceFile).toBe("/path/to/user.ts");
-      expect(typeInfo.unionMembers).toBe(undefined);
+      expect(typeInfo.unionMembers).toBe(null);
     });
 
     it("should represent a Union type with members", () => {
@@ -122,12 +146,16 @@ describe("GraphQL types", () => {
         kind: "Union",
         unionMembers: ["User", "Post"],
         sourceFile: "/path/to/search-result.ts",
+        fields: null,
+        enumValues: null,
+        description: null,
+        deprecated: null,
       };
 
       expect(typeInfo.name).toBe("SearchResult");
       expect(typeInfo.kind).toBe("Union");
       expect(typeInfo.unionMembers).toEqual(["User", "Post"]);
-      expect(typeInfo.fields).toBe(undefined);
+      expect(typeInfo.fields).toBe(null);
     });
 
     it("should represent an Enum type with values", () => {
@@ -135,10 +163,24 @@ describe("GraphQL types", () => {
         name: "Status",
         kind: "Enum",
         enumValues: [
-          { name: "ACTIVE", originalValue: "active" },
-          { name: "INACTIVE", originalValue: "inactive" },
+          {
+            name: "ACTIVE",
+            originalValue: "active",
+            description: null,
+            deprecated: null,
+          },
+          {
+            name: "INACTIVE",
+            originalValue: "inactive",
+            description: null,
+            deprecated: null,
+          },
         ],
         sourceFile: "/path/to/status.ts",
+        fields: null,
+        unionMembers: null,
+        description: null,
+        deprecated: null,
       };
 
       expect(typeInfo.name).toBe("Status");
@@ -146,7 +188,7 @@ describe("GraphQL types", () => {
       expect(typeInfo.enumValues?.length).toBe(2);
       expect(typeInfo.enumValues?.[0]?.name).toBe("ACTIVE");
       expect(typeInfo.enumValues?.[0]?.originalValue).toBe("active");
-      expect(typeInfo.fields).toBe(undefined);
+      expect(typeInfo.fields).toBe(null);
     });
 
     it("should represent an InputObject type with fields", () => {
@@ -156,21 +198,39 @@ describe("GraphQL types", () => {
         fields: [
           {
             name: "name",
-            type: { typeName: "String", nullable: false, list: false },
+            type: {
+              typeName: "String",
+              nullable: false,
+              list: false,
+              listItemNullable: null,
+            },
+            description: null,
+            deprecated: null,
           },
           {
             name: "email",
-            type: { typeName: "String", nullable: true, list: false },
+            type: {
+              typeName: "String",
+              nullable: true,
+              list: false,
+              listItemNullable: null,
+            },
+            description: null,
+            deprecated: null,
           },
         ],
         sourceFile: "/path/to/create-user-input.ts",
+        unionMembers: null,
+        enumValues: null,
+        description: null,
+        deprecated: null,
       };
 
       expect(typeInfo.name).toBe("CreateUserInput");
       expect(typeInfo.kind).toBe("InputObject");
       expect(typeInfo.fields?.length).toBe(2);
       expect(typeInfo.sourceFile).toBe("/path/to/create-user-input.ts");
-      expect(typeInfo.unionMembers).toBe(undefined);
+      expect(typeInfo.unionMembers).toBe(null);
     });
   });
 
@@ -179,6 +239,8 @@ describe("GraphQL types", () => {
       const enumValue: EnumValueInfo = {
         name: "ACTIVE",
         originalValue: "active",
+        description: null,
+        deprecated: null,
       };
 
       expect(enumValue.name).toBe("ACTIVE");
@@ -189,6 +251,8 @@ describe("GraphQL types", () => {
       const enumValue: EnumValueInfo = {
         name: "MY_STATUS",
         originalValue: "myStatus",
+        description: null,
+        deprecated: null,
       };
 
       expect(enumValue.name).toBe("MY_STATUS");

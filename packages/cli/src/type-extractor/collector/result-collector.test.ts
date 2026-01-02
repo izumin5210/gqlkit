@@ -11,19 +11,31 @@ describe("ResultCollector", () => {
             name: "Zebra",
             kind: "Object",
             fields: [],
+            unionMembers: null,
+            enumValues: null,
             sourceFile: "/path/to/zebra.ts",
+            description: null,
+            deprecated: null,
           },
           {
             name: "Apple",
             kind: "Object",
             fields: [],
+            unionMembers: null,
+            enumValues: null,
             sourceFile: "/path/to/apple.ts",
+            description: null,
+            deprecated: null,
           },
           {
             name: "Mango",
             kind: "Object",
             fields: [],
+            unionMembers: null,
+            enumValues: null,
             sourceFile: "/path/to/mango.ts",
+            description: null,
+            deprecated: null,
           },
         ];
         const diagnostics: Diagnostic[] = [];
@@ -43,18 +55,43 @@ describe("ResultCollector", () => {
             fields: [
               {
                 name: "zipCode",
-                type: { typeName: "String", nullable: false, list: false },
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
               {
                 name: "age",
-                type: { typeName: "Int", nullable: false, list: false },
+                type: {
+                  typeName: "Int",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
               {
                 name: "name",
-                type: { typeName: "String", nullable: false, list: false },
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
               },
             ],
+            unionMembers: null,
+            enumValues: null,
             sourceFile: "/path/to/user.ts",
+            description: null,
+            deprecated: null,
           },
         ];
         const diagnostics: Diagnostic[] = [];
@@ -73,8 +110,12 @@ describe("ResultCollector", () => {
           {
             name: "Result",
             kind: "Union",
+            fields: null,
             unionMembers: ["Zebra", "Apple", "Mango"],
+            enumValues: null,
             sourceFile: "/path/to/result.ts",
+            description: null,
+            deprecated: null,
           },
         ];
         const diagnostics: Diagnostic[] = [];
@@ -90,12 +131,48 @@ describe("ResultCollector", () => {
 
       it("should produce same output for same input regardless of order", () => {
         const types1: GraphQLTypeInfo[] = [
-          { name: "B", kind: "Object", fields: [], sourceFile: "/b.ts" },
-          { name: "A", kind: "Object", fields: [], sourceFile: "/a.ts" },
+          {
+            name: "B",
+            kind: "Object",
+            fields: [],
+            unionMembers: null,
+            enumValues: null,
+            sourceFile: "/b.ts",
+            description: null,
+            deprecated: null,
+          },
+          {
+            name: "A",
+            kind: "Object",
+            fields: [],
+            unionMembers: null,
+            enumValues: null,
+            sourceFile: "/a.ts",
+            description: null,
+            deprecated: null,
+          },
         ];
         const types2: GraphQLTypeInfo[] = [
-          { name: "A", kind: "Object", fields: [], sourceFile: "/a.ts" },
-          { name: "B", kind: "Object", fields: [], sourceFile: "/b.ts" },
+          {
+            name: "A",
+            kind: "Object",
+            fields: [],
+            unionMembers: null,
+            enumValues: null,
+            sourceFile: "/a.ts",
+            description: null,
+            deprecated: null,
+          },
+          {
+            name: "B",
+            kind: "Object",
+            fields: [],
+            unionMembers: null,
+            enumValues: null,
+            sourceFile: "/b.ts",
+            description: null,
+            deprecated: null,
+          },
         ];
 
         const result1 = collectResults(types1, []);
@@ -113,16 +190,19 @@ describe("ResultCollector", () => {
             code: "UNRESOLVED_REFERENCE",
             message: "Error 1",
             severity: "error",
+            location: null,
           },
           {
             code: "UNSUPPORTED_SYNTAX",
             message: "Warning 1",
             severity: "warning",
+            location: null,
           },
           {
             code: "PARSE_ERROR",
             message: "Error 2",
             severity: "error",
+            location: null,
           },
         ];
 
@@ -139,11 +219,13 @@ describe("ResultCollector", () => {
             code: "UNRESOLVED_REFERENCE",
             message: "Error 1",
             severity: "error",
+            location: null,
           },
           {
             code: "UNRESOLVED_REFERENCE",
             message: "Error 1",
             severity: "error",
+            location: null,
           },
         ];
 

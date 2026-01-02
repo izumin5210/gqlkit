@@ -23,26 +23,54 @@ describe("E2E: Schema Output Options", () => {
             sourceFile: "/src/gql/types/user.ts",
             exportKind: "named",
             description: "A user in the system",
+            deprecated: null,
           },
           fields: [
             {
               name: "id",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
               description: "Unique identifier",
+              deprecated: null,
             },
             {
               name: "name",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
               description: "Display name",
+              deprecated: null,
             },
             {
               name: "email",
-              tsType: { kind: "primitive", name: "string", nullable: true },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: true,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: true,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
         {
           metadata: {
@@ -50,19 +78,41 @@ describe("E2E: Schema Output Options", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/post.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "id",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
             {
               name: "title",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
       ];
 
@@ -73,11 +123,23 @@ describe("E2E: Schema Output Options", () => {
           fields: [
             {
               name: "user",
-              type: { typeName: "User", nullable: true, list: false },
+              type: {
+                typeName: "User",
+                nullable: true,
+                list: false,
+                listItemNullable: null,
+              },
               args: [
                 {
                   name: "id",
-                  type: { typeName: "ID", nullable: false, list: false },
+                  type: {
+                    typeName: "ID",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
               sourceLocation: {
@@ -85,7 +147,9 @@ describe("E2E: Schema Output Options", () => {
                 line: 1,
                 column: 1,
               },
+              resolverExportName: null,
               description: "Get a user by ID",
+              deprecated: null,
             },
             {
               name: "users",
@@ -95,11 +159,15 @@ describe("E2E: Schema Output Options", () => {
                 list: true,
                 listItemNullable: false,
               },
+              args: null,
               sourceLocation: {
                 file: "/src/gql/resolvers/query.ts",
                 line: 5,
                 column: 1,
               },
+              resolverExportName: null,
+              description: null,
+              deprecated: null,
             },
           ],
         },
@@ -107,11 +175,23 @@ describe("E2E: Schema Output Options", () => {
           fields: [
             {
               name: "createUser",
-              type: { typeName: "User", nullable: false, list: false },
+              type: {
+                typeName: "User",
+                nullable: false,
+                list: false,
+                listItemNullable: null,
+              },
               args: [
                 {
                   name: "name",
-                  type: { typeName: "String", nullable: false, list: false },
+                  type: {
+                    typeName: "String",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  description: null,
+                  deprecated: null,
                 },
               ],
               sourceLocation: {
@@ -119,6 +199,9 @@ describe("E2E: Schema Output Options", () => {
                 line: 1,
                 column: 1,
               },
+              resolverExportName: null,
+              description: null,
+              deprecated: null,
             },
           ],
         },
@@ -134,11 +217,15 @@ describe("E2E: Schema Output Options", () => {
                   list: true,
                   listItemNullable: false,
                 },
+                args: null,
                 sourceLocation: {
                   file: "/src/gql/resolvers/user.ts",
                   line: 1,
                   column: 1,
                 },
+                resolverExportName: null,
+                description: null,
+                deprecated: null,
               },
             ],
           },
@@ -150,6 +237,8 @@ describe("E2E: Schema Output Options", () => {
         typesResult,
         resolversResult,
         outputDir: "/src/gqlkit/generated",
+        customScalarNames: null,
+        enablePruning: null,
       });
 
       expect(!result.hasErrors);
@@ -178,20 +267,41 @@ describe("E2E: Schema Output Options", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/user.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "id",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
             {
               name: "legacyId",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
               deprecated: { isDeprecated: true, reason: "Use id instead" },
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
       ];
 
@@ -202,12 +312,20 @@ describe("E2E: Schema Output Options", () => {
           fields: [
             {
               name: "oldEndpoint",
-              type: { typeName: "User", nullable: true, list: false },
+              type: {
+                typeName: "User",
+                nullable: true,
+                list: false,
+                listItemNullable: null,
+              },
+              args: null,
               sourceLocation: {
                 file: "/src/gql/resolvers/query.ts",
                 line: 1,
                 column: 1,
               },
+              resolverExportName: null,
+              description: null,
               deprecated: { isDeprecated: true, reason: "Use newEndpoint" },
             },
           ],
@@ -221,6 +339,8 @@ describe("E2E: Schema Output Options", () => {
         typesResult,
         resolversResult,
         outputDir: "/src/gqlkit/generated",
+        customScalarNames: null,
+        enablePruning: null,
       });
 
       expect(!result.hasErrors);
@@ -241,14 +361,27 @@ describe("E2E: Schema Output Options", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/event.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "id",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
       ];
 
@@ -266,6 +399,7 @@ describe("E2E: Schema Output Options", () => {
         resolversResult,
         outputDir: "/src/gqlkit/generated",
         customScalarNames: ["DateTime", "UUID"],
+        enablePruning: null,
       });
 
       expect(!result.hasErrors);
@@ -284,14 +418,27 @@ describe("E2E: Schema Output Options", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/user.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "id",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
         {
           metadata: {
@@ -299,14 +446,27 @@ describe("E2E: Schema Output Options", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/unused.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "data",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
         {
           metadata: {
@@ -314,14 +474,27 @@ describe("E2E: Schema Output Options", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/another.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "value",
-              tsType: { kind: "primitive", name: "number", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "number",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
       ];
 
@@ -332,12 +505,21 @@ describe("E2E: Schema Output Options", () => {
           fields: [
             {
               name: "user",
-              type: { typeName: "User", nullable: true, list: false },
+              type: {
+                typeName: "User",
+                nullable: true,
+                list: false,
+                listItemNullable: null,
+              },
+              args: null,
               sourceLocation: {
                 file: "/src/gql/resolvers/query.ts",
                 line: 1,
                 column: 1,
               },
+              resolverExportName: null,
+              description: null,
+              deprecated: null,
             },
           ],
         },
@@ -350,6 +532,7 @@ describe("E2E: Schema Output Options", () => {
         typesResult,
         resolversResult,
         outputDir: "/src/gqlkit/generated",
+        customScalarNames: null,
         enablePruning: true,
       });
 
@@ -361,8 +544,8 @@ describe("E2E: Schema Output Options", () => {
       expect(!result.sdlContent.includes("AnotherUnused"));
 
       expect(result.prunedTypes);
-      expect(result.prunedTypes.includes("UnusedType"));
-      expect(result.prunedTypes.includes("AnotherUnused"));
+      expect(result.prunedTypes!.includes("UnusedType"));
+      expect(result.prunedTypes!.includes("AnotherUnused"));
     });
 
     it("should keep transitively referenced types", () => {
@@ -373,19 +556,41 @@ describe("E2E: Schema Output Options", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/user.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "id",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
             {
               name: "profile",
-              tsType: { kind: "reference", name: "Profile", nullable: true },
+              tsType: {
+                kind: "reference",
+                name: "Profile",
+                nullable: true,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: true,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
         {
           metadata: {
@@ -393,14 +598,27 @@ describe("E2E: Schema Output Options", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/profile.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "bio",
-              tsType: { kind: "primitive", name: "string", nullable: true },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: true,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: true,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
         {
           metadata: {
@@ -408,14 +626,27 @@ describe("E2E: Schema Output Options", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/unused.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "data",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
       ];
 
@@ -426,12 +657,21 @@ describe("E2E: Schema Output Options", () => {
           fields: [
             {
               name: "user",
-              type: { typeName: "User", nullable: true, list: false },
+              type: {
+                typeName: "User",
+                nullable: true,
+                list: false,
+                listItemNullable: null,
+              },
+              args: null,
               sourceLocation: {
                 file: "/src/gql/resolvers/query.ts",
                 line: 1,
                 column: 1,
               },
+              resolverExportName: null,
+              description: null,
+              deprecated: null,
             },
           ],
         },
@@ -444,6 +684,7 @@ describe("E2E: Schema Output Options", () => {
         typesResult,
         resolversResult,
         outputDir: "/src/gqlkit/generated",
+        customScalarNames: null,
         enablePruning: true,
       });
 
@@ -455,8 +696,8 @@ describe("E2E: Schema Output Options", () => {
       expect(!result.sdlContent.includes("UnusedType"));
 
       expect(result.prunedTypes);
-      expect(result.prunedTypes.includes("UnusedType"));
-      expect(!result.prunedTypes.includes("Profile"));
+      expect(result.prunedTypes!.includes("UnusedType"));
+      expect(!result.prunedTypes!.includes("Profile"));
     });
 
     it("should keep custom scalars when pruning", () => {
@@ -467,14 +708,27 @@ describe("E2E: Schema Output Options", () => {
             kind: "interface",
             sourceFile: "/src/gql/types/user.ts",
             exportKind: "named",
+            description: null,
+            deprecated: null,
           },
           fields: [
             {
               name: "id",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
       ];
 
@@ -485,12 +739,21 @@ describe("E2E: Schema Output Options", () => {
           fields: [
             {
               name: "user",
-              type: { typeName: "User", nullable: true, list: false },
+              type: {
+                typeName: "User",
+                nullable: true,
+                list: false,
+                listItemNullable: null,
+              },
+              args: null,
               sourceLocation: {
                 file: "/src/gql/resolvers/query.ts",
                 line: 1,
                 column: 1,
               },
+              resolverExportName: null,
+              description: null,
+              deprecated: null,
             },
           ],
         },
@@ -511,7 +774,7 @@ describe("E2E: Schema Output Options", () => {
       expect(result.sdlContent);
       expect(result.sdlContent.includes("scalar DateTime"));
       expect(result.prunedTypes);
-      expect(!result.prunedTypes.includes("DateTime"));
+      expect(!result.prunedTypes!.includes("DateTime"));
     });
   });
 
@@ -525,19 +788,40 @@ describe("E2E: Schema Output Options", () => {
             sourceFile: "/src/gql/types/user.ts",
             exportKind: "named",
             description: "A user",
+            deprecated: null,
           },
           fields: [
             {
               name: "id",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
             {
               name: "name",
-              tsType: { kind: "primitive", name: "string", nullable: false },
+              tsType: {
+                kind: "primitive",
+                name: "string",
+                nullable: false,
+                elementType: null,
+                members: null,
+                scalarInfo: null,
+              },
               optional: false,
+              description: null,
+              deprecated: null,
             },
           ],
+          unionMembers: null,
+          enumMembers: null,
         },
       ];
 
@@ -548,12 +832,21 @@ describe("E2E: Schema Output Options", () => {
           fields: [
             {
               name: "user",
-              type: { typeName: "User", nullable: true, list: false },
+              type: {
+                typeName: "User",
+                nullable: true,
+                list: false,
+                listItemNullable: null,
+              },
+              args: null,
               sourceLocation: {
                 file: "/src/gql/resolvers/query.ts",
                 line: 1,
                 column: 1,
               },
+              resolverExportName: null,
+              description: null,
+              deprecated: null,
             },
           ],
         },
@@ -566,6 +859,8 @@ describe("E2E: Schema Output Options", () => {
         typesResult,
         resolversResult,
         outputDir: "/src/gqlkit/generated",
+        customScalarNames: null,
+        enablePruning: null,
       });
 
       expect(!result.hasErrors);

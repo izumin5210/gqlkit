@@ -64,12 +64,13 @@ describe("Diagnostics types", () => {
         code: "DIRECTORY_NOT_FOUND",
         message: "Directory not found: /path/to/dir",
         severity: "error",
+        location: null,
       };
 
       expect(diagnostic.severity).toBe("error");
       expect(diagnostic.code).toBe("DIRECTORY_NOT_FOUND");
       expect(diagnostic.message).toBe("Directory not found: /path/to/dir");
-      expect(diagnostic.location).toBe(undefined);
+      expect(diagnostic.location).toBe(null);
     });
 
     it("should support warning severity", () => {
@@ -77,6 +78,7 @@ describe("Diagnostics types", () => {
         code: "UNSUPPORTED_SYNTAX",
         message: "Generics are not supported",
         severity: "warning",
+        location: null,
       };
 
       expect(diagnostic.severity).toBe("warning");
@@ -110,6 +112,7 @@ describe("Diagnostics types", () => {
             code: "DIRECTORY_NOT_FOUND",
             message: "Directory not found",
             severity: "error",
+            location: null,
           },
         ],
         warnings: [
@@ -117,6 +120,7 @@ describe("Diagnostics types", () => {
             code: "UNSUPPORTED_SYNTAX",
             message: "Unsupported syntax",
             severity: "warning",
+            location: null,
           },
         ],
       };

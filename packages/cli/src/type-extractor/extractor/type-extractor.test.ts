@@ -52,8 +52,8 @@ describe("TypeExtractor", () => {
 
       const program = createProgramFromFiles(files);
 
-      expect(program.getSourceFile(files[0]!));
-      expect(program.getSourceFile(files[1]!));
+      expect(program.getSourceFile(files[0]!)).toBeTruthy();
+      expect(program.getSourceFile(files[1]!)).toBeTruthy();
     });
   });
 
@@ -69,10 +69,10 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types.length, 1);
-        expect(result.types[0]?.metadata.name, "User");
-        expect(result.types[0]?.metadata.kind, "interface");
-        expect(result.types[0]?.metadata.exportKind, "named");
+        expect(result.types.length).toBe(1);
+        expect(result.types[0]?.metadata.name).toBe("User");
+        expect(result.types[0]?.metadata.kind).toBe("interface");
+        expect(result.types[0]?.metadata.exportKind).toBe("named");
       });
 
       it("should detect exported type alias", async () => {
@@ -85,10 +85,10 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types.length, 1);
-        expect(result.types[0]?.metadata.name, "Status");
-        expect(result.types[0]?.metadata.kind, "object");
-        expect(result.types[0]?.metadata.exportKind, "named");
+        expect(result.types.length).toBe(1);
+        expect(result.types[0]?.metadata.name).toBe("Status");
+        expect(result.types[0]?.metadata.kind).toBe("object");
+        expect(result.types[0]?.metadata.exportKind).toBe("named");
       });
 
       it("should detect default exported type", async () => {
@@ -101,7 +101,9 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types.some((t) => t.metadata.exportKind === "default"));
+        expect(
+          result.types.some((t) => t.metadata.exportKind === "default"),
+        ).toBeTruthy();
       });
 
       it("should exclude non-exported types", async () => {
@@ -114,8 +116,8 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types.length, 1);
-        expect(result.types[0]?.metadata.name, "PublicType");
+        expect(result.types.length).toBe(1);
+        expect(result.types[0]?.metadata.name).toBe("PublicType");
       });
     });
 
@@ -137,9 +139,9 @@ describe("TypeExtractor", () => {
         const unionType = result.types.find(
           (t) => t.metadata.name === "Result",
         );
-        expect(unionType);
-        expect(unionType.metadata.kind, "union");
-        expect(unionType.unionMembers, ["Error", "Success"]);
+        expect(unionType).toBeTruthy();
+        expect(unionType?.metadata.kind).toBe("union");
+        expect(unionType?.unionMembers).toEqual(["Error", "Success"]);
       });
     });
 
@@ -151,7 +153,7 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, [filePath]);
 
-        expect(result.types[0]?.metadata.sourceFile, filePath);
+        expect(result.types[0]?.metadata.sourceFile).toBe(filePath);
       });
     });
 
@@ -167,12 +169,12 @@ describe("TypeExtractor", () => {
         const result = extractTypesFromProgram(program, files);
 
         const user = result.types[0];
-        expect(user);
-        expect(user.fields.length, 3);
-        const fieldNames = user.fields.map((f) => f.name);
-        expect(fieldNames.includes("id"));
-        expect(fieldNames.includes("name"));
-        expect(fieldNames.includes("age"));
+        expect(user).toBeTruthy();
+        expect(user?.fields.length).toBe(3);
+        const fieldNames = user?.fields.map((f) => f.name);
+        expect(fieldNames?.includes("id")).toBeTruthy();
+        expect(fieldNames?.includes("name")).toBeTruthy();
+        expect(fieldNames?.includes("age")).toBeTruthy();
       });
 
       it("should detect primitive string type", async () => {
@@ -186,9 +188,9 @@ describe("TypeExtractor", () => {
         const result = extractTypesFromProgram(program, files);
 
         const field = result.types[0]?.fields[0];
-        expect(field);
-        expect(field.tsType.kind, "primitive");
-        expect(field.tsType.name, "string");
+        expect(field).toBeTruthy();
+        expect(field?.tsType.kind).toBe("primitive");
+        expect(field?.tsType.name).toBe("string");
       });
 
       it("should detect primitive number type", async () => {
@@ -202,9 +204,9 @@ describe("TypeExtractor", () => {
         const result = extractTypesFromProgram(program, files);
 
         const field = result.types[0]?.fields[0];
-        expect(field);
-        expect(field.tsType.kind, "primitive");
-        expect(field.tsType.name, "number");
+        expect(field).toBeTruthy();
+        expect(field?.tsType.kind).toBe("primitive");
+        expect(field?.tsType.name).toBe("number");
       });
 
       it("should detect primitive boolean type", async () => {
@@ -218,9 +220,9 @@ describe("TypeExtractor", () => {
         const result = extractTypesFromProgram(program, files);
 
         const field = result.types[0]?.fields[0];
-        expect(field);
-        expect(field.tsType.kind, "primitive");
-        expect(field.tsType.name, "boolean");
+        expect(field).toBeTruthy();
+        expect(field?.tsType.kind).toBe("primitive");
+        expect(field?.tsType.name).toBe("boolean");
       });
 
       it("should detect optional fields", async () => {
@@ -234,8 +236,8 @@ describe("TypeExtractor", () => {
         const result = extractTypesFromProgram(program, files);
 
         const field = result.types[0]?.fields[0];
-        expect(field);
-        expect(field.optional, true);
+        expect(field).toBeTruthy();
+        expect(field?.optional).toBe(true);
       });
 
       it("should detect required fields", async () => {
@@ -249,8 +251,8 @@ describe("TypeExtractor", () => {
         const result = extractTypesFromProgram(program, files);
 
         const field = result.types[0]?.fields[0];
-        expect(field);
-        expect(field.optional, false);
+        expect(field).toBeTruthy();
+        expect(field?.optional).toBe(false);
       });
 
       it("should detect type references", async () => {
@@ -267,11 +269,11 @@ describe("TypeExtractor", () => {
         const result = extractTypesFromProgram(program, files);
 
         const user = result.types.find((t) => t.metadata.name === "User");
-        expect(user);
-        const addressField = user.fields.find((f) => f.name === "address");
-        expect(addressField);
-        expect(addressField.tsType.kind, "reference");
-        expect(addressField.tsType.name, "Address");
+        expect(user).toBeTruthy();
+        const addressField = user?.fields.find((f) => f.name === "address");
+        expect(addressField).toBeTruthy();
+        expect(addressField?.tsType.kind).toBe("reference");
+        expect(addressField?.tsType.name).toBe("Address");
       });
 
       it("should detect array types", async () => {
@@ -285,10 +287,10 @@ describe("TypeExtractor", () => {
         const result = extractTypesFromProgram(program, files);
 
         const field = result.types[0]?.fields[0];
-        expect(field);
-        expect(field.tsType.kind, "array");
-        expect(field.tsType.elementType?.kind, "primitive");
-        expect(field.tsType.elementType?.name, "string");
+        expect(field).toBeTruthy();
+        expect(field?.tsType.kind).toBe("array");
+        expect(field?.tsType.elementType?.kind).toBe("primitive");
+        expect(field?.tsType.elementType?.name).toBe("string");
       });
 
       it("should detect nullable types with null", async () => {
@@ -302,10 +304,10 @@ describe("TypeExtractor", () => {
         const result = extractTypesFromProgram(program, files);
 
         const field = result.types[0]?.fields[0];
-        expect(field);
-        expect(field.tsType.nullable, true);
-        expect(field.tsType.kind, "primitive");
-        expect(field.tsType.name, "string");
+        expect(field).toBeTruthy();
+        expect(field?.tsType.nullable).toBe(true);
+        expect(field?.tsType.kind).toBe("primitive");
+        expect(field?.tsType.name).toBe("string");
       });
 
       it("should detect nullable types with undefined", async () => {
@@ -319,8 +321,8 @@ describe("TypeExtractor", () => {
         const result = extractTypesFromProgram(program, files);
 
         const field = result.types[0]?.fields[0];
-        expect(field);
-        expect(field.tsType.nullable, true);
+        expect(field).toBeTruthy();
+        expect(field?.tsType.nullable).toBe(true);
       });
 
       it("should not extract fields for union types", async () => {
@@ -340,10 +342,10 @@ describe("TypeExtractor", () => {
         const unionType = result.types.find(
           (t) => t.metadata.name === "Result",
         );
-        expect(unionType);
-        expect(unionType.fields.length, 0);
-        expect(unionType.unionMembers);
-        expect(unionType.unionMembers.length, 2);
+        expect(unionType).toBeTruthy();
+        expect(unionType?.fields.length).toBe(0);
+        expect(unionType?.unionMembers).toBeTruthy();
+        expect(unionType?.unionMembers?.length).toBe(2);
       });
     });
 
@@ -354,10 +356,12 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, [nonExistentFile]);
 
-        expect(result.diagnostics.length, 1);
-        expect(result.diagnostics[0]?.code, "PARSE_ERROR");
-        expect(result.diagnostics[0]?.severity, "error");
-        expect(result.diagnostics[0]?.message.includes("non-existent.ts"));
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("PARSE_ERROR");
+        expect(result.diagnostics[0]?.severity).toBe("error");
+        expect(
+          result.diagnostics[0]?.message.includes("non-existent.ts"),
+        ).toBeTruthy();
       });
 
       it("should include source location in diagnostics", async () => {
@@ -366,10 +370,10 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, [nonExistentFile]);
 
-        expect(result.diagnostics[0]?.location);
-        expect(result.diagnostics[0]?.location.file, nonExistentFile);
-        expect(result.diagnostics[0]?.location.line, 1);
-        expect(result.diagnostics[0]?.location.column, 1);
+        expect(result.diagnostics[0]?.location).toBeTruthy();
+        expect(result.diagnostics[0]?.location?.file).toBe(nonExistentFile);
+        expect(result.diagnostics[0]?.location?.line).toBe(1);
+        expect(result.diagnostics[0]?.location?.column).toBe(1);
       });
 
       it("should continue processing other files when one fails", async () => {
@@ -383,10 +387,10 @@ describe("TypeExtractor", () => {
           invalidFile,
         ]);
 
-        expect(result.types.length, 1);
-        expect(result.types[0]?.metadata.name, "Valid");
-        expect(result.diagnostics.length, 1);
-        expect(result.diagnostics[0]?.code, "PARSE_ERROR");
+        expect(result.types.length).toBe(1);
+        expect(result.types[0]?.metadata.name).toBe("Valid");
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("PARSE_ERROR");
       });
 
       it("should warn for unsupported generic types", async () => {
@@ -399,8 +403,12 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.diagnostics.some((d) => d.code === "UNSUPPORTED_SYNTAX"));
-        expect(result.diagnostics.some((d) => d.severity === "warning"));
+        expect(
+          result.diagnostics.some((d) => d.code === "UNSUPPORTED_SYNTAX"),
+        ).toBeTruthy();
+        expect(
+          result.diagnostics.some((d) => d.severity === "warning"),
+        ).toBeTruthy();
       });
     });
   });
@@ -417,8 +425,10 @@ describe("TypeExtractor", () => {
         const sourceFile = program.getSourceFile(files[0]!);
         const enumNode = sourceFile?.statements[0];
 
-        expect(enumNode);
-        expect(isStringEnum(enumNode), true);
+        expect(enumNode).toBeTruthy();
+        if (enumNode) {
+          expect(isStringEnum(enumNode)).toBe(true);
+        }
       });
 
       it("should return false for numeric enum", async () => {
@@ -431,8 +441,10 @@ describe("TypeExtractor", () => {
         const sourceFile = program.getSourceFile(files[0]!);
         const enumNode = sourceFile?.statements[0];
 
-        expect(enumNode);
-        expect(isStringEnum(enumNode), false);
+        expect(enumNode).toBeTruthy();
+        if (enumNode) {
+          expect(isStringEnum(enumNode)).toBe(false);
+        }
       });
     });
 
@@ -447,8 +459,10 @@ describe("TypeExtractor", () => {
         const sourceFile = program.getSourceFile(files[0]!);
         const enumNode = sourceFile?.statements[0];
 
-        expect(enumNode);
-        expect(isNumericEnum(enumNode), true);
+        expect(enumNode).toBeTruthy();
+        if (enumNode) {
+          expect(isNumericEnum(enumNode)).toBe(true);
+        }
       });
 
       it("should return true for implicit numeric enum", async () => {
@@ -461,8 +475,10 @@ describe("TypeExtractor", () => {
         const sourceFile = program.getSourceFile(files[0]!);
         const enumNode = sourceFile?.statements[0];
 
-        expect(enumNode);
-        expect(isNumericEnum(enumNode), true);
+        expect(enumNode).toBeTruthy();
+        if (enumNode) {
+          expect(isNumericEnum(enumNode)).toBe(true);
+        }
       });
 
       it("should return false for string enum", async () => {
@@ -475,8 +491,10 @@ describe("TypeExtractor", () => {
         const sourceFile = program.getSourceFile(files[0]!);
         const enumNode = sourceFile?.statements[0];
 
-        expect(enumNode);
-        expect(isNumericEnum(enumNode), false);
+        expect(enumNode).toBeTruthy();
+        if (enumNode) {
+          expect(isNumericEnum(enumNode)).toBe(false);
+        }
       });
     });
 
@@ -491,8 +509,10 @@ describe("TypeExtractor", () => {
         const sourceFile = program.getSourceFile(files[0]!);
         const enumNode = sourceFile?.statements[0];
 
-        expect(enumNode);
-        expect(isHeterogeneousEnum(enumNode), true);
+        expect(enumNode).toBeTruthy();
+        if (enumNode) {
+          expect(isHeterogeneousEnum(enumNode)).toBe(true);
+        }
       });
 
       it("should return false for pure string enum", async () => {
@@ -505,8 +525,10 @@ describe("TypeExtractor", () => {
         const sourceFile = program.getSourceFile(files[0]!);
         const enumNode = sourceFile?.statements[0];
 
-        expect(enumNode);
-        expect(isHeterogeneousEnum(enumNode), false);
+        expect(enumNode).toBeTruthy();
+        if (enumNode) {
+          expect(isHeterogeneousEnum(enumNode)).toBe(false);
+        }
       });
     });
 
@@ -521,8 +543,10 @@ describe("TypeExtractor", () => {
         const sourceFile = program.getSourceFile(files[0]!);
         const enumNode = sourceFile?.statements[0];
 
-        expect(enumNode);
-        expect(isConstEnum(enumNode), true);
+        expect(enumNode).toBeTruthy();
+        if (enumNode) {
+          expect(isConstEnum(enumNode)).toBe(true);
+        }
       });
 
       it("should return false for regular enum", async () => {
@@ -535,8 +559,10 @@ describe("TypeExtractor", () => {
         const sourceFile = program.getSourceFile(files[0]!);
         const enumNode = sourceFile?.statements[0];
 
-        expect(enumNode);
-        expect(isConstEnum(enumNode), false);
+        expect(enumNode).toBeTruthy();
+        if (enumNode) {
+          expect(isConstEnum(enumNode)).toBe(false);
+        }
       });
     });
 
@@ -551,14 +577,14 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types.length, 1);
-        expect(result.types[0]?.metadata.kind, "enum");
-        expect(result.types[0]?.metadata.name, "Status");
-        expect(result.types[0]?.enumMembers?.length, 2);
-        expect(result.types[0]?.enumMembers?.[0]?.name, "Active");
-        expect(result.types[0]?.enumMembers?.[0]?.value, "active");
-        expect(result.types[0]?.enumMembers?.[1]?.name, "Inactive");
-        expect(result.types[0]?.enumMembers?.[1]?.value, "inactive");
+        expect(result.types.length).toBe(1);
+        expect(result.types[0]?.metadata.kind).toBe("enum");
+        expect(result.types[0]?.metadata.name).toBe("Status");
+        expect(result.types[0]?.enumMembers?.length).toBe(2);
+        expect(result.types[0]?.enumMembers?.[0]?.name).toBe("Active");
+        expect(result.types[0]?.enumMembers?.[0]?.value).toBe("active");
+        expect(result.types[0]?.enumMembers?.[1]?.name).toBe("Inactive");
+        expect(result.types[0]?.enumMembers?.[1]?.value).toBe("inactive");
       });
 
       it("should extract default exported string enum", async () => {
@@ -571,9 +597,9 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types.length, 1);
-        expect(result.types[0]?.metadata.kind, "enum");
-        expect(result.types[0]?.metadata.exportKind, "default");
+        expect(result.types.length).toBe(1);
+        expect(result.types[0]?.metadata.kind).toBe("enum");
+        expect(result.types[0]?.metadata.exportKind).toBe("default");
       });
 
       it("should preserve enum member order", async () => {
@@ -586,9 +612,9 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types[0]?.enumMembers?.[0]?.name, "Third");
-        expect(result.types[0]?.enumMembers?.[1]?.name, "First");
-        expect(result.types[0]?.enumMembers?.[2]?.name, "Second");
+        expect(result.types[0]?.enumMembers?.[0]?.name).toBe("Third");
+        expect(result.types[0]?.enumMembers?.[1]?.name).toBe("First");
+        expect(result.types[0]?.enumMembers?.[2]?.name).toBe("Second");
       });
 
       it("should report diagnostic for numeric enum", async () => {
@@ -601,13 +627,13 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types.length, 0);
+        expect(result.types.length).toBe(0);
         expect(
           result.diagnostics.some((d) => d.code === "UNSUPPORTED_ENUM_TYPE"),
-        );
+        ).toBeTruthy();
         expect(
           result.diagnostics.some((d) => d.message.includes("string enum")),
-        );
+        ).toBeTruthy();
       });
 
       it("should report diagnostic for const enum", async () => {
@@ -620,13 +646,13 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types.length, 0);
+        expect(result.types.length).toBe(0);
         expect(
           result.diagnostics.some((d) => d.code === "UNSUPPORTED_ENUM_TYPE"),
-        );
+        ).toBeTruthy();
         expect(
           result.diagnostics.some((d) => d.message.includes("regular enum")),
-        );
+        ).toBeTruthy();
       });
 
       it("should report diagnostic for heterogeneous enum", async () => {
@@ -639,10 +665,10 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types.length, 0);
+        expect(result.types.length).toBe(0);
         expect(
           result.diagnostics.some((d) => d.code === "UNSUPPORTED_ENUM_TYPE"),
-        );
+        ).toBeTruthy();
       });
 
       it("should extract enum and interface from same file", async () => {
@@ -658,15 +684,15 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types.length, 2);
+        expect(result.types.length).toBe(2);
         const enumType = result.types.find((t) => t.metadata.name === "Status");
         const interfaceType = result.types.find(
           (t) => t.metadata.name === "User",
         );
-        expect(enumType);
-        expect(interfaceType);
-        expect(enumType.metadata.kind, "enum");
-        expect(interfaceType.metadata.kind, "interface");
+        expect(enumType).toBeTruthy();
+        expect(interfaceType).toBeTruthy();
+        expect(enumType?.metadata.kind).toBe("enum");
+        expect(interfaceType?.metadata.kind).toBe("interface");
       });
     });
 
@@ -682,11 +708,12 @@ describe("TypeExtractor", () => {
         const sourceFile = program.getSourceFile(files[0]!);
         const typeAliasNode = sourceFile?.statements[0];
 
-        expect(typeAliasNode);
-        expect(ts.isTypeAliasDeclaration(typeAliasNode));
-        const symbol = checker.getSymbolAtLocation(typeAliasNode.name);
-        const type = checker.getDeclaredTypeOfSymbol(symbol!);
-        expect(isStringLiteralUnion(type, checker), true);
+        expect(typeAliasNode).toBeTruthy();
+        if (typeAliasNode && ts.isTypeAliasDeclaration(typeAliasNode)) {
+          const symbol = checker.getSymbolAtLocation(typeAliasNode.name);
+          const type = checker.getDeclaredTypeOfSymbol(symbol!);
+          expect(isStringLiteralUnion(type, checker)).toBe(true);
+        }
       });
 
       it("should return true for nullable string literal union", async () => {
@@ -700,11 +727,12 @@ describe("TypeExtractor", () => {
         const sourceFile = program.getSourceFile(files[0]!);
         const typeAliasNode = sourceFile?.statements[0];
 
-        expect(typeAliasNode);
-        expect(ts.isTypeAliasDeclaration(typeAliasNode));
-        const symbol = checker.getSymbolAtLocation(typeAliasNode.name);
-        const type = checker.getDeclaredTypeOfSymbol(symbol!);
-        expect(isStringLiteralUnion(type, checker), true);
+        expect(typeAliasNode).toBeTruthy();
+        if (typeAliasNode && ts.isTypeAliasDeclaration(typeAliasNode)) {
+          const symbol = checker.getSymbolAtLocation(typeAliasNode.name);
+          const type = checker.getDeclaredTypeOfSymbol(symbol!);
+          expect(isStringLiteralUnion(type, checker)).toBe(true);
+        }
       });
 
       it("should return false for object union", async () => {
@@ -722,11 +750,12 @@ describe("TypeExtractor", () => {
         const sourceFile = program.getSourceFile(files[0]!);
         const typeAliasNode = sourceFile?.statements[2];
 
-        expect(typeAliasNode);
-        expect(ts.isTypeAliasDeclaration(typeAliasNode));
-        const symbol = checker.getSymbolAtLocation(typeAliasNode.name);
-        const type = checker.getDeclaredTypeOfSymbol(symbol!);
-        expect(isStringLiteralUnion(type, checker), false);
+        expect(typeAliasNode).toBeTruthy();
+        if (typeAliasNode && ts.isTypeAliasDeclaration(typeAliasNode)) {
+          const symbol = checker.getSymbolAtLocation(typeAliasNode.name);
+          const type = checker.getDeclaredTypeOfSymbol(symbol!);
+          expect(isStringLiteralUnion(type, checker)).toBe(false);
+        }
       });
 
       it("should return false for mixed string and number literals", async () => {
@@ -740,11 +769,12 @@ describe("TypeExtractor", () => {
         const sourceFile = program.getSourceFile(files[0]!);
         const typeAliasNode = sourceFile?.statements[0];
 
-        expect(typeAliasNode);
-        expect(ts.isTypeAliasDeclaration(typeAliasNode));
-        const symbol = checker.getSymbolAtLocation(typeAliasNode.name);
-        const type = checker.getDeclaredTypeOfSymbol(symbol!);
-        expect(isStringLiteralUnion(type, checker), false);
+        expect(typeAliasNode).toBeTruthy();
+        if (typeAliasNode && ts.isTypeAliasDeclaration(typeAliasNode)) {
+          const symbol = checker.getSymbolAtLocation(typeAliasNode.name);
+          const type = checker.getDeclaredTypeOfSymbol(symbol!);
+          expect(isStringLiteralUnion(type, checker)).toBe(false);
+        }
       });
     });
 
@@ -759,12 +789,12 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types.length, 1);
-        expect(result.types[0]?.metadata.kind, "enum");
-        expect(result.types[0]?.metadata.name, "Status");
-        expect(result.types[0]?.enumMembers?.length, 3);
-        expect(result.types[0]?.enumMembers?.[0]?.name, "active");
-        expect(result.types[0]?.enumMembers?.[0]?.value, "active");
+        expect(result.types.length).toBe(1);
+        expect(result.types[0]?.metadata.kind).toBe("enum");
+        expect(result.types[0]?.metadata.name).toBe("Status");
+        expect(result.types[0]?.enumMembers?.length).toBe(3);
+        expect(result.types[0]?.enumMembers?.[0]?.name).toBe("active");
+        expect(result.types[0]?.enumMembers?.[0]?.value).toBe("active");
       });
 
       it("should extract nullable string literal union excluding null/undefined", async () => {
@@ -777,9 +807,9 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types.length, 1);
-        expect(result.types[0]?.metadata.kind, "enum");
-        expect(result.types[0]?.enumMembers?.length, 2);
+        expect(result.types.length).toBe(1);
+        expect(result.types[0]?.metadata.kind).toBe("enum");
+        expect(result.types[0]?.enumMembers?.length).toBe(2);
       });
 
       it("should preserve string literal union member order", async () => {
@@ -792,9 +822,9 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types[0]?.enumMembers?.[0]?.name, "third");
-        expect(result.types[0]?.enumMembers?.[1]?.name, "first");
-        expect(result.types[0]?.enumMembers?.[2]?.name, "second");
+        expect(result.types[0]?.enumMembers?.[0]?.name).toBe("third");
+        expect(result.types[0]?.enumMembers?.[1]?.name).toBe("first");
+        expect(result.types[0]?.enumMembers?.[2]?.name).toBe("second");
       });
 
       it("should not treat mixed type union as enum", async () => {
@@ -807,8 +837,8 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types.length, 1);
-        expect(result.types[0]?.metadata.kind, "object");
+        expect(result.types.length).toBe(1);
+        expect(result.types[0]?.metadata.kind).toBe("object");
       });
 
       it("should not treat object union as enum", async () => {
@@ -828,8 +858,8 @@ describe("TypeExtractor", () => {
         const resultType = result.types.find(
           (t) => t.metadata.name === "Result",
         );
-        expect(resultType);
-        expect(resultType.metadata.kind, "union");
+        expect(resultType).toBeTruthy();
+        expect(resultType?.metadata.kind).toBe("union");
       });
     });
 
@@ -849,7 +879,9 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types[0]?.metadata.description, "A user in the system");
+        expect(result.types[0]?.metadata.description).toBe(
+          "A user in the system",
+        );
       });
 
       it("should extract description from type alias TSDoc", async () => {
@@ -865,8 +897,7 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(
-          result.types[0]?.metadata.description,
+        expect(result.types[0]?.metadata.description).toBe(
           "Current status of the operation",
         );
       });
@@ -889,8 +920,7 @@ describe("TypeExtractor", () => {
         const resultType = result.types.find(
           (t) => t.metadata.name === "Result",
         );
-        expect(
-          resultType?.metadata.description,
+        expect(resultType?.metadata.description).toBe(
           "Result of an operation that can succeed or fail",
         );
       });
@@ -905,7 +935,7 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types[0]?.metadata.description, undefined);
+        expect(result.types[0]?.metadata.description).toBe(null);
       });
 
       it("should extract deprecated from type TSDoc", async () => {
@@ -926,10 +956,9 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(result.types[0]?.metadata.deprecated);
-        expect(result.types[0]?.metadata.deprecated?.isDeprecated, true);
-        expect(
-          result.types[0]?.metadata.deprecated?.reason,
+        expect(result.types[0]?.metadata.deprecated).toBeTruthy();
+        expect(result.types[0]?.metadata.deprecated?.isDeprecated).toBe(true);
+        expect(result.types[0]?.metadata.deprecated?.reason).toBe(
           "Use Member instead",
         );
       });
@@ -955,8 +984,8 @@ describe("TypeExtractor", () => {
         const nameField = result.types[0]?.fields.find(
           (f) => f.name === "name",
         );
-        expect(idField?.description, "The unique identifier");
-        expect(nameField?.description, "The display name");
+        expect(idField?.description).toBe("The unique identifier");
+        expect(nameField?.description).toBe("The display name");
       });
 
       it("should extract deprecated from field TSDoc", async () => {
@@ -978,9 +1007,9 @@ describe("TypeExtractor", () => {
         const result = extractTypesFromProgram(program, files);
 
         const idField = result.types[0]?.fields.find((f) => f.name === "id");
-        expect(idField?.deprecated);
-        expect(idField?.deprecated?.isDeprecated, true);
-        expect(idField?.deprecated?.reason, "Use uuid instead");
+        expect(idField?.deprecated).toBeTruthy();
+        expect(idField?.deprecated?.isDeprecated).toBe(true);
+        expect(idField?.deprecated?.reason).toBe("Use uuid instead");
       });
 
       it("should return undefined field description when no TSDoc exists", async () => {
@@ -998,8 +1027,8 @@ describe("TypeExtractor", () => {
         const result = extractTypesFromProgram(program, files);
 
         const idField = result.types[0]?.fields.find((f) => f.name === "id");
-        expect(idField?.description, undefined);
-        expect(idField?.deprecated, undefined);
+        expect(idField?.description).toBe(null);
+        expect(idField?.deprecated).toBe(null);
       });
 
       it("should extract description from enum TSDoc", async () => {
@@ -1018,8 +1047,7 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(
-          result.types[0]?.metadata.description,
+        expect(result.types[0]?.metadata.description).toBe(
           "The status of a user account",
         );
       });
@@ -1047,8 +1075,8 @@ describe("TypeExtractor", () => {
         const inactiveEnum = result.types[0]?.enumMembers?.find(
           (m) => m.name === "Inactive",
         );
-        expect(activeEnum?.description, "User is currently active");
-        expect(inactiveEnum?.description, "User account is deactivated");
+        expect(activeEnum?.description).toBe("User is currently active");
+        expect(inactiveEnum?.description).toBe("User account is deactivated");
       });
 
       it("should extract deprecated from enum member TSDoc", async () => {
@@ -1073,9 +1101,9 @@ describe("TypeExtractor", () => {
         const inactiveEnum = result.types[0]?.enumMembers?.find(
           (m) => m.name === "Inactive",
         );
-        expect(inactiveEnum?.deprecated);
-        expect(inactiveEnum?.deprecated?.isDeprecated, true);
-        expect(inactiveEnum?.deprecated?.reason, "Use Suspended instead");
+        expect(inactiveEnum?.deprecated).toBeTruthy();
+        expect(inactiveEnum?.deprecated?.isDeprecated).toBe(true);
+        expect(inactiveEnum?.deprecated?.reason).toBe("Use Suspended instead");
       });
     });
   });

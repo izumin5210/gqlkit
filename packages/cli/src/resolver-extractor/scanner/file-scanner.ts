@@ -57,6 +57,7 @@ export async function scanResolverDirectory(
             code: "DIRECTORY_NOT_FOUND",
             message: `Path is not a directory: ${absolutePath}`,
             severity: "error",
+            location: null,
           },
         ],
       };
@@ -69,6 +70,7 @@ export async function scanResolverDirectory(
           code: "DIRECTORY_NOT_FOUND",
           message: `Directory not found: ${absolutePath}`,
           severity: "error",
+          location: null,
         },
       ],
     };

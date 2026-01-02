@@ -101,6 +101,8 @@ function convertTsTypeToReferenceWithBrandInfo(
       tsType: {
         kind: "scalar",
         name: brandedResult.scalarInfo.scalarName,
+        elementType: null,
+        members: null,
         nullable: false,
         scalarInfo: brandedResult.scalarInfo,
       },
@@ -113,7 +115,10 @@ function convertTsTypeToReferenceWithBrandInfo(
       tsType: {
         kind: "primitive",
         name: "string",
+        elementType: null,
+        members: null,
         nullable: false,
+        scalarInfo: null,
       },
       unknownBrand: brandedResult.unknownBrand,
     };
@@ -129,7 +134,10 @@ function convertTsTypeToReferenceWithBrandInfo(
       tsType: {
         kind: "primitive",
         name: "boolean",
+        elementType: null,
+        members: null,
         nullable: hasNull || hasUndefined,
+        scalarInfo: null,
       },
       unknownBrand: undefined,
     };
@@ -167,8 +175,11 @@ function convertTsTypeToReferenceWithBrandInfo(
     return {
       tsType: {
         kind: "union",
+        name: null,
+        elementType: null,
         members: memberResults.map((r) => r.tsType),
         nullable,
+        scalarInfo: null,
       },
       unknownBrand: unknownBrands[0],
     };
@@ -183,7 +194,10 @@ function convertTsTypeToReferenceWithBrandInfo(
           tsType: {
             kind: "primitive" as const,
             name: "unknown",
+            elementType: null,
+            members: null,
             nullable: false,
+            scalarInfo: null,
           },
           unknownBrand: undefined,
         };
@@ -191,8 +205,11 @@ function convertTsTypeToReferenceWithBrandInfo(
     return {
       tsType: {
         kind: "array",
+        name: null,
         elementType: elementResult.tsType,
+        members: null,
         nullable: false,
+        scalarInfo: null,
       },
       unknownBrand: elementResult.unknownBrand,
     };
@@ -202,13 +219,27 @@ function convertTsTypeToReferenceWithBrandInfo(
 
   if (type.flags & ts.TypeFlags.String) {
     return {
-      tsType: { kind: "primitive", name: "string", nullable: false },
+      tsType: {
+        kind: "primitive",
+        name: "string",
+        elementType: null,
+        members: null,
+        nullable: false,
+        scalarInfo: null,
+      },
       unknownBrand: undefined,
     };
   }
   if (type.flags & ts.TypeFlags.Number) {
     return {
-      tsType: { kind: "primitive", name: "number", nullable: false },
+      tsType: {
+        kind: "primitive",
+        name: "number",
+        elementType: null,
+        members: null,
+        nullable: false,
+        scalarInfo: null,
+      },
       unknownBrand: undefined,
     };
   }
@@ -217,7 +248,14 @@ function convertTsTypeToReferenceWithBrandInfo(
     type.flags & ts.TypeFlags.BooleanLiteral
   ) {
     return {
-      tsType: { kind: "primitive", name: "boolean", nullable: false },
+      tsType: {
+        kind: "primitive",
+        name: "boolean",
+        elementType: null,
+        members: null,
+        nullable: false,
+        scalarInfo: null,
+      },
       unknownBrand: undefined,
     };
   }
@@ -226,14 +264,24 @@ function convertTsTypeToReferenceWithBrandInfo(
       tsType: {
         kind: "literal",
         name: typeString.replace(/"/g, ""),
+        elementType: null,
+        members: null,
         nullable: false,
+        scalarInfo: null,
       },
       unknownBrand: undefined,
     };
   }
   if (type.flags & ts.TypeFlags.NumberLiteral) {
     return {
-      tsType: { kind: "literal", name: typeString, nullable: false },
+      tsType: {
+        kind: "literal",
+        name: typeString,
+        elementType: null,
+        members: null,
+        nullable: false,
+        scalarInfo: null,
+      },
       unknownBrand: undefined,
     };
   }
@@ -243,14 +291,24 @@ function convertTsTypeToReferenceWithBrandInfo(
       tsType: {
         kind: "reference",
         name: type.symbol.getName(),
+        elementType: null,
+        members: null,
         nullable: false,
+        scalarInfo: null,
       },
       unknownBrand: undefined,
     };
   }
 
   return {
-    tsType: { kind: "reference", name: typeString, nullable: false },
+    tsType: {
+      kind: "reference",
+      name: typeString,
+      elementType: null,
+      members: null,
+      nullable: false,
+      scalarInfo: null,
+    },
     unknownBrand: undefined,
   };
 }
@@ -298,8 +356,8 @@ function extractFieldsFromType(
       name: prop.getName(),
       tsType: typeResult.tsType,
       optional,
-      description: tsdocInfo.description,
-      deprecated: tsdocInfo.deprecated,
+      description: tsdocInfo.description ?? null,
+      deprecated: tsdocInfo.deprecated ?? null,
     });
   }
 
@@ -399,8 +457,8 @@ function extractEnumMembers(
       members.push({
         name,
         value: initializer.text,
-        description: tsdocInfo.description,
-        deprecated: tsdocInfo.deprecated,
+        description: tsdocInfo.description ?? null,
+        deprecated: tsdocInfo.deprecated ?? null,
       });
     }
   }
@@ -425,6 +483,8 @@ function extractStringLiteralUnionMembers(
       members.push({
         name: value,
         value: value,
+        description: null,
+        deprecated: null,
       });
     }
   }
@@ -569,7 +629,7 @@ export function extractTypesFromProgram(
           deprecated: tsdocInfo.deprecated,
         };
 
-        types.push({ metadata, fields: [], enumMembers });
+        types.push({ metadata, fields: [], unionMembers: null, enumMembers });
         return;
       }
 
@@ -616,7 +676,7 @@ export function extractTypesFromProgram(
 
         if (kind === "enum") {
           const enumMembers = extractStringLiteralUnionMembers(type, checker);
-          types.push({ metadata, fields: [], enumMembers });
+          types.push({ metadata, fields: [], unionMembers: null, enumMembers });
           return;
         }
 
@@ -637,9 +697,12 @@ export function extractTypesFromProgram(
           });
         }
 
-        const typeInfo: ExtractedTypeInfo = unionMembers
-          ? { metadata, fields: fieldResult.fields, unionMembers }
-          : { metadata, fields: fieldResult.fields };
+        const typeInfo: ExtractedTypeInfo = {
+          metadata,
+          fields: fieldResult.fields,
+          unionMembers: unionMembers ?? null,
+          enumMembers: null,
+        };
 
         types.push(typeInfo);
       }

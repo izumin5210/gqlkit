@@ -60,23 +60,26 @@ describe("Integration Tests", () => {
         `,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(3);
       expect(result.diagnostics.errors.length).toBe(0);
 
       const user = result.types.find((t) => t.name === "User");
       expect(user).toBeDefined();
-      expect(user.kind).toBe("Object");
+      expect(user?.kind).toBe("Object");
 
-      const emailField = user.fields?.find((f) => f.name === "email");
+      const emailField = user?.fields?.find((f) => f.name === "email");
       expect(emailField).toBeDefined();
-      expect(emailField.type.nullable).toBe(true);
+      expect(emailField?.type.nullable).toBe(true);
 
-      const postsField = user.fields?.find((f) => f.name === "posts");
+      const postsField = user?.fields?.find((f) => f.name === "posts");
       expect(postsField).toBeDefined();
-      expect(postsField.type.list).toBe(true);
-      expect(postsField.type.typeName).toBe("Post");
+      expect(postsField?.type.list).toBe(true);
+      expect(postsField?.type.typeName).toBe("Post");
     });
   });
 
@@ -91,9 +94,18 @@ describe("Integration Tests", () => {
         `export interface Apple { xField: boolean; bField: string; }`,
       );
 
-      const result1 = await extractTypes({ directory: tempDir });
-      const result2 = await extractTypes({ directory: tempDir });
-      const result3 = await extractTypes({ directory: tempDir });
+      const result1 = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
+      const result2 = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
+      const result3 = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result1).toEqual(result2);
       expect(result2).toEqual(result3);
@@ -117,38 +129,43 @@ describe("Integration Tests", () => {
         `,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(1);
       const type = result.types[0];
       expect(type?.fields).toBeDefined();
 
-      const stringField = type.fields.find((f) => f.name === "stringField");
+      const stringField = type?.fields?.find((f) => f.name === "stringField");
       expect(stringField?.type.typeName).toBe("String");
       expect(stringField?.type.nullable).toBe(false);
       expect(stringField?.type.list).toBe(false);
 
-      const numberField = type.fields.find((f) => f.name === "numberField");
+      const numberField = type?.fields?.find((f) => f.name === "numberField");
       expect(numberField?.type.typeName).toBe("Float");
 
-      const booleanField = type.fields.find((f) => f.name === "booleanField");
+      const booleanField = type?.fields?.find((f) => f.name === "booleanField");
       expect(booleanField?.type.typeName).toBe("Boolean");
 
-      const nullableString = type.fields.find(
+      const nullableString = type?.fields?.find(
         (f) => f.name === "nullableString",
       );
       expect(nullableString?.type.nullable).toBe(true);
 
-      const optionalNumber = type.fields.find(
+      const optionalNumber = type?.fields?.find(
         (f) => f.name === "optionalNumber",
       );
       expect(optionalNumber?.type.nullable).toBe(true);
 
-      const stringArray = type.fields.find((f) => f.name === "stringArray");
+      const stringArray = type?.fields?.find((f) => f.name === "stringArray");
       expect(stringArray?.type.list).toBe(true);
       expect(stringArray?.type.typeName).toBe("String");
 
-      const nullableArray = type.fields.find((f) => f.name === "nullableArray");
+      const nullableArray = type?.fields?.find(
+        (f) => f.name === "nullableArray",
+      );
       expect(nullableArray?.type.list).toBe(true);
       expect(nullableArray?.type.listItemNullable).toBe(true);
     });
@@ -162,7 +179,10 @@ describe("Integration Tests", () => {
         `,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(2);
       expect(result.types.every((t) => t.kind === "Object")).toBeTruthy();
@@ -178,14 +198,17 @@ describe("Integration Tests", () => {
         `,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       const unionType = result.types.find((t) => t.name === "Pet");
       expect(unionType).toBeDefined();
-      expect(unionType.kind).toBe("Union");
-      expect(unionType.unionMembers?.includes("Cat")).toBeTruthy();
-      expect(unionType.unionMembers?.includes("Dog")).toBeTruthy();
-      expect(unionType.fields).toBeNull();
+      expect(unionType?.kind).toBe("Union");
+      expect(unionType?.unionMembers?.includes("Cat")).toBeTruthy();
+      expect(unionType?.unionMembers?.includes("Dog")).toBeTruthy();
+      expect(unionType?.fields).toBeNull();
     });
   });
 
@@ -204,7 +227,10 @@ describe("Integration Tests", () => {
         `export interface Generic<T> { value: T; }`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.diagnostics.errors.length >= 2).toBeTruthy();
       expect(
@@ -230,7 +256,10 @@ describe("Integration Tests", () => {
         `export enum Status { Active = "active", Inactive = "inactive", Pending = "pending" }`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(1);
       expect(result.types[0]?.kind).toBe("Enum");
@@ -246,7 +275,10 @@ describe("Integration Tests", () => {
         `export type Role = "admin" | "user" | "guest";`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(1);
       expect(result.types[0]?.kind).toBe("Enum");
@@ -260,7 +292,10 @@ describe("Integration Tests", () => {
         `export enum UserStatus { superAdmin = "superAdmin", normalUser = "normalUser" }`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types[0]?.enumValues?.[0]?.name).toBe("SUPER_ADMIN");
       expect(result.types[0]?.enumValues?.[1]?.name).toBe("NORMAL_USER");
@@ -272,7 +307,10 @@ describe("Integration Tests", () => {
         `export enum Priority { Low, Medium, High }`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(0);
       expect(
@@ -288,7 +326,10 @@ describe("Integration Tests", () => {
         `export const enum Direction { Up = "up", Down = "down" }`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(0);
       expect(
@@ -309,21 +350,24 @@ describe("Integration Tests", () => {
         `,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(4);
 
       const status = result.types.find((t) => t.name === "Status");
       expect(status).toBeDefined();
-      expect(status.kind).toBe("Enum");
+      expect(status?.kind).toBe("Enum");
 
       const user = result.types.find((t) => t.name === "User");
       expect(user).toBeDefined();
-      expect(user.kind).toBe("Object");
+      expect(user?.kind).toBe("Object");
 
       const searchResult = result.types.find((t) => t.name === "SearchResult");
       expect(searchResult).toBeDefined();
-      expect(searchResult.kind).toBe("Union");
+      expect(searchResult?.kind).toBe("Union");
     });
 
     it("should report error for invalid enum member name", async () => {
@@ -332,7 +376,10 @@ describe("Integration Tests", () => {
         `export type Invalid = "123abc" | "valid";`,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(
         result.diagnostics.errors.some((e) => e.code === "INVALID_ENUM_MEMBER"),
@@ -353,16 +400,19 @@ export interface User {
 `,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(1);
       const user = result.types[0];
       expect(user).toBeDefined();
 
-      const idField = user.fields?.find((f) => f.name === "id");
+      const idField = user?.fields?.find((f) => f.name === "id");
       expect(idField).toBeDefined();
-      expect(idField.type.typeName).toBe("ID");
-      expect(idField.type.nullable).toBe(false);
+      expect(idField?.type.typeName).toBe("ID");
+      expect(idField?.type.nullable).toBe(false);
     });
 
     it("should convert Int and Float to corresponding GraphQL scalars", async () => {
@@ -378,25 +428,28 @@ export interface Product {
 `,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(1);
       const product = result.types[0];
       expect(product).toBeDefined();
 
-      const countField = product.fields?.find((f) => f.name === "count");
+      const countField = product?.fields?.find((f) => f.name === "count");
       expect(countField).toBeDefined();
-      expect(countField.type.typeName).toBe("Int");
+      expect(countField?.type.typeName).toBe("Int");
 
-      const priceField = product.fields?.find((f) => f.name === "price");
+      const priceField = product?.fields?.find((f) => f.name === "price");
       expect(priceField).toBeDefined();
-      expect(priceField.type.typeName).toBe("Float");
+      expect(priceField?.type.typeName).toBe("Float");
 
-      const regularNumberField = product.fields?.find(
+      const regularNumberField = product?.fields?.find(
         (f) => f.name === "regularNumber",
       );
       expect(regularNumberField).toBeDefined();
-      expect(regularNumberField.type.typeName).toBe("Float");
+      expect(regularNumberField?.type.typeName).toBe("Float");
     });
 
     it("should handle branded scalar types in arrays", async () => {
@@ -411,21 +464,24 @@ export interface Collection {
 `,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(1);
       const collection = result.types[0];
       expect(collection).toBeDefined();
 
-      const idsField = collection.fields?.find((f) => f.name === "ids");
+      const idsField = collection?.fields?.find((f) => f.name === "ids");
       expect(idsField).toBeDefined();
-      expect(idsField.type.list).toBe(true);
-      expect(idsField.type.typeName).toBe("ID");
+      expect(idsField?.type.list).toBe(true);
+      expect(idsField?.type.typeName).toBe("ID");
 
-      const countsField = collection.fields?.find((f) => f.name === "counts");
+      const countsField = collection?.fields?.find((f) => f.name === "counts");
       expect(countsField).toBeDefined();
-      expect(countsField.type.list).toBe(true);
-      expect(countsField.type.typeName).toBe("Int");
+      expect(countsField?.type.list).toBe(true);
+      expect(countsField?.type.typeName).toBe("Int");
     });
 
     it("should handle nullable branded scalar types", async () => {
@@ -440,23 +496,28 @@ export interface NullableFields {
 `,
       );
 
-      const result = await extractTypes({ directory: tempDir });
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
 
       expect(result.types.length).toBe(1);
       const type = result.types[0];
       expect(type).toBeDefined();
 
-      const optionalIdField = type.fields?.find((f) => f.name === "optionalId");
+      const optionalIdField = type?.fields?.find(
+        (f) => f.name === "optionalId",
+      );
       expect(optionalIdField).toBeDefined();
-      expect(optionalIdField.type.typeName).toBe("ID");
-      expect(optionalIdField.type.nullable).toBe(true);
+      expect(optionalIdField?.type.typeName).toBe("ID");
+      expect(optionalIdField?.type.nullable).toBe(true);
 
-      const nullablePriceField = type.fields?.find(
+      const nullablePriceField = type?.fields?.find(
         (f) => f.name === "nullablePrice",
       );
       expect(nullablePriceField).toBeDefined();
-      expect(nullablePriceField.type.typeName).toBe("Float");
-      expect(nullablePriceField.type.nullable).toBe(true);
+      expect(nullablePriceField?.type.typeName).toBe("Float");
+      expect(nullablePriceField?.type.nullable).toBe(true);
     });
   });
 });
