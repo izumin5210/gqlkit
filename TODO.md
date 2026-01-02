@@ -16,6 +16,7 @@ gqlkit の未実装機能・既知の問題・改善項目を管理するファ�
 - [ ] **ジェネリクス型の完全サポート**: 現在は警告を出して reject
 - [ ] **Tuple 型**: TypeScript tuple の GraphQL マッピング
 - [ ] **TypeScript extends (継承)**: interface/type の継承関係の GraphQL への反映
+- [ ] **@oneof directive サポート**: OneOf input object 型のサポート
 
 ## Resolver System
 
@@ -48,6 +49,7 @@ gqlkit の未実装機能・既知の問題・改善項目を管理するファ�
 ### Configuration
 
 - [x] **設定ファイルサポート**: `gqlkit.config.ts` + `defineConfig()` で対応
+- [ ] **afterAllFileWrite**: コード生成後に任意のコマンドを実行できる機能
 
 ### Integrations
 
