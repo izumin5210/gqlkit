@@ -1,5 +1,8 @@
 import path from "node:path";
-import { buildDocumentNode } from "../builder/ast-builder.js";
+import {
+  type BuildDocumentOptions,
+  buildDocumentNode,
+} from "../builder/ast-builder.js";
 import type { IntegratedResult } from "../integrator/result-integrator.js";
 import type { ResolverInfo } from "../resolver-collector/resolver-collector.js";
 
@@ -11,14 +14,20 @@ export interface CodeEmitterResult {
   readonly resolvers: string;
 }
 
-function formatDocumentNodeAsCode(integratedResult: IntegratedResult): string {
-  const doc = buildDocumentNode(integratedResult);
+function formatDocumentNodeAsCode(
+  integratedResult: IntegratedResult,
+  options?: BuildDocumentOptions,
+): string {
+  const doc = buildDocumentNode(integratedResult, options);
 
   return JSON.stringify(doc, null, 2);
 }
 
-export function emitTypeDefsCode(integratedResult: IntegratedResult): string {
-  const documentNodeCode = formatDocumentNodeAsCode(integratedResult);
+export function emitTypeDefsCode(
+  integratedResult: IntegratedResult,
+  options?: BuildDocumentOptions,
+): string {
+  const documentNodeCode = formatDocumentNodeAsCode(integratedResult, options);
 
   return `${GENERATED_FILE_HEADER}
 

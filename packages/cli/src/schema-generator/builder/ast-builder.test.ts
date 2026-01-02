@@ -2421,6 +2421,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: "/project/src/types/user.ts",
           },
         ],
         inputTypes: [],
@@ -2436,6 +2437,288 @@ describe("ASTBuilder", () => {
 
       expect(doc.definitions[0]?.kind).toBe(Kind.SCALAR_TYPE_DEFINITION);
       expect(doc.definitions[1]?.kind).toBe(Kind.OBJECT_TYPE_DEFINITION);
+    });
+  });
+
+  describe("source file location in description", () => {
+    it("should add source file location to type description when sourceRoot is provided", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "User",
+            kind: "Object",
+            fields: [
+              {
+                name: "id",
+                type: {
+                  typeName: "ID",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
+              },
+            ],
+            unionMembers: null,
+            enumValues: null,
+            description: "A user in the system",
+            deprecated: null,
+            sourceFile: "/project/src/gql/types/user.ts",
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [],
+        customScalarNames: null,
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult, {
+        sourceRoot: "/project",
+      });
+      const sdl = print(doc);
+
+      expect(sdl).toContain("A user in the system");
+      expect(sdl).toContain("Defined in: src/gql/types/user.ts");
+    });
+
+    it("should add source file location even when description is null", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "User",
+            kind: "Object",
+            fields: [
+              {
+                name: "id",
+                type: {
+                  typeName: "ID",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
+              },
+            ],
+            unionMembers: null,
+            enumValues: null,
+            description: null,
+            deprecated: null,
+            sourceFile: "/project/src/gql/types/user.ts",
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [],
+        customScalarNames: null,
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult, {
+        sourceRoot: "/project",
+      });
+      const sdl = print(doc);
+
+      expect(sdl).toContain("Defined in: src/gql/types/user.ts");
+    });
+
+    it("should add source file location to extension field description", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "Query",
+            kind: "Object",
+            fields: [],
+            unionMembers: null,
+            enumValues: null,
+            description: null,
+            deprecated: null,
+            sourceFile: null,
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [
+          {
+            targetTypeName: "Query",
+            fields: [
+              {
+                name: "me",
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                args: null,
+                resolverSourceFile: "/project/src/gql/resolvers/me.ts",
+                resolverExportName: "me",
+                description: "Get the current user",
+                deprecated: null,
+              },
+            ],
+          },
+        ],
+        customScalarNames: null,
+        hasQuery: true,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult, {
+        sourceRoot: "/project",
+      });
+      const sdl = print(doc);
+
+      expect(sdl).toContain("Get the current user");
+      expect(sdl).toContain("Defined in: src/gql/resolvers/me.ts");
+    });
+
+    it("should add source file location to input type description", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [],
+        inputTypes: [
+          {
+            name: "CreateUserInput",
+            fields: [
+              {
+                name: "name",
+                type: {
+                  typeName: "String",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                description: null,
+                deprecated: null,
+              },
+            ],
+            sourceFile: "/project/src/gql/types/create-user-input.ts",
+            description: "Input for creating a user",
+          },
+        ],
+        typeExtensions: [],
+        customScalarNames: null,
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult, {
+        sourceRoot: "/project",
+      });
+      const sdl = print(doc);
+
+      expect(sdl).toContain("Input for creating a user");
+      expect(sdl).toContain("Defined in: src/gql/types/create-user-input.ts");
+    });
+
+    it("should not add source file location when sourceRoot is not provided", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "User",
+            kind: "Object",
+            fields: [],
+            unionMembers: null,
+            enumValues: null,
+            description: "A user in the system",
+            deprecated: null,
+            sourceFile: "/project/src/gql/types/user.ts",
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [],
+        customScalarNames: null,
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult);
+      const sdl = print(doc);
+
+      expect(sdl).toContain("A user in the system");
+      expect(sdl).not.toContain("Defined in:");
+    });
+
+    it("should add source file location to union type description", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "SearchResult",
+            kind: "Union",
+            fields: null,
+            unionMembers: ["User", "Post"],
+            enumValues: null,
+            description: "Search result union",
+            deprecated: null,
+            sourceFile: "/project/src/gql/types/search-result.ts",
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [],
+        customScalarNames: null,
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult, {
+        sourceRoot: "/project",
+      });
+      const sdl = print(doc);
+
+      expect(sdl).toContain("Search result union");
+      expect(sdl).toContain("Defined in: src/gql/types/search-result.ts");
+    });
+
+    it("should add source file location to enum type description", () => {
+      const integratedResult: IntegratedResult = {
+        baseTypes: [
+          {
+            name: "Status",
+            kind: "Enum",
+            fields: null,
+            unionMembers: null,
+            enumValues: [
+              {
+                name: "ACTIVE",
+                originalValue: "active",
+                description: null,
+                deprecated: null,
+              },
+            ],
+            description: "Status enum",
+            deprecated: null,
+            sourceFile: "/project/src/gql/types/status.ts",
+          },
+        ],
+        inputTypes: [],
+        typeExtensions: [],
+        customScalarNames: null,
+        hasQuery: false,
+        hasMutation: false,
+        hasErrors: false,
+        diagnostics: [],
+      };
+
+      const doc = buildDocumentNode(integratedResult, {
+        sourceRoot: "/project",
+      });
+      const sdl = print(doc);
+
+      expect(sdl).toContain("Status enum");
+      expect(sdl).toContain("Defined in: src/gql/types/status.ts");
     });
   });
 });

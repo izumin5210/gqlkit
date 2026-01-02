@@ -1,3 +1,4 @@
+import path from "node:path";
 import {
   type ConstArgumentNode,
   type ConstDirectiveNode,
@@ -35,6 +36,28 @@ import type {
   TypeExtension,
 } from "../integrator/result-integrator.js";
 
+export interface BuildDocumentOptions {
+  readonly sourceRoot?: string;
+}
+
+function appendSourceLocation(
+  description: string | null,
+  sourceFile: string | null,
+  sourceRoot: string | undefined,
+): string | null {
+  if (!sourceRoot || !sourceFile) {
+    return description;
+  }
+
+  const relativePath = path.relative(sourceRoot, sourceFile);
+  const sourceLocation = `Defined in: ${relativePath}`;
+
+  if (description) {
+    return `${description}\n\n${sourceLocation}`;
+  }
+  return sourceLocation;
+}
+
 export function buildNameNode(value: string): NameNode {
   return {
     kind: Kind.NAME,
@@ -43,10 +66,11 @@ export function buildNameNode(value: string): NameNode {
 }
 
 export function buildStringValueNode(value: string): StringValueNode {
+  const hasNewline = value.includes("\n");
   return {
     kind: Kind.STRING,
     value,
-    block: false,
+    block: hasNewline,
   };
 }
 
@@ -155,6 +179,7 @@ function buildBaseFieldDefinitionNode(field: BaseField): FieldDefinitionNode {
 
 export function buildFieldDefinitionNode(
   field: ExtensionField,
+  sourceRoot?: string,
 ): FieldDefinitionNode {
   const directives: ConstDirectiveNode[] = [];
   if (field.deprecated) {
@@ -163,20 +188,25 @@ export function buildFieldDefinitionNode(
 
   const args = field.args?.map(buildInputValueDefinitionNode);
 
+  const description = appendSourceLocation(
+    field.description,
+    field.resolverSourceFile,
+    sourceRoot,
+  );
+
   return {
     kind: Kind.FIELD_DEFINITION,
     name: buildNameNode(field.name),
     ...(args && args.length > 0 ? { arguments: args } : {}),
     type: buildFieldTypeNode(field.type),
-    ...(field.description
-      ? { description: buildStringValueNode(field.description) }
-      : {}),
+    ...(description ? { description: buildStringValueNode(description) } : {}),
     ...(directives.length > 0 ? { directives } : {}),
   };
 }
 
 export function buildObjectTypeDefinitionNode(
   baseType: BaseType,
+  sourceRoot?: string,
 ): ObjectTypeDefinitionNode {
   const sortedFields = baseType.fields ? sortByName(baseType.fields) : [];
   const directives: ConstDirectiveNode[] = [];
@@ -184,31 +214,40 @@ export function buildObjectTypeDefinitionNode(
     directives.push(buildDeprecatedDirective(baseType.deprecated));
   }
 
+  const description = appendSourceLocation(
+    baseType.description,
+    baseType.sourceFile,
+    sourceRoot,
+  );
+
   return {
     kind: Kind.OBJECT_TYPE_DEFINITION,
     name: buildNameNode(baseType.name),
     fields: sortedFields.map(buildBaseFieldDefinitionNode),
-    ...(baseType.description
-      ? { description: buildStringValueNode(baseType.description) }
-      : {}),
+    ...(description ? { description: buildStringValueNode(description) } : {}),
     ...(directives.length > 0 ? { directives } : {}),
   };
 }
 
 export function buildUnionTypeDefinitionNode(
   baseType: BaseType,
+  sourceRoot?: string,
 ): UnionTypeDefinitionNode {
   const sortedMembers = baseType.unionMembers
     ? [...baseType.unionMembers].sort((a, b) => a.localeCompare(b))
     : [];
 
+  const description = appendSourceLocation(
+    baseType.description,
+    baseType.sourceFile,
+    sourceRoot,
+  );
+
   return {
     kind: Kind.UNION_TYPE_DEFINITION,
     name: buildNameNode(baseType.name),
     types: sortedMembers.map(buildNamedTypeNode),
-    ...(baseType.description
-      ? { description: buildStringValueNode(baseType.description) }
-      : {}),
+    ...(description ? { description: buildStringValueNode(description) } : {}),
   };
 }
 
@@ -232,16 +271,21 @@ export function buildEnumValueDefinitionNode(
 
 export function buildEnumTypeDefinitionNode(
   baseType: BaseType,
+  sourceRoot?: string,
 ): EnumTypeDefinitionNode {
   const enumValues = baseType.enumValues ?? [];
+
+  const description = appendSourceLocation(
+    baseType.description,
+    baseType.sourceFile,
+    sourceRoot,
+  );
 
   return {
     kind: Kind.ENUM_TYPE_DEFINITION,
     name: buildNameNode(baseType.name),
     values: enumValues.map(buildEnumValueDefinitionNode),
-    ...(baseType.description
-      ? { description: buildStringValueNode(baseType.description) }
-      : {}),
+    ...(description ? { description: buildStringValueNode(description) } : {}),
   };
 }
 
@@ -271,33 +315,43 @@ function buildInputFieldDefinitionNode(
 
 export function buildInputObjectTypeDefinitionNode(
   inputType: InputType,
+  sourceRoot?: string,
 ): InputObjectTypeDefinitionNode {
   const sortedFields = sortByName(inputType.fields);
+
+  const description = appendSourceLocation(
+    inputType.description,
+    inputType.sourceFile,
+    sourceRoot,
+  );
 
   return {
     kind: Kind.INPUT_OBJECT_TYPE_DEFINITION,
     name: buildNameNode(inputType.name),
     fields: sortedFields.map(buildInputFieldDefinitionNode),
-    ...(inputType.description
-      ? { description: buildStringValueNode(inputType.description) }
-      : {}),
+    ...(description ? { description: buildStringValueNode(description) } : {}),
   };
 }
 
 export function buildObjectTypeExtensionNode(
   typeExtension: TypeExtension,
+  sourceRoot?: string,
 ): ObjectTypeExtensionNode {
   const sortedFields = sortByName(typeExtension.fields);
   return {
     kind: Kind.OBJECT_TYPE_EXTENSION,
     name: buildNameNode(typeExtension.targetTypeName),
-    fields: sortedFields.map(buildFieldDefinitionNode),
+    fields: sortedFields.map((field) =>
+      buildFieldDefinitionNode(field, sourceRoot),
+    ),
   };
 }
 
 export function buildDocumentNode(
   integratedResult: IntegratedResult,
+  options?: BuildDocumentOptions,
 ): DocumentNode {
+  const sourceRoot = options?.sourceRoot;
   const definitions: DefinitionNode[] = [];
 
   if (integratedResult.customScalarNames) {
@@ -315,11 +369,11 @@ export function buildDocumentNode(
 
   for (const baseType of sortedBaseTypes) {
     if (baseType.kind === "Object") {
-      definitions.push(buildObjectTypeDefinitionNode(baseType));
+      definitions.push(buildObjectTypeDefinitionNode(baseType, sourceRoot));
     } else if (baseType.kind === "Union") {
-      definitions.push(buildUnionTypeDefinitionNode(baseType));
+      definitions.push(buildUnionTypeDefinitionNode(baseType, sourceRoot));
     } else if (baseType.kind === "Enum") {
-      definitions.push(buildEnumTypeDefinitionNode(baseType));
+      definitions.push(buildEnumTypeDefinitionNode(baseType, sourceRoot));
     }
   }
 
@@ -328,7 +382,7 @@ export function buildDocumentNode(
   );
 
   for (const inputType of sortedInputTypes) {
-    definitions.push(buildInputObjectTypeDefinitionNode(inputType));
+    definitions.push(buildInputObjectTypeDefinitionNode(inputType, sourceRoot));
   }
 
   const sortedExtensions = [...integratedResult.typeExtensions].sort((a, b) =>
@@ -336,7 +390,7 @@ export function buildDocumentNode(
   );
 
   for (const ext of sortedExtensions) {
-    definitions.push(buildObjectTypeExtensionNode(ext));
+    definitions.push(buildObjectTypeExtensionNode(ext, sourceRoot));
   }
 
   return {

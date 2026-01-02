@@ -160,8 +160,8 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value: "A comment on a post",
-        block: false,
+        value: "A comment on a post\n\nDefined in: src/gql/types/comment.ts",
+        block: true,
       },
     },
     {
@@ -359,8 +359,8 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value: "A blog post",
-        block: false,
+        value: "A blog post\n\nDefined in: src/gql/types/post.ts",
+        block: true,
       },
     },
     {
@@ -394,8 +394,8 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value: "Post publication status",
-        block: false,
+        value: "Post publication status\n\nDefined in: src/gql/types/status.ts",
+        block: true,
       },
     },
     {
@@ -437,8 +437,8 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value: "User role in the system",
-        block: false,
+        value: "User role in the system\n\nDefined in: src/gql/types/role.ts",
+        block: true,
       },
     },
     {
@@ -465,8 +465,9 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value: "Union type representing any content that can be searched",
-        block: false,
+        value:
+          "Union type representing any content that can be searched\n\nDefined in: src/gql/types/content.ts",
+        block: true,
       },
     },
     {
@@ -493,8 +494,9 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value: "Timeline content (posts and comments mixed)",
-        block: false,
+        value:
+          "Timeline content (posts and comments mixed)\n\nDefined in: src/gql/types/content.ts",
+        block: true,
       },
     },
     {
@@ -700,8 +702,8 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value: "A user in the system",
-        block: false,
+        value: "A user in the system\n\nDefined in: src/gql/types/user.ts",
+        block: true,
       },
     },
     {
@@ -785,8 +787,8 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value: "User account status",
-        block: false,
+        value: "User account status\n\nDefined in: src/gql/types/status.ts",
+        block: true,
       },
     },
     {
@@ -853,8 +855,9 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value: "Input for creating a new post",
-        block: false,
+        value:
+          "Input for creating a new post\n\nDefined in: src/gql/types/post.ts",
+        block: true,
       },
     },
     {
@@ -929,8 +932,9 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value: "Input for creating a new user",
-        block: false,
+        value:
+          "Input for creating a new user\n\nDefined in: src/gql/types/user.ts",
+        block: true,
       },
     },
     {
@@ -985,8 +989,9 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value: "Input for updating user profile",
-        block: false,
+        value:
+          "Input for updating user profile\n\nDefined in: src/gql/types/user.ts",
+        block: true,
       },
     },
     {
@@ -1033,8 +1038,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Create a new post",
-            block: false,
+            value:
+              "Create a new post\n\nDefined in: src/gql/resolvers/mutations.ts",
+            block: true,
           },
         },
         {
@@ -1074,8 +1080,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Create a new user",
-            block: false,
+            value:
+              "Create a new user\n\nDefined in: src/gql/resolvers/mutations.ts",
+            block: true,
           },
         },
         {
@@ -1115,8 +1122,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Delete a user by ID",
-            block: false,
+            value:
+              "Delete a user by ID\n\nDefined in: src/gql/resolvers/mutations.ts",
+            block: true,
           },
         },
         {
@@ -1170,8 +1178,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Update an existing user",
-            block: false,
+            value:
+              "Update an existing user\n\nDefined in: src/gql/resolvers/mutations.ts",
+            block: true,
           },
         },
       ],
@@ -1198,8 +1207,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Get the author of this post",
-            block: false,
+            value:
+              "Get the author of this post\n\nDefined in: src/gql/resolvers/post-fields.ts",
+            block: true,
           },
         },
         {
@@ -1256,8 +1266,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Get comments on this post with optional pagination",
-            block: false,
+            value:
+              "Get comments on this post with optional pagination\n\nDefined in: src/gql/resolvers/post-fields.ts",
+            block: true,
           },
         },
         {
@@ -1294,8 +1305,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Get the excerpt of the post body",
-            block: false,
+            value:
+              "Get the excerpt of the post body\n\nDefined in: src/gql/resolvers/post-fields.ts",
+            block: true,
           },
         },
         {
@@ -1316,8 +1328,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Check if the post is published",
-            block: false,
+            value:
+              "Check if the post is published\n\nDefined in: src/gql/resolvers/post-fields.ts",
+            block: true,
           },
         },
       ],
@@ -1353,8 +1366,8 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Get all posts",
-            block: false,
+            value: "Get all posts\n\nDefined in: src/gql/resolvers/queries.ts",
+            block: true,
           },
         },
         {
@@ -1381,8 +1394,8 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Get all users",
-            block: false,
+            value: "Get all users\n\nDefined in: src/gql/resolvers/queries.ts",
+            block: true,
           },
         },
         {
@@ -1400,8 +1413,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Get the currently authenticated user",
-            block: false,
+            value:
+              "Get the currently authenticated user\n\nDefined in: src/gql/resolvers/queries.ts",
+            block: true,
           },
         },
         {
@@ -1438,8 +1452,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Get a post by ID",
-            block: false,
+            value:
+              "Get a post by ID\n\nDefined in: src/gql/resolvers/queries.ts",
+            block: true,
           },
         },
         {
@@ -1485,8 +1500,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Search for content (posts and comments)",
-            block: false,
+            value:
+              "Search for content (posts and comments)\n\nDefined in: src/gql/resolvers/queries.ts",
+            block: true,
           },
         },
         {
@@ -1523,8 +1539,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Get a user by ID",
-            block: false,
+            value:
+              "Get a user by ID\n\nDefined in: src/gql/resolvers/queries.ts",
+            block: true,
           },
         },
         {
@@ -1598,8 +1615,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "List users with pagination",
-            block: false,
+            value:
+              "List users with pagination\n\nDefined in: src/gql/resolvers/queries.ts",
+            block: true,
           },
         },
       ],
@@ -1629,8 +1647,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Get user's display name with role suffix",
-            block: false,
+            value:
+              "Get user's display name with role suffix\n\nDefined in: src/gql/resolvers/user-fields.ts",
+            block: true,
           },
         },
         {
@@ -1651,8 +1670,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Check if the user is an admin",
-            block: false,
+            value:
+              "Check if the user is an admin\n\nDefined in: src/gql/resolvers/user-fields.ts",
+            block: true,
           },
         },
         {
@@ -1673,8 +1693,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Get the count of posts by this user",
-            block: false,
+            value:
+              "Get the count of posts by this user\n\nDefined in: src/gql/resolvers/user-fields.ts",
+            block: true,
           },
         },
         {
@@ -1701,8 +1722,9 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Get posts authored by this user",
-            block: false,
+            value:
+              "Get posts authored by this user\n\nDefined in: src/gql/resolvers/user-fields.ts",
+            block: true,
           },
         },
       ],

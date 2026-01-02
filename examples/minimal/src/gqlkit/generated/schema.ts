@@ -89,6 +89,11 @@ export const typeDefs: DocumentNode = {
           },
         },
       ],
+      description: {
+        kind: "StringValue",
+        value: "Defined in: src/gql/types/user.ts",
+        block: false,
+      },
     },
     {
       kind: "ObjectTypeExtension",
@@ -118,6 +123,11 @@ export const typeDefs: DocumentNode = {
                 },
               },
             },
+          },
+          description: {
+            kind: "StringValue",
+            value: "Defined in: src/gql/resolvers/user.ts",
+            block: false,
           },
         },
         {
@@ -151,6 +161,11 @@ export const typeDefs: DocumentNode = {
               kind: "Name",
               value: "User",
             },
+          },
+          description: {
+            kind: "StringValue",
+            value: "Defined in: src/gql/resolvers/user.ts",
+            block: false,
           },
         },
       ],

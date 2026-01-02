@@ -27,6 +27,7 @@ export interface BaseType {
   readonly enumValues: ReadonlyArray<EnumValueInfo> | null;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly sourceFile: string | null;
 }
 
 export interface InputType {
@@ -123,6 +124,7 @@ export function integrate(
         enumValues: type.enumValues,
         description: type.description,
         deprecated: type.deprecated,
+        sourceFile: type.sourceFile,
       });
     } else if (type.kind === "Object") {
       baseTypes.push({
@@ -139,6 +141,7 @@ export function integrate(
         enumValues: null,
         description: type.description,
         deprecated: type.deprecated,
+        sourceFile: type.sourceFile,
       });
     } else {
       baseTypes.push({
@@ -149,6 +152,7 @@ export function integrate(
         enumValues: null,
         description: type.description,
         deprecated: null,
+        sourceFile: type.sourceFile,
       });
     }
   }
@@ -165,6 +169,7 @@ export function integrate(
       enumValues: null,
       description: null,
       deprecated: null,
+      sourceFile: null,
     });
   }
   if (hasMutation) {
@@ -176,6 +181,7 @@ export function integrate(
       enumValues: null,
       description: null,
       deprecated: null,
+      sourceFile: null,
     });
   }
 

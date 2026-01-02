@@ -14,6 +14,7 @@ export interface GenerateSchemaInput {
   readonly outputDir: string;
   readonly customScalarNames: ReadonlyArray<string> | null;
   readonly enablePruning: boolean | null;
+  readonly sourceRoot: string | null;
 }
 
 export interface GenerateSchemaResult {
@@ -34,6 +35,7 @@ export function generateSchema(
     outputDir,
     customScalarNames,
     enablePruning,
+    sourceRoot,
   } = input;
 
   const integratedResult = integrate(
@@ -42,7 +44,9 @@ export function generateSchema(
     customScalarNames,
   );
 
-  let documentNode = buildDocumentNode(integratedResult);
+  let documentNode = buildDocumentNode(integratedResult, {
+    sourceRoot: sourceRoot ?? undefined,
+  });
   let prunedTypes: ReadonlyArray<string> | null = null;
 
   if (enablePruning) {
@@ -54,7 +58,9 @@ export function generateSchema(
     prunedTypes = pruneResult.removedTypes;
   }
 
-  const typeDefsCode = emitTypeDefsCode(integratedResult);
+  const typeDefsCode = emitTypeDefsCode(integratedResult, {
+    sourceRoot: sourceRoot ?? undefined,
+  });
   const sdlContent = emitSdlContent(documentNode);
 
   const resolverInfo = collectResolverInfo(integratedResult);

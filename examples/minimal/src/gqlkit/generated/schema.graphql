@@ -2,6 +2,7 @@
 
 type Query
 
+"Defined in: src/gql/types/user.ts"
 type User {
   age: Float!
   id: String!
@@ -10,6 +11,8 @@ type User {
 }
 
 extend type Query {
+  "Defined in: src/gql/resolvers/user.ts"
   allUsers: [User!]!
+  "Defined in: src/gql/resolvers/user.ts"
   user(id: String!): User
 }

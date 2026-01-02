@@ -82,6 +82,7 @@ export async function executeGeneration(
     outputDir: config.outputDir,
     customScalarNames,
     enablePruning: null,
+    sourceRoot: config.cwd,
   });
 
   allDiagnostics.push(...schemaResult.diagnostics);

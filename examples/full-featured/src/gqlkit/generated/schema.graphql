@@ -2,7 +2,11 @@
 
 scalar DateTime
 
-"A comment on a post"
+"""
+A comment on a post
+
+Defined in: src/gql/types/comment.ts
+"""
 type Comment {
   "ID of the user who wrote this comment"
   authorId: ID!
@@ -20,7 +24,11 @@ type Comment {
 
 type Mutation
 
-"A blog post"
+"""
+A blog post
+
+Defined in: src/gql/types/post.ts
+"""
 type Post {
   "Post author's ID"
   authorId: ID!
@@ -40,7 +48,11 @@ type Post {
   title: String!
 }
 
-"Post publication status"
+"""
+Post publication status
+
+Defined in: src/gql/types/status.ts
+"""
 enum PostStatus {
   DRAFT
   PUBLISHED
@@ -49,20 +61,36 @@ enum PostStatus {
 
 type Query
 
-"User role in the system"
+"""
+User role in the system
+
+Defined in: src/gql/types/role.ts
+"""
 enum Role {
   ADMIN
   EDITOR
   VIEWER
 }
 
-"Union type representing any content that can be searched"
+"""
+Union type representing any content that can be searched
+
+Defined in: src/gql/types/content.ts
+"""
 union SearchResult = Comment | Post
 
-"Timeline content (posts and comments mixed)"
+"""
+Timeline content (posts and comments mixed)
+
+Defined in: src/gql/types/content.ts
+"""
 union TimelineItem = Comment | Post
 
-"A user in the system"
+"""
+A user in the system
+
+Defined in: src/gql/types/user.ts
+"""
 type User {
   "User's age in years"
   age: Int!
@@ -82,7 +110,11 @@ type User {
   username: String @deprecated(reason: "Use `name` field instead")
 }
 
-"User account status"
+"""
+User account status
+
+Defined in: src/gql/types/status.ts
+"""
 enum UserStatus {
   "User is active and can access the system"
   ACTIVE
@@ -94,14 +126,22 @@ enum UserStatus {
   PENDING @deprecated(reason: "Use `Inactive` status instead")
 }
 
-"Input for creating a new post"
+"""
+Input for creating a new post
+
+Defined in: src/gql/types/post.ts
+"""
 input CreatePostInput {
   body: String!
   tags: [String!]
   title: String!
 }
 
-"Input for creating a new user"
+"""
+Input for creating a new user
+
+Defined in: src/gql/types/user.ts
+"""
 input CreateUserInput {
   age: Int!
   email: String
@@ -109,7 +149,11 @@ input CreateUserInput {
   role: String
 }
 
-"Input for updating user profile"
+"""
+Input for updating user profile
+
+Defined in: src/gql/types/user.ts
+"""
 input UpdateUserInput {
   age: Int
   email: String
@@ -117,51 +161,127 @@ input UpdateUserInput {
 }
 
 extend type Mutation {
-  "Create a new post"
+  """
+  Create a new post
+
+  Defined in: src/gql/resolvers/mutations.ts
+  """
   createPost(input: CreatePostInput!): Post!
-  "Create a new user"
+  """
+  Create a new user
+
+  Defined in: src/gql/resolvers/mutations.ts
+  """
   createUser(input: CreateUserInput!): User!
-  "Delete a user by ID"
+  """
+  Delete a user by ID
+
+  Defined in: src/gql/resolvers/mutations.ts
+  """
   deleteUser(id: String!): String!
-  "Update an existing user"
+  """
+  Update an existing user
+
+  Defined in: src/gql/resolvers/mutations.ts
+  """
   updateUser(id: String!, input: UpdateUserInput!): User
 }
 
 extend type Post {
-  "Get the author of this post"
+  """
+  Get the author of this post
+
+  Defined in: src/gql/resolvers/post-fields.ts
+  """
   author: User
-  "Get comments on this post with optional pagination"
+  """
+  Get comments on this post with optional pagination
+
+  Defined in: src/gql/resolvers/post-fields.ts
+  """
   comments(limit: Float, includeReplies: String): [Comment!]!
-  "Get the excerpt of the post body"
+  """
+  Get the excerpt of the post body
+
+  Defined in: src/gql/resolvers/post-fields.ts
+  """
   excerpt(length: Float): String!
-  "Check if the post is published"
+  """
+  Check if the post is published
+
+  Defined in: src/gql/resolvers/post-fields.ts
+  """
   isPublished: String!
 }
 
 extend type Query {
-  "Get all posts"
+  """
+  Get all posts
+
+  Defined in: src/gql/resolvers/queries.ts
+  """
   allPosts: [Post!]!
-  "Get all users"
+  """
+  Get all users
+
+  Defined in: src/gql/resolvers/queries.ts
+  """
   allUsers: [User!]!
-  "Get the currently authenticated user"
+  """
+  Get the currently authenticated user
+
+  Defined in: src/gql/resolvers/queries.ts
+  """
   me: User
-  "Get a post by ID"
+  """
+  Get a post by ID
+
+  Defined in: src/gql/resolvers/queries.ts
+  """
   post(id: String!): Post
-  "Search for content (posts and comments)"
+  """
+  Search for content (posts and comments)
+
+  Defined in: src/gql/resolvers/queries.ts
+  """
   search(query: String!): [String!]!
-  "Get a user by ID"
+  """
+  Get a user by ID
+
+  Defined in: src/gql/resolvers/queries.ts
+  """
   user(id: String!): User
-  "List users with pagination"
+  """
+  List users with pagination
+
+  Defined in: src/gql/resolvers/queries.ts
+  """
   users_(limit: Float!, offset: Float, status: String): [User!]!
 }
 
 extend type User {
-  "Get user's display name with role suffix"
+  """
+  Get user's display name with role suffix
+
+  Defined in: src/gql/resolvers/user-fields.ts
+  """
   displayName: String!
-  "Check if the user is an admin"
+  """
+  Check if the user is an admin
+
+  Defined in: src/gql/resolvers/user-fields.ts
+  """
   isAdmin: String!
-  "Get the count of posts by this user"
+  """
+  Get the count of posts by this user
+
+  Defined in: src/gql/resolvers/user-fields.ts
+  """
   postCount: Float!
-  "Get posts authored by this user"
+  """
+  Get posts authored by this user
+
+  Defined in: src/gql/resolvers/user-fields.ts
+  """
   posts: [Post!]!
 }
