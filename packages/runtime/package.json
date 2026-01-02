@@ -19,7 +19,8 @@
   "author": "izumin5210 <m@izum.in>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --build"
+    "build": "tsc --build",
+    "test": "pnpm -w vitest run --project=runtime --typecheck"
   },
   "peerDependencies": {
     "graphql": "^16.0.0"
