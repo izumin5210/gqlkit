@@ -13,7 +13,7 @@ import { validateTypes } from "./validator/type-validator.js";
 
 export interface ExtractTypesOptions {
   readonly directory: string;
-  readonly customScalarNames?: ReadonlyArray<string>;
+  readonly customScalarNames: ReadonlyArray<string> | null;
 }
 
 export type { ExtractTypesResult };

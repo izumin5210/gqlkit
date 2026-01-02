@@ -1,6 +1,6 @@
 import path from "node:path";
-import { describe, expect, it } from "vitest";
 import ts from "typescript";
+import { describe, expect, it } from "vitest";
 import { extractTSDocFromSymbol, extractTSDocInfo } from "./tsdoc-parser.js";
 
 const VIRTUAL_ROOT = "/virtual";
@@ -148,10 +148,10 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(interfaceNode, checker);
 
-        expect(result.description).toBe(undefined);
+        expect(result.description).toBe(null);
       });
 
-      it("should return undefined for whitespace-only description", () => {
+      it("should return null for whitespace-only description", () => {
         const { program, filePaths } = createTestProgram({
           "user.ts": `
             /**
@@ -169,7 +169,7 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(interfaceNode, checker);
 
-        expect(result.description).toBe(undefined);
+        expect(result.description).toBe(null);
       });
 
       it("should strip leading and trailing whitespace and asterisks", () => {
@@ -216,7 +216,7 @@ describe("TSDocParser", () => {
 
         expect(result.deprecated).toBeTruthy();
         expect(result.deprecated!.isDeprecated).toBe(true);
-        expect(result.deprecated!.reason).toBe(undefined);
+        expect(result.deprecated!.reason).toBe(null);
       });
 
       it("should extract @deprecated tag with reason", () => {
@@ -259,7 +259,7 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(interfaceNode, checker);
 
-        expect(result.deprecated).toBe(undefined);
+        expect(result.deprecated).toBe(null);
       });
 
       it("should extract @deprecated from property symbol", () => {
@@ -433,7 +433,7 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(interfaceNode, checker);
 
-        expect(result.description).toBe(undefined);
+        expect(result.description).toBe(null);
       });
     });
   });
@@ -481,7 +481,7 @@ describe("TSDocParser", () => {
       expect(idProperty).toBeTruthy();
       const result = extractTSDocFromSymbol(idProperty!, checker);
 
-      expect(result.description).toBe(undefined);
+      expect(result.description).toBe(null);
     });
   });
 });

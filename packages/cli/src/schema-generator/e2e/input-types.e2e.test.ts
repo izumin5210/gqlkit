@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { print } from "graphql";
+import { describe, expect, it } from "vitest";
 import type { ExtractResolversResult } from "../../resolver-extractor/index.js";
 import { convertToGraphQL } from "../../type-extractor/converter/graphql-converter.js";
 import type { ExtractedTypeInfo } from "../../type-extractor/types/index.js";

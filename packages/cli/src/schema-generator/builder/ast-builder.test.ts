@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { Kind, print } from "graphql";
+import { describe, expect, it } from "vitest";
 import type { GraphQLInputValue } from "../../resolver-extractor/index.js";
 import type {
   EnumValueInfo,
@@ -128,10 +128,7 @@ describe("ASTBuilder", () => {
       expect(node.directives.length, 1);
       expect(node.directives[0]?.name.value, "deprecated");
       expect(node.directives[0]?.arguments?.length, 1);
-      expect(
-        node.directives[0]?.arguments?.[0]?.name.value,
-        "reason",
-      );
+      expect(node.directives[0]?.arguments?.[0]?.name.value, "reason");
     });
 
     it("should add @deprecated directive without reason", () => {
@@ -448,13 +445,7 @@ describe("ASTBuilder", () => {
         }
         return null;
       });
-      expect(argTypeNames, [
-        "String",
-        "Int",
-        "Float",
-        "Boolean",
-        "ID",
-      ]);
+      expect(argTypeNames, ["String", "Int", "Float", "Boolean", "ID"]);
     });
   });
 
@@ -543,10 +534,7 @@ describe("ASTBuilder", () => {
       expect(node.kind, Kind.SCALAR_TYPE_DEFINITION);
       expect(node.name.value, "DateTime");
       expect(node.description);
-      expect(
-        node.description.value,
-        "An ISO-8601 encoded datetime",
-      );
+      expect(node.description.value, "An ISO-8601 encoded datetime");
     });
   });
 

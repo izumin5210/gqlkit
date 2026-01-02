@@ -110,6 +110,7 @@ function convertTsTypeToGraphQL(
       typeName: tsType.scalarInfo?.scalarName ?? tsType.name ?? "String",
       nullable,
       list: false,
+      listItemNullable: null,
     };
   }
 
@@ -119,6 +120,7 @@ function convertTsTypeToGraphQL(
       typeName: graphqlType,
       nullable,
       list: false,
+      listItemNullable: null,
     };
   }
 
@@ -127,6 +129,7 @@ function convertTsTypeToGraphQL(
       typeName: tsType.name ?? "Unknown",
       nullable,
       list: false,
+      listItemNullable: null,
     };
   }
 
@@ -134,6 +137,7 @@ function convertTsTypeToGraphQL(
     typeName: tsType.name ?? "String",
     nullable,
     list: false,
+    listItemNullable: null,
   };
 }
 
@@ -194,6 +198,8 @@ export function convertToGraphQL(
       types.push({
         name: metadata.name,
         kind: "Enum",
+        fields: null,
+        unionMembers: null,
         enumValues,
         sourceFile: metadata.sourceFile,
         description: metadata.description,
@@ -216,9 +222,12 @@ export function convertToGraphQL(
       types.push({
         name: metadata.name,
         kind: "Union",
+        fields: null,
         unionMembers,
+        enumValues: null,
         sourceFile: metadata.sourceFile,
         description: metadata.description,
+        deprecated: null,
       });
     } else {
       const fields = convertFields(extracted);
@@ -228,6 +237,8 @@ export function convertToGraphQL(
         name: metadata.name,
         kind: isInput ? "InputObject" : "Object",
         fields,
+        unionMembers: null,
+        enumValues: null,
         sourceFile: metadata.sourceFile,
         description: metadata.description,
         deprecated: metadata.deprecated,

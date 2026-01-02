@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { type DocumentNode, Kind, print } from "graphql";
+import { describe, expect, it } from "vitest";
 import { pruneDocumentNode } from "./schema-pruner.js";
 
 describe("SchemaPruner", () => {

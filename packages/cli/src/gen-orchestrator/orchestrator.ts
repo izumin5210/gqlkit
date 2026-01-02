@@ -17,9 +17,9 @@ export interface GenerationConfig {
   readonly typesDir: string;
   readonly resolversDir: string;
   readonly outputDir: string;
-  readonly configDir?: string;
-  readonly customScalars?: ReadonlyArray<ResolvedScalarMapping>;
-  readonly output?: ResolvedOutputConfig;
+  readonly configDir: string | null;
+  readonly customScalars: ReadonlyArray<ResolvedScalarMapping> | null;
+  readonly output: ResolvedOutputConfig | null;
 }
 
 export interface GenerationResult {
@@ -81,6 +81,7 @@ export async function executeGeneration(
     resolversResult,
     outputDir: config.outputDir,
     customScalarNames,
+    enablePruning: null,
   });
 
   allDiagnostics.push(...schemaResult.diagnostics);

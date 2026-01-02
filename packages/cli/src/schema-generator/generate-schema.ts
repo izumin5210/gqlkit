@@ -12,8 +12,8 @@ export interface GenerateSchemaInput {
   readonly typesResult: ExtractTypesResult;
   readonly resolversResult: ExtractResolversResult;
   readonly outputDir: string;
-  readonly customScalarNames?: ReadonlyArray<string>;
-  readonly enablePruning?: boolean;
+  readonly customScalarNames: ReadonlyArray<string> | null;
+  readonly enablePruning: boolean | null;
 }
 
 export interface GenerateSchemaResult {
@@ -22,7 +22,7 @@ export interface GenerateSchemaResult {
   readonly resolversCode: string;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
   readonly hasErrors: boolean;
-  readonly prunedTypes?: ReadonlyArray<string>;
+  readonly prunedTypes: ReadonlyArray<string> | null;
 }
 
 export function generateSchema(
@@ -43,12 +43,12 @@ export function generateSchema(
   );
 
   let documentNode = buildDocumentNode(integratedResult);
-  let prunedTypes: ReadonlyArray<string> | undefined;
+  let prunedTypes: ReadonlyArray<string> | null = null;
 
   if (enablePruning) {
     const pruneResult = pruneDocumentNode({
       documentNode,
-      ...(customScalarNames != null && { customScalarNames }),
+      customScalarNames,
     });
     documentNode = pruneResult.documentNode;
     prunedTypes = pruneResult.removedTypes;
@@ -66,6 +66,6 @@ export function generateSchema(
     resolversCode,
     diagnostics: integratedResult.diagnostics,
     hasErrors: integratedResult.hasErrors,
-    ...(prunedTypes != null && { prunedTypes }),
+    prunedTypes,
   };
 }

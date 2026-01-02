@@ -43,9 +43,9 @@ export interface ScalarRegistryConfig {
   /** TypeScript program for module resolution */
   readonly program: ts.Program;
   /** Directory containing the config file (for resolving relative paths) */
-  readonly configDir?: string;
+  readonly configDir: string | null;
   /** Custom scalar mappings from config */
-  readonly customScalars?: ReadonlyArray<ResolvedScalarMapping>;
+  readonly customScalars: ReadonlyArray<ResolvedScalarMapping> | null;
 }
 
 /**
@@ -178,7 +178,7 @@ function resolveModulePath(
 export function createScalarRegistry(
   config: ScalarRegistryConfig,
 ): ScalarRegistry {
-  const { program, configDir, customScalars = [] } = config;
+  const { program, configDir, customScalars } = config;
   const compilerOptions = program.getCompilerOptions();
   const host: ts.ModuleResolutionHost = {
     fileExists: ts.sys.fileExists,
@@ -191,7 +191,7 @@ export function createScalarRegistry(
 
   const customMappings = new Map<string, ExtendedScalarMappingInfo>();
 
-  if (configDir) {
+  if (configDir && customScalars) {
     for (const scalar of customScalars) {
       const resolvedPath = resolveModulePath(
         scalar.importPath,

@@ -87,12 +87,15 @@ describe("Integration Tests", () => {
         typesDir,
         resolversDir,
         outputDir,
+        configDir: null,
+        customScalars: null,
+        output: null,
       };
 
       const result = await executeGeneration(config);
 
-      expect(result.success, true);
-      expect(result.filesWritten.length, 3);
+      expect(result.success).toBe(true);
+      expect(result.filesWritten.length).toBe(3);
 
       const schemaContent = await readFile(
         join(outputDir, "schema.ts"),
@@ -143,18 +146,21 @@ describe("Integration Tests", () => {
         typesDir,
         resolversDir,
         outputDir,
+        configDir: null,
+        customScalars: null,
+        output: null,
       };
 
       const result = await executeGeneration(config);
 
-      expect(result.success, true);
+      expect(result.success).toBe(true);
 
       const schemaContent = await readFile(
         join(outputDir, "schema.ts"),
         "utf-8",
       );
-      expect(schemaContent.includes("import type { DocumentNode }"));
-      expect(schemaContent.includes("export const typeDefs"));
+      expect(schemaContent.includes("import type { DocumentNode }")).toBe(true);
+      expect(schemaContent.includes("export const typeDefs")).toBe(true);
     });
 
     it("should handle mutations", async () => {
@@ -202,18 +208,21 @@ describe("Integration Tests", () => {
         typesDir,
         resolversDir,
         outputDir,
+        configDir: null,
+        customScalars: null,
+        output: null,
       };
 
       const result = await executeGeneration(config);
 
-      expect(result.success, true);
+      expect(result.success).toBe(true);
 
       const schemaContent = await readFile(
         join(outputDir, "schema.ts"),
         "utf-8",
       );
-      expect(schemaContent.includes("Mutation"));
-      expect(schemaContent.includes("createUser"));
+      expect(schemaContent.includes("Mutation")).toBe(true);
+      expect(schemaContent.includes("createUser")).toBe(true);
     });
   });
 
@@ -253,6 +262,7 @@ describe("Integration Tests", () => {
         typesDir,
         resolversDir,
         outputDir,
+        configDir: null,
         customScalars: [
           {
             graphqlName: "DateTime",
@@ -260,24 +270,21 @@ describe("Integration Tests", () => {
             importPath: "./src/scalars",
           },
         ],
+        output: null,
       };
 
       const result = await executeGeneration(config);
 
-      expect(result.success, true);
+      expect(result.success).toBe(true);
 
       const schemaContent = await readFile(
         join(outputDir, "schema.ts"),
         "utf-8",
       );
-      expect(
-        schemaContent.includes('"kind": "ScalarTypeDefinition"'),
-        "Schema should include scalar type definition",
+      expect(schemaContent.includes('"kind": "ScalarTypeDefinition"')).toBe(
+        true,
       );
-      expect(
-        schemaContent.includes('"value": "DateTime"'),
-        "Schema should include DateTime scalar",
-      );
+      expect(schemaContent.includes('"value": "DateTime"')).toBe(true);
     });
 
     it("should generate schema with multiple custom scalars", async () => {
@@ -317,6 +324,7 @@ describe("Integration Tests", () => {
         typesDir,
         resolversDir,
         outputDir,
+        configDir: null,
         customScalars: [
           {
             graphqlName: "DateTime",
@@ -329,18 +337,19 @@ describe("Integration Tests", () => {
             importPath: "./src/scalars",
           },
         ],
+        output: null,
       };
 
       const result = await executeGeneration(config);
 
-      expect(result.success, true);
+      expect(result.success).toBe(true);
 
       const schemaContent = await readFile(
         join(outputDir, "schema.ts"),
         "utf-8",
       );
-      expect(schemaContent.includes('"value": "DateTime"'));
-      expect(schemaContent.includes('"value": "JSON"'));
+      expect(schemaContent.includes('"value": "DateTime"')).toBe(true);
+      expect(schemaContent.includes('"value": "JSON"')).toBe(true);
     });
 
     it("should pass validation when custom scalar is referenced in type", async () => {
@@ -378,6 +387,7 @@ describe("Integration Tests", () => {
         typesDir,
         resolversDir,
         outputDir,
+        configDir: null,
         customScalars: [
           {
             graphqlName: "DateTime",
@@ -385,17 +395,16 @@ describe("Integration Tests", () => {
             importPath: "./src/scalars",
           },
         ],
+        output: null,
       };
 
       const result = await executeGeneration(config);
 
-      expect(result.success, true);
+      expect(result.success).toBe(true);
       expect(
         result.diagnostics.filter((d) => d.code === "UNRESOLVED_REFERENCE")
           .length,
-        0,
-        "Should not have unresolved reference errors for custom scalars",
-      );
+      ).toBe(0);
     });
 
     it("should fail validation for unknown type reference when not in custom scalars", async () => {
@@ -432,15 +441,17 @@ describe("Integration Tests", () => {
         typesDir,
         resolversDir,
         outputDir,
+        configDir: null,
+        customScalars: null,
+        output: null,
       };
 
       const result = await executeGeneration(config);
 
-      expect(result.success, false);
+      expect(result.success).toBe(false);
       expect(
         result.diagnostics.some((d) => d.code === "UNRESOLVED_REFERENCE"),
-        "Should have unresolved reference error for unknown type",
-      );
+      ).toBe(true);
     });
   });
 
@@ -466,14 +477,17 @@ describe("Integration Tests", () => {
         typesDir: join(testDir, "src/gql/types"),
         resolversDir,
         outputDir: join(testDir, "src/gqlkit/generated"),
+        configDir: null,
+        customScalars: null,
+        output: null,
       };
 
       const result = await executeGeneration(config);
 
-      expect(result.success, false);
+      expect(result.success).toBe(false);
       expect(
         result.diagnostics.some((d) => d.code === "DIRECTORY_NOT_FOUND"),
-      );
+      ).toBe(true);
     });
 
     it("should fail when resolvers directory does not exist", async () => {
@@ -491,14 +505,17 @@ describe("Integration Tests", () => {
         typesDir,
         resolversDir: join(testDir, "src/gql/resolvers"),
         outputDir: join(testDir, "src/gqlkit/generated"),
+        configDir: null,
+        customScalars: null,
+        output: null,
       };
 
       const result = await executeGeneration(config);
 
-      expect(result.success, false);
+      expect(result.success).toBe(false);
       expect(
         result.diagnostics.some((d) => d.code === "DIRECTORY_NOT_FOUND"),
-      );
+      ).toBe(true);
     });
   });
 });

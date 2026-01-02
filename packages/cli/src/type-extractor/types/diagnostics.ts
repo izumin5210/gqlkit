@@ -41,7 +41,7 @@ export interface Diagnostic {
   readonly code: DiagnosticCode;
   readonly message: string;
   readonly severity: "error" | "warning";
-  readonly location?: SourceLocation | undefined;
+  readonly location: SourceLocation | null;
 }
 
 export interface Diagnostics {

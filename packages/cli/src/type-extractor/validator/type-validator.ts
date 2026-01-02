@@ -7,7 +7,7 @@ export interface ValidationResult {
 
 export interface ValidateTypesOptions {
   readonly types: ReadonlyArray<GraphQLTypeInfo>;
-  readonly customScalarNames?: ReadonlyArray<string> | undefined;
+  readonly customScalarNames: ReadonlyArray<string> | null;
 }
 
 const BUILT_IN_SCALARS = new Set(["String", "Int", "Float", "Boolean", "ID"]);

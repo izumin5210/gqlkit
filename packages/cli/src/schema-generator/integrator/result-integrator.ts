@@ -15,35 +15,35 @@ import type {
 export interface BaseField {
   readonly name: string;
   readonly type: GraphQLFieldType;
-  readonly description?: string | undefined;
-  readonly deprecated?: DeprecationInfo | undefined;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
 }
 
 export interface BaseType {
   readonly name: string;
   readonly kind: "Object" | "Union" | "Enum";
-  readonly fields?: ReadonlyArray<BaseField> | undefined;
-  readonly unionMembers?: ReadonlyArray<string> | undefined;
-  readonly enumValues?: ReadonlyArray<EnumValueInfo> | undefined;
-  readonly description?: string | undefined;
-  readonly deprecated?: DeprecationInfo | undefined;
+  readonly fields: ReadonlyArray<BaseField> | null;
+  readonly unionMembers: ReadonlyArray<string> | null;
+  readonly enumValues: ReadonlyArray<EnumValueInfo> | null;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
 }
 
 export interface InputType {
   readonly name: string;
   readonly fields: ReadonlyArray<BaseField>;
   readonly sourceFile: string;
-  readonly description?: string | undefined;
+  readonly description: string | null;
 }
 
 export interface ExtensionField {
   readonly name: string;
   readonly type: GraphQLFieldType;
-  readonly args?: ReadonlyArray<GraphQLInputValue> | undefined;
+  readonly args: ReadonlyArray<GraphQLInputValue> | null;
   readonly resolverSourceFile: string;
-  readonly resolverExportName?: string | undefined;
-  readonly description?: string | undefined;
-  readonly deprecated?: DeprecationInfo | undefined;
+  readonly resolverExportName: string | null;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
 }
 
 export interface TypeExtension {
@@ -55,7 +55,7 @@ export interface IntegratedResult {
   readonly baseTypes: ReadonlyArray<BaseType>;
   readonly inputTypes: ReadonlyArray<InputType>;
   readonly typeExtensions: ReadonlyArray<TypeExtension>;
-  readonly customScalarNames?: ReadonlyArray<string> | undefined;
+  readonly customScalarNames: ReadonlyArray<string> | null;
   readonly hasQuery: boolean;
   readonly hasMutation: boolean;
   readonly hasErrors: boolean;
@@ -88,7 +88,7 @@ function convertResolverTypeExtension(
 export function integrate(
   typesResult: ExtractTypesResult,
   resolversResult: ExtractResolversResult,
-  customScalarNames?: ReadonlyArray<string>,
+  customScalarNames: ReadonlyArray<string> | null,
 ): IntegratedResult {
   const diagnostics: Diagnostic[] = [];
 
@@ -118,6 +118,8 @@ export function integrate(
       baseTypes.push({
         name: type.name,
         kind: type.kind,
+        fields: null,
+        unionMembers: null,
         enumValues: type.enumValues,
         description: type.description,
         deprecated: type.deprecated,
@@ -126,12 +128,15 @@ export function integrate(
       baseTypes.push({
         name: type.name,
         kind: type.kind,
-        fields: type.fields?.map((field) => ({
-          name: field.name,
-          type: field.type,
-          description: field.description,
-          deprecated: field.deprecated,
-        })),
+        fields:
+          type.fields?.map((field) => ({
+            name: field.name,
+            type: field.type,
+            description: field.description,
+            deprecated: field.deprecated,
+          })) ?? null,
+        unionMembers: null,
+        enumValues: null,
         description: type.description,
         deprecated: type.deprecated,
       });
@@ -139,8 +144,11 @@ export function integrate(
       baseTypes.push({
         name: type.name,
         kind: type.kind,
+        fields: null,
         unionMembers: type.unionMembers,
+        enumValues: null,
         description: type.description,
+        deprecated: null,
       });
     }
   }
@@ -149,10 +157,26 @@ export function integrate(
   const hasMutation = resolversResult.mutationFields.fields.length > 0;
 
   if (hasQuery) {
-    baseTypes.push({ name: "Query", kind: "Object", fields: [] });
+    baseTypes.push({
+      name: "Query",
+      kind: "Object",
+      fields: [],
+      unionMembers: null,
+      enumValues: null,
+      description: null,
+      deprecated: null,
+    });
   }
   if (hasMutation) {
-    baseTypes.push({ name: "Mutation", kind: "Object", fields: [] });
+    baseTypes.push({
+      name: "Mutation",
+      kind: "Object",
+      fields: [],
+      unionMembers: null,
+      enumValues: null,
+      description: null,
+      deprecated: null,
+    });
   }
 
   const knownTypeNames = new Set([
@@ -191,7 +215,7 @@ export function integrate(
               line: firstField.sourceLocation.line,
               column: firstField.sourceLocation.column,
             }
-          : undefined,
+          : null,
       });
     } else {
       typeExtensions.push(convertResolverTypeExtension(ext));
@@ -207,7 +231,7 @@ export function integrate(
     customScalarNames:
       customScalarNames && customScalarNames.length > 0
         ? customScalarNames
-        : undefined,
+        : null,
     hasQuery,
     hasMutation,
     hasErrors,

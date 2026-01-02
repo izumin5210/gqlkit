@@ -26,11 +26,11 @@ describe("FileWriter", () => {
 
       const result = await writeFiles(options);
 
-      expect(result.success, true);
-      expect(result.writtenPaths.length, 1);
+      expect(result.success).toBe(true);
+      expect(result.writtenPaths.length).toBe(1);
 
       const content = await readFile(join(testDir, "schema.ts"), "utf-8");
-      expect(content, "export const typeDefs = {};");
+      expect(content).toBe("export const typeDefs = {};");
     });
 
     it("should create output directory if it does not exist", async () => {
@@ -44,9 +44,9 @@ describe("FileWriter", () => {
 
       const result = await writeFiles(options);
 
-      expect(result.success, true);
+      expect(result.success).toBe(true);
       const stats = await stat(nestedDir);
-      expect(stats.isDirectory());
+      expect(stats.isDirectory()).toBe(true);
     });
 
     it("should write multiple files", async () => {
@@ -60,17 +60,17 @@ describe("FileWriter", () => {
 
       const result = await writeFiles(options);
 
-      expect(result.success, true);
-      expect(result.writtenPaths.length, 2);
+      expect(result.success).toBe(true);
+      expect(result.writtenPaths.length).toBe(2);
 
       const schemaContent = await readFile(join(testDir, "schema.ts"), "utf-8");
-      expect(schemaContent, "export const typeDefs = {};");
+      expect(schemaContent).toBe("export const typeDefs = {};");
 
       const resolversContent = await readFile(
         join(testDir, "resolvers.ts"),
         "utf-8",
       );
-      expect(resolversContent, "export const resolvers = {};");
+      expect(resolversContent).toBe("export const resolvers = {};");
     });
 
     it("should overwrite existing files", async () => {
@@ -88,9 +88,9 @@ describe("FileWriter", () => {
         files: [{ filename: "schema.ts", content: newContent }],
       });
 
-      expect(result.success, true);
+      expect(result.success).toBe(true);
       const content = await readFile(filePath, "utf-8");
-      expect(content, newContent);
+      expect(content).toBe(newContent);
     });
 
     it("should return written file paths", async () => {
@@ -104,9 +104,13 @@ describe("FileWriter", () => {
 
       const result = await writeFiles(options);
 
-      expect(result.success, true);
-      expect(result.writtenPaths.includes(join(testDir, "schema.ts")));
-      expect(result.writtenPaths.includes(join(testDir, "resolvers.ts")));
+      expect(result.success).toBe(true);
+      expect(result.writtenPaths.includes(join(testDir, "schema.ts"))).toBe(
+        true,
+      );
+      expect(result.writtenPaths.includes(join(testDir, "resolvers.ts"))).toBe(
+        true,
+      );
     });
 
     it("should return error when write fails", async () => {
@@ -120,8 +124,8 @@ describe("FileWriter", () => {
 
       const result = await writeFiles(options);
 
-      expect(result.success, false);
-      expect(result.error);
+      expect(result.success).toBe(false);
+      expect(result.error).toBeTruthy();
     });
   });
 });

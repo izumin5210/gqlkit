@@ -22,21 +22,21 @@ export interface ArgumentDefinition {
   readonly name: string;
   readonly tsType: TSTypeReference;
   readonly optional: boolean;
-  readonly description?: string | undefined;
-  readonly deprecated?: DeprecationInfo | undefined;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
 }
 
 export interface DefineApiResolverInfo {
   readonly fieldName: string;
   readonly resolverType: DefineApiResolverType;
-  readonly parentTypeName?: string | undefined;
-  readonly argsType?: TSTypeReference | undefined;
-  readonly args?: ReadonlyArray<ArgumentDefinition> | undefined;
+  readonly parentTypeName: string | null;
+  readonly argsType: TSTypeReference | null;
+  readonly args: ReadonlyArray<ArgumentDefinition> | null;
   readonly returnType: TSTypeReference;
   readonly sourceFile: string;
   readonly exportedInputTypes: ReadonlyArray<ExportedInputType>;
-  readonly description?: string | undefined;
-  readonly deprecated?: DeprecationInfo | undefined;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
 }
 
 export interface ExtractDefineApiResult {
@@ -91,6 +91,8 @@ function convertTypeToTSTypeReference(
     return {
       kind: "scalar",
       name: brandedResult.scalarInfo.scalarName,
+      elementType: null,
+      members: null,
       nullable: false,
       scalarInfo: brandedResult.scalarInfo,
     };
@@ -120,10 +122,13 @@ function convertTypeToTSTypeReference(
     if (nonNullTypes.length > 1) {
       return {
         kind: "union",
+        name: null,
+        elementType: null,
         members: nonNullTypes.map((t) =>
           convertTypeToTSTypeReference(t, checker),
         ),
         nullable,
+        scalarInfo: null,
       };
     }
   }
@@ -134,8 +139,11 @@ function convertTypeToTSTypeReference(
     if (elementType) {
       return {
         kind: "array",
+        name: null,
         elementType: convertTypeToTSTypeReference(elementType, checker),
+        members: null,
         nullable: false,
+        scalarInfo: null,
       };
     }
   }
@@ -147,25 +155,52 @@ function convertTypeToTSTypeReference(
       return {
         kind: "reference",
         name,
+        elementType: null,
+        members: null,
         nullable: false,
+        scalarInfo: null,
       };
     }
   }
 
   if (type.flags & ts.TypeFlags.String) {
-    return { kind: "primitive", name: "string", nullable: false };
+    return {
+      kind: "primitive",
+      name: "string",
+      elementType: null,
+      members: null,
+      nullable: false,
+      scalarInfo: null,
+    };
   }
   if (type.flags & ts.TypeFlags.Number) {
-    return { kind: "primitive", name: "number", nullable: false };
+    return {
+      kind: "primitive",
+      name: "number",
+      elementType: null,
+      members: null,
+      nullable: false,
+      scalarInfo: null,
+    };
   }
   if (type.flags & ts.TypeFlags.Boolean) {
-    return { kind: "primitive", name: "boolean", nullable: false };
+    return {
+      kind: "primitive",
+      name: "boolean",
+      elementType: null,
+      members: null,
+      nullable: false,
+      scalarInfo: null,
+    };
   }
 
   return {
     kind: "reference",
     name: typeString,
+    elementType: null,
+    members: null,
     nullable: false,
+    scalarInfo: null,
   };
 }
 
@@ -206,10 +241,10 @@ function isInlineTypeLiteralDeclaration(declaration: ts.Declaration): boolean {
 function extractTSDocFromPropertyWithPriority(
   prop: ts.Symbol,
   checker: ts.TypeChecker,
-): { description?: string | undefined; deprecated?: DeprecationInfo | undefined } {
+): { description: string | null; deprecated: DeprecationInfo | null } {
   const declarations = prop.getDeclarations();
   if (!declarations || declarations.length === 0) {
-    return {};
+    return { description: null, deprecated: null };
   }
 
   const inlineDeclaration = declarations.find(isInlineTypeLiteralDeclaration);
@@ -262,9 +297,9 @@ function extractTypeArgumentsFromCall(
   checker: ts.TypeChecker,
   resolverType: DefineApiResolverType,
 ): {
-  parentTypeName?: string | undefined;
-  argsType?: TSTypeReference | undefined;
-  args?: ArgumentDefinition[] | undefined;
+  parentTypeName: string | null;
+  argsType: TSTypeReference | null;
+  args: ArgumentDefinition[] | null;
   returnType: TSTypeReference;
 } | null {
   const typeArgs = node.typeArguments;
@@ -293,12 +328,12 @@ function extractTypeArgumentsFromCall(
     const isNoArgs =
       argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
-    const args = isNoArgs ? undefined : extractArgsFromType(argsType, checker);
+    const args = isNoArgs ? null : extractArgsFromType(argsType, checker);
 
     return {
-      parentTypeName,
-      argsType: isNoArgs ? undefined : argsTypeRef,
-      args: args && args.length > 0 ? args : undefined,
+      parentTypeName: parentTypeName ?? null,
+      argsType: isNoArgs ? null : argsTypeRef,
+      args: args && args.length > 0 ? args : null,
       returnType: convertTypeToTSTypeReference(returnType, checker),
     };
   }
@@ -321,11 +356,12 @@ function extractTypeArgumentsFromCall(
   const isNoArgs =
     argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
-  const args = isNoArgs ? undefined : extractArgsFromType(argsType, checker);
+  const args = isNoArgs ? null : extractArgsFromType(argsType, checker);
 
   return {
-    argsType: isNoArgs ? undefined : argsTypeRef,
-    args: args && args.length > 0 ? args : undefined,
+    parentTypeName: null,
+    argsType: isNoArgs ? null : argsTypeRef,
+    args: args && args.length > 0 ? args : null,
     returnType: convertTypeToTSTypeReference(returnType, checker),
   };
 }

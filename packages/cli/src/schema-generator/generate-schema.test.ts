@@ -186,9 +186,7 @@ describe("generateSchema", () => {
       const result = generateSchema(input);
 
       expect(result.hasErrors, true);
-      expect(
-        result.diagnostics.some((d) => d.code === "UNKNOWN_TARGET_TYPE"),
-      );
+      expect(result.diagnostics.some((d) => d.code === "UNKNOWN_TARGET_TYPE"));
     });
 
     it("should still generate code even with errors", () => {

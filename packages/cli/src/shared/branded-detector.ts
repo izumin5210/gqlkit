@@ -55,7 +55,7 @@ export interface DetectionResult {
  */
 export interface DetectBrandedScalarOptions {
   /** Optional ScalarRegistry for custom scalar detection */
-  readonly registry?: ScalarRegistry;
+  readonly registry: ScalarRegistry | null;
 }
 
 /**
@@ -70,10 +70,10 @@ export interface DetectBrandedScalarOptions {
 export function detectBrandedScalar(
   type: ts.Type,
   checker: ts.TypeChecker,
-  options?: DetectBrandedScalarOptions,
+  options: DetectBrandedScalarOptions | null = null,
 ): DetectionResult {
   const diagnostics: Diagnostic[] = [];
-  const registry = options?.registry;
+  const registry = options?.registry ?? null;
 
   const aliasSymbol = type.aliasSymbol;
   if (aliasSymbol) {

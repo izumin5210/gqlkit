@@ -35,7 +35,7 @@ describe("resolveParentType", () => {
 
       expect(result.success).toBe(true);
       expect(result.graphqlTypeName).toBe("User");
-      expect(result.diagnostic).toBe(undefined);
+      expect(result.diagnostic).toBe(null);
     });
 
     it("should resolve parent type with different source file", () => {
@@ -79,7 +79,7 @@ describe("resolveParentType", () => {
       );
 
       expect(result.success).toBe(false);
-      expect(result.graphqlTypeName).toBe(undefined);
+      expect(result.graphqlTypeName).toBe(null);
       expect(result.diagnostic).toBeTruthy();
       expect(result.diagnostic!.code).toBe("MISSING_PARENT_TYPE");
       expect(result.diagnostic!.message).toContain("Comment");

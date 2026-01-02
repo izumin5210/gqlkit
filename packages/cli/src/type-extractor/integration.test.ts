@@ -185,7 +185,7 @@ describe("Integration Tests", () => {
       expect(unionType.kind).toBe("Union");
       expect(unionType.unionMembers?.includes("Cat")).toBeTruthy();
       expect(unionType.unionMembers?.includes("Dog")).toBeTruthy();
-      expect(unionType.fields).toBeUndefined();
+      expect(unionType.fields).toBeNull();
     });
   });
 

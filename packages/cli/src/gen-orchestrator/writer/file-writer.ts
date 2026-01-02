@@ -12,7 +12,7 @@ export interface WriteFileOptions {
 export interface WriteResult {
   readonly success: boolean;
   readonly writtenPaths: ReadonlyArray<string>;
-  readonly error?: Error;
+  readonly error: Error | null;
 }
 
 export async function writeFiles(
@@ -30,7 +30,7 @@ export async function writeFiles(
       writtenPaths.push(filePath);
     }
 
-    return { success: true, writtenPaths };
+    return { success: true, writtenPaths, error: null };
   } catch (error) {
     return {
       success: false,

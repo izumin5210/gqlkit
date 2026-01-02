@@ -41,7 +41,9 @@ describe("ProgressReporter", () => {
       reporter.fileWritten("src/gqlkit/generated/schema.ts");
 
       expect(output.length).toBe(1);
-      expect(output[0]?.includes("src/gqlkit/generated/schema.ts")).toBeTruthy();
+      expect(
+        output[0]?.includes("src/gqlkit/generated/schema.ts"),
+      ).toBeTruthy();
     });
 
     it("should format file path with 'wrote' prefix", () => {
@@ -54,7 +56,9 @@ describe("ProgressReporter", () => {
       reporter.fileWritten("src/gqlkit/generated/resolvers.ts");
 
       expect(output[0]?.includes("wrote")).toBeTruthy();
-      expect(output[0]?.includes("src/gqlkit/generated/resolvers.ts")).toBeTruthy();
+      expect(
+        output[0]?.includes("src/gqlkit/generated/resolvers.ts"),
+      ).toBeTruthy();
     });
   });
 

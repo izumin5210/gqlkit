@@ -1,7 +1,7 @@
 import path from "node:path";
-import { describe, expect, it } from "vitest";
 import { fileURLToPath } from "node:url";
 import ts from "typescript";
+import { describe, expect, it } from "vitest";
 import { extractDefineApiResolvers } from "./define-api-extractor.js";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
@@ -1053,10 +1053,7 @@ describe("extractDefineApiResolvers", () => {
       expect(resolver.args);
       expect(resolver.args.length, 1);
       expect(resolver.args[0]!.name, "id");
-      expect(
-        resolver.args[0]!.description,
-        "Description from inline type",
-      );
+      expect(resolver.args[0]!.description, "Description from inline type");
     });
 
     it("should return undefined description when argument has no TSDoc", () => {

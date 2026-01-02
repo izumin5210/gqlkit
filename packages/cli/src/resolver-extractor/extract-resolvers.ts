@@ -17,18 +17,18 @@ import { scanResolverDirectory } from "./scanner/file-scanner.js";
 export interface GraphQLInputValue {
   readonly name: string;
   readonly type: GraphQLFieldType;
-  readonly description?: string | undefined;
-  readonly deprecated?: DeprecationInfo | undefined;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
 }
 
 export interface GraphQLFieldDefinition {
   readonly name: string;
   readonly type: GraphQLFieldType;
-  readonly args?: ReadonlyArray<GraphQLInputValue> | undefined;
+  readonly args: ReadonlyArray<GraphQLInputValue> | null;
   readonly sourceLocation: SourceLocation;
-  readonly resolverExportName?: string | undefined;
-  readonly description?: string | undefined;
-  readonly deprecated?: DeprecationInfo | undefined;
+  readonly resolverExportName: string | null;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
 }
 
 export interface QueryFieldDefinitions {
@@ -108,7 +108,7 @@ function convertTsTypeToGraphQLType(tsType: TSTypeReference): {
   typeName: string;
   nullable: boolean;
   list: boolean;
-  listItemNullable?: boolean;
+  listItemNullable: boolean | null;
 } {
   const nullable = tsType.nullable;
 
@@ -133,6 +133,7 @@ function convertTsTypeToGraphQLType(tsType: TSTypeReference): {
       typeName: graphqlType,
       nullable,
       list: false,
+      listItemNullable: null,
     };
   }
 
@@ -141,6 +142,7 @@ function convertTsTypeToGraphQLType(tsType: TSTypeReference): {
       typeName: tsType.name ?? "Unknown",
       nullable,
       list: false,
+      listItemNullable: null,
     };
   }
 
@@ -148,6 +150,7 @@ function convertTsTypeToGraphQLType(tsType: TSTypeReference): {
     typeName: tsType.name ?? "String",
     nullable,
     list: false,
+    listItemNullable: null,
   };
 }
 
@@ -176,7 +179,7 @@ function convertDefineApiToFields(
     const fieldDef: GraphQLFieldDefinition = {
       name: resolver.fieldName,
       type: convertTsTypeToGraphQLType(resolver.returnType),
-      args: resolver.args ? convertArgsToInputValues(resolver.args) : undefined,
+      args: resolver.args ? convertArgsToInputValues(resolver.args) : null,
       sourceLocation: {
         file: resolver.sourceFile,
         line: 1,

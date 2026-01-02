@@ -9,8 +9,8 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { fileURLToPath } from "node:url";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const projectRoot = join(__dirname, "../..");
@@ -82,8 +82,10 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stdout } = await runCli(testDir);
 
-      expect(exitCode, 0);
-      expect(stdout.includes("Done!") || stdout.includes("complete"));
+      expect(exitCode).toBe(0);
+      expect(
+        stdout.includes("Done!") || stdout.includes("complete"),
+      ).toBeTruthy();
     });
 
     it("should create output files", async () => {
@@ -120,8 +122,8 @@ describe("E2E Tests (Task 7)", () => {
       const schemaStat = await stat(schemaPath);
       const resolversStat = await stat(resolversPath);
 
-      expect(schemaStat.isFile());
-      expect(resolversStat.isFile());
+      expect(schemaStat.isFile()).toBeTruthy();
+      expect(resolversStat.isFile()).toBeTruthy();
     });
 
     it("should generate TypeScript code that can be type-checked", async () => {
@@ -161,9 +163,11 @@ describe("E2E Tests (Task 7)", () => {
         "utf-8",
       );
 
-      expect(schemaContent.includes("import type { DocumentNode }"));
-      expect(schemaContent.includes("export const typeDefs"));
-      expect(resolversContent.includes("export const resolvers"));
+      expect(
+        schemaContent.includes("import type { DocumentNode }"),
+      ).toBeTruthy();
+      expect(schemaContent.includes("export const typeDefs")).toBeTruthy();
+      expect(resolversContent.includes("export const resolvers")).toBeTruthy();
     });
   });
 
@@ -174,10 +178,10 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stderr } = await runCli(testDir);
 
-      expect(exitCode, 1);
+      expect(exitCode).toBe(1);
       expect(
         stderr.includes("DIRECTORY_NOT_FOUND") || stderr.includes("error"),
-      );
+      ).toBeTruthy();
     });
 
     it("should output diagnostic messages to stderr", async () => {
@@ -186,10 +190,10 @@ describe("E2E Tests (Task 7)", () => {
 
       const { stderr } = await runCli(testDir);
 
-      expect(stderr.length > 0);
+      expect(stderr.length > 0).toBeTruthy();
       expect(
         stderr.includes("error") || stderr.includes("DIRECTORY_NOT_FOUND"),
-      );
+      ).toBeTruthy();
     });
   });
 
@@ -235,15 +239,9 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stderr } = await runCli(testDir);
 
-      expect(exitCode, 1);
-      expect(
-        stderr.includes("CONFIG_SYNTAX_ERROR"),
-        "Should include CONFIG_SYNTAX_ERROR diagnostic",
-      );
-      expect(
-        stderr.includes("Config load failed"),
-        "Should include error summary",
-      );
+      expect(exitCode).toBe(1);
+      expect(stderr.includes("CONFIG_SYNTAX_ERROR")).toBeTruthy();
+      expect(stderr.includes("Config load failed")).toBeTruthy();
     });
 
     it("should output CONFIG_BUILTIN_OVERRIDE for overriding built-in scalar", async () => {
@@ -266,15 +264,9 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stderr } = await runCli(testDir);
 
-      expect(exitCode, 1);
-      expect(
-        stderr.includes("CONFIG_BUILTIN_OVERRIDE"),
-        "Should include CONFIG_BUILTIN_OVERRIDE diagnostic",
-      );
-      expect(
-        stderr.includes("String"),
-        "Should mention the built-in scalar name",
-      );
+      expect(exitCode).toBe(1);
+      expect(stderr.includes("CONFIG_BUILTIN_OVERRIDE")).toBeTruthy();
+      expect(stderr.includes("String")).toBeTruthy();
     });
 
     it("should output CONFIG_DUPLICATE_MAPPING for duplicate graphqlName", async () => {
@@ -301,15 +293,9 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stderr } = await runCli(testDir);
 
-      expect(exitCode, 1);
-      expect(
-        stderr.includes("CONFIG_DUPLICATE_MAPPING"),
-        "Should include CONFIG_DUPLICATE_MAPPING diagnostic",
-      );
-      expect(
-        stderr.includes("DateTime"),
-        "Should mention the duplicate scalar name",
-      );
+      expect(exitCode).toBe(1);
+      expect(stderr.includes("CONFIG_DUPLICATE_MAPPING")).toBeTruthy();
+      expect(stderr.includes("DateTime")).toBeTruthy();
     });
 
     it("should output CONFIG_DUPLICATE_TYPE for duplicate type mapping", async () => {
@@ -336,11 +322,8 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stderr } = await runCli(testDir);
 
-      expect(exitCode, 1);
-      expect(
-        stderr.includes("CONFIG_DUPLICATE_TYPE"),
-        "Should include CONFIG_DUPLICATE_TYPE diagnostic",
-      );
+      expect(exitCode).toBe(1);
+      expect(stderr.includes("CONFIG_DUPLICATE_TYPE")).toBeTruthy();
     });
 
     it("should output CONFIG_MISSING_PROPERTY for missing required field", async () => {
@@ -362,12 +345,9 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stderr } = await runCli(testDir);
 
-      expect(exitCode, 1);
-      expect(
-        stderr.includes("CONFIG_MISSING_PROPERTY"),
-        "Should include CONFIG_MISSING_PROPERTY diagnostic",
-      );
-      expect(stderr.includes("type"), "Should mention the missing property");
+      expect(exitCode).toBe(1);
+      expect(stderr.includes("CONFIG_MISSING_PROPERTY")).toBeTruthy();
+      expect(stderr.includes("type")).toBeTruthy();
     });
 
     it("should include file location in diagnostic output", async () => {
@@ -390,10 +370,7 @@ describe("E2E Tests (Task 7)", () => {
 
       const { stderr } = await runCli(testDir);
 
-      expect(
-        stderr.includes("gqlkit.config.ts"),
-        "Should include config file path in diagnostic",
-      );
+      expect(stderr.includes("gqlkit.config.ts")).toBeTruthy();
     });
 
     it("should generate schema successfully with valid custom scalar config", async () => {
@@ -416,20 +393,16 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stdout } = await runCli(testDir);
 
-      expect(exitCode, 0);
+      expect(exitCode).toBe(0);
       expect(
         stdout.includes("Done!") || stdout.includes("complete"),
-        "Should complete successfully",
-      );
+      ).toBeTruthy();
 
       const schemaContent = await readFile(
         join(testDir, "src/gqlkit/generated/schema.ts"),
         "utf-8",
       );
-      expect(
-        schemaContent.includes('"value": "DateTime"'),
-        "Schema should include DateTime scalar",
-      );
+      expect(schemaContent.includes('"value": "DateTime"')).toBeTruthy();
     });
   });
 });

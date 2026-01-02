@@ -16,6 +16,7 @@ describe("DiagnosticReporter", () => {
           code: "DIRECTORY_NOT_FOUND",
           message: "src/gql/types not found",
           severity: "error",
+          location: null,
         },
       ];
 
@@ -38,6 +39,7 @@ describe("DiagnosticReporter", () => {
           code: "UNSUPPORTED_SYNTAX",
           message: "Unsupported syntax",
           severity: "warning",
+          location: null,
         },
       ];
 
@@ -83,6 +85,7 @@ describe("DiagnosticReporter", () => {
           code: "UNRESOLVED_REFERENCE",
           message: "Type 'Foo' not found",
           severity: "error",
+          location: null,
         },
       ];
 
@@ -104,16 +107,19 @@ describe("DiagnosticReporter", () => {
           code: "DIRECTORY_NOT_FOUND",
           message: "dir not found",
           severity: "error",
+          location: null,
         },
         {
           code: "UNSUPPORTED_SYNTAX",
           message: "unsupported",
           severity: "warning",
+          location: null,
         },
         {
           code: "PARSE_ERROR",
           message: "parse error",
           severity: "error",
+          location: null,
         },
       ];
 

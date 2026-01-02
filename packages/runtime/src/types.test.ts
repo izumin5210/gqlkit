@@ -6,8 +6,8 @@
  * Runtime assertions verify the tests are actually executed.
  */
 
-import { describe, expect, it } from "vitest";
 import type { GraphQLResolveInfo } from "graphql";
+import { describe, expect, it } from "vitest";
 import {
   createGqlkitApis,
   type FieldResolver,
@@ -27,7 +27,6 @@ type User = {
   name: string;
   email: string;
 };
-
 
 describe("Type inference tests", () => {
   describe("NoArgs type", () => {

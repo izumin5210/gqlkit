@@ -86,10 +86,7 @@ describe("extractResolvers", () => {
       });
 
       expect(result.diagnostics.errors.length, 1);
-      expect(
-        result.diagnostics.errors[0]?.code,
-        "DIRECTORY_NOT_FOUND",
-      );
+      expect(result.diagnostics.errors[0]?.code, "DIRECTORY_NOT_FOUND");
     });
 
     it("should return empty result for empty directory", async () => {
@@ -139,10 +136,7 @@ describe("extractResolvers", () => {
       const result = await extractResolvers({ directory: tempDir });
 
       expect(result.queryFields.fields[0]?.sourceLocation);
-      expect(
-        result.queryFields.fields[0]?.sourceLocation.file,
-        filePath,
-      );
+      expect(result.queryFields.fields[0]?.sourceLocation.file, filePath);
     });
 
     it("should separate errors and warnings in diagnostics", async () => {

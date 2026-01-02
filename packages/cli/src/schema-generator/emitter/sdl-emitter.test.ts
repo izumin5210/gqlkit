@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import { type DocumentNode, Kind } from "graphql";
+import { describe, expect, it } from "vitest";
 import { emitSdlContent } from "./sdl-emitter.js";
 
 describe("SdlEmitter", () => {

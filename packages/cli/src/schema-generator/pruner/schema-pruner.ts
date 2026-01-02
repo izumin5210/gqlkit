@@ -11,7 +11,7 @@ import {
 
 export interface PruneDocumentNodeInput {
   readonly documentNode: DocumentNode;
-  readonly customScalarNames?: ReadonlyArray<string>;
+  readonly customScalarNames: ReadonlyArray<string> | null;
 }
 
 export interface PruneDocumentNodeResult {
@@ -71,7 +71,8 @@ function extractCustomScalarDefinitions(
 export function pruneDocumentNode(
   input: PruneDocumentNodeInput,
 ): PruneDocumentNodeResult {
-  const { documentNode, customScalarNames = [] } = input;
+  const { documentNode } = input;
+  const customScalarNames = input.customScalarNames ?? [];
 
   const originalTypeNames = getTypeNamesFromDocument(documentNode);
   const customScalarSet = new Set(customScalarNames);

@@ -6,8 +6,8 @@ import type {
 
 export interface ParentTypeResolution {
   readonly success: boolean;
-  readonly graphqlTypeName?: string;
-  readonly diagnostic?: Diagnostic;
+  readonly graphqlTypeName: string | null;
+  readonly diagnostic: Diagnostic | null;
 }
 
 export function resolveParentType(
@@ -18,6 +18,7 @@ export function resolveParentType(
   if (parentTsType.kind !== "reference" || !parentTsType.name) {
     return {
       success: false,
+      graphqlTypeName: null,
       diagnostic: {
         code: "MISSING_PARENT_TYPE",
         message:
@@ -41,6 +42,7 @@ export function resolveParentType(
   if (!matchingType) {
     return {
       success: false,
+      graphqlTypeName: null,
       diagnostic: {
         code: "MISSING_PARENT_TYPE",
         message: `Parent type '${typeName}' is not defined in src/gql/types. Define it or use an existing type.`,
@@ -57,5 +59,6 @@ export function resolveParentType(
   return {
     success: true,
     graphqlTypeName: typeName,
+    diagnostic: null,
   };
 }

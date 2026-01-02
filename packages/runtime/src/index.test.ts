@@ -1,5 +1,5 @@
-import { describe, expect, it } from "vitest";
 import type { GraphQLResolveInfo } from "graphql";
+import { describe, expect, it } from "vitest";
 import { createGqlkitApis, type GqlkitApis, type NoArgs } from "./index.js";
 
 describe("@gqlkit-ts/runtime", () => {

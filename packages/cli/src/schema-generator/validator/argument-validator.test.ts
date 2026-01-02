@@ -473,10 +473,7 @@ describe("ArgumentValidator", () => {
 
         expect(result.isValid, false);
         for (const diagnostic of result.diagnostics) {
-          expect(
-            diagnostic.location,
-            "Expected location on all diagnostics",
-          );
+          expect(diagnostic.location, "Expected location on all diagnostics");
           expect(diagnostic.location.file, "Expected file path in location");
           expect(typeof diagnostic.location.line, "number");
           expect(typeof diagnostic.location.column, "number");
@@ -506,11 +503,7 @@ describe("ArgumentValidator", () => {
         const errors = result.diagnostics.filter((d) =>
           d.message.includes("UnknownType"),
         );
-        expect(
-          errors.length,
-          1,
-          "Expected exactly 1 error for UnknownType",
-        );
+        expect(errors.length, 1, "Expected exactly 1 error for UnknownType");
       });
     });
 

@@ -8,8 +8,8 @@ export interface TypeMetadata {
   readonly kind: TypeKind;
   readonly sourceFile: string;
   readonly exportKind: "named" | "default";
-  readonly description?: string | undefined;
-  readonly deprecated?: DeprecationInfo | undefined;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
 }
 
 export interface TSTypeReference {
@@ -20,31 +20,31 @@ export interface TSTypeReference {
     | "union"
     | "literal"
     | "scalar";
-  readonly name?: string | undefined;
-  readonly elementType?: TSTypeReference | undefined;
-  readonly members?: ReadonlyArray<TSTypeReference> | undefined;
+  readonly name: string | null;
+  readonly elementType: TSTypeReference | null;
+  readonly members: ReadonlyArray<TSTypeReference> | null;
   readonly nullable: boolean;
-  readonly scalarInfo?: ScalarTypeInfo | undefined;
+  readonly scalarInfo: ScalarTypeInfo | null;
 }
 
 export interface FieldDefinition {
   readonly name: string;
   readonly tsType: TSTypeReference;
   readonly optional: boolean;
-  readonly description?: string | undefined;
-  readonly deprecated?: DeprecationInfo | undefined;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
 }
 
 export interface EnumMemberInfo {
   readonly name: string;
   readonly value: string;
-  readonly description?: string | undefined;
-  readonly deprecated?: DeprecationInfo | undefined;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
 }
 
 export interface ExtractedTypeInfo {
   readonly metadata: TypeMetadata;
   readonly fields: ReadonlyArray<FieldDefinition>;
-  readonly unionMembers?: ReadonlyArray<string> | undefined;
-  readonly enumMembers?: ReadonlyArray<EnumMemberInfo> | undefined;
+  readonly unionMembers: ReadonlyArray<string> | null;
+  readonly enumMembers: ReadonlyArray<EnumMemberInfo> | null;
 }

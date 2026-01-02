@@ -6,30 +6,30 @@ export interface GraphQLFieldType {
   readonly typeName: string;
   readonly nullable: boolean;
   readonly list: boolean;
-  readonly listItemNullable?: boolean | undefined;
+  readonly listItemNullable: boolean | null;
 }
 
 export interface FieldInfo {
   readonly name: string;
   readonly type: GraphQLFieldType;
-  readonly description?: string | undefined;
-  readonly deprecated?: DeprecationInfo | undefined;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
 }
 
 export interface EnumValueInfo {
   readonly name: string;
   readonly originalValue: string;
-  readonly description?: string | undefined;
-  readonly deprecated?: DeprecationInfo | undefined;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
 }
 
 export interface GraphQLTypeInfo {
   readonly name: string;
   readonly kind: GraphQLTypeKind;
-  readonly fields?: ReadonlyArray<FieldInfo> | undefined;
-  readonly unionMembers?: ReadonlyArray<string> | undefined;
-  readonly enumValues?: ReadonlyArray<EnumValueInfo> | undefined;
+  readonly fields: ReadonlyArray<FieldInfo> | null;
+  readonly unionMembers: ReadonlyArray<string> | null;
+  readonly enumValues: ReadonlyArray<EnumValueInfo> | null;
   readonly sourceFile: string;
-  readonly description?: string | undefined;
-  readonly deprecated?: DeprecationInfo | undefined;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
 }

@@ -42,14 +42,15 @@ describe("GenCommandOrchestrator", () => {
         typesDir: join(testDir, "nonexistent/types"),
         resolversDir: join(testDir, "nonexistent/resolvers"),
         outputDir: join(testDir, "generated"),
+        configDir: null,
+        customScalars: null,
+        output: null,
       };
 
       const result = await executeGeneration(config);
 
-      expect(result.success, false);
-      expect(
-        result.diagnostics.some((d) => d.code === "DIRECTORY_NOT_FOUND"),
-      );
+      expect(result.success).toBe(false);
+      expect(result.diagnostics.some((d) => d.code === "DIRECTORY_NOT_FOUND"));
     });
 
     it("should return error when resolvers directory does not exist", async () => {
@@ -62,14 +63,15 @@ describe("GenCommandOrchestrator", () => {
         typesDir: join(testDir, "src/gql/types"),
         resolversDir: join(testDir, "nonexistent/resolvers"),
         outputDir: join(testDir, "generated"),
+        configDir: null,
+        customScalars: null,
+        output: null,
       };
 
       const result = await executeGeneration(config);
 
-      expect(result.success, false);
-      expect(
-        result.diagnostics.some((d) => d.code === "DIRECTORY_NOT_FOUND"),
-      );
+      expect(result.success).toBe(false);
+      expect(result.diagnostics.some((d) => d.code === "DIRECTORY_NOT_FOUND"));
     });
   });
 
@@ -93,11 +95,14 @@ describe("GenCommandOrchestrator", () => {
         typesDir: join(testDir, "src/gql/types"),
         resolversDir: join(testDir, "src/gql/resolvers"),
         outputDir: join(testDir, "generated"),
+        configDir: null,
+        customScalars: null,
+        output: null,
       };
 
       const result = await executeGeneration(config);
 
-      expect(result.success, true);
+      expect(result.success).toBe(true);
       expect(result.filesWritten.length > 0);
     });
 
@@ -120,6 +125,9 @@ describe("GenCommandOrchestrator", () => {
         typesDir: join(testDir, "src/gql/types"),
         resolversDir: join(testDir, "src/gql/resolvers"),
         outputDir: join(testDir, "generated"),
+        configDir: null,
+        customScalars: null,
+        output: null,
       };
 
       const result = await executeGeneration(config);
@@ -148,11 +156,14 @@ describe("GenCommandOrchestrator", () => {
         typesDir: join(testDir, "src/gql/types"),
         resolversDir: join(testDir, "src/gql/resolvers"),
         outputDir: join(testDir, "generated"),
+        configDir: null,
+        customScalars: null,
+        output: null,
       };
 
       const result = await executeGeneration(config);
 
-      expect(result.success, true);
+      expect(result.success).toBe(true);
       expect(result.filesWritten.some((f) => f.endsWith("schema.ts")));
       expect(result.filesWritten.some((f) => f.endsWith("resolvers.ts")));
     });
@@ -165,12 +176,15 @@ describe("GenCommandOrchestrator", () => {
         typesDir: join(testDir, "nonexistent/types"),
         resolversDir: join(testDir, "nonexistent/resolvers"),
         outputDir: join(testDir, "generated"),
+        configDir: null,
+        customScalars: null,
+        output: null,
       };
 
       const result = await executeGeneration(config);
 
-      expect(result.success, false);
-      expect(result.filesWritten.length, 0);
+      expect(result.success).toBe(false);
+      expect(result.filesWritten.length).toBe(0);
     });
 
     it("should return success=true when no errors", async () => {
@@ -192,11 +206,14 @@ describe("GenCommandOrchestrator", () => {
         typesDir: join(testDir, "src/gql/types"),
         resolversDir: join(testDir, "src/gql/resolvers"),
         outputDir: join(testDir, "generated"),
+        configDir: null,
+        customScalars: null,
+        output: null,
       };
 
       const result = await executeGeneration(config);
 
-      expect(result.success, true);
+      expect(result.success).toBe(true);
       expect(result.filesWritten.length > 0);
     });
   });
@@ -221,6 +238,8 @@ describe("GenCommandOrchestrator", () => {
         typesDir: join(testDir, "src/gql/types"),
         resolversDir: join(testDir, "src/gql/resolvers"),
         outputDir: join(testDir, "generated"),
+        configDir: null,
+        customScalars: null,
         output: {
           ast: join(testDir, "generated/schema.ts"),
           sdl: join(testDir, "generated/schema.graphql"),
@@ -229,7 +248,7 @@ describe("GenCommandOrchestrator", () => {
 
       const result = await executeGeneration(config);
 
-      expect(result.success, true);
+      expect(result.success).toBe(true);
       expect(result.filesWritten.some((f) => f.endsWith("schema.ts")));
       expect(result.filesWritten.some((f) => f.endsWith("schema.graphql")));
     });
@@ -253,6 +272,8 @@ describe("GenCommandOrchestrator", () => {
         typesDir: join(testDir, "src/gql/types"),
         resolversDir: join(testDir, "src/gql/resolvers"),
         outputDir: join(testDir, "generated"),
+        configDir: null,
+        customScalars: null,
         output: {
           ast: null,
           sdl: join(testDir, "generated/schema.graphql"),
@@ -261,7 +282,7 @@ describe("GenCommandOrchestrator", () => {
 
       const result = await executeGeneration(config);
 
-      expect(result.success, true);
+      expect(result.success).toBe(true);
       expect(!result.filesWritten.some((f) => f.endsWith("schema.ts")));
       expect(result.filesWritten.some((f) => f.endsWith("schema.graphql")));
     });
@@ -285,6 +306,8 @@ describe("GenCommandOrchestrator", () => {
         typesDir: join(testDir, "src/gql/types"),
         resolversDir: join(testDir, "src/gql/resolvers"),
         outputDir: join(testDir, "generated"),
+        configDir: null,
+        customScalars: null,
         output: {
           ast: join(testDir, "generated/schema.ts"),
           sdl: null,
@@ -293,7 +316,7 @@ describe("GenCommandOrchestrator", () => {
 
       const result = await executeGeneration(config);
 
-      expect(result.success, true);
+      expect(result.success).toBe(true);
       expect(result.filesWritten.some((f) => f.endsWith("schema.ts")));
       expect(!result.filesWritten.some((f) => f.endsWith(".graphql")));
     });
@@ -317,6 +340,8 @@ describe("GenCommandOrchestrator", () => {
         typesDir: join(testDir, "src/gql/types"),
         resolversDir: join(testDir, "src/gql/resolvers"),
         outputDir: join(testDir, "generated"),
+        configDir: null,
+        customScalars: null,
         output: {
           ast: null,
           sdl: null,
@@ -325,7 +350,7 @@ describe("GenCommandOrchestrator", () => {
 
       const result = await executeGeneration(config);
 
-      expect(result.success, true);
+      expect(result.success).toBe(true);
       expect(!result.filesWritten.some((f) => f.endsWith("schema.ts")));
       expect(!result.filesWritten.some((f) => f.endsWith(".graphql")));
       expect(result.filesWritten.some((f) => f.endsWith("resolvers.ts")));

@@ -224,7 +224,7 @@ describe("GraphQLConverter", () => {
 
         const result = convertToGraphQL(input);
 
-        expect(result.types[0]?.fields).toBe(undefined);
+        expect(result.types[0]?.fields).toBe(null);
       });
     });
 

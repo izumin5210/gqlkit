@@ -173,14 +173,8 @@ describe("ResolverCollector", () => {
 
         const queryType = info.types.find((t) => t.typeName === "Query");
         expect(queryType);
-        expect(
-          queryType.fields[0]?.sourceFile,
-          "/src/resolvers/query.ts",
-        );
-        expect(
-          queryType.fields[0]?.resolverValueName,
-          "queryResolver",
-        );
+        expect(queryType.fields[0]?.sourceFile, "/src/resolvers/query.ts");
+        expect(queryType.fields[0]?.resolverValueName, "queryResolver");
       });
     });
 
@@ -363,10 +357,7 @@ describe("ResolverCollector", () => {
         const queryType = info.types.find((t) => t.typeName === "Query");
         expect(queryType);
         expect(queryType.fields[0]?.isDirectExport, false);
-        expect(
-          queryType.fields[0]?.resolverValueName,
-          "queryResolver",
-        );
+        expect(queryType.fields[0]?.resolverValueName, "queryResolver");
       });
 
       it("should use resolverExportName as resolverValueName when available", () => {
@@ -426,10 +417,7 @@ describe("ResolverCollector", () => {
 
         const userType = info.types.find((t) => t.typeName === "User");
         expect(userType);
-        expect(
-          userType.fields[0]?.resolverValueName,
-          "userResolver",
-        );
+        expect(userType.fields[0]?.resolverValueName, "userResolver");
         expect(userType.fields[0]?.isDirectExport, false);
       });
 

@@ -2,12 +2,12 @@ import ts from "typescript";
 
 export interface DeprecationInfo {
   readonly isDeprecated: true;
-  readonly reason?: string | undefined;
+  readonly reason: string | null;
 }
 
 export interface TSDocInfo {
-  readonly description?: string | undefined;
-  readonly deprecated?: DeprecationInfo | undefined;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
 }
 
 function getSymbolFromNode(
@@ -79,7 +79,7 @@ function extractDeprecatedFromDeclarations(
         const reason = getTagCommentText(tag.comment);
         return {
           isDeprecated: true,
-          reason,
+          reason: reason ?? null,
         };
       }
     }
@@ -118,7 +118,7 @@ export function extractTSDocInfo(
   const symbol = getSymbolFromNode(node, checker);
 
   if (!symbol) {
-    return {};
+    return { description: null, deprecated: null };
   }
 
   const description = extractDescriptionFromSymbol(symbol, checker);
@@ -127,8 +127,8 @@ export function extractTSDocInfo(
   );
 
   return {
-    description,
-    deprecated,
+    description: description ?? null,
+    deprecated: deprecated ?? null,
   };
 }
 
@@ -142,7 +142,7 @@ export function extractTSDocFromSymbol(
   );
 
   return {
-    description,
-    deprecated,
+    description: description ?? null,
+    deprecated: deprecated ?? null,
   };
 }

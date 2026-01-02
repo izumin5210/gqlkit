@@ -87,10 +87,7 @@ describe("ResultIntegrator", () => {
         expect(result.baseTypes.length, 1);
         expect(result.baseTypes[0]?.name, "SearchResult");
         expect(result.baseTypes[0]?.kind, "Union");
-        expect(result.baseTypes[0]?.unionMembers, [
-          "User",
-          "Post",
-        ]);
+        expect(result.baseTypes[0]?.unionMembers, ["User", "Post"]);
       });
     });
 
@@ -147,10 +144,7 @@ describe("ResultIntegrator", () => {
         const result = integrate(typesResult, resolversResult);
 
         expect(result.diagnostics.length, 1);
-        expect(
-          result.diagnostics[0]?.code,
-          "INVALID_RESOLVER_SIGNATURE",
-        );
+        expect(result.diagnostics[0]?.code, "INVALID_RESOLVER_SIGNATURE");
       });
 
       it("should combine diagnostics from both sources", () => {
@@ -562,10 +556,7 @@ describe("ResultIntegrator", () => {
         expect(unknownTypeError.severity, "error");
         expect(unknownTypeError.message.includes("NonExistentType"));
         expect(unknownTypeError.location);
-        expect(
-          unknownTypeError.location?.file,
-          "/path/to/resolver.ts",
-        );
+        expect(unknownTypeError.location?.file, "/path/to/resolver.ts");
       });
 
       it("should not report error when typeExtension targets existing type", () => {
@@ -967,10 +958,7 @@ describe("ResultIntegrator", () => {
           (t) => t.targetTypeName === "Query",
         );
         expect(queryExtension);
-        expect(
-          queryExtension.fields[0]?.resolverExportName,
-          "users",
-        );
+        expect(queryExtension.fields[0]?.resolverExportName, "users");
       });
 
       it("should propagate resolverExportName for Mutation fields from Define API", () => {
@@ -1004,10 +992,7 @@ describe("ResultIntegrator", () => {
           (t) => t.targetTypeName === "Mutation",
         );
         expect(mutationExtension);
-        expect(
-          mutationExtension.fields[0]?.resolverExportName,
-          "createUser",
-        );
+        expect(mutationExtension.fields[0]?.resolverExportName, "createUser");
       });
 
       it("should propagate resolverExportName for field resolvers from Define API", () => {
@@ -1056,10 +1041,7 @@ describe("ResultIntegrator", () => {
           (t) => t.targetTypeName === "User",
         );
         expect(userExtension);
-        expect(
-          userExtension.fields[0]?.resolverExportName,
-          "posts",
-        );
+        expect(userExtension.fields[0]?.resolverExportName, "posts");
       });
 
       it("should preserve undefined resolverExportName for non-Define API resolvers", () => {
@@ -1092,10 +1074,7 @@ describe("ResultIntegrator", () => {
           (t) => t.targetTypeName === "Query",
         );
         expect(queryExtension);
-        expect(
-          queryExtension.fields[0]?.resolverExportName,
-          undefined,
-        );
+        expect(queryExtension.fields[0]?.resolverExportName, undefined);
       });
     });
   });

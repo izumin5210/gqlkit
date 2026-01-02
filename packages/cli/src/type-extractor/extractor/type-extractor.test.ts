@@ -1,8 +1,8 @@
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import ts from "typescript";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import {
   createProgramFromFiles,
   extractTypesFromProgram,
@@ -101,9 +101,7 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(
-          result.types.some((t) => t.metadata.exportKind === "default"),
-        );
+        expect(result.types.some((t) => t.metadata.exportKind === "default"));
       });
 
       it("should exclude non-exported types", async () => {
@@ -369,10 +367,7 @@ describe("TypeExtractor", () => {
         const result = extractTypesFromProgram(program, [nonExistentFile]);
 
         expect(result.diagnostics[0]?.location);
-        expect(
-          result.diagnostics[0]?.location.file,
-          nonExistentFile,
-        );
+        expect(result.diagnostics[0]?.location.file, nonExistentFile);
         expect(result.diagnostics[0]?.location.line, 1);
         expect(result.diagnostics[0]?.location.column, 1);
       });
@@ -404,9 +399,7 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(
-          result.diagnostics.some((d) => d.code === "UNSUPPORTED_SYNTAX"),
-        );
+        expect(result.diagnostics.some((d) => d.code === "UNSUPPORTED_SYNTAX"));
         expect(result.diagnostics.some((d) => d.severity === "warning"));
       });
     });
@@ -565,10 +558,7 @@ describe("TypeExtractor", () => {
         expect(result.types[0]?.enumMembers?.[0]?.name, "Active");
         expect(result.types[0]?.enumMembers?.[0]?.value, "active");
         expect(result.types[0]?.enumMembers?.[1]?.name, "Inactive");
-        expect(
-          result.types[0]?.enumMembers?.[1]?.value,
-          "inactive",
-        );
+        expect(result.types[0]?.enumMembers?.[1]?.value, "inactive");
       });
 
       it("should extract default exported string enum", async () => {
@@ -859,10 +849,7 @@ describe("TypeExtractor", () => {
 
         const result = extractTypesFromProgram(program, files);
 
-        expect(
-          result.types[0]?.metadata.description,
-          "A user in the system",
-        );
+        expect(result.types[0]?.metadata.description, "A user in the system");
       });
 
       it("should extract description from type alias TSDoc", async () => {
@@ -940,10 +927,7 @@ describe("TypeExtractor", () => {
         const result = extractTypesFromProgram(program, files);
 
         expect(result.types[0]?.metadata.deprecated);
-        expect(
-          result.types[0]?.metadata.deprecated?.isDeprecated,
-          true,
-        );
+        expect(result.types[0]?.metadata.deprecated?.isDeprecated, true);
         expect(
           result.types[0]?.metadata.deprecated?.reason,
           "Use Member instead",
@@ -1064,10 +1048,7 @@ describe("TypeExtractor", () => {
           (m) => m.name === "Inactive",
         );
         expect(activeEnum?.description, "User is currently active");
-        expect(
-          inactiveEnum?.description,
-          "User account is deactivated",
-        );
+        expect(inactiveEnum?.description, "User account is deactivated");
       });
 
       it("should extract deprecated from enum member TSDoc", async () => {
@@ -1094,10 +1075,7 @@ describe("TypeExtractor", () => {
         );
         expect(inactiveEnum?.deprecated);
         expect(inactiveEnum?.deprecated?.isDeprecated, true);
-        expect(
-          inactiveEnum?.deprecated?.reason,
-          "Use Suspended instead",
-        );
+        expect(inactiveEnum?.deprecated?.reason, "Use Suspended instead");
       });
     });
   });
