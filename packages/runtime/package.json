@@ -19,8 +19,7 @@
   "author": "izumin5210 <m@izum.in>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --build",
-    "test": "node --import tsx --test 'src/**/*.test.ts'"
+    "build": "tsc --build"
   },
   "peerDependencies": {
     "graphql": "^16.0.0"

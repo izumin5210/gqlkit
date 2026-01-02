@@ -1,4 +1,3 @@
-import assert from "node:assert";
 import { spawn } from "node:child_process";
 import {
   mkdir,
@@ -10,7 +9,7 @@ import {
 } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
-import { afterEach, beforeEach, describe, it } from "node:test";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { fileURLToPath } from "node:url";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -83,8 +82,8 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stdout } = await runCli(testDir);
 
-      assert.strictEqual(exitCode, 0);
-      assert.ok(stdout.includes("Done!") || stdout.includes("complete"));
+      expect(exitCode, 0);
+      expect(stdout.includes("Done!") || stdout.includes("complete"));
     });
 
     it("should create output files", async () => {
@@ -121,8 +120,8 @@ describe("E2E Tests (Task 7)", () => {
       const schemaStat = await stat(schemaPath);
       const resolversStat = await stat(resolversPath);
 
-      assert.ok(schemaStat.isFile());
-      assert.ok(resolversStat.isFile());
+      expect(schemaStat.isFile());
+      expect(resolversStat.isFile());
     });
 
     it("should generate TypeScript code that can be type-checked", async () => {
@@ -162,9 +161,9 @@ describe("E2E Tests (Task 7)", () => {
         "utf-8",
       );
 
-      assert.ok(schemaContent.includes("import type { DocumentNode }"));
-      assert.ok(schemaContent.includes("export const typeDefs"));
-      assert.ok(resolversContent.includes("export const resolvers"));
+      expect(schemaContent.includes("import type { DocumentNode }"));
+      expect(schemaContent.includes("export const typeDefs"));
+      expect(resolversContent.includes("export const resolvers"));
     });
   });
 
@@ -175,8 +174,8 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stderr } = await runCli(testDir);
 
-      assert.strictEqual(exitCode, 1);
-      assert.ok(
+      expect(exitCode, 1);
+      expect(
         stderr.includes("DIRECTORY_NOT_FOUND") || stderr.includes("error"),
       );
     });
@@ -187,8 +186,8 @@ describe("E2E Tests (Task 7)", () => {
 
       const { stderr } = await runCli(testDir);
 
-      assert.ok(stderr.length > 0);
-      assert.ok(
+      expect(stderr.length > 0);
+      expect(
         stderr.includes("error") || stderr.includes("DIRECTORY_NOT_FOUND"),
       );
     });
@@ -236,12 +235,12 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stderr } = await runCli(testDir);
 
-      assert.strictEqual(exitCode, 1);
-      assert.ok(
+      expect(exitCode, 1);
+      expect(
         stderr.includes("CONFIG_SYNTAX_ERROR"),
         "Should include CONFIG_SYNTAX_ERROR diagnostic",
       );
-      assert.ok(
+      expect(
         stderr.includes("Config load failed"),
         "Should include error summary",
       );
@@ -267,12 +266,12 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stderr } = await runCli(testDir);
 
-      assert.strictEqual(exitCode, 1);
-      assert.ok(
+      expect(exitCode, 1);
+      expect(
         stderr.includes("CONFIG_BUILTIN_OVERRIDE"),
         "Should include CONFIG_BUILTIN_OVERRIDE diagnostic",
       );
-      assert.ok(
+      expect(
         stderr.includes("String"),
         "Should mention the built-in scalar name",
       );
@@ -302,12 +301,12 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stderr } = await runCli(testDir);
 
-      assert.strictEqual(exitCode, 1);
-      assert.ok(
+      expect(exitCode, 1);
+      expect(
         stderr.includes("CONFIG_DUPLICATE_MAPPING"),
         "Should include CONFIG_DUPLICATE_MAPPING diagnostic",
       );
-      assert.ok(
+      expect(
         stderr.includes("DateTime"),
         "Should mention the duplicate scalar name",
       );
@@ -337,8 +336,8 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stderr } = await runCli(testDir);
 
-      assert.strictEqual(exitCode, 1);
-      assert.ok(
+      expect(exitCode, 1);
+      expect(
         stderr.includes("CONFIG_DUPLICATE_TYPE"),
         "Should include CONFIG_DUPLICATE_TYPE diagnostic",
       );
@@ -363,12 +362,12 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stderr } = await runCli(testDir);
 
-      assert.strictEqual(exitCode, 1);
-      assert.ok(
+      expect(exitCode, 1);
+      expect(
         stderr.includes("CONFIG_MISSING_PROPERTY"),
         "Should include CONFIG_MISSING_PROPERTY diagnostic",
       );
-      assert.ok(stderr.includes("type"), "Should mention the missing property");
+      expect(stderr.includes("type"), "Should mention the missing property");
     });
 
     it("should include file location in diagnostic output", async () => {
@@ -391,7 +390,7 @@ describe("E2E Tests (Task 7)", () => {
 
       const { stderr } = await runCli(testDir);
 
-      assert.ok(
+      expect(
         stderr.includes("gqlkit.config.ts"),
         "Should include config file path in diagnostic",
       );
@@ -417,8 +416,8 @@ describe("E2E Tests (Task 7)", () => {
 
       const { exitCode, stdout } = await runCli(testDir);
 
-      assert.strictEqual(exitCode, 0);
-      assert.ok(
+      expect(exitCode, 0);
+      expect(
         stdout.includes("Done!") || stdout.includes("complete"),
         "Should complete successfully",
       );
@@ -427,7 +426,7 @@ describe("E2E Tests (Task 7)", () => {
         join(testDir, "src/gqlkit/generated/schema.ts"),
         "utf-8",
       );
-      assert.ok(
+      expect(
         schemaContent.includes('"value": "DateTime"'),
         "Schema should include DateTime scalar",
       );

@@ -6,8 +6,7 @@
  * Runtime assertions verify the tests are actually executed.
  */
 
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type { GraphQLResolveInfo } from "graphql";
 import {
   createGqlkitApis,
@@ -34,7 +33,7 @@ describe("Type inference tests", () => {
   describe("NoArgs type", () => {
     it("should represent empty args", () => {
       const emptyArgs: NoArgs = {};
-      assert.deepEqual(emptyArgs, {});
+      expect(emptyArgs).toEqual({});
     });
   });
 
@@ -50,7 +49,7 @@ describe("Type inference tests", () => {
         void (info satisfies GraphQLResolveInfo);
         return { id: args.id, name: "", email: "" };
       };
-      assert.ok(fn);
+      expect(fn).toBeDefined();
     });
 
     it("should have correct 4-parameter signature for MutationResolverFn", () => {
@@ -64,7 +63,7 @@ describe("Type inference tests", () => {
         void (info satisfies GraphQLResolveInfo);
         return { id: "1", name: args.name, email: "" };
       };
-      assert.ok(fn);
+      expect(fn).toBeDefined();
     });
 
     it("should have correct 4-parameter signature for FieldResolverFn", () => {
@@ -79,7 +78,7 @@ describe("Type inference tests", () => {
         void (info satisfies GraphQLResolveInfo);
         return parent.name;
       };
-      assert.ok(fn);
+      expect(fn).toBeDefined();
     });
   });
 
@@ -102,7 +101,7 @@ describe("Type inference tests", () => {
         void (info satisfies GraphQLResolveInfo);
         return { id: args.id, name: "", email: "" };
       };
-      assert.ok(fn);
+      expect(fn).toBeDefined();
     });
 
     it("should accept custom Context type for MutationResolverFn", () => {
@@ -117,7 +116,7 @@ describe("Type inference tests", () => {
         void (info satisfies GraphQLResolveInfo);
         return { id: "1", name: args.name, email: "" };
       };
-      assert.ok(fn);
+      expect(fn).toBeDefined();
     });
 
     it("should accept custom Context type for FieldResolverFn", () => {
@@ -133,7 +132,7 @@ describe("Type inference tests", () => {
         void (info satisfies GraphQLResolveInfo);
         return parent.name;
       };
-      assert.ok(fn);
+      expect(fn).toBeDefined();
     });
 
     it("should default to unknown when Context type is not specified", () => {
@@ -146,7 +145,7 @@ describe("Type inference tests", () => {
 
       const fnWithExplicit: QueryResolverFn<NoArgs, User, unknown> =
         fnWithDefault;
-      assert.ok(fnWithExplicit);
+      expect(fnWithExplicit).toBeDefined();
     });
   });
 
@@ -155,9 +154,9 @@ describe("Type inference tests", () => {
       const queryKind: ResolverKind = "query";
       const mutationKind: ResolverKind = "mutation";
       const fieldKind: ResolverKind = "field";
-      assert.equal(queryKind, "query");
-      assert.equal(mutationKind, "mutation");
-      assert.equal(fieldKind, "field");
+      expect(queryKind).toBe("query");
+      expect(mutationKind).toBe("mutation");
+      expect(fieldKind).toBe("field");
     });
 
     it("should define QueryResolver as intersection of function and brand", () => {
@@ -175,7 +174,7 @@ describe("Type inference tests", () => {
         {},
         {} as GraphQLResolveInfo,
       );
-      assert.deepEqual(result, { id: "1", name: "", email: "" });
+      expect(result).toEqual({ id: "1", name: "", email: "" });
     });
 
     it("should define MutationResolver as intersection of function and brand", () => {
@@ -193,7 +192,7 @@ describe("Type inference tests", () => {
         {},
         {} as GraphQLResolveInfo,
       );
-      assert.deepEqual(result, { id: "1", name: "", email: "" });
+      expect(result).toEqual({ id: "1", name: "", email: "" });
     });
 
     it("should define FieldResolver as intersection of function and brand", () => {
@@ -208,13 +207,13 @@ describe("Type inference tests", () => {
         {},
         {} as GraphQLResolveInfo,
       );
-      assert.equal(result, "test");
+      expect(result).toBe("test");
     });
 
     it("should include kind in QueryResolver brand", () => {
       type BrandType = QueryResolver<NoArgs, User>[ResolverBrand];
       const brand: BrandType = { kind: "query", args: {}, result: {} as User };
-      assert.equal(brand.kind, "query");
+      expect(brand.kind).toBe("query");
     });
 
     it("should include kind in MutationResolver brand", () => {
@@ -224,7 +223,7 @@ describe("Type inference tests", () => {
         args: {},
         result: {} as User,
       };
-      assert.equal(brand.kind, "mutation");
+      expect(brand.kind).toBe("mutation");
     });
 
     it("should include kind and parent in FieldResolver brand", () => {
@@ -235,7 +234,7 @@ describe("Type inference tests", () => {
         args: {},
         result: "",
       };
-      assert.equal(brand.kind, "field");
+      expect(brand.kind).toBe("field");
     });
 
     it("should support custom Context in branded types", () => {
@@ -247,7 +246,7 @@ describe("Type inference tests", () => {
         return { id: "1", name: "", email: "" };
       }) as TestResolver;
 
-      assert.ok(resolver);
+      expect(resolver).toBeDefined();
     });
   });
 
@@ -263,7 +262,7 @@ describe("Type inference tests", () => {
         },
       );
 
-      assert.ok(query);
+      expect(query).toBeDefined();
     });
 
     it("should infer context type in generated defineMutation", () => {
@@ -277,7 +276,7 @@ describe("Type inference tests", () => {
         },
       );
 
-      assert.ok(mutation);
+      expect(mutation).toBeDefined();
     });
 
     it("should infer context type in generated defineField", () => {
@@ -291,7 +290,7 @@ describe("Type inference tests", () => {
         },
       );
 
-      assert.ok(field);
+      expect(field).toBeDefined();
     });
 
     it("should use unknown as default Context when not specified", () => {
@@ -304,7 +303,7 @@ describe("Type inference tests", () => {
         },
       );
 
-      assert.ok(query);
+      expect(query).toBeDefined();
     });
   });
 
@@ -321,7 +320,7 @@ describe("Type inference tests", () => {
         },
       );
 
-      assert.ok(query);
+      expect(query).toBeDefined();
     });
 
     it("should enforce correct return type", () => {
@@ -335,7 +334,7 @@ describe("Type inference tests", () => {
         },
       );
 
-      assert.ok(query);
+      expect(query).toBeDefined();
     });
 
     it("should enforce correct parent type in field resolver", () => {
@@ -349,7 +348,7 @@ describe("Type inference tests", () => {
         },
       );
 
-      assert.ok(field);
+      expect(field).toBeDefined();
     });
   });
 
@@ -363,7 +362,7 @@ describe("Type inference tests", () => {
       ) => {
         return { id: args.id, name: "", email: "" };
       };
-      assert.ok(fn);
+      expect(fn).toBeDefined();
     });
 
     it("should work with MutationResolverFn without context type parameter", () => {
@@ -375,7 +374,7 @@ describe("Type inference tests", () => {
       ) => {
         return { id: "1", name: args.name, email: "" };
       };
-      assert.ok(fn);
+      expect(fn).toBeDefined();
     });
 
     it("should work with FieldResolverFn without context type parameter", () => {
@@ -387,7 +386,7 @@ describe("Type inference tests", () => {
       ) => {
         return parent.name;
       };
-      assert.ok(fn);
+      expect(fn).toBeDefined();
     });
   });
 
@@ -407,7 +406,7 @@ describe("Type inference tests", () => {
       type BrandInfo = QueryType[ResolverBrand];
       void ({} as BrandInfo["kind"] satisfies "query");
 
-      assert.ok(query);
+      expect(query).toBeDefined();
     });
 
     it("should return branded type from createGqlkitApis.defineMutation", () => {
@@ -425,7 +424,7 @@ describe("Type inference tests", () => {
       type BrandInfo = MutationType[ResolverBrand];
       void ({} as BrandInfo["kind"] satisfies "mutation");
 
-      assert.ok(mutation);
+      expect(mutation).toBeDefined();
     });
 
     it("should return branded type from createGqlkitApis.defineField", () => {
@@ -441,7 +440,7 @@ describe("Type inference tests", () => {
       type BrandInfo = FieldType[ResolverBrand];
       void ({} as BrandInfo["kind"] satisfies "field");
 
-      assert.ok(field);
+      expect(field).toBeDefined();
     });
 
     it("should be callable as a function", () => {
@@ -461,7 +460,7 @@ describe("Type inference tests", () => {
         { userId: "u1" },
         {} as GraphQLResolveInfo,
       );
-      assert.deepEqual(result, { id: "1", name: "", email: "" });
+      expect(result).toEqual({ id: "1", name: "", email: "" });
     });
   });
 
@@ -470,16 +469,16 @@ describe("Type inference tests", () => {
       type MyContext = { userId: string };
       const apis: GqlkitApis<MyContext> = createGqlkitApis<MyContext>();
 
-      assert.ok(apis.defineQuery);
-      assert.ok(apis.defineMutation);
-      assert.ok(apis.defineField);
+      expect(apis.defineQuery).toBeDefined();
+      expect(apis.defineMutation).toBeDefined();
+      expect(apis.defineField).toBeDefined();
     });
   });
 
   describe("Package exports (Task 8)", () => {
     it("should export NoArgs type (Task 8.1)", () => {
       const args: NoArgs = {};
-      assert.deepEqual(args, {});
+      expect(args).toEqual({});
     });
 
     it("should export NoArgs usable with createGqlkitApis (Task 8.1)", () => {
@@ -494,17 +493,17 @@ describe("Type inference tests", () => {
         }),
       );
 
-      assert.ok(query);
+      expect(query).toBeDefined();
     });
 
     it("should export createGqlkitApis (Task 8.2)", () => {
-      assert.ok(typeof createGqlkitApis === "function");
+      expect(typeof createGqlkitApis).toBe("function");
     });
 
     it("should export GqlkitApis type (Task 8.2)", () => {
       type MyContext = { userId: string };
       const apis: GqlkitApis<MyContext> = createGqlkitApis<MyContext>();
-      assert.ok(apis);
+      expect(apis).toBeDefined();
     });
 
     it("should export QueryResolver branded type (Task 8.2)", () => {
@@ -516,7 +515,7 @@ describe("Type inference tests", () => {
         User
       >((_root, _args, _ctx, _info) => ({ id: "1", name: "", email: "" }));
 
-      assert.ok(query);
+      expect(query).toBeDefined();
     });
 
     it("should export MutationResolver branded type (Task 8.2)", () => {
@@ -528,7 +527,7 @@ describe("Type inference tests", () => {
           (_root, _args, _ctx, _info) => ({ id: "1", name: "", email: "" }),
         );
 
-      assert.ok(mutation);
+      expect(mutation).toBeDefined();
     });
 
     it("should export FieldResolver branded type (Task 8.2)", () => {
@@ -540,7 +539,7 @@ describe("Type inference tests", () => {
           (parent, _args, _ctx, _info) => parent.name,
         );
 
-      assert.ok(field);
+      expect(field).toBeDefined();
     });
 
     it("should export QueryResolverFn type (Task 8.2)", () => {
@@ -554,7 +553,7 @@ describe("Type inference tests", () => {
         name: "",
         email: "",
       });
-      assert.ok(fn);
+      expect(fn).toBeDefined();
     });
 
     it("should export MutationResolverFn type (Task 8.2)", () => {
@@ -568,7 +567,7 @@ describe("Type inference tests", () => {
         name: args.name,
         email: "",
       });
-      assert.ok(fn);
+      expect(fn).toBeDefined();
     });
 
     it("should export FieldResolverFn type (Task 8.2)", () => {
@@ -578,7 +577,7 @@ describe("Type inference tests", () => {
         _ctx,
         _info,
       ) => parent.name;
-      assert.ok(fn);
+      expect(fn).toBeDefined();
     });
 
     it("should export ResolverBrand and ResolverKind types (Task 8.2)", () => {
@@ -586,9 +585,9 @@ describe("Type inference tests", () => {
       const mutationKind: ResolverKind = "mutation";
       const fieldKind: ResolverKind = "field";
 
-      assert.equal(queryKind, "query");
-      assert.equal(mutationKind, "mutation");
-      assert.equal(fieldKind, "field");
+      expect(queryKind).toBe("query");
+      expect(mutationKind).toBe("mutation");
+      expect(fieldKind).toBe("field");
     });
   });
 });

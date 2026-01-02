@@ -1,8 +1,7 @@
-import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, beforeEach, describe, it } from "node:test";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import ts from "typescript";
 import {
   type DetectionResult,
@@ -103,14 +102,14 @@ export type User = { id: IDString };
 
       const checker = program.getTypeChecker();
       const fieldType = getFieldType(program, "src/types.ts", "User", "id");
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      const result = detectBrandedScalar(fieldType, checker);
-      assert.ok(result.scalarInfo);
-      assert.equal(result.scalarInfo.scalarName, "ID");
-      assert.equal(result.scalarInfo.brandName, "IDString");
-      assert.equal(result.scalarInfo.baseType, "string");
-      assert.equal(result.diagnostics.length, 0);
+      const result = detectBrandedScalar(fieldType!, checker);
+      expect(result.scalarInfo).toBeTruthy();
+      expect(result.scalarInfo!.scalarName).toBe("ID");
+      expect(result.scalarInfo!.brandName).toBe("IDString");
+      expect(result.scalarInfo!.baseType).toBe("string");
+      expect(result.diagnostics.length).toBe(0);
     });
 
     it("should detect IDNumber and return ScalarTypeInfo with ID scalar", () => {
@@ -128,13 +127,13 @@ export type User = { numericId: IDNumber };
         "User",
         "numericId",
       );
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      const result = detectBrandedScalar(fieldType, checker);
-      assert.ok(result.scalarInfo);
-      assert.equal(result.scalarInfo.scalarName, "ID");
-      assert.equal(result.scalarInfo.brandName, "IDNumber");
-      assert.equal(result.scalarInfo.baseType, "number");
+      const result = detectBrandedScalar(fieldType!, checker);
+      expect(result.scalarInfo).toBeTruthy();
+      expect(result.scalarInfo!.scalarName).toBe("ID");
+      expect(result.scalarInfo!.brandName).toBe("IDNumber");
+      expect(result.scalarInfo!.baseType).toBe("number");
     });
 
     it("should detect Int and return ScalarTypeInfo with Int scalar", () => {
@@ -152,13 +151,13 @@ export type Product = { count: Int };
         "Product",
         "count",
       );
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      const result = detectBrandedScalar(fieldType, checker);
-      assert.ok(result.scalarInfo);
-      assert.equal(result.scalarInfo.scalarName, "Int");
-      assert.equal(result.scalarInfo.brandName, "Int");
-      assert.equal(result.scalarInfo.baseType, "number");
+      const result = detectBrandedScalar(fieldType!, checker);
+      expect(result.scalarInfo).toBeTruthy();
+      expect(result.scalarInfo!.scalarName).toBe("Int");
+      expect(result.scalarInfo!.brandName).toBe("Int");
+      expect(result.scalarInfo!.baseType).toBe("number");
     });
 
     it("should detect Float and return ScalarTypeInfo with Float scalar", () => {
@@ -176,13 +175,13 @@ export type Product = { price: Float };
         "Product",
         "price",
       );
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      const result = detectBrandedScalar(fieldType, checker);
-      assert.ok(result.scalarInfo);
-      assert.equal(result.scalarInfo.scalarName, "Float");
-      assert.equal(result.scalarInfo.brandName, "Float");
-      assert.equal(result.scalarInfo.baseType, "number");
+      const result = detectBrandedScalar(fieldType!, checker);
+      expect(result.scalarInfo).toBeTruthy();
+      expect(result.scalarInfo!.scalarName).toBe("Float");
+      expect(result.scalarInfo!.brandName).toBe("Float");
+      expect(result.scalarInfo!.baseType).toBe("number");
     });
 
     it("should return undefined scalarInfo for plain string type", () => {
@@ -194,10 +193,10 @@ export type User = { name: string };
 
       const checker = program.getTypeChecker();
       const fieldType = getFieldType(program, "src/types.ts", "User", "name");
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      const result = detectBrandedScalar(fieldType, checker);
-      assert.equal(result.scalarInfo, undefined);
+      const result = detectBrandedScalar(fieldType!, checker);
+      expect(result.scalarInfo).toBe(undefined);
     });
 
     it("should return undefined scalarInfo for plain number type", () => {
@@ -209,10 +208,10 @@ export type User = { age: number };
 
       const checker = program.getTypeChecker();
       const fieldType = getFieldType(program, "src/types.ts", "User", "age");
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      const result = detectBrandedScalar(fieldType, checker);
-      assert.equal(result.scalarInfo, undefined);
+      const result = detectBrandedScalar(fieldType!, checker);
+      expect(result.scalarInfo).toBe(undefined);
     });
 
     it("should return undefined scalarInfo for boolean type", () => {
@@ -224,10 +223,10 @@ export type User = { active: boolean };
 
       const checker = program.getTypeChecker();
       const fieldType = getFieldType(program, "src/types.ts", "User", "active");
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      const result = detectBrandedScalar(fieldType, checker);
-      assert.equal(result.scalarInfo, undefined);
+      const result = detectBrandedScalar(fieldType!, checker);
+      expect(result.scalarInfo).toBe(undefined);
     });
 
     it("should return undefined scalarInfo for reference type", () => {
@@ -245,10 +244,10 @@ export type User = { address: Address };
         "User",
         "address",
       );
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      const result = detectBrandedScalar(fieldType, checker);
-      assert.equal(result.scalarInfo, undefined);
+      const result = detectBrandedScalar(fieldType!, checker);
+      expect(result.scalarInfo).toBe(undefined);
     });
 
     it("should work with re-exported branded types", () => {
@@ -264,12 +263,12 @@ export type User = { id: IDString };
 
       const checker = program.getTypeChecker();
       const fieldType = getFieldType(program, "src/types.ts", "User", "id");
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      const result = detectBrandedScalar(fieldType, checker);
-      assert.ok(result.scalarInfo);
-      assert.equal(result.scalarInfo.scalarName, "ID");
-      assert.equal(result.scalarInfo.brandName, "IDString");
+      const result = detectBrandedScalar(fieldType!, checker);
+      expect(result.scalarInfo).toBeTruthy();
+      expect(result.scalarInfo!.scalarName).toBe("ID");
+      expect(result.scalarInfo!.brandName).toBe("IDString");
     });
   });
 
@@ -284,9 +283,9 @@ export type User = { id: IDString };
 
       const checker = program.getTypeChecker();
       const fieldType = getFieldType(program, "src/types.ts", "User", "id");
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      assert.equal(isBrandedScalarType(fieldType, checker), true);
+      expect(isBrandedScalarType(fieldType!, checker)).toBe(true);
     });
 
     it("should return true for Int", () => {
@@ -304,9 +303,9 @@ export type Product = { count: Int };
         "Product",
         "count",
       );
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      assert.equal(isBrandedScalarType(fieldType, checker), true);
+      expect(isBrandedScalarType(fieldType!, checker)).toBe(true);
     });
 
     it("should return false for plain string", () => {
@@ -318,9 +317,9 @@ export type User = { name: string };
 
       const checker = program.getTypeChecker();
       const fieldType = getFieldType(program, "src/types.ts", "User", "name");
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      assert.equal(isBrandedScalarType(fieldType, checker), false);
+      expect(isBrandedScalarType(fieldType!, checker)).toBe(false);
     });
 
     it("should return false for plain number", () => {
@@ -332,9 +331,9 @@ export type User = { age: number };
 
       const checker = program.getTypeChecker();
       const fieldType = getFieldType(program, "src/types.ts", "User", "age");
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      assert.equal(isBrandedScalarType(fieldType, checker), false);
+      expect(isBrandedScalarType(fieldType!, checker)).toBe(false);
     });
   });
 
@@ -346,11 +345,11 @@ export type User = { age: number };
         baseType: "string",
         isCustom: false,
       };
-      assert.ok(info);
-      assert.equal(info.scalarName, "ID");
-      assert.equal(info.brandName, "IDString");
-      assert.equal(info.baseType, "string");
-      assert.equal(info.isCustom, false);
+      expect(info).toBeTruthy();
+      expect(info.scalarName).toBe("ID");
+      expect(info.brandName).toBe("IDString");
+      expect(info.baseType).toBe("string");
+      expect(info.isCustom).toBe(false);
     });
 
     it("should have correct shape for custom scalar", () => {
@@ -360,11 +359,11 @@ export type User = { age: number };
         baseType: undefined,
         isCustom: true,
       };
-      assert.ok(info);
-      assert.equal(info.scalarName, "DateTime");
-      assert.equal(info.brandName, "DateTime");
-      assert.equal(info.baseType, undefined);
-      assert.equal(info.isCustom, true);
+      expect(info).toBeTruthy();
+      expect(info.scalarName).toBe("DateTime");
+      expect(info.brandName).toBe("DateTime");
+      expect(info.baseType).toBe(undefined);
+      expect(info.isCustom).toBe(true);
     });
 
     it("should support all valid scalarName values", () => {
@@ -384,7 +383,7 @@ export type User = { age: number };
           baseType: "string",
           isCustom: false,
         };
-        assert.ok(info);
+        expect(info).toBeTruthy();
       }
     });
   });
@@ -401,9 +400,9 @@ export type User = { age: number };
         unknownBrand: undefined,
         diagnostics: [],
       };
-      assert.ok(result.scalarInfo);
-      assert.equal(result.unknownBrand, undefined);
-      assert.equal(result.diagnostics.length, 0);
+      expect(result.scalarInfo).toBeTruthy();
+      expect(result.unknownBrand).toBe(undefined);
+      expect(result.diagnostics.length).toBe(0);
     });
 
     it("should have correct shape without scalarInfo", () => {
@@ -412,8 +411,8 @@ export type User = { age: number };
         unknownBrand: undefined,
         diagnostics: [],
       };
-      assert.equal(result.scalarInfo, undefined);
-      assert.equal(result.unknownBrand, undefined);
+      expect(result.scalarInfo).toBe(undefined);
+      expect(result.unknownBrand).toBe(undefined);
     });
 
     it("should have correct shape with unknownBrand", () => {
@@ -425,10 +424,10 @@ export type User = { age: number };
         },
         diagnostics: [],
       };
-      assert.equal(result.scalarInfo, undefined);
-      assert.ok(result.unknownBrand);
-      assert.equal(result.unknownBrand.typeName, "CustomScalar");
-      assert.equal(result.unknownBrand.importSource, "@gqlkit-ts/runtime");
+      expect(result.scalarInfo).toBe(undefined);
+      expect(result.unknownBrand).toBeTruthy();
+      expect(result.unknownBrand!.typeName).toBe("CustomScalar");
+      expect(result.unknownBrand!.importSource).toBe("@gqlkit-ts/runtime");
     });
   });
 
@@ -452,13 +451,13 @@ export type User = { custom: UnknownBrandedType };
 
       const checker = program.getTypeChecker();
       const fieldType = getFieldType(program, "src/types.ts", "User", "custom");
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      const result = detectBrandedScalar(fieldType, checker);
-      assert.equal(result.scalarInfo, undefined);
-      assert.ok(result.unknownBrand);
-      assert.equal(result.unknownBrand.typeName, "UnknownBrandedType");
-      assert.equal(result.unknownBrand.importSource, "@gqlkit-ts/runtime");
+      const result = detectBrandedScalar(fieldType!, checker);
+      expect(result.scalarInfo).toBe(undefined);
+      expect(result.unknownBrand).toBeTruthy();
+      expect(result.unknownBrand!.typeName).toBe("UnknownBrandedType");
+      expect(result.unknownBrand!.importSource).toBe("@gqlkit-ts/runtime");
     });
 
     it("should not return unknownBrand for types from other modules", () => {
@@ -474,11 +473,11 @@ export type User = { custom: CustomType };
 
       const checker = program.getTypeChecker();
       const fieldType = getFieldType(program, "src/types.ts", "User", "custom");
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      const result = detectBrandedScalar(fieldType, checker);
-      assert.equal(result.scalarInfo, undefined);
-      assert.equal(result.unknownBrand, undefined);
+      const result = detectBrandedScalar(fieldType!, checker);
+      expect(result.scalarInfo).toBe(undefined);
+      expect(result.unknownBrand).toBe(undefined);
     });
   });
 
@@ -513,13 +512,13 @@ export type Event = { createdAt: DateTime };
         "Event",
         "createdAt",
       );
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      const result = detectBrandedScalar(fieldType, checker, { registry });
-      assert.ok(result.scalarInfo);
-      assert.equal(result.scalarInfo.scalarName, "DateTime");
-      assert.equal(result.scalarInfo.brandName, "DateTime");
-      assert.equal(result.scalarInfo.isCustom, true);
+      const result = detectBrandedScalar(fieldType!, checker, { registry });
+      expect(result.scalarInfo).toBeTruthy();
+      expect(result.scalarInfo!.scalarName).toBe("DateTime");
+      expect(result.scalarInfo!.brandName).toBe("DateTime");
+      expect(result.scalarInfo!.isCustom).toBe(true);
     });
 
     it("should not detect custom scalar when registry is not provided", () => {
@@ -540,10 +539,10 @@ export type Event = { createdAt: DateTime };
         "Event",
         "createdAt",
       );
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      const result = detectBrandedScalar(fieldType, checker);
-      assert.equal(result.scalarInfo, undefined);
+      const result = detectBrandedScalar(fieldType!, checker);
+      expect(result.scalarInfo).toBe(undefined);
     });
 
     it("should still detect standard branded types when registry is provided", () => {
@@ -562,13 +561,13 @@ export type User = { id: IDString };
 
       const checker = program.getTypeChecker();
       const fieldType = getFieldType(program, "src/types.ts", "User", "id");
-      assert.ok(fieldType);
+      expect(fieldType).toBeTruthy();
 
-      const result = detectBrandedScalar(fieldType, checker, { registry });
-      assert.ok(result.scalarInfo);
-      assert.equal(result.scalarInfo.scalarName, "ID");
-      assert.equal(result.scalarInfo.brandName, "IDString");
-      assert.equal(result.scalarInfo.isCustom, false);
+      const result = detectBrandedScalar(fieldType!, checker, { registry });
+      expect(result.scalarInfo).toBeTruthy();
+      expect(result.scalarInfo!.scalarName).toBe("ID");
+      expect(result.scalarInfo!.brandName).toBe("IDString");
+      expect(result.scalarInfo!.isCustom).toBe(false);
     });
   });
 });

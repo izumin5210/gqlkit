@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type { GraphQLTypeInfo } from "../types/index.js";
 import { validateTypes } from "./type-validator.js";
 
@@ -34,8 +33,8 @@ describe("TypeValidator", () => {
 
         const result = validateTypes(types);
 
-        assert.strictEqual(result.valid, true);
-        assert.strictEqual(result.diagnostics.length, 0);
+        expect(result.valid).toBe(true);
+        expect(result.diagnostics.length).toBe(0);
       });
 
       it("should pass for built-in scalar types", () => {
@@ -63,8 +62,8 @@ describe("TypeValidator", () => {
 
         const result = validateTypes(types);
 
-        assert.strictEqual(result.valid, true);
-        assert.strictEqual(result.diagnostics.length, 0);
+        expect(result.valid).toBe(true);
+        expect(result.diagnostics.length).toBe(0);
       });
 
       it("should report error for unresolved type reference", () => {
@@ -84,9 +83,9 @@ describe("TypeValidator", () => {
 
         const result = validateTypes(types);
 
-        assert.strictEqual(result.valid, false);
-        assert.strictEqual(result.diagnostics.length, 1);
-        assert.strictEqual(result.diagnostics[0]?.code, "UNRESOLVED_REFERENCE");
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("UNRESOLVED_REFERENCE");
       });
 
       it("should include field name in error message", () => {
@@ -106,8 +105,8 @@ describe("TypeValidator", () => {
 
         const result = validateTypes(types);
 
-        assert.ok(result.diagnostics[0]?.message.includes("author"));
-        assert.ok(result.diagnostics[0]?.message.includes("User"));
+        expect(result.diagnostics[0]?.message).toContain("author");
+        expect(result.diagnostics[0]?.message).toContain("User");
       });
 
       it("should include source location in diagnostics", () => {
@@ -127,11 +126,8 @@ describe("TypeValidator", () => {
 
         const result = validateTypes(types);
 
-        assert.ok(result.diagnostics[0]?.location);
-        assert.strictEqual(
-          result.diagnostics[0]?.location.file,
-          "/path/to/post.ts",
-        );
+        expect(result.diagnostics[0]?.location).toBeTruthy();
+        expect(result.diagnostics[0]?.location!.file).toBe("/path/to/post.ts");
       });
 
       it("should validate union member references", () => {
@@ -152,8 +148,10 @@ describe("TypeValidator", () => {
 
         const result = validateTypes(types);
 
-        assert.strictEqual(result.valid, false);
-        assert.ok(result.diagnostics.some((d) => d.message.includes("Post")));
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.some((d) => d.message.includes("Post"))).toBe(
+          true,
+        );
       });
 
       it("should collect all unresolved references", () => {
@@ -177,8 +175,8 @@ describe("TypeValidator", () => {
 
         const result = validateTypes(types);
 
-        assert.strictEqual(result.valid, false);
-        assert.strictEqual(result.diagnostics.length, 2);
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(2);
       });
 
       it("should validate list element type references", () => {
@@ -203,8 +201,10 @@ describe("TypeValidator", () => {
 
         const result = validateTypes(types);
 
-        assert.strictEqual(result.valid, false);
-        assert.ok(result.diagnostics.some((d) => d.message.includes("Post")));
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.some((d) => d.message.includes("Post"))).toBe(
+          true,
+        );
       });
     });
   });

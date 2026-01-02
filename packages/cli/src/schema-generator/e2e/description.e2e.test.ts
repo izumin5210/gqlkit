@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import { print } from "graphql";
 import type { ExtractResolversResult } from "../../resolver-extractor/index.js";
 import { convertToGraphQL } from "../../type-extractor/converter/graphql-converter.js";
@@ -38,7 +37,7 @@ describe("E2E: Description and Deprecated", () => {
 
       const conversionResult = convertToGraphQL(extractedTypes);
 
-      assert.strictEqual(conversionResult.diagnostics.length, 0);
+      expect(conversionResult.diagnostics.length, 0);
 
       const resolversResult: ExtractResolversResult = {
         queryFields: { fields: [] },
@@ -58,9 +57,9 @@ describe("E2E: Description and Deprecated", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('"A user in the system"'));
-      assert.ok(sdl.includes('"The unique identifier"'));
-      assert.ok(sdl.includes('"The display name"'));
+      expect(sdl.includes('"A user in the system"'));
+      expect(sdl.includes('"The unique identifier"'));
+      expect(sdl.includes('"The display name"'));
     });
 
     it("should propagate resolver descriptions to schema", () => {
@@ -115,7 +114,7 @@ describe("E2E: Description and Deprecated", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('"Get the currently authenticated user"'));
+      expect(sdl.includes('"Get the currently authenticated user"'));
     });
 
     it("should propagate enum descriptions to schema", () => {
@@ -164,9 +163,9 @@ describe("E2E: Description and Deprecated", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('"The status of an item"'));
-      assert.ok(sdl.includes('"The item is active"'));
-      assert.ok(sdl.includes('"The item is not active"'));
+      expect(sdl.includes('"The status of an item"'));
+      expect(sdl.includes('"The item is active"'));
+      expect(sdl.includes('"The item is not active"'));
     });
   });
 
@@ -211,7 +210,7 @@ describe("E2E: Description and Deprecated", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('@deprecated(reason: "Use uuid instead")'));
+      expect(sdl.includes('@deprecated(reason: "Use uuid instead")'));
     });
 
     it("should propagate resolver deprecated to schema", () => {
@@ -266,7 +265,7 @@ describe("E2E: Description and Deprecated", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('@deprecated(reason: "Use currentUser")'));
+      expect(sdl.includes('@deprecated(reason: "Use currentUser")'));
     });
 
     it("should propagate enum value deprecated to schema", () => {
@@ -310,7 +309,7 @@ describe("E2E: Description and Deprecated", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('@deprecated(reason: "Use SUSPENDED")'));
+      expect(sdl.includes('@deprecated(reason: "Use SUSPENDED")'));
     });
   });
 
@@ -357,9 +356,9 @@ describe("E2E: Description and Deprecated", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('"A user in the system"'));
-      assert.ok(sdl.includes('"The unique identifier"'));
-      assert.ok(sdl.includes('@deprecated(reason: "Use uuid instead")'));
+      expect(sdl.includes('"A user in the system"'));
+      expect(sdl.includes('"The unique identifier"'));
+      expect(sdl.includes('@deprecated(reason: "Use uuid instead")'));
     });
 
     it("should include both description and deprecated on resolver", () => {
@@ -415,8 +414,8 @@ describe("E2E: Description and Deprecated", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('"Get the currently authenticated user"'));
-      assert.ok(sdl.includes('@deprecated(reason: "Use currentUser")'));
+      expect(sdl.includes('"Get the currently authenticated user"'));
+      expect(sdl.includes('@deprecated(reason: "Use currentUser")'));
     });
   });
 });

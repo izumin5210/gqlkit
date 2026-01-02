@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type { ExtractedTypeInfo } from "../types/index.js";
 import {
   convertToGraphQL,
@@ -31,11 +30,11 @@ describe("GraphQLConverter", () => {
 
         const result = convertToGraphQL(input);
 
-        assert.strictEqual(result.types.length, 1);
+        expect(result.types.length).toBe(1);
         const field = result.types[0]?.fields?.[0];
-        assert.ok(field);
-        assert.strictEqual(field.type.typeName, "String");
-        assert.strictEqual(field.type.nullable, false);
+        expect(field).toBeTruthy();
+        expect(field!.type.typeName).toBe("String");
+        expect(field!.type.nullable).toBe(false);
       });
 
       it("should convert number to GraphQL Int", () => {
@@ -60,8 +59,8 @@ describe("GraphQLConverter", () => {
         const result = convertToGraphQL(input);
 
         const field = result.types[0]?.fields?.[0];
-        assert.ok(field);
-        assert.strictEqual(field.type.typeName, "Float");
+        expect(field).toBeTruthy();
+        expect(field!.type.typeName).toBe("Float");
       });
 
       it("should convert boolean to GraphQL Boolean", () => {
@@ -86,8 +85,8 @@ describe("GraphQLConverter", () => {
         const result = convertToGraphQL(input);
 
         const field = result.types[0]?.fields?.[0];
-        assert.ok(field);
-        assert.strictEqual(field.type.typeName, "Boolean");
+        expect(field).toBeTruthy();
+        expect(field!.type.typeName).toBe("Boolean");
       });
 
       it("should preserve type references as-is", () => {
@@ -112,8 +111,8 @@ describe("GraphQLConverter", () => {
         const result = convertToGraphQL(input);
 
         const field = result.types[0]?.fields?.[0];
-        assert.ok(field);
-        assert.strictEqual(field.type.typeName, "User");
+        expect(field).toBeTruthy();
+        expect(field!.type.typeName).toBe("User");
       });
     });
 
@@ -139,8 +138,8 @@ describe("GraphQLConverter", () => {
 
         const result = convertToGraphQL(input);
 
-        assert.strictEqual(result.types[0]?.kind, "Object");
-        assert.strictEqual(result.types[0]?.name, "User");
+        expect(result.types[0]?.kind).toBe("Object");
+        expect(result.types[0]?.name).toBe("User");
       });
 
       it("should convert object type to GraphQL Object type", () => {
@@ -164,8 +163,8 @@ describe("GraphQLConverter", () => {
 
         const result = convertToGraphQL(input);
 
-        assert.strictEqual(result.types[0]?.kind, "Object");
-        assert.strictEqual(result.types[0]?.name, "Status");
+        expect(result.types[0]?.kind).toBe("Object");
+        expect(result.types[0]?.name).toBe("Status");
       });
 
       it("should include source file in type info", () => {
@@ -183,7 +182,7 @@ describe("GraphQLConverter", () => {
 
         const result = convertToGraphQL(input);
 
-        assert.strictEqual(result.types[0]?.sourceFile, "/path/to/user.ts");
+        expect(result.types[0]?.sourceFile).toBe("/path/to/user.ts");
       });
     });
 
@@ -204,9 +203,9 @@ describe("GraphQLConverter", () => {
 
         const result = convertToGraphQL(input);
 
-        assert.strictEqual(result.types[0]?.kind, "Union");
-        assert.strictEqual(result.types[0]?.name, "SearchResult");
-        assert.deepStrictEqual(result.types[0]?.unionMembers, ["Post", "User"]);
+        expect(result.types[0]?.kind).toBe("Union");
+        expect(result.types[0]?.name).toBe("SearchResult");
+        expect(result.types[0]?.unionMembers).toEqual(["Post", "User"]);
       });
 
       it("should not include fields for union types", () => {
@@ -225,7 +224,7 @@ describe("GraphQLConverter", () => {
 
         const result = convertToGraphQL(input);
 
-        assert.strictEqual(result.types[0]?.fields, undefined);
+        expect(result.types[0]?.fields).toBe(undefined);
       });
     });
 
@@ -252,8 +251,8 @@ describe("GraphQLConverter", () => {
         const result = convertToGraphQL(input);
 
         const field = result.types[0]?.fields?.[0];
-        assert.ok(field);
-        assert.strictEqual(field.type.nullable, true);
+        expect(field).toBeTruthy();
+        expect(field!.type.nullable).toBe(true);
       });
 
       it("should mark optional fields as nullable", () => {
@@ -278,8 +277,8 @@ describe("GraphQLConverter", () => {
         const result = convertToGraphQL(input);
 
         const field = result.types[0]?.fields?.[0];
-        assert.ok(field);
-        assert.strictEqual(field.type.nullable, true);
+        expect(field).toBeTruthy();
+        expect(field!.type.nullable).toBe(true);
       });
 
       it("should convert array types to list", () => {
@@ -312,10 +311,10 @@ describe("GraphQLConverter", () => {
         const result = convertToGraphQL(input);
 
         const field = result.types[0]?.fields?.[0];
-        assert.ok(field);
-        assert.strictEqual(field.type.list, true);
-        assert.strictEqual(field.type.typeName, "String");
-        assert.strictEqual(field.type.listItemNullable, false);
+        expect(field).toBeTruthy();
+        expect(field!.type.list).toBe(true);
+        expect(field!.type.typeName).toBe("String");
+        expect(field!.type.listItemNullable).toBe(false);
       });
 
       it("should track nullable list items", () => {
@@ -348,9 +347,9 @@ describe("GraphQLConverter", () => {
         const result = convertToGraphQL(input);
 
         const field = result.types[0]?.fields?.[0];
-        assert.ok(field);
-        assert.strictEqual(field.type.list, true);
-        assert.strictEqual(field.type.listItemNullable, true);
+        expect(field).toBeTruthy();
+        expect(field!.type.list).toBe(true);
+        expect(field!.type.listItemNullable).toBe(true);
       });
     });
 
@@ -373,10 +372,9 @@ describe("GraphQLConverter", () => {
 
           const result = convertToGraphQL(input);
 
-          assert.ok(
+          expect(
             result.diagnostics.some((d) => d.code === "RESERVED_TYPE_NAME"),
-            `Expected RESERVED_TYPE_NAME error for '${name}'`,
-          );
+          ).toBe(true);
         }
       });
 
@@ -395,7 +393,7 @@ describe("GraphQLConverter", () => {
 
         const result = convertToGraphQL(input);
 
-        assert.ok(result.diagnostics[0]?.message.includes("String"));
+        expect(result.diagnostics[0]?.message).toContain("String");
       });
     });
 
@@ -419,15 +417,12 @@ describe("GraphQLConverter", () => {
 
         const result = convertToGraphQL(input);
 
-        assert.strictEqual(result.types.length, 1);
-        assert.strictEqual(result.types[0]?.kind, "Enum");
-        assert.strictEqual(result.types[0]?.name, "Status");
-        assert.strictEqual(result.types[0]?.enumValues?.length, 2);
-        assert.strictEqual(result.types[0]?.enumValues?.[0]?.name, "ACTIVE");
-        assert.strictEqual(
-          result.types[0]?.enumValues?.[0]?.originalValue,
-          "active",
-        );
+        expect(result.types.length).toBe(1);
+        expect(result.types[0]?.kind).toBe("Enum");
+        expect(result.types[0]?.name).toBe("Status");
+        expect(result.types[0]?.enumValues?.length).toBe(2);
+        expect(result.types[0]?.enumValues?.[0]?.name).toBe("ACTIVE");
+        expect(result.types[0]?.enumValues?.[0]?.originalValue).toBe("active");
       });
 
       it("should convert enum member names to SCREAMING_SNAKE_CASE", () => {
@@ -449,14 +444,8 @@ describe("GraphQLConverter", () => {
 
         const result = convertToGraphQL(input);
 
-        assert.strictEqual(
-          result.types[0]?.enumValues?.[0]?.name,
-          "SUPER_ADMIN",
-        );
-        assert.strictEqual(
-          result.types[0]?.enumValues?.[1]?.name,
-          "REGULAR_USER",
-        );
+        expect(result.types[0]?.enumValues?.[0]?.name).toBe("SUPER_ADMIN");
+        expect(result.types[0]?.enumValues?.[1]?.name).toBe("REGULAR_USER");
       });
 
       it("should preserve original value", () => {
@@ -475,8 +464,7 @@ describe("GraphQLConverter", () => {
 
         const result = convertToGraphQL(input);
 
-        assert.strictEqual(
-          result.types[0]?.enumValues?.[0]?.originalValue,
+        expect(result.types[0]?.enumValues?.[0]?.originalValue).toBe(
           "dark-blue",
         );
       });
@@ -497,9 +485,9 @@ describe("GraphQLConverter", () => {
 
         const result = convertToGraphQL(input);
 
-        assert.ok(
+        expect(
           result.diagnostics.some((d) => d.code === "INVALID_ENUM_MEMBER"),
-        );
+        ).toBe(true);
       });
 
       it("should check reserved type names for enum", () => {
@@ -518,9 +506,9 @@ describe("GraphQLConverter", () => {
 
         const result = convertToGraphQL(input);
 
-        assert.ok(
+        expect(
           result.diagnostics.some((d) => d.code === "RESERVED_TYPE_NAME"),
-        );
+        ).toBe(true);
       });
     });
   });
@@ -552,10 +540,10 @@ describe("GraphQLConverter", () => {
 
       const result = convertToGraphQL(input);
 
-      assert.strictEqual(result.types.length, 1);
-      assert.strictEqual(result.types[0]?.kind, "InputObject");
-      assert.strictEqual(result.types[0]?.name, "CreateUserInput");
-      assert.strictEqual(result.types[0]?.fields?.length, 2);
+      expect(result.types.length).toBe(1);
+      expect(result.types[0]?.kind).toBe("InputObject");
+      expect(result.types[0]?.name).toBe("CreateUserInput");
+      expect(result.types[0]?.fields?.length).toBe(2);
     });
 
     it("should convert object type with *Input suffix to InputObject kind", () => {
@@ -579,7 +567,7 @@ describe("GraphQLConverter", () => {
 
       const result = convertToGraphQL(input);
 
-      assert.strictEqual(result.types[0]?.kind, "InputObject");
+      expect(result.types[0]?.kind).toBe("InputObject");
     });
 
     it("should not convert non-*Input types to InputObject", () => {
@@ -603,7 +591,7 @@ describe("GraphQLConverter", () => {
 
       const result = convertToGraphQL(input);
 
-      assert.strictEqual(result.types[0]?.kind, "Object");
+      expect(result.types[0]?.kind).toBe("Object");
     });
 
     it("should handle nested Input type references in fields", () => {
@@ -636,12 +624,12 @@ describe("GraphQLConverter", () => {
 
       const result = convertToGraphQL(input);
 
-      assert.strictEqual(result.types[0]?.kind, "InputObject");
+      expect(result.types[0]?.kind).toBe("InputObject");
       const authorField = result.types[0]?.fields?.find(
         (f) => f.name === "author",
       );
-      assert.ok(authorField);
-      assert.strictEqual(authorField.type.typeName, "AuthorInput");
+      expect(authorField).toBeTruthy();
+      expect(authorField!.type.typeName).toBe("AuthorInput");
     });
 
     it("should report error for union type with *Input suffix", () => {
@@ -660,16 +648,15 @@ describe("GraphQLConverter", () => {
 
       const result = convertToGraphQL(input);
 
-      assert.ok(
+      expect(
         result.diagnostics.some((d) => d.code === "INVALID_INPUT_TYPE"),
-        "Expected INVALID_INPUT_TYPE error",
-      );
+      ).toBe(true);
       const error = result.diagnostics.find(
         (d) => d.code === "INVALID_INPUT_TYPE",
       );
-      assert.ok(error?.message.includes("StatusInput"));
-      assert.ok(error?.message.includes("union"));
-      assert.strictEqual(error?.location?.file, "/path/to/status-input.ts");
+      expect(error?.message).toContain("StatusInput");
+      expect(error?.message).toContain("union");
+      expect(error?.location?.file).toBe("/path/to/status-input.ts");
     });
 
     it("should report error for enum type with *Input suffix", () => {
@@ -691,15 +678,14 @@ describe("GraphQLConverter", () => {
 
       const result = convertToGraphQL(input);
 
-      assert.ok(
+      expect(
         result.diagnostics.some((d) => d.code === "INVALID_INPUT_TYPE"),
-        "Expected INVALID_INPUT_TYPE error",
-      );
+      ).toBe(true);
       const error = result.diagnostics.find(
         (d) => d.code === "INVALID_INPUT_TYPE",
       );
-      assert.ok(error?.message.includes("ColorInput"));
-      assert.ok(error?.message.includes("enum"));
+      expect(error?.message).toContain("ColorInput");
+      expect(error?.message).toContain("enum");
     });
 
     it("should not add invalid Input types to result types", () => {
@@ -718,67 +704,64 @@ describe("GraphQLConverter", () => {
 
       const result = convertToGraphQL(input);
 
-      assert.strictEqual(result.types.length, 1);
-      assert.strictEqual(result.types[0]?.kind, "Union");
+      expect(result.types.length).toBe(1);
+      expect(result.types[0]?.kind).toBe("Union");
     });
   });
 
   describe("toScreamingSnakeCase", () => {
     it("should convert camelCase to SCREAMING_SNAKE_CASE", () => {
-      assert.strictEqual(toScreamingSnakeCase("camelCase"), "CAMEL_CASE");
+      expect(toScreamingSnakeCase("camelCase")).toBe("CAMEL_CASE");
     });
 
     it("should convert PascalCase to SCREAMING_SNAKE_CASE", () => {
-      assert.strictEqual(toScreamingSnakeCase("PascalCase"), "PASCAL_CASE");
+      expect(toScreamingSnakeCase("PascalCase")).toBe("PASCAL_CASE");
     });
 
     it("should convert kebab-case to SCREAMING_SNAKE_CASE", () => {
-      assert.strictEqual(toScreamingSnakeCase("kebab-case"), "KEBAB_CASE");
+      expect(toScreamingSnakeCase("kebab-case")).toBe("KEBAB_CASE");
     });
 
     it("should convert lowercase to UPPERCASE", () => {
-      assert.strictEqual(toScreamingSnakeCase("active"), "ACTIVE");
+      expect(toScreamingSnakeCase("active")).toBe("ACTIVE");
     });
 
     it("should preserve existing SCREAMING_SNAKE_CASE", () => {
-      assert.strictEqual(
-        toScreamingSnakeCase("ALREADY_SNAKE"),
-        "ALREADY_SNAKE",
-      );
+      expect(toScreamingSnakeCase("ALREADY_SNAKE")).toBe("ALREADY_SNAKE");
     });
 
     it("should handle spaces", () => {
-      assert.strictEqual(toScreamingSnakeCase("space case"), "SPACE_CASE");
+      expect(toScreamingSnakeCase("space case")).toBe("SPACE_CASE");
     });
 
     it("should handle consecutive uppercase letters", () => {
-      assert.strictEqual(toScreamingSnakeCase("XMLParser"), "XML_PARSER");
+      expect(toScreamingSnakeCase("XMLParser")).toBe("XML_PARSER");
     });
   });
 
   describe("isValidGraphQLEnumValue", () => {
     it("should return true for valid uppercase name", () => {
-      assert.strictEqual(isValidGraphQLEnumValue("VALID_NAME"), true);
+      expect(isValidGraphQLEnumValue("VALID_NAME")).toBe(true);
     });
 
     it("should return true for name starting with underscore", () => {
-      assert.strictEqual(isValidGraphQLEnumValue("_VALID"), true);
+      expect(isValidGraphQLEnumValue("_VALID")).toBe(true);
     });
 
     it("should return true for name with numbers", () => {
-      assert.strictEqual(isValidGraphQLEnumValue("VALUE_123"), true);
+      expect(isValidGraphQLEnumValue("VALUE_123")).toBe(true);
     });
 
     it("should return false for name starting with number", () => {
-      assert.strictEqual(isValidGraphQLEnumValue("123_INVALID"), false);
+      expect(isValidGraphQLEnumValue("123_INVALID")).toBe(false);
     });
 
     it("should return false for empty string", () => {
-      assert.strictEqual(isValidGraphQLEnumValue(""), false);
+      expect(isValidGraphQLEnumValue("")).toBe(false);
     });
 
     it("should return false for name with special characters", () => {
-      assert.strictEqual(isValidGraphQLEnumValue("INVALID@NAME"), false);
+      expect(isValidGraphQLEnumValue("INVALID@NAME")).toBe(false);
     });
   });
 });

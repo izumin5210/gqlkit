@@ -32,10 +32,9 @@ Static code generation tool that analyzes TypeScript source files and produces G
 
 ### Testing
 
-- **Test Runner**: Node.js built-in test runner (`node --test`)
-- **Loader**: tsx for TypeScript execution
+- **Test Runner**: Vitest (workspace projects configuration)
 - **Pattern**: Colocated tests (`*.test.ts` alongside source files)
-- **Command**: `pnpm test` (runs tests across all packages)
+- **Command**: `pnpm test` (runs tests across all packages via `vitest run`)
 
 ## Development Environment
 
@@ -65,4 +64,4 @@ Static code generation tool that analyzes TypeScript source files and produces G
 
 ---
 _Document standards and patterns, not every dependency_
-_Updated: 2025-01-01 - Branded scalar types convention_
+_Updated: 2026-01-02 - Migrated to Vitest_

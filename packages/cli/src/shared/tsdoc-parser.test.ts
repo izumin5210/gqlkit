@@ -1,6 +1,5 @@
-import assert from "node:assert/strict";
 import path from "node:path";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import ts from "typescript";
 import { extractTSDocFromSymbol, extractTSDocInfo } from "./tsdoc-parser.js";
 
@@ -84,7 +83,7 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(interfaceNode, checker);
 
-        assert.equal(result.description, "A user in the system");
+        expect(result.description).toBe("A user in the system");
       });
 
       it("should extract multi-line description preserving newlines", () => {
@@ -106,10 +105,10 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(interfaceNode, checker);
 
-        assert.ok(result.description);
-        assert.ok(result.description.includes("A user in the system."));
-        assert.ok(
-          result.description.includes("This represents an authenticated user."),
+        expect(result.description).toBeTruthy();
+        expect(result.description).toContain("A user in the system.");
+        expect(result.description).toContain(
+          "This represents an authenticated user.",
         );
       });
 
@@ -131,7 +130,7 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(interfaceNode, checker);
 
-        assert.equal(result.description, "A user in the system");
+        expect(result.description).toBe("A user in the system");
       });
 
       it("should return undefined when no TSDoc comment exists", () => {
@@ -149,7 +148,7 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(interfaceNode, checker);
 
-        assert.equal(result.description, undefined);
+        expect(result.description).toBe(undefined);
       });
 
       it("should return undefined for whitespace-only description", () => {
@@ -170,7 +169,7 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(interfaceNode, checker);
 
-        assert.equal(result.description, undefined);
+        expect(result.description).toBe(undefined);
       });
 
       it("should strip leading and trailing whitespace and asterisks", () => {
@@ -191,7 +190,7 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(interfaceNode, checker);
 
-        assert.equal(result.description, "A user in the system");
+        expect(result.description).toBe("A user in the system");
       });
     });
 
@@ -215,9 +214,9 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(interfaceNode, checker);
 
-        assert.ok(result.deprecated);
-        assert.equal(result.deprecated.isDeprecated, true);
-        assert.equal(result.deprecated.reason, undefined);
+        expect(result.deprecated).toBeTruthy();
+        expect(result.deprecated!.isDeprecated).toBe(true);
+        expect(result.deprecated!.reason).toBe(undefined);
       });
 
       it("should extract @deprecated tag with reason", () => {
@@ -239,9 +238,9 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(interfaceNode, checker);
 
-        assert.ok(result.deprecated);
-        assert.equal(result.deprecated.isDeprecated, true);
-        assert.equal(result.deprecated.reason, "Use Member instead");
+        expect(result.deprecated).toBeTruthy();
+        expect(result.deprecated!.isDeprecated).toBe(true);
+        expect(result.deprecated!.reason).toBe("Use Member instead");
       });
 
       it("should return undefined deprecated when no @deprecated tag exists", () => {
@@ -260,7 +259,7 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(interfaceNode, checker);
 
-        assert.equal(result.deprecated, undefined);
+        expect(result.deprecated).toBe(undefined);
       });
 
       it("should extract @deprecated from property symbol", () => {
@@ -284,12 +283,12 @@ describe("TSDocParser", () => {
         const type = checker.getDeclaredTypeOfSymbol(symbol!);
         const idProperty = type.getProperty("id");
 
-        assert.ok(idProperty);
-        const result = extractTSDocFromSymbol(idProperty, checker);
+        expect(idProperty).toBeTruthy();
+        const result = extractTSDocFromSymbol(idProperty!, checker);
 
-        assert.ok(result.deprecated);
-        assert.equal(result.deprecated.isDeprecated, true);
-        assert.equal(result.deprecated.reason, "Use uuid instead");
+        expect(result.deprecated).toBeTruthy();
+        expect(result.deprecated!.isDeprecated).toBe(true);
+        expect(result.deprecated!.reason).toBe("Use uuid instead");
       });
     });
 
@@ -312,9 +311,9 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(varStatement, checker);
 
-        assert.equal(result.description, "Fetches a user by ID");
-        assert.ok(!result.description?.includes("@param"));
-        assert.ok(!result.description?.includes("user ID"));
+        expect(result.description).toBe("Fetches a user by ID");
+        expect(result.description).not.toContain("@param");
+        expect(result.description).not.toContain("user ID");
       });
 
       it("should exclude @returns tag from description", () => {
@@ -334,8 +333,8 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(varStatement, checker);
 
-        assert.equal(result.description, "Fetches a user by ID");
-        assert.ok(!result.description?.includes("@returns"));
+        expect(result.description).toBe("Fetches a user by ID");
+        expect(result.description).not.toContain("@returns");
       });
 
       it("should exclude @example tag from description", () => {
@@ -356,8 +355,8 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(varStatement, checker);
 
-        assert.equal(result.description, "Fetches a user by ID");
-        assert.ok(!result.description?.includes("@example"));
+        expect(result.description).toBe("Fetches a user by ID");
+        expect(result.description).not.toContain("@example");
       });
 
       it("should only include description content excluding all non-description tags", () => {
@@ -381,13 +380,13 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(varStatement, checker);
 
-        assert.ok(result.description);
-        assert.ok(result.description.includes("Main description here."));
-        assert.ok(result.description.includes("With multiple lines."));
-        assert.ok(!result.description.includes("@param"));
-        assert.ok(!result.description.includes("@returns"));
-        assert.ok(!result.description.includes("@example"));
-        assert.ok(!result.description.includes("@deprecated"));
+        expect(result.description).toBeTruthy();
+        expect(result.description).toContain("Main description here.");
+        expect(result.description).toContain("With multiple lines.");
+        expect(result.description).not.toContain("@param");
+        expect(result.description).not.toContain("@returns");
+        expect(result.description).not.toContain("@example");
+        expect(result.description).not.toContain("@deprecated");
       });
 
       it("should exclude @privateRemarks content from description", () => {
@@ -410,9 +409,9 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(interfaceNode, checker);
 
-        assert.equal(result.description, "A user in the system");
-        assert.ok(!result.description?.includes("@privateRemarks"));
-        assert.ok(!result.description?.includes("internal implementation"));
+        expect(result.description).toBe("A user in the system");
+        expect(result.description).not.toContain("@privateRemarks");
+        expect(result.description).not.toContain("internal implementation");
       });
 
       it("should return undefined when only @privateRemarks exists", () => {
@@ -434,7 +433,7 @@ describe("TSDocParser", () => {
 
         const result = extractTSDocInfo(interfaceNode, checker);
 
-        assert.equal(result.description, undefined);
+        expect(result.description).toBe(undefined);
       });
     });
   });
@@ -457,10 +456,10 @@ describe("TSDocParser", () => {
       const type = checker.getDeclaredTypeOfSymbol(symbol!);
       const idProperty = type.getProperty("id");
 
-      assert.ok(idProperty);
-      const result = extractTSDocFromSymbol(idProperty, checker);
+      expect(idProperty).toBeTruthy();
+      const result = extractTSDocFromSymbol(idProperty!, checker);
 
-      assert.equal(result.description, "The unique identifier");
+      expect(result.description).toBe("The unique identifier");
     });
 
     it("should return undefined for property without TSDoc", () => {
@@ -479,10 +478,10 @@ describe("TSDocParser", () => {
       const type = checker.getDeclaredTypeOfSymbol(symbol!);
       const idProperty = type.getProperty("id");
 
-      assert.ok(idProperty);
-      const result = extractTSDocFromSymbol(idProperty, checker);
+      expect(idProperty).toBeTruthy();
+      const result = extractTSDocFromSymbol(idProperty!, checker);
 
-      assert.equal(result.description, undefined);
+      expect(result.description).toBe(undefined);
     });
   });
 });

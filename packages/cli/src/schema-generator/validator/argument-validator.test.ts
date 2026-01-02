@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type {
   InputType,
   TypeExtension,
@@ -55,8 +54,8 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        assert.strictEqual(result.isValid, true);
-        assert.strictEqual(result.diagnostics.length, 0);
+        expect(result.isValid, true);
+        expect(result.diagnostics.length, 0);
       });
 
       it("should pass for valid Input Object argument types", () => {
@@ -101,8 +100,8 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        assert.strictEqual(result.isValid, true);
-        assert.strictEqual(result.diagnostics.length, 0);
+        expect(result.isValid, true);
+        expect(result.diagnostics.length, 0);
       });
 
       it("should pass for valid Enum argument types", () => {
@@ -132,8 +131,8 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        assert.strictEqual(result.isValid, true);
-        assert.strictEqual(result.diagnostics.length, 0);
+        expect(result.isValid, true);
+        expect(result.diagnostics.length, 0);
       });
 
       it("should report error for unknown argument type", () => {
@@ -166,14 +165,14 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        assert.strictEqual(result.isValid, false);
-        assert.ok(
+        expect(result.isValid, false);
+        expect(
           result.diagnostics.some((d) => d.code === "UNKNOWN_ARGUMENT_TYPE"),
         );
         const error = result.diagnostics.find(
           (d) => d.code === "UNKNOWN_ARGUMENT_TYPE",
         );
-        assert.ok(error?.message.includes("UnknownType"));
+        expect(error?.message.includes("UnknownType"));
       });
 
       it("should report error when argument uses Output type", () => {
@@ -202,14 +201,14 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        assert.strictEqual(result.isValid, false);
-        assert.ok(
+        expect(result.isValid, false);
+        expect(
           result.diagnostics.some((d) => d.code === "OUTPUT_TYPE_IN_INPUT"),
         );
         const error = result.diagnostics.find(
           (d) => d.code === "OUTPUT_TYPE_IN_INPUT",
         );
-        assert.ok(error?.message.includes("User"));
+        expect(error?.message.includes("User"));
       });
     });
 
@@ -238,14 +237,14 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        assert.strictEqual(result.isValid, false);
-        assert.ok(
+        expect(result.isValid, false);
+        expect(
           result.diagnostics.some((d) => d.code === "CIRCULAR_INPUT_REFERENCE"),
         );
         const error = result.diagnostics.find(
           (d) => d.code === "CIRCULAR_INPUT_REFERENCE",
         );
-        assert.ok(error?.message.includes("NodeInput"));
+        expect(error?.message.includes("NodeInput"));
       });
 
       it("should detect indirect circular reference (A -> B -> A)", () => {
@@ -294,15 +293,15 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        assert.strictEqual(result.isValid, false);
-        assert.ok(
+        expect(result.isValid, false);
+        expect(
           result.diagnostics.some((d) => d.code === "CIRCULAR_INPUT_REFERENCE"),
         );
         const error = result.diagnostics.find(
           (d) => d.code === "CIRCULAR_INPUT_REFERENCE",
         );
-        assert.ok(error?.message.includes("CreateUserInput"));
-        assert.ok(error?.message.includes("AddressInput"));
+        expect(error?.message.includes("CreateUserInput"));
+        expect(error?.message.includes("AddressInput"));
       });
 
       it("should allow nullable self-reference without error", () => {
@@ -329,8 +328,8 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        assert.strictEqual(result.isValid, true);
-        assert.strictEqual(
+        expect(result.isValid, true);
+        expect(
           result.diagnostics.filter(
             (d) => d.code === "CIRCULAR_INPUT_REFERENCE",
           ).length,
@@ -378,8 +377,8 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        assert.strictEqual(result.isValid, false);
-        assert.ok(
+        expect(result.isValid, false);
+        expect(
           result.diagnostics.some((d) => d.code === "CIRCULAR_INPUT_REFERENCE"),
         );
       });
@@ -432,12 +431,12 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        assert.strictEqual(result.isValid, false);
-        assert.ok(result.diagnostics.length >= 2, "Expected at least 2 errors");
-        assert.ok(
+        expect(result.isValid, false);
+        expect(result.diagnostics.length >= 2, "Expected at least 2 errors");
+        expect(
           result.diagnostics.some((d) => d.code === "UNKNOWN_ARGUMENT_TYPE"),
         );
-        assert.ok(
+        expect(
           result.diagnostics.some((d) => d.code === "OUTPUT_TYPE_IN_INPUT"),
         );
       });
@@ -472,15 +471,15 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        assert.strictEqual(result.isValid, false);
+        expect(result.isValid, false);
         for (const diagnostic of result.diagnostics) {
-          assert.ok(
+          expect(
             diagnostic.location,
             "Expected location on all diagnostics",
           );
-          assert.ok(diagnostic.location.file, "Expected file path in location");
-          assert.strictEqual(typeof diagnostic.location.line, "number");
-          assert.strictEqual(typeof diagnostic.location.column, "number");
+          expect(diagnostic.location.file, "Expected file path in location");
+          expect(typeof diagnostic.location.line, "number");
+          expect(typeof diagnostic.location.column, "number");
         }
       });
 
@@ -507,7 +506,7 @@ describe("ArgumentValidator", () => {
         const errors = result.diagnostics.filter((d) =>
           d.message.includes("UnknownType"),
         );
-        assert.strictEqual(
+        expect(
           errors.length,
           1,
           "Expected exactly 1 error for UnknownType",
@@ -540,8 +539,8 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        assert.strictEqual(result.isValid, true);
-        assert.strictEqual(result.diagnostics.length, 0);
+        expect(result.isValid, true);
+        expect(result.diagnostics.length, 0);
       });
 
       it("should pass for nested Input Object references", () => {
@@ -578,8 +577,8 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        assert.strictEqual(result.isValid, true);
-        assert.strictEqual(result.diagnostics.length, 0);
+        expect(result.isValid, true);
+        expect(result.diagnostics.length, 0);
       });
 
       it("should report error when Input Object references Output type", () => {
@@ -607,15 +606,15 @@ describe("ArgumentValidator", () => {
 
         const result = validateArguments(typeExtensions, inputTypes, context);
 
-        assert.strictEqual(result.isValid, false);
-        assert.ok(
+        expect(result.isValid, false);
+        expect(
           result.diagnostics.some((d) => d.code === "OUTPUT_TYPE_IN_INPUT"),
         );
         const error = result.diagnostics.find(
           (d) => d.code === "OUTPUT_TYPE_IN_INPUT",
         );
-        assert.ok(error?.message.includes("CreatePostInput"));
-        assert.ok(error?.message.includes("User"));
+        expect(error?.message.includes("CreatePostInput"));
+        expect(error?.message.includes("User"));
       });
     });
   });

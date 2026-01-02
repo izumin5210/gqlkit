@@ -1,8 +1,7 @@
-import assert from "node:assert";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, it } from "node:test";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { executeGeneration, type GenerationConfig } from "./orchestrator.js";
 
 describe("Integration Tests", () => {
@@ -92,25 +91,25 @@ describe("Integration Tests", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, true);
-      assert.strictEqual(result.filesWritten.length, 3);
+      expect(result.success, true);
+      expect(result.filesWritten.length, 3);
 
       const schemaContent = await readFile(
         join(outputDir, "schema.ts"),
         "utf-8",
       );
-      assert.ok(schemaContent.includes("typeDefs"));
-      assert.ok(schemaContent.includes("User"));
-      assert.ok(schemaContent.includes("Post"));
-      assert.ok(schemaContent.includes("Query"));
+      expect(schemaContent.includes("typeDefs"));
+      expect(schemaContent.includes("User"));
+      expect(schemaContent.includes("Post"));
+      expect(schemaContent.includes("Query"));
 
       const resolversContent = await readFile(
         join(outputDir, "resolvers.ts"),
         "utf-8",
       );
-      assert.ok(resolversContent.includes("resolvers"));
-      assert.ok(resolversContent.includes("Query"));
-      assert.ok(resolversContent.includes("User"));
+      expect(resolversContent.includes("resolvers"));
+      expect(resolversContent.includes("Query"));
+      expect(resolversContent.includes("User"));
     });
 
     it("should generate valid TypeScript code", async () => {
@@ -148,14 +147,14 @@ describe("Integration Tests", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, true);
+      expect(result.success, true);
 
       const schemaContent = await readFile(
         join(outputDir, "schema.ts"),
         "utf-8",
       );
-      assert.ok(schemaContent.includes("import type { DocumentNode }"));
-      assert.ok(schemaContent.includes("export const typeDefs"));
+      expect(schemaContent.includes("import type { DocumentNode }"));
+      expect(schemaContent.includes("export const typeDefs"));
     });
 
     it("should handle mutations", async () => {
@@ -207,14 +206,14 @@ describe("Integration Tests", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, true);
+      expect(result.success, true);
 
       const schemaContent = await readFile(
         join(outputDir, "schema.ts"),
         "utf-8",
       );
-      assert.ok(schemaContent.includes("Mutation"));
-      assert.ok(schemaContent.includes("createUser"));
+      expect(schemaContent.includes("Mutation"));
+      expect(schemaContent.includes("createUser"));
     });
   });
 
@@ -265,17 +264,17 @@ describe("Integration Tests", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, true);
+      expect(result.success, true);
 
       const schemaContent = await readFile(
         join(outputDir, "schema.ts"),
         "utf-8",
       );
-      assert.ok(
+      expect(
         schemaContent.includes('"kind": "ScalarTypeDefinition"'),
         "Schema should include scalar type definition",
       );
-      assert.ok(
+      expect(
         schemaContent.includes('"value": "DateTime"'),
         "Schema should include DateTime scalar",
       );
@@ -334,14 +333,14 @@ describe("Integration Tests", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, true);
+      expect(result.success, true);
 
       const schemaContent = await readFile(
         join(outputDir, "schema.ts"),
         "utf-8",
       );
-      assert.ok(schemaContent.includes('"value": "DateTime"'));
-      assert.ok(schemaContent.includes('"value": "JSON"'));
+      expect(schemaContent.includes('"value": "DateTime"'));
+      expect(schemaContent.includes('"value": "JSON"'));
     });
 
     it("should pass validation when custom scalar is referenced in type", async () => {
@@ -390,8 +389,8 @@ describe("Integration Tests", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, true);
-      assert.strictEqual(
+      expect(result.success, true);
+      expect(
         result.diagnostics.filter((d) => d.code === "UNRESOLVED_REFERENCE")
           .length,
         0,
@@ -437,8 +436,8 @@ describe("Integration Tests", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, false);
-      assert.ok(
+      expect(result.success, false);
+      expect(
         result.diagnostics.some((d) => d.code === "UNRESOLVED_REFERENCE"),
         "Should have unresolved reference error for unknown type",
       );
@@ -471,8 +470,8 @@ describe("Integration Tests", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, false);
-      assert.ok(
+      expect(result.success, false);
+      expect(
         result.diagnostics.some((d) => d.code === "DIRECTORY_NOT_FOUND"),
       );
     });
@@ -496,8 +495,8 @@ describe("Integration Tests", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, false);
-      assert.ok(
+      expect(result.success, false);
+      expect(
         result.diagnostics.some((d) => d.code === "DIRECTORY_NOT_FOUND"),
       );
     });

@@ -1,8 +1,7 @@
-import assert from "node:assert";
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, it } from "node:test";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runGenCommand } from "./gen.js";
 
 describe("gen command", () => {
@@ -61,10 +60,10 @@ describe("gen command", () => {
 
       const result = await runGenCommand({ cwd: testDir });
 
-      assert.strictEqual(result.exitCode, 0);
+      expect(result.exitCode).toBe(0);
       const schemaPath = join(testDir, "src/gqlkit/generated/schema.ts");
       const content = await readFile(schemaPath, "utf-8");
-      assert.ok(content.includes("typeDefs"));
+      expect(content.includes("typeDefs")).toBeTruthy();
     });
 
     it("should generate resolvers.ts file", async () => {
@@ -72,10 +71,10 @@ describe("gen command", () => {
 
       const result = await runGenCommand({ cwd: testDir });
 
-      assert.strictEqual(result.exitCode, 0);
+      expect(result.exitCode).toBe(0);
       const resolversPath = join(testDir, "src/gqlkit/generated/resolvers.ts");
       const content = await readFile(resolversPath, "utf-8");
-      assert.ok(content.includes("resolvers"));
+      expect(content.includes("resolvers")).toBeTruthy();
     });
 
     it("should return exit code 0 on success", async () => {
@@ -83,7 +82,7 @@ describe("gen command", () => {
 
       const result = await runGenCommand({ cwd: testDir });
 
-      assert.strictEqual(result.exitCode, 0);
+      expect(result.exitCode).toBe(0);
     });
   });
 
@@ -94,7 +93,7 @@ describe("gen command", () => {
 
       const result = await runGenCommand({ cwd: testDir });
 
-      assert.strictEqual(result.exitCode, 1);
+      expect(result.exitCode).toBe(1);
     });
 
     it("should return exit code 1 when resolvers directory is missing", async () => {
@@ -108,7 +107,7 @@ describe("gen command", () => {
 
       const result = await runGenCommand({ cwd: testDir });
 
-      assert.strictEqual(result.exitCode, 1);
+      expect(result.exitCode).toBe(1);
     });
   });
 
@@ -118,7 +117,7 @@ describe("gen command", () => {
 
       const result = await runGenCommand({ cwd: testDir });
 
-      assert.strictEqual(result.exitCode, 0);
+      expect(result.exitCode).toBe(0);
     });
 
     it("should load config file when present", async () => {
@@ -130,7 +129,7 @@ describe("gen command", () => {
 
       const result = await runGenCommand({ cwd: testDir });
 
-      assert.strictEqual(result.exitCode, 0);
+      expect(result.exitCode).toBe(0);
     });
 
     it("should return exit code 1 when config file has syntax error", async () => {
@@ -142,7 +141,7 @@ describe("gen command", () => {
 
       const result = await runGenCommand({ cwd: testDir });
 
-      assert.strictEqual(result.exitCode, 1);
+      expect(result.exitCode).toBe(1);
     });
 
     it("should return exit code 1 when config file has validation error", async () => {
@@ -159,7 +158,7 @@ describe("gen command", () => {
 
       const result = await runGenCommand({ cwd: testDir });
 
-      assert.strictEqual(result.exitCode, 1);
+      expect(result.exitCode).toBe(1);
     });
 
     it("should generate schema with custom scalar definitions", async () => {
@@ -213,14 +212,13 @@ describe("gen command", () => {
 
       const result = await runGenCommand({ cwd: testDir });
 
-      assert.strictEqual(result.exitCode, 0);
+      expect(result.exitCode).toBe(0);
       const schemaPath = join(testDir, "src/gqlkit/generated/schema.ts");
       const content = await readFile(schemaPath, "utf-8");
-      assert.ok(
+      expect(
         content.includes('"kind": "ScalarTypeDefinition"') &&
           content.includes('"value": "DateTime"'),
-        "Schema should include custom scalar definition",
-      );
+      ).toBeTruthy();
     });
   });
 });

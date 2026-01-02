@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type {
   Diagnostic,
   DiagnosticCode,
@@ -16,46 +15,46 @@ describe("Diagnostics types", () => {
         column: 5,
       };
 
-      assert.strictEqual(location.file, "/path/to/file.ts");
-      assert.strictEqual(location.line, 10);
-      assert.strictEqual(location.column, 5);
+      expect(location.file).toBe("/path/to/file.ts");
+      expect(location.line).toBe(10);
+      expect(location.column).toBe(5);
     });
   });
 
   describe("DiagnosticCode", () => {
     it("should support DIRECTORY_NOT_FOUND code", () => {
       const code: DiagnosticCode = "DIRECTORY_NOT_FOUND";
-      assert.strictEqual(code, "DIRECTORY_NOT_FOUND");
+      expect(code).toBe("DIRECTORY_NOT_FOUND");
     });
 
     it("should support PARSE_ERROR code", () => {
       const code: DiagnosticCode = "PARSE_ERROR";
-      assert.strictEqual(code, "PARSE_ERROR");
+      expect(code).toBe("PARSE_ERROR");
     });
 
     it("should support UNSUPPORTED_SYNTAX code", () => {
       const code: DiagnosticCode = "UNSUPPORTED_SYNTAX";
-      assert.strictEqual(code, "UNSUPPORTED_SYNTAX");
+      expect(code).toBe("UNSUPPORTED_SYNTAX");
     });
 
     it("should support RESERVED_TYPE_NAME code", () => {
       const code: DiagnosticCode = "RESERVED_TYPE_NAME";
-      assert.strictEqual(code, "RESERVED_TYPE_NAME");
+      expect(code).toBe("RESERVED_TYPE_NAME");
     });
 
     it("should support UNRESOLVED_REFERENCE code", () => {
       const code: DiagnosticCode = "UNRESOLVED_REFERENCE";
-      assert.strictEqual(code, "UNRESOLVED_REFERENCE");
+      expect(code).toBe("UNRESOLVED_REFERENCE");
     });
 
     it("should support UNSUPPORTED_ENUM_TYPE code", () => {
       const code: DiagnosticCode = "UNSUPPORTED_ENUM_TYPE";
-      assert.strictEqual(code, "UNSUPPORTED_ENUM_TYPE");
+      expect(code).toBe("UNSUPPORTED_ENUM_TYPE");
     });
 
     it("should support INVALID_ENUM_MEMBER code", () => {
       const code: DiagnosticCode = "INVALID_ENUM_MEMBER";
-      assert.strictEqual(code, "INVALID_ENUM_MEMBER");
+      expect(code).toBe("INVALID_ENUM_MEMBER");
     });
   });
 
@@ -67,13 +66,10 @@ describe("Diagnostics types", () => {
         severity: "error",
       };
 
-      assert.strictEqual(diagnostic.severity, "error");
-      assert.strictEqual(diagnostic.code, "DIRECTORY_NOT_FOUND");
-      assert.strictEqual(
-        diagnostic.message,
-        "Directory not found: /path/to/dir",
-      );
-      assert.strictEqual(diagnostic.location, undefined);
+      expect(diagnostic.severity).toBe("error");
+      expect(diagnostic.code).toBe("DIRECTORY_NOT_FOUND");
+      expect(diagnostic.message).toBe("Directory not found: /path/to/dir");
+      expect(diagnostic.location).toBe(undefined);
     });
 
     it("should support warning severity", () => {
@@ -83,7 +79,7 @@ describe("Diagnostics types", () => {
         severity: "warning",
       };
 
-      assert.strictEqual(diagnostic.severity, "warning");
+      expect(diagnostic.severity).toBe("warning");
     });
 
     it("should support optional location", () => {
@@ -98,7 +94,7 @@ describe("Diagnostics types", () => {
         },
       };
 
-      assert.deepStrictEqual(diagnostic.location, {
+      expect(diagnostic.location).toEqual({
         file: "/path/to/file.ts",
         line: 10,
         column: 5,
@@ -125,10 +121,10 @@ describe("Diagnostics types", () => {
         ],
       };
 
-      assert.strictEqual(diagnostics.errors.length, 1);
-      assert.strictEqual(diagnostics.warnings.length, 1);
-      assert.strictEqual(diagnostics.errors[0]?.severity, "error");
-      assert.strictEqual(diagnostics.warnings[0]?.severity, "warning");
+      expect(diagnostics.errors.length).toBe(1);
+      expect(diagnostics.warnings.length).toBe(1);
+      expect(diagnostics.errors[0]?.severity).toBe("error");
+      expect(diagnostics.warnings[0]?.severity).toBe("warning");
     });
 
     it("should be readonly", () => {
@@ -137,8 +133,8 @@ describe("Diagnostics types", () => {
         warnings: [],
       };
 
-      assert.ok(Array.isArray(diagnostics.errors));
-      assert.ok(Array.isArray(diagnostics.warnings));
+      expect(Array.isArray(diagnostics.errors)).toBe(true);
+      expect(Array.isArray(diagnostics.warnings)).toBe(true);
     });
   });
 });

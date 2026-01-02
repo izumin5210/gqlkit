@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type {
   GqlkitConfig,
   ScalarMappingConfig,
@@ -16,9 +15,9 @@ describe("Config Types", () => {
           name: "DateTime",
         },
       };
-      assert.equal(config.graphqlName, "DateTime");
-      assert.equal(config.type.from, "./src/scalars");
-      assert.equal(config.type.name, "DateTime");
+      expect(config.graphqlName).toBe("DateTime");
+      expect(config.type.from).toBe("./src/scalars");
+      expect(config.type.name).toBe("DateTime");
     });
 
     it("should support package path imports", () => {
@@ -29,21 +28,21 @@ describe("Config Types", () => {
           name: "UUID",
         },
       };
-      assert.equal(config.type.from, "@my-lib/scalars");
+      expect(config.type.from).toBe("@my-lib/scalars");
     });
   });
 
   describe("GqlkitConfig", () => {
     it("should allow empty config", () => {
       const config: GqlkitConfig = {};
-      assert.equal(config.scalars, undefined);
+      expect(config.scalars).toBe(undefined);
     });
 
     it("should allow config with empty scalars array", () => {
       const config: GqlkitConfig = {
         scalars: [],
       };
-      assert.deepEqual(config.scalars, []);
+      expect(config.scalars).toEqual([]);
     });
 
     it("should allow config with single scalar mapping", () => {
@@ -55,7 +54,7 @@ describe("Config Types", () => {
           },
         ],
       };
-      assert.equal(config.scalars?.length, 1);
+      expect(config.scalars?.length).toBe(1);
     });
 
     it("should allow config with multiple scalar mappings", () => {
@@ -75,7 +74,7 @@ describe("Config Types", () => {
           },
         ],
       };
-      assert.equal(config.scalars?.length, 3);
+      expect(config.scalars?.length).toBe(3);
     });
 
     it("should allow config with output settings", () => {
@@ -85,8 +84,8 @@ describe("Config Types", () => {
           sdl: "src/gqlkit/generated/schema.graphql",
         },
       };
-      assert.equal(config.output?.ast, "src/gqlkit/generated/schema.ts");
-      assert.equal(config.output?.sdl, "src/gqlkit/generated/schema.graphql");
+      expect(config.output?.ast).toBe("src/gqlkit/generated/schema.ts");
+      expect(config.output?.sdl).toBe("src/gqlkit/generated/schema.graphql");
     });
 
     it("should allow config with output suppression using null", () => {
@@ -96,16 +95,16 @@ describe("Config Types", () => {
           sdl: "schema.graphql",
         },
       };
-      assert.equal(config.output?.ast, null);
-      assert.equal(config.output?.sdl, "schema.graphql");
+      expect(config.output?.ast).toBe(null);
+      expect(config.output?.sdl).toBe("schema.graphql");
     });
 
     it("should allow config with undefined output paths for defaults", () => {
       const config: GqlkitConfig = {
         output: {},
       };
-      assert.equal(config.output?.ast, undefined);
-      assert.equal(config.output?.sdl, undefined);
+      expect(config.output?.ast).toBe(undefined);
+      expect(config.output?.sdl).toBe(undefined);
     });
   });
 
@@ -115,8 +114,8 @@ describe("Config Types", () => {
         ast: "custom/path/schema.ts",
         sdl: "custom/path/schema.graphql",
       };
-      assert.equal(config.ast, "custom/path/schema.ts");
-      assert.equal(config.sdl, "custom/path/schema.graphql");
+      expect(config.ast).toBe("custom/path/schema.ts");
+      expect(config.sdl).toBe("custom/path/schema.graphql");
     });
 
     it("should allow null for output suppression", () => {
@@ -124,14 +123,14 @@ describe("Config Types", () => {
         ast: null,
         sdl: null,
       };
-      assert.equal(config.ast, null);
-      assert.equal(config.sdl, null);
+      expect(config.ast).toBe(null);
+      expect(config.sdl).toBe(null);
     });
 
     it("should allow omitting properties for default paths", () => {
       const config: SchemaOutputConfig = {};
-      assert.equal(config.ast, undefined);
-      assert.equal(config.sdl, undefined);
+      expect(config.ast).toBe(undefined);
+      expect(config.sdl).toBe(undefined);
     });
 
     it("should allow mixed configurations", () => {
@@ -139,8 +138,8 @@ describe("Config Types", () => {
         ast: "schema.ts",
         sdl: null,
       };
-      assert.equal(config.ast, "schema.ts");
-      assert.equal(config.sdl, null);
+      expect(config.ast).toBe("schema.ts");
+      expect(config.sdl).toBe(null);
     });
   });
 });

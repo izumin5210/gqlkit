@@ -1,8 +1,7 @@
-import assert from "node:assert";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, it } from "node:test";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { extractTypes } from "./extract-types.js";
 
 describe("extractTypes", () => {
@@ -25,9 +24,9 @@ describe("extractTypes", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 1);
-      assert.strictEqual(result.types[0]?.name, "User");
-      assert.strictEqual(result.types[0]?.kind, "Object");
+      expect(result.types.length).toBe(1);
+      expect(result.types[0]?.name).toBe("User");
+      expect(result.types[0]?.kind).toBe("Object");
     });
 
     it("should extract types from multiple files", async () => {
@@ -42,10 +41,10 @@ describe("extractTypes", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 2);
+      expect(result.types.length).toBe(2);
       const names = result.types.map((t) => t.name);
-      assert.ok(names.includes("User"));
-      assert.ok(names.includes("Post"));
+      expect(names.includes("User")).toBeTruthy();
+      expect(names.includes("Post")).toBeTruthy();
     });
 
     it("should convert types to GraphQL format", async () => {
@@ -61,16 +60,16 @@ describe("extractTypes", () => {
       const result = await extractTypes({ directory: tempDir });
 
       const user = result.types[0];
-      assert.ok(user?.fields);
+      expect(user?.fields).toBeDefined();
 
       const idField = user.fields.find((f) => f.name === "id");
-      assert.strictEqual(idField?.type.typeName, "String");
+      expect(idField?.type.typeName).toBe("String");
 
       const ageField = user.fields.find((f) => f.name === "age");
-      assert.strictEqual(ageField?.type.typeName, "Float");
+      expect(ageField?.type.typeName).toBe("Float");
 
       const activeField = user.fields.find((f) => f.name === "active");
-      assert.strictEqual(activeField?.type.typeName, "Boolean");
+      expect(activeField?.type.typeName).toBe("Boolean");
     });
   });
 
@@ -84,8 +83,8 @@ describe("extractTypes", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 1);
-      assert.strictEqual(result.types[0]?.name, "User");
+      expect(result.types.length).toBe(1);
+      expect(result.types[0]?.name).toBe("User");
     });
   });
 
@@ -102,11 +101,11 @@ describe("extractTypes", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 2);
+      expect(result.types.length).toBe(2);
       const post = result.types.find((t) => t.name === "Post");
-      assert.ok(post?.fields);
+      expect(post?.fields).toBeDefined();
       const authorField = post.fields.find((f) => f.name === "author");
-      assert.strictEqual(authorField?.type.typeName, "User");
+      expect(authorField?.type.typeName).toBe("User");
     });
 
     it("should extract union types", async () => {
@@ -122,10 +121,10 @@ describe("extractTypes", () => {
       const result = await extractTypes({ directory: tempDir });
 
       const unionType = result.types.find((t) => t.name === "Result");
-      assert.ok(unionType);
-      assert.strictEqual(unionType.kind, "Union");
-      assert.ok(unionType.unionMembers?.includes("Success"));
-      assert.ok(unionType.unionMembers?.includes("Failure"));
+      expect(unionType).toBeDefined();
+      expect(unionType.kind).toBe("Union");
+      expect(unionType.unionMembers?.includes("Success")).toBeTruthy();
+      expect(unionType.unionMembers?.includes("Failure")).toBeTruthy();
     });
   });
 
@@ -142,8 +141,8 @@ describe("extractTypes", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types[0]?.name, "Apple");
-      assert.strictEqual(result.types[1]?.name, "Zebra");
+      expect(result.types[0]?.name).toBe("Apple");
+      expect(result.types[1]?.name).toBe("Zebra");
     });
 
     it("should sort fields within types", async () => {
@@ -155,9 +154,9 @@ describe("extractTypes", () => {
       const result = await extractTypes({ directory: tempDir });
 
       const fields = result.types[0]?.fields;
-      assert.ok(fields);
-      assert.strictEqual(fields[0]?.name, "alpha");
-      assert.strictEqual(fields[1]?.name, "zulu");
+      expect(fields).toBeDefined();
+      expect(fields[0]?.name).toBe("alpha");
+      expect(fields[1]?.name).toBe("zulu");
     });
   });
 
@@ -165,19 +164,16 @@ describe("extractTypes", () => {
     it("should report error for non-existent directory", async () => {
       const result = await extractTypes({ directory: "/non/existent/path" });
 
-      assert.strictEqual(result.types.length, 0);
-      assert.ok(result.diagnostics.errors.length > 0);
-      assert.strictEqual(
-        result.diagnostics.errors[0]?.code,
-        "DIRECTORY_NOT_FOUND",
-      );
+      expect(result.types.length).toBe(0);
+      expect(result.diagnostics.errors.length > 0).toBeTruthy();
+      expect(result.diagnostics.errors[0]?.code).toBe("DIRECTORY_NOT_FOUND");
     });
 
     it("should return empty result for empty directory", async () => {
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 0);
-      assert.strictEqual(result.diagnostics.errors.length, 0);
+      expect(result.types.length).toBe(0);
+      expect(result.diagnostics.errors.length).toBe(0);
     });
 
     it("should report unresolved type references", async () => {
@@ -188,11 +184,11 @@ describe("extractTypes", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.ok(
+      expect(
         result.diagnostics.errors.some(
           (e) => e.code === "UNRESOLVED_REFERENCE",
         ),
-      );
+      ).toBeTruthy();
     });
 
     it("should warn about generic types", async () => {
@@ -203,11 +199,11 @@ describe("extractTypes", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.ok(
+      expect(
         result.diagnostics.warnings.some(
           (w) => w.code === "UNSUPPORTED_SYNTAX",
         ),
-      );
+      ).toBeTruthy();
     });
   });
 
@@ -215,7 +211,7 @@ describe("extractTypes", () => {
     it("should return a Promise", async () => {
       const result = extractTypes({ directory: tempDir });
 
-      assert.ok(result instanceof Promise);
+      expect(result instanceof Promise).toBeTruthy();
       await result;
     });
   });

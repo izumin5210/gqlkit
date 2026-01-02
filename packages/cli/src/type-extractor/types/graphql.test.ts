@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type {
   EnumValueInfo,
   FieldInfo,
@@ -12,22 +11,22 @@ describe("GraphQL types", () => {
   describe("GraphQLTypeKind", () => {
     it("should support Object kind", () => {
       const kind: GraphQLTypeKind = "Object";
-      assert.strictEqual(kind, "Object");
+      expect(kind).toBe("Object");
     });
 
     it("should support Union kind", () => {
       const kind: GraphQLTypeKind = "Union";
-      assert.strictEqual(kind, "Union");
+      expect(kind).toBe("Union");
     });
 
     it("should support Enum kind", () => {
       const kind: GraphQLTypeKind = "Enum";
-      assert.strictEqual(kind, "Enum");
+      expect(kind).toBe("Enum");
     });
 
     it("should support InputObject kind", () => {
       const kind: GraphQLTypeKind = "InputObject";
-      assert.strictEqual(kind, "InputObject");
+      expect(kind).toBe("InputObject");
     });
   });
 
@@ -39,9 +38,9 @@ describe("GraphQL types", () => {
         list: false,
       };
 
-      assert.strictEqual(fieldType.typeName, "String");
-      assert.strictEqual(fieldType.nullable, false);
-      assert.strictEqual(fieldType.list, false);
+      expect(fieldType.typeName).toBe("String");
+      expect(fieldType.nullable).toBe(false);
+      expect(fieldType.list).toBe(false);
     });
 
     it("should support nullable types", () => {
@@ -51,7 +50,7 @@ describe("GraphQL types", () => {
         list: false,
       };
 
-      assert.strictEqual(fieldType.nullable, true);
+      expect(fieldType.nullable).toBe(true);
     });
 
     it("should support list types", () => {
@@ -61,7 +60,7 @@ describe("GraphQL types", () => {
         list: true,
       };
 
-      assert.strictEqual(fieldType.list, true);
+      expect(fieldType.list).toBe(true);
     });
 
     it("should support listItemNullable for list types", () => {
@@ -72,7 +71,7 @@ describe("GraphQL types", () => {
         listItemNullable: true,
       };
 
-      assert.strictEqual(fieldType.listItemNullable, true);
+      expect(fieldType.listItemNullable).toBe(true);
     });
   });
 
@@ -87,8 +86,8 @@ describe("GraphQL types", () => {
         },
       };
 
-      assert.strictEqual(field.name, "id");
-      assert.strictEqual(field.type.typeName, "String");
+      expect(field.name).toBe("id");
+      expect(field.type.typeName).toBe("String");
     });
   });
 
@@ -110,11 +109,11 @@ describe("GraphQL types", () => {
         sourceFile: "/path/to/user.ts",
       };
 
-      assert.strictEqual(typeInfo.name, "User");
-      assert.strictEqual(typeInfo.kind, "Object");
-      assert.strictEqual(typeInfo.fields?.length, 2);
-      assert.strictEqual(typeInfo.sourceFile, "/path/to/user.ts");
-      assert.strictEqual(typeInfo.unionMembers, undefined);
+      expect(typeInfo.name).toBe("User");
+      expect(typeInfo.kind).toBe("Object");
+      expect(typeInfo.fields?.length).toBe(2);
+      expect(typeInfo.sourceFile).toBe("/path/to/user.ts");
+      expect(typeInfo.unionMembers).toBe(undefined);
     });
 
     it("should represent a Union type with members", () => {
@@ -125,10 +124,10 @@ describe("GraphQL types", () => {
         sourceFile: "/path/to/search-result.ts",
       };
 
-      assert.strictEqual(typeInfo.name, "SearchResult");
-      assert.strictEqual(typeInfo.kind, "Union");
-      assert.deepStrictEqual(typeInfo.unionMembers, ["User", "Post"]);
-      assert.strictEqual(typeInfo.fields, undefined);
+      expect(typeInfo.name).toBe("SearchResult");
+      expect(typeInfo.kind).toBe("Union");
+      expect(typeInfo.unionMembers).toEqual(["User", "Post"]);
+      expect(typeInfo.fields).toBe(undefined);
     });
 
     it("should represent an Enum type with values", () => {
@@ -142,12 +141,12 @@ describe("GraphQL types", () => {
         sourceFile: "/path/to/status.ts",
       };
 
-      assert.strictEqual(typeInfo.name, "Status");
-      assert.strictEqual(typeInfo.kind, "Enum");
-      assert.strictEqual(typeInfo.enumValues?.length, 2);
-      assert.strictEqual(typeInfo.enumValues?.[0]?.name, "ACTIVE");
-      assert.strictEqual(typeInfo.enumValues?.[0]?.originalValue, "active");
-      assert.strictEqual(typeInfo.fields, undefined);
+      expect(typeInfo.name).toBe("Status");
+      expect(typeInfo.kind).toBe("Enum");
+      expect(typeInfo.enumValues?.length).toBe(2);
+      expect(typeInfo.enumValues?.[0]?.name).toBe("ACTIVE");
+      expect(typeInfo.enumValues?.[0]?.originalValue).toBe("active");
+      expect(typeInfo.fields).toBe(undefined);
     });
 
     it("should represent an InputObject type with fields", () => {
@@ -167,11 +166,11 @@ describe("GraphQL types", () => {
         sourceFile: "/path/to/create-user-input.ts",
       };
 
-      assert.strictEqual(typeInfo.name, "CreateUserInput");
-      assert.strictEqual(typeInfo.kind, "InputObject");
-      assert.strictEqual(typeInfo.fields?.length, 2);
-      assert.strictEqual(typeInfo.sourceFile, "/path/to/create-user-input.ts");
-      assert.strictEqual(typeInfo.unionMembers, undefined);
+      expect(typeInfo.name).toBe("CreateUserInput");
+      expect(typeInfo.kind).toBe("InputObject");
+      expect(typeInfo.fields?.length).toBe(2);
+      expect(typeInfo.sourceFile).toBe("/path/to/create-user-input.ts");
+      expect(typeInfo.unionMembers).toBe(undefined);
     });
   });
 
@@ -182,8 +181,8 @@ describe("GraphQL types", () => {
         originalValue: "active",
       };
 
-      assert.strictEqual(enumValue.name, "ACTIVE");
-      assert.strictEqual(enumValue.originalValue, "active");
+      expect(enumValue.name).toBe("ACTIVE");
+      expect(enumValue.originalValue).toBe("active");
     });
 
     it("should preserve original value for SCREAMING_SNAKE_CASE conversion", () => {
@@ -192,8 +191,8 @@ describe("GraphQL types", () => {
         originalValue: "myStatus",
       };
 
-      assert.strictEqual(enumValue.name, "MY_STATUS");
-      assert.strictEqual(enumValue.originalValue, "myStatus");
+      expect(enumValue.name).toBe("MY_STATUS");
+      expect(enumValue.originalValue).toBe("myStatus");
     });
   });
 });

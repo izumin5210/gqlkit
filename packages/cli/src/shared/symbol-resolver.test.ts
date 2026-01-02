@@ -1,8 +1,7 @@
-import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, beforeEach, describe, it } from "node:test";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import ts from "typescript";
 import {
   isSymbolFromGqlkitRuntime,
@@ -98,10 +97,10 @@ export type User = { id: IDString };
       const checker = program.getTypeChecker();
       const filePath = path.join(tempDir, "src/types.ts");
       const sourceFile = program.getSourceFile(filePath);
-      assert.ok(sourceFile);
+      expect(sourceFile).toBeTruthy();
 
       let idFieldSymbol: ts.Symbol | undefined;
-      ts.forEachChild(sourceFile, (node) => {
+      ts.forEachChild(sourceFile!, (node) => {
         if (ts.isTypeAliasDeclaration(node)) {
           const typeSymbol = checker.getSymbolAtLocation(node.name);
           if (typeSymbol) {
@@ -115,11 +114,11 @@ export type User = { id: IDString };
         }
       });
 
-      assert.ok(idFieldSymbol);
-      const origin = resolveSymbolOrigin(idFieldSymbol, checker);
-      assert.ok(origin);
-      assert.equal(origin.symbolName, "IDString");
-      assert.equal(origin.isFromRuntime, true);
+      expect(idFieldSymbol).toBeTruthy();
+      const origin = resolveSymbolOrigin(idFieldSymbol!, checker);
+      expect(origin).toBeTruthy();
+      expect(origin!.symbolName).toBe("IDString");
+      expect(origin!.isFromRuntime).toBe(true);
     });
 
     it("should return undefined for local type", () => {
@@ -131,11 +130,11 @@ export type LocalType = { name: string };
 
       const checker = program.getTypeChecker();
       const symbol = getTypeSymbol(program, "src/types.ts", "LocalType");
-      assert.ok(symbol);
+      expect(symbol).toBeTruthy();
 
-      const origin = resolveSymbolOrigin(symbol, checker);
-      assert.ok(origin);
-      assert.equal(origin.isFromRuntime, false);
+      const origin = resolveSymbolOrigin(symbol!, checker);
+      expect(origin).toBeTruthy();
+      expect(origin!.isFromRuntime).toBe(false);
     });
 
     it("should return undefined for primitive types", () => {
@@ -148,15 +147,15 @@ export type MyString = string;
       const checker = program.getTypeChecker();
       const filePath = path.join(tempDir, "src/types.ts");
       const sourceFile = program.getSourceFile(filePath);
-      assert.ok(sourceFile);
+      expect(sourceFile).toBeTruthy();
 
-      ts.forEachChild(sourceFile, (node) => {
+      ts.forEachChild(sourceFile!, (node) => {
         if (ts.isTypeAliasDeclaration(node)) {
           const typeSymbol = checker.getSymbolAtLocation(node.name);
           if (typeSymbol) {
             const origin = resolveSymbolOrigin(typeSymbol, checker);
-            assert.ok(origin);
-            assert.equal(origin.isFromRuntime, false);
+            expect(origin).toBeTruthy();
+            expect(origin!.isFromRuntime).toBe(false);
           }
         }
       });
@@ -176,10 +175,10 @@ export type User = { id: IDString };
       const checker = program.getTypeChecker();
       const filePath = path.join(tempDir, "src/types.ts");
       const sourceFile = program.getSourceFile(filePath);
-      assert.ok(sourceFile);
+      expect(sourceFile).toBeTruthy();
 
       let idFieldSymbol: ts.Symbol | undefined;
-      ts.forEachChild(sourceFile, (node) => {
+      ts.forEachChild(sourceFile!, (node) => {
         if (ts.isTypeAliasDeclaration(node)) {
           const typeSymbol = checker.getSymbolAtLocation(node.name);
           if (typeSymbol) {
@@ -193,11 +192,11 @@ export type User = { id: IDString };
         }
       });
 
-      assert.ok(idFieldSymbol);
-      const origin = resolveSymbolOrigin(idFieldSymbol, checker);
-      assert.ok(origin);
-      assert.equal(origin.symbolName, "IDString");
-      assert.equal(origin.isFromRuntime, true);
+      expect(idFieldSymbol).toBeTruthy();
+      const origin = resolveSymbolOrigin(idFieldSymbol!, checker);
+      expect(origin).toBeTruthy();
+      expect(origin!.symbolName).toBe("IDString");
+      expect(origin!.isFromRuntime).toBe(true);
     });
   });
 
@@ -213,10 +212,10 @@ export type User = { id: IDString };
       const checker = program.getTypeChecker();
       const filePath = path.join(tempDir, "src/types.ts");
       const sourceFile = program.getSourceFile(filePath);
-      assert.ok(sourceFile);
+      expect(sourceFile).toBeTruthy();
 
       let idFieldSymbol: ts.Symbol | undefined;
-      ts.forEachChild(sourceFile, (node) => {
+      ts.forEachChild(sourceFile!, (node) => {
         if (ts.isTypeAliasDeclaration(node)) {
           const typeSymbol = checker.getSymbolAtLocation(node.name);
           if (typeSymbol) {
@@ -230,8 +229,8 @@ export type User = { id: IDString };
         }
       });
 
-      assert.ok(idFieldSymbol);
-      assert.equal(isSymbolFromGqlkitRuntime(idFieldSymbol, checker), true);
+      expect(idFieldSymbol).toBeTruthy();
+      expect(isSymbolFromGqlkitRuntime(idFieldSymbol!, checker)).toBe(true);
     });
 
     it("should return true for Int from @gqlkit-ts/runtime", () => {
@@ -245,10 +244,10 @@ export type Product = { count: Int };
       const checker = program.getTypeChecker();
       const filePath = path.join(tempDir, "src/types.ts");
       const sourceFile = program.getSourceFile(filePath);
-      assert.ok(sourceFile);
+      expect(sourceFile).toBeTruthy();
 
       let countFieldSymbol: ts.Symbol | undefined;
-      ts.forEachChild(sourceFile, (node) => {
+      ts.forEachChild(sourceFile!, (node) => {
         if (ts.isTypeAliasDeclaration(node)) {
           const typeSymbol = checker.getSymbolAtLocation(node.name);
           if (typeSymbol) {
@@ -262,8 +261,8 @@ export type Product = { count: Int };
         }
       });
 
-      assert.ok(countFieldSymbol);
-      assert.equal(isSymbolFromGqlkitRuntime(countFieldSymbol, checker), true);
+      expect(countFieldSymbol).toBeTruthy();
+      expect(isSymbolFromGqlkitRuntime(countFieldSymbol!, checker)).toBe(true);
     });
 
     it("should return false for local type", () => {
@@ -276,8 +275,8 @@ export type User = { id: LocalId };
 
       const checker = program.getTypeChecker();
       const symbol = getTypeSymbol(program, "src/types.ts", "User");
-      assert.ok(symbol);
-      assert.equal(isSymbolFromGqlkitRuntime(symbol, checker), false);
+      expect(symbol).toBeTruthy();
+      expect(isSymbolFromGqlkitRuntime(symbol!, checker)).toBe(false);
     });
 
     it("should return false for type from other package", () => {
@@ -293,8 +292,8 @@ export type SomeType = { value: string };
 
       const checker = program.getTypeChecker();
       const symbol = getTypeSymbol(program, "src/other.ts", "SomeType");
-      assert.ok(symbol);
-      assert.equal(isSymbolFromGqlkitRuntime(symbol, checker), false);
+      expect(symbol).toBeTruthy();
+      expect(isSymbolFromGqlkitRuntime(symbol!, checker)).toBe(false);
     });
   });
 
@@ -306,10 +305,10 @@ export type SomeType = { value: string };
         isFromRuntime: true,
         sourceFilePath: undefined,
       };
-      assert.ok(origin);
-      assert.equal(origin.moduleName, "@gqlkit-ts/runtime");
-      assert.equal(origin.symbolName, "IDString");
-      assert.equal(origin.isFromRuntime, true);
+      expect(origin).toBeTruthy();
+      expect(origin.moduleName).toBe("@gqlkit-ts/runtime");
+      expect(origin.symbolName).toBe("IDString");
+      expect(origin.isFromRuntime).toBe(true);
     });
   });
 });

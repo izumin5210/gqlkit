@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import { createProgressReporter } from "./progress-reporter.js";
 
 describe("ProgressReporter", () => {
@@ -13,8 +12,8 @@ describe("ProgressReporter", () => {
 
       reporter.startPhase("Extracting types");
 
-      assert.strictEqual(output.length, 1);
-      assert.ok(output[0]?.includes("Extracting types"));
+      expect(output.length).toBe(1);
+      expect(output[0]?.includes("Extracting types")).toBeTruthy();
     });
 
     it("should format phase name with prefix", () => {
@@ -26,8 +25,8 @@ describe("ProgressReporter", () => {
 
       reporter.startPhase("Extracting resolvers");
 
-      assert.ok(output[0]?.startsWith("  "));
-      assert.ok(output[0]?.includes("Extracting resolvers"));
+      expect(output[0]?.startsWith("  ")).toBeTruthy();
+      expect(output[0]?.includes("Extracting resolvers")).toBeTruthy();
     });
   });
 
@@ -41,8 +40,8 @@ describe("ProgressReporter", () => {
 
       reporter.fileWritten("src/gqlkit/generated/schema.ts");
 
-      assert.strictEqual(output.length, 1);
-      assert.ok(output[0]?.includes("src/gqlkit/generated/schema.ts"));
+      expect(output.length).toBe(1);
+      expect(output[0]?.includes("src/gqlkit/generated/schema.ts")).toBeTruthy();
     });
 
     it("should format file path with 'wrote' prefix", () => {
@@ -54,8 +53,8 @@ describe("ProgressReporter", () => {
 
       reporter.fileWritten("src/gqlkit/generated/resolvers.ts");
 
-      assert.ok(output[0]?.includes("wrote"));
-      assert.ok(output[0]?.includes("src/gqlkit/generated/resolvers.ts"));
+      expect(output[0]?.includes("wrote")).toBeTruthy();
+      expect(output[0]?.includes("src/gqlkit/generated/resolvers.ts")).toBeTruthy();
     });
   });
 
@@ -69,7 +68,7 @@ describe("ProgressReporter", () => {
 
       reporter.complete();
 
-      assert.strictEqual(output.length, 1);
+      expect(output.length).toBe(1);
     });
   });
 });

@@ -1,8 +1,7 @@
-import assert from "node:assert";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, it } from "node:test";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { extractResolvers } from "./extract-resolvers.js";
 
 describe("extractResolvers", () => {
@@ -30,9 +29,9 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      assert.strictEqual(result.queryFields.fields.length, 1);
-      assert.strictEqual(result.queryFields.fields[0]?.name, "hello");
-      assert.strictEqual(result.diagnostics.errors.length, 0);
+      expect(result.queryFields.fields.length, 1);
+      expect(result.queryFields.fields[0]?.name, "hello");
+      expect(result.diagnostics.errors.length, 0);
     });
 
     it("should extract Query, Mutation, and type resolvers", async () => {
@@ -73,10 +72,10 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      assert.strictEqual(result.queryFields.fields.length, 1);
-      assert.strictEqual(result.mutationFields.fields.length, 1);
-      assert.strictEqual(result.typeExtensions.length, 1);
-      assert.strictEqual(result.typeExtensions[0]?.targetTypeName, "User");
+      expect(result.queryFields.fields.length, 1);
+      expect(result.mutationFields.fields.length, 1);
+      expect(result.typeExtensions.length, 1);
+      expect(result.typeExtensions[0]?.targetTypeName, "User");
     });
   });
 
@@ -86,8 +85,8 @@ describe("extractResolvers", () => {
         directory: join(tempDir, "non-existent"),
       });
 
-      assert.strictEqual(result.diagnostics.errors.length, 1);
-      assert.strictEqual(
+      expect(result.diagnostics.errors.length, 1);
+      expect(
         result.diagnostics.errors[0]?.code,
         "DIRECTORY_NOT_FOUND",
       );
@@ -96,10 +95,10 @@ describe("extractResolvers", () => {
     it("should return empty result for empty directory", async () => {
       const result = await extractResolvers({ directory: tempDir });
 
-      assert.strictEqual(result.queryFields.fields.length, 0);
-      assert.strictEqual(result.mutationFields.fields.length, 0);
-      assert.strictEqual(result.typeExtensions.length, 0);
-      assert.strictEqual(result.diagnostics.errors.length, 0);
+      expect(result.queryFields.fields.length, 0);
+      expect(result.mutationFields.fields.length, 0);
+      expect(result.typeExtensions.length, 0);
+      expect(result.diagnostics.errors.length, 0);
     });
   });
 
@@ -120,9 +119,9 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      assert.ok(result.queryFields.fields.length > 0);
-      assert.ok(result.mutationFields.fields.length > 0);
-      assert.ok(result.typeExtensions.length > 0);
+      expect(result.queryFields.fields.length > 0);
+      expect(result.mutationFields.fields.length > 0);
+      expect(result.typeExtensions.length > 0);
     });
 
     it("should include source file location in field definitions", async () => {
@@ -139,8 +138,8 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      assert.ok(result.queryFields.fields[0]?.sourceLocation);
-      assert.strictEqual(
+      expect(result.queryFields.fields[0]?.sourceLocation);
+      expect(
         result.queryFields.fields[0]?.sourceLocation.file,
         filePath,
       );
@@ -149,8 +148,8 @@ describe("extractResolvers", () => {
     it("should separate errors and warnings in diagnostics", async () => {
       const result = await extractResolvers({ directory: tempDir });
 
-      assert.ok(Array.isArray(result.diagnostics.errors));
-      assert.ok(Array.isArray(result.diagnostics.warnings));
+      expect(Array.isArray(result.diagnostics.errors));
+      expect(Array.isArray(result.diagnostics.warnings));
     });
   });
 
@@ -180,7 +179,7 @@ describe("extractResolvers", () => {
       const result1 = await extractResolvers({ directory: tempDir });
       const result2 = await extractResolvers({ directory: tempDir });
 
-      assert.deepStrictEqual(result1, result2);
+      expect(result1, result2);
     });
   });
 
@@ -198,9 +197,9 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      assert.ok("diagnostics" in result);
-      assert.ok("errors" in result.diagnostics);
-      assert.ok("warnings" in result.diagnostics);
+      expect("diagnostics" in result);
+      expect("errors" in result.diagnostics);
+      expect("warnings" in result.diagnostics);
     });
   });
 
@@ -224,11 +223,11 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      assert.strictEqual(result.diagnostics.errors.length, 0);
-      assert.strictEqual(result.queryFields.fields.length, 2);
+      expect(result.diagnostics.errors.length, 0);
+      expect(result.queryFields.fields.length, 2);
       const fieldNames = result.queryFields.fields.map((f) => f.name);
-      assert.ok(fieldNames.includes("me"));
-      assert.ok(fieldNames.includes("users"));
+      expect(fieldNames.includes("me"));
+      expect(fieldNames.includes("users"));
     });
 
     it("should extract Mutation resolver from defineMutation", async () => {
@@ -248,9 +247,9 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      assert.strictEqual(result.diagnostics.errors.length, 0);
-      assert.strictEqual(result.mutationFields.fields.length, 1);
-      assert.strictEqual(result.mutationFields.fields[0]?.name, "createUser");
+      expect(result.diagnostics.errors.length, 0);
+      expect(result.mutationFields.fields.length, 1);
+      expect(result.mutationFields.fields[0]?.name, "createUser");
     });
 
     it("should extract type field resolver from defineField", async () => {
@@ -269,11 +268,11 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      assert.strictEqual(result.diagnostics.errors.length, 0);
-      assert.strictEqual(result.typeExtensions.length, 1);
-      assert.strictEqual(result.typeExtensions[0]?.targetTypeName, "User");
-      assert.strictEqual(result.typeExtensions[0]?.fields.length, 1);
-      assert.strictEqual(result.typeExtensions[0]?.fields[0]?.name, "fullName");
+      expect(result.diagnostics.errors.length, 0);
+      expect(result.typeExtensions.length, 1);
+      expect(result.typeExtensions[0]?.targetTypeName, "User");
+      expect(result.typeExtensions[0]?.fields.length, 1);
+      expect(result.typeExtensions[0]?.fields[0]?.name, "fullName");
     });
 
     it("should extract resolver with args", async () => {
@@ -292,12 +291,12 @@ describe("extractResolvers", () => {
 
       const result = await extractResolvers({ directory: tempDir });
 
-      assert.strictEqual(result.diagnostics.errors.length, 0);
-      assert.strictEqual(result.queryFields.fields.length, 1);
-      assert.strictEqual(result.queryFields.fields[0]?.name, "user");
-      assert.ok(result.queryFields.fields[0]?.args);
-      assert.strictEqual(result.queryFields.fields[0]?.args.length, 1);
-      assert.strictEqual(result.queryFields.fields[0]?.args[0]?.name, "id");
+      expect(result.diagnostics.errors.length, 0);
+      expect(result.queryFields.fields.length, 1);
+      expect(result.queryFields.fields[0]?.name, "user");
+      expect(result.queryFields.fields[0]?.args);
+      expect(result.queryFields.fields[0]?.args.length, 1);
+      expect(result.queryFields.fields[0]?.args[0]?.name, "id");
     });
   });
 });

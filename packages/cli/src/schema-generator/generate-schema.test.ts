@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import { type GenerateSchemaInput, generateSchema } from "./generate-schema.js";
 
 describe("generateSchema", () => {
@@ -21,10 +20,10 @@ describe("generateSchema", () => {
 
       const result = generateSchema(input);
 
-      assert.strictEqual(typeof result.typeDefsCode, "string");
-      assert.strictEqual(typeof result.resolversCode, "string");
-      assert.ok(Array.isArray(result.diagnostics));
-      assert.strictEqual(typeof result.hasErrors, "boolean");
+      expect(typeof result.typeDefsCode, "string");
+      expect(typeof result.resolversCode, "string");
+      expect(Array.isArray(result.diagnostics));
+      expect(typeof result.hasErrors, "boolean");
     });
 
     it("should generate typeDefs code", () => {
@@ -56,8 +55,8 @@ describe("generateSchema", () => {
 
       const result = generateSchema(input);
 
-      assert.ok(result.typeDefsCode.includes("typeDefs"));
-      assert.ok(result.typeDefsCode.includes("User"));
+      expect(result.typeDefsCode.includes("typeDefs"));
+      expect(result.typeDefsCode.includes("User"));
     });
 
     it("should generate resolvers code", () => {
@@ -89,8 +88,8 @@ describe("generateSchema", () => {
 
       const result = generateSchema(input);
 
-      assert.ok(result.resolversCode.includes("resolvers"));
-      assert.ok(result.resolversCode.includes("queryResolver"));
+      expect(result.resolversCode.includes("resolvers"));
+      expect(result.resolversCode.includes("queryResolver"));
     });
   });
 
@@ -121,8 +120,8 @@ describe("generateSchema", () => {
 
       const result = generateSchema(input);
 
-      assert.strictEqual(result.hasErrors, true);
-      assert.strictEqual(result.diagnostics.length, 1);
+      expect(result.hasErrors, true);
+      expect(result.diagnostics.length, 1);
     });
 
     it("should report hasErrors when resolver errors exist", () => {
@@ -151,7 +150,7 @@ describe("generateSchema", () => {
 
       const result = generateSchema(input);
 
-      assert.strictEqual(result.hasErrors, true);
+      expect(result.hasErrors, true);
     });
 
     it("should report UNKNOWN_TARGET_TYPE for invalid type extensions", () => {
@@ -186,8 +185,8 @@ describe("generateSchema", () => {
 
       const result = generateSchema(input);
 
-      assert.strictEqual(result.hasErrors, true);
-      assert.ok(
+      expect(result.hasErrors, true);
+      expect(
         result.diagnostics.some((d) => d.code === "UNKNOWN_TARGET_TYPE"),
       );
     });
@@ -230,8 +229,8 @@ describe("generateSchema", () => {
 
       const result = generateSchema(input);
 
-      assert.strictEqual(result.hasErrors, true);
-      assert.ok(result.typeDefsCode.length > 0);
+      expect(result.hasErrors, true);
+      expect(result.typeDefsCode.length > 0);
     });
   });
 
@@ -354,14 +353,14 @@ describe("generateSchema", () => {
 
       const result = generateSchema(input);
 
-      assert.strictEqual(result.hasErrors, false);
-      assert.ok(result.typeDefsCode.includes("Query"));
-      assert.ok(result.typeDefsCode.includes("Mutation"));
-      assert.ok(result.typeDefsCode.includes("User"));
-      assert.ok(result.typeDefsCode.includes("Post"));
-      assert.ok(result.resolversCode.includes("queryResolver"));
-      assert.ok(result.resolversCode.includes("mutationResolver"));
-      assert.ok(result.resolversCode.includes("userResolver"));
+      expect(result.hasErrors, false);
+      expect(result.typeDefsCode.includes("Query"));
+      expect(result.typeDefsCode.includes("Mutation"));
+      expect(result.typeDefsCode.includes("User"));
+      expect(result.typeDefsCode.includes("Post"));
+      expect(result.resolversCode.includes("queryResolver"));
+      expect(result.resolversCode.includes("mutationResolver"));
+      expect(result.resolversCode.includes("userResolver"));
     });
 
     it("should produce deterministic output", () => {
@@ -405,12 +404,12 @@ describe("generateSchema", () => {
       const result1 = generateSchema(input);
       const result2 = generateSchema(input);
 
-      assert.strictEqual(result1.typeDefsCode, result2.typeDefsCode);
-      assert.strictEqual(result1.resolversCode, result2.resolversCode);
+      expect(result1.typeDefsCode, result2.typeDefsCode);
+      expect(result1.resolversCode, result2.resolversCode);
 
       const appleIndex = result1.typeDefsCode.indexOf("Apple");
       const zebraIndex = result1.typeDefsCode.indexOf("Zebra");
-      assert.ok(appleIndex < zebraIndex);
+      expect(appleIndex < zebraIndex);
     });
   });
 
@@ -456,10 +455,10 @@ describe("generateSchema", () => {
 
       const result = generateSchema(input);
 
-      assert.ok(result.sdlContent);
-      assert.ok(result.sdlContent.includes("type User"));
-      assert.ok(result.sdlContent.includes("type Query"));
-      assert.ok(result.sdlContent.includes("id: ID!"));
+      expect(result.sdlContent);
+      expect(result.sdlContent.includes("type User"));
+      expect(result.sdlContent.includes("type Query"));
+      expect(result.sdlContent.includes("id: ID!"));
     });
 
     it("should include descriptions in SDL", () => {
@@ -493,8 +492,8 @@ describe("generateSchema", () => {
 
       const result = generateSchema(input);
 
-      assert.ok(result.sdlContent);
-      assert.ok(
+      expect(result.sdlContent);
+      expect(
         result.sdlContent.includes("A user in the system") ||
           result.sdlContent.includes('"A user in the system"'),
       );
@@ -554,8 +553,8 @@ describe("generateSchema", () => {
 
       const result = generateSchema(input);
 
-      assert.ok(result.sdlContent?.includes("UnusedType"));
-      assert.strictEqual(result.prunedTypes, undefined);
+      expect(result.sdlContent?.includes("UnusedType"));
+      expect(result.prunedTypes, undefined);
     });
 
     it("should prune unused types when enablePruning is true", () => {
@@ -611,10 +610,10 @@ describe("generateSchema", () => {
 
       const result = generateSchema(input);
 
-      assert.ok(result.sdlContent);
-      assert.ok(!result.sdlContent.includes("UnusedType"));
-      assert.ok(result.prunedTypes);
-      assert.ok(result.prunedTypes.includes("UnusedType"));
+      expect(result.sdlContent);
+      expect(!result.sdlContent.includes("UnusedType"));
+      expect(result.prunedTypes);
+      expect(result.prunedTypes.includes("UnusedType"));
     });
 
     it("should keep custom scalars when pruning", () => {
@@ -660,7 +659,7 @@ describe("generateSchema", () => {
 
       const result = generateSchema(input);
 
-      assert.ok(result.sdlContent?.includes("scalar DateTime"));
+      expect(result.sdlContent?.includes("scalar DateTime"));
     });
   });
 });

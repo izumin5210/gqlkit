@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type { ExtractResolversResult } from "../../resolver-extractor/index.js";
 import type { ExtractTypesResult } from "../../type-extractor/index.js";
 import { integrate } from "./result-integrator.js";
@@ -21,11 +20,11 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.ok(Array.isArray(result.baseTypes));
-        assert.ok(Array.isArray(result.typeExtensions));
-        assert.strictEqual(typeof result.hasQuery, "boolean");
-        assert.strictEqual(typeof result.hasMutation, "boolean");
-        assert.ok(Array.isArray(result.diagnostics));
+        expect(Array.isArray(result.baseTypes));
+        expect(Array.isArray(result.typeExtensions));
+        expect(typeof result.hasQuery, "boolean");
+        expect(typeof result.hasMutation, "boolean");
+        expect(Array.isArray(result.diagnostics));
       });
 
       it("should convert type-extractor types to baseTypes", () => {
@@ -58,10 +57,10 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.strictEqual(result.baseTypes.length, 1);
-        assert.strictEqual(result.baseTypes[0]?.name, "User");
-        assert.strictEqual(result.baseTypes[0]?.kind, "Object");
-        assert.strictEqual(result.baseTypes[0]?.fields?.length, 2);
+        expect(result.baseTypes.length, 1);
+        expect(result.baseTypes[0]?.name, "User");
+        expect(result.baseTypes[0]?.kind, "Object");
+        expect(result.baseTypes[0]?.fields?.length, 2);
       });
 
       it("should convert Union types to baseTypes", () => {
@@ -85,10 +84,10 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.strictEqual(result.baseTypes.length, 1);
-        assert.strictEqual(result.baseTypes[0]?.name, "SearchResult");
-        assert.strictEqual(result.baseTypes[0]?.kind, "Union");
-        assert.deepStrictEqual(result.baseTypes[0]?.unionMembers, [
+        expect(result.baseTypes.length, 1);
+        expect(result.baseTypes[0]?.name, "SearchResult");
+        expect(result.baseTypes[0]?.kind, "Union");
+        expect(result.baseTypes[0]?.unionMembers, [
           "User",
           "Post",
         ]);
@@ -120,8 +119,8 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.strictEqual(result.diagnostics.length, 1);
-        assert.strictEqual(result.diagnostics[0]?.code, "UNRESOLVED_REFERENCE");
+        expect(result.diagnostics.length, 1);
+        expect(result.diagnostics[0]?.code, "UNRESOLVED_REFERENCE");
       });
 
       it("should propagate diagnostics from resolver-extractor", () => {
@@ -147,8 +146,8 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.strictEqual(result.diagnostics.length, 1);
-        assert.strictEqual(
+        expect(result.diagnostics.length, 1);
+        expect(
           result.diagnostics[0]?.code,
           "INVALID_RESOLVER_SIGNATURE",
         );
@@ -192,11 +191,11 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.strictEqual(result.diagnostics.length, 3);
+        expect(result.diagnostics.length, 3);
         const codes = result.diagnostics.map((d) => d.code);
-        assert.ok(codes.includes("UNRESOLVED_REFERENCE"));
-        assert.ok(codes.includes("UNSUPPORTED_SYNTAX"));
-        assert.ok(codes.includes("INVALID_RESOLVER_SIGNATURE"));
+        expect(codes.includes("UNRESOLVED_REFERENCE"));
+        expect(codes.includes("UNSUPPORTED_SYNTAX"));
+        expect(codes.includes("INVALID_RESOLVER_SIGNATURE"));
       });
     });
 
@@ -232,8 +231,8 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.strictEqual(result.hasQuery, true);
-        assert.strictEqual(result.hasMutation, false);
+        expect(result.hasQuery, true);
+        expect(result.hasMutation, false);
       });
 
       it("should set hasMutation true when mutationFields exist", () => {
@@ -262,8 +261,8 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.strictEqual(result.hasQuery, false);
-        assert.strictEqual(result.hasMutation, true);
+        expect(result.hasQuery, false);
+        expect(result.hasMutation, true);
       });
 
       it("should add Query base type when hasQuery is true", () => {
@@ -293,9 +292,9 @@ describe("ResultIntegrator", () => {
         const result = integrate(typesResult, resolversResult);
 
         const queryType = result.baseTypes.find((t) => t.name === "Query");
-        assert.ok(queryType);
-        assert.strictEqual(queryType.kind, "Object");
-        assert.strictEqual(queryType.fields?.length, 0);
+        expect(queryType);
+        expect(queryType.kind, "Object");
+        expect(queryType.fields?.length, 0);
       });
 
       it("should add Mutation base type when hasMutation is true", () => {
@@ -327,9 +326,9 @@ describe("ResultIntegrator", () => {
         const mutationType = result.baseTypes.find(
           (t) => t.name === "Mutation",
         );
-        assert.ok(mutationType);
-        assert.strictEqual(mutationType.kind, "Object");
-        assert.strictEqual(mutationType.fields?.length, 0);
+        expect(mutationType);
+        expect(mutationType.kind, "Object");
+        expect(mutationType.fields?.length, 0);
       });
 
       it("should not add Query base type when queryFields is empty", () => {
@@ -347,7 +346,7 @@ describe("ResultIntegrator", () => {
         const result = integrate(typesResult, resolversResult);
 
         const queryType = result.baseTypes.find((t) => t.name === "Query");
-        assert.strictEqual(queryType, undefined);
+        expect(queryType, undefined);
       });
 
       it("should not add Mutation base type when mutationFields is empty", () => {
@@ -367,7 +366,7 @@ describe("ResultIntegrator", () => {
         const mutationType = result.baseTypes.find(
           (t) => t.name === "Mutation",
         );
-        assert.strictEqual(mutationType, undefined);
+        expect(mutationType, undefined);
       });
 
       it("should create Query typeExtension with fields", () => {
@@ -420,16 +419,16 @@ describe("ResultIntegrator", () => {
         const queryExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "Query",
         );
-        assert.ok(queryExtension);
-        assert.strictEqual(queryExtension.fields.length, 2);
+        expect(queryExtension);
+        expect(queryExtension.fields.length, 2);
 
         const usersField = queryExtension.fields.find(
           (f) => f.name === "users",
         );
-        assert.ok(usersField);
-        assert.strictEqual(usersField.type.typeName, "User");
-        assert.strictEqual(usersField.args?.length, 1);
-        assert.strictEqual(usersField.args?.[0]?.name, "limit");
+        expect(usersField);
+        expect(usersField.type.typeName, "User");
+        expect(usersField.args?.length, 1);
+        expect(usersField.args?.[0]?.name, "limit");
       });
 
       it("should create Mutation typeExtension with fields", () => {
@@ -467,9 +466,9 @@ describe("ResultIntegrator", () => {
         const mutationExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "Mutation",
         );
-        assert.ok(mutationExtension);
-        assert.strictEqual(mutationExtension.fields.length, 1);
-        assert.strictEqual(mutationExtension.fields[0]?.name, "createUser");
+        expect(mutationExtension);
+        expect(mutationExtension.fields.length, 1);
+        expect(mutationExtension.fields[0]?.name, "createUser");
       });
     });
 
@@ -518,10 +517,10 @@ describe("ResultIntegrator", () => {
         const userExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "User",
         );
-        assert.ok(userExtension);
-        assert.strictEqual(userExtension.fields.length, 1);
-        assert.strictEqual(userExtension.fields[0]?.name, "posts");
-        assert.strictEqual(
+        expect(userExtension);
+        expect(userExtension.fields.length, 1);
+        expect(userExtension.fields[0]?.name, "posts");
+        expect(
           userExtension.fields[0]?.resolverSourceFile,
           "/path/to/user-resolver.ts",
         );
@@ -559,11 +558,11 @@ describe("ResultIntegrator", () => {
         const unknownTypeError = result.diagnostics.find(
           (d) => d.code === "UNKNOWN_TARGET_TYPE",
         );
-        assert.ok(unknownTypeError);
-        assert.strictEqual(unknownTypeError.severity, "error");
-        assert.ok(unknownTypeError.message.includes("NonExistentType"));
-        assert.ok(unknownTypeError.location);
-        assert.strictEqual(
+        expect(unknownTypeError);
+        expect(unknownTypeError.severity, "error");
+        expect(unknownTypeError.message.includes("NonExistentType"));
+        expect(unknownTypeError.location);
+        expect(
           unknownTypeError.location?.file,
           "/path/to/resolver.ts",
         );
@@ -613,7 +612,7 @@ describe("ResultIntegrator", () => {
         const unknownTypeError = result.diagnostics.find(
           (d) => d.code === "UNKNOWN_TARGET_TYPE",
         );
-        assert.strictEqual(unknownTypeError, undefined);
+        expect(unknownTypeError, undefined);
       });
 
       it("should keep base types and type extensions separate", () => {
@@ -662,19 +661,19 @@ describe("ResultIntegrator", () => {
         const result = integrate(typesResult, resolversResult);
 
         const userBaseType = result.baseTypes.find((t) => t.name === "User");
-        assert.ok(userBaseType);
-        assert.strictEqual(userBaseType.fields?.length, 2);
+        expect(userBaseType);
+        expect(userBaseType.fields?.length, 2);
         const baseFieldNames = userBaseType.fields?.map((f) => f.name);
-        assert.ok(baseFieldNames?.includes("id"));
-        assert.ok(baseFieldNames?.includes("name"));
-        assert.ok(!baseFieldNames?.includes("posts"));
+        expect(baseFieldNames?.includes("id"));
+        expect(baseFieldNames?.includes("name"));
+        expect(!baseFieldNames?.includes("posts"));
 
         const userExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "User",
         );
-        assert.ok(userExtension);
-        assert.strictEqual(userExtension.fields.length, 1);
-        assert.strictEqual(userExtension.fields[0]?.name, "posts");
+        expect(userExtension);
+        expect(userExtension.fields.length, 1);
+        expect(userExtension.fields[0]?.name, "posts");
       });
     });
 
@@ -720,14 +719,14 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.strictEqual(result.baseTypes.length, 1);
-        assert.strictEqual(result.baseTypes[0]?.name, "User");
-        assert.strictEqual(result.baseTypes[0]?.kind, "Object");
+        expect(result.baseTypes.length, 1);
+        expect(result.baseTypes[0]?.name, "User");
+        expect(result.baseTypes[0]?.kind, "Object");
 
-        assert.ok(result.inputTypes);
-        assert.strictEqual(result.inputTypes.length, 1);
-        assert.strictEqual(result.inputTypes[0]?.name, "CreateUserInput");
-        assert.strictEqual(result.inputTypes[0]?.fields?.length, 2);
+        expect(result.inputTypes);
+        expect(result.inputTypes.length, 1);
+        expect(result.inputTypes[0]?.name, "CreateUserInput");
+        expect(result.inputTypes[0]?.fields?.length, 2);
       });
 
       it("should include all InputObject types from type-extractor", () => {
@@ -771,10 +770,10 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.strictEqual(result.inputTypes.length, 2);
+        expect(result.inputTypes.length, 2);
         const inputNames = result.inputTypes.map((t) => t.name);
-        assert.ok(inputNames.includes("CreateUserInput"));
-        assert.ok(inputNames.includes("UpdateUserInput"));
+        expect(inputNames.includes("CreateUserInput"));
+        expect(inputNames.includes("UpdateUserInput"));
       });
 
       it("should have empty inputTypes when no InputObject types exist", () => {
@@ -803,7 +802,7 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.strictEqual(result.inputTypes.length, 0);
+        expect(result.inputTypes.length, 0);
       });
     });
 
@@ -822,7 +821,7 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.strictEqual(result.hasErrors, false);
+        expect(result.hasErrors, false);
       });
 
       it("should set hasErrors to true when error diagnostics exist in types", () => {
@@ -848,7 +847,7 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.strictEqual(result.hasErrors, true);
+        expect(result.hasErrors, true);
       });
 
       it("should set hasErrors to true when error diagnostics exist in resolvers", () => {
@@ -874,7 +873,7 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.strictEqual(result.hasErrors, true);
+        expect(result.hasErrors, true);
       });
 
       it("should set hasErrors to true when UNKNOWN_TARGET_TYPE error is generated", () => {
@@ -906,7 +905,7 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.strictEqual(result.hasErrors, true);
+        expect(result.hasErrors, true);
       });
 
       it("should not set hasErrors to true for warnings only", () => {
@@ -932,7 +931,7 @@ describe("ResultIntegrator", () => {
 
         const result = integrate(typesResult, resolversResult);
 
-        assert.strictEqual(result.hasErrors, false);
+        expect(result.hasErrors, false);
       });
     });
 
@@ -967,8 +966,8 @@ describe("ResultIntegrator", () => {
         const queryExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "Query",
         );
-        assert.ok(queryExtension);
-        assert.strictEqual(
+        expect(queryExtension);
+        expect(
           queryExtension.fields[0]?.resolverExportName,
           "users",
         );
@@ -1004,8 +1003,8 @@ describe("ResultIntegrator", () => {
         const mutationExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "Mutation",
         );
-        assert.ok(mutationExtension);
-        assert.strictEqual(
+        expect(mutationExtension);
+        expect(
           mutationExtension.fields[0]?.resolverExportName,
           "createUser",
         );
@@ -1056,8 +1055,8 @@ describe("ResultIntegrator", () => {
         const userExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "User",
         );
-        assert.ok(userExtension);
-        assert.strictEqual(
+        expect(userExtension);
+        expect(
           userExtension.fields[0]?.resolverExportName,
           "posts",
         );
@@ -1092,8 +1091,8 @@ describe("ResultIntegrator", () => {
         const queryExtension = result.typeExtensions.find(
           (t) => t.targetTypeName === "Query",
         );
-        assert.ok(queryExtension);
-        assert.strictEqual(
+        expect(queryExtension);
+        expect(
           queryExtension.fields[0]?.resolverExportName,
           undefined,
         );

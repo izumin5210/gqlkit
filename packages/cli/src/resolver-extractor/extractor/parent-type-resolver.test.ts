@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type { ExtractedTypeInfo } from "../../type-extractor/types/index.js";
 import { resolveParentType } from "./parent-type-resolver.js";
 
@@ -34,9 +33,9 @@ describe("resolveParentType", () => {
         "resolvers/user.ts",
       );
 
-      assert.equal(result.success, true);
-      assert.equal(result.graphqlTypeName, "User");
-      assert.equal(result.diagnostic, undefined);
+      expect(result.success).toBe(true);
+      expect(result.graphqlTypeName).toBe("User");
+      expect(result.diagnostic).toBe(undefined);
     });
 
     it("should resolve parent type with different source file", () => {
@@ -56,8 +55,8 @@ describe("resolveParentType", () => {
         "resolvers/post-fields.ts",
       );
 
-      assert.equal(result.success, true);
-      assert.equal(result.graphqlTypeName, "Post");
+      expect(result.success).toBe(true);
+      expect(result.graphqlTypeName).toBe("Post");
     });
   });
 
@@ -79,11 +78,11 @@ describe("resolveParentType", () => {
         "resolvers/comment.ts",
       );
 
-      assert.equal(result.success, false);
-      assert.equal(result.graphqlTypeName, undefined);
-      assert.ok(result.diagnostic);
-      assert.equal(result.diagnostic.code, "MISSING_PARENT_TYPE");
-      assert.ok(result.diagnostic.message.includes("Comment"));
+      expect(result.success).toBe(false);
+      expect(result.graphqlTypeName).toBe(undefined);
+      expect(result.diagnostic).toBeTruthy();
+      expect(result.diagnostic!.code).toBe("MISSING_PARENT_TYPE");
+      expect(result.diagnostic!.message).toContain("Comment");
     });
 
     it("should return diagnostic when type reference has no name", () => {
@@ -99,9 +98,9 @@ describe("resolveParentType", () => {
         "resolvers/unknown.ts",
       );
 
-      assert.equal(result.success, false);
-      assert.ok(result.diagnostic);
-      assert.equal(result.diagnostic.code, "MISSING_PARENT_TYPE");
+      expect(result.success).toBe(false);
+      expect(result.diagnostic).toBeTruthy();
+      expect(result.diagnostic!.code).toBe("MISSING_PARENT_TYPE");
     });
   });
 
@@ -120,8 +119,8 @@ describe("resolveParentType", () => {
         "resolvers/user.ts",
       );
 
-      assert.equal(result.success, false);
-      assert.ok(result.diagnostic);
+      expect(result.success).toBe(false);
+      expect(result.diagnostic).toBeTruthy();
     });
 
     it("should handle nullable parent type reference", () => {
@@ -138,8 +137,8 @@ describe("resolveParentType", () => {
         "resolvers/user.ts",
       );
 
-      assert.equal(result.success, true);
-      assert.equal(result.graphqlTypeName, "User");
+      expect(result.success).toBe(true);
+      expect(result.graphqlTypeName).toBe("User");
     });
   });
 });

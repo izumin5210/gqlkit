@@ -1,8 +1,7 @@
-import assert from "node:assert";
 import { mkdir, mkdtemp, readFile, rm, stat } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, it } from "node:test";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { type WriteFileOptions, writeFiles } from "./file-writer.js";
 
 describe("FileWriter", () => {
@@ -27,11 +26,11 @@ describe("FileWriter", () => {
 
       const result = await writeFiles(options);
 
-      assert.strictEqual(result.success, true);
-      assert.strictEqual(result.writtenPaths.length, 1);
+      expect(result.success, true);
+      expect(result.writtenPaths.length, 1);
 
       const content = await readFile(join(testDir, "schema.ts"), "utf-8");
-      assert.strictEqual(content, "export const typeDefs = {};");
+      expect(content, "export const typeDefs = {};");
     });
 
     it("should create output directory if it does not exist", async () => {
@@ -45,9 +44,9 @@ describe("FileWriter", () => {
 
       const result = await writeFiles(options);
 
-      assert.strictEqual(result.success, true);
+      expect(result.success, true);
       const stats = await stat(nestedDir);
-      assert.ok(stats.isDirectory());
+      expect(stats.isDirectory());
     });
 
     it("should write multiple files", async () => {
@@ -61,17 +60,17 @@ describe("FileWriter", () => {
 
       const result = await writeFiles(options);
 
-      assert.strictEqual(result.success, true);
-      assert.strictEqual(result.writtenPaths.length, 2);
+      expect(result.success, true);
+      expect(result.writtenPaths.length, 2);
 
       const schemaContent = await readFile(join(testDir, "schema.ts"), "utf-8");
-      assert.strictEqual(schemaContent, "export const typeDefs = {};");
+      expect(schemaContent, "export const typeDefs = {};");
 
       const resolversContent = await readFile(
         join(testDir, "resolvers.ts"),
         "utf-8",
       );
-      assert.strictEqual(resolversContent, "export const resolvers = {};");
+      expect(resolversContent, "export const resolvers = {};");
     });
 
     it("should overwrite existing files", async () => {
@@ -89,9 +88,9 @@ describe("FileWriter", () => {
         files: [{ filename: "schema.ts", content: newContent }],
       });
 
-      assert.strictEqual(result.success, true);
+      expect(result.success, true);
       const content = await readFile(filePath, "utf-8");
-      assert.strictEqual(content, newContent);
+      expect(content, newContent);
     });
 
     it("should return written file paths", async () => {
@@ -105,9 +104,9 @@ describe("FileWriter", () => {
 
       const result = await writeFiles(options);
 
-      assert.strictEqual(result.success, true);
-      assert.ok(result.writtenPaths.includes(join(testDir, "schema.ts")));
-      assert.ok(result.writtenPaths.includes(join(testDir, "resolvers.ts")));
+      expect(result.success, true);
+      expect(result.writtenPaths.includes(join(testDir, "schema.ts")));
+      expect(result.writtenPaths.includes(join(testDir, "resolvers.ts")));
     });
 
     it("should return error when write fails", async () => {
@@ -121,8 +120,8 @@ describe("FileWriter", () => {
 
       const result = await writeFiles(options);
 
-      assert.strictEqual(result.success, false);
-      assert.ok(result.error);
+      expect(result.success, false);
+      expect(result.error);
     });
   });
 });

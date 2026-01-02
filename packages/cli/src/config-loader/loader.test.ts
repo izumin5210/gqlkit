@@ -1,8 +1,7 @@
-import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, beforeEach, describe, it } from "node:test";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { loadConfig } from "./loader.js";
 
 describe("ConfigLoader", () => {
@@ -20,15 +19,15 @@ describe("ConfigLoader", () => {
     it("should return default config when gqlkit.config.ts does not exist", async () => {
       const result = await loadConfig({ cwd: tempDir });
 
-      assert.equal(result.configPath, undefined);
-      assert.deepEqual(result.config, {
+      expect(result.configPath).toBe(undefined);
+      expect(result.config).toEqual({
         scalars: [],
         output: {
           ast: "src/gqlkit/generated/schema.ts",
           sdl: "src/gqlkit/generated/schema.graphql",
         },
       });
-      assert.equal(result.diagnostics.length, 0);
+      expect(result.diagnostics.length).toBe(0);
     });
 
     it("should load config from gqlkit.config.ts", async () => {
@@ -46,12 +45,12 @@ export default {
 
       const result = await loadConfig({ cwd: tempDir });
 
-      assert.equal(result.configPath, path.join(tempDir, "gqlkit.config.ts"));
-      assert.equal(result.config.scalars.length, 1);
-      assert.equal(result.config.scalars[0]?.graphqlName, "DateTime");
-      assert.equal(result.config.scalars[0]?.typeName, "DateTime");
-      assert.equal(result.config.scalars[0]?.importPath, "./src/scalars");
-      assert.equal(result.diagnostics.length, 0);
+      expect(result.configPath).toBe(path.join(tempDir, "gqlkit.config.ts"));
+      expect(result.config.scalars.length).toBe(1);
+      expect(result.config.scalars[0]?.graphqlName).toBe("DateTime");
+      expect(result.config.scalars[0]?.typeName).toBe("DateTime");
+      expect(result.config.scalars[0]?.importPath).toBe("./src/scalars");
+      expect(result.diagnostics.length).toBe(0);
     });
 
     it("should load config with multiple scalar mappings", async () => {
@@ -68,11 +67,11 @@ export default {
 
       const result = await loadConfig({ cwd: tempDir });
 
-      assert.equal(result.config.scalars.length, 3);
-      assert.equal(result.config.scalars[0]?.graphqlName, "DateTime");
-      assert.equal(result.config.scalars[1]?.graphqlName, "UUID");
-      assert.equal(result.config.scalars[2]?.graphqlName, "URL");
-      assert.equal(result.config.scalars[2]?.importPath, "@my-lib/types");
+      expect(result.config.scalars.length).toBe(3);
+      expect(result.config.scalars[0]?.graphqlName).toBe("DateTime");
+      expect(result.config.scalars[1]?.graphqlName).toBe("UUID");
+      expect(result.config.scalars[2]?.graphqlName).toBe("URL");
+      expect(result.config.scalars[2]?.importPath).toBe("@my-lib/types");
     });
 
     it("should return error diagnostic for syntax error", async () => {
@@ -87,9 +86,9 @@ export default {
 
       const result = await loadConfig({ cwd: tempDir });
 
-      assert.equal(result.diagnostics.length, 1);
-      assert.equal(result.diagnostics[0]?.code, "CONFIG_SYNTAX_ERROR");
-      assert.equal(result.diagnostics[0]?.severity, "error");
+      expect(result.diagnostics.length).toBe(1);
+      expect(result.diagnostics[0]?.code).toBe("CONFIG_SYNTAX_ERROR");
+      expect(result.diagnostics[0]?.severity).toBe("error");
     });
 
     it("should load config without defineConfig wrapper", async () => {
@@ -104,8 +103,8 @@ export default {
 
       const result = await loadConfig({ cwd: tempDir });
 
-      assert.equal(result.config.scalars.length, 1);
-      assert.equal(result.config.scalars[0]?.graphqlName, "DateTime");
+      expect(result.config.scalars.length).toBe(1);
+      expect(result.config.scalars[0]?.graphqlName).toBe("DateTime");
     });
 
     it("should handle empty config object", async () => {
@@ -116,14 +115,14 @@ export default {};
 
       const result = await loadConfig({ cwd: tempDir });
 
-      assert.deepEqual(result.config, {
+      expect(result.config).toEqual({
         scalars: [],
         output: {
           ast: "src/gqlkit/generated/schema.ts",
           sdl: "src/gqlkit/generated/schema.graphql",
         },
       });
-      assert.equal(result.diagnostics.length, 0);
+      expect(result.diagnostics.length).toBe(0);
     });
   });
 });

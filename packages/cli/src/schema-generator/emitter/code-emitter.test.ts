@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type { IntegratedResult } from "../integrator/result-integrator.js";
 import type { ResolverInfo } from "../resolver-collector/resolver-collector.js";
 import { emitResolversCode, emitTypeDefsCode } from "./code-emitter.js";
@@ -34,9 +33,9 @@ describe("CodeEmitter", () => {
 
       const code = emitTypeDefsCode(integratedResult);
 
-      assert.ok(code.includes("import type { DocumentNode }"));
-      assert.ok(code.includes("export const typeDefs: DocumentNode"));
-      assert.ok(code.includes('"User"'));
+      expect(code.includes("import type { DocumentNode }"));
+      expect(code.includes("export const typeDefs: DocumentNode"));
+      expect(code.includes('"User"'));
     });
 
     it("should include all type definitions", () => {
@@ -84,9 +83,9 @@ describe("CodeEmitter", () => {
 
       const code = emitTypeDefsCode(integratedResult);
 
-      assert.ok(code.includes("Query"));
-      assert.ok(code.includes("User"));
-      assert.ok(code.includes("ObjectTypeExtension"));
+      expect(code.includes("Query"));
+      expect(code.includes("User"));
+      expect(code.includes("ObjectTypeExtension"));
     });
 
     it("should handle union types", () => {
@@ -108,8 +107,8 @@ describe("CodeEmitter", () => {
 
       const code = emitTypeDefsCode(integratedResult);
 
-      assert.ok(code.includes("UnionTypeDefinition"));
-      assert.ok(code.includes("SearchResult"));
+      expect(code.includes("UnionTypeDefinition"));
+      expect(code.includes("SearchResult"));
     });
   });
 
@@ -135,9 +134,9 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        assert.ok(code.includes("import"));
-        assert.ok(code.includes("queryResolver"));
-        assert.ok(code.includes("export const resolvers"));
+        expect(code.includes("import"));
+        expect(code.includes("queryResolver"));
+        expect(code.includes("export const resolvers"));
       });
 
       it("should generate correct import paths", () => {
@@ -160,7 +159,7 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        assert.ok(code.includes("../resolvers/query.js"));
+        expect(code.includes("../resolvers/query.js"));
       });
 
       it("should include all types in resolver map", () => {
@@ -194,8 +193,8 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        assert.ok(code.includes("Query:"));
-        assert.ok(code.includes("User:"));
+        expect(code.includes("Query:"));
+        expect(code.includes("User:"));
       });
     });
 
@@ -226,8 +225,8 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        assert.ok(code.includes("users: queryResolver.users"));
-        assert.ok(code.includes("user: queryResolver.user"));
+        expect(code.includes("users: queryResolver.users"));
+        expect(code.includes("user: queryResolver.user"));
       });
     });
 
@@ -252,8 +251,8 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        assert.ok(code.includes("users: users,"));
-        assert.ok(!code.includes("users: users.users"));
+        expect(code.includes("users: users,"));
+        expect(!code.includes("users: users.users"));
       });
 
       it("should import direct export names correctly", () => {
@@ -282,7 +281,7 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        assert.ok(code.includes("import { allUsers, me }"));
+        expect(code.includes("import { allUsers, me }"));
       });
 
       it("should generate complete resolver map for Define API resolvers", () => {
@@ -343,30 +342,30 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        assert.ok(
+        expect(
           code.includes(
             'import { createUser } from "../resolvers/mutations.js";',
           ),
         );
-        assert.ok(
+        expect(
           code.includes(
             'import { allUsers, me } from "../resolvers/queries.js";',
           ),
         );
-        assert.ok(
+        expect(
           code.includes(
             'import { displayName, posts_ } from "../resolvers/user-fields.js";',
           ),
         );
 
-        assert.ok(code.includes("Mutation: {"));
-        assert.ok(code.includes("createUser: createUser,"));
-        assert.ok(code.includes("Query: {"));
-        assert.ok(code.includes("allUsers: allUsers,"));
-        assert.ok(code.includes("me: me,"));
-        assert.ok(code.includes("User: {"));
-        assert.ok(code.includes("displayName: displayName,"));
-        assert.ok(code.includes("posts_: posts_,"));
+        expect(code.includes("Mutation: {"));
+        expect(code.includes("createUser: createUser,"));
+        expect(code.includes("Query: {"));
+        expect(code.includes("allUsers: allUsers,"));
+        expect(code.includes("me: me,"));
+        expect(code.includes("User: {"));
+        expect(code.includes("displayName: displayName,"));
+        expect(code.includes("posts_: posts_,"));
       });
     });
 
@@ -391,7 +390,7 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        assert.ok(code.includes('./resolvers/query.js"'));
+        expect(code.includes('./resolvers/query.js"'));
       });
 
       it("should convert .ts extension to .js for ESM compatibility", () => {
@@ -414,8 +413,8 @@ describe("CodeEmitter", () => {
 
         const code = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        assert.ok(code.includes(".js"));
-        assert.ok(!code.includes(".ts"));
+        expect(code.includes(".js"));
+        expect(!code.includes(".ts"));
       });
 
       it("should combine multiple imports from same file", () => {
@@ -447,8 +446,8 @@ describe("CodeEmitter", () => {
         const importMatches = code.match(
           /import \{.*\} from "\.\.\/resolvers\/query\.js";/g,
         );
-        assert.strictEqual(importMatches?.length, 1);
-        assert.ok(code.includes("import { posts, users }"));
+        expect(importMatches?.length, 1);
+        expect(code.includes("import { posts, users }"));
       });
 
       it("should sort import statements by path", () => {
@@ -482,7 +481,7 @@ describe("CodeEmitter", () => {
 
         const aQueryIndex = code.indexOf("a-query.js");
         const zQueryIndex = code.indexOf("z-query.js");
-        assert.ok(aQueryIndex < zQueryIndex);
+        expect(aQueryIndex < zQueryIndex);
       });
     });
 
@@ -508,7 +507,7 @@ describe("CodeEmitter", () => {
         const code1 = emitResolversCode(resolverInfo, "/src/gqlkit");
         const code2 = emitResolversCode(resolverInfo, "/src/gqlkit");
 
-        assert.strictEqual(code1, code2);
+        expect(code1, code2);
       });
     });
   });

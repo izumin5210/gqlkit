@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import { validateConfig } from "./validator.js";
 
 describe("ConfigValidator", () => {
@@ -12,10 +11,10 @@ describe("ConfigValidator", () => {
         configPath,
       });
 
-      assert.equal(result.valid, true);
-      assert.ok(result.resolvedConfig);
-      assert.deepEqual(result.resolvedConfig.scalars, []);
-      assert.equal(result.diagnostics.length, 0);
+      expect(result.valid).toBe(true);
+      expect(result.resolvedConfig).toBeTruthy();
+      expect(result.resolvedConfig!.scalars).toEqual([]);
+      expect(result.diagnostics.length).toBe(0);
     });
 
     it("should return valid for config with scalars", () => {
@@ -31,9 +30,9 @@ describe("ConfigValidator", () => {
         configPath,
       });
 
-      assert.equal(result.valid, true);
-      assert.ok(result.resolvedConfig);
-      assert.equal(result.resolvedConfig.scalars.length, 1);
+      expect(result.valid).toBe(true);
+      expect(result.resolvedConfig).toBeTruthy();
+      expect(result.resolvedConfig!.scalars.length).toBe(1);
     });
 
     it("should return error for non-object config", () => {
@@ -42,9 +41,9 @@ describe("ConfigValidator", () => {
         configPath,
       });
 
-      assert.equal(result.valid, false);
-      assert.equal(result.diagnostics.length, 1);
-      assert.equal(result.diagnostics[0]?.code, "CONFIG_INVALID_TYPE");
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics.length).toBe(1);
+      expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_TYPE");
     });
 
     it("should return error for null config", () => {
@@ -53,9 +52,9 @@ describe("ConfigValidator", () => {
         configPath,
       });
 
-      assert.equal(result.valid, false);
-      assert.equal(result.diagnostics.length, 1);
-      assert.equal(result.diagnostics[0]?.code, "CONFIG_INVALID_TYPE");
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics.length).toBe(1);
+      expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_TYPE");
     });
 
     it("should return error when scalars is not an array", () => {
@@ -66,10 +65,10 @@ describe("ConfigValidator", () => {
         configPath,
       });
 
-      assert.equal(result.valid, false);
-      assert.equal(result.diagnostics.length, 1);
-      assert.equal(result.diagnostics[0]?.code, "CONFIG_INVALID_TYPE");
-      assert.ok(result.diagnostics[0]?.message.includes("scalars"));
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics.length).toBe(1);
+      expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_TYPE");
+      expect(result.diagnostics[0]?.message).toContain("scalars");
     });
 
     it("should return error when scalar mapping is missing graphqlName", () => {
@@ -84,10 +83,10 @@ describe("ConfigValidator", () => {
         configPath,
       });
 
-      assert.equal(result.valid, false);
-      assert.equal(result.diagnostics.length, 1);
-      assert.equal(result.diagnostics[0]?.code, "CONFIG_MISSING_PROPERTY");
-      assert.ok(result.diagnostics[0]?.message.includes("graphqlName"));
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics.length).toBe(1);
+      expect(result.diagnostics[0]?.code).toBe("CONFIG_MISSING_PROPERTY");
+      expect(result.diagnostics[0]?.message).toContain("graphqlName");
     });
 
     it("should return error when scalar mapping is missing type", () => {
@@ -102,10 +101,10 @@ describe("ConfigValidator", () => {
         configPath,
       });
 
-      assert.equal(result.valid, false);
-      assert.equal(result.diagnostics.length, 1);
-      assert.equal(result.diagnostics[0]?.code, "CONFIG_MISSING_PROPERTY");
-      assert.ok(result.diagnostics[0]?.message.includes("type"));
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics.length).toBe(1);
+      expect(result.diagnostics[0]?.code).toBe("CONFIG_MISSING_PROPERTY");
+      expect(result.diagnostics[0]?.message).toContain("type");
     });
 
     it("should return error when type.from is missing", () => {
@@ -121,10 +120,10 @@ describe("ConfigValidator", () => {
         configPath,
       });
 
-      assert.equal(result.valid, false);
-      assert.equal(result.diagnostics.length, 1);
-      assert.equal(result.diagnostics[0]?.code, "CONFIG_MISSING_PROPERTY");
-      assert.ok(result.diagnostics[0]?.message.includes("type.from"));
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics.length).toBe(1);
+      expect(result.diagnostics[0]?.code).toBe("CONFIG_MISSING_PROPERTY");
+      expect(result.diagnostics[0]?.message).toContain("type.from");
     });
 
     it("should return error when type.name is missing", () => {
@@ -140,10 +139,10 @@ describe("ConfigValidator", () => {
         configPath,
       });
 
-      assert.equal(result.valid, false);
-      assert.equal(result.diagnostics.length, 1);
-      assert.equal(result.diagnostics[0]?.code, "CONFIG_MISSING_PROPERTY");
-      assert.ok(result.diagnostics[0]?.message.includes("type.name"));
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics.length).toBe(1);
+      expect(result.diagnostics[0]?.code).toBe("CONFIG_MISSING_PROPERTY");
+      expect(result.diagnostics[0]?.message).toContain("type.name");
     });
 
     describe("built-in scalar override", () => {
@@ -161,10 +160,10 @@ describe("ConfigValidator", () => {
             configPath,
           });
 
-          assert.equal(result.valid, false);
-          assert.equal(result.diagnostics.length, 1);
-          assert.equal(result.diagnostics[0]?.code, "CONFIG_BUILTIN_OVERRIDE");
-          assert.ok(result.diagnostics[0]?.message.includes(builtinName));
+          expect(result.valid).toBe(false);
+          expect(result.diagnostics.length).toBe(1);
+          expect(result.diagnostics[0]?.code).toBe("CONFIG_BUILTIN_OVERRIDE");
+          expect(result.diagnostics[0]?.message).toContain(builtinName);
         });
       }
     });
@@ -187,10 +186,10 @@ describe("ConfigValidator", () => {
           configPath,
         });
 
-        assert.equal(result.valid, false);
-        assert.equal(result.diagnostics.length, 1);
-        assert.equal(result.diagnostics[0]?.code, "CONFIG_DUPLICATE_MAPPING");
-        assert.ok(result.diagnostics[0]?.message.includes("DateTime"));
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_DUPLICATE_MAPPING");
+        expect(result.diagnostics[0]?.message).toContain("DateTime");
       });
 
       it("should return error for duplicate type mapping", () => {
@@ -210,10 +209,10 @@ describe("ConfigValidator", () => {
           configPath,
         });
 
-        assert.equal(result.valid, false);
-        assert.equal(result.diagnostics.length, 1);
-        assert.equal(result.diagnostics[0]?.code, "CONFIG_DUPLICATE_TYPE");
-        assert.ok(result.diagnostics[0]?.message.includes("DateTime"));
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_DUPLICATE_TYPE");
+        expect(result.diagnostics[0]?.message).toContain("DateTime");
       });
 
       it("should allow same type name from different paths", () => {
@@ -233,8 +232,8 @@ describe("ConfigValidator", () => {
           configPath,
         });
 
-        assert.equal(result.valid, true);
-        assert.equal(result.diagnostics.length, 0);
+        expect(result.valid).toBe(true);
+        expect(result.diagnostics.length).toBe(0);
       });
     });
 
@@ -245,14 +244,12 @@ describe("ConfigValidator", () => {
           configPath,
         });
 
-        assert.equal(result.valid, true);
-        assert.ok(result.resolvedConfig);
-        assert.equal(
-          result.resolvedConfig.output.ast,
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.output.ast).toBe(
           "src/gqlkit/generated/schema.ts",
         );
-        assert.equal(
-          result.resolvedConfig.output.sdl,
+        expect(result.resolvedConfig!.output.sdl).toBe(
           "src/gqlkit/generated/schema.graphql",
         );
       });
@@ -263,14 +260,12 @@ describe("ConfigValidator", () => {
           configPath,
         });
 
-        assert.equal(result.valid, true);
-        assert.ok(result.resolvedConfig);
-        assert.equal(
-          result.resolvedConfig.output.ast,
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.output.ast).toBe(
           "src/gqlkit/generated/schema.ts",
         );
-        assert.equal(
-          result.resolvedConfig.output.sdl,
+        expect(result.resolvedConfig!.output.sdl).toBe(
           "src/gqlkit/generated/schema.graphql",
         );
       });
@@ -286,10 +281,10 @@ describe("ConfigValidator", () => {
           configPath,
         });
 
-        assert.equal(result.valid, true);
-        assert.ok(result.resolvedConfig);
-        assert.equal(result.resolvedConfig.output.ast, "custom/schema.ts");
-        assert.equal(result.resolvedConfig.output.sdl, "custom/schema.graphql");
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.output.ast).toBe("custom/schema.ts");
+        expect(result.resolvedConfig!.output.sdl).toBe("custom/schema.graphql");
       });
 
       it("should allow null to suppress output", () => {
@@ -303,10 +298,10 @@ describe("ConfigValidator", () => {
           configPath,
         });
 
-        assert.equal(result.valid, true);
-        assert.ok(result.resolvedConfig);
-        assert.equal(result.resolvedConfig.output.ast, null);
-        assert.equal(result.resolvedConfig.output.sdl, null);
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.output.ast).toBe(null);
+        expect(result.resolvedConfig!.output.sdl).toBe(null);
       });
 
       it("should allow mixed null and string", () => {
@@ -320,10 +315,10 @@ describe("ConfigValidator", () => {
           configPath,
         });
 
-        assert.equal(result.valid, true);
-        assert.ok(result.resolvedConfig);
-        assert.equal(result.resolvedConfig.output.ast, "schema.ts");
-        assert.equal(result.resolvedConfig.output.sdl, null);
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.output.ast).toBe("schema.ts");
+        expect(result.resolvedConfig!.output.sdl).toBe(null);
       });
 
       it("should return error for invalid ast type (number)", () => {
@@ -336,10 +331,10 @@ describe("ConfigValidator", () => {
           configPath,
         });
 
-        assert.equal(result.valid, false);
-        assert.equal(result.diagnostics.length, 1);
-        assert.equal(result.diagnostics[0]?.code, "CONFIG_INVALID_OUTPUT_TYPE");
-        assert.ok(result.diagnostics[0]?.message.includes("output.ast"));
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_OUTPUT_TYPE");
+        expect(result.diagnostics[0]?.message).toContain("output.ast");
       });
 
       it("should return error for invalid sdl type (boolean)", () => {
@@ -352,10 +347,10 @@ describe("ConfigValidator", () => {
           configPath,
         });
 
-        assert.equal(result.valid, false);
-        assert.equal(result.diagnostics.length, 1);
-        assert.equal(result.diagnostics[0]?.code, "CONFIG_INVALID_OUTPUT_TYPE");
-        assert.ok(result.diagnostics[0]?.message.includes("output.sdl"));
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_OUTPUT_TYPE");
+        expect(result.diagnostics[0]?.message).toContain("output.sdl");
       });
 
       it("should return error for empty string path", () => {
@@ -368,10 +363,10 @@ describe("ConfigValidator", () => {
           configPath,
         });
 
-        assert.equal(result.valid, false);
-        assert.equal(result.diagnostics.length, 1);
-        assert.equal(result.diagnostics[0]?.code, "CONFIG_INVALID_OUTPUT_PATH");
-        assert.ok(result.diagnostics[0]?.message.includes("empty"));
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_OUTPUT_PATH");
+        expect(result.diagnostics[0]?.message).toContain("empty");
       });
 
       it("should return error for invalid output type (not object)", () => {
@@ -382,10 +377,10 @@ describe("ConfigValidator", () => {
           configPath,
         });
 
-        assert.equal(result.valid, false);
-        assert.equal(result.diagnostics.length, 1);
-        assert.equal(result.diagnostics[0]?.code, "CONFIG_INVALID_TYPE");
-        assert.ok(result.diagnostics[0]?.message.includes("output"));
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_TYPE");
+        expect(result.diagnostics[0]?.message).toContain("output");
       });
     });
   });

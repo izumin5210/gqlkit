@@ -1,8 +1,7 @@
-import assert from "node:assert";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, it } from "node:test";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { extractTypes } from "./index.js";
 
 describe("Integration Tests", () => {
@@ -63,21 +62,21 @@ describe("Integration Tests", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 3);
-      assert.strictEqual(result.diagnostics.errors.length, 0);
+      expect(result.types.length).toBe(3);
+      expect(result.diagnostics.errors.length).toBe(0);
 
       const user = result.types.find((t) => t.name === "User");
-      assert.ok(user);
-      assert.strictEqual(user.kind, "Object");
+      expect(user).toBeDefined();
+      expect(user.kind).toBe("Object");
 
       const emailField = user.fields?.find((f) => f.name === "email");
-      assert.ok(emailField);
-      assert.strictEqual(emailField.type.nullable, true);
+      expect(emailField).toBeDefined();
+      expect(emailField.type.nullable).toBe(true);
 
       const postsField = user.fields?.find((f) => f.name === "posts");
-      assert.ok(postsField);
-      assert.strictEqual(postsField.type.list, true);
-      assert.strictEqual(postsField.type.typeName, "Post");
+      expect(postsField).toBeDefined();
+      expect(postsField.type.list).toBe(true);
+      expect(postsField.type.typeName).toBe("Post");
     });
   });
 
@@ -96,8 +95,8 @@ describe("Integration Tests", () => {
       const result2 = await extractTypes({ directory: tempDir });
       const result3 = await extractTypes({ directory: tempDir });
 
-      assert.deepStrictEqual(result1, result2);
-      assert.deepStrictEqual(result2, result3);
+      expect(result1).toEqual(result2);
+      expect(result2).toEqual(result3);
     });
   });
 
@@ -120,38 +119,38 @@ describe("Integration Tests", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 1);
+      expect(result.types.length).toBe(1);
       const type = result.types[0];
-      assert.ok(type?.fields);
+      expect(type?.fields).toBeDefined();
 
       const stringField = type.fields.find((f) => f.name === "stringField");
-      assert.strictEqual(stringField?.type.typeName, "String");
-      assert.strictEqual(stringField?.type.nullable, false);
-      assert.strictEqual(stringField?.type.list, false);
+      expect(stringField?.type.typeName).toBe("String");
+      expect(stringField?.type.nullable).toBe(false);
+      expect(stringField?.type.list).toBe(false);
 
       const numberField = type.fields.find((f) => f.name === "numberField");
-      assert.strictEqual(numberField?.type.typeName, "Float");
+      expect(numberField?.type.typeName).toBe("Float");
 
       const booleanField = type.fields.find((f) => f.name === "booleanField");
-      assert.strictEqual(booleanField?.type.typeName, "Boolean");
+      expect(booleanField?.type.typeName).toBe("Boolean");
 
       const nullableString = type.fields.find(
         (f) => f.name === "nullableString",
       );
-      assert.strictEqual(nullableString?.type.nullable, true);
+      expect(nullableString?.type.nullable).toBe(true);
 
       const optionalNumber = type.fields.find(
         (f) => f.name === "optionalNumber",
       );
-      assert.strictEqual(optionalNumber?.type.nullable, true);
+      expect(optionalNumber?.type.nullable).toBe(true);
 
       const stringArray = type.fields.find((f) => f.name === "stringArray");
-      assert.strictEqual(stringArray?.type.list, true);
-      assert.strictEqual(stringArray?.type.typeName, "String");
+      expect(stringArray?.type.list).toBe(true);
+      expect(stringArray?.type.typeName).toBe("String");
 
       const nullableArray = type.fields.find((f) => f.name === "nullableArray");
-      assert.strictEqual(nullableArray?.type.list, true);
-      assert.strictEqual(nullableArray?.type.listItemNullable, true);
+      expect(nullableArray?.type.list).toBe(true);
+      expect(nullableArray?.type.listItemNullable).toBe(true);
     });
 
     it("should correctly convert object and interface types", async () => {
@@ -165,8 +164,8 @@ describe("Integration Tests", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 2);
-      assert.ok(result.types.every((t) => t.kind === "Object"));
+      expect(result.types.length).toBe(2);
+      expect(result.types.every((t) => t.kind === "Object")).toBeTruthy();
     });
 
     it("should correctly convert union types", async () => {
@@ -182,11 +181,11 @@ describe("Integration Tests", () => {
       const result = await extractTypes({ directory: tempDir });
 
       const unionType = result.types.find((t) => t.name === "Pet");
-      assert.ok(unionType);
-      assert.strictEqual(unionType.kind, "Union");
-      assert.ok(unionType.unionMembers?.includes("Cat"));
-      assert.ok(unionType.unionMembers?.includes("Dog"));
-      assert.strictEqual(unionType.fields, undefined);
+      expect(unionType).toBeDefined();
+      expect(unionType.kind).toBe("Union");
+      expect(unionType.unionMembers?.includes("Cat")).toBeTruthy();
+      expect(unionType.unionMembers?.includes("Dog")).toBeTruthy();
+      expect(unionType.fields).toBeUndefined();
     });
   });
 
@@ -207,20 +206,20 @@ describe("Integration Tests", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.ok(result.diagnostics.errors.length >= 2);
-      assert.ok(
+      expect(result.diagnostics.errors.length >= 2).toBeTruthy();
+      expect(
         result.diagnostics.errors.some((e) => e.code === "RESERVED_TYPE_NAME"),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         result.diagnostics.errors.some(
           (e) => e.code === "UNRESOLVED_REFERENCE",
         ),
-      );
-      assert.ok(
+      ).toBeTruthy();
+      expect(
         result.diagnostics.warnings.some(
           (w) => w.code === "UNSUPPORTED_SYNTAX",
         ),
-      );
+      ).toBeTruthy();
     });
   });
 
@@ -233,15 +232,12 @@ describe("Integration Tests", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 1);
-      assert.strictEqual(result.types[0]?.kind, "Enum");
-      assert.strictEqual(result.types[0]?.name, "Status");
-      assert.strictEqual(result.types[0]?.enumValues?.length, 3);
-      assert.strictEqual(result.types[0]?.enumValues?.[0]?.name, "ACTIVE");
-      assert.strictEqual(
-        result.types[0]?.enumValues?.[0]?.originalValue,
-        "active",
-      );
+      expect(result.types.length).toBe(1);
+      expect(result.types[0]?.kind).toBe("Enum");
+      expect(result.types[0]?.name).toBe("Status");
+      expect(result.types[0]?.enumValues?.length).toBe(3);
+      expect(result.types[0]?.enumValues?.[0]?.name).toBe("ACTIVE");
+      expect(result.types[0]?.enumValues?.[0]?.originalValue).toBe("active");
     });
 
     it("should extract string literal union as GraphQL enum", async () => {
@@ -252,10 +248,10 @@ describe("Integration Tests", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 1);
-      assert.strictEqual(result.types[0]?.kind, "Enum");
-      assert.strictEqual(result.types[0]?.name, "Role");
-      assert.strictEqual(result.types[0]?.enumValues?.length, 3);
+      expect(result.types.length).toBe(1);
+      expect(result.types[0]?.kind).toBe("Enum");
+      expect(result.types[0]?.name).toBe("Role");
+      expect(result.types[0]?.enumValues?.length).toBe(3);
     });
 
     it("should convert enum member names to SCREAMING_SNAKE_CASE", async () => {
@@ -266,8 +262,8 @@ describe("Integration Tests", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types[0]?.enumValues?.[0]?.name, "SUPER_ADMIN");
-      assert.strictEqual(result.types[0]?.enumValues?.[1]?.name, "NORMAL_USER");
+      expect(result.types[0]?.enumValues?.[0]?.name).toBe("SUPER_ADMIN");
+      expect(result.types[0]?.enumValues?.[1]?.name).toBe("NORMAL_USER");
     });
 
     it("should report error for numeric enum", async () => {
@@ -278,12 +274,12 @@ describe("Integration Tests", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 0);
-      assert.ok(
+      expect(result.types.length).toBe(0);
+      expect(
         result.diagnostics.errors.some(
           (e) => e.code === "UNSUPPORTED_ENUM_TYPE",
         ),
-      );
+      ).toBeTruthy();
     });
 
     it("should report error for const enum", async () => {
@@ -294,12 +290,12 @@ describe("Integration Tests", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 0);
-      assert.ok(
+      expect(result.types.length).toBe(0);
+      expect(
         result.diagnostics.errors.some(
           (e) => e.code === "UNSUPPORTED_ENUM_TYPE",
         ),
-      );
+      ).toBeTruthy();
     });
 
     it("should handle enum alongside other types", async () => {
@@ -315,19 +311,19 @@ describe("Integration Tests", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 4);
+      expect(result.types.length).toBe(4);
 
       const status = result.types.find((t) => t.name === "Status");
-      assert.ok(status);
-      assert.strictEqual(status.kind, "Enum");
+      expect(status).toBeDefined();
+      expect(status.kind).toBe("Enum");
 
       const user = result.types.find((t) => t.name === "User");
-      assert.ok(user);
-      assert.strictEqual(user.kind, "Object");
+      expect(user).toBeDefined();
+      expect(user.kind).toBe("Object");
 
       const searchResult = result.types.find((t) => t.name === "SearchResult");
-      assert.ok(searchResult);
-      assert.strictEqual(searchResult.kind, "Union");
+      expect(searchResult).toBeDefined();
+      expect(searchResult.kind).toBe("Union");
     });
 
     it("should report error for invalid enum member name", async () => {
@@ -338,9 +334,9 @@ describe("Integration Tests", () => {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.ok(
+      expect(
         result.diagnostics.errors.some((e) => e.code === "INVALID_ENUM_MEMBER"),
-      );
+      ).toBeTruthy();
     });
   });
 
@@ -359,14 +355,14 @@ export interface User {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 1);
+      expect(result.types.length).toBe(1);
       const user = result.types[0];
-      assert.ok(user);
+      expect(user).toBeDefined();
 
       const idField = user.fields?.find((f) => f.name === "id");
-      assert.ok(idField);
-      assert.strictEqual(idField.type.typeName, "ID");
-      assert.strictEqual(idField.type.nullable, false);
+      expect(idField).toBeDefined();
+      expect(idField.type.typeName).toBe("ID");
+      expect(idField.type.nullable).toBe(false);
     });
 
     it("should convert Int and Float to corresponding GraphQL scalars", async () => {
@@ -384,23 +380,23 @@ export interface Product {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 1);
+      expect(result.types.length).toBe(1);
       const product = result.types[0];
-      assert.ok(product);
+      expect(product).toBeDefined();
 
       const countField = product.fields?.find((f) => f.name === "count");
-      assert.ok(countField);
-      assert.strictEqual(countField.type.typeName, "Int");
+      expect(countField).toBeDefined();
+      expect(countField.type.typeName).toBe("Int");
 
       const priceField = product.fields?.find((f) => f.name === "price");
-      assert.ok(priceField);
-      assert.strictEqual(priceField.type.typeName, "Float");
+      expect(priceField).toBeDefined();
+      expect(priceField.type.typeName).toBe("Float");
 
       const regularNumberField = product.fields?.find(
         (f) => f.name === "regularNumber",
       );
-      assert.ok(regularNumberField);
-      assert.strictEqual(regularNumberField.type.typeName, "Float");
+      expect(regularNumberField).toBeDefined();
+      expect(regularNumberField.type.typeName).toBe("Float");
     });
 
     it("should handle branded scalar types in arrays", async () => {
@@ -417,19 +413,19 @@ export interface Collection {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 1);
+      expect(result.types.length).toBe(1);
       const collection = result.types[0];
-      assert.ok(collection);
+      expect(collection).toBeDefined();
 
       const idsField = collection.fields?.find((f) => f.name === "ids");
-      assert.ok(idsField);
-      assert.strictEqual(idsField.type.list, true);
-      assert.strictEqual(idsField.type.typeName, "ID");
+      expect(idsField).toBeDefined();
+      expect(idsField.type.list).toBe(true);
+      expect(idsField.type.typeName).toBe("ID");
 
       const countsField = collection.fields?.find((f) => f.name === "counts");
-      assert.ok(countsField);
-      assert.strictEqual(countsField.type.list, true);
-      assert.strictEqual(countsField.type.typeName, "Int");
+      expect(countsField).toBeDefined();
+      expect(countsField.type.list).toBe(true);
+      expect(countsField.type.typeName).toBe("Int");
     });
 
     it("should handle nullable branded scalar types", async () => {
@@ -446,21 +442,21 @@ export interface NullableFields {
 
       const result = await extractTypes({ directory: tempDir });
 
-      assert.strictEqual(result.types.length, 1);
+      expect(result.types.length).toBe(1);
       const type = result.types[0];
-      assert.ok(type);
+      expect(type).toBeDefined();
 
       const optionalIdField = type.fields?.find((f) => f.name === "optionalId");
-      assert.ok(optionalIdField);
-      assert.strictEqual(optionalIdField.type.typeName, "ID");
-      assert.strictEqual(optionalIdField.type.nullable, true);
+      expect(optionalIdField).toBeDefined();
+      expect(optionalIdField.type.typeName).toBe("ID");
+      expect(optionalIdField.type.nullable).toBe(true);
 
       const nullablePriceField = type.fields?.find(
         (f) => f.name === "nullablePrice",
       );
-      assert.ok(nullablePriceField);
-      assert.strictEqual(nullablePriceField.type.typeName, "Float");
-      assert.strictEqual(nullablePriceField.type.nullable, true);
+      expect(nullablePriceField).toBeDefined();
+      expect(nullablePriceField.type.typeName).toBe("Float");
+      expect(nullablePriceField.type.nullable).toBe(true);
     });
   });
 });

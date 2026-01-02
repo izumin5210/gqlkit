@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type {
   EnumMemberInfo,
   ExtractedTypeInfo,
@@ -13,22 +12,22 @@ describe("TypeScript types", () => {
   describe("TypeKind", () => {
     it("should support object kind", () => {
       const kind: TypeKind = "object";
-      assert.strictEqual(kind, "object");
+      expect(kind).toBe("object");
     });
 
     it("should support interface kind", () => {
       const kind: TypeKind = "interface";
-      assert.strictEqual(kind, "interface");
+      expect(kind).toBe("interface");
     });
 
     it("should support union kind", () => {
       const kind: TypeKind = "union";
-      assert.strictEqual(kind, "union");
+      expect(kind).toBe("union");
     });
 
     it("should support enum kind", () => {
       const kind: TypeKind = "enum";
-      assert.strictEqual(kind, "enum");
+      expect(kind).toBe("enum");
     });
   });
 
@@ -41,10 +40,10 @@ describe("TypeScript types", () => {
         exportKind: "named",
       };
 
-      assert.strictEqual(metadata.name, "User");
-      assert.strictEqual(metadata.kind, "interface");
-      assert.strictEqual(metadata.sourceFile, "/path/to/user.ts");
-      assert.strictEqual(metadata.exportKind, "named");
+      expect(metadata.name).toBe("User");
+      expect(metadata.kind).toBe("interface");
+      expect(metadata.sourceFile).toBe("/path/to/user.ts");
+      expect(metadata.exportKind).toBe("named");
     });
 
     it("should support default export", () => {
@@ -55,7 +54,7 @@ describe("TypeScript types", () => {
         exportKind: "default",
       };
 
-      assert.strictEqual(metadata.exportKind, "default");
+      expect(metadata.exportKind).toBe("default");
     });
   });
 
@@ -67,9 +66,9 @@ describe("TypeScript types", () => {
         nullable: false,
       };
 
-      assert.strictEqual(ref.kind, "primitive");
-      assert.strictEqual(ref.name, "string");
-      assert.strictEqual(ref.nullable, false);
+      expect(ref.kind).toBe("primitive");
+      expect(ref.name).toBe("string");
+      expect(ref.nullable).toBe(false);
     });
 
     it("should represent reference type", () => {
@@ -79,8 +78,8 @@ describe("TypeScript types", () => {
         nullable: false,
       };
 
-      assert.strictEqual(ref.kind, "reference");
-      assert.strictEqual(ref.name, "User");
+      expect(ref.kind).toBe("reference");
+      expect(ref.name).toBe("User");
     });
 
     it("should represent array type", () => {
@@ -94,9 +93,9 @@ describe("TypeScript types", () => {
         nullable: false,
       };
 
-      assert.strictEqual(ref.kind, "array");
-      assert.strictEqual(ref.elementType?.kind, "reference");
-      assert.strictEqual(ref.elementType?.name, "Post");
+      expect(ref.kind).toBe("array");
+      expect(ref.elementType?.kind).toBe("reference");
+      expect(ref.elementType?.name).toBe("Post");
     });
 
     it("should represent union type with members", () => {
@@ -109,8 +108,8 @@ describe("TypeScript types", () => {
         nullable: false,
       };
 
-      assert.strictEqual(ref.kind, "union");
-      assert.strictEqual(ref.members?.length, 2);
+      expect(ref.kind).toBe("union");
+      expect(ref.members?.length).toBe(2);
     });
 
     it("should represent literal type", () => {
@@ -120,8 +119,8 @@ describe("TypeScript types", () => {
         nullable: false,
       };
 
-      assert.strictEqual(ref.kind, "literal");
-      assert.strictEqual(ref.name, "active");
+      expect(ref.kind).toBe("literal");
+      expect(ref.name).toBe("active");
     });
 
     it("should support nullable property", () => {
@@ -131,7 +130,7 @@ describe("TypeScript types", () => {
         nullable: true,
       };
 
-      assert.strictEqual(ref.nullable, true);
+      expect(ref.nullable).toBe(true);
     });
   });
 
@@ -147,9 +146,9 @@ describe("TypeScript types", () => {
         optional: false,
       };
 
-      assert.strictEqual(field.name, "id");
-      assert.strictEqual(field.tsType.kind, "primitive");
-      assert.strictEqual(field.optional, false);
+      expect(field.name).toBe("id");
+      expect(field.tsType.kind).toBe("primitive");
+      expect(field.optional).toBe(false);
     });
 
     it("should support optional fields", () => {
@@ -163,7 +162,7 @@ describe("TypeScript types", () => {
         optional: true,
       };
 
-      assert.strictEqual(field.optional, true);
+      expect(field.optional).toBe(true);
     });
   });
 
@@ -190,9 +189,9 @@ describe("TypeScript types", () => {
         ],
       };
 
-      assert.strictEqual(typeInfo.metadata.name, "User");
-      assert.strictEqual(typeInfo.fields.length, 2);
-      assert.strictEqual(typeInfo.unionMembers, undefined);
+      expect(typeInfo.metadata.name).toBe("User");
+      expect(typeInfo.fields.length).toBe(2);
+      expect(typeInfo.unionMembers).toBe(undefined);
     });
 
     it("should represent union type with members", () => {
@@ -207,9 +206,9 @@ describe("TypeScript types", () => {
         unionMembers: ["User", "Post"],
       };
 
-      assert.strictEqual(typeInfo.metadata.kind, "union");
-      assert.deepStrictEqual(typeInfo.unionMembers, ["User", "Post"]);
-      assert.strictEqual(typeInfo.fields.length, 0);
+      expect(typeInfo.metadata.kind).toBe("union");
+      expect(typeInfo.unionMembers).toEqual(["User", "Post"]);
+      expect(typeInfo.fields.length).toBe(0);
     });
 
     it("should represent enum type with members", () => {
@@ -227,10 +226,10 @@ describe("TypeScript types", () => {
         ],
       };
 
-      assert.strictEqual(typeInfo.metadata.kind, "enum");
-      assert.strictEqual(typeInfo.enumMembers?.length, 2);
-      assert.strictEqual(typeInfo.enumMembers?.[0]?.name, "Active");
-      assert.strictEqual(typeInfo.enumMembers?.[0]?.value, "active");
+      expect(typeInfo.metadata.kind).toBe("enum");
+      expect(typeInfo.enumMembers?.length).toBe(2);
+      expect(typeInfo.enumMembers?.[0]?.name).toBe("Active");
+      expect(typeInfo.enumMembers?.[0]?.value).toBe("active");
     });
   });
 
@@ -241,8 +240,8 @@ describe("TypeScript types", () => {
         value: "active",
       };
 
-      assert.strictEqual(member.name, "Active");
-      assert.strictEqual(member.value, "active");
+      expect(member.name).toBe("Active");
+      expect(member.value).toBe("active");
     });
 
     it("should support string enum values", () => {
@@ -251,8 +250,8 @@ describe("TypeScript types", () => {
         value: "ACTIVE",
       };
 
-      assert.strictEqual(member.name, "StatusActive");
-      assert.strictEqual(member.value, "ACTIVE");
+      expect(member.name).toBe("StatusActive");
+      expect(member.value).toBe("ACTIVE");
     });
   });
 });

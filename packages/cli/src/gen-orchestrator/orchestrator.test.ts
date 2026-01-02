@@ -1,8 +1,7 @@
-import assert from "node:assert";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, it } from "node:test";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { executeGeneration, type GenerationConfig } from "./orchestrator.js";
 
 describe("GenCommandOrchestrator", () => {
@@ -47,8 +46,8 @@ describe("GenCommandOrchestrator", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, false);
-      assert.ok(
+      expect(result.success, false);
+      expect(
         result.diagnostics.some((d) => d.code === "DIRECTORY_NOT_FOUND"),
       );
     });
@@ -67,8 +66,8 @@ describe("GenCommandOrchestrator", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, false);
-      assert.ok(
+      expect(result.success, false);
+      expect(
         result.diagnostics.some((d) => d.code === "DIRECTORY_NOT_FOUND"),
       );
     });
@@ -98,8 +97,8 @@ describe("GenCommandOrchestrator", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, true);
-      assert.ok(result.filesWritten.length > 0);
+      expect(result.success, true);
+      expect(result.filesWritten.length > 0);
     });
 
     it("should collect diagnostics from extraction", async () => {
@@ -125,7 +124,7 @@ describe("GenCommandOrchestrator", () => {
 
       const result = await executeGeneration(config);
 
-      assert.ok(result.diagnostics.length > 0);
+      expect(result.diagnostics.length > 0);
     });
   });
 
@@ -153,9 +152,9 @@ describe("GenCommandOrchestrator", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, true);
-      assert.ok(result.filesWritten.some((f) => f.endsWith("schema.ts")));
-      assert.ok(result.filesWritten.some((f) => f.endsWith("resolvers.ts")));
+      expect(result.success, true);
+      expect(result.filesWritten.some((f) => f.endsWith("schema.ts")));
+      expect(result.filesWritten.some((f) => f.endsWith("resolvers.ts")));
     });
   });
 
@@ -170,8 +169,8 @@ describe("GenCommandOrchestrator", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, false);
-      assert.strictEqual(result.filesWritten.length, 0);
+      expect(result.success, false);
+      expect(result.filesWritten.length, 0);
     });
 
     it("should return success=true when no errors", async () => {
@@ -197,8 +196,8 @@ describe("GenCommandOrchestrator", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, true);
-      assert.ok(result.filesWritten.length > 0);
+      expect(result.success, true);
+      expect(result.filesWritten.length > 0);
     });
   });
 
@@ -230,9 +229,9 @@ describe("GenCommandOrchestrator", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, true);
-      assert.ok(result.filesWritten.some((f) => f.endsWith("schema.ts")));
-      assert.ok(result.filesWritten.some((f) => f.endsWith("schema.graphql")));
+      expect(result.success, true);
+      expect(result.filesWritten.some((f) => f.endsWith("schema.ts")));
+      expect(result.filesWritten.some((f) => f.endsWith("schema.graphql")));
     });
 
     it("should not generate AST file when ast is null", async () => {
@@ -262,9 +261,9 @@ describe("GenCommandOrchestrator", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, true);
-      assert.ok(!result.filesWritten.some((f) => f.endsWith("schema.ts")));
-      assert.ok(result.filesWritten.some((f) => f.endsWith("schema.graphql")));
+      expect(result.success, true);
+      expect(!result.filesWritten.some((f) => f.endsWith("schema.ts")));
+      expect(result.filesWritten.some((f) => f.endsWith("schema.graphql")));
     });
 
     it("should not generate SDL file when sdl is null", async () => {
@@ -294,9 +293,9 @@ describe("GenCommandOrchestrator", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, true);
-      assert.ok(result.filesWritten.some((f) => f.endsWith("schema.ts")));
-      assert.ok(!result.filesWritten.some((f) => f.endsWith(".graphql")));
+      expect(result.success, true);
+      expect(result.filesWritten.some((f) => f.endsWith("schema.ts")));
+      expect(!result.filesWritten.some((f) => f.endsWith(".graphql")));
     });
 
     it("should still generate resolvers.ts when both ast and sdl are null", async () => {
@@ -326,10 +325,10 @@ describe("GenCommandOrchestrator", () => {
 
       const result = await executeGeneration(config);
 
-      assert.strictEqual(result.success, true);
-      assert.ok(!result.filesWritten.some((f) => f.endsWith("schema.ts")));
-      assert.ok(!result.filesWritten.some((f) => f.endsWith(".graphql")));
-      assert.ok(result.filesWritten.some((f) => f.endsWith("resolvers.ts")));
+      expect(result.success, true);
+      expect(!result.filesWritten.some((f) => f.endsWith("schema.ts")));
+      expect(!result.filesWritten.some((f) => f.endsWith(".graphql")));
+      expect(result.filesWritten.some((f) => f.endsWith("resolvers.ts")));
     });
   });
 });

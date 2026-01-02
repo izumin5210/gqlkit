@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import { type DocumentNode, Kind, print } from "graphql";
 import { pruneDocumentNode } from "./schema-pruner.js";
 
@@ -46,9 +45,9 @@ describe("SchemaPruner", () => {
       const result = pruneDocumentNode({ documentNode: doc });
       const sdl = print(result.documentNode);
 
-      assert.ok(sdl.includes("type Query"));
-      assert.ok(sdl.includes("type User"));
-      assert.deepEqual(result.removedTypes, []);
+      expect(sdl).toContain("type Query");
+      expect(sdl).toContain("type User");
+      expect(result.removedTypes).toEqual([]);
     });
 
     it("should remove types not referenced from root types", () => {
@@ -89,9 +88,9 @@ describe("SchemaPruner", () => {
       const result = pruneDocumentNode({ documentNode: doc });
       const sdl = print(result.documentNode);
 
-      assert.ok(sdl.includes("type Query"));
-      assert.ok(!sdl.includes("UnusedType"));
-      assert.ok(result.removedTypes.includes("UnusedType"));
+      expect(sdl).toContain("type Query");
+      expect(sdl).not.toContain("UnusedType");
+      expect(result.removedTypes).toContain("UnusedType");
     });
 
     it("should keep types referenced from Mutation", () => {
@@ -162,10 +161,10 @@ describe("SchemaPruner", () => {
       const result = pruneDocumentNode({ documentNode: doc });
       const sdl = print(result.documentNode);
 
-      assert.ok(sdl.includes("type Mutation"));
-      assert.ok(sdl.includes("type User"));
-      assert.ok(sdl.includes("input CreateUserInput"));
-      assert.deepEqual(result.removedTypes, []);
+      expect(sdl).toContain("type Mutation");
+      expect(sdl).toContain("type User");
+      expect(sdl).toContain("input CreateUserInput");
+      expect(result.removedTypes).toEqual([]);
     });
 
     it("should keep custom scalars when specified", () => {
@@ -199,8 +198,8 @@ describe("SchemaPruner", () => {
       });
       const sdl = print(result.documentNode);
 
-      assert.ok(sdl.includes("scalar DateTime"));
-      assert.deepEqual(result.removedTypes, []);
+      expect(sdl).toContain("scalar DateTime");
+      expect(result.removedTypes).toEqual([]);
     });
 
     it("should keep transitively referenced types", () => {
@@ -258,10 +257,10 @@ describe("SchemaPruner", () => {
       const result = pruneDocumentNode({ documentNode: doc });
       const sdl = print(result.documentNode);
 
-      assert.ok(sdl.includes("type Query"));
-      assert.ok(sdl.includes("type User"));
-      assert.ok(sdl.includes("type Post"));
-      assert.deepEqual(result.removedTypes, []);
+      expect(sdl).toContain("type Query");
+      expect(sdl).toContain("type User");
+      expect(sdl).toContain("type Post");
+      expect(result.removedTypes).toEqual([]);
     });
 
     it("should handle type extensions with Query", () => {
@@ -307,9 +306,9 @@ describe("SchemaPruner", () => {
       const result = pruneDocumentNode({ documentNode: doc });
       const sdl = print(result.documentNode);
 
-      assert.ok(sdl.includes("Query"));
-      assert.ok(sdl.includes("User"));
-      assert.deepEqual(result.removedTypes, []);
+      expect(sdl).toContain("Query");
+      expect(sdl).toContain("User");
+      expect(result.removedTypes).toEqual([]);
     });
 
     it("should keep enum types referenced from fields", () => {
@@ -350,9 +349,9 @@ describe("SchemaPruner", () => {
       const result = pruneDocumentNode({ documentNode: doc });
       const sdl = print(result.documentNode);
 
-      assert.ok(sdl.includes("enum Status"));
-      assert.ok(sdl.includes("ACTIVE"));
-      assert.deepEqual(result.removedTypes, []);
+      expect(sdl).toContain("enum Status");
+      expect(sdl).toContain("ACTIVE");
+      expect(result.removedTypes).toEqual([]);
     });
 
     it("should keep union types and their members", () => {
@@ -421,10 +420,10 @@ describe("SchemaPruner", () => {
       const result = pruneDocumentNode({ documentNode: doc });
       const sdl = print(result.documentNode);
 
-      assert.ok(sdl.includes("union SearchResult"));
-      assert.ok(sdl.includes("type User"));
-      assert.ok(sdl.includes("type Post"));
-      assert.deepEqual(result.removedTypes, []);
+      expect(sdl).toContain("union SearchResult");
+      expect(sdl).toContain("type User");
+      expect(sdl).toContain("type Post");
+      expect(result.removedTypes).toEqual([]);
     });
   });
 });

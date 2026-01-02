@@ -11,8 +11,7 @@
   "author": "izumin5210 <m@izum.in>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --build",
-    "test": "node --import tsx --test 'src/**/*.test.ts'"
+    "build": "tsc --build"
   },
   "dependencies": {
     "@graphql-tools/utils": "^10.11.0",

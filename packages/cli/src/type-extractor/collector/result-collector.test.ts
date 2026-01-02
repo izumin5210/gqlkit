@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type { Diagnostic, GraphQLTypeInfo } from "../types/index.js";
 import { collectResults } from "./result-collector.js";
 
@@ -31,9 +30,9 @@ describe("ResultCollector", () => {
 
         const result = collectResults(types, diagnostics);
 
-        assert.strictEqual(result.types[0]?.name, "Apple");
-        assert.strictEqual(result.types[1]?.name, "Mango");
-        assert.strictEqual(result.types[2]?.name, "Zebra");
+        expect(result.types[0]?.name).toBe("Apple");
+        expect(result.types[1]?.name).toBe("Mango");
+        expect(result.types[2]?.name).toBe("Zebra");
       });
 
       it("should sort fields alphabetically within each type", () => {
@@ -63,10 +62,10 @@ describe("ResultCollector", () => {
         const result = collectResults(types, diagnostics);
 
         const fields = result.types[0]?.fields;
-        assert.ok(fields);
-        assert.strictEqual(fields[0]?.name, "age");
-        assert.strictEqual(fields[1]?.name, "name");
-        assert.strictEqual(fields[2]?.name, "zipCode");
+        expect(fields).toBeTruthy();
+        expect(fields![0]?.name).toBe("age");
+        expect(fields![1]?.name).toBe("name");
+        expect(fields![2]?.name).toBe("zipCode");
       });
 
       it("should sort union members alphabetically", () => {
@@ -83,10 +82,10 @@ describe("ResultCollector", () => {
         const result = collectResults(types, diagnostics);
 
         const members = result.types[0]?.unionMembers;
-        assert.ok(members);
-        assert.strictEqual(members[0], "Apple");
-        assert.strictEqual(members[1], "Mango");
-        assert.strictEqual(members[2], "Zebra");
+        expect(members).toBeTruthy();
+        expect(members![0]).toBe("Apple");
+        expect(members![1]).toBe("Mango");
+        expect(members![2]).toBe("Zebra");
       });
 
       it("should produce same output for same input regardless of order", () => {
@@ -102,7 +101,7 @@ describe("ResultCollector", () => {
         const result1 = collectResults(types1, []);
         const result2 = collectResults(types2, []);
 
-        assert.deepStrictEqual(result1, result2);
+        expect(result1).toEqual(result2);
       });
     });
 
@@ -129,8 +128,8 @@ describe("ResultCollector", () => {
 
         const result = collectResults(types, diagnostics);
 
-        assert.strictEqual(result.diagnostics.errors.length, 2);
-        assert.strictEqual(result.diagnostics.warnings.length, 1);
+        expect(result.diagnostics.errors.length).toBe(2);
+        expect(result.diagnostics.warnings.length).toBe(1);
       });
 
       it("should remove duplicate diagnostics", () => {
@@ -150,7 +149,7 @@ describe("ResultCollector", () => {
 
         const result = collectResults(types, diagnostics);
 
-        assert.strictEqual(result.diagnostics.errors.length, 1);
+        expect(result.diagnostics.errors.length).toBe(1);
       });
 
       it("should preserve diagnostic details", () => {
@@ -167,10 +166,10 @@ describe("ResultCollector", () => {
         const result = collectResults(types, diagnostics);
 
         const error = result.diagnostics.errors[0];
-        assert.ok(error);
-        assert.strictEqual(error.code, "PARSE_ERROR");
-        assert.strictEqual(error.message, "Failed to parse");
-        assert.deepStrictEqual(error.location, {
+        expect(error).toBeTruthy();
+        expect(error!.code).toBe("PARSE_ERROR");
+        expect(error!.message).toBe("Failed to parse");
+        expect(error!.location).toEqual({
           file: "/path/to/file.ts",
           line: 10,
           column: 5,

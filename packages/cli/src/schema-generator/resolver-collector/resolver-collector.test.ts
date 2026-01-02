@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type { IntegratedResult } from "../integrator/result-integrator.js";
 import { collectResolverInfo } from "./resolver-collector.js";
 
@@ -19,8 +18,8 @@ describe("ResolverCollector", () => {
 
         const info = collectResolverInfo(integratedResult);
 
-        assert.ok(Array.isArray(info.types));
-        assert.ok(Array.isArray(info.sourceFiles));
+        expect(Array.isArray(info.types));
+        expect(Array.isArray(info.sourceFiles));
       });
 
       it("should extract source files from type extensions", () => {
@@ -52,8 +51,8 @@ describe("ResolverCollector", () => {
 
         const info = collectResolverInfo(integratedResult);
 
-        assert.ok(info.sourceFiles.includes("/src/resolvers/query.ts"));
-        assert.strictEqual(info.sourceFiles.length, 1);
+        expect(info.sourceFiles.includes("/src/resolvers/query.ts"));
+        expect(info.sourceFiles.length, 1);
       });
     });
 
@@ -83,9 +82,9 @@ describe("ResolverCollector", () => {
         const info = collectResolverInfo(integratedResult);
 
         const queryType = info.types.find((t) => t.typeName === "Query");
-        assert.ok(queryType);
-        assert.strictEqual(queryType.fields.length, 1);
-        assert.strictEqual(queryType.fields[0]?.fieldName, "users");
+        expect(queryType);
+        expect(queryType.fields.length, 1);
+        expect(queryType.fields[0]?.fieldName, "users");
       });
 
       it("should classify Mutation fields into Mutation type", () => {
@@ -113,9 +112,9 @@ describe("ResolverCollector", () => {
         const info = collectResolverInfo(integratedResult);
 
         const mutationType = info.types.find((t) => t.typeName === "Mutation");
-        assert.ok(mutationType);
-        assert.strictEqual(mutationType.fields.length, 1);
-        assert.strictEqual(mutationType.fields[0]?.fieldName, "createUser");
+        expect(mutationType);
+        expect(mutationType.fields.length, 1);
+        expect(mutationType.fields[0]?.fieldName, "createUser");
       });
 
       it("should classify non-root type fields separately", () => {
@@ -143,9 +142,9 @@ describe("ResolverCollector", () => {
         const info = collectResolverInfo(integratedResult);
 
         const userType = info.types.find((t) => t.typeName === "User");
-        assert.ok(userType);
-        assert.strictEqual(userType.fields.length, 1);
-        assert.strictEqual(userType.fields[0]?.fieldName, "posts");
+        expect(userType);
+        expect(userType.fields.length, 1);
+        expect(userType.fields[0]?.fieldName, "posts");
       });
 
       it("should collect resolver values from source files", () => {
@@ -173,12 +172,12 @@ describe("ResolverCollector", () => {
         const info = collectResolverInfo(integratedResult);
 
         const queryType = info.types.find((t) => t.typeName === "Query");
-        assert.ok(queryType);
-        assert.strictEqual(
+        expect(queryType);
+        expect(
           queryType.fields[0]?.sourceFile,
           "/src/resolvers/query.ts",
         );
-        assert.strictEqual(
+        expect(
           queryType.fields[0]?.resolverValueName,
           "queryResolver",
         );
@@ -223,8 +222,8 @@ describe("ResolverCollector", () => {
 
         const info = collectResolverInfo(integratedResult);
 
-        assert.strictEqual(info.types[0]?.typeName, "Post");
-        assert.strictEqual(info.types[1]?.typeName, "User");
+        expect(info.types[0]?.typeName, "Post");
+        expect(info.types[1]?.typeName, "User");
       });
 
       it("should sort source files", () => {
@@ -256,8 +255,8 @@ describe("ResolverCollector", () => {
 
         const info = collectResolverInfo(integratedResult);
 
-        assert.strictEqual(info.sourceFiles[0], "/src/resolvers/a-query.ts");
-        assert.strictEqual(info.sourceFiles[1], "/src/resolvers/z-query.ts");
+        expect(info.sourceFiles[0], "/src/resolvers/a-query.ts");
+        expect(info.sourceFiles[1], "/src/resolvers/z-query.ts");
       });
 
       it("should sort fields within each type by name", () => {
@@ -298,10 +297,10 @@ describe("ResolverCollector", () => {
         const info = collectResolverInfo(integratedResult);
 
         const queryType = info.types.find((t) => t.typeName === "Query");
-        assert.ok(queryType);
-        assert.strictEqual(queryType.fields[0]?.fieldName, "apple");
-        assert.strictEqual(queryType.fields[1]?.fieldName, "mango");
-        assert.strictEqual(queryType.fields[2]?.fieldName, "zebra");
+        expect(queryType);
+        expect(queryType.fields[0]?.fieldName, "apple");
+        expect(queryType.fields[1]?.fieldName, "mango");
+        expect(queryType.fields[2]?.fieldName, "zebra");
       });
     });
 
@@ -332,9 +331,9 @@ describe("ResolverCollector", () => {
         const info = collectResolverInfo(integratedResult);
 
         const queryType = info.types.find((t) => t.typeName === "Query");
-        assert.ok(queryType);
-        assert.strictEqual(queryType.fields[0]?.isDirectExport, true);
-        assert.strictEqual(queryType.fields[0]?.resolverValueName, "users");
+        expect(queryType);
+        expect(queryType.fields[0]?.isDirectExport, true);
+        expect(queryType.fields[0]?.resolverValueName, "users");
       });
 
       it("should set isDirectExport to false when resolverExportName is not provided", () => {
@@ -362,9 +361,9 @@ describe("ResolverCollector", () => {
         const info = collectResolverInfo(integratedResult);
 
         const queryType = info.types.find((t) => t.typeName === "Query");
-        assert.ok(queryType);
-        assert.strictEqual(queryType.fields[0]?.isDirectExport, false);
-        assert.strictEqual(
+        expect(queryType);
+        expect(queryType.fields[0]?.isDirectExport, false);
+        expect(
           queryType.fields[0]?.resolverValueName,
           "queryResolver",
         );
@@ -396,9 +395,9 @@ describe("ResolverCollector", () => {
         const info = collectResolverInfo(integratedResult);
 
         const userType = info.types.find((t) => t.typeName === "User");
-        assert.ok(userType);
-        assert.strictEqual(userType.fields[0]?.resolverValueName, "posts_");
-        assert.strictEqual(userType.fields[0]?.isDirectExport, true);
+        expect(userType);
+        expect(userType.fields[0]?.resolverValueName, "posts_");
+        expect(userType.fields[0]?.isDirectExport, true);
       });
 
       it("should use fallback naming when resolverExportName is not provided", () => {
@@ -426,12 +425,12 @@ describe("ResolverCollector", () => {
         const info = collectResolverInfo(integratedResult);
 
         const userType = info.types.find((t) => t.typeName === "User");
-        assert.ok(userType);
-        assert.strictEqual(
+        expect(userType);
+        expect(
           userType.fields[0]?.resolverValueName,
           "userResolver",
         );
-        assert.strictEqual(userType.fields[0]?.isDirectExport, false);
+        expect(userType.fields[0]?.isDirectExport, false);
       });
 
       it("should handle mixed direct and indirect exports in same type", () => {
@@ -465,21 +464,21 @@ describe("ResolverCollector", () => {
         const info = collectResolverInfo(integratedResult);
 
         const queryType = info.types.find((t) => t.typeName === "Query");
-        assert.ok(queryType);
+        expect(queryType);
 
         const directField = queryType.fields.find(
           (f) => f.fieldName === "directField",
         );
-        assert.ok(directField);
-        assert.strictEqual(directField.isDirectExport, true);
-        assert.strictEqual(directField.resolverValueName, "directField");
+        expect(directField);
+        expect(directField.isDirectExport, true);
+        expect(directField.resolverValueName, "directField");
 
         const indirectField = queryType.fields.find(
           (f) => f.fieldName === "indirectField",
         );
-        assert.ok(indirectField);
-        assert.strictEqual(indirectField.isDirectExport, false);
-        assert.strictEqual(indirectField.resolverValueName, "queryResolver");
+        expect(indirectField);
+        expect(indirectField.isDirectExport, false);
+        expect(indirectField.resolverValueName, "queryResolver");
       });
     });
   });

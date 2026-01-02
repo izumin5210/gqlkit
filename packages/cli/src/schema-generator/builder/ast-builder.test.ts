@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import { Kind, print } from "graphql";
 import type { GraphQLInputValue } from "../../resolver-extractor/index.js";
 import type {
@@ -36,8 +35,8 @@ describe("ASTBuilder", () => {
     it("should create a NameNode with given value", () => {
       const node = buildNameNode("User");
 
-      assert.strictEqual(node.kind, Kind.NAME);
-      assert.strictEqual(node.value, "User");
+      expect(node.kind, Kind.NAME);
+      expect(node.value, "User");
     });
   });
 
@@ -45,9 +44,9 @@ describe("ASTBuilder", () => {
     it("should create a NamedTypeNode with given type name", () => {
       const node = buildNamedTypeNode("String");
 
-      assert.strictEqual(node.kind, Kind.NAMED_TYPE);
-      assert.strictEqual(node.name.kind, Kind.NAME);
-      assert.strictEqual(node.name.value, "String");
+      expect(node.kind, Kind.NAMED_TYPE);
+      expect(node.name.kind, Kind.NAME);
+      expect(node.name.value, "String");
     });
   });
 
@@ -56,8 +55,8 @@ describe("ASTBuilder", () => {
       const innerType = buildNamedTypeNode("User");
       const node = buildListTypeNode(innerType);
 
-      assert.strictEqual(node.kind, Kind.LIST_TYPE);
-      assert.strictEqual(node.type.kind, Kind.NAMED_TYPE);
+      expect(node.kind, Kind.LIST_TYPE);
+      expect(node.type.kind, Kind.NAMED_TYPE);
     });
   });
 
@@ -66,8 +65,8 @@ describe("ASTBuilder", () => {
       const innerType = buildNamedTypeNode("String");
       const node = buildNonNullTypeNode(innerType);
 
-      assert.strictEqual(node.kind, Kind.NON_NULL_TYPE);
-      assert.strictEqual(node.type.kind, Kind.NAMED_TYPE);
+      expect(node.kind, Kind.NON_NULL_TYPE);
+      expect(node.type.kind, Kind.NAMED_TYPE);
     });
   });
 
@@ -79,9 +78,9 @@ describe("ASTBuilder", () => {
       };
       const node = buildInputValueDefinitionNode(inputValue);
 
-      assert.strictEqual(node.kind, Kind.INPUT_VALUE_DEFINITION);
-      assert.strictEqual(node.name.value, "id");
-      assert.strictEqual(node.type.kind, Kind.NON_NULL_TYPE);
+      expect(node.kind, Kind.INPUT_VALUE_DEFINITION);
+      expect(node.name.value, "id");
+      expect(node.type.kind, Kind.NON_NULL_TYPE);
     });
 
     it("should handle nullable type", () => {
@@ -91,7 +90,7 @@ describe("ASTBuilder", () => {
       };
       const node = buildInputValueDefinitionNode(inputValue);
 
-      assert.strictEqual(node.type.kind, Kind.NAMED_TYPE);
+      expect(node.type.kind, Kind.NAMED_TYPE);
     });
 
     it("should add description when provided", () => {
@@ -102,9 +101,9 @@ describe("ASTBuilder", () => {
       };
       const node = buildInputValueDefinitionNode(inputValue);
 
-      assert.ok(node.description);
-      assert.strictEqual(node.description.kind, Kind.STRING);
-      assert.strictEqual(node.description.value, "The unique identifier");
+      expect(node.description);
+      expect(node.description.kind, Kind.STRING);
+      expect(node.description.value, "The unique identifier");
     });
 
     it("should not add description when not provided", () => {
@@ -114,7 +113,7 @@ describe("ASTBuilder", () => {
       };
       const node = buildInputValueDefinitionNode(inputValue);
 
-      assert.strictEqual(node.description, undefined);
+      expect(node.description, undefined);
     });
 
     it("should add @deprecated directive when provided", () => {
@@ -125,11 +124,11 @@ describe("ASTBuilder", () => {
       };
       const node = buildInputValueDefinitionNode(inputValue);
 
-      assert.ok(node.directives);
-      assert.strictEqual(node.directives.length, 1);
-      assert.strictEqual(node.directives[0]?.name.value, "deprecated");
-      assert.strictEqual(node.directives[0]?.arguments?.length, 1);
-      assert.strictEqual(
+      expect(node.directives);
+      expect(node.directives.length, 1);
+      expect(node.directives[0]?.name.value, "deprecated");
+      expect(node.directives[0]?.arguments?.length, 1);
+      expect(
         node.directives[0]?.arguments?.[0]?.name.value,
         "reason",
       );
@@ -143,10 +142,10 @@ describe("ASTBuilder", () => {
       };
       const node = buildInputValueDefinitionNode(inputValue);
 
-      assert.ok(node.directives);
-      assert.strictEqual(node.directives.length, 1);
-      assert.strictEqual(node.directives[0]?.name.value, "deprecated");
-      assert.strictEqual(node.directives[0]?.arguments?.length ?? 0, 0);
+      expect(node.directives);
+      expect(node.directives.length, 1);
+      expect(node.directives[0]?.name.value, "deprecated");
+      expect(node.directives[0]?.arguments?.length ?? 0, 0);
     });
 
     it("should add both description and deprecated", () => {
@@ -158,10 +157,10 @@ describe("ASTBuilder", () => {
       };
       const node = buildInputValueDefinitionNode(inputValue);
 
-      assert.ok(node.description);
-      assert.strictEqual(node.description.value, "The unique identifier");
-      assert.ok(node.directives);
-      assert.strictEqual(node.directives.length, 1);
+      expect(node.description);
+      expect(node.description.value, "The unique identifier");
+      expect(node.directives);
+      expect(node.directives.length, 1);
     });
   });
 
@@ -174,9 +173,9 @@ describe("ASTBuilder", () => {
       };
       const node = buildFieldTypeNode(fieldType);
 
-      assert.strictEqual(node.kind, Kind.NON_NULL_TYPE);
+      expect(node.kind, Kind.NON_NULL_TYPE);
       if (node.kind === Kind.NON_NULL_TYPE) {
-        assert.strictEqual(node.type.kind, Kind.NAMED_TYPE);
+        expect(node.type.kind, Kind.NAMED_TYPE);
       }
     });
 
@@ -188,7 +187,7 @@ describe("ASTBuilder", () => {
       };
       const node = buildFieldTypeNode(fieldType);
 
-      assert.strictEqual(node.kind, Kind.NAMED_TYPE);
+      expect(node.kind, Kind.NAMED_TYPE);
     });
 
     it("should create non-null list with non-null items [Type!]!", () => {
@@ -200,9 +199,9 @@ describe("ASTBuilder", () => {
       };
       const node = buildFieldTypeNode(fieldType);
 
-      assert.strictEqual(node.kind, Kind.NON_NULL_TYPE);
+      expect(node.kind, Kind.NON_NULL_TYPE);
       if (node.kind === Kind.NON_NULL_TYPE) {
-        assert.strictEqual(node.type.kind, Kind.LIST_TYPE);
+        expect(node.type.kind, Kind.LIST_TYPE);
       }
     });
 
@@ -215,7 +214,7 @@ describe("ASTBuilder", () => {
       };
       const node = buildFieldTypeNode(fieldType);
 
-      assert.strictEqual(node.kind, Kind.LIST_TYPE);
+      expect(node.kind, Kind.LIST_TYPE);
     });
 
     it("should create non-null list with nullable items [Type]!", () => {
@@ -227,12 +226,12 @@ describe("ASTBuilder", () => {
       };
       const node = buildFieldTypeNode(fieldType);
 
-      assert.strictEqual(node.kind, Kind.NON_NULL_TYPE);
+      expect(node.kind, Kind.NON_NULL_TYPE);
       if (node.kind === Kind.NON_NULL_TYPE) {
         const listType = node.type;
-        assert.strictEqual(listType.kind, Kind.LIST_TYPE);
+        expect(listType.kind, Kind.LIST_TYPE);
         if (listType.kind === Kind.LIST_TYPE) {
-          assert.strictEqual(listType.type.kind, Kind.NAMED_TYPE);
+          expect(listType.type.kind, Kind.NAMED_TYPE);
         }
       }
     });
@@ -246,9 +245,9 @@ describe("ASTBuilder", () => {
       };
       const node = buildFieldTypeNode(fieldType);
 
-      assert.strictEqual(node.kind, Kind.LIST_TYPE);
+      expect(node.kind, Kind.LIST_TYPE);
       if (node.kind === Kind.LIST_TYPE) {
-        assert.strictEqual(node.type.kind, Kind.NAMED_TYPE);
+        expect(node.type.kind, Kind.NAMED_TYPE);
       }
     });
   });
@@ -267,9 +266,9 @@ describe("ASTBuilder", () => {
       };
       const node = buildFieldDefinitionNode(field);
 
-      assert.strictEqual(node.kind, Kind.FIELD_DEFINITION);
-      assert.strictEqual(node.name.value, "posts");
-      assert.strictEqual(node.type.kind, Kind.NON_NULL_TYPE);
+      expect(node.kind, Kind.FIELD_DEFINITION);
+      expect(node.name.value, "posts");
+      expect(node.type.kind, Kind.NON_NULL_TYPE);
     });
 
     it("should include arguments when present", () => {
@@ -286,8 +285,8 @@ describe("ASTBuilder", () => {
       };
       const node = buildFieldDefinitionNode(field);
 
-      assert.strictEqual(node.arguments?.length, 1);
-      assert.strictEqual(node.arguments?.[0]?.name.value, "id");
+      expect(node.arguments?.length, 1);
+      expect(node.arguments?.[0]?.name.value, "id");
     });
 
     it("should have empty arguments array when no args", () => {
@@ -298,7 +297,7 @@ describe("ASTBuilder", () => {
       };
       const node = buildFieldDefinitionNode(field);
 
-      assert.strictEqual(node.arguments?.length ?? 0, 0);
+      expect(node.arguments?.length ?? 0, 0);
     });
 
     it("should handle multiple arguments with different nullability", () => {
@@ -319,15 +318,15 @@ describe("ASTBuilder", () => {
       };
       const node = buildFieldDefinitionNode(field);
 
-      assert.strictEqual(node.arguments?.length, 2);
+      expect(node.arguments?.length, 2);
 
       const queryArg = node.arguments?.[0];
-      assert.strictEqual(queryArg?.name.value, "query");
-      assert.strictEqual(queryArg?.type.kind, Kind.NON_NULL_TYPE);
+      expect(queryArg?.name.value, "query");
+      expect(queryArg?.type.kind, Kind.NON_NULL_TYPE);
 
       const limitArg = node.arguments?.[1];
-      assert.strictEqual(limitArg?.name.value, "limit");
-      assert.strictEqual(limitArg?.type.kind, Kind.NAMED_TYPE);
+      expect(limitArg?.name.value, "limit");
+      expect(limitArg?.type.kind, Kind.NAMED_TYPE);
     });
 
     it("should handle list argument types", () => {
@@ -349,11 +348,11 @@ describe("ASTBuilder", () => {
       };
       const node = buildFieldDefinitionNode(field);
 
-      assert.strictEqual(node.arguments?.length, 1);
+      expect(node.arguments?.length, 1);
       const idsArg = node.arguments?.[0];
-      assert.strictEqual(idsArg?.type.kind, Kind.NON_NULL_TYPE);
+      expect(idsArg?.type.kind, Kind.NON_NULL_TYPE);
       if (idsArg?.type.kind === Kind.NON_NULL_TYPE) {
-        assert.strictEqual(idsArg.type.type.kind, Kind.LIST_TYPE);
+        expect(idsArg.type.type.kind, Kind.LIST_TYPE);
       }
     });
 
@@ -371,14 +370,14 @@ describe("ASTBuilder", () => {
       };
       const node = buildFieldDefinitionNode(field);
 
-      assert.strictEqual(node.arguments?.length, 1);
+      expect(node.arguments?.length, 1);
       const inputArg = node.arguments?.[0];
-      assert.strictEqual(inputArg?.name.value, "input");
-      assert.strictEqual(inputArg?.type.kind, Kind.NON_NULL_TYPE);
+      expect(inputArg?.name.value, "input");
+      expect(inputArg?.type.kind, Kind.NON_NULL_TYPE);
       if (inputArg?.type.kind === Kind.NON_NULL_TYPE) {
         const namedType = inputArg.type.type;
         if (namedType.kind === Kind.NAMED_TYPE) {
-          assert.strictEqual(namedType.name.value, "CreateUserInput");
+          expect(namedType.name.value, "CreateUserInput");
         }
       }
     });
@@ -397,14 +396,14 @@ describe("ASTBuilder", () => {
       };
       const node = buildFieldDefinitionNode(field);
 
-      assert.strictEqual(node.arguments?.length, 1);
+      expect(node.arguments?.length, 1);
       const statusArg = node.arguments?.[0];
-      assert.strictEqual(statusArg?.name.value, "status");
-      assert.strictEqual(statusArg?.type.kind, Kind.NON_NULL_TYPE);
+      expect(statusArg?.name.value, "status");
+      expect(statusArg?.type.kind, Kind.NON_NULL_TYPE);
       if (statusArg?.type.kind === Kind.NON_NULL_TYPE) {
         const namedType = statusArg.type.type;
         if (namedType.kind === Kind.NAMED_TYPE) {
-          assert.strictEqual(namedType.name.value, "Status");
+          expect(namedType.name.value, "Status");
         }
       }
     });
@@ -439,7 +438,7 @@ describe("ASTBuilder", () => {
       };
       const node = buildFieldDefinitionNode(field);
 
-      assert.strictEqual(node.arguments?.length, 5);
+      expect(node.arguments?.length, 5);
       const argTypeNames = node.arguments?.map((arg) => {
         if (
           arg.type.kind === Kind.NON_NULL_TYPE &&
@@ -449,7 +448,7 @@ describe("ASTBuilder", () => {
         }
         return null;
       });
-      assert.deepStrictEqual(argTypeNames, [
+      expect(argTypeNames, [
         "String",
         "Int",
         "Float",
@@ -477,9 +476,9 @@ describe("ASTBuilder", () => {
       };
       const node = buildObjectTypeDefinitionNode(baseType);
 
-      assert.strictEqual(node.kind, Kind.OBJECT_TYPE_DEFINITION);
-      assert.strictEqual(node.name.value, "User");
-      assert.strictEqual(node.fields?.length, 2);
+      expect(node.kind, Kind.OBJECT_TYPE_DEFINITION);
+      expect(node.name.value, "User");
+      expect(node.fields?.length, 2);
     });
 
     it("should create empty fields for Query base type", () => {
@@ -490,9 +489,9 @@ describe("ASTBuilder", () => {
       };
       const node = buildObjectTypeDefinitionNode(baseType);
 
-      assert.strictEqual(node.kind, Kind.OBJECT_TYPE_DEFINITION);
-      assert.strictEqual(node.name.value, "Query");
-      assert.strictEqual(node.fields?.length, 0);
+      expect(node.kind, Kind.OBJECT_TYPE_DEFINITION);
+      expect(node.name.value, "Query");
+      expect(node.fields?.length, 0);
     });
   });
 
@@ -505,11 +504,11 @@ describe("ASTBuilder", () => {
       };
       const node = buildUnionTypeDefinitionNode(baseType);
 
-      assert.strictEqual(node.kind, Kind.UNION_TYPE_DEFINITION);
-      assert.strictEqual(node.name.value, "SearchResult");
-      assert.strictEqual(node.types?.length, 2);
-      assert.strictEqual(node.types?.[0]?.name.value, "Post");
-      assert.strictEqual(node.types?.[1]?.name.value, "User");
+      expect(node.kind, Kind.UNION_TYPE_DEFINITION);
+      expect(node.name.value, "SearchResult");
+      expect(node.types?.length, 2);
+      expect(node.types?.[0]?.name.value, "Post");
+      expect(node.types?.[1]?.name.value, "User");
     });
   });
 
@@ -521,8 +520,8 @@ describe("ASTBuilder", () => {
       };
       const node = buildEnumValueDefinitionNode(enumValue);
 
-      assert.strictEqual(node.kind, Kind.ENUM_VALUE_DEFINITION);
-      assert.strictEqual(node.name.value, "ACTIVE");
+      expect(node.kind, Kind.ENUM_VALUE_DEFINITION);
+      expect(node.name.value, "ACTIVE");
     });
   });
 
@@ -530,9 +529,9 @@ describe("ASTBuilder", () => {
     it("should create ScalarTypeDefinitionNode with name only", () => {
       const node = buildScalarTypeDefinitionNode("DateTime");
 
-      assert.strictEqual(node.kind, Kind.SCALAR_TYPE_DEFINITION);
-      assert.strictEqual(node.name.value, "DateTime");
-      assert.strictEqual(node.description, undefined);
+      expect(node.kind, Kind.SCALAR_TYPE_DEFINITION);
+      expect(node.name.value, "DateTime");
+      expect(node.description, undefined);
     });
 
     it("should create ScalarTypeDefinitionNode with description", () => {
@@ -541,10 +540,10 @@ describe("ASTBuilder", () => {
         "An ISO-8601 encoded datetime",
       );
 
-      assert.strictEqual(node.kind, Kind.SCALAR_TYPE_DEFINITION);
-      assert.strictEqual(node.name.value, "DateTime");
-      assert.ok(node.description);
-      assert.strictEqual(
+      expect(node.kind, Kind.SCALAR_TYPE_DEFINITION);
+      expect(node.name.value, "DateTime");
+      expect(node.description);
+      expect(
         node.description.value,
         "An ISO-8601 encoded datetime",
       );
@@ -563,11 +562,11 @@ describe("ASTBuilder", () => {
       };
       const node = buildEnumTypeDefinitionNode(baseType);
 
-      assert.strictEqual(node.kind, Kind.ENUM_TYPE_DEFINITION);
-      assert.strictEqual(node.name.value, "Status");
-      assert.strictEqual(node.values?.length, 2);
-      assert.strictEqual(node.values?.[0]?.name.value, "ACTIVE");
-      assert.strictEqual(node.values?.[1]?.name.value, "INACTIVE");
+      expect(node.kind, Kind.ENUM_TYPE_DEFINITION);
+      expect(node.name.value, "Status");
+      expect(node.values?.length, 2);
+      expect(node.values?.[0]?.name.value, "ACTIVE");
+      expect(node.values?.[1]?.name.value, "INACTIVE");
     });
 
     it("should preserve enum value order", () => {
@@ -582,9 +581,9 @@ describe("ASTBuilder", () => {
       };
       const node = buildEnumTypeDefinitionNode(baseType);
 
-      assert.strictEqual(node.values?.[0]?.name.value, "LOW");
-      assert.strictEqual(node.values?.[1]?.name.value, "HIGH");
-      assert.strictEqual(node.values?.[2]?.name.value, "MEDIUM");
+      expect(node.values?.[0]?.name.value, "LOW");
+      expect(node.values?.[1]?.name.value, "HIGH");
+      expect(node.values?.[2]?.name.value, "MEDIUM");
     });
   });
 
@@ -606,9 +605,9 @@ describe("ASTBuilder", () => {
       };
       const node = buildInputObjectTypeDefinitionNode(inputType);
 
-      assert.strictEqual(node.kind, Kind.INPUT_OBJECT_TYPE_DEFINITION);
-      assert.strictEqual(node.name.value, "CreateUserInput");
-      assert.strictEqual(node.fields?.length, 2);
+      expect(node.kind, Kind.INPUT_OBJECT_TYPE_DEFINITION);
+      expect(node.name.value, "CreateUserInput");
+      expect(node.fields?.length, 2);
     });
 
     it("should sort fields by name alphabetically", () => {
@@ -633,7 +632,7 @@ describe("ASTBuilder", () => {
       const node = buildInputObjectTypeDefinitionNode(inputType);
 
       const fieldNames = node.fields?.map((f) => f.name.value);
-      assert.deepStrictEqual(fieldNames, ["alpha", "bravo", "zulu"]);
+      expect(fieldNames, ["alpha", "bravo", "zulu"]);
     });
 
     it("should handle non-nullable fields correctly", () => {
@@ -649,7 +648,7 @@ describe("ASTBuilder", () => {
       };
       const node = buildInputObjectTypeDefinitionNode(inputType);
 
-      assert.strictEqual(node.fields?.[0]?.type.kind, Kind.NON_NULL_TYPE);
+      expect(node.fields?.[0]?.type.kind, Kind.NON_NULL_TYPE);
     });
 
     it("should handle nullable fields correctly", () => {
@@ -665,7 +664,7 @@ describe("ASTBuilder", () => {
       };
       const node = buildInputObjectTypeDefinitionNode(inputType);
 
-      assert.strictEqual(node.fields?.[0]?.type.kind, Kind.NAMED_TYPE);
+      expect(node.fields?.[0]?.type.kind, Kind.NAMED_TYPE);
     });
 
     it("should handle list fields correctly", () => {
@@ -686,9 +685,9 @@ describe("ASTBuilder", () => {
       };
       const node = buildInputObjectTypeDefinitionNode(inputType);
 
-      assert.strictEqual(node.fields?.[0]?.type.kind, Kind.NON_NULL_TYPE);
+      expect(node.fields?.[0]?.type.kind, Kind.NON_NULL_TYPE);
       if (node.fields?.[0]?.type.kind === Kind.NON_NULL_TYPE) {
-        assert.strictEqual(node.fields[0].type.type.kind, Kind.LIST_TYPE);
+        expect(node.fields[0].type.type.kind, Kind.LIST_TYPE);
       }
     });
 
@@ -710,11 +709,11 @@ describe("ASTBuilder", () => {
       const node = buildInputObjectTypeDefinitionNode(inputType);
 
       const authorField = node.fields?.find((f) => f.name.value === "author");
-      assert.ok(authorField);
+      expect(authorField);
       if (authorField?.type.kind === Kind.NON_NULL_TYPE) {
         const namedType = authorField.type.type;
         if (namedType.kind === Kind.NAMED_TYPE) {
-          assert.strictEqual(namedType.name.value, "AuthorInput");
+          expect(namedType.name.value, "AuthorInput");
         }
       }
     });
@@ -737,20 +736,20 @@ describe("ASTBuilder", () => {
       const node = buildInputObjectTypeDefinitionNode(inputType);
 
       const statusField = node.fields?.find((f) => f.name.value === "status");
-      assert.ok(statusField);
-      assert.strictEqual(statusField?.type.kind, Kind.NON_NULL_TYPE);
+      expect(statusField);
+      expect(statusField?.type.kind, Kind.NON_NULL_TYPE);
       if (statusField?.type.kind === Kind.NON_NULL_TYPE) {
         const namedType = statusField.type.type;
         if (namedType.kind === Kind.NAMED_TYPE) {
-          assert.strictEqual(namedType.name.value, "Status");
+          expect(namedType.name.value, "Status");
         }
       }
 
       const roleField = node.fields?.find((f) => f.name.value === "role");
-      assert.ok(roleField);
-      assert.strictEqual(roleField?.type.kind, Kind.NAMED_TYPE);
+      expect(roleField);
+      expect(roleField?.type.kind, Kind.NAMED_TYPE);
       if (roleField?.type.kind === Kind.NAMED_TYPE) {
-        assert.strictEqual(roleField.type.name.value, "Role");
+        expect(roleField.type.name.value, "Role");
       }
     });
   });
@@ -769,10 +768,10 @@ describe("ASTBuilder", () => {
       };
       const node = buildObjectTypeExtensionNode(typeExtension);
 
-      assert.strictEqual(node.kind, Kind.OBJECT_TYPE_EXTENSION);
-      assert.strictEqual(node.name.value, "User");
-      assert.strictEqual(node.fields?.length, 1);
-      assert.strictEqual(node.fields?.[0]?.name.value, "posts");
+      expect(node.kind, Kind.OBJECT_TYPE_EXTENSION);
+      expect(node.name.value, "User");
+      expect(node.fields?.length, 1);
+      expect(node.fields?.[0]?.name.value, "posts");
     });
 
     it("should handle multiple fields with args and sort by name", () => {
@@ -799,10 +798,10 @@ describe("ASTBuilder", () => {
       };
       const node = buildObjectTypeExtensionNode(typeExtension);
 
-      assert.strictEqual(node.fields?.length, 2);
-      assert.strictEqual(node.fields?.[0]?.name.value, "user");
-      assert.strictEqual(node.fields?.[0]?.arguments?.length, 1);
-      assert.strictEqual(node.fields?.[1]?.name.value, "users");
+      expect(node.fields?.length, 2);
+      expect(node.fields?.[0]?.name.value, "user");
+      expect(node.fields?.[0]?.arguments?.length, 1);
+      expect(node.fields?.[1]?.name.value, "users");
     });
   });
 
@@ -831,9 +830,9 @@ describe("ASTBuilder", () => {
 
       const doc = buildDocumentNode(integratedResult);
 
-      assert.strictEqual(doc.kind, Kind.DOCUMENT);
-      assert.strictEqual(doc.definitions.length, 1);
-      assert.strictEqual(doc.definitions[0]?.kind, Kind.OBJECT_TYPE_DEFINITION);
+      expect(doc.kind, Kind.DOCUMENT);
+      expect(doc.definitions.length, 1);
+      expect(doc.definitions[0]?.kind, Kind.OBJECT_TYPE_DEFINITION);
     });
 
     it("should include both base types and type extensions", () => {
@@ -876,7 +875,7 @@ describe("ASTBuilder", () => {
 
       const doc = buildDocumentNode(integratedResult);
 
-      assert.strictEqual(doc.definitions.length, 3);
+      expect(doc.definitions.length, 3);
     });
 
     it("should sort base types by name", () => {
@@ -902,7 +901,7 @@ describe("ASTBuilder", () => {
         return "";
       });
 
-      assert.deepStrictEqual(names, ["Apple", "Mango", "Zebra"]);
+      expect(names, ["Apple", "Mango", "Zebra"]);
     });
 
     it("should sort type extensions by name", () => {
@@ -951,7 +950,7 @@ describe("ASTBuilder", () => {
         return "";
       });
 
-      assert.deepStrictEqual(names, ["Apple", "Zebra"]);
+      expect(names, ["Apple", "Zebra"]);
     });
 
     it("should sort fields within types by name", () => {
@@ -984,9 +983,9 @@ describe("ASTBuilder", () => {
       const typeDef = doc.definitions[0];
       if (typeDef?.kind === Kind.OBJECT_TYPE_DEFINITION) {
         const fieldNames = typeDef.fields?.map((f) => f.name.value);
-        assert.deepStrictEqual(fieldNames, ["alpha", "zulu"]);
+        expect(fieldNames).toEqual(["alpha", "zulu"]);
       } else {
-        assert.fail("Expected ObjectTypeDefinitionNode");
+        expect.fail("Expected ObjectTypeDefinitionNode");
       }
     });
 
@@ -1009,8 +1008,8 @@ describe("ASTBuilder", () => {
 
       const doc = buildDocumentNode(integratedResult);
 
-      assert.strictEqual(doc.definitions.length, 1);
-      assert.strictEqual(doc.definitions[0]?.kind, Kind.UNION_TYPE_DEFINITION);
+      expect(doc.definitions.length, 1);
+      expect(doc.definitions[0]?.kind, Kind.UNION_TYPE_DEFINITION);
     });
 
     it("should handle Enum types", () => {
@@ -1035,8 +1034,8 @@ describe("ASTBuilder", () => {
 
       const doc = buildDocumentNode(integratedResult);
 
-      assert.strictEqual(doc.definitions.length, 1);
-      assert.strictEqual(doc.definitions[0]?.kind, Kind.ENUM_TYPE_DEFINITION);
+      expect(doc.definitions.length, 1);
+      expect(doc.definitions[0]?.kind, Kind.ENUM_TYPE_DEFINITION);
     });
 
     it("should produce valid GraphQL SDL with enum", () => {
@@ -1062,9 +1061,9 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes("enum Status"));
-      assert.ok(sdl.includes("ACTIVE"));
-      assert.ok(sdl.includes("PENDING"));
+      expect(sdl.includes("enum Status"));
+      expect(sdl.includes("ACTIVE"));
+      expect(sdl.includes("PENDING"));
     });
 
     it("should produce valid GraphQL SDL", () => {
@@ -1117,10 +1116,10 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes("type Query"));
-      assert.ok(sdl.includes("type User"));
-      assert.ok(sdl.includes("extend type Query"));
-      assert.ok(sdl.includes("users: [User!]!"));
+      expect(sdl.includes("type Query"));
+      expect(sdl.includes("type User"));
+      expect(sdl.includes("extend type Query"));
+      expect(sdl.includes("users: [User!]!"));
     });
 
     it("should include Input Object types in DocumentNode", () => {
@@ -1167,9 +1166,9 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes("input CreateUserInput"));
-      assert.ok(sdl.includes("name: String!"));
-      assert.ok(sdl.includes("email: String"));
+      expect(sdl.includes("input CreateUserInput"));
+      expect(sdl.includes("name: String!"));
+      expect(sdl.includes("email: String"));
     });
 
     it("should sort Input Object types alphabetically", () => {
@@ -1209,13 +1208,13 @@ describe("ASTBuilder", () => {
         (d) => d.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION,
       );
 
-      assert.strictEqual(inputTypes.length, 2);
+      expect(inputTypes.length, 2);
       if (
         inputTypes[0]?.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION &&
         inputTypes[1]?.kind === Kind.INPUT_OBJECT_TYPE_DEFINITION
       ) {
-        assert.strictEqual(inputTypes[0].name.value, "AInput");
-        assert.strictEqual(inputTypes[1].name.value, "ZInput");
+        expect(inputTypes[0].name.value, "AInput");
+        expect(inputTypes[1].name.value, "ZInput");
       }
     });
 
@@ -1285,11 +1284,11 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes("input CreateUserInput"));
-      assert.ok(sdl.includes("type Mutation"));
-      assert.ok(sdl.includes("type User"));
-      assert.ok(sdl.includes("extend type Mutation"));
-      assert.ok(sdl.includes("createUser(input: CreateUserInput!): User!"));
+      expect(sdl.includes("input CreateUserInput"));
+      expect(sdl.includes("type Mutation"));
+      expect(sdl.includes("type User"));
+      expect(sdl.includes("extend type Mutation"));
+      expect(sdl.includes("createUser(input: CreateUserInput!): User!"));
     });
   });
 
@@ -1320,8 +1319,8 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('"A user in the system"'));
-      assert.ok(sdl.includes("type User"));
+      expect(sdl.includes('"A user in the system"'));
+      expect(sdl.includes("type User"));
     });
 
     it("should add description to field definition", () => {
@@ -1350,7 +1349,7 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('"The unique identifier"'));
+      expect(sdl.includes('"The unique identifier"'));
     });
 
     it("should add @deprecated directive to type definition", () => {
@@ -1374,7 +1373,7 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('@deprecated(reason: "Use Member instead")'));
+      expect(sdl.includes('@deprecated(reason: "Use Member instead")'));
     });
 
     it("should add @deprecated directive without reason", () => {
@@ -1398,7 +1397,7 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes("@deprecated"));
+      expect(sdl.includes("@deprecated"));
     });
 
     it("should add @deprecated directive to field definition", () => {
@@ -1427,7 +1426,7 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('@deprecated(reason: "Use uuid instead")'));
+      expect(sdl.includes('@deprecated(reason: "Use uuid instead")'));
     });
 
     it("should add description to enum type", () => {
@@ -1451,7 +1450,7 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('"The status of an item"'));
+      expect(sdl.includes('"The status of an item"'));
     });
 
     it("should add description to enum value", () => {
@@ -1480,7 +1479,7 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('"The item is active"'));
+      expect(sdl.includes('"The item is active"'));
     });
 
     it("should add @deprecated directive to enum value", () => {
@@ -1509,7 +1508,7 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('@deprecated(reason: "Use SUSPENDED")'));
+      expect(sdl.includes('@deprecated(reason: "Use SUSPENDED")'));
     });
 
     it("should add description to extension field", () => {
@@ -1538,7 +1537,7 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('"Get the current user"'));
+      expect(sdl.includes('"Get the current user"'));
     });
 
     it("should add @deprecated directive to extension field", () => {
@@ -1567,7 +1566,7 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('@deprecated(reason: "Use currentUser")'));
+      expect(sdl.includes('@deprecated(reason: "Use currentUser")'));
     });
 
     it("should add description to input type", () => {
@@ -1596,7 +1595,7 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes('"Input for creating a user"'));
+      expect(sdl.includes('"Input for creating a user"'));
     });
   });
 
@@ -1627,8 +1626,8 @@ describe("ASTBuilder", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes("scalar DateTime"));
-      assert.ok(sdl.includes("type User"));
+      expect(sdl.includes("scalar DateTime"));
+      expect(sdl.includes("type User"));
     });
 
     it("should sort custom scalar definitions alphabetically", () => {
@@ -1648,15 +1647,15 @@ describe("ASTBuilder", () => {
         (d) => d.kind === Kind.SCALAR_TYPE_DEFINITION,
       );
 
-      assert.strictEqual(scalarDefs.length, 3);
+      expect(scalarDefs.length, 3);
       if (
         scalarDefs[0]?.kind === Kind.SCALAR_TYPE_DEFINITION &&
         scalarDefs[1]?.kind === Kind.SCALAR_TYPE_DEFINITION &&
         scalarDefs[2]?.kind === Kind.SCALAR_TYPE_DEFINITION
       ) {
-        assert.strictEqual(scalarDefs[0].name.value, "DateTime");
-        assert.strictEqual(scalarDefs[1].name.value, "URL");
-        assert.strictEqual(scalarDefs[2].name.value, "UUID");
+        expect(scalarDefs[0].name.value, "DateTime");
+        expect(scalarDefs[1].name.value, "URL");
+        expect(scalarDefs[2].name.value, "UUID");
       }
     });
 
@@ -1685,8 +1684,8 @@ describe("ASTBuilder", () => {
 
       const doc = buildDocumentNode(integratedResult);
 
-      assert.strictEqual(doc.definitions[0]?.kind, Kind.SCALAR_TYPE_DEFINITION);
-      assert.strictEqual(doc.definitions[1]?.kind, Kind.OBJECT_TYPE_DEFINITION);
+      expect(doc.definitions[0]?.kind, Kind.SCALAR_TYPE_DEFINITION);
+      expect(doc.definitions[1]?.kind, Kind.OBJECT_TYPE_DEFINITION);
     });
   });
 });

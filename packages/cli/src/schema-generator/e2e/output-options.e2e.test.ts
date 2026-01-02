@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type { ExtractResolversResult } from "../../resolver-extractor/index.js";
 import { convertToGraphQL } from "../../type-extractor/converter/graphql-converter.js";
 import type { ExtractedTypeInfo } from "../../type-extractor/types/typescript.js";
@@ -153,19 +152,19 @@ describe("E2E: Schema Output Options", () => {
         outputDir: "/src/gqlkit/generated",
       });
 
-      assert.ok(!result.hasErrors);
-      assert.ok(result.sdlContent);
+      expect(!result.hasErrors);
+      expect(result.sdlContent);
 
-      assert.ok(result.sdlContent.includes("type User"));
-      assert.ok(result.sdlContent.includes("type Post"));
-      assert.ok(result.sdlContent.includes("type Query"));
-      assert.ok(result.sdlContent.includes("type Mutation"));
+      expect(result.sdlContent.includes("type User"));
+      expect(result.sdlContent.includes("type Post"));
+      expect(result.sdlContent.includes("type Query"));
+      expect(result.sdlContent.includes("type Mutation"));
 
-      assert.ok(result.sdlContent.includes("user(id: ID!): User"));
-      assert.ok(result.sdlContent.includes("users: [User!]!"));
-      assert.ok(result.sdlContent.includes("createUser(name: String!): User!"));
+      expect(result.sdlContent.includes("user(id: ID!): User"));
+      expect(result.sdlContent.includes("users: [User!]!"));
+      expect(result.sdlContent.includes("createUser(name: String!): User!"));
 
-      assert.ok(
+      expect(
         result.sdlContent.includes('"A user in the system"') ||
           result.sdlContent.includes('"""A user in the system"""'),
       );
@@ -224,12 +223,12 @@ describe("E2E: Schema Output Options", () => {
         outputDir: "/src/gqlkit/generated",
       });
 
-      assert.ok(!result.hasErrors);
-      assert.ok(result.sdlContent);
-      assert.ok(
+      expect(!result.hasErrors);
+      expect(result.sdlContent);
+      expect(
         result.sdlContent.includes('@deprecated(reason: "Use id instead")'),
       );
-      assert.ok(
+      expect(
         result.sdlContent.includes('@deprecated(reason: "Use newEndpoint")'),
       );
     });
@@ -269,10 +268,10 @@ describe("E2E: Schema Output Options", () => {
         customScalarNames: ["DateTime", "UUID"],
       });
 
-      assert.ok(!result.hasErrors);
-      assert.ok(result.sdlContent);
-      assert.ok(result.sdlContent.includes("scalar DateTime"));
-      assert.ok(result.sdlContent.includes("scalar UUID"));
+      expect(!result.hasErrors);
+      expect(result.sdlContent);
+      expect(result.sdlContent.includes("scalar DateTime"));
+      expect(result.sdlContent.includes("scalar UUID"));
     });
   });
 
@@ -354,16 +353,16 @@ describe("E2E: Schema Output Options", () => {
         enablePruning: true,
       });
 
-      assert.ok(!result.hasErrors);
-      assert.ok(result.sdlContent);
+      expect(!result.hasErrors);
+      expect(result.sdlContent);
 
-      assert.ok(result.sdlContent.includes("type User"));
-      assert.ok(!result.sdlContent.includes("UnusedType"));
-      assert.ok(!result.sdlContent.includes("AnotherUnused"));
+      expect(result.sdlContent.includes("type User"));
+      expect(!result.sdlContent.includes("UnusedType"));
+      expect(!result.sdlContent.includes("AnotherUnused"));
 
-      assert.ok(result.prunedTypes);
-      assert.ok(result.prunedTypes.includes("UnusedType"));
-      assert.ok(result.prunedTypes.includes("AnotherUnused"));
+      expect(result.prunedTypes);
+      expect(result.prunedTypes.includes("UnusedType"));
+      expect(result.prunedTypes.includes("AnotherUnused"));
     });
 
     it("should keep transitively referenced types", () => {
@@ -448,16 +447,16 @@ describe("E2E: Schema Output Options", () => {
         enablePruning: true,
       });
 
-      assert.ok(!result.hasErrors);
-      assert.ok(result.sdlContent);
+      expect(!result.hasErrors);
+      expect(result.sdlContent);
 
-      assert.ok(result.sdlContent.includes("type User"));
-      assert.ok(result.sdlContent.includes("type Profile"));
-      assert.ok(!result.sdlContent.includes("UnusedType"));
+      expect(result.sdlContent.includes("type User"));
+      expect(result.sdlContent.includes("type Profile"));
+      expect(!result.sdlContent.includes("UnusedType"));
 
-      assert.ok(result.prunedTypes);
-      assert.ok(result.prunedTypes.includes("UnusedType"));
-      assert.ok(!result.prunedTypes.includes("Profile"));
+      expect(result.prunedTypes);
+      expect(result.prunedTypes.includes("UnusedType"));
+      expect(!result.prunedTypes.includes("Profile"));
     });
 
     it("should keep custom scalars when pruning", () => {
@@ -508,11 +507,11 @@ describe("E2E: Schema Output Options", () => {
         enablePruning: true,
       });
 
-      assert.ok(!result.hasErrors);
-      assert.ok(result.sdlContent);
-      assert.ok(result.sdlContent.includes("scalar DateTime"));
-      assert.ok(result.prunedTypes);
-      assert.ok(!result.prunedTypes.includes("DateTime"));
+      expect(!result.hasErrors);
+      expect(result.sdlContent);
+      expect(result.sdlContent.includes("scalar DateTime"));
+      expect(result.prunedTypes);
+      expect(!result.prunedTypes.includes("DateTime"));
     });
   });
 
@@ -569,12 +568,12 @@ describe("E2E: Schema Output Options", () => {
         outputDir: "/src/gqlkit/generated",
       });
 
-      assert.ok(!result.hasErrors);
-      assert.ok(result.sdlContent);
-      assert.ok(result.typeDefsCode);
+      expect(!result.hasErrors);
+      expect(result.sdlContent);
+      expect(result.typeDefsCode);
 
-      assert.ok(result.typeDefsCode.includes("User"));
-      assert.ok(result.sdlContent.includes("type User"));
+      expect(result.typeDefsCode.includes("User"));
+      expect(result.sdlContent.includes("type User"));
     });
   });
 });

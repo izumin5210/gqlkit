@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import { type DocumentNode, Kind } from "graphql";
 import { emitSdlContent } from "./sdl-emitter.js";
 
@@ -42,9 +41,9 @@ describe("SdlEmitter", () => {
 
       const result = emitSdlContent(doc);
 
-      assert.ok(result.includes("type User"));
-      assert.ok(result.includes("id: ID!"));
-      assert.ok(result.includes("name: String!"));
+      expect(result.includes("type User"));
+      expect(result.includes("id: ID!"));
+      expect(result.includes("name: String!"));
     });
 
     it("should emit type with description", () => {
@@ -75,11 +74,11 @@ describe("SdlEmitter", () => {
 
       const result = emitSdlContent(doc);
 
-      assert.ok(
+      expect(
         result.includes('"A user in the system"') ||
           result.includes('"""A user in the system"""'),
       );
-      assert.ok(result.includes("type User"));
+      expect(result.includes("type User"));
     });
 
     it("should emit field with arguments", () => {
@@ -118,8 +117,8 @@ describe("SdlEmitter", () => {
 
       const result = emitSdlContent(doc);
 
-      assert.ok(result.includes("extend type Query"));
-      assert.ok(result.includes("user(id: ID!): User"));
+      expect(result.includes("extend type Query"));
+      expect(result.includes("user(id: ID!): User"));
     });
 
     it("should emit deprecated directive", () => {
@@ -162,8 +161,8 @@ describe("SdlEmitter", () => {
 
       const result = emitSdlContent(doc);
 
-      assert.ok(result.includes("@deprecated"));
-      assert.ok(result.includes("Use newField instead"));
+      expect(result.includes("@deprecated"));
+      expect(result.includes("Use newField instead"));
     });
 
     it("should emit scalar type definition", () => {
@@ -179,7 +178,7 @@ describe("SdlEmitter", () => {
 
       const result = emitSdlContent(doc);
 
-      assert.ok(result.includes("scalar DateTime"));
+      expect(result.includes("scalar DateTime"));
     });
 
     it("should emit enum type definition", () => {
@@ -205,9 +204,9 @@ describe("SdlEmitter", () => {
 
       const result = emitSdlContent(doc);
 
-      assert.ok(result.includes("enum Status"));
-      assert.ok(result.includes("ACTIVE"));
-      assert.ok(result.includes("INACTIVE"));
+      expect(result.includes("enum Status"));
+      expect(result.includes("ACTIVE"));
+      expect(result.includes("INACTIVE"));
     });
 
     it("should emit union type definition", () => {
@@ -233,7 +232,7 @@ describe("SdlEmitter", () => {
 
       const result = emitSdlContent(doc);
 
-      assert.ok(result.includes("union SearchResult = User | Post"));
+      expect(result.includes("union SearchResult = User | Post"));
     });
 
     it("should emit input object type definition", () => {
@@ -262,8 +261,8 @@ describe("SdlEmitter", () => {
 
       const result = emitSdlContent(doc);
 
-      assert.ok(result.includes("input CreateUserInput"));
-      assert.ok(result.includes("name: String!"));
+      expect(result.includes("input CreateUserInput"));
+      expect(result.includes("name: String!"));
     });
 
     it("should emit list types correctly", () => {
@@ -298,7 +297,7 @@ describe("SdlEmitter", () => {
 
       const result = emitSdlContent(doc);
 
-      assert.ok(result.includes("tags: [String!]!"));
+      expect(result.includes("tags: [String!]!"));
     });
   });
 });

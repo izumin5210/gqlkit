@@ -5,8 +5,7 @@
  * and can be distinguished from each other at the type level.
  */
 
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type { Float, IDNumber, IDString, Int, ScalarBrand } from "./index.js";
 
 describe("Branded Scalar Types", () => {
@@ -14,7 +13,7 @@ describe("Branded Scalar Types", () => {
     it("should be a branded type with a unique symbol", () => {
       type TestBrand = ScalarBrand<"Test">;
       const brand: TestBrand = {} as TestBrand;
-      assert.ok(brand);
+      expect(brand).toBeDefined();
     });
   });
 
@@ -22,12 +21,12 @@ describe("Branded Scalar Types", () => {
     it("should be compatible with string", () => {
       const id: IDString = "user-123" as IDString;
       const str: string = id;
-      assert.equal(str, "user-123");
+      expect(str).toBe("user-123");
     });
 
     it("should be distinguishable from plain string at type level", () => {
       const id: IDString = "user-123" as IDString;
-      assert.equal(typeof id, "string");
+      expect(typeof id).toBe("string");
     });
   });
 
@@ -35,12 +34,12 @@ describe("Branded Scalar Types", () => {
     it("should be compatible with number", () => {
       const id: IDNumber = 123 as IDNumber;
       const num: number = id;
-      assert.equal(num, 123);
+      expect(num).toBe(123);
     });
 
     it("should be distinguishable from plain number at type level", () => {
       const id: IDNumber = 123 as IDNumber;
-      assert.equal(typeof id, "number");
+      expect(typeof id).toBe("number");
     });
   });
 
@@ -48,12 +47,12 @@ describe("Branded Scalar Types", () => {
     it("should be compatible with number", () => {
       const int: Int = 42 as Int;
       const num: number = int;
-      assert.equal(num, 42);
+      expect(num).toBe(42);
     });
 
     it("should be distinguishable from plain number at type level", () => {
       const int: Int = 42 as Int;
-      assert.equal(typeof int, "number");
+      expect(typeof int).toBe("number");
     });
   });
 
@@ -61,12 +60,12 @@ describe("Branded Scalar Types", () => {
     it("should be compatible with number", () => {
       const float: Float = 3.14 as Float;
       const num: number = float;
-      assert.equal(num, 3.14);
+      expect(num).toBe(3.14);
     });
 
     it("should be distinguishable from plain number at type level", () => {
       const float: Float = 3.14 as Float;
-      assert.equal(typeof float, "number");
+      expect(typeof float).toBe("number");
     });
   });
 
@@ -74,44 +73,44 @@ describe("Branded Scalar Types", () => {
     it("IDString and IDNumber should be different types", () => {
       const idStr: IDString = "123" as IDString;
       const idNum: IDNumber = 123 as IDNumber;
-      assert.notEqual(typeof idStr, typeof idNum);
+      expect(typeof idStr).not.toBe(typeof idNum);
     });
 
     it("Int and Float should be different branded types", () => {
       const int: Int = 42 as Int;
       const float: Float = 42.0 as Float;
-      assert.equal(typeof int, typeof float);
+      expect(typeof int).toBe(typeof float);
     });
 
     it("IDNumber, Int, and Float should all be number-based but distinguishable", () => {
       const idNum: IDNumber = 1 as IDNumber;
       const int: Int = 2 as Int;
       const float: Float = 3.0 as Float;
-      assert.equal(typeof idNum, "number");
-      assert.equal(typeof int, "number");
-      assert.equal(typeof float, "number");
+      expect(typeof idNum).toBe("number");
+      expect(typeof int).toBe("number");
+      expect(typeof float).toBe("number");
     });
   });
 
   describe("No runtime cost", () => {
     it("should have no runtime overhead for IDString", () => {
       const id: IDString = "test" as IDString;
-      assert.strictEqual(id, "test");
+      expect(id).toBe("test");
     });
 
     it("should have no runtime overhead for IDNumber", () => {
       const id: IDNumber = 42 as IDNumber;
-      assert.strictEqual(id, 42);
+      expect(id).toBe(42);
     });
 
     it("should have no runtime overhead for Int", () => {
       const int: Int = 100 as Int;
-      assert.strictEqual(int, 100);
+      expect(int).toBe(100);
     });
 
     it("should have no runtime overhead for Float", () => {
       const float: Float = 1.5 as Float;
-      assert.strictEqual(float, 1.5);
+      expect(float).toBe(1.5);
     });
   });
 
@@ -131,21 +130,21 @@ describe("Branded Scalar Types", () => {
         rating: 4.5 as Float,
       };
 
-      assert.equal(user.id, "user-1");
-      assert.equal(user.numericId, 1);
-      assert.equal(user.age, 25);
-      assert.equal(user.rating, 4.5);
+      expect(user.id).toBe("user-1");
+      expect(user.numericId).toBe(1);
+      expect(user.age).toBe(25);
+      expect(user.rating).toBe(4.5);
     });
 
     it("should work in arrays", () => {
       const ids: IDString[] = ["id-1" as IDString, "id-2" as IDString];
-      assert.equal(ids.length, 2);
+      expect(ids.length).toBe(2);
     });
 
     it("should work with nullable types", () => {
       type MaybeId = IDString | null;
       const id: MaybeId = null;
-      assert.strictEqual(id, null);
+      expect(id).toBeNull();
     });
   });
 });

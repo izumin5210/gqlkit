@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import { print } from "graphql";
 import type { ExtractResolversResult } from "../../resolver-extractor/index.js";
 import { convertToGraphQL } from "../../type-extractor/converter/graphql-converter.js";
@@ -55,14 +54,14 @@ describe("E2E: Input Types and Resolver Arguments", () => {
 
       const conversionResult = convertToGraphQL(extractedTypes);
 
-      assert.strictEqual(conversionResult.diagnostics.length, 0);
-      assert.strictEqual(conversionResult.types.length, 2);
-      assert.ok(
+      expect(conversionResult.diagnostics.length, 0);
+      expect(conversionResult.types.length, 2);
+      expect(
         conversionResult.types.some(
           (t) => t.kind === "Object" && t.name === "User",
         ),
       );
-      assert.ok(
+      expect(
         conversionResult.types.some(
           (t) => t.kind === "InputObject" && t.name === "CreateUserInput",
         ),
@@ -105,19 +104,19 @@ describe("E2E: Input Types and Resolver Arguments", () => {
         resolversResult,
       );
 
-      assert.strictEqual(integratedResult.baseTypes.length, 2);
-      assert.strictEqual(integratedResult.inputTypes.length, 1);
-      assert.strictEqual(integratedResult.hasErrors, false);
+      expect(integratedResult.baseTypes.length, 2);
+      expect(integratedResult.inputTypes.length, 1);
+      expect(integratedResult.hasErrors, false);
 
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes("type User"));
-      assert.ok(sdl.includes("type Mutation"));
-      assert.ok(sdl.includes("input CreateUserInput"));
-      assert.ok(sdl.includes("createUser(input: CreateUserInput!): User!"));
-      assert.ok(sdl.includes("name: String!"));
-      assert.ok(sdl.includes("email: String"));
+      expect(sdl.includes("type User"));
+      expect(sdl.includes("type Mutation"));
+      expect(sdl.includes("input CreateUserInput"));
+      expect(sdl.includes("createUser(input: CreateUserInput!): User!"));
+      expect(sdl.includes("name: String!"));
+      expect(sdl.includes("email: String"));
     });
 
     it("should generate schema with nested Input types", () => {
@@ -202,7 +201,7 @@ describe("E2E: Input Types and Resolver Arguments", () => {
       ];
 
       const conversionResult = convertToGraphQL(extractedTypes);
-      assert.strictEqual(conversionResult.diagnostics.length, 0);
+      expect(conversionResult.diagnostics.length, 0);
 
       const resolversResult: ExtractResolversResult = {
         queryFields: { fields: [] },
@@ -244,10 +243,10 @@ describe("E2E: Input Types and Resolver Arguments", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes("input CreatePostInput"));
-      assert.ok(sdl.includes("input MetadataInput"));
-      assert.ok(sdl.includes("metadata: MetadataInput"));
-      assert.ok(sdl.includes("tags: [String!]!"));
+      expect(sdl.includes("input CreatePostInput"));
+      expect(sdl.includes("input MetadataInput"));
+      expect(sdl.includes("metadata: MetadataInput"));
+      expect(sdl.includes("tags: [String!]!"));
     });
 
     it("should handle Enum types in Input fields and arguments", () => {
@@ -303,7 +302,7 @@ describe("E2E: Input Types and Resolver Arguments", () => {
       ];
 
       const conversionResult = convertToGraphQL(extractedTypes);
-      assert.strictEqual(conversionResult.diagnostics.length, 0);
+      expect(conversionResult.diagnostics.length, 0);
 
       const resolversResult: ExtractResolversResult = {
         queryFields: {
@@ -346,11 +345,11 @@ describe("E2E: Input Types and Resolver Arguments", () => {
       const doc = buildDocumentNode(integratedResult);
       const sdl = print(doc);
 
-      assert.ok(sdl.includes("enum Status"));
-      assert.ok(sdl.includes("ACTIVE"));
-      assert.ok(sdl.includes("INACTIVE"));
-      assert.ok(sdl.includes("input UpdateUserInput"));
-      assert.ok(sdl.includes("usersByStatus(status: Status!): [User!]!"));
+      expect(sdl.includes("enum Status"));
+      expect(sdl.includes("ACTIVE"));
+      expect(sdl.includes("INACTIVE"));
+      expect(sdl.includes("input UpdateUserInput"));
+      expect(sdl.includes("usersByStatus(status: Status!): [User!]!"));
     });
   });
 
@@ -371,7 +370,7 @@ describe("E2E: Input Types and Resolver Arguments", () => {
 
       const conversionResult = convertToGraphQL(extractedTypes);
 
-      assert.ok(
+      expect(
         conversionResult.diagnostics.some(
           (d) => d.code === "INVALID_INPUT_TYPE",
         ),
@@ -397,7 +396,7 @@ describe("E2E: Input Types and Resolver Arguments", () => {
 
       const conversionResult = convertToGraphQL(extractedTypes);
 
-      assert.ok(
+      expect(
         conversionResult.diagnostics.some(
           (d) => d.code === "INVALID_INPUT_TYPE",
         ),

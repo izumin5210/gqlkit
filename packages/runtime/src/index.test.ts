@@ -1,5 +1,4 @@
-import assert from "node:assert/strict";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type { GraphQLResolveInfo } from "graphql";
 import { createGqlkitApis, type GqlkitApis, type NoArgs } from "./index.js";
 
@@ -7,7 +6,7 @@ describe("@gqlkit-ts/runtime", () => {
   describe("NoArgs type", () => {
     it("should be usable as empty args type", () => {
       const args: NoArgs = {};
-      assert.deepEqual(args, {});
+      expect(args).toEqual({});
     });
   });
 
@@ -21,10 +20,10 @@ describe("@gqlkit-ts/runtime", () => {
       it("should return an object with defineQuery, defineMutation, defineField", () => {
         const apis = createGqlkitApis<TestContext>();
 
-        assert.ok(apis);
-        assert.ok(typeof apis.defineQuery === "function");
-        assert.ok(typeof apis.defineMutation === "function");
-        assert.ok(typeof apis.defineField === "function");
+        expect(apis).toBeDefined();
+        expect(typeof apis.defineQuery).toBe("function");
+        expect(typeof apis.defineMutation).toBe("function");
+        expect(typeof apis.defineField).toBe("function");
       });
 
       it("should return resolvers as identity functions", () => {
@@ -58,9 +57,9 @@ describe("@gqlkit-ts/runtime", () => {
         );
         const field = apis.defineField<User, NoArgs, string>(fieldResolver);
 
-        assert.strictEqual(query, queryResolver);
-        assert.strictEqual(mutation, mutationResolver);
-        assert.strictEqual(field, fieldResolver);
+        expect(query).toBe(queryResolver);
+        expect(mutation).toBe(mutationResolver);
+        expect(field).toBe(fieldResolver);
       });
 
       it("should support async resolvers", async () => {
@@ -76,14 +75,14 @@ describe("@gqlkit-ts/runtime", () => {
 
         const query = apis.defineQuery<NoArgs, User>(asyncResolver);
 
-        assert.strictEqual(query, asyncResolver);
+        expect(query).toBe(asyncResolver);
         const result = await query(
           undefined,
           {},
           { userId: "u1", db: { query: () => null } },
           {} as GraphQLResolveInfo,
         );
-        assert.deepEqual(result, { id: "1", name: "Async User" });
+        expect(result).toEqual({ id: "1", name: "Async User" });
       });
     });
 
@@ -95,9 +94,9 @@ describe("@gqlkit-ts/runtime", () => {
         const adminApis = createGqlkitApis<AdminContext>();
         const publicApis = createGqlkitApis<PublicContext>();
 
-        assert.ok(adminApis);
-        assert.ok(publicApis);
-        assert.notStrictEqual(adminApis, publicApis);
+        expect(adminApis).toBeDefined();
+        expect(publicApis).toBeDefined();
+        expect(adminApis).not.toBe(publicApis);
       });
 
       it("should bind each API set to its Context type", () => {
@@ -123,15 +122,15 @@ describe("@gqlkit-ts/runtime", () => {
           },
         );
 
-        assert.ok(adminQuery);
-        assert.ok(publicQuery);
+        expect(adminQuery).toBeDefined();
+        expect(publicQuery).toBeDefined();
       });
     });
 
     describe("GqlkitApis type (Task 3.1)", () => {
       it("should be correctly typed", () => {
         const apis: GqlkitApis<TestContext> = createGqlkitApis<TestContext>();
-        assert.ok(apis);
+        expect(apis).toBeDefined();
       });
     });
 
@@ -146,7 +145,7 @@ describe("@gqlkit-ts/runtime", () => {
           },
         );
 
-        assert.ok(query);
+        expect(query).toBeDefined();
       });
     });
   });

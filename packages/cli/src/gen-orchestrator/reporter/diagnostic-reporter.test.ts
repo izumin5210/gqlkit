@@ -1,5 +1,4 @@
-import assert from "node:assert";
-import { describe, it } from "node:test";
+import { describe, expect, it } from "vitest";
 import type { Diagnostic } from "../../type-extractor/index.js";
 import { createDiagnosticReporter } from "./diagnostic-reporter.js";
 
@@ -22,9 +21,9 @@ describe("DiagnosticReporter", () => {
 
       reporter.reportDiagnostics(diagnostics);
 
-      assert.strictEqual(stderr.length, 1);
-      assert.ok(stderr[0]?.includes("error"));
-      assert.ok(stderr[0]?.includes("DIRECTORY_NOT_FOUND"));
+      expect(stderr.length).toBe(1);
+      expect(stderr[0]?.includes("error")).toBeTruthy();
+      expect(stderr[0]?.includes("DIRECTORY_NOT_FOUND")).toBeTruthy();
     });
 
     it("should output warning diagnostics to stdout", () => {
@@ -44,9 +43,9 @@ describe("DiagnosticReporter", () => {
 
       reporter.reportDiagnostics(diagnostics);
 
-      assert.strictEqual(stdout.length, 1);
-      assert.ok(stdout[0]?.includes("warning"));
-      assert.ok(stdout[0]?.includes("UNSUPPORTED_SYNTAX"));
+      expect(stdout.length).toBe(1);
+      expect(stdout[0]?.includes("warning")).toBeTruthy();
+      expect(stdout[0]?.includes("UNSUPPORTED_SYNTAX")).toBeTruthy();
     });
 
     it("should include location info when present", () => {
@@ -67,9 +66,9 @@ describe("DiagnosticReporter", () => {
 
       reporter.reportDiagnostics(diagnostics);
 
-      assert.ok(stderr[0]?.includes("src/gql/types/user.ts"));
-      assert.ok(stderr[0]?.includes("10"));
-      assert.ok(stderr[0]?.includes("5"));
+      expect(stderr[0]?.includes("src/gql/types/user.ts")).toBeTruthy();
+      expect(stderr[0]?.includes("10")).toBeTruthy();
+      expect(stderr[0]?.includes("5")).toBeTruthy();
     });
 
     it("should format diagnostics with code in brackets", () => {
@@ -89,7 +88,7 @@ describe("DiagnosticReporter", () => {
 
       reporter.reportDiagnostics(diagnostics);
 
-      assert.ok(stderr[0]?.includes("[UNRESOLVED_REFERENCE]"));
+      expect(stderr[0]?.includes("[UNRESOLVED_REFERENCE]")).toBeTruthy();
     });
 
     it("should report multiple diagnostics", () => {
@@ -120,8 +119,8 @@ describe("DiagnosticReporter", () => {
 
       reporter.reportDiagnostics(diagnostics);
 
-      assert.strictEqual(stderr.length, 2);
-      assert.strictEqual(stdout.length, 1);
+      expect(stderr.length).toBe(2);
+      expect(stdout.length).toBe(1);
     });
   });
 
@@ -135,8 +134,8 @@ describe("DiagnosticReporter", () => {
 
       reporter.reportError("Something went wrong");
 
-      assert.strictEqual(stderr.length, 1);
-      assert.ok(stderr[0]?.includes("Something went wrong"));
+      expect(stderr.length).toBe(1);
+      expect(stderr[0]?.includes("Something went wrong")).toBeTruthy();
     });
   });
 
@@ -150,8 +149,8 @@ describe("DiagnosticReporter", () => {
 
       reporter.reportSuccess("Generation complete");
 
-      assert.strictEqual(stdout.length, 1);
-      assert.ok(stdout[0]?.includes("Generation complete"));
+      expect(stdout.length).toBe(1);
+      expect(stdout[0]?.includes("Generation complete")).toBeTruthy();
     });
   });
 });

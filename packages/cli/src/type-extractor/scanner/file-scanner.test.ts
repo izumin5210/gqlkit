@@ -1,8 +1,7 @@
-import assert from "node:assert";
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, it } from "node:test";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { scanDirectory } from "./file-scanner.js";
 
 describe("scanDirectory", () => {
@@ -23,10 +22,10 @@ describe("scanDirectory", () => {
 
       const result = await scanDirectory(tempDir);
 
-      assert.strictEqual(result.errors.length, 0);
-      assert.strictEqual(result.files.length, 2);
-      assert.ok(result.files.some((f) => f.endsWith("user.ts")));
-      assert.ok(result.files.some((f) => f.endsWith("post.ts")));
+      expect(result.errors.length).toBe(0);
+      expect(result.files.length).toBe(2);
+      expect(result.files.some((f) => f.endsWith("user.ts"))).toBe(true);
+      expect(result.files.some((f) => f.endsWith("post.ts"))).toBe(true);
     });
 
     it("should recursively scan subdirectories", async () => {
@@ -42,10 +41,10 @@ describe("scanDirectory", () => {
 
       const result = await scanDirectory(tempDir);
 
-      assert.strictEqual(result.errors.length, 0);
-      assert.strictEqual(result.files.length, 2);
-      assert.ok(result.files.some((f) => f.includes("types/user.ts")));
-      assert.ok(result.files.some((f) => f.endsWith("index.ts")));
+      expect(result.errors.length).toBe(0);
+      expect(result.files.length).toBe(2);
+      expect(result.files.some((f) => f.includes("types/user.ts"))).toBe(true);
+      expect(result.files.some((f) => f.endsWith("index.ts"))).toBe(true);
     });
 
     it("should return absolute paths", async () => {
@@ -53,9 +52,9 @@ describe("scanDirectory", () => {
 
       const result = await scanDirectory(tempDir);
 
-      assert.strictEqual(result.errors.length, 0);
-      assert.strictEqual(result.files.length, 1);
-      assert.ok(result.files[0]?.startsWith("/"));
+      expect(result.errors.length).toBe(0);
+      expect(result.files.length).toBe(1);
+      expect(result.files[0]?.startsWith("/")).toBe(true);
     });
   });
 
@@ -66,9 +65,9 @@ describe("scanDirectory", () => {
 
       const result = await scanDirectory(tempDir);
 
-      assert.strictEqual(result.errors.length, 0);
-      assert.strictEqual(result.files.length, 1);
-      assert.ok(result.files[0]?.endsWith("user.ts"));
+      expect(result.errors.length).toBe(0);
+      expect(result.files.length).toBe(1);
+      expect(result.files[0]?.endsWith("user.ts")).toBe(true);
     });
 
     it("should exclude node_modules directory", async () => {
@@ -83,9 +82,9 @@ describe("scanDirectory", () => {
 
       const result = await scanDirectory(tempDir);
 
-      assert.strictEqual(result.errors.length, 0);
-      assert.strictEqual(result.files.length, 1);
-      assert.ok(result.files[0]?.endsWith("user.ts"));
+      expect(result.errors.length).toBe(0);
+      expect(result.files.length).toBe(1);
+      expect(result.files[0]?.endsWith("user.ts")).toBe(true);
     });
 
     it("should ignore non-TypeScript files", async () => {
@@ -95,9 +94,9 @@ describe("scanDirectory", () => {
 
       const result = await scanDirectory(tempDir);
 
-      assert.strictEqual(result.errors.length, 0);
-      assert.strictEqual(result.files.length, 1);
-      assert.ok(result.files[0]?.endsWith("user.ts"));
+      expect(result.errors.length).toBe(0);
+      expect(result.files.length).toBe(1);
+      expect(result.files[0]?.endsWith("user.ts")).toBe(true);
     });
   });
 
@@ -107,15 +106,15 @@ describe("scanDirectory", () => {
 
       const result = await scanDirectory(tempDir);
 
-      assert.strictEqual(result.errors.length, 0);
-      assert.strictEqual(result.files.length, 0);
+      expect(result.errors.length).toBe(0);
+      expect(result.files.length).toBe(0);
     });
 
     it("should return empty array for empty directory", async () => {
       const result = await scanDirectory(tempDir);
 
-      assert.strictEqual(result.errors.length, 0);
-      assert.strictEqual(result.files.length, 0);
+      expect(result.errors.length).toBe(0);
+      expect(result.files.length).toBe(0);
     });
   });
 
@@ -127,11 +126,11 @@ describe("scanDirectory", () => {
 
       const result = await scanDirectory(tempDir);
 
-      assert.strictEqual(result.errors.length, 0);
-      assert.strictEqual(result.files.length, 3);
-      assert.ok(result.files[0]?.endsWith("apple.ts"));
-      assert.ok(result.files[1]?.endsWith("mango.ts"));
-      assert.ok(result.files[2]?.endsWith("zebra.ts"));
+      expect(result.errors.length).toBe(0);
+      expect(result.files.length).toBe(3);
+      expect(result.files[0]?.endsWith("apple.ts")).toBe(true);
+      expect(result.files[1]?.endsWith("mango.ts")).toBe(true);
+      expect(result.files[2]?.endsWith("zebra.ts")).toBe(true);
     });
 
     it("should sort files including subdirectories alphabetically", async () => {
@@ -149,11 +148,11 @@ describe("scanDirectory", () => {
 
       const result = await scanDirectory(tempDir);
 
-      assert.strictEqual(result.errors.length, 0);
-      assert.strictEqual(result.files.length, 3);
-      assert.ok(result.files[0]?.includes("aaa/second.ts"));
-      assert.ok(result.files[1]?.includes("bbb/first.ts"));
-      assert.ok(result.files[2]?.endsWith("root.ts"));
+      expect(result.errors.length).toBe(0);
+      expect(result.files.length).toBe(3);
+      expect(result.files[0]?.includes("aaa/second.ts")).toBe(true);
+      expect(result.files[1]?.includes("bbb/first.ts")).toBe(true);
+      expect(result.files[2]?.endsWith("root.ts")).toBe(true);
     });
   });
 
@@ -163,11 +162,11 @@ describe("scanDirectory", () => {
 
       const result = await scanDirectory(nonExistentPath);
 
-      assert.strictEqual(result.files.length, 0);
-      assert.strictEqual(result.errors.length, 1);
-      assert.strictEqual(result.errors[0]?.code, "DIRECTORY_NOT_FOUND");
-      assert.strictEqual(result.errors[0]?.severity, "error");
-      assert.ok(result.errors[0]?.message.includes("non-existent"));
+      expect(result.files.length).toBe(0);
+      expect(result.errors.length).toBe(1);
+      expect(result.errors[0]?.code).toBe("DIRECTORY_NOT_FOUND");
+      expect(result.errors[0]?.severity).toBe("error");
+      expect(result.errors[0]?.message).toContain("non-existent");
     });
 
     it("should return DIRECTORY_NOT_FOUND error when path is a file", async () => {
@@ -176,10 +175,10 @@ describe("scanDirectory", () => {
 
       const result = await scanDirectory(filePath);
 
-      assert.strictEqual(result.files.length, 0);
-      assert.strictEqual(result.errors.length, 1);
-      assert.strictEqual(result.errors[0]?.code, "DIRECTORY_NOT_FOUND");
-      assert.ok(result.errors[0]?.message.includes("not a directory"));
+      expect(result.files.length).toBe(0);
+      expect(result.errors.length).toBe(1);
+      expect(result.errors[0]?.code).toBe("DIRECTORY_NOT_FOUND");
+      expect(result.errors[0]?.message).toContain("not a directory");
     });
 
     it("should include absolute path in error message", async () => {
@@ -187,8 +186,8 @@ describe("scanDirectory", () => {
 
       const result = await scanDirectory(nonExistentPath);
 
-      assert.strictEqual(result.errors.length, 1);
-      assert.ok(result.errors[0]?.message.includes(tempDir));
+      expect(result.errors.length).toBe(1);
+      expect(result.errors[0]?.message).toContain(tempDir);
     });
   });
 });

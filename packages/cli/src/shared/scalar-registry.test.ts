@@ -1,8 +1,7 @@
-import assert from "node:assert/strict";
 import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
-import { afterEach, beforeEach, describe, it } from "node:test";
+import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import ts from "typescript";
 import {
   createScalarRegistry,
@@ -15,119 +14,119 @@ import {
 describe("ScalarRegistry", () => {
   describe("STANDARD_SCALAR_MAPPINGS", () => {
     it("should contain exactly 4 standard mappings", () => {
-      assert.equal(STANDARD_SCALAR_MAPPINGS.size, 4);
+      expect(STANDARD_SCALAR_MAPPINGS.size).toBe(4);
     });
 
     it("should contain IDString mapping", () => {
       const mapping = STANDARD_SCALAR_MAPPINGS.get("IDString");
-      assert.ok(mapping);
-      assert.equal(mapping.brandName, "IDString");
-      assert.equal(mapping.graphqlScalar, "ID");
-      assert.equal(mapping.baseType, "string");
+      expect(mapping).toBeTruthy();
+      expect(mapping!.brandName).toBe("IDString");
+      expect(mapping!.graphqlScalar).toBe("ID");
+      expect(mapping!.baseType).toBe("string");
     });
 
     it("should contain IDNumber mapping", () => {
       const mapping = STANDARD_SCALAR_MAPPINGS.get("IDNumber");
-      assert.ok(mapping);
-      assert.equal(mapping.brandName, "IDNumber");
-      assert.equal(mapping.graphqlScalar, "ID");
-      assert.equal(mapping.baseType, "number");
+      expect(mapping).toBeTruthy();
+      expect(mapping!.brandName).toBe("IDNumber");
+      expect(mapping!.graphqlScalar).toBe("ID");
+      expect(mapping!.baseType).toBe("number");
     });
 
     it("should contain Int mapping", () => {
       const mapping = STANDARD_SCALAR_MAPPINGS.get("Int");
-      assert.ok(mapping);
-      assert.equal(mapping.brandName, "Int");
-      assert.equal(mapping.graphqlScalar, "Int");
-      assert.equal(mapping.baseType, "number");
+      expect(mapping).toBeTruthy();
+      expect(mapping!.brandName).toBe("Int");
+      expect(mapping!.graphqlScalar).toBe("Int");
+      expect(mapping!.baseType).toBe("number");
     });
 
     it("should contain Float mapping", () => {
       const mapping = STANDARD_SCALAR_MAPPINGS.get("Float");
-      assert.ok(mapping);
-      assert.equal(mapping.brandName, "Float");
-      assert.equal(mapping.graphqlScalar, "Float");
-      assert.equal(mapping.baseType, "number");
+      expect(mapping).toBeTruthy();
+      expect(mapping!.brandName).toBe("Float");
+      expect(mapping!.graphqlScalar).toBe("Float");
+      expect(mapping!.baseType).toBe("number");
     });
 
     it("should be immutable", () => {
       const mapping = STANDARD_SCALAR_MAPPINGS.get("IDString");
-      assert.ok(mapping);
-      assert.throws(() => {
+      expect(mapping).toBeTruthy();
+      expect(() => {
         (mapping as { brandName: string }).brandName = "Modified";
-      });
+      }).toThrow();
     });
   });
 
   describe("getScalarMapping", () => {
     it("should return mapping for IDString", () => {
       const mapping = getScalarMapping("IDString");
-      assert.ok(mapping);
-      assert.equal(mapping.brandName, "IDString");
-      assert.equal(mapping.graphqlScalar, "ID");
+      expect(mapping).toBeTruthy();
+      expect(mapping!.brandName).toBe("IDString");
+      expect(mapping!.graphqlScalar).toBe("ID");
     });
 
     it("should return mapping for IDNumber", () => {
       const mapping = getScalarMapping("IDNumber");
-      assert.ok(mapping);
-      assert.equal(mapping.brandName, "IDNumber");
-      assert.equal(mapping.graphqlScalar, "ID");
+      expect(mapping).toBeTruthy();
+      expect(mapping!.brandName).toBe("IDNumber");
+      expect(mapping!.graphqlScalar).toBe("ID");
     });
 
     it("should return mapping for Int", () => {
       const mapping = getScalarMapping("Int");
-      assert.ok(mapping);
-      assert.equal(mapping.brandName, "Int");
-      assert.equal(mapping.graphqlScalar, "Int");
+      expect(mapping).toBeTruthy();
+      expect(mapping!.brandName).toBe("Int");
+      expect(mapping!.graphqlScalar).toBe("Int");
     });
 
     it("should return mapping for Float", () => {
       const mapping = getScalarMapping("Float");
-      assert.ok(mapping);
-      assert.equal(mapping.brandName, "Float");
-      assert.equal(mapping.graphqlScalar, "Float");
+      expect(mapping).toBeTruthy();
+      expect(mapping!.brandName).toBe("Float");
+      expect(mapping!.graphqlScalar).toBe("Float");
     });
 
     it("should return undefined for unknown brand name", () => {
       const mapping = getScalarMapping("UnknownType");
-      assert.equal(mapping, undefined);
+      expect(mapping).toBe(undefined);
     });
 
     it("should return undefined for empty string", () => {
       const mapping = getScalarMapping("");
-      assert.equal(mapping, undefined);
+      expect(mapping).toBe(undefined);
     });
   });
 
   describe("isKnownBrandedScalar", () => {
     it("should return true for IDString", () => {
-      assert.equal(isKnownBrandedScalar("IDString"), true);
+      expect(isKnownBrandedScalar("IDString")).toBe(true);
     });
 
     it("should return true for IDNumber", () => {
-      assert.equal(isKnownBrandedScalar("IDNumber"), true);
+      expect(isKnownBrandedScalar("IDNumber")).toBe(true);
     });
 
     it("should return true for Int", () => {
-      assert.equal(isKnownBrandedScalar("Int"), true);
+      expect(isKnownBrandedScalar("Int")).toBe(true);
     });
 
     it("should return true for Float", () => {
-      assert.equal(isKnownBrandedScalar("Float"), true);
+      expect(isKnownBrandedScalar("Float")).toBe(true);
     });
 
     it("should return false for unknown brand name", () => {
-      assert.equal(isKnownBrandedScalar("UnknownType"), false);
+      expect(isKnownBrandedScalar("UnknownType")).toBe(false);
     });
 
     it("should return false for empty string", () => {
-      assert.equal(isKnownBrandedScalar(""), false);
+      expect(isKnownBrandedScalar("")).toBe(false);
     });
 
     it("should return false for similar but not exact names", () => {
-      assert.equal(isKnownBrandedScalar("idstring"), false);
-      assert.equal(isKnownBrandedScalar("ID_STRING"), false);
-      assert.equal(isKnownBrandedScalar("IdString"), false);
+      expect(isKnownBrandedScalar("idstring")).toBe(false);
+      expect(isKnownBrandedScalar("ID_STRING")).toBe(false);
+      expect(isKnownBrandedScalar("IdString")).toBe(false);
     });
   });
 
@@ -138,10 +137,10 @@ describe("ScalarRegistry", () => {
         graphqlScalar: "String",
         baseType: "string",
       };
-      assert.ok(info);
-      assert.equal(info.brandName, "TestBrand");
-      assert.equal(info.graphqlScalar, "String");
-      assert.equal(info.baseType, "string");
+      expect(info).toBeTruthy();
+      expect(info.brandName).toBe("TestBrand");
+      expect(info.graphqlScalar).toBe("String");
+      expect(info.baseType).toBe("string");
     });
 
     it("should support all valid graphqlScalar values", () => {
@@ -158,7 +157,7 @@ describe("ScalarRegistry", () => {
           graphqlScalar: scalar,
           baseType: "string",
         };
-        assert.ok(info);
+        expect(info).toBeTruthy();
       }
     });
 
@@ -173,7 +172,7 @@ describe("ScalarRegistry", () => {
           graphqlScalar: "String",
           baseType,
         };
-        assert.ok(info);
+        expect(info).toBeTruthy();
       }
     });
   });
@@ -220,10 +219,10 @@ describe("ScalarRegistry", () => {
           "IDString",
           "@gqlkit-ts/runtime",
         );
-        assert.ok(idStringMapping);
-        assert.equal(idStringMapping.graphqlScalar, "ID");
-        assert.equal(idStringMapping.typeName, "IDString");
-        assert.equal(idStringMapping.isCustom, false);
+        expect(idStringMapping).toBeTruthy();
+        expect(idStringMapping!.graphqlScalar).toBe("ID");
+        expect(idStringMapping!.typeName).toBe("IDString");
+        expect(idStringMapping!.isCustom).toBe(false);
       });
 
       it("should return undefined for unknown types", () => {
@@ -233,7 +232,7 @@ describe("ScalarRegistry", () => {
         const registry = createScalarRegistry({ program });
 
         const mapping = registry.getMapping("Unknown", "./src/scalars");
-        assert.equal(mapping, undefined);
+        expect(mapping).toBe(undefined);
       });
 
       it("should return empty custom scalar names", () => {
@@ -243,7 +242,7 @@ describe("ScalarRegistry", () => {
         const registry = createScalarRegistry({ program });
 
         const names = registry.getCustomScalarNames();
-        assert.deepEqual(names, []);
+        expect(names).toEqual([]);
       });
     });
 
@@ -275,10 +274,10 @@ describe("ScalarRegistry", () => {
           "DateTime",
           path.join(tempDir, "src/scalars.ts"),
         );
-        assert.ok(mapping);
-        assert.equal(mapping.graphqlScalar, "DateTime");
-        assert.equal(mapping.typeName, "DateTime");
-        assert.equal(mapping.isCustom, true);
+        expect(mapping).toBeTruthy();
+        expect(mapping!.graphqlScalar).toBe("DateTime");
+        expect(mapping!.typeName).toBe("DateTime");
+        expect(mapping!.isCustom).toBe(true);
       });
 
       it("should return custom scalar names", () => {
@@ -313,7 +312,7 @@ export type UUID = string & { __brand: 'UUID' };
         });
 
         const names = registry.getCustomScalarNames();
-        assert.deepEqual([...names].sort(), ["DateTime", "UUID"]);
+        expect([...names].sort()).toEqual(["DateTime", "UUID"]);
       });
 
       it("should resolve ./src/scalars and ./src/scalars/index.ts to same module", () => {
@@ -343,8 +342,8 @@ export type UUID = string & { __brand: 'UUID' };
           "DateTime",
           path.join(tempDir, "src/scalars/index.ts"),
         );
-        assert.ok(mappingViaDir);
-        assert.equal(mappingViaDir.graphqlScalar, "DateTime");
+        expect(mappingViaDir).toBeTruthy();
+        expect(mappingViaDir!.graphqlScalar).toBe("DateTime");
       });
 
       it("should prioritize custom scalars over standard branded types", () => {
@@ -374,17 +373,17 @@ export type UUID = string & { __brand: 'UUID' };
           "IDString",
           "@gqlkit-ts/runtime",
         );
-        assert.ok(runtimeMapping);
-        assert.equal(runtimeMapping.graphqlScalar, "ID");
-        assert.equal(runtimeMapping.isCustom, false);
+        expect(runtimeMapping).toBeTruthy();
+        expect(runtimeMapping!.graphqlScalar).toBe("ID");
+        expect(runtimeMapping!.isCustom).toBe(false);
 
         const customMapping = registry.getMapping(
           "IDString",
           path.join(tempDir, "src/scalars.ts"),
         );
-        assert.ok(customMapping);
-        assert.equal(customMapping.graphqlScalar, "CustomID");
-        assert.equal(customMapping.isCustom, true);
+        expect(customMapping).toBeTruthy();
+        expect(customMapping!.graphqlScalar).toBe("CustomID");
+        expect(customMapping!.isCustom).toBe(true);
       });
     });
   });
