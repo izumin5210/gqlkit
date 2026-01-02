@@ -4,12 +4,15 @@ import type {
 } from "../config-loader/index.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import { extractResolvers } from "../resolver-extractor/index.js";
+import { scanResolverDirectory } from "../resolver-extractor/scanner/file-scanner.js";
 import { generateSchema } from "../schema-generator/index.js";
+import { createSharedProgram } from "../shared/program-factory.js";
 import type {
   Diagnostic,
   ExtractTypesResult,
 } from "../type-extractor/index.js";
 import { extractTypes } from "../type-extractor/index.js";
+import { scanDirectory } from "../type-extractor/scanner/file-scanner.js";
 import { writeFiles } from "./writer/file-writer.js";
 
 export interface GenerationConfig {
@@ -20,6 +23,7 @@ export interface GenerationConfig {
   readonly configDir: string | null;
   readonly customScalars: ReadonlyArray<ResolvedScalarMapping> | null;
   readonly output: ResolvedOutputConfig | null;
+  readonly tsconfigPath: string | null;
 }
 
 export interface GenerationResult {
@@ -58,12 +62,45 @@ export async function executeGeneration(
   const customScalarNames =
     config.customScalars?.map((s) => s.graphqlName) ?? [];
 
+  const typeScanResult = await scanDirectory(config.typesDir);
+  const resolverScanResult = await scanResolverDirectory(config.resolversDir);
+
+  const scanDiagnostics: Diagnostic[] = [
+    ...typeScanResult.errors,
+    ...resolverScanResult.errors,
+  ];
+
+  if (scanDiagnostics.length > 0) {
+    return {
+      success: false,
+      filesWritten: [],
+      diagnostics: scanDiagnostics,
+    };
+  }
+
+  const programResult = createSharedProgram({
+    cwd: config.cwd,
+    tsconfigPath: config.tsconfigPath ?? null,
+    typeFiles: typeScanResult.files,
+    resolverFiles: resolverScanResult.files,
+  });
+
+  if (programResult.diagnostics.length > 0 || !programResult.program) {
+    return {
+      success: false,
+      filesWritten: [],
+      diagnostics: [...programResult.diagnostics],
+    };
+  }
+
   const typesResult = await extractTypes({
     directory: config.typesDir,
     customScalarNames,
+    program: programResult.program,
   });
   const resolversResult = await extractResolvers({
     directory: config.resolversDir,
+    program: programResult.program,
   });
 
   const allDiagnostics = collectAllDiagnostics(typesResult, resolversResult);

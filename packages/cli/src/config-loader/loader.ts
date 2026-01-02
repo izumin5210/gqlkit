@@ -28,6 +28,7 @@ export interface ResolvedOutputConfig {
 export interface ResolvedConfig {
   readonly scalars: ReadonlyArray<ResolvedScalarMapping>;
   readonly output: ResolvedOutputConfig;
+  readonly tsconfigPath: string | null;
 }
 
 export interface LoadConfigResult {
@@ -49,6 +50,7 @@ const DEFAULT_OUTPUT_CONFIG: ResolvedOutputConfig = {
 const DEFAULT_RESOLVED_CONFIG: ResolvedConfig = {
   scalars: [],
   output: DEFAULT_OUTPUT_CONFIG,
+  tsconfigPath: null,
 };
 
 export async function loadConfig(

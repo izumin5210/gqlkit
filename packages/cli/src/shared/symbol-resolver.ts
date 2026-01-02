@@ -53,11 +53,7 @@ export function resolveSymbolOrigin(
     const sourceFile = declaration.getSourceFile();
     const fileName = sourceFile.fileName;
 
-    if (
-      fileName.includes("@gqlkit-ts/runtime") ||
-      fileName.includes("gqlkit-ts/runtime") ||
-      fileName.includes("/packages/runtime/src/")
-    ) {
+    if (fileName.includes("@gqlkit-ts/runtime")) {
       return {
         moduleName: GQLKIT_RUNTIME_MODULE,
         symbolName,

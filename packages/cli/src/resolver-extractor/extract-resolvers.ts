@@ -1,3 +1,4 @@
+import type ts from "typescript";
 import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
 import { createProgramFromFiles } from "../type-extractor/extractor/type-extractor.js";
 import type {
@@ -46,6 +47,7 @@ export interface TypeExtension {
 
 export interface ExtractResolversOptions {
   readonly directory: string;
+  readonly program?: ts.Program | null;
 }
 
 export interface ExtractResolversResult {
@@ -239,7 +241,7 @@ export async function extractResolvers(
     return createEmptyResult(collectDiagnostics(allDiagnostics));
   }
 
-  const program = createProgramFromFiles(scanResult.files);
+  const program = options.program ?? createProgramFromFiles(scanResult.files);
 
   const defineApiExtractionResult = extractDefineApiResolvers(
     program,

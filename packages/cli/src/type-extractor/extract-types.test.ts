@@ -1,6 +1,7 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
+import ts from "typescript";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { extractTypes } from "./extract-types.js";
 
@@ -252,6 +253,63 @@ describe("extractTypes", () => {
 
       expect(result instanceof Promise).toBeTruthy();
       await result;
+    });
+  });
+
+  describe("external Program support", () => {
+    it("should use external Program when provided", async () => {
+      const filePath = join(tempDir, "user.ts");
+      await writeFile(
+        filePath,
+        `export interface User { id: string; name: string; }`,
+      );
+
+      const program = ts.createProgram([filePath], {
+        target: ts.ScriptTarget.ES2022,
+        module: ts.ModuleKind.NodeNext,
+        moduleResolution: ts.ModuleResolutionKind.Node16,
+        strict: true,
+      });
+
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+        program,
+      });
+
+      expect(result.types.length).toBe(1);
+      expect(result.types[0]?.name).toBe("User");
+    });
+
+    it("should create internal Program when not provided (backward compatibility)", async () => {
+      await writeFile(
+        join(tempDir, "user.ts"),
+        `export interface User { id: string; }`,
+      );
+
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+        program: null,
+      });
+
+      expect(result.types.length).toBe(1);
+      expect(result.types[0]?.name).toBe("User");
+    });
+
+    it("should work without program parameter (backward compatibility)", async () => {
+      await writeFile(
+        join(tempDir, "user.ts"),
+        `export interface User { id: string; }`,
+      );
+
+      const result = await extractTypes({
+        directory: tempDir,
+        customScalarNames: null,
+      });
+
+      expect(result.types.length).toBe(1);
+      expect(result.types[0]?.name).toBe("User");
     });
   });
 });

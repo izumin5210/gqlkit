@@ -38,6 +38,14 @@ export interface GqlkitConfig {
    * AST と SDL の出力パスを個別に設定できる。
    */
   readonly output?: SchemaOutputConfig;
+
+  /**
+   * TypeScript 設定ファイルへのパス。
+   * - 相対パスの場合、設定ファイルからの相対パス
+   * - 絶対パスも指定可能
+   * - 未指定の場合、プロジェクトルートの tsconfig.json を自動検索
+   */
+  readonly tsconfigPath?: string;
 }
 
 /**

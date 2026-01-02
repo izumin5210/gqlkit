@@ -72,6 +72,39 @@ function validateOutputPath(
   return { resolved: value, diagnostics: [] };
 }
 
+function validateTsconfigPath(
+  value: unknown,
+  configPath: string,
+): { resolved: string | null; diagnostics: Diagnostic[] } {
+  const diagnostics: Diagnostic[] = [];
+
+  if (value === undefined) {
+    return { resolved: null, diagnostics: [] };
+  }
+
+  if (typeof value !== "string") {
+    diagnostics.push({
+      code: "CONFIG_INVALID_TYPE",
+      message: "tsconfigPath must be a string",
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+    return { resolved: null, diagnostics };
+  }
+
+  if (value === "") {
+    diagnostics.push({
+      code: "CONFIG_INVALID_PATH",
+      message: "tsconfigPath path cannot be empty",
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+    return { resolved: null, diagnostics };
+  }
+
+  return { resolved: value, diagnostics: [] };
+}
+
 function validateOutputConfig(
   output: unknown,
   configPath: string,
@@ -222,6 +255,12 @@ export function validateConfig(
   const outputResult = validateOutputConfig(config["output"], configPath);
   diagnostics.push(...outputResult.diagnostics);
 
+  const tsconfigPathResult = validateTsconfigPath(
+    config["tsconfigPath"],
+    configPath,
+  );
+  diagnostics.push(...tsconfigPathResult.diagnostics);
+
   if (config["scalars"] !== undefined && !Array.isArray(config["scalars"])) {
     diagnostics.push({
       code: "CONFIG_INVALID_TYPE",
@@ -286,6 +325,7 @@ export function validateConfig(
     resolvedConfig: {
       scalars: resolvedScalars,
       output: outputResult.resolved,
+      tsconfigPath: tsconfigPathResult.resolved,
     },
     diagnostics: [],
   };

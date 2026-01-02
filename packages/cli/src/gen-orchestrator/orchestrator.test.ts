@@ -356,4 +356,119 @@ describe("GenCommandOrchestrator", () => {
       expect(result.filesWritten.some((f) => f.endsWith("resolvers.ts")));
     });
   });
+
+  describe("tsconfig integration", () => {
+    it("should use tsconfig.json when tsconfigPath is null and tsconfig.json exists", async () => {
+      await writeFile(
+        join(testDir, "tsconfig.json"),
+        JSON.stringify({
+          compilerOptions: {
+            target: "ES2022",
+            strict: true,
+          },
+        }),
+      );
+
+      await setupTypesDir({
+        "user.ts": "export interface User { id: string; }",
+      });
+      await setupResolversDir({
+        "query.ts": `
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
+          interface User { id: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const user = defineQuery<NoArgs, User>(function() { return { id: "1" }; });
+        `,
+      });
+
+      const config: GenerationConfig = {
+        cwd: testDir,
+        typesDir: join(testDir, "src/gql/types"),
+        resolversDir: join(testDir, "src/gql/resolvers"),
+        outputDir: join(testDir, "generated"),
+        configDir: null,
+        customScalars: null,
+        output: null,
+        tsconfigPath: null,
+      };
+
+      const result = await executeGeneration(config);
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should use custom tsconfig when tsconfigPath is specified", async () => {
+      await writeFile(
+        join(testDir, "tsconfig.custom.json"),
+        JSON.stringify({
+          compilerOptions: {
+            target: "ES2022",
+            strict: true,
+          },
+        }),
+      );
+
+      await setupTypesDir({
+        "user.ts": "export interface User { id: string; }",
+      });
+      await setupResolversDir({
+        "query.ts": `
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
+          interface User { id: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const user = defineQuery<NoArgs, User>(function() { return { id: "1" }; });
+        `,
+      });
+
+      const config: GenerationConfig = {
+        cwd: testDir,
+        typesDir: join(testDir, "src/gql/types"),
+        resolversDir: join(testDir, "src/gql/resolvers"),
+        outputDir: join(testDir, "generated"),
+        configDir: null,
+        customScalars: null,
+        output: null,
+        tsconfigPath: join(testDir, "tsconfig.custom.json"),
+      };
+
+      const result = await executeGeneration(config);
+
+      expect(result.success).toBe(true);
+    });
+
+    it("should return error when specified tsconfig does not exist", async () => {
+      await setupTypesDir({
+        "user.ts": "export interface User { id: string; }",
+      });
+      await setupResolversDir({
+        "query.ts": `
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
+          interface User { id: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const user = defineQuery<NoArgs, User>(function() { return { id: "1" }; });
+        `,
+      });
+
+      const config: GenerationConfig = {
+        cwd: testDir,
+        typesDir: join(testDir, "src/gql/types"),
+        resolversDir: join(testDir, "src/gql/resolvers"),
+        outputDir: join(testDir, "generated"),
+        configDir: null,
+        customScalars: null,
+        output: null,
+        tsconfigPath: join(testDir, "nonexistent-tsconfig.json"),
+      };
+
+      const result = await executeGeneration(config);
+
+      expect(result.success).toBe(false);
+      expect(
+        result.diagnostics.some((d) => d.code === "TSCONFIG_NOT_FOUND"),
+      ).toBe(true);
+    });
+  });
 });

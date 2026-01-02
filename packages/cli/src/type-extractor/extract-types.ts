@@ -1,3 +1,4 @@
+import type ts from "typescript";
 import {
   collectResults,
   type ExtractTypesResult,
@@ -14,6 +15,7 @@ import { validateTypes } from "./validator/type-validator.js";
 export interface ExtractTypesOptions {
   readonly directory: string;
   readonly customScalarNames: ReadonlyArray<string> | null;
+  readonly program?: ts.Program | null;
 }
 
 export type { ExtractTypesResult };
@@ -30,7 +32,7 @@ export async function extractTypes(
     return collectResults([], allDiagnostics);
   }
 
-  const program = createProgramFromFiles(scanResult.files);
+  const program = options.program ?? createProgramFromFiles(scanResult.files);
 
   const extractionResult = extractTypesFromProgram(program, scanResult.files);
   allDiagnostics.push(...extractionResult.diagnostics);

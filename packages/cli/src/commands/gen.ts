@@ -47,6 +47,7 @@ export async function runGenCommand(
     configDir,
     customScalars: configResult.config.scalars,
     output: configResult.config.output,
+    tsconfigPath: configResult.config.tsconfigPath,
   };
 
   progressReporter.startPhase("Extracting types");

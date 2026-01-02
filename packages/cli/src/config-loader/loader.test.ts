@@ -26,6 +26,7 @@ describe("ConfigLoader", () => {
           ast: "src/gqlkit/generated/schema.ts",
           sdl: "src/gqlkit/generated/schema.graphql",
         },
+        tsconfigPath: null,
       });
       expect(result.diagnostics.length).toBe(0);
     });
@@ -121,6 +122,7 @@ export default {};
           ast: "src/gqlkit/generated/schema.ts",
           sdl: "src/gqlkit/generated/schema.graphql",
         },
+        tsconfigPath: null,
       });
       expect(result.diagnostics.length).toBe(0);
     });

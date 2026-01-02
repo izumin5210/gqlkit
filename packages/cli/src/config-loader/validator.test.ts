@@ -383,5 +383,61 @@ describe("ConfigValidator", () => {
         expect(result.diagnostics[0]?.message).toContain("output");
       });
     });
+
+    describe("tsconfigPath options", () => {
+      it("should resolve tsconfigPath to null when not provided", () => {
+        const result = validateConfig({
+          config: {},
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.tsconfigPath).toBe(null);
+      });
+
+      it("should accept string tsconfigPath", () => {
+        const result = validateConfig({
+          config: {
+            tsconfigPath: "./tsconfig.build.json",
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.tsconfigPath).toBe(
+          "./tsconfig.build.json",
+        );
+      });
+
+      it("should return error for invalid tsconfigPath type", () => {
+        const result = validateConfig({
+          config: {
+            tsconfigPath: 123,
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_TYPE");
+        expect(result.diagnostics[0]?.message).toContain("tsconfigPath");
+      });
+
+      it("should return error for empty tsconfigPath", () => {
+        const result = validateConfig({
+          config: {
+            tsconfigPath: "",
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_PATH");
+        expect(result.diagnostics[0]?.message).toContain("empty");
+      });
+    });
   });
 });

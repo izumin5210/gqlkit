@@ -1,5 +1,3 @@
-import path from "node:path";
-import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import {
   detectBrandedScalar,
@@ -24,12 +22,6 @@ export interface ExtractionResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const RUNTIME_SOURCE_PATH = path.resolve(
-  __dirname,
-  "../../../../runtime/src/index.ts",
-);
-
 const DEFAULT_COMPILER_OPTIONS: ts.CompilerOptions = {
   target: ts.ScriptTarget.ES2022,
   module: ts.ModuleKind.NodeNext,
@@ -38,10 +30,6 @@ const DEFAULT_COMPILER_OPTIONS: ts.CompilerOptions = {
   esModuleInterop: true,
   skipLibCheck: true,
   noEmit: true,
-  baseUrl: __dirname,
-  paths: {
-    "@gqlkit-ts/runtime": [RUNTIME_SOURCE_PATH],
-  },
 };
 
 export function createProgramFromFiles(

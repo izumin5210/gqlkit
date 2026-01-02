@@ -405,4 +405,155 @@ describe("E2E Tests (Task 7)", () => {
       expect(schemaContent.includes('"value": "DateTime"')).toBeTruthy();
     });
   });
+
+  describe("tsconfig integration (Task 0019)", () => {
+    async function setupBasicProject(): Promise<void> {
+      const typesDir = join(testDir, "src/gql/types");
+      const resolversDir = join(testDir, "src/gql/resolvers");
+
+      await mkdir(typesDir, { recursive: true });
+      await mkdir(resolversDir, { recursive: true });
+
+      await writeFile(
+        join(typesDir, "user.ts"),
+        "export interface User { id: string; }",
+        "utf-8",
+      );
+
+      await writeFile(
+        join(resolversDir, "query.ts"),
+        `
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          type Context = unknown;
+          interface User { id: string; }
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const user = defineQuery<NoArgs, User>(function() { return { id: "1" }; });
+        `,
+        "utf-8",
+      );
+    }
+
+    it("should use tsconfig.json when present in project root", async () => {
+      await setupBasicProject();
+
+      await writeFile(
+        join(testDir, "tsconfig.json"),
+        JSON.stringify({
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            strict: true,
+          },
+        }),
+        "utf-8",
+      );
+
+      const { exitCode, stdout } = await runCli(testDir);
+
+      expect(exitCode).toBe(0);
+      expect(
+        stdout.includes("Done!") || stdout.includes("complete"),
+      ).toBeTruthy();
+    });
+
+    it("should use custom tsconfig path from config file", async () => {
+      await setupBasicProject();
+
+      await writeFile(
+        join(testDir, "tsconfig.build.json"),
+        JSON.stringify({
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            strict: true,
+          },
+        }),
+        "utf-8",
+      );
+
+      await writeFile(
+        join(testDir, "gqlkit.config.ts"),
+        `
+          export default {
+            tsconfigPath: "./tsconfig.build.json",
+          };
+        `,
+        "utf-8",
+      );
+
+      const { exitCode, stdout } = await runCli(testDir);
+
+      expect(exitCode).toBe(0);
+      expect(
+        stdout.includes("Done!") || stdout.includes("complete"),
+      ).toBeTruthy();
+    });
+
+    it("should exit with code 1 when custom tsconfig path does not exist", async () => {
+      await setupBasicProject();
+
+      await writeFile(
+        join(testDir, "gqlkit.config.ts"),
+        `
+          export default {
+            tsconfigPath: "./nonexistent-tsconfig.json",
+          };
+        `,
+        "utf-8",
+      );
+
+      const { exitCode, stderr } = await runCli(testDir);
+
+      expect(exitCode).toBe(1);
+      expect(stderr.includes("TSCONFIG_NOT_FOUND")).toBeTruthy();
+    });
+
+    it("should work without tsconfig.json (use default compiler options)", async () => {
+      await setupBasicProject();
+
+      const { exitCode, stdout } = await runCli(testDir);
+
+      expect(exitCode).toBe(0);
+      expect(
+        stdout.includes("Done!") || stdout.includes("complete"),
+      ).toBeTruthy();
+    });
+
+    it("should generate consistent output with tsconfig.json present", async () => {
+      await setupBasicProject();
+
+      await writeFile(
+        join(testDir, "tsconfig.json"),
+        JSON.stringify({
+          compilerOptions: {
+            target: "ES2022",
+            module: "NodeNext",
+            strict: true,
+          },
+        }),
+        "utf-8",
+      );
+
+      const result1 = await runCli(testDir);
+      const schema1 = await readFile(
+        join(testDir, "src/gqlkit/generated/schema.ts"),
+        "utf-8",
+      );
+
+      await rm(join(testDir, "src/gqlkit/generated"), {
+        recursive: true,
+        force: true,
+      });
+
+      const result2 = await runCli(testDir);
+      const schema2 = await readFile(
+        join(testDir, "src/gqlkit/generated/schema.ts"),
+        "utf-8",
+      );
+
+      expect(result1.exitCode).toBe(0);
+      expect(result2.exitCode).toBe(0);
+      expect(schema1).toBe(schema2);
+    });
+  });
 });

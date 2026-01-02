@@ -42,7 +42,9 @@ describe("ASTBuilder", () => {
     });
 
     it("should use block string format for multi-line description", () => {
-      const node = buildStringValueNode("A user in the system\n\nWith more details");
+      const node = buildStringValueNode(
+        "A user in the system\n\nWith more details",
+      );
 
       expect(node.kind).toBe(Kind.STRING);
       expect(node.value).toBe("A user in the system\n\nWith more details");
