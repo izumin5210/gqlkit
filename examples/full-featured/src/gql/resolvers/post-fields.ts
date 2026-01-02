@@ -41,8 +41,8 @@ const commentsByPost: Record<string, Comment[]> = {
 /**
  * Get the author of this post
  */
-export const author = defineField<Post, NoArgs, User | null>((parent) =>
-  users.find((u) => u.id === parent.authorId) ?? null,
+export const author = defineField<Post, NoArgs, User | null>(
+  (parent) => users.find((u) => u.id === parent.authorId) ?? null,
 );
 
 /**

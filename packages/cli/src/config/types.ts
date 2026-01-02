@@ -1,4 +1,28 @@
 /**
+ * スキーマ出力オプション。
+ * AST と SDL の出力パスを個別に設定できる。
+ */
+export interface SchemaOutputConfig {
+  /**
+   * AST (DocumentNode) 形式の出力パス。
+   * - 相対パスの場合、プロジェクトルートからの相対パス
+   * - null の場合、AST 出力を抑制
+   * - undefined の場合、デフォルトパス使用
+   * @default "src/gqlkit/generated/schema.ts"
+   */
+  readonly ast?: string | null;
+
+  /**
+   * SDL 形式の出力パス。
+   * - 相対パスの場合、プロジェクトルートからの相対パス
+   * - null の場合、SDL 出力を抑制
+   * - undefined の場合、デフォルトパス使用
+   * @default "src/gqlkit/generated/schema.graphql"
+   */
+  readonly sdl?: string | null;
+}
+
+/**
  * gqlkit 設定ファイルの型定義。
  * `gqlkit.config.ts` で使用する。
  */
@@ -8,6 +32,12 @@ export interface GqlkitConfig {
    * branded type と GraphQL scalar の対応を設定する。
    */
   readonly scalars?: ReadonlyArray<ScalarMappingConfig>;
+
+  /**
+   * スキーマ出力設定。
+   * AST と SDL の出力パスを個別に設定できる。
+   */
+  readonly output?: SchemaOutputConfig;
 }
 
 /**

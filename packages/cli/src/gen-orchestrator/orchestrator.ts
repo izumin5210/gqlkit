@@ -1,4 +1,7 @@
-import type { ResolvedScalarMapping } from "../config-loader/index.js";
+import type {
+  ResolvedOutputConfig,
+  ResolvedScalarMapping,
+} from "../config-loader/index.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import { extractResolvers } from "../resolver-extractor/index.js";
 import { generateSchema } from "../schema-generator/index.js";
@@ -16,6 +19,7 @@ export interface GenerationConfig {
   readonly outputDir: string;
   readonly configDir?: string;
   readonly customScalars?: ReadonlyArray<ResolvedScalarMapping>;
+  readonly output?: ResolvedOutputConfig;
 }
 
 export interface GenerationResult {
@@ -89,12 +93,32 @@ export async function executeGeneration(
     };
   }
 
+  const files: Array<{ filename: string; content: string }> = [];
+
+  const outputAst = config.output?.ast;
+  const outputSdl = config.output?.sdl;
+
+  if (outputAst !== null) {
+    const astFilename =
+      outputAst && typeof outputAst === "string"
+        ? (outputAst.split("/").pop() ?? "schema.ts")
+        : "schema.ts";
+    files.push({ filename: astFilename, content: schemaResult.typeDefsCode });
+  }
+
+  if (outputSdl !== null) {
+    const sdlFilename =
+      outputSdl && typeof outputSdl === "string"
+        ? (outputSdl.split("/").pop() ?? "schema.graphql")
+        : "schema.graphql";
+    files.push({ filename: sdlFilename, content: schemaResult.sdlContent });
+  }
+
+  files.push({ filename: "resolvers.ts", content: schemaResult.resolversCode });
+
   const writeResult = await writeFiles({
     outputDir: config.outputDir,
-    files: [
-      { filename: "schema.ts", content: schemaResult.typeDefsCode },
-      { filename: "resolvers.ts", content: schemaResult.resolversCode },
-    ],
+    files,
   });
 
   if (!writeResult.success) {

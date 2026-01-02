@@ -237,5 +237,156 @@ describe("ConfigValidator", () => {
         assert.equal(result.diagnostics.length, 0);
       });
     });
+
+    describe("output options", () => {
+      it("should resolve default output paths when output is undefined", () => {
+        const result = validateConfig({
+          config: {},
+          configPath,
+        });
+
+        assert.equal(result.valid, true);
+        assert.ok(result.resolvedConfig);
+        assert.equal(
+          result.resolvedConfig.output.ast,
+          "src/gqlkit/generated/schema.ts",
+        );
+        assert.equal(
+          result.resolvedConfig.output.sdl,
+          "src/gqlkit/generated/schema.graphql",
+        );
+      });
+
+      it("should resolve default paths when individual options are undefined", () => {
+        const result = validateConfig({
+          config: { output: {} },
+          configPath,
+        });
+
+        assert.equal(result.valid, true);
+        assert.ok(result.resolvedConfig);
+        assert.equal(
+          result.resolvedConfig.output.ast,
+          "src/gqlkit/generated/schema.ts",
+        );
+        assert.equal(
+          result.resolvedConfig.output.sdl,
+          "src/gqlkit/generated/schema.graphql",
+        );
+      });
+
+      it("should use custom paths when provided", () => {
+        const result = validateConfig({
+          config: {
+            output: {
+              ast: "custom/schema.ts",
+              sdl: "custom/schema.graphql",
+            },
+          },
+          configPath,
+        });
+
+        assert.equal(result.valid, true);
+        assert.ok(result.resolvedConfig);
+        assert.equal(result.resolvedConfig.output.ast, "custom/schema.ts");
+        assert.equal(result.resolvedConfig.output.sdl, "custom/schema.graphql");
+      });
+
+      it("should allow null to suppress output", () => {
+        const result = validateConfig({
+          config: {
+            output: {
+              ast: null,
+              sdl: null,
+            },
+          },
+          configPath,
+        });
+
+        assert.equal(result.valid, true);
+        assert.ok(result.resolvedConfig);
+        assert.equal(result.resolvedConfig.output.ast, null);
+        assert.equal(result.resolvedConfig.output.sdl, null);
+      });
+
+      it("should allow mixed null and string", () => {
+        const result = validateConfig({
+          config: {
+            output: {
+              ast: "schema.ts",
+              sdl: null,
+            },
+          },
+          configPath,
+        });
+
+        assert.equal(result.valid, true);
+        assert.ok(result.resolvedConfig);
+        assert.equal(result.resolvedConfig.output.ast, "schema.ts");
+        assert.equal(result.resolvedConfig.output.sdl, null);
+      });
+
+      it("should return error for invalid ast type (number)", () => {
+        const result = validateConfig({
+          config: {
+            output: {
+              ast: 123,
+            },
+          },
+          configPath,
+        });
+
+        assert.equal(result.valid, false);
+        assert.equal(result.diagnostics.length, 1);
+        assert.equal(result.diagnostics[0]?.code, "CONFIG_INVALID_OUTPUT_TYPE");
+        assert.ok(result.diagnostics[0]?.message.includes("output.ast"));
+      });
+
+      it("should return error for invalid sdl type (boolean)", () => {
+        const result = validateConfig({
+          config: {
+            output: {
+              sdl: true,
+            },
+          },
+          configPath,
+        });
+
+        assert.equal(result.valid, false);
+        assert.equal(result.diagnostics.length, 1);
+        assert.equal(result.diagnostics[0]?.code, "CONFIG_INVALID_OUTPUT_TYPE");
+        assert.ok(result.diagnostics[0]?.message.includes("output.sdl"));
+      });
+
+      it("should return error for empty string path", () => {
+        const result = validateConfig({
+          config: {
+            output: {
+              ast: "",
+            },
+          },
+          configPath,
+        });
+
+        assert.equal(result.valid, false);
+        assert.equal(result.diagnostics.length, 1);
+        assert.equal(result.diagnostics[0]?.code, "CONFIG_INVALID_OUTPUT_PATH");
+        assert.ok(result.diagnostics[0]?.message.includes("empty"));
+      });
+
+      it("should return error for invalid output type (not object)", () => {
+        const result = validateConfig({
+          config: {
+            output: "invalid",
+          },
+          configPath,
+        });
+
+        assert.equal(result.valid, false);
+        assert.equal(result.diagnostics.length, 1);
+        assert.equal(result.diagnostics[0]?.code, "CONFIG_INVALID_TYPE");
+        assert.ok(result.diagnostics[0]?.message.includes("output"));
+      });
+    });
   });
 });

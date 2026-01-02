@@ -93,7 +93,7 @@ describe("Integration Tests", () => {
       const result = await executeGeneration(config);
 
       assert.strictEqual(result.success, true);
-      assert.strictEqual(result.filesWritten.length, 2);
+      assert.strictEqual(result.filesWritten.length, 3);
 
       const schemaContent = await readFile(
         join(outputDir, "schema.ts"),

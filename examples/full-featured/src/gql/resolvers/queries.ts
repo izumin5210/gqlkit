@@ -1,6 +1,6 @@
 import { defineQuery, type NoArgs } from "../gqlkit.js";
-import type { Post } from "../types/post.js";
 import type { SearchResult } from "../types/content.js";
+import type { Post } from "../types/post.js";
 import type { User } from "../types/user.js";
 
 const users: User[] = [
@@ -61,8 +61,8 @@ export const allUsers = defineQuery<NoArgs, User[]>(() => users);
 /**
  * Get a user by ID
  */
-export const user = defineQuery<{ id: string }, User | null>((_root, args) =>
-  users.find((u) => u.id === args.id) ?? null,
+export const user = defineQuery<{ id: string }, User | null>(
+  (_root, args) => users.find((u) => u.id === args.id) ?? null,
 );
 
 /**
@@ -88,8 +88,8 @@ export const allPosts = defineQuery<NoArgs, Post[]>(() => posts);
 /**
  * Get a post by ID
  */
-export const post = defineQuery<{ id: string }, Post | null>((_root, args) =>
-  posts.find((p) => p.id === args.id) ?? null,
+export const post = defineQuery<{ id: string }, Post | null>(
+  (_root, args) => posts.find((p) => p.id === args.id) ?? null,
 );
 
 /**
@@ -99,7 +99,8 @@ export const search = defineQuery<{ query: string }, SearchResult[]>(
   (_root, args) => {
     const q = args.query.toLowerCase();
     return posts.filter(
-      (p) => p.title.toLowerCase().includes(q) || p.body.toLowerCase().includes(q),
+      (p) =>
+        p.title.toLowerCase().includes(q) || p.body.toLowerCase().includes(q),
     );
   },
 );

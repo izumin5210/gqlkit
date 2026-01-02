@@ -1,12 +1,6 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import type { ExtractResolversResult } from "../resolver-extractor/index.js";
-import type { ExtractTypesResult } from "../type-extractor/index.js";
-import {
-  type GenerateSchemaInput,
-  type GenerateSchemaResult,
-  generateSchema,
-} from "./generate-schema.js";
+import { type GenerateSchemaInput, generateSchema } from "./generate-schema.js";
 
 describe("generateSchema", () => {
   describe("basic functionality", () => {
@@ -417,6 +411,256 @@ describe("generateSchema", () => {
       const appleIndex = result1.typeDefsCode.indexOf("Apple");
       const zebraIndex = result1.typeDefsCode.indexOf("Zebra");
       assert.ok(appleIndex < zebraIndex);
+    });
+  });
+
+  describe("SDL output", () => {
+    it("should generate sdlContent in result", () => {
+      const input: GenerateSchemaInput = {
+        typesResult: {
+          types: [
+            {
+              name: "User",
+              kind: "Object",
+              fields: [
+                {
+                  name: "id",
+                  type: { typeName: "ID", nullable: false, list: false },
+                },
+              ],
+              sourceFile: "/src/types/user.ts",
+            },
+          ],
+          diagnostics: { errors: [], warnings: [] },
+        },
+        resolversResult: {
+          queryFields: {
+            fields: [
+              {
+                name: "user",
+                type: { typeName: "User", nullable: true, list: false },
+                sourceLocation: {
+                  file: "/src/resolvers/query.ts",
+                  line: 1,
+                  column: 1,
+                },
+              },
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          diagnostics: { errors: [], warnings: [] },
+        },
+        outputDir: "/src/gqlkit",
+      };
+
+      const result = generateSchema(input);
+
+      assert.ok(result.sdlContent);
+      assert.ok(result.sdlContent.includes("type User"));
+      assert.ok(result.sdlContent.includes("type Query"));
+      assert.ok(result.sdlContent.includes("id: ID!"));
+    });
+
+    it("should include descriptions in SDL", () => {
+      const input: GenerateSchemaInput = {
+        typesResult: {
+          types: [
+            {
+              name: "User",
+              kind: "Object",
+              description: "A user in the system",
+              fields: [
+                {
+                  name: "id",
+                  type: { typeName: "ID", nullable: false, list: false },
+                  description: "Unique identifier",
+                },
+              ],
+              sourceFile: "/src/types/user.ts",
+            },
+          ],
+          diagnostics: { errors: [], warnings: [] },
+        },
+        resolversResult: {
+          queryFields: { fields: [] },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          diagnostics: { errors: [], warnings: [] },
+        },
+        outputDir: "/src/gqlkit",
+      };
+
+      const result = generateSchema(input);
+
+      assert.ok(result.sdlContent);
+      assert.ok(
+        result.sdlContent.includes("A user in the system") ||
+          result.sdlContent.includes('"A user in the system"'),
+      );
+    });
+  });
+
+  describe("pruning", () => {
+    it("should not prune by default", () => {
+      const input: GenerateSchemaInput = {
+        typesResult: {
+          types: [
+            {
+              name: "User",
+              kind: "Object",
+              fields: [
+                {
+                  name: "id",
+                  type: { typeName: "ID", nullable: false, list: false },
+                },
+              ],
+              sourceFile: "/src/types/user.ts",
+            },
+            {
+              name: "UnusedType",
+              kind: "Object",
+              fields: [
+                {
+                  name: "id",
+                  type: { typeName: "ID", nullable: false, list: false },
+                },
+              ],
+              sourceFile: "/src/types/unused.ts",
+            },
+          ],
+          diagnostics: { errors: [], warnings: [] },
+        },
+        resolversResult: {
+          queryFields: {
+            fields: [
+              {
+                name: "user",
+                type: { typeName: "User", nullable: true, list: false },
+                sourceLocation: {
+                  file: "/src/resolvers/query.ts",
+                  line: 1,
+                  column: 1,
+                },
+              },
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          diagnostics: { errors: [], warnings: [] },
+        },
+        outputDir: "/src/gqlkit",
+      };
+
+      const result = generateSchema(input);
+
+      assert.ok(result.sdlContent?.includes("UnusedType"));
+      assert.strictEqual(result.prunedTypes, undefined);
+    });
+
+    it("should prune unused types when enablePruning is true", () => {
+      const input: GenerateSchemaInput = {
+        typesResult: {
+          types: [
+            {
+              name: "User",
+              kind: "Object",
+              fields: [
+                {
+                  name: "id",
+                  type: { typeName: "ID", nullable: false, list: false },
+                },
+              ],
+              sourceFile: "/src/types/user.ts",
+            },
+            {
+              name: "UnusedType",
+              kind: "Object",
+              fields: [
+                {
+                  name: "id",
+                  type: { typeName: "ID", nullable: false, list: false },
+                },
+              ],
+              sourceFile: "/src/types/unused.ts",
+            },
+          ],
+          diagnostics: { errors: [], warnings: [] },
+        },
+        resolversResult: {
+          queryFields: {
+            fields: [
+              {
+                name: "user",
+                type: { typeName: "User", nullable: true, list: false },
+                sourceLocation: {
+                  file: "/src/resolvers/query.ts",
+                  line: 1,
+                  column: 1,
+                },
+              },
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          diagnostics: { errors: [], warnings: [] },
+        },
+        outputDir: "/src/gqlkit",
+        enablePruning: true,
+      };
+
+      const result = generateSchema(input);
+
+      assert.ok(result.sdlContent);
+      assert.ok(!result.sdlContent.includes("UnusedType"));
+      assert.ok(result.prunedTypes);
+      assert.ok(result.prunedTypes.includes("UnusedType"));
+    });
+
+    it("should keep custom scalars when pruning", () => {
+      const input: GenerateSchemaInput = {
+        typesResult: {
+          types: [
+            {
+              name: "User",
+              kind: "Object",
+              fields: [
+                {
+                  name: "id",
+                  type: { typeName: "ID", nullable: false, list: false },
+                },
+              ],
+              sourceFile: "/src/types/user.ts",
+            },
+          ],
+          diagnostics: { errors: [], warnings: [] },
+        },
+        resolversResult: {
+          queryFields: {
+            fields: [
+              {
+                name: "user",
+                type: { typeName: "User", nullable: true, list: false },
+                sourceLocation: {
+                  file: "/src/resolvers/query.ts",
+                  line: 1,
+                  column: 1,
+                },
+              },
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          diagnostics: { errors: [], warnings: [] },
+        },
+        outputDir: "/src/gqlkit",
+        customScalarNames: ["DateTime"],
+        enablePruning: true,
+      };
+
+      const result = generateSchema(input);
+
+      assert.ok(result.sdlContent?.includes("scalar DateTime"));
     });
   });
 });

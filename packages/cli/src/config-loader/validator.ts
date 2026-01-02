@@ -1,5 +1,11 @@
 import type { Diagnostic } from "../type-extractor/types/index.js";
-import type { ResolvedConfig, ResolvedScalarMapping } from "./loader.js";
+import {
+  DEFAULT_AST_OUTPUT_PATH,
+  DEFAULT_SDL_OUTPUT_PATH,
+  type ResolvedConfig,
+  type ResolvedOutputConfig,
+  type ResolvedScalarMapping,
+} from "./loader.js";
 
 export interface ValidateConfigOptions {
   readonly config: unknown;
@@ -24,6 +30,93 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function validateOutputPath(
+  value: unknown,
+  fieldName: string,
+  configPath: string,
+): { resolved: string | null; diagnostics: Diagnostic[] } {
+  const diagnostics: Diagnostic[] = [];
+
+  if (value === undefined) {
+    const defaultPath =
+      fieldName === "output.ast"
+        ? DEFAULT_AST_OUTPUT_PATH
+        : DEFAULT_SDL_OUTPUT_PATH;
+    return { resolved: defaultPath, diagnostics: [] };
+  }
+
+  if (value === null) {
+    return { resolved: null, diagnostics: [] };
+  }
+
+  if (typeof value !== "string") {
+    diagnostics.push({
+      code: "CONFIG_INVALID_OUTPUT_TYPE",
+      message: `${fieldName} must be a string, null, or undefined`,
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+    return { resolved: null, diagnostics };
+  }
+
+  if (value === "") {
+    diagnostics.push({
+      code: "CONFIG_INVALID_OUTPUT_PATH",
+      message: `${fieldName} path cannot be empty`,
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+    return { resolved: null, diagnostics };
+  }
+
+  return { resolved: value, diagnostics: [] };
+}
+
+function validateOutputConfig(
+  output: unknown,
+  configPath: string,
+): { resolved: ResolvedOutputConfig | undefined; diagnostics: Diagnostic[] } {
+  const diagnostics: Diagnostic[] = [];
+
+  if (output === undefined) {
+    return {
+      resolved: {
+        ast: DEFAULT_AST_OUTPUT_PATH,
+        sdl: DEFAULT_SDL_OUTPUT_PATH,
+      },
+      diagnostics: [],
+    };
+  }
+
+  if (!isRecord(output)) {
+    diagnostics.push({
+      code: "CONFIG_INVALID_TYPE",
+      message: "output must be an object",
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+    return { resolved: undefined, diagnostics };
+  }
+
+  const astResult = validateOutputPath(output["ast"], "output.ast", configPath);
+  const sdlResult = validateOutputPath(output["sdl"], "output.sdl", configPath);
+
+  diagnostics.push(...astResult.diagnostics);
+  diagnostics.push(...sdlResult.diagnostics);
+
+  if (diagnostics.length > 0) {
+    return { resolved: undefined, diagnostics };
+  }
+
+  return {
+    resolved: {
+      ast: astResult.resolved,
+      sdl: sdlResult.resolved,
+    },
+    diagnostics: [],
+  };
+}
+
 function validateScalarMapping(
   scalar: unknown,
   index: number,
@@ -41,7 +134,7 @@ function validateScalarMapping(
     return { resolved: undefined, diagnostics };
   }
 
-  if (typeof scalar.graphqlName !== "string") {
+  if (typeof scalar["graphqlName"] !== "string") {
     diagnostics.push({
       code: "CONFIG_MISSING_PROPERTY",
       message: `scalars[${index}].graphqlName is required and must be a string`,
@@ -50,7 +143,7 @@ function validateScalarMapping(
     });
   }
 
-  if (!isRecord(scalar.type)) {
+  if (!isRecord(scalar["type"])) {
     diagnostics.push({
       code: "CONFIG_MISSING_PROPERTY",
       message: `scalars[${index}].type is required and must be an object`,
@@ -60,9 +153,9 @@ function validateScalarMapping(
     return { resolved: undefined, diagnostics };
   }
 
-  const type = scalar.type;
+  const type = scalar["type"];
 
-  if (typeof type.from !== "string") {
+  if (typeof type["from"] !== "string") {
     diagnostics.push({
       code: "CONFIG_MISSING_PROPERTY",
       message: `scalars[${index}].type.from is required and must be a string`,
@@ -71,7 +164,7 @@ function validateScalarMapping(
     });
   }
 
-  if (typeof type.name !== "string") {
+  if (typeof type["name"] !== "string") {
     diagnostics.push({
       code: "CONFIG_MISSING_PROPERTY",
       message: `scalars[${index}].type.name is required and must be a string`,
@@ -84,7 +177,7 @@ function validateScalarMapping(
     return { resolved: undefined, diagnostics };
   }
 
-  const graphqlName = scalar.graphqlName as string;
+  const graphqlName = scalar["graphqlName"] as string;
 
   if (
     BUILTIN_SCALAR_NAMES.includes(
@@ -103,8 +196,8 @@ function validateScalarMapping(
   return {
     resolved: {
       graphqlName,
-      typeName: type.name as string,
-      importPath: type.from as string,
+      typeName: type["name"] as string,
+      importPath: type["from"] as string,
     },
     diagnostics,
   };
@@ -126,15 +219,10 @@ export function validateConfig(
     return { valid: false, resolvedConfig: undefined, diagnostics };
   }
 
-  if (config.scalars === undefined) {
-    return {
-      valid: true,
-      resolvedConfig: { scalars: [] },
-      diagnostics: [],
-    };
-  }
+  const outputResult = validateOutputConfig(config["output"], configPath);
+  diagnostics.push(...outputResult.diagnostics);
 
-  if (!Array.isArray(config.scalars)) {
+  if (config["scalars"] !== undefined && !Array.isArray(config["scalars"])) {
     diagnostics.push({
       code: "CONFIG_INVALID_TYPE",
       message: "scalars must be an array",
@@ -144,12 +232,13 @@ export function validateConfig(
     return { valid: false, resolvedConfig: undefined, diagnostics };
   }
 
+  const scalarsArray = config["scalars"] ?? [];
   const resolvedScalars: ResolvedScalarMapping[] = [];
   const seenGraphqlNames = new Map<string, number>();
   const seenTypes = new Map<string, { index: number; names: string[] }>();
 
-  for (let i = 0; i < config.scalars.length; i++) {
-    const scalar = config.scalars[i];
+  for (let i = 0; i < scalarsArray.length; i++) {
+    const scalar = scalarsArray[i];
     const result = validateScalarMapping(scalar, i, configPath);
     diagnostics.push(...result.diagnostics);
 
@@ -188,13 +277,16 @@ export function validateConfig(
     }
   }
 
-  if (diagnostics.length > 0) {
+  if (diagnostics.length > 0 || !outputResult.resolved) {
     return { valid: false, resolvedConfig: undefined, diagnostics };
   }
 
   return {
     valid: true,
-    resolvedConfig: { scalars: resolvedScalars },
+    resolvedConfig: {
+      scalars: resolvedScalars,
+      output: outputResult.resolved,
+    },
     diagnostics: [],
   };
 }

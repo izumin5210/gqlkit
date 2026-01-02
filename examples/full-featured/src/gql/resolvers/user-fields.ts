@@ -21,8 +21,8 @@ const postsByAuthor: Record<string, Post[]> = {
 /**
  * Get posts authored by this user
  */
-export const posts = defineField<User, NoArgs, Post[]>((parent) =>
-  postsByAuthor[parent.id] ?? [],
+export const posts = defineField<User, NoArgs, Post[]>(
+  (parent) => postsByAuthor[parent.id] ?? [],
 );
 
 /**

@@ -1,0 +1,13 @@
+type Query
+
+type User {
+  age: Float!
+  id: String!
+  isActive: Boolean!
+  name: String!
+}
+
+extend type Query {
+  allUsers: [User!]!
+  user(id: String!): User
+}

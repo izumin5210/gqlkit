@@ -1,0 +1,165 @@
+scalar DateTime
+
+"A comment on a post"
+type Comment {
+  "ID of the user who wrote this comment"
+  authorId: ID!
+  "Comment text content"
+  body: String!
+  "When the comment was created"
+  createdAt: DateTime!
+  "Unique identifier for the comment"
+  id: ID!
+  "ID of the post this comment belongs to"
+  postId: ID!
+  "Replies to this comment (nested list)"
+  replies: [Comment!]!
+}
+
+type Mutation
+
+"A blog post"
+type Post {
+  "Post author's ID"
+  authorId: ID!
+  "Post content body"
+  body: String!
+  "When the post was created"
+  createdAt: DateTime!
+  "Unique identifier for the post"
+  id: ID!
+  "When the post was published (null if draft)"
+  publishedAt: DateTime
+  "Publication status"
+  status: String!
+  "Tags associated with this post (may contain null for deleted tags)"
+  tags: [String]!
+  "Post title"
+  title: String!
+}
+
+"Post publication status"
+enum PostStatus {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+type Query
+
+"User role in the system"
+enum Role {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+
+"Union type representing any content that can be searched"
+union SearchResult = Comment | Post
+
+"Timeline content (posts and comments mixed)"
+union TimelineItem = Comment | Post
+
+"A user in the system"
+type User {
+  "User's age in years"
+  age: Int!
+  "When the user was created"
+  createdAt: DateTime!
+  "User's email address (null if not verified)"
+  email: String
+  "Unique identifier for the user"
+  id: ID!
+  "User's display name"
+  name: String!
+  "User's role"
+  role: String!
+  "Current account status"
+  status: String!
+  "User's legacy username"
+  username: String @deprecated(reason: "Use `name` field instead")
+}
+
+"User account status"
+enum UserStatus {
+  "User is active and can access the system"
+  ACTIVE
+  "User is temporarily inactive"
+  INACTIVE
+  "User account is suspended"
+  SUSPENDED
+  "User account is pending verification"
+  PENDING @deprecated(reason: "Use `Inactive` status instead")
+}
+
+"Input for creating a new post"
+input CreatePostInput {
+  body: String!
+  tags: [String!]
+  title: String!
+}
+
+"Input for creating a new user"
+input CreateUserInput {
+  age: Int!
+  email: String
+  name: String!
+  role: String
+}
+
+"Input for updating user profile"
+input UpdateUserInput {
+  age: Int
+  email: String
+  name: String
+}
+
+extend type Mutation {
+  "Create a new post"
+  createPost(input: CreatePostInput!): Post!
+  "Create a new user"
+  createUser(input: CreateUserInput!): User!
+  "Delete a user by ID"
+  deleteUser(id: String!): String!
+  "Update an existing user"
+  updateUser(id: String!, input: UpdateUserInput!): User
+}
+
+extend type Post {
+  "Get the author of this post"
+  author: User
+  "Get comments on this post with optional pagination"
+  comments(limit: Float, includeReplies: String): [Comment!]!
+  "Get the excerpt of the post body"
+  excerpt(length: Float): String!
+  "Check if the post is published"
+  isPublished: String!
+}
+
+extend type Query {
+  "Get all posts"
+  allPosts: [Post!]!
+  "Get all users"
+  allUsers: [User!]!
+  "Get the currently authenticated user"
+  me: User
+  "Get a post by ID"
+  post(id: String!): Post
+  "Search for content (posts and comments)"
+  search(query: String!): [String!]!
+  "Get a user by ID"
+  user(id: String!): User
+  "List users with pagination"
+  users_(limit: Float!, offset: Float, status: String): [User!]!
+}
+
+extend type User {
+  "Get user's display name with role suffix"
+  displayName: String!
+  "Check if the user is an admin"
+  isAdmin: String!
+  "Get the count of posts by this user"
+  postCount: Float!
+  "Get posts authored by this user"
+  posts: [Post!]!
+}

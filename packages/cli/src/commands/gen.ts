@@ -46,6 +46,7 @@ export async function runGenCommand(
     outputDir: join(options.cwd, "src/gqlkit/generated"),
     configDir,
     customScalars: configResult.config.scalars,
+    output: configResult.config.output,
   };
 
   progressReporter.startPhase("Extracting types");

@@ -21,7 +21,13 @@ describe("ConfigLoader", () => {
       const result = await loadConfig({ cwd: tempDir });
 
       assert.equal(result.configPath, undefined);
-      assert.deepEqual(result.config, { scalars: [] });
+      assert.deepEqual(result.config, {
+        scalars: [],
+        output: {
+          ast: "src/gqlkit/generated/schema.ts",
+          sdl: "src/gqlkit/generated/schema.graphql",
+        },
+      });
       assert.equal(result.diagnostics.length, 0);
     });
 
@@ -110,7 +116,13 @@ export default {};
 
       const result = await loadConfig({ cwd: tempDir });
 
-      assert.deepEqual(result.config, { scalars: [] });
+      assert.deepEqual(result.config, {
+        scalars: [],
+        output: {
+          ast: "src/gqlkit/generated/schema.ts",
+          sdl: "src/gqlkit/generated/schema.graphql",
+        },
+      });
       assert.equal(result.diagnostics.length, 0);
     });
   });

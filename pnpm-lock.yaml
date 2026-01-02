@@ -64,6 +64,9 @@ importers:
 
   packages/cli:
     dependencies:
+      '@graphql-tools/utils':
+        specifier: ^10.11.0
+        version: 10.11.0(graphql@16.12.0)
       graphql:
         specifier: ^16.12.0
         version: 16.12.0

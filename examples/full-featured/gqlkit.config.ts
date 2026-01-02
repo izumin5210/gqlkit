@@ -10,6 +10,10 @@ const config: GqlkitConfig = {
       },
     },
   ],
+  output: {
+    ast: "src/gqlkit/generated/schema.ts",
+    sdl: "src/gqlkit/generated/schema.graphql",
+  },
 };
 
 export default config;
