@@ -2,7 +2,7 @@ import assert from "node:assert";
 import { describe, it } from "node:test";
 import type { ExtractResolversResult } from "../../resolver-extractor/index.js";
 import type { ExtractTypesResult } from "../../type-extractor/index.js";
-import { type IntegratedResult, integrate } from "./result-integrator.js";
+import { integrate } from "./result-integrator.js";
 
 describe("ResultIntegrator", () => {
   describe("integrate", () => {

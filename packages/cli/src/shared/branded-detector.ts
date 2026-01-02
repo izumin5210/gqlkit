@@ -12,10 +12,7 @@ import {
   isKnownBrandedScalar,
   type ScalarRegistry,
 } from "./scalar-registry.js";
-import {
-  isSymbolFromGqlkitRuntime,
-  resolveSymbolOrigin,
-} from "./symbol-resolver.js";
+import { resolveSymbolOrigin } from "./symbol-resolver.js";
 
 /**
  * Information about a detected scalar type.

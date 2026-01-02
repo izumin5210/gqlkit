@@ -3,6 +3,7 @@ import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, it } from "node:test";
+import ts from "typescript";
 import {
   createProgramFromFiles,
   extractTypesFromProgram,
@@ -693,9 +694,8 @@ describe("TypeExtractor", () => {
         const typeAliasNode = sourceFile?.statements[0];
 
         assert.ok(typeAliasNode);
-        const symbol = checker.getSymbolAtLocation(
-          (typeAliasNode as { name: { getText: () => string } }).name,
-        );
+        assert.ok(ts.isTypeAliasDeclaration(typeAliasNode));
+        const symbol = checker.getSymbolAtLocation(typeAliasNode.name);
         const type = checker.getDeclaredTypeOfSymbol(symbol!);
         assert.strictEqual(isStringLiteralUnion(type, checker), true);
       });
@@ -712,9 +712,8 @@ describe("TypeExtractor", () => {
         const typeAliasNode = sourceFile?.statements[0];
 
         assert.ok(typeAliasNode);
-        const symbol = checker.getSymbolAtLocation(
-          (typeAliasNode as { name: { getText: () => string } }).name,
-        );
+        assert.ok(ts.isTypeAliasDeclaration(typeAliasNode));
+        const symbol = checker.getSymbolAtLocation(typeAliasNode.name);
         const type = checker.getDeclaredTypeOfSymbol(symbol!);
         assert.strictEqual(isStringLiteralUnion(type, checker), true);
       });
@@ -735,9 +734,8 @@ describe("TypeExtractor", () => {
         const typeAliasNode = sourceFile?.statements[2];
 
         assert.ok(typeAliasNode);
-        const symbol = checker.getSymbolAtLocation(
-          (typeAliasNode as { name: { getText: () => string } }).name,
-        );
+        assert.ok(ts.isTypeAliasDeclaration(typeAliasNode));
+        const symbol = checker.getSymbolAtLocation(typeAliasNode.name);
         const type = checker.getDeclaredTypeOfSymbol(symbol!);
         assert.strictEqual(isStringLiteralUnion(type, checker), false);
       });
@@ -754,9 +752,8 @@ describe("TypeExtractor", () => {
         const typeAliasNode = sourceFile?.statements[0];
 
         assert.ok(typeAliasNode);
-        const symbol = checker.getSymbolAtLocation(
-          (typeAliasNode as { name: { getText: () => string } }).name,
-        );
+        assert.ok(ts.isTypeAliasDeclaration(typeAliasNode));
+        const symbol = checker.getSymbolAtLocation(typeAliasNode.name);
         const type = checker.getDeclaredTypeOfSymbol(symbol!);
         assert.strictEqual(isStringLiteralUnion(type, checker), false);
       });

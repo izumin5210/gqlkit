@@ -29,11 +29,6 @@ type User = {
   email: string;
 };
 
-type Post = {
-  id: string;
-  title: string;
-  authorId: string;
-};
 
 describe("Type inference tests", () => {
   describe("NoArgs type", () => {
@@ -51,10 +46,9 @@ describe("Type inference tests", () => {
         _context,
         info,
       ) => {
-        const _root: undefined = root;
-        const _id: string = args.id;
-        const _info: GraphQLResolveInfo = info;
-        return { id: _id, name: "", email: "" };
+        void (root satisfies undefined);
+        void (info satisfies GraphQLResolveInfo);
+        return { id: args.id, name: "", email: "" };
       };
       assert.ok(fn);
     });
@@ -66,10 +60,9 @@ describe("Type inference tests", () => {
         _context,
         info,
       ) => {
-        const _root: undefined = root;
-        const _name: string = args.name;
-        const _info: GraphQLResolveInfo = info;
-        return { id: "1", name: _name, email: "" };
+        void (root satisfies undefined);
+        void (info satisfies GraphQLResolveInfo);
+        return { id: "1", name: args.name, email: "" };
       };
       assert.ok(fn);
     });
@@ -81,10 +74,10 @@ describe("Type inference tests", () => {
         _context,
         info,
       ) => {
-        const _user: User = parent;
-        const _format: string = args.format;
-        const _info: GraphQLResolveInfo = info;
-        return _user.name;
+        void (parent satisfies User);
+        void (args.format satisfies string);
+        void (info satisfies GraphQLResolveInfo);
+        return parent.name;
       };
       assert.ok(fn);
     });
@@ -103,12 +96,11 @@ describe("Type inference tests", () => {
         context,
         info,
       ) => {
-        const _root: undefined = root;
-        const _id: string = args.id;
-        const _userId: string = context.userId;
-        const _db: { query: (sql: string) => unknown } = context.db;
-        const _info: GraphQLResolveInfo = info;
-        return { id: _id, name: "", email: "" };
+        void (root satisfies undefined);
+        void (context.userId satisfies string);
+        void (context.db satisfies { query: (sql: string) => unknown });
+        void (info satisfies GraphQLResolveInfo);
+        return { id: args.id, name: "", email: "" };
       };
       assert.ok(fn);
     });
@@ -120,11 +112,10 @@ describe("Type inference tests", () => {
         context,
         info,
       ) => {
-        const _root: undefined = root;
-        const _name: string = args.name;
-        const _userId: string = context.userId;
-        const _info: GraphQLResolveInfo = info;
-        return { id: "1", name: _name, email: "" };
+        void (root satisfies undefined);
+        void (context.userId satisfies string);
+        void (info satisfies GraphQLResolveInfo);
+        return { id: "1", name: args.name, email: "" };
       };
       assert.ok(fn);
     });
@@ -136,11 +127,11 @@ describe("Type inference tests", () => {
         string,
         CustomContext
       > = (parent, args, context, info) => {
-        const _user: User = parent;
-        const _format: string = args.format;
-        const _userId: string = context.userId;
-        const _info: GraphQLResolveInfo = info;
-        return _user.name;
+        void (parent satisfies User);
+        void (args.format satisfies string);
+        void (context.userId satisfies string);
+        void (info satisfies GraphQLResolveInfo);
+        return parent.name;
       };
       assert.ok(fn);
     });
@@ -252,7 +243,7 @@ describe("Type inference tests", () => {
       type TestResolver = QueryResolver<NoArgs, User, CustomContext>;
 
       const resolver: TestResolver = ((_root, _args, ctx, _info) => {
-        const _userId: string = ctx.userId;
+        void (ctx.userId satisfies string);
         return { id: "1", name: "", email: "" };
       }) as TestResolver;
 
@@ -267,9 +258,8 @@ describe("Type inference tests", () => {
 
       const query = apis.defineQuery<NoArgs, User>(
         (_root, _args, ctx, _info) => {
-          const userId: string = ctx.userId;
-          const _db: unknown = ctx.db;
-          return { id: userId, name: "", email: "" };
+          void (ctx.db satisfies unknown);
+          return { id: ctx.userId, name: "", email: "" };
         },
       );
 
@@ -296,7 +286,7 @@ describe("Type inference tests", () => {
 
       const field = apis.defineField<User, NoArgs, string>(
         (parent, _args, ctx, _info) => {
-          const _userId: string = ctx.userId;
+          void (ctx.userId satisfies string);
           return parent.name;
         },
       );
@@ -309,7 +299,7 @@ describe("Type inference tests", () => {
 
       const query = apis.defineQuery<NoArgs, User>(
         (_root, _args, ctx, _info) => {
-          const _ctxAsUnknown: unknown = ctx;
+          void (ctx satisfies unknown);
           return { id: "1", name: "", email: "" };
         },
       );
@@ -415,7 +405,7 @@ describe("Type inference tests", () => {
 
       type QueryType = typeof query;
       type BrandInfo = QueryType[ResolverBrand];
-      const _kindCheck: "query" = {} as BrandInfo["kind"];
+      void ({} as BrandInfo["kind"] satisfies "query");
 
       assert.ok(query);
     });
@@ -433,7 +423,7 @@ describe("Type inference tests", () => {
 
       type MutationType = typeof mutation;
       type BrandInfo = MutationType[ResolverBrand];
-      const _kindCheck: "mutation" = {} as BrandInfo["kind"];
+      void ({} as BrandInfo["kind"] satisfies "mutation");
 
       assert.ok(mutation);
     });
@@ -449,7 +439,7 @@ describe("Type inference tests", () => {
 
       type FieldType = typeof field;
       type BrandInfo = FieldType[ResolverBrand];
-      const _kindCheck: "field" = {} as BrandInfo["kind"];
+      void ({} as BrandInfo["kind"] satisfies "field");
 
       assert.ok(field);
     });

@@ -304,6 +304,7 @@ export type SomeType = { value: string };
         moduleName: "@gqlkit-ts/runtime",
         symbolName: "IDString",
         isFromRuntime: true,
+        sourceFilePath: undefined,
       };
       assert.ok(origin);
       assert.equal(origin.moduleName, "@gqlkit-ts/runtime");

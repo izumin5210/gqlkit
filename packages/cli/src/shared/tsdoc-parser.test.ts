@@ -1,11 +1,9 @@
 import assert from "node:assert/strict";
 import path from "node:path";
 import { describe, it } from "node:test";
-import { fileURLToPath } from "node:url";
 import ts from "typescript";
 import { extractTSDocFromSymbol, extractTSDocInfo } from "./tsdoc-parser.js";
 
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const VIRTUAL_ROOT = "/virtual";
 
 function createTestProgram(files: Record<string, string>): {

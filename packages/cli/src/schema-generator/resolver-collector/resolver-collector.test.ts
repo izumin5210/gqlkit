@@ -1,11 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import type { IntegratedResult } from "../integrator/result-integrator.js";
-import {
-  collectResolverInfo,
-  type ResolverInfo,
-  type TypeResolvers,
-} from "./resolver-collector.js";
+import { collectResolverInfo } from "./resolver-collector.js";
 
 describe("ResolverCollector", () => {
   describe("collectResolverInfo", () => {
@@ -13,6 +9,7 @@ describe("ResolverCollector", () => {
       it("should return ResolverInfo with expected shape", () => {
         const integratedResult: IntegratedResult = {
           baseTypes: [],
+          inputTypes: [],
           typeExtensions: [],
           hasQuery: false,
           hasMutation: false,
@@ -29,6 +26,7 @@ describe("ResolverCollector", () => {
       it("should extract source files from type extensions", () => {
         const integratedResult: IntegratedResult = {
           baseTypes: [{ name: "Query", kind: "Object", fields: [] }],
+          inputTypes: [],
           typeExtensions: [
             {
               targetTypeName: "Query",
@@ -63,6 +61,7 @@ describe("ResolverCollector", () => {
       it("should classify Query fields into Query type", () => {
         const integratedResult: IntegratedResult = {
           baseTypes: [{ name: "Query", kind: "Object", fields: [] }],
+          inputTypes: [],
           typeExtensions: [
             {
               targetTypeName: "Query",
@@ -92,6 +91,7 @@ describe("ResolverCollector", () => {
       it("should classify Mutation fields into Mutation type", () => {
         const integratedResult: IntegratedResult = {
           baseTypes: [{ name: "Mutation", kind: "Object", fields: [] }],
+          inputTypes: [],
           typeExtensions: [
             {
               targetTypeName: "Mutation",
@@ -121,6 +121,7 @@ describe("ResolverCollector", () => {
       it("should classify non-root type fields separately", () => {
         const integratedResult: IntegratedResult = {
           baseTypes: [{ name: "User", kind: "Object", fields: [] }],
+          inputTypes: [],
           typeExtensions: [
             {
               targetTypeName: "User",
@@ -150,6 +151,7 @@ describe("ResolverCollector", () => {
       it("should collect resolver values from source files", () => {
         const integratedResult: IntegratedResult = {
           baseTypes: [{ name: "Query", kind: "Object", fields: [] }],
+          inputTypes: [],
           typeExtensions: [
             {
               targetTypeName: "Query",
@@ -190,6 +192,7 @@ describe("ResolverCollector", () => {
             { name: "User", kind: "Object", fields: [] },
             { name: "Post", kind: "Object", fields: [] },
           ],
+          inputTypes: [],
           typeExtensions: [
             {
               targetTypeName: "User",
@@ -227,6 +230,7 @@ describe("ResolverCollector", () => {
       it("should sort source files", () => {
         const integratedResult: IntegratedResult = {
           baseTypes: [{ name: "Query", kind: "Object", fields: [] }],
+          inputTypes: [],
           typeExtensions: [
             {
               targetTypeName: "Query",
@@ -259,6 +263,7 @@ describe("ResolverCollector", () => {
       it("should sort fields within each type by name", () => {
         const integratedResult: IntegratedResult = {
           baseTypes: [{ name: "Query", kind: "Object", fields: [] }],
+          inputTypes: [],
           typeExtensions: [
             {
               targetTypeName: "Query",
@@ -304,6 +309,7 @@ describe("ResolverCollector", () => {
       it("should set isDirectExport to true when resolverExportName is provided", () => {
         const integratedResult: IntegratedResult = {
           baseTypes: [{ name: "Query", kind: "Object", fields: [] }],
+          inputTypes: [],
           typeExtensions: [
             {
               targetTypeName: "Query",
@@ -334,6 +340,7 @@ describe("ResolverCollector", () => {
       it("should set isDirectExport to false when resolverExportName is not provided", () => {
         const integratedResult: IntegratedResult = {
           baseTypes: [{ name: "Query", kind: "Object", fields: [] }],
+          inputTypes: [],
           typeExtensions: [
             {
               targetTypeName: "Query",
@@ -366,6 +373,7 @@ describe("ResolverCollector", () => {
       it("should use resolverExportName as resolverValueName when available", () => {
         const integratedResult: IntegratedResult = {
           baseTypes: [{ name: "User", kind: "Object", fields: [] }],
+          inputTypes: [],
           typeExtensions: [
             {
               targetTypeName: "User",
@@ -396,6 +404,7 @@ describe("ResolverCollector", () => {
       it("should use fallback naming when resolverExportName is not provided", () => {
         const integratedResult: IntegratedResult = {
           baseTypes: [{ name: "User", kind: "Object", fields: [] }],
+          inputTypes: [],
           typeExtensions: [
             {
               targetTypeName: "User",
@@ -428,6 +437,7 @@ describe("ResolverCollector", () => {
       it("should handle mixed direct and indirect exports in same type", () => {
         const integratedResult: IntegratedResult = {
           baseTypes: [{ name: "Query", kind: "Object", fields: [] }],
+          inputTypes: [],
           typeExtensions: [
             {
               targetTypeName: "Query",

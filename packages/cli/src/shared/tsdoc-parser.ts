@@ -2,12 +2,12 @@ import ts from "typescript";
 
 export interface DeprecationInfo {
   readonly isDeprecated: true;
-  readonly reason?: string;
+  readonly reason?: string | undefined;
 }
 
 export interface TSDocInfo {
-  readonly description?: string;
-  readonly deprecated?: DeprecationInfo;
+  readonly description?: string | undefined;
+  readonly deprecated?: DeprecationInfo | undefined;
 }
 
 function getSymbolFromNode(

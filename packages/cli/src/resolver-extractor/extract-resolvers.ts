@@ -17,18 +17,18 @@ import { scanResolverDirectory } from "./scanner/file-scanner.js";
 export interface GraphQLInputValue {
   readonly name: string;
   readonly type: GraphQLFieldType;
-  readonly description?: string;
-  readonly deprecated?: DeprecationInfo;
+  readonly description?: string | undefined;
+  readonly deprecated?: DeprecationInfo | undefined;
 }
 
 export interface GraphQLFieldDefinition {
   readonly name: string;
   readonly type: GraphQLFieldType;
-  readonly args?: ReadonlyArray<GraphQLInputValue>;
+  readonly args?: ReadonlyArray<GraphQLInputValue> | undefined;
   readonly sourceLocation: SourceLocation;
-  readonly resolverExportName?: string;
-  readonly description?: string;
-  readonly deprecated?: DeprecationInfo;
+  readonly resolverExportName?: string | undefined;
+  readonly description?: string | undefined;
+  readonly deprecated?: DeprecationInfo | undefined;
 }
 
 export interface QueryFieldDefinitions {

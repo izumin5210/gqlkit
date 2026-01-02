@@ -1,20 +1,22 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
-import type { GraphQLFieldType } from "../../type-extractor/types/index.js";
 import type {
   InputType,
   TypeExtension,
 } from "../integrator/result-integrator.js";
-import {
-  type ValidationContext,
-  validateArguments,
-} from "./argument-validator.js";
+import { validateArguments } from "./argument-validator.js";
+
+interface CreateContextOptions {
+  knownTypes?: string[];
+  inputTypes?: string[];
+  outputTypes?: string[];
+  enumTypes?: string[];
+  scalarTypes?: string[];
+}
 
 describe("ArgumentValidator", () => {
   describe("validateArguments", () => {
-    function createContext(
-      options: Partial<ValidationContext> = {},
-    ): ValidationContext {
+    function createContext(options: CreateContextOptions = {}) {
       return {
         knownTypes: new Set(options.knownTypes ?? []),
         inputTypes: new Set(options.inputTypes ?? []),

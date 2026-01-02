@@ -255,13 +255,6 @@ function convertTsTypeToReferenceWithBrandInfo(
   };
 }
 
-function convertTsTypeToReference(
-  type: ts.Type,
-  checker: ts.TypeChecker,
-): TSTypeReference {
-  return convertTsTypeToReferenceWithBrandInfo(type, checker).tsType;
-}
-
 interface FieldExtractionResult {
   readonly fields: FieldDefinition[];
   readonly unknownBrands: ReadonlyArray<{

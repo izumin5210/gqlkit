@@ -16,6 +16,7 @@ export type DiagnosticCode =
   | "UNSUPPORTED_ARG_TYPE"
   | "UNKNOWN_TARGET_TYPE"
   | "PARENT_TYPE_MISMATCH"
+  | "MISSING_PARENT_TYPE"
   | "UNSUPPORTED_ENUM_TYPE"
   | "INVALID_ENUM_MEMBER"
   | "INVALID_INPUT_TYPE"
@@ -25,6 +26,7 @@ export type DiagnosticCode =
   | "UNKNOWN_BRANDED_SCALAR"
   | "INVALID_SCALAR_IMPORT"
   | "CONFLICTING_SCALAR_TYPE"
+  | "INVALID_DEFINE_CALL"
   | "CONFIG_SYNTAX_ERROR"
   | "CONFIG_MISSING_PROPERTY"
   | "CONFIG_INVALID_TYPE"
@@ -39,7 +41,7 @@ export interface Diagnostic {
   readonly code: DiagnosticCode;
   readonly message: string;
   readonly severity: "error" | "warning";
-  readonly location?: SourceLocation;
+  readonly location?: SourceLocation | undefined;
 }
 
 export interface Diagnostics {

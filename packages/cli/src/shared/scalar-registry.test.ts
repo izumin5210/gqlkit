@@ -9,7 +9,6 @@ import {
   getScalarMapping,
   isKnownBrandedScalar,
   type ScalarMappingInfo,
-  type ScalarRegistry,
   STANDARD_SCALAR_MAPPINGS,
 } from "./scalar-registry.js";
 
@@ -314,7 +313,7 @@ export type UUID = string & { __brand: 'UUID' };
         });
 
         const names = registry.getCustomScalarNames();
-        assert.deepEqual(names.sort(), ["DateTime", "UUID"]);
+        assert.deepEqual([...names].sort(), ["DateTime", "UUID"]);
       });
 
       it("should resolve ./src/scalars and ./src/scalars/index.ts to same module", () => {

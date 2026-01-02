@@ -1,10 +1,7 @@
 import assert from "node:assert";
 import { describe, it } from "node:test";
 import type { Diagnostic } from "../../type-extractor/index.js";
-import {
-  createDiagnosticReporter,
-  type DiagnosticReporter,
-} from "./diagnostic-reporter.js";
+import { createDiagnosticReporter } from "./diagnostic-reporter.js";
 
 describe("DiagnosticReporter", () => {
   describe("reportDiagnostics", () => {

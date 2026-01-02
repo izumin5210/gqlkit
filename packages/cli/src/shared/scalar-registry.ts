@@ -6,7 +6,7 @@
  * branded scalar types during type extraction.
  */
 
-import { dirname, join, resolve } from "node:path";
+import { join } from "node:path";
 import ts from "typescript";
 import type { ResolvedScalarMapping } from "../config-loader/index.js";
 
@@ -186,7 +186,7 @@ export function createScalarRegistry(
     directoryExists: ts.sys.directoryExists,
     getCurrentDirectory: () => compilerOptions.baseUrl ?? process.cwd(),
     getDirectories: ts.sys.getDirectories,
-    realpath: ts.sys.realpath,
+    ...(ts.sys.realpath ? { realpath: ts.sys.realpath } : {}),
   };
 
   const customMappings = new Map<string, ExtendedScalarMappingInfo>();

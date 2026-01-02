@@ -7,20 +7,26 @@ export interface ValidationResult {
 
 export interface ValidateTypesOptions {
   readonly types: ReadonlyArray<GraphQLTypeInfo>;
-  readonly customScalarNames?: ReadonlyArray<string>;
+  readonly customScalarNames?: ReadonlyArray<string> | undefined;
 }
 
 const BUILT_IN_SCALARS = new Set(["String", "Int", "Float", "Boolean", "ID"]);
 
+function isOptionsObject(
+  arg: ReadonlyArray<GraphQLTypeInfo> | ValidateTypesOptions,
+): arg is ValidateTypesOptions {
+  return !Array.isArray(arg) && "types" in arg;
+}
+
 export function validateTypes(
   typesOrOptions: ReadonlyArray<GraphQLTypeInfo> | ValidateTypesOptions,
 ): ValidationResult {
-  const types = Array.isArray(typesOrOptions)
-    ? typesOrOptions
-    : typesOrOptions.types;
-  const customScalarNames = Array.isArray(typesOrOptions)
-    ? undefined
-    : typesOrOptions.customScalarNames;
+  const types = isOptionsObject(typesOrOptions)
+    ? typesOrOptions.types
+    : typesOrOptions;
+  const customScalarNames = isOptionsObject(typesOrOptions)
+    ? typesOrOptions.customScalarNames
+    : undefined;
 
   const diagnostics: Diagnostic[] = [];
 

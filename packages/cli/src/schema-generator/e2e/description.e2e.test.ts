@@ -3,7 +3,7 @@ import { describe, it } from "node:test";
 import { print } from "graphql";
 import type { ExtractResolversResult } from "../../resolver-extractor/index.js";
 import { convertToGraphQL } from "../../type-extractor/converter/graphql-converter.js";
-import type { ExtractedTypeInfo } from "../../type-extractor/extractor/type-extractor.js";
+import type { ExtractedTypeInfo } from "../../type-extractor/types/index.js";
 import { buildDocumentNode } from "../builder/ast-builder.js";
 import { integrate } from "../integrator/result-integrator.js";
 

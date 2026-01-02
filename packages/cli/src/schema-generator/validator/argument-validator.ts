@@ -20,17 +20,6 @@ export interface ArgumentValidationResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
-function isValidInputType(
-  typeName: string,
-  context: ValidationContext,
-): boolean {
-  return (
-    context.scalarTypes.has(typeName) ||
-    context.inputTypes.has(typeName) ||
-    context.enumTypes.has(typeName)
-  );
-}
-
 function validateFieldArgumentType(
   argType: GraphQLFieldType,
   context: ValidationContext,

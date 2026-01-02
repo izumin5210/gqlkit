@@ -1,9 +1,6 @@
 import assert from "node:assert";
-import { describe, it, mock } from "node:test";
-import {
-  createProgressReporter,
-  type ProgressReporter,
-} from "./progress-reporter.js";
+import { describe, it } from "node:test";
+import { createProgressReporter } from "./progress-reporter.js";
 
 describe("ProgressReporter", () => {
   describe("startPhase", () => {

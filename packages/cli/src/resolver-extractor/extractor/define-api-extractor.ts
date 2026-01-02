@@ -22,21 +22,21 @@ export interface ArgumentDefinition {
   readonly name: string;
   readonly tsType: TSTypeReference;
   readonly optional: boolean;
-  readonly description?: string;
-  readonly deprecated?: DeprecationInfo;
+  readonly description?: string | undefined;
+  readonly deprecated?: DeprecationInfo | undefined;
 }
 
 export interface DefineApiResolverInfo {
   readonly fieldName: string;
   readonly resolverType: DefineApiResolverType;
-  readonly parentTypeName?: string;
-  readonly argsType?: TSTypeReference;
-  readonly args?: ReadonlyArray<ArgumentDefinition>;
+  readonly parentTypeName?: string | undefined;
+  readonly argsType?: TSTypeReference | undefined;
+  readonly args?: ReadonlyArray<ArgumentDefinition> | undefined;
   readonly returnType: TSTypeReference;
   readonly sourceFile: string;
   readonly exportedInputTypes: ReadonlyArray<ExportedInputType>;
-  readonly description?: string;
-  readonly deprecated?: DeprecationInfo;
+  readonly description?: string | undefined;
+  readonly deprecated?: DeprecationInfo | undefined;
 }
 
 export interface ExtractDefineApiResult {
@@ -206,7 +206,7 @@ function isInlineTypeLiteralDeclaration(declaration: ts.Declaration): boolean {
 function extractTSDocFromPropertyWithPriority(
   prop: ts.Symbol,
   checker: ts.TypeChecker,
-): { description?: string; deprecated?: DeprecationInfo } {
+): { description?: string | undefined; deprecated?: DeprecationInfo | undefined } {
   const declarations = prop.getDeclarations();
   if (!declarations || declarations.length === 0) {
     return {};
@@ -262,9 +262,9 @@ function extractTypeArgumentsFromCall(
   checker: ts.TypeChecker,
   resolverType: DefineApiResolverType,
 ): {
-  parentTypeName?: string;
-  argsType?: TSTypeReference;
-  args?: ArgumentDefinition[];
+  parentTypeName?: string | undefined;
+  argsType?: TSTypeReference | undefined;
+  args?: ArgumentDefinition[] | undefined;
   returnType: TSTypeReference;
 } | null {
   const typeArgs = node.typeArguments;

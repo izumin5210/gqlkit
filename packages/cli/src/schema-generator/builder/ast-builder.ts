@@ -66,7 +66,7 @@ export function buildDeprecatedDirective(
   return {
     kind: Kind.DIRECTIVE,
     name: buildNameNode("deprecated"),
-    arguments: args.length > 0 ? args : undefined,
+    ...(args.length > 0 ? { arguments: args } : {}),
   };
 }
 
@@ -125,10 +125,10 @@ export function buildInputValueDefinitionNode(
     kind: Kind.INPUT_VALUE_DEFINITION,
     name: buildNameNode(inputValue.name),
     type: buildFieldTypeNode(inputValue.type),
-    description: inputValue.description
-      ? buildStringValueNode(inputValue.description)
-      : undefined,
-    directives: directives.length > 0 ? directives : undefined,
+    ...(inputValue.description
+      ? { description: buildStringValueNode(inputValue.description) }
+      : {}),
+    ...(directives.length > 0 ? { directives } : {}),
   };
 }
 
@@ -146,10 +146,10 @@ function buildBaseFieldDefinitionNode(field: BaseField): FieldDefinitionNode {
     kind: Kind.FIELD_DEFINITION,
     name: buildNameNode(field.name),
     type: buildFieldTypeNode(field.type),
-    description: field.description
-      ? buildStringValueNode(field.description)
-      : undefined,
-    directives: directives.length > 0 ? directives : undefined,
+    ...(field.description
+      ? { description: buildStringValueNode(field.description) }
+      : {}),
+    ...(directives.length > 0 ? { directives } : {}),
   };
 }
 
@@ -161,15 +161,17 @@ export function buildFieldDefinitionNode(
     directives.push(buildDeprecatedDirective(field.deprecated));
   }
 
+  const args = field.args?.map(buildInputValueDefinitionNode);
+
   return {
     kind: Kind.FIELD_DEFINITION,
     name: buildNameNode(field.name),
-    arguments: field.args?.map(buildInputValueDefinitionNode),
+    ...(args && args.length > 0 ? { arguments: args } : {}),
     type: buildFieldTypeNode(field.type),
-    description: field.description
-      ? buildStringValueNode(field.description)
-      : undefined,
-    directives: directives.length > 0 ? directives : undefined,
+    ...(field.description
+      ? { description: buildStringValueNode(field.description) }
+      : {}),
+    ...(directives.length > 0 ? { directives } : {}),
   };
 }
 
@@ -186,10 +188,10 @@ export function buildObjectTypeDefinitionNode(
     kind: Kind.OBJECT_TYPE_DEFINITION,
     name: buildNameNode(baseType.name),
     fields: sortedFields.map(buildBaseFieldDefinitionNode),
-    description: baseType.description
-      ? buildStringValueNode(baseType.description)
-      : undefined,
-    directives: directives.length > 0 ? directives : undefined,
+    ...(baseType.description
+      ? { description: buildStringValueNode(baseType.description) }
+      : {}),
+    ...(directives.length > 0 ? { directives } : {}),
   };
 }
 
@@ -204,9 +206,9 @@ export function buildUnionTypeDefinitionNode(
     kind: Kind.UNION_TYPE_DEFINITION,
     name: buildNameNode(baseType.name),
     types: sortedMembers.map(buildNamedTypeNode),
-    description: baseType.description
-      ? buildStringValueNode(baseType.description)
-      : undefined,
+    ...(baseType.description
+      ? { description: buildStringValueNode(baseType.description) }
+      : {}),
   };
 }
 
@@ -221,10 +223,10 @@ export function buildEnumValueDefinitionNode(
   return {
     kind: Kind.ENUM_VALUE_DEFINITION,
     name: buildNameNode(value.name),
-    description: value.description
-      ? buildStringValueNode(value.description)
-      : undefined,
-    directives: directives.length > 0 ? directives : undefined,
+    ...(value.description
+      ? { description: buildStringValueNode(value.description) }
+      : {}),
+    ...(directives.length > 0 ? { directives } : {}),
   };
 }
 
@@ -237,9 +239,9 @@ export function buildEnumTypeDefinitionNode(
     kind: Kind.ENUM_TYPE_DEFINITION,
     name: buildNameNode(baseType.name),
     values: enumValues.map(buildEnumValueDefinitionNode),
-    description: baseType.description
-      ? buildStringValueNode(baseType.description)
-      : undefined,
+    ...(baseType.description
+      ? { description: buildStringValueNode(baseType.description) }
+      : {}),
   };
 }
 
@@ -250,7 +252,7 @@ export function buildScalarTypeDefinitionNode(
   return {
     kind: Kind.SCALAR_TYPE_DEFINITION,
     name: buildNameNode(name),
-    description: description ? buildStringValueNode(description) : undefined,
+    ...(description ? { description: buildStringValueNode(description) } : {}),
   };
 }
 
@@ -261,9 +263,9 @@ function buildInputFieldDefinitionNode(
     kind: Kind.INPUT_VALUE_DEFINITION,
     name: buildNameNode(field.name),
     type: buildFieldTypeNode(field.type),
-    description: field.description
-      ? buildStringValueNode(field.description)
-      : undefined,
+    ...(field.description
+      ? { description: buildStringValueNode(field.description) }
+      : {}),
   };
 }
 
@@ -276,9 +278,9 @@ export function buildInputObjectTypeDefinitionNode(
     kind: Kind.INPUT_OBJECT_TYPE_DEFINITION,
     name: buildNameNode(inputType.name),
     fields: sortedFields.map(buildInputFieldDefinitionNode),
-    description: inputType.description
-      ? buildStringValueNode(inputType.description)
-      : undefined,
+    ...(inputType.description
+      ? { description: buildStringValueNode(inputType.description) }
+      : {}),
   };
 }
 

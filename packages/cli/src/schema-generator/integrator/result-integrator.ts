@@ -15,35 +15,35 @@ import type {
 export interface BaseField {
   readonly name: string;
   readonly type: GraphQLFieldType;
-  readonly description?: string;
-  readonly deprecated?: DeprecationInfo;
+  readonly description?: string | undefined;
+  readonly deprecated?: DeprecationInfo | undefined;
 }
 
 export interface BaseType {
   readonly name: string;
   readonly kind: "Object" | "Union" | "Enum";
-  readonly fields?: ReadonlyArray<BaseField>;
-  readonly unionMembers?: ReadonlyArray<string>;
-  readonly enumValues?: ReadonlyArray<EnumValueInfo>;
-  readonly description?: string;
-  readonly deprecated?: DeprecationInfo;
+  readonly fields?: ReadonlyArray<BaseField> | undefined;
+  readonly unionMembers?: ReadonlyArray<string> | undefined;
+  readonly enumValues?: ReadonlyArray<EnumValueInfo> | undefined;
+  readonly description?: string | undefined;
+  readonly deprecated?: DeprecationInfo | undefined;
 }
 
 export interface InputType {
   readonly name: string;
   readonly fields: ReadonlyArray<BaseField>;
   readonly sourceFile: string;
-  readonly description?: string;
+  readonly description?: string | undefined;
 }
 
 export interface ExtensionField {
   readonly name: string;
   readonly type: GraphQLFieldType;
-  readonly args?: ReadonlyArray<GraphQLInputValue>;
+  readonly args?: ReadonlyArray<GraphQLInputValue> | undefined;
   readonly resolverSourceFile: string;
-  readonly resolverExportName?: string;
-  readonly description?: string;
-  readonly deprecated?: DeprecationInfo;
+  readonly resolverExportName?: string | undefined;
+  readonly description?: string | undefined;
+  readonly deprecated?: DeprecationInfo | undefined;
 }
 
 export interface TypeExtension {
@@ -55,7 +55,7 @@ export interface IntegratedResult {
   readonly baseTypes: ReadonlyArray<BaseType>;
   readonly inputTypes: ReadonlyArray<InputType>;
   readonly typeExtensions: ReadonlyArray<TypeExtension>;
-  readonly customScalarNames?: ReadonlyArray<string>;
+  readonly customScalarNames?: ReadonlyArray<string> | undefined;
   readonly hasQuery: boolean;
   readonly hasMutation: boolean;
   readonly hasErrors: boolean;

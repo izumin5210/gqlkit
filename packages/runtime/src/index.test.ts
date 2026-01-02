@@ -111,14 +111,14 @@ describe("@gqlkit-ts/runtime", () => {
 
         const adminQuery = adminApis.defineQuery<NoArgs, User>(
           (_root, _args, ctx, _info) => {
-            const _adminId: string = ctx.adminId;
+            void (ctx.adminId satisfies string);
             return { id: "admin-user" };
           },
         );
 
         const publicQuery = publicApis.defineQuery<NoArgs, User>(
           (_root, _args, ctx, _info) => {
-            const _sessionId: string = ctx.sessionId;
+            void (ctx.sessionId satisfies string);
             return { id: "public-user" };
           },
         );
