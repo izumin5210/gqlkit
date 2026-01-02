@@ -10,6 +10,8 @@ gqlkit is a convention-driven code generator for GraphQL servers in TypeScript. 
 - **Fail-fast validation**: Actionable errors for type mismatches, missing references, and convention violations
 - **Documentation extraction**: TSDoc comments automatically become GraphQL schema descriptions with `@deprecated` support
 - **Branded scalar types**: Type-safe distinction between GraphQL scalar types (ID, Int, Float) via branded TypeScript types from `@gqlkit-ts/runtime`
+- **Custom scalar configuration**: User-defined scalar type mappings via `gqlkit.config.ts` with `defineConfig()`
+- **Multiple output formats**: Generate schema AST (DocumentNode) or SDL string, with optional schema pruning
 
 ## Target Use Cases
 
@@ -24,4 +26,4 @@ gqlkit provides a "kit" experience: consistent conventions paired with consisten
 
 ---
 _Focus on patterns and purpose, not exhaustive feature lists_
-_Updated: 2025-01-01 - Branded scalar types capability_
+_Updated: 2026-01-02 - Custom scalar configuration and SDL output capabilities_

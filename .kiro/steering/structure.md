@@ -23,6 +23,8 @@ Pipeline-based architecture for code generation:
 
 - **Entry**: `src/cli.ts` - Wires commands to gunshi CLI
 - **Commands**: `src/commands/` - CLI command definitions using gunshi's `define()`
+- **Configuration**: `src/config/` - Configuration type definitions and `defineConfig()` helper
+- **Config Loading**: `src/config-loader/` - Configuration file loading and validation
 - **Type Extraction**: `src/type-extractor/` - Scans and analyzes TypeScript types
 - **Resolver Extraction**: `src/resolver-extractor/` - Scans and analyzes resolver definitions
 - **Schema Generation**: `src/schema-generator/` - Builds GraphQL AST and resolver maps
@@ -74,4 +76,4 @@ import { extractTypes } from "../type-extractor/index.js";
 
 ---
 _Document patterns, not file trees. New files following patterns shouldn't require updates_
-_Updated: 2025-01-01 - Runtime branded scalar types_
+_Updated: 2026-01-02 - Added config/config-loader pipeline stages_

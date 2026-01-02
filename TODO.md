@@ -6,9 +6,9 @@ gqlkit の未実装機能・既知の問題・改善項目を管理するファ�
 
 ### Scalar Types
 
-- [ ] **ID 型サポート**: TypeScript の `string` を GraphQL `ID` として扱う仕組み（専用型 or アノテーション）
-- [ ] **Float 型サポート**: 現在 `number` は常に `Int` にマッピング。`Float` への明示的な指定方法が必要
-- [ ] **カスタムスカラー型**: `Date`, `DateTime`, `JSON` などのカスタムスカラー定義・使用
+- [x] **ID 型サポート**: `IDString`, `IDNumber` branded types で対応
+- [x] **Float 型サポート**: `Float` branded type で対応。`number` は `Float` にマッピング
+- [x] **カスタムスカラー型**: `gqlkit.config.ts` の `scalars` 設定で対応
 
 ### Complex Types
 
@@ -43,11 +43,11 @@ gqlkit の未実装機能・既知の問題・改善項目を管理するファ�
 
 ### Documentation
 
-- [ ] **README を新 API (defineQuery/defineMutation/defineField) に更新**: 現在は旧オブジェクトスタイル API の例が記載されている
+- [x] **README を新 API (defineQuery/defineMutation/defineField) に更新**: 完了
 
 ### Configuration
 
-- [ ] **設定ファイルサポート**: 解析対象ディレクトリ・出力ディレクトリの変更を設定ファイルで指定可能にする
+- [x] **設定ファイルサポート**: `gqlkit.config.ts` + `defineConfig()` で対応
 
 ### Integrations
 
@@ -55,4 +55,4 @@ gqlkit の未実装機能・既知の問題・改善項目を管理するファ�
 
 ---
 
-_Last updated: 2026-01-01_
+_Last updated: 2026-01-02_

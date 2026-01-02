@@ -20,37 +20,32 @@ src/
 
 ```ts
 // src/gql/types/User.ts
+import type { IDString } from "@gqlkit-ts/runtime";
+
 export type User = {
-  id: string
-  username: string
-}
+  id: IDString;
+  username: string;
+};
 ```
 
 ### 2. Define resolver signatures and implementations in `src/gql/resolvers`.
 
 ```ts
 // src/gql/resolvers/User.ts
-import { User } from "../types/User";
+import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import type { User } from "../types/User";
 
-export type QueryResolver = {
-  me: () => User;
-};
+type Context = { currentUserId: string };
 
-export type UserResolver = {
-  profileUrl: (user: User) => string
-};
+const { defineQuery, defineField } = createGqlkitApis<Context>();
 
-export const queryResolver: QueryResolver = {
-  me() {
-    return { id: "1", username: "alice" };
-  },
-};
+export const me = defineQuery<NoArgs, User>((_root, _args, ctx) => {
+  return { id: ctx.currentUserId as IDString, username: "alice" };
+});
 
-export const userResolver: UserResolver = {
-  profileUrl(user) {
-    return `https://example.com/users/${user.username}`;
-  },
-};
+export const profileUrl = defineField<User, NoArgs, string>((parent) => {
+  return `https://example.com/users/${parent.username}`;
+});
 ```
 
 ### 3. Generate schema wiring code.
@@ -94,68 +89,74 @@ Type definitions are plain TypeScript type (and optionally interface) exports.
 Example:
 
 ```ts
+import type { IDString, Int } from "@gqlkit-ts/runtime";
+
 export type Post = {
-  id: string
-  title: string
-  author: User
-}
+  id: IDString;
+  title: string;
+  viewCount: Int;
+  author: User;
+};
 ```
 
-### 3) Resolver files define “resolver groups”
+#### Branded scalar types
 
-Resolvers are discovered by exported resolver type aliases and exported resolver values.
+gqlkit provides branded types to explicitly specify GraphQL scalar mappings:
 
-In each resolver module:
+| TypeScript type | GraphQL type |
+|-----------------|--------------|
+| `IDString`      | `ID!`        |
+| `IDNumber`      | `ID!`        |
+| `Int`           | `Int!`       |
+| `Float`         | `Float!`     |
+| `string`        | `String!`    |
+| `number`        | `Float!`     |
+| `boolean`       | `Boolean!`   |
 
-- You define a resolver signature type, e.g. `export type UserResolver = { ... }`
-- You export an implementation object that matches it, e.g. `export const userResolver: UserResolver = { ... }`
+### 3) Resolver definitions
 
-Resolver groups are matched by name:
+Resolvers are defined using the `@gqlkit-ts/runtime` API.
 
-- `QueryResolver` → GraphQL Query
-- `MutationResolver` → GraphQL Mutation
-- `<TypeName>Resolver` → GraphQL object type `<TypeName>`
+```ts
+import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
 
-So in the example above:
+type Context = { userId: string };
 
-- `QueryResolver` maps to `Query`
-- `UserResolver` maps to `User`
+const { defineQuery, defineMutation, defineField } = createGqlkitApis<Context>();
+```
+
+Each resolver export name becomes the GraphQL field name:
+
+- `export const me = defineQuery<...>(...)` → `Query.me`
+- `export const createUser = defineMutation<...>(...)` → `Mutation.createUser`
+- `export const profileUrl = defineField<User, ...>(...)` → `User.profileUrl`
 
 ### 4) Resolver function signature rules
 
 Resolver signatures must be explicit and type-checkable.
 
-Supported minimal signatures:
+```ts
+// Query/Mutation: (root, args, ctx, info) => Return
+export const me = defineQuery<NoArgs, User>(
+  (root, args, ctx, info) => { ... }
+);
 
-- Root fields (Query/Mutation):
-    - `field: () => Return`
-    - (optionally later) `field: (args: Args, ctx: Context, info: GraphQLResolveInfo) => Return`
-- Object fields:
-    - field: `(parent: Parent) => Return`
-    - (optionally later) `field: (parent: Parent, args: Args, ctx: Context, info: GraphQLResolveInfo) => Return`
+export const createUser = defineMutation<{ name: string }, User>(
+  (root, args, ctx, info) => { ... }
+);
 
-In your current design, `UserResolver.profileUrl` is:
-
+// Field: (parent, args, ctx, info) => Return
+export const profileUrl = defineField<User, NoArgs, string>(
+  (parent, args, ctx, info) => { ... }
+);
 ```
-profileUrl: (user: User) => string
-```
 
-This implies:
+Type parameters:
+- `defineQuery<TArgs, TResult>` - Query field resolver
+- `defineMutation<TArgs, TResult>` - Mutation field resolver
+- `defineField<TParent, TArgs, TResult>` - Object type field resolver
 
-- parent type = `User`
-- return type = `String!` (depending on nullability rules)
-
-### 5) Naming conventions for exported resolver values
-
-To keep generation simple and avoid configuration:
-- Resolver implementation exports should be named:
-    - `queryResolver` for `QueryResolver`
-    - `mutationResolver` for `MutationResolver`
-    - `userResolver` for `UserResolver` (lower camel case of type name)
-
-This is the recommended convention because it enables a strict 1:1 mapping without additional metadata.
-
-(If you want flexibility later, you can add an escape hatch via a small config file, but the default path should remain convention-driven.)
+Use `NoArgs` type when the field has no arguments.
 
 ## `gqlkit gen`
 
@@ -169,9 +170,9 @@ This is the recommended convention because it enables a strict 1:1 mapping witho
   - no extra fields / missing fields (depending on policy)
 4. Generates:
   - GraphQL schema AST (DocumentNode) representing type definitions
-  - Resolver map object aggregating all resolver implementations
+  - GraphQL SDL file (optional)
 
-Example generated output (illustrative):
+Example generated output:
 
 ```ts
 // src/gqlkit/generated/schema.ts
@@ -180,25 +181,81 @@ import type { DocumentNode } from "graphql";
 export const typeDefs: DocumentNode = /* parsed schema AST */;
 ```
 
-```ts
-// src/gqlkit/generated/resolvers.ts
-export const resolvers = {
-  Query: {
-    me: queryResolver.me,
-  },
-  User: {
-    profileUrl: userResolver.profileUrl,
-  },
-};
+```graphql
+# src/gqlkit/generated/schema.graphql
+type Query {
+  me: User!
+}
+
+type User {
+  id: ID!
+  username: String!
+  profileUrl: String!
+}
 ```
 
 Output directory
 
 By default:
 
-- `src/gqlkit/generated/**`
+- `src/gqlkit/generated/schema.ts` - TypeScript AST
+- `src/gqlkit/generated/schema.graphql` - SDL file
 
 (Keep generated code committed or not committed depending on your workflow; gqlkit should support both.)
+
+## Configuration
+
+gqlkit can be configured via `gqlkit.config.ts`:
+
+```ts
+// gqlkit.config.ts
+import { defineConfig } from "@gqlkit-ts/cli";
+
+export default defineConfig({
+  scalars: [
+    {
+      graphqlName: "DateTime",
+      type: { from: "./src/types/scalars", name: "DateTime" },
+    },
+  ],
+  output: {
+    ast: "src/gqlkit/generated/schema.ts",
+    sdl: "src/gqlkit/generated/schema.graphql",
+  },
+});
+```
+
+### Custom scalar types
+
+Map TypeScript types to GraphQL custom scalars:
+
+```ts
+export default defineConfig({
+  scalars: [
+    {
+      graphqlName: "DateTime",
+      type: { from: "./src/types/scalars", name: "DateTime" },
+    },
+    {
+      graphqlName: "UUID",
+      type: { from: "./src/types/scalars", name: "UUID" },
+    },
+  ],
+});
+```
+
+### Output paths
+
+Customize output file locations or disable outputs:
+
+```ts
+export default defineConfig({
+  output: {
+    ast: "generated/schema.ts",  // Custom path
+    sdl: null,                    // Disable SDL output
+  },
+});
+```
 
 ## Validation & errors (recommended behavior)
 
