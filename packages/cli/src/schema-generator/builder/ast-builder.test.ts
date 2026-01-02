@@ -27,10 +27,29 @@ import {
   buildObjectTypeDefinitionNode,
   buildObjectTypeExtensionNode,
   buildScalarTypeDefinitionNode,
+  buildStringValueNode,
   buildUnionTypeDefinitionNode,
 } from "./ast-builder.js";
 
 describe("ASTBuilder", () => {
+  describe("buildStringValueNode", () => {
+    it("should always use block string format for single-line description", () => {
+      const node = buildStringValueNode("A user in the system");
+
+      expect(node.kind).toBe(Kind.STRING);
+      expect(node.value).toBe("A user in the system");
+      expect(node.block).toBe(true);
+    });
+
+    it("should use block string format for multi-line description", () => {
+      const node = buildStringValueNode("A user in the system\n\nWith more details");
+
+      expect(node.kind).toBe(Kind.STRING);
+      expect(node.value).toBe("A user in the system\n\nWith more details");
+      expect(node.block).toBe(true);
+    });
+  });
+
   describe("buildNameNode", () => {
     it("should create a NameNode with given value", () => {
       const node = buildNameNode("User");

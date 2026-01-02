@@ -66,11 +66,10 @@ export function buildNameNode(value: string): NameNode {
 }
 
 export function buildStringValueNode(value: string): StringValueNode {
-  const hasNewline = value.includes("\n");
   return {
     kind: Kind.STRING,
     value,
-    block: hasNewline,
+    block: true,
   };
 }
 

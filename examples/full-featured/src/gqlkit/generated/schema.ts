@@ -3,1731 +3,1708 @@
 import type { DocumentNode } from "graphql";
 
 export const typeDefs: DocumentNode = {
-  kind: "Document",
-  definitions: [
+  "kind": "Document",
+  "definitions": [
     {
-      kind: "ScalarTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "DateTime",
-      },
+      "kind": "ScalarTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "DateTime"
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "Comment",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Comment"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "authorId",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "authorId"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "ID",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ID"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "ID of the user who wrote this comment",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the user who wrote this comment",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "body",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "body"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Comment text content",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Comment text content",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "createdAt",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "createdAt"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "DateTime",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "DateTime"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "When the comment was created",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "When the comment was created",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "ID",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ID"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Unique identifier for the comment",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Unique identifier for the comment",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "postId",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "postId"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "ID",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ID"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "ID of the post this comment belongs to",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the post this comment belongs to",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "replies",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "replies"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "ListType",
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "Comment",
-                  },
-                },
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Comment"
+                  }
+                }
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Replies to this comment (nested list)",
-            block: false,
-          },
-        },
+          "description": {
+            "kind": "StringValue",
+            "value": "Replies to this comment (nested list)",
+            "block": true
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value: "A comment on a post\n\nDefined in: src/gql/types/comment.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "A comment on a post\n\nDefined in: src/gql/types/comment.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "Mutation",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Mutation"
       },
-      fields: [],
+      "fields": []
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "Post",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Post"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "authorId",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "authorId"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "ID",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ID"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Post author's ID",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Post author's ID",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "body",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "body"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Post content body",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Post content body",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "createdAt",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "createdAt"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "DateTime",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "DateTime"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "When the post was created",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "When the post was created",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "ID",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ID"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Unique identifier for the post",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Unique identifier for the post",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "publishedAt",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "publishedAt"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "DateTime",
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "DateTime"
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "When the post was published (null if draft)",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "When the post was published (null if draft)",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "status",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "status"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Publication status",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Publication status",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "tags",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "tags"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "ListType",
-              type: {
-                kind: "NamedType",
-                name: {
-                  kind: "Name",
-                  value: "String",
-                },
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String"
+                }
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Tags associated with this post (may contain null for deleted tags)",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Tags associated with this post (may contain null for deleted tags)",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Post title",
-            block: false,
-          },
-        },
+          "description": {
+            "kind": "StringValue",
+            "value": "Post title",
+            "block": true
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value: "A blog post\n\nDefined in: src/gql/types/post.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "A blog post\n\nDefined in: src/gql/types/post.ts",
+        "block": true
+      }
     },
     {
-      kind: "EnumTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "PostStatus",
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "PostStatus"
       },
-      values: [
+      "values": [
         {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "DRAFT",
-          },
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "DRAFT"
+          }
         },
         {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "PUBLISHED",
-          },
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "PUBLISHED"
+          }
         },
         {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "ARCHIVED",
-          },
-        },
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "ARCHIVED"
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value: "Post publication status\n\nDefined in: src/gql/types/status.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Post publication status\n\nDefined in: src/gql/types/status.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "Query",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
       },
-      fields: [],
+      "fields": []
     },
     {
-      kind: "EnumTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "Role",
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Role"
       },
-      values: [
+      "values": [
         {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "ADMIN",
-          },
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "ADMIN"
+          }
         },
         {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "EDITOR",
-          },
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "EDITOR"
+          }
         },
         {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "VIEWER",
-          },
-        },
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "VIEWER"
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value: "User role in the system\n\nDefined in: src/gql/types/role.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "User role in the system\n\nDefined in: src/gql/types/role.ts",
+        "block": true
+      }
     },
     {
-      kind: "UnionTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "SearchResult",
+      "kind": "UnionTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "SearchResult"
       },
-      types: [
+      "types": [
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "Comment",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Comment"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "Post",
-          },
-        },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Post"
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Union type representing any content that can be searched\n\nDefined in: src/gql/types/content.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Union type representing any content that can be searched\n\nDefined in: src/gql/types/content.ts",
+        "block": true
+      }
     },
     {
-      kind: "UnionTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "TimelineItem",
+      "kind": "UnionTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "TimelineItem"
       },
-      types: [
+      "types": [
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "Comment",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Comment"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "Post",
-          },
-        },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Post"
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Timeline content (posts and comments mixed)\n\nDefined in: src/gql/types/content.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Timeline content (posts and comments mixed)\n\nDefined in: src/gql/types/content.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "User",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "User"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "age",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "age"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Int",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Int"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "User's age in years",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "User's age in years",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "createdAt",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "createdAt"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "DateTime",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "DateTime"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "When the user was created",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "When the user was created",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "email",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "email"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "User's email address (null if not verified)",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "User's email address (null if not verified)",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "ID",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ID"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Unique identifier for the user",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Unique identifier for the user",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "name",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "name"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "User's display name",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "User's display name",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "role",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "role"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "User's role",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "User's role",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "status",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "status"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Current account status",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Current account status",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "username",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "username"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "User's legacy username",
-            block: false,
+          "description": {
+            "kind": "StringValue",
+            "value": "User's legacy username",
+            "block": true
           },
-          directives: [
+          "directives": [
             {
-              kind: "Directive",
-              name: {
-                kind: "Name",
-                value: "deprecated",
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
               },
-              arguments: [
+              "arguments": [
                 {
-                  kind: "Argument",
-                  name: {
-                    kind: "Name",
-                    value: "reason",
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
                   },
-                  value: {
-                    kind: "StringValue",
-                    value: "Use `name` field instead",
-                    block: false,
-                  },
-                },
-              ],
-            },
-          ],
-        },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use `name` field instead",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value: "A user in the system\n\nDefined in: src/gql/types/user.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "A user in the system\n\nDefined in: src/gql/types/user.ts",
+        "block": true
+      }
     },
     {
-      kind: "EnumTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "UserStatus",
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "UserStatus"
       },
-      values: [
+      "values": [
         {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "ACTIVE",
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "ACTIVE"
           },
-          description: {
-            kind: "StringValue",
-            value: "User is active and can access the system",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "User is active and can access the system",
+            "block": true
+          }
         },
         {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "INACTIVE",
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "INACTIVE"
           },
-          description: {
-            kind: "StringValue",
-            value: "User is temporarily inactive",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "User is temporarily inactive",
+            "block": true
+          }
         },
         {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "SUSPENDED",
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "SUSPENDED"
           },
-          description: {
-            kind: "StringValue",
-            value: "User account is suspended",
-            block: false,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "User account is suspended",
+            "block": true
+          }
         },
         {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "PENDING",
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "PENDING"
           },
-          description: {
-            kind: "StringValue",
-            value: "User account is pending verification",
-            block: false,
+          "description": {
+            "kind": "StringValue",
+            "value": "User account is pending verification",
+            "block": true
           },
-          directives: [
+          "directives": [
             {
-              kind: "Directive",
-              name: {
-                kind: "Name",
-                value: "deprecated",
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
               },
-              arguments: [
+              "arguments": [
                 {
-                  kind: "Argument",
-                  name: {
-                    kind: "Name",
-                    value: "reason",
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
                   },
-                  value: {
-                    kind: "StringValue",
-                    value: "Use `Inactive` status instead",
-                    block: false,
-                  },
-                },
-              ],
-            },
-          ],
-        },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use `Inactive` status instead",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value: "User account status\n\nDefined in: src/gql/types/status.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "User account status\n\nDefined in: src/gql/types/status.ts",
+        "block": true
+      }
     },
     {
-      kind: "InputObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "CreatePostInput",
+      "kind": "InputObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "CreatePostInput"
       },
-      fields: [
+      "fields": [
         {
-          kind: "InputValueDefinition",
-          name: {
-            kind: "Name",
-            value: "body",
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "body"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "InputValueDefinition",
-          name: {
-            kind: "Name",
-            value: "tags",
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "tags"
           },
-          type: {
-            kind: "ListType",
-            type: {
-              kind: "NonNullType",
-              type: {
-                kind: "NamedType",
-                name: {
-                  kind: "Name",
-                  value: "String",
-                },
-              },
-            },
-          },
+          "type": {
+            "kind": "ListType",
+            "type": {
+              "kind": "NonNullType",
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String"
+                }
+              }
+            }
+          }
         },
         {
-          kind: "InputValueDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Input for creating a new post\n\nDefined in: src/gql/types/post.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Input for creating a new post\n\nDefined in: src/gql/types/post.ts",
+        "block": true
+      }
     },
     {
-      kind: "InputObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "CreateUserInput",
+      "kind": "InputObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "CreateUserInput"
       },
-      fields: [
+      "fields": [
         {
-          kind: "InputValueDefinition",
-          name: {
-            kind: "Name",
-            value: "age",
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "age"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Int",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Int"
+              }
+            }
+          }
         },
         {
-          kind: "InputValueDefinition",
-          name: {
-            kind: "Name",
-            value: "email",
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "email"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
         },
         {
-          kind: "InputValueDefinition",
-          name: {
-            kind: "Name",
-            value: "name",
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "name"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "InputValueDefinition",
-          name: {
-            kind: "Name",
-            value: "role",
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "role"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Input for creating a new user\n\nDefined in: src/gql/types/user.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Input for creating a new user\n\nDefined in: src/gql/types/user.ts",
+        "block": true
+      }
     },
     {
-      kind: "InputObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "UpdateUserInput",
+      "kind": "InputObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "UpdateUserInput"
       },
-      fields: [
+      "fields": [
         {
-          kind: "InputValueDefinition",
-          name: {
-            kind: "Name",
-            value: "age",
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "age"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Int",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int"
+            }
+          }
         },
         {
-          kind: "InputValueDefinition",
-          name: {
-            kind: "Name",
-            value: "email",
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "email"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
         },
         {
-          kind: "InputValueDefinition",
-          name: {
-            kind: "Name",
-            value: "name",
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "name"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Input for updating user profile\n\nDefined in: src/gql/types/user.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Input for updating user profile\n\nDefined in: src/gql/types/user.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeExtension",
-      name: {
-        kind: "Name",
-        value: "Mutation",
+      "kind": "ObjectTypeExtension",
+      "name": {
+        "kind": "Name",
+        "value": "Mutation"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "createPost",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "createPost"
           },
-          arguments: [
+          "arguments": [
             {
-              kind: "InputValueDefinition",
-              name: {
-                kind: "Name",
-                value: "input",
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "input"
               },
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "CreatePostInput",
-                  },
-                },
-              },
-            },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "CreatePostInput"
+                  }
+                }
+              }
+            }
           ],
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Post",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Post"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Create a new post\n\nDefined in: src/gql/resolvers/mutations.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Create a new post\n\nDefined in: src/gql/resolvers/mutations.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "createUser",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "createUser"
           },
-          arguments: [
+          "arguments": [
             {
-              kind: "InputValueDefinition",
-              name: {
-                kind: "Name",
-                value: "input",
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "input"
               },
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "CreateUserInput",
-                  },
-                },
-              },
-            },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "CreateUserInput"
+                  }
+                }
+              }
+            }
           ],
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "User",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "User"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Create a new user\n\nDefined in: src/gql/resolvers/mutations.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Create a new user\n\nDefined in: src/gql/resolvers/mutations.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "deleteUser",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "deleteUser"
           },
-          arguments: [
+          "arguments": [
             {
-              kind: "InputValueDefinition",
-              name: {
-                kind: "Name",
-                value: "id",
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "id"
               },
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "String",
-                  },
-                },
-              },
-            },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
+                }
+              }
+            }
           ],
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Delete a user by ID\n\nDefined in: src/gql/resolvers/mutations.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Delete a user by ID\n\nDefined in: src/gql/resolvers/mutations.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "updateUser",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "updateUser"
           },
-          arguments: [
+          "arguments": [
             {
-              kind: "InputValueDefinition",
-              name: {
-                kind: "Name",
-                value: "id",
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "id"
               },
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "String",
-                  },
-                },
-              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
+                }
+              }
             },
             {
-              kind: "InputValueDefinition",
-              name: {
-                kind: "Name",
-                value: "input",
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "input"
               },
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "UpdateUserInput",
-                  },
-                },
-              },
-            },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "UpdateUserInput"
+                  }
+                }
+              }
+            }
           ],
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "User",
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "User"
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Update an existing user\n\nDefined in: src/gql/resolvers/mutations.ts",
-            block: true,
-          },
-        },
-      ],
+          "description": {
+            "kind": "StringValue",
+            "value": "Update an existing user\n\nDefined in: src/gql/resolvers/mutations.ts",
+            "block": true
+          }
+        }
+      ]
     },
     {
-      kind: "ObjectTypeExtension",
-      name: {
-        kind: "Name",
-        value: "Post",
+      "kind": "ObjectTypeExtension",
+      "name": {
+        "kind": "Name",
+        "value": "Post"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "author",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "author"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "User",
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "User"
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Get the author of this post\n\nDefined in: src/gql/resolvers/post-fields.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Get the author of this post\n\nDefined in: src/gql/resolvers/post-fields.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "comments",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "comments"
           },
-          arguments: [
+          "arguments": [
             {
-              kind: "InputValueDefinition",
-              name: {
-                kind: "Name",
-                value: "limit",
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "limit"
               },
-              type: {
-                kind: "NamedType",
-                name: {
-                  kind: "Name",
-                  value: "Float",
-                },
-              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Float"
+                }
+              }
             },
             {
-              kind: "InputValueDefinition",
-              name: {
-                kind: "Name",
-                value: "includeReplies",
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "includeReplies"
               },
-              type: {
-                kind: "NamedType",
-                name: {
-                  kind: "Name",
-                  value: "String",
-                },
-              },
-            },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String"
+                }
+              }
+            }
           ],
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "ListType",
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "Comment",
-                  },
-                },
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Comment"
+                  }
+                }
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Get comments on this post with optional pagination\n\nDefined in: src/gql/resolvers/post-fields.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Get comments on this post with optional pagination\n\nDefined in: src/gql/resolvers/post-fields.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "excerpt",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "excerpt"
           },
-          arguments: [
+          "arguments": [
             {
-              kind: "InputValueDefinition",
-              name: {
-                kind: "Name",
-                value: "length",
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "length"
               },
-              type: {
-                kind: "NamedType",
-                name: {
-                  kind: "Name",
-                  value: "Float",
-                },
-              },
-            },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Float"
+                }
+              }
+            }
           ],
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Get the excerpt of the post body\n\nDefined in: src/gql/resolvers/post-fields.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Get the excerpt of the post body\n\nDefined in: src/gql/resolvers/post-fields.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "isPublished",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "isPublished"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Check if the post is published\n\nDefined in: src/gql/resolvers/post-fields.ts",
-            block: true,
-          },
-        },
-      ],
+          "description": {
+            "kind": "StringValue",
+            "value": "Check if the post is published\n\nDefined in: src/gql/resolvers/post-fields.ts",
+            "block": true
+          }
+        }
+      ]
     },
     {
-      kind: "ObjectTypeExtension",
-      name: {
-        kind: "Name",
-        value: "Query",
+      "kind": "ObjectTypeExtension",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "allPosts",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "allPosts"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "ListType",
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "Post",
-                  },
-                },
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Post"
+                  }
+                }
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Get all posts\n\nDefined in: src/gql/resolvers/queries.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Get all posts\n\nDefined in: src/gql/resolvers/queries.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "allUsers",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "allUsers"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "ListType",
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "User",
-                  },
-                },
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "User"
+                  }
+                }
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Get all users\n\nDefined in: src/gql/resolvers/queries.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Get all users\n\nDefined in: src/gql/resolvers/queries.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "me",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "me"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "User",
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "User"
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Get the currently authenticated user\n\nDefined in: src/gql/resolvers/queries.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Get the currently authenticated user\n\nDefined in: src/gql/resolvers/queries.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "post",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "post"
           },
-          arguments: [
+          "arguments": [
             {
-              kind: "InputValueDefinition",
-              name: {
-                kind: "Name",
-                value: "id",
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "id"
               },
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "String",
-                  },
-                },
-              },
-            },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
+                }
+              }
+            }
           ],
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Post",
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Post"
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Get a post by ID\n\nDefined in: src/gql/resolvers/queries.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Get a post by ID\n\nDefined in: src/gql/resolvers/queries.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "search",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "search"
           },
-          arguments: [
+          "arguments": [
             {
-              kind: "InputValueDefinition",
-              name: {
-                kind: "Name",
-                value: "query",
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "query"
               },
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "String",
-                  },
-                },
-              },
-            },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
+                }
+              }
+            }
           ],
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "ListType",
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "String",
-                  },
-                },
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
+                }
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Search for content (posts and comments)\n\nDefined in: src/gql/resolvers/queries.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Search for content (posts and comments)\n\nDefined in: src/gql/resolvers/queries.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "user",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "user"
           },
-          arguments: [
+          "arguments": [
             {
-              kind: "InputValueDefinition",
-              name: {
-                kind: "Name",
-                value: "id",
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "id"
               },
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "String",
-                  },
-                },
-              },
-            },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
+                }
+              }
+            }
           ],
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "User",
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "User"
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Get a user by ID\n\nDefined in: src/gql/resolvers/queries.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Get a user by ID\n\nDefined in: src/gql/resolvers/queries.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "users_",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "users_"
           },
-          arguments: [
+          "arguments": [
             {
-              kind: "InputValueDefinition",
-              name: {
-                kind: "Name",
-                value: "limit",
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "limit"
               },
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "Float",
-                  },
-                },
-              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Float"
+                  }
+                }
+              }
             },
             {
-              kind: "InputValueDefinition",
-              name: {
-                kind: "Name",
-                value: "offset",
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "offset"
               },
-              type: {
-                kind: "NamedType",
-                name: {
-                  kind: "Name",
-                  value: "Float",
-                },
-              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Float"
+                }
+              }
             },
             {
-              kind: "InputValueDefinition",
-              name: {
-                kind: "Name",
-                value: "status",
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "status"
               },
-              type: {
-                kind: "NamedType",
-                name: {
-                  kind: "Name",
-                  value: "String",
-                },
-              },
-            },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String"
+                }
+              }
+            }
           ],
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "ListType",
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "User",
-                  },
-                },
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "User"
+                  }
+                }
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "List users with pagination\n\nDefined in: src/gql/resolvers/queries.ts",
-            block: true,
-          },
-        },
-      ],
+          "description": {
+            "kind": "StringValue",
+            "value": "List users with pagination\n\nDefined in: src/gql/resolvers/queries.ts",
+            "block": true
+          }
+        }
+      ]
     },
     {
-      kind: "ObjectTypeExtension",
-      name: {
-        kind: "Name",
-        value: "User",
+      "kind": "ObjectTypeExtension",
+      "name": {
+        "kind": "Name",
+        "value": "User"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "displayName",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "displayName"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Get user's display name with role suffix\n\nDefined in: src/gql/resolvers/user-fields.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Get user's display name with role suffix\n\nDefined in: src/gql/resolvers/user-fields.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "isAdmin",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "isAdmin"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Check if the user is an admin\n\nDefined in: src/gql/resolvers/user-fields.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Check if the user is an admin\n\nDefined in: src/gql/resolvers/user-fields.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "postCount",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "postCount"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Float",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Get the count of posts by this user\n\nDefined in: src/gql/resolvers/user-fields.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Get the count of posts by this user\n\nDefined in: src/gql/resolvers/user-fields.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "posts",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "posts"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "ListType",
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "Post",
-                  },
-                },
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Post"
+                  }
+                }
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "Get posts authored by this user\n\nDefined in: src/gql/resolvers/user-fields.ts",
-            block: true,
-          },
-        },
-      ],
-    },
-  ],
+          "description": {
+            "kind": "StringValue",
+            "value": "Get posts authored by this user\n\nDefined in: src/gql/resolvers/user-fields.ts",
+            "block": true
+          }
+        }
+      ]
+    }
+  ]
 } as DocumentNode;
