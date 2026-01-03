@@ -44,6 +44,7 @@ jobs:
     name: test / Node.js ${{ matrix.node-version }} / ${{ matrix.os }}
     permissions:
       contents: read
+      pull-requests: write
     env:
       COVERAGE: ${{ matrix.node-version == 'lts/*' && matrix.os == 'ubuntu-latest' }}
     steps:
@@ -60,6 +61,7 @@ jobs:
           pnpm build
           pnpm test --coverage=${COVERAGE}
       - uses: k1LoW/octocov-action@v1
+        if: matrix.node-version == 'lts/*' && matrix.os == 'ubuntu-latest'
 
   status-check:
     runs-on: ubuntu-latest
