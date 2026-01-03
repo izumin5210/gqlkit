@@ -352,7 +352,7 @@ function extractFieldsFromType(
   return { fields, unknownBrands };
 }
 
-export function isStringEnum(node: ts.Node): boolean {
+function isStringEnum(node: ts.Node): boolean {
   if (!ts.isEnumDeclaration(node)) return false;
   const members = node.members;
   if (members.length === 0) return false;
@@ -363,7 +363,7 @@ export function isStringEnum(node: ts.Node): boolean {
   });
 }
 
-export function isNumericEnum(node: ts.Node): boolean {
+function isNumericEnum(node: ts.Node): boolean {
   if (!ts.isEnumDeclaration(node)) return false;
   const members = node.members;
   if (members.length === 0) return true;
@@ -378,7 +378,7 @@ export function isNumericEnum(node: ts.Node): boolean {
   });
 }
 
-export function isHeterogeneousEnum(node: ts.Node): boolean {
+function isHeterogeneousEnum(node: ts.Node): boolean {
   if (!ts.isEnumDeclaration(node)) return false;
   const members = node.members;
   if (members.length <= 1) return false;
@@ -405,13 +405,13 @@ export function isHeterogeneousEnum(node: ts.Node): boolean {
   return false;
 }
 
-export function isConstEnum(node: ts.Node): boolean {
+function isConstEnum(node: ts.Node): boolean {
   if (!ts.isEnumDeclaration(node)) return false;
   const modifiers = ts.getCombinedModifierFlags(node);
   return (modifiers & ts.ModifierFlags.Const) !== 0;
 }
 
-export function isStringLiteralUnion(
+function isStringLiteralUnion(
   type: ts.Type,
   _checker: ts.TypeChecker,
 ): boolean {

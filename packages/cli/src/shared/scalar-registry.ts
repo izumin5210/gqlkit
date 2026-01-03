@@ -70,7 +70,7 @@ export interface ScalarRegistry {
  * Standard scalar mappings for the 4 branded types provided by @gqlkit-ts/runtime.
  * This map is immutable and serves as the default mapping configuration.
  */
-export const STANDARD_SCALAR_MAPPINGS: ReadonlyMap<string, ScalarMappingInfo> =
+const STANDARD_SCALAR_MAPPINGS: ReadonlyMap<string, ScalarMappingInfo> =
   new Map<string, ScalarMappingInfo>([
     [
       "IDString",
@@ -175,7 +175,7 @@ function resolveModulePath(
  * The registry manages both standard branded types from @gqlkit-ts/runtime
  * and custom scalar mappings from the config file.
  */
-export function createScalarRegistry(
+function createScalarRegistry(
   config: ScalarRegistryConfig,
 ): ScalarRegistry {
   const { program, configDir, customScalars } = config;

@@ -229,7 +229,7 @@ function convertArgsToInputValues(
   }));
 }
 
-export async function extractResolvers(
+async function extractResolvers(
   options: ExtractResolversOptions,
 ): Promise<ExtractResolversResult> {
   const allDiagnostics: Diagnostic[] = [];

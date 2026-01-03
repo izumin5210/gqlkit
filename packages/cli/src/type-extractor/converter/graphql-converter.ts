@@ -37,7 +37,7 @@ function isInputTypeName(name: string): boolean {
   return name.endsWith("Input");
 }
 
-export function toScreamingSnakeCase(value: string): string {
+function toScreamingSnakeCase(value: string): string {
   return value
     .replace(/[-\s]+/g, "_")
     .replace(/([a-z])([A-Z])/g, "$1_$2")
@@ -45,7 +45,7 @@ export function toScreamingSnakeCase(value: string): string {
     .toUpperCase();
 }
 
-export function isValidGraphQLEnumValue(value: string): boolean {
+function isValidGraphQLEnumValue(value: string): boolean {
   if (value.length === 0) return false;
   return GRAPHQL_ENUM_VALUE_PATTERN.test(value);
 }

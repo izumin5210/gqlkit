@@ -1,7 +1,7 @@
 export {
   type ExtractTypesOptions,
   type ExtractTypesResult,
-  extractTypes,
+  
 } from "./extract-types.js";
 
 export type {

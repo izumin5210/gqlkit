@@ -58,14 +58,14 @@ function appendSourceLocation(
   return sourceLocation;
 }
 
-export function buildNameNode(value: string): NameNode {
+function buildNameNode(value: string): NameNode {
   return {
     kind: Kind.NAME,
     value,
   };
 }
 
-export function buildStringValueNode(value: string): StringValueNode {
+function buildStringValueNode(value: string): StringValueNode {
   return {
     kind: Kind.STRING,
     value,
@@ -93,14 +93,14 @@ function buildDeprecatedDirective(
   };
 }
 
-export function buildNamedTypeNode(typeName: string): NamedTypeNode {
+function buildNamedTypeNode(typeName: string): NamedTypeNode {
   return {
     kind: Kind.NAMED_TYPE,
     name: buildNameNode(typeName),
   };
 }
 
-export function buildListTypeNode(
+function buildListTypeNode(
   innerType: NamedTypeNode | NonNullTypeNode,
 ): ListTypeNode {
   return {
@@ -109,7 +109,7 @@ export function buildListTypeNode(
   };
 }
 
-export function buildNonNullTypeNode(
+function buildNonNullTypeNode(
   innerType: NamedTypeNode | ListTypeNode,
 ): NonNullTypeNode {
   return {
@@ -118,7 +118,7 @@ export function buildNonNullTypeNode(
   };
 }
 
-export function buildFieldTypeNode(fieldType: GraphQLFieldType): TypeNode {
+function buildFieldTypeNode(fieldType: GraphQLFieldType): TypeNode {
   const { typeName, nullable, list, listItemNullable } = fieldType;
 
   if (list) {
@@ -136,7 +136,7 @@ export function buildFieldTypeNode(fieldType: GraphQLFieldType): TypeNode {
   return nullable ? namedType : buildNonNullTypeNode(namedType);
 }
 
-export function buildInputValueDefinitionNode(
+function buildInputValueDefinitionNode(
   inputValue: GraphQLInputValue,
 ): InputValueDefinitionNode {
   const directives: ConstDirectiveNode[] = [];
@@ -176,7 +176,7 @@ function buildBaseFieldDefinitionNode(field: BaseField): FieldDefinitionNode {
   };
 }
 
-export function buildFieldDefinitionNode(
+function buildFieldDefinitionNode(
   field: ExtensionField,
   sourceRoot?: string,
 ): FieldDefinitionNode {
@@ -203,7 +203,7 @@ export function buildFieldDefinitionNode(
   };
 }
 
-export function buildObjectTypeDefinitionNode(
+function buildObjectTypeDefinitionNode(
   baseType: BaseType,
   sourceRoot?: string,
 ): ObjectTypeDefinitionNode {
@@ -228,7 +228,7 @@ export function buildObjectTypeDefinitionNode(
   };
 }
 
-export function buildUnionTypeDefinitionNode(
+function buildUnionTypeDefinitionNode(
   baseType: BaseType,
   sourceRoot?: string,
 ): UnionTypeDefinitionNode {
@@ -250,7 +250,7 @@ export function buildUnionTypeDefinitionNode(
   };
 }
 
-export function buildEnumValueDefinitionNode(
+function buildEnumValueDefinitionNode(
   value: EnumValueInfo,
 ): EnumValueDefinitionNode {
   const directives: ConstDirectiveNode[] = [];
@@ -268,7 +268,7 @@ export function buildEnumValueDefinitionNode(
   };
 }
 
-export function buildEnumTypeDefinitionNode(
+function buildEnumTypeDefinitionNode(
   baseType: BaseType,
   sourceRoot?: string,
 ): EnumTypeDefinitionNode {
@@ -288,7 +288,7 @@ export function buildEnumTypeDefinitionNode(
   };
 }
 
-export function buildScalarTypeDefinitionNode(
+function buildScalarTypeDefinitionNode(
   name: string,
   description?: string,
 ): ScalarTypeDefinitionNode {
@@ -312,7 +312,7 @@ function buildInputFieldDefinitionNode(
   };
 }
 
-export function buildInputObjectTypeDefinitionNode(
+function buildInputObjectTypeDefinitionNode(
   inputType: InputType,
   sourceRoot?: string,
 ): InputObjectTypeDefinitionNode {
@@ -332,7 +332,7 @@ export function buildInputObjectTypeDefinitionNode(
   };
 }
 
-export function buildObjectTypeExtensionNode(
+function buildObjectTypeExtensionNode(
   typeExtension: TypeExtension,
   sourceRoot?: string,
 ): ObjectTypeExtensionNode {

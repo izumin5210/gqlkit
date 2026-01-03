@@ -193,7 +193,7 @@ export function detectBrandedScalar(
  * @param checker - The TypeScript type checker
  * @returns true if the type is a known branded scalar, false otherwise
  */
-export function isBrandedScalarType(
+function isBrandedScalarType(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): boolean {

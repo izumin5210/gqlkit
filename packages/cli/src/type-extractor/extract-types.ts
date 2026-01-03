@@ -20,7 +20,7 @@ export interface ExtractTypesOptions {
 
 export type { ExtractTypesResult };
 
-export async function extractTypes(
+async function extractTypes(
   options: ExtractTypesOptions,
 ): Promise<ExtractTypesResult> {
   const allDiagnostics: Diagnostic[] = [];

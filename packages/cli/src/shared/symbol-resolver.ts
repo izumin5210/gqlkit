@@ -137,7 +137,7 @@ export function resolveSymbolOrigin(
  * @param checker - The TypeScript type checker
  * @returns true if the symbol is from @gqlkit-ts/runtime, false otherwise
  */
-export function isSymbolFromGqlkitRuntime(
+function isSymbolFromGqlkitRuntime(
   symbol: ts.Symbol,
   checker: ts.TypeChecker,
 ): boolean {
