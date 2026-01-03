@@ -1,0 +1,8 @@
+{
+  "compilerOptions": {
+    "target": "INVALID_TARGET_VALUE",
+    "module": "NodeNext",
+    "strict": true
+  },
+  "include": ["types/**/*.ts", "resolvers/**/*.ts"]
+}

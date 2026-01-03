@@ -3,8 +3,8 @@ import { define } from "gunshi";
 import { loadConfig } from "../config-loader/index.js";
 import {
   executeGeneration,
-  writeGeneratedFiles,
   type GenerationConfig,
+  writeGeneratedFiles,
 } from "../gen-orchestrator/orchestrator.js";
 import { createDiagnosticReporter } from "../gen-orchestrator/reporter/diagnostic-reporter.js";
 import { createProgressReporter } from "../gen-orchestrator/reporter/progress-reporter.js";

@@ -1,12 +1,11 @@
-export {
-  type ExtractResolversOptions,
-  type ExtractResolversResult,
-  
-  type GraphQLFieldDefinition,
-  type GraphQLInputValue,
-  type MutationFieldDefinitions,
-  type QueryFieldDefinitions,
-  type TypeExtension,
+export type {
+  ExtractResolversOptions,
+  ExtractResolversResult,
+  GraphQLFieldDefinition,
+  GraphQLInputValue,
+  MutationFieldDefinitions,
+  QueryFieldDefinitions,
+  TypeExtension,
 } from "./extract-resolvers.js";
 
 export type { ScanResult } from "./scanner/file-scanner.js";

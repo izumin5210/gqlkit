@@ -1,21 +1,17 @@
-;
-;
 export {
   type GenerateSchemaInput,
   type GenerateSchemaResult,
   generateSchema,
 } from "./generate-schema.js";
-export {
-  type BaseField,
-  type BaseType,
-  type ExtensionField,
-  type IntegratedResult,
-  
-  type TypeExtension,
+export type {
+  BaseField,
+  BaseType,
+  ExtensionField,
+  IntegratedResult,
+  TypeExtension,
 } from "./integrator/result-integrator.js";
-export {
-  
-  type FieldResolver,
-  type ResolverInfo,
-  type TypeResolvers,
+export type {
+  FieldResolver,
+  ResolverInfo,
+  TypeResolvers,
 } from "./resolver-collector/resolver-collector.js";

@@ -1,9 +1,9 @@
-import { readFile, readdir } from "node:fs/promises";
+import { readdir, readFile } from "node:fs/promises";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import type { ResolvedScalarMapping } from "../config-loader/index.js";
 import type { GqlkitConfig } from "../config/index.js";
+import type { ResolvedScalarMapping } from "../config-loader/index.js";
 import { executeGeneration } from "./orchestrator.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));

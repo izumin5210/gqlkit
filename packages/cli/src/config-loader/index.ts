@@ -7,8 +7,7 @@ export {
   type ResolvedScalarMapping,
 } from "./loader.js";
 
-export {
-  type ValidateConfigOptions,
-  type ValidateConfigResult,
-  
+export type {
+  ValidateConfigOptions,
+  ValidateConfigResult,
 } from "./validator.js";

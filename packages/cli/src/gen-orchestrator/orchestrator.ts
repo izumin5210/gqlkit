@@ -379,19 +379,26 @@ export async function executeGeneration(
     return {
       success: false,
       files: [],
-      diagnostics: [...programResult.diagnostics],
+      diagnostics: normalizeDiagnosticPaths(
+        programResult.diagnostics,
+        config.cwd,
+      ),
     };
   }
 
   const { program } = programResult;
-  const customScalarNames = config.customScalars?.map((s) => s.graphqlName) ?? [];
+  const customScalarNames =
+    config.customScalars?.map((s) => s.graphqlName) ?? [];
 
   const typesResult = extractTypesCore(
     program,
     typeScanResult.files,
     customScalarNames,
   );
-  const resolversResult = extractResolversCore(program, resolverScanResult.files);
+  const resolversResult = extractResolversCore(
+    program,
+    resolverScanResult.files,
+  );
 
   const allDiagnostics = collectAllDiagnostics(typesResult, resolversResult);
 
@@ -471,7 +478,10 @@ export async function writeGeneratedFiles(
 ): Promise<WriteFilesResult> {
   const result = await writeFiles({
     outputDir: config.outputDir,
-    files: config.files.map((f) => ({ filename: f.filename, content: f.content })),
+    files: config.files.map((f) => ({
+      filename: f.filename,
+      content: f.content,
+    })),
   });
 
   return {

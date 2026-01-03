@@ -1,0 +1,12 @@
+[
+  {
+    "code": "UNKNOWN_TARGET_TYPE",
+    "message": "Type extension references unknown type 'UnknownType'",
+    "severity": "error",
+    "location": {
+      "file": "resolvers/unknown.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]
