@@ -1,4 +1,4 @@
-import { relative } from "node:path";
+import { dirname, relative, resolve } from "node:path";
 import type ts from "typescript";
 import type {
   ResolvedOutputConfig,
@@ -31,17 +31,16 @@ import { writeFiles } from "./writer/file-writer.js";
 
 export interface GenerationConfig {
   readonly cwd: string;
-  readonly typesDir: string;
-  readonly resolversDir: string;
-  readonly outputDir: string;
+  readonly sourceDir: string;
+  readonly sourceIgnoreGlobs: ReadonlyArray<string>;
+  readonly output: ResolvedOutputConfig;
   readonly configDir: string | null;
   readonly customScalars: ReadonlyArray<ResolvedScalarMapping> | null;
-  readonly output: ResolvedOutputConfig | null;
   readonly tsconfigPath: string | null;
 }
 
 export interface GeneratedFile {
-  readonly filename: string;
+  readonly filePath: string;
   readonly content: string;
 }
 
@@ -211,32 +210,58 @@ function extractResolversCore(
   };
 }
 
+function buildExcludePaths(
+  cwd: string,
+  output: ResolvedOutputConfig,
+): string[] {
+  const paths: string[] = [];
+  if (output.resolversPath !== null) {
+    paths.push(resolve(cwd, output.resolversPath));
+  }
+  if (output.typeDefsPath !== null) {
+    paths.push(resolve(cwd, output.typeDefsPath));
+  }
+  if (output.schemaPath !== null) {
+    paths.push(resolve(cwd, output.schemaPath));
+  }
+  return paths;
+}
+
+function getOutputDir(output: ResolvedOutputConfig): string {
+  const path = output.resolversPath ?? output.typeDefsPath ?? output.schemaPath;
+  if (path !== null) {
+    return dirname(path);
+  }
+  return "src/gqlkit/__generated__";
+}
+
 export async function executeGeneration(
   config: GenerationConfig,
 ): Promise<GenerationResult> {
-  const typeScanResult = await scanDirectory(config.typesDir);
-  const resolverScanResult = await scanDirectory(config.resolversDir, {
-    excludePatterns: [".test.ts", ".spec.ts"],
+  const absoluteSourceDir = resolve(config.cwd, config.sourceDir);
+
+  const excludePaths = buildExcludePaths(config.cwd, config.output);
+
+  const scanResult = await scanDirectory(absoluteSourceDir, {
+    excludeGlobs: [...config.sourceIgnoreGlobs, "**/*.test.ts", "**/*.spec.ts"],
+    excludePaths,
   });
 
-  const scanDiagnostics: Diagnostic[] = [
-    ...typeScanResult.errors,
-    ...resolverScanResult.errors,
-  ];
-
-  if (scanDiagnostics.length > 0) {
+  if (scanResult.errors.length > 0) {
     return {
       success: false,
       files: [],
-      diagnostics: scanDiagnostics,
+      diagnostics: scanResult.errors,
     };
   }
+
+  const sourceFiles = scanResult.files;
 
   const programResult = createSharedProgram({
     cwd: config.cwd,
     tsconfigPath: config.tsconfigPath ?? null,
-    typeFiles: typeScanResult.files,
-    resolverFiles: resolverScanResult.files,
+    typeFiles: sourceFiles,
+    resolverFiles: sourceFiles,
   });
 
   if (programResult.diagnostics.length > 0 || !programResult.program) {
@@ -254,15 +279,8 @@ export async function executeGeneration(
   const customScalarNames =
     config.customScalars?.map((s) => s.graphqlName) ?? [];
 
-  const typesResult = extractTypesCore(
-    program,
-    typeScanResult.files,
-    customScalarNames,
-  );
-  const resolversResult = extractResolversCore(
-    program,
-    resolverScanResult.files,
-  );
+  const typesResult = extractTypesCore(program, sourceFiles, customScalarNames);
+  const resolversResult = extractResolversCore(program, sourceFiles);
 
   const allDiagnostics = collectAllDiagnostics(typesResult, resolversResult);
 
@@ -281,7 +299,7 @@ export async function executeGeneration(
     resolversResult: resolversResult as Parameters<
       typeof generateSchema
     >[0]["resolversResult"],
-    outputDir: config.outputDir,
+    outputDir: resolve(config.cwd, getOutputDir(config.output)),
     customScalarNames,
     enablePruning: null,
     sourceRoot: config.cwd,
@@ -299,26 +317,26 @@ export async function executeGeneration(
 
   const files: GeneratedFile[] = [];
 
-  const outputAst = config.output?.ast;
-  const outputSdl = config.output?.sdl;
-
-  if (outputAst !== null) {
-    const astFilename =
-      outputAst && typeof outputAst === "string"
-        ? (outputAst.split("/").pop() ?? "schema.ts")
-        : "schema.ts";
-    files.push({ filename: astFilename, content: schemaResult.typeDefsCode });
+  if (config.output.typeDefsPath !== null) {
+    files.push({
+      filePath: resolve(config.cwd, config.output.typeDefsPath),
+      content: schemaResult.typeDefsCode,
+    });
   }
 
-  if (outputSdl !== null) {
-    const sdlFilename =
-      outputSdl && typeof outputSdl === "string"
-        ? (outputSdl.split("/").pop() ?? "schema.graphql")
-        : "schema.graphql";
-    files.push({ filename: sdlFilename, content: schemaResult.sdlContent });
+  if (config.output.schemaPath !== null) {
+    files.push({
+      filePath: resolve(config.cwd, config.output.schemaPath),
+      content: schemaResult.sdlContent,
+    });
   }
 
-  files.push({ filename: "resolvers.ts", content: schemaResult.resolversCode });
+  if (config.output.resolversPath !== null) {
+    files.push({
+      filePath: resolve(config.cwd, config.output.resolversPath),
+      content: schemaResult.resolversCode,
+    });
+  }
 
   return {
     success: true,
@@ -328,7 +346,6 @@ export async function executeGeneration(
 }
 
 export interface WriteFilesConfig {
-  readonly outputDir: string;
   readonly files: ReadonlyArray<GeneratedFile>;
 }
 
@@ -341,9 +358,8 @@ export async function writeGeneratedFiles(
   config: WriteFilesConfig,
 ): Promise<WriteFilesResult> {
   const result = await writeFiles({
-    outputDir: config.outputDir,
     files: config.files.map((f) => ({
-      filename: f.filename,
+      filePath: f.filePath,
       content: f.content,
     })),
   });

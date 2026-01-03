@@ -2,7 +2,7 @@
 
 scalar DateTime
 
-"""Defined in: types/event.ts"""
+"""Defined in: src/gqlkit/event.ts"""
 type Event {
   createdAt: DateTime!
   id: String!
@@ -12,6 +12,6 @@ type Event {
 type Query
 
 extend type Query {
-  """Defined in: resolvers/query.ts"""
+  """Defined in: src/gqlkit/query.ts"""
   events: [Event!]!
 }

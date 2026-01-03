@@ -21,11 +21,14 @@ describe("ConfigLoader", () => {
 
       expect(result.configPath).toBe(undefined);
       expect(result.config).toEqual({
-        scalars: [],
+        sourceDir: "src/gqlkit",
+        sourceIgnoreGlobs: [],
         output: {
-          ast: "src/gqlkit/generated/schema.ts",
-          sdl: "src/gqlkit/generated/schema.graphql",
+          resolversPath: "src/gqlkit/__generated__/resolvers.ts",
+          typeDefsPath: "src/gqlkit/__generated__/typeDefs.ts",
+          schemaPath: "src/gqlkit/__generated__/schema.graphql",
         },
+        scalars: [],
         tsconfigPath: null,
       });
       expect(result.diagnostics.length).toBe(0);
@@ -117,11 +120,14 @@ export default {};
       const result = await loadConfig({ cwd: tempDir });
 
       expect(result.config).toEqual({
-        scalars: [],
+        sourceDir: "src/gqlkit",
+        sourceIgnoreGlobs: [],
         output: {
-          ast: "src/gqlkit/generated/schema.ts",
-          sdl: "src/gqlkit/generated/schema.graphql",
+          resolversPath: "src/gqlkit/__generated__/resolvers.ts",
+          typeDefsPath: "src/gqlkit/__generated__/typeDefs.ts",
+          schemaPath: "src/gqlkit/__generated__/schema.graphql",
         },
+        scalars: [],
         tsconfigPath: null,
       });
       expect(result.diagnostics.length).toBe(0);

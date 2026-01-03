@@ -1,4 +1,4 @@
-import { dirname, join } from "node:path";
+import { dirname } from "node:path";
 import { define } from "gunshi";
 import { loadConfig } from "../config-loader/index.js";
 import {
@@ -40,17 +40,17 @@ export async function runGenCommand(
     ? dirname(configResult.configPath)
     : options.cwd;
 
-  const outputDir = join(options.cwd, "src/gqlkit/generated");
+  const { sourceDir, sourceIgnoreGlobs, output, scalars, tsconfigPath } =
+    configResult.config;
 
   const config: GenerationConfig = {
     cwd: options.cwd,
-    typesDir: join(options.cwd, "src/gql/types"),
-    resolversDir: join(options.cwd, "src/gql/resolvers"),
-    outputDir,
+    sourceDir,
+    sourceIgnoreGlobs,
+    output,
     configDir,
-    customScalars: configResult.config.scalars,
-    output: configResult.config.output,
-    tsconfigPath: configResult.config.tsconfigPath,
+    customScalars: scalars,
+    tsconfigPath,
   };
 
   progressReporter.startPhase("Extracting types");
@@ -69,7 +69,6 @@ export async function runGenCommand(
   }
 
   const writeResult = await writeGeneratedFiles({
-    outputDir,
     files: result.files,
   });
 

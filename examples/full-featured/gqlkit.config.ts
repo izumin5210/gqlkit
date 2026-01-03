@@ -1,6 +1,7 @@
 import type { GqlkitConfig } from "@gqlkit-ts/cli";
 
 const config: GqlkitConfig = {
+  sourceDir: "src/gql",
   scalars: [
     {
       graphqlName: "DateTime",
@@ -11,8 +12,9 @@ const config: GqlkitConfig = {
     },
   ],
   output: {
-    ast: "src/gqlkit/generated/schema.ts",
-    sdl: "src/gqlkit/generated/schema.graphql",
+    resolversPath: "src/gqlkit/__generated__/resolvers.ts",
+    typeDefsPath: "src/gqlkit/__generated__/schema.ts",
+    schemaPath: "src/gqlkit/__generated__/schema.graphql",
   },
 };
 

@@ -237,138 +237,7 @@ describe("ConfigValidator", () => {
       });
     });
 
-    describe("output options", () => {
-      it("should resolve default output paths when output is undefined", () => {
-        const result = validateConfig({
-          config: {},
-          configPath,
-        });
-
-        expect(result.valid).toBe(true);
-        expect(result.resolvedConfig).toBeTruthy();
-        expect(result.resolvedConfig!.output.ast).toBe(
-          "src/gqlkit/generated/schema.ts",
-        );
-        expect(result.resolvedConfig!.output.sdl).toBe(
-          "src/gqlkit/generated/schema.graphql",
-        );
-      });
-
-      it("should resolve default paths when individual options are undefined", () => {
-        const result = validateConfig({
-          config: { output: {} },
-          configPath,
-        });
-
-        expect(result.valid).toBe(true);
-        expect(result.resolvedConfig).toBeTruthy();
-        expect(result.resolvedConfig!.output.ast).toBe(
-          "src/gqlkit/generated/schema.ts",
-        );
-        expect(result.resolvedConfig!.output.sdl).toBe(
-          "src/gqlkit/generated/schema.graphql",
-        );
-      });
-
-      it("should use custom paths when provided", () => {
-        const result = validateConfig({
-          config: {
-            output: {
-              ast: "custom/schema.ts",
-              sdl: "custom/schema.graphql",
-            },
-          },
-          configPath,
-        });
-
-        expect(result.valid).toBe(true);
-        expect(result.resolvedConfig).toBeTruthy();
-        expect(result.resolvedConfig!.output.ast).toBe("custom/schema.ts");
-        expect(result.resolvedConfig!.output.sdl).toBe("custom/schema.graphql");
-      });
-
-      it("should allow null to suppress output", () => {
-        const result = validateConfig({
-          config: {
-            output: {
-              ast: null,
-              sdl: null,
-            },
-          },
-          configPath,
-        });
-
-        expect(result.valid).toBe(true);
-        expect(result.resolvedConfig).toBeTruthy();
-        expect(result.resolvedConfig!.output.ast).toBe(null);
-        expect(result.resolvedConfig!.output.sdl).toBe(null);
-      });
-
-      it("should allow mixed null and string", () => {
-        const result = validateConfig({
-          config: {
-            output: {
-              ast: "schema.ts",
-              sdl: null,
-            },
-          },
-          configPath,
-        });
-
-        expect(result.valid).toBe(true);
-        expect(result.resolvedConfig).toBeTruthy();
-        expect(result.resolvedConfig!.output.ast).toBe("schema.ts");
-        expect(result.resolvedConfig!.output.sdl).toBe(null);
-      });
-
-      it("should return error for invalid ast type (number)", () => {
-        const result = validateConfig({
-          config: {
-            output: {
-              ast: 123,
-            },
-          },
-          configPath,
-        });
-
-        expect(result.valid).toBe(false);
-        expect(result.diagnostics.length).toBe(1);
-        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_OUTPUT_TYPE");
-        expect(result.diagnostics[0]?.message).toContain("output.ast");
-      });
-
-      it("should return error for invalid sdl type (boolean)", () => {
-        const result = validateConfig({
-          config: {
-            output: {
-              sdl: true,
-            },
-          },
-          configPath,
-        });
-
-        expect(result.valid).toBe(false);
-        expect(result.diagnostics.length).toBe(1);
-        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_OUTPUT_TYPE");
-        expect(result.diagnostics[0]?.message).toContain("output.sdl");
-      });
-
-      it("should return error for empty string path", () => {
-        const result = validateConfig({
-          config: {
-            output: {
-              ast: "",
-            },
-          },
-          configPath,
-        });
-
-        expect(result.valid).toBe(false);
-        expect(result.diagnostics.length).toBe(1);
-        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_OUTPUT_PATH");
-        expect(result.diagnostics[0]?.message).toContain("empty");
-      });
-
+    describe("output options (legacy tests - updated to new format)", () => {
       it("should return error for invalid output type (not object)", () => {
         const result = validateConfig({
           config: {
@@ -436,6 +305,291 @@ describe("ConfigValidator", () => {
         expect(result.valid).toBe(false);
         expect(result.diagnostics.length).toBe(1);
         expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_PATH");
+        expect(result.diagnostics[0]?.message).toContain("empty");
+      });
+    });
+
+    describe("sourceDir options", () => {
+      it("should resolve default sourceDir when not provided", () => {
+        const result = validateConfig({
+          config: {},
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.sourceDir).toBe("src/gqlkit");
+      });
+
+      it("should accept valid sourceDir string", () => {
+        const result = validateConfig({
+          config: {
+            sourceDir: "src/graphql",
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.sourceDir).toBe("src/graphql");
+      });
+
+      it("should return error for empty sourceDir", () => {
+        const result = validateConfig({
+          config: {
+            sourceDir: "",
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_SOURCE_DIR");
+        expect(result.diagnostics[0]?.message).toContain("cannot be empty");
+      });
+
+      it("should return error for non-string sourceDir", () => {
+        const result = validateConfig({
+          config: {
+            sourceDir: 123,
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_TYPE");
+        expect(result.diagnostics[0]?.message).toContain("sourceDir");
+      });
+    });
+
+    describe("sourceIgnoreGlobs options", () => {
+      it("should resolve default sourceIgnoreGlobs when not provided", () => {
+        const result = validateConfig({
+          config: {},
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.sourceIgnoreGlobs).toEqual([]);
+      });
+
+      it("should accept valid glob patterns array", () => {
+        const result = validateConfig({
+          config: {
+            sourceIgnoreGlobs: ["**/*.test.ts", "**/__tests__/**"],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.sourceIgnoreGlobs).toEqual([
+          "**/*.test.ts",
+          "**/__tests__/**",
+        ]);
+      });
+
+      it("should accept empty array", () => {
+        const result = validateConfig({
+          config: {
+            sourceIgnoreGlobs: [],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.sourceIgnoreGlobs).toEqual([]);
+      });
+
+      it("should return error for non-array sourceIgnoreGlobs", () => {
+        const result = validateConfig({
+          config: {
+            sourceIgnoreGlobs: "**/*.test.ts",
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_IGNORE_GLOBS");
+        expect(result.diagnostics[0]?.message).toContain(
+          "must be an array of strings",
+        );
+      });
+
+      it("should return error for array with non-string elements", () => {
+        const result = validateConfig({
+          config: {
+            sourceIgnoreGlobs: ["valid", 123, "also-valid"],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_IGNORE_GLOBS");
+        expect(result.diagnostics[0]?.message).toContain(
+          "must be an array of strings",
+        );
+      });
+    });
+
+    describe("new output options (resolversPath, typeDefsPath, schemaPath)", () => {
+      it("should resolve default output paths when output is undefined", () => {
+        const result = validateConfig({
+          config: {},
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.output.resolversPath).toBe(
+          "src/gqlkit/__generated__/resolvers.ts",
+        );
+        expect(result.resolvedConfig!.output.typeDefsPath).toBe(
+          "src/gqlkit/__generated__/typeDefs.ts",
+        );
+        expect(result.resolvedConfig!.output.schemaPath).toBe(
+          "src/gqlkit/__generated__/schema.graphql",
+        );
+      });
+
+      it("should resolve default paths when individual options are undefined", () => {
+        const result = validateConfig({
+          config: { output: {} },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.output.resolversPath).toBe(
+          "src/gqlkit/__generated__/resolvers.ts",
+        );
+        expect(result.resolvedConfig!.output.typeDefsPath).toBe(
+          "src/gqlkit/__generated__/typeDefs.ts",
+        );
+        expect(result.resolvedConfig!.output.schemaPath).toBe(
+          "src/gqlkit/__generated__/schema.graphql",
+        );
+      });
+
+      it("should use custom paths when provided", () => {
+        const result = validateConfig({
+          config: {
+            output: {
+              resolversPath: "custom/resolvers.ts",
+              typeDefsPath: "custom/typeDefs.ts",
+              schemaPath: "custom/schema.graphql",
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.output.resolversPath).toBe(
+          "custom/resolvers.ts",
+        );
+        expect(result.resolvedConfig!.output.typeDefsPath).toBe(
+          "custom/typeDefs.ts",
+        );
+        expect(result.resolvedConfig!.output.schemaPath).toBe(
+          "custom/schema.graphql",
+        );
+      });
+
+      it("should allow null to suppress output for each path", () => {
+        const result = validateConfig({
+          config: {
+            output: {
+              resolversPath: null,
+              typeDefsPath: null,
+              schemaPath: null,
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.output.resolversPath).toBe(null);
+        expect(result.resolvedConfig!.output.typeDefsPath).toBe(null);
+        expect(result.resolvedConfig!.output.schemaPath).toBe(null);
+      });
+
+      it("should allow mixed null and string", () => {
+        const result = validateConfig({
+          config: {
+            output: {
+              resolversPath: "custom/resolvers.ts",
+              typeDefsPath: null,
+              schemaPath: "custom/schema.graphql",
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.output.resolversPath).toBe(
+          "custom/resolvers.ts",
+        );
+        expect(result.resolvedConfig!.output.typeDefsPath).toBe(null);
+        expect(result.resolvedConfig!.output.schemaPath).toBe(
+          "custom/schema.graphql",
+        );
+      });
+
+      it("should return error for invalid resolversPath type", () => {
+        const result = validateConfig({
+          config: {
+            output: {
+              resolversPath: 123,
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_OUTPUT_TYPE");
+        expect(result.diagnostics[0]?.message).toContain(
+          "output.resolversPath",
+        );
+      });
+
+      it("should return error for invalid typeDefsPath type", () => {
+        const result = validateConfig({
+          config: {
+            output: {
+              typeDefsPath: true,
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_OUTPUT_TYPE");
+        expect(result.diagnostics[0]?.message).toContain("output.typeDefsPath");
+      });
+
+      it("should return error for empty string resolversPath", () => {
+        const result = validateConfig({
+          config: {
+            output: {
+              resolversPath: "",
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_OUTPUT_PATH");
         expect(result.diagnostics[0]?.message).toContain("empty");
       });
     });

@@ -16,28 +16,24 @@ describe("gen command", () => {
   });
 
   async function setupProject(): Promise<void> {
-    const typesDir = join(testDir, "src/gql/types");
-    const resolversDir = join(testDir, "src/gql/resolvers");
+    const sourceDir = join(testDir, "src/gqlkit");
 
-    await mkdir(typesDir, { recursive: true });
-    await mkdir(resolversDir, { recursive: true });
+    await mkdir(sourceDir, { recursive: true });
 
     await writeFile(
-      join(typesDir, "user.ts"),
+      join(sourceDir, "types.ts"),
       "export interface User { id: string; name: string; }",
       "utf-8",
     );
 
     await writeFile(
-      join(resolversDir, "query.ts"),
+      join(sourceDir, "resolvers.ts"),
       `
-        export type QueryResolver = {
-          users: () => User[];
-        };
-        export const queryResolver: QueryResolver = {
-          users: () => [],
-        };
-        interface User { id: string; name: string; }
+        import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+        import type { User } from "./types.js";
+        type Context = unknown;
+        const { defineQuery } = createGqlkitApis<Context>();
+        export const users = defineQuery<NoArgs, User[]>(() => []);
       `,
       "utf-8",
     );
@@ -55,14 +51,17 @@ describe("gen command", () => {
   }
 
   describe("successful generation", () => {
-    it("should generate schema.ts file", async () => {
+    it("should generate typeDefs.ts file", async () => {
       await setupProject();
 
       const result = await runGenCommand({ cwd: testDir });
 
       expect(result.exitCode).toBe(0);
-      const schemaPath = join(testDir, "src/gqlkit/generated/schema.ts");
-      const content = await readFile(schemaPath, "utf-8");
+      const typeDefsPath = join(
+        testDir,
+        "src/gqlkit/__generated__/typeDefs.ts",
+      );
+      const content = await readFile(typeDefsPath, "utf-8");
       expect(content.includes("typeDefs")).toBeTruthy();
     });
 
@@ -72,7 +71,10 @@ describe("gen command", () => {
       const result = await runGenCommand({ cwd: testDir });
 
       expect(result.exitCode).toBe(0);
-      const resolversPath = join(testDir, "src/gqlkit/generated/resolvers.ts");
+      const resolversPath = join(
+        testDir,
+        "src/gqlkit/__generated__/resolvers.ts",
+      );
       const content = await readFile(resolversPath, "utf-8");
       expect(content.includes("resolvers")).toBeTruthy();
     });
@@ -87,24 +89,7 @@ describe("gen command", () => {
   });
 
   describe("error handling", () => {
-    it("should return exit code 1 when types directory is missing", async () => {
-      const resolversDir = join(testDir, "src/gql/resolvers");
-      await mkdir(resolversDir, { recursive: true });
-
-      const result = await runGenCommand({ cwd: testDir });
-
-      expect(result.exitCode).toBe(1);
-    });
-
-    it("should return exit code 1 when resolvers directory is missing", async () => {
-      const typesDir = join(testDir, "src/gql/types");
-      await mkdir(typesDir, { recursive: true });
-      await writeFile(
-        join(typesDir, "user.ts"),
-        "export interface User { id: string; }",
-        "utf-8",
-      );
-
+    it("should return exit code 1 when source directory is missing", async () => {
       const result = await runGenCommand({ cwd: testDir });
 
       expect(result.exitCode).toBe(1);
@@ -170,27 +155,25 @@ describe("gen command", () => {
         "utf-8",
       );
 
-      const typesDir = join(testDir, "src/gql/types");
-      await mkdir(typesDir, { recursive: true });
+      const sourceDir = join(testDir, "src/gqlkit");
+      await mkdir(sourceDir, { recursive: true });
       await writeFile(
-        join(typesDir, "event.ts"),
+        join(sourceDir, "event.ts"),
         `
-          import type { DateTime } from "../../scalars/index.js";
+          import type { DateTime } from "../scalars/index.js";
           export interface Event { id: string; createdAt: DateTime; }
         `,
         "utf-8",
       );
 
-      const resolversDir = join(testDir, "src/gql/resolvers");
-      await mkdir(resolversDir, { recursive: true });
       await writeFile(
-        join(resolversDir, "query.ts"),
+        join(sourceDir, "query.ts"),
         `
           import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          import type { Event } from "./event.js";
           type Context = unknown;
-          interface Event { id: string; createdAt: string; }
           const { defineQuery } = createGqlkitApis<Context>();
-          export const events = defineQuery<NoArgs, Event[]>(function() { return []; });
+          export const events = defineQuery<NoArgs, Event[]>(() => []);
         `,
         "utf-8",
       );
@@ -213,8 +196,11 @@ describe("gen command", () => {
       const result = await runGenCommand({ cwd: testDir });
 
       expect(result.exitCode).toBe(0);
-      const schemaPath = join(testDir, "src/gqlkit/generated/schema.ts");
-      const content = await readFile(schemaPath, "utf-8");
+      const typeDefsPath = join(
+        testDir,
+        "src/gqlkit/__generated__/typeDefs.ts",
+      );
+      const content = await readFile(typeDefsPath, "utf-8");
       expect(
         content.includes('"kind": "ScalarTypeDefinition"') &&
           content.includes('"value": "DateTime"'),

@@ -2,7 +2,7 @@
 
 type Query
 
-"""Defined in: types/user.ts"""
+"""Defined in: src/gqlkit/user.ts"""
 type User {
   email: String
   emailAddress: String @deprecated(reason: """Use email instead""")
@@ -11,10 +11,10 @@ type User {
 }
 
 extend type Query {
-  """Defined in: resolvers/query.ts"""
+  """Defined in: src/gqlkit/query.ts"""
   allUsers: [User!]! @deprecated(reason: """Use users instead""")
-  """Defined in: resolvers/query.ts"""
+  """Defined in: src/gqlkit/query.ts"""
   user: User
-  """Defined in: resolvers/query.ts"""
+  """Defined in: src/gqlkit/query.ts"""
   users: [User!]!
 }
