@@ -1,0 +1,16 @@
+{
+  "$schema": "https://unpkg.com/knip@5/schema.json",
+  "ignoreExportsUsedInFile": {
+    "interface": true,
+    "type": true
+  },
+  "tags": ["-lintignore"],
+  "workspaces": {
+    "packages/cli": {
+      "ignoreFiles": ["src/**/testdata/**"],
+      "ignoreDependencies": ["@gqlkit-ts/runtime"]
+    }
+  },
+  "ignoreWorkspaces": ["examples/*"],
+  "ignoreDependencies": ["graphql", "tsx"]
+}

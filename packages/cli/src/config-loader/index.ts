@@ -10,5 +10,5 @@ export {
 export {
   type ValidateConfigOptions,
   type ValidateConfigResult,
-  validateConfig,
+  
 } from "./validator.js";

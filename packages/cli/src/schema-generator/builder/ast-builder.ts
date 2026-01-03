@@ -73,7 +73,7 @@ export function buildStringValueNode(value: string): StringValueNode {
   };
 }
 
-export function buildDeprecatedDirective(
+function buildDeprecatedDirective(
   deprecated: DeprecationInfo,
 ): ConstDirectiveNode {
   const args: ConstArgumentNode[] = [];
