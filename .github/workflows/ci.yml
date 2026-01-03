@@ -50,5 +50,7 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
       - name: test
-        run: pnpm test
+        run: |
+          pnpm build
+          pnpm test
 
