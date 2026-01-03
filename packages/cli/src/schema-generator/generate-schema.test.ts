@@ -18,6 +18,7 @@ describe("generateSchema", () => {
         outputDir: "/src/gqlkit",
         customScalarNames: null,
         enablePruning: null,
+        sourceRoot: null,
       };
 
       const result = generateSchema(input);
@@ -66,6 +67,7 @@ describe("generateSchema", () => {
         outputDir: "/src/gqlkit",
         customScalarNames: null,
         enablePruning: null,
+        sourceRoot: null,
       };
 
       const result = generateSchema(input);
@@ -110,6 +112,7 @@ describe("generateSchema", () => {
         outputDir: "/src/gqlkit",
         customScalarNames: null,
         enablePruning: null,
+        sourceRoot: null,
       };
 
       const result = generateSchema(input);
@@ -145,6 +148,7 @@ describe("generateSchema", () => {
         outputDir: "/src/gqlkit",
         customScalarNames: null,
         enablePruning: null,
+        sourceRoot: null,
       };
 
       const result = generateSchema(input);
@@ -178,6 +182,7 @@ describe("generateSchema", () => {
         outputDir: "/src/gqlkit",
         customScalarNames: null,
         enablePruning: null,
+        sourceRoot: null,
       };
 
       const result = generateSchema(input);
@@ -224,6 +229,7 @@ describe("generateSchema", () => {
         outputDir: "/src/gqlkit",
         customScalarNames: null,
         enablePruning: null,
+        sourceRoot: null,
       };
 
       const result = generateSchema(input);
@@ -280,6 +286,7 @@ describe("generateSchema", () => {
         outputDir: "/src/gqlkit",
         customScalarNames: null,
         enablePruning: null,
+        sourceRoot: null,
       };
 
       const result = generateSchema(input);
@@ -480,6 +487,7 @@ describe("generateSchema", () => {
         outputDir: "/src/gqlkit",
         customScalarNames: null,
         enablePruning: null,
+        sourceRoot: null,
       };
 
       const result = generateSchema(input);
@@ -554,6 +562,7 @@ describe("generateSchema", () => {
         outputDir: "/src/gqlkit",
         customScalarNames: null,
         enablePruning: null,
+        sourceRoot: null,
       };
 
       const result1 = generateSchema(input);
@@ -628,6 +637,7 @@ describe("generateSchema", () => {
         outputDir: "/src/gqlkit",
         customScalarNames: null,
         enablePruning: null,
+        sourceRoot: null,
       };
 
       const result = generateSchema(input);
@@ -676,6 +686,7 @@ describe("generateSchema", () => {
         outputDir: "/src/gqlkit",
         customScalarNames: null,
         enablePruning: null,
+        sourceRoot: null,
       };
 
       const result = generateSchema(input);
@@ -770,6 +781,7 @@ describe("generateSchema", () => {
         outputDir: "/src/gqlkit",
         customScalarNames: null,
         enablePruning: null,
+        sourceRoot: null,
       };
 
       const result = generateSchema(input);
@@ -859,6 +871,7 @@ describe("generateSchema", () => {
         outputDir: "/src/gqlkit",
         customScalarNames: null,
         enablePruning: true,
+        sourceRoot: null,
       };
 
       const result = generateSchema(input);
@@ -928,6 +941,7 @@ describe("generateSchema", () => {
         outputDir: "/src/gqlkit",
         customScalarNames: ["DateTime"],
         enablePruning: true,
+        sourceRoot: null,
       };
 
       const result = generateSchema(input);

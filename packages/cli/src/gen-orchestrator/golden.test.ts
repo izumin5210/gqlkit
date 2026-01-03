@@ -56,8 +56,8 @@ describe("Golden File Tests", async () => {
       const customScalars: ResolvedScalarMapping[] | null =
         config?.scalars?.map((s) => ({
           graphqlName: s.graphqlName,
-          typeName: s.typeName,
-          importPath: s.importPath,
+          typeName: s.type.name,
+          importPath: s.type.from,
         })) ?? null;
 
       const result = await executeGeneration({

@@ -93,12 +93,13 @@ describe("Integration Tests", () => {
         configDir: null,
         customScalars: null,
         output: null,
+        tsconfigPath: null,
       };
 
       const result = await executeGeneration(config);
 
       expect(result.success).toBe(true);
-      expect(result.filesWritten.length).toBe(3);
+      expect(result.files.length).toBe(3);
 
       const schemaContent = await readFile(
         join(outputDir, "schema.ts"),
@@ -152,6 +153,7 @@ describe("Integration Tests", () => {
         configDir: null,
         customScalars: null,
         output: null,
+        tsconfigPath: null,
       };
 
       const result = await executeGeneration(config);
@@ -214,6 +216,7 @@ describe("Integration Tests", () => {
         configDir: null,
         customScalars: null,
         output: null,
+        tsconfigPath: null,
       };
 
       const result = await executeGeneration(config);
@@ -275,6 +278,7 @@ describe("Integration Tests", () => {
           },
         ],
         output: null,
+        tsconfigPath: null,
       };
 
       const result = await executeGeneration(config);
@@ -342,6 +346,7 @@ describe("Integration Tests", () => {
           },
         ],
         output: null,
+        tsconfigPath: null,
       };
 
       const result = await executeGeneration(config);
@@ -400,6 +405,7 @@ describe("Integration Tests", () => {
           },
         ],
         output: null,
+        tsconfigPath: null,
       };
 
       const result = await executeGeneration(config);
@@ -448,6 +454,7 @@ describe("Integration Tests", () => {
         configDir: null,
         customScalars: null,
         output: null,
+        tsconfigPath: null,
       };
 
       const result = await executeGeneration(config);
@@ -485,6 +492,7 @@ describe("Integration Tests", () => {
         configDir: null,
         customScalars: null,
         output: null,
+        tsconfigPath: null,
       };
 
       const result = await executeGeneration(config);
@@ -513,6 +521,7 @@ describe("Integration Tests", () => {
         configDir: null,
         customScalars: null,
         output: null,
+        tsconfigPath: null,
       };
 
       const result = await executeGeneration(config);

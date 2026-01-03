@@ -44,9 +44,10 @@ export function generateSchema(
     customScalarNames,
   );
 
-  let documentNode = buildDocumentNode(integratedResult, {
-    sourceRoot: sourceRoot ?? undefined,
-  });
+  let documentNode = buildDocumentNode(
+    integratedResult,
+    sourceRoot !== null ? { sourceRoot } : undefined,
+  );
   let prunedTypes: ReadonlyArray<string> | null = null;
 
   if (enablePruning) {
@@ -58,9 +59,10 @@ export function generateSchema(
     prunedTypes = pruneResult.removedTypes;
   }
 
-  const typeDefsCode = emitTypeDefsCode(integratedResult, {
-    sourceRoot: sourceRoot ?? undefined,
-  });
+  const typeDefsCode = emitTypeDefsCode(
+    integratedResult,
+    sourceRoot !== null ? { sourceRoot } : undefined,
+  );
   const sdlContent = emitSdlContent(documentNode);
 
   const resolverInfo = collectResolverInfo(integratedResult);

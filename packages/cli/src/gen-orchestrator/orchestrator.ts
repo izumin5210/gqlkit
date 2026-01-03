@@ -1,18 +1,19 @@
+import { relative } from "node:path";
+import type ts from "typescript";
 import type {
   ResolvedOutputConfig,
   ResolvedScalarMapping,
 } from "../config-loader/index.js";
-import type { ExtractResolversResult } from "../resolver-extractor/index.js";
-import { extractResolvers } from "../resolver-extractor/index.js";
+import { extractDefineApiResolvers } from "../resolver-extractor/extractor/define-api-extractor.js";
 import { scanResolverDirectory } from "../resolver-extractor/scanner/file-scanner.js";
 import { generateSchema } from "../schema-generator/index.js";
 import { createSharedProgram } from "../shared/program-factory.js";
-import type {
-  Diagnostic,
-  ExtractTypesResult,
-} from "../type-extractor/index.js";
-import { extractTypes } from "../type-extractor/index.js";
+import { collectResults } from "../type-extractor/collector/result-collector.js";
+import { convertToGraphQL } from "../type-extractor/converter/graphql-converter.js";
+import { extractTypesFromProgram } from "../type-extractor/extractor/type-extractor.js";
+import type { Diagnostic, Diagnostics } from "../type-extractor/index.js";
 import { scanDirectory } from "../type-extractor/scanner/file-scanner.js";
+import { validateTypes } from "../type-extractor/validator/type-validator.js";
 import { writeFiles } from "./writer/file-writer.js";
 
 export interface GenerationConfig {
@@ -26,29 +27,44 @@ export interface GenerationConfig {
   readonly tsconfigPath: string | null;
 }
 
+export interface GeneratedFile {
+  readonly filename: string;
+  readonly content: string;
+}
+
 export interface GenerationResult {
   readonly success: boolean;
-  readonly filesWritten: ReadonlyArray<string>;
+  readonly files: ReadonlyArray<GeneratedFile>;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
+interface TypesResult {
+  types: ReturnType<typeof collectResults>["types"];
+  diagnostics: Diagnostics;
+}
+
+interface ResolversResult {
+  queryFields: { fields: ReadonlyArray<unknown> };
+  mutationFields: { fields: ReadonlyArray<unknown> };
+  typeExtensions: ReadonlyArray<unknown>;
+  diagnostics: Diagnostics;
+}
+
 function collectAllDiagnostics(
-  typesResult: ExtractTypesResult,
-  resolversResult: ExtractResolversResult,
+  typesResult: { diagnostics: Diagnostics },
+  resolversResult: { diagnostics: Diagnostics },
 ): Diagnostic[] {
   const diagnostics: Diagnostic[] = [];
-
   diagnostics.push(...typesResult.diagnostics.errors);
   diagnostics.push(...typesResult.diagnostics.warnings);
   diagnostics.push(...resolversResult.diagnostics.errors);
   diagnostics.push(...resolversResult.diagnostics.warnings);
-
   return diagnostics;
 }
 
 function hasErrors(
-  typesResult: ExtractTypesResult,
-  resolversResult: ExtractResolversResult,
+  typesResult: { diagnostics: { errors: ReadonlyArray<Diagnostic> } },
+  resolversResult: { diagnostics: { errors: ReadonlyArray<Diagnostic> } },
 ): boolean {
   return (
     typesResult.diagnostics.errors.length > 0 ||
@@ -56,12 +72,286 @@ function hasErrors(
   );
 }
 
+function extractTypesCore(
+  program: ts.Program,
+  sourceFiles: ReadonlyArray<string>,
+  customScalarNames: ReadonlyArray<string>,
+): TypesResult {
+  const allDiagnostics: Diagnostic[] = [];
+
+  const extractionResult = extractTypesFromProgram(program, sourceFiles);
+  allDiagnostics.push(...extractionResult.diagnostics);
+
+  const conversionResult = convertToGraphQL(extractionResult.types);
+  allDiagnostics.push(...conversionResult.diagnostics);
+
+  const validationResult = validateTypes({
+    types: conversionResult.types,
+    customScalarNames,
+  });
+  allDiagnostics.push(...validationResult.diagnostics);
+
+  return collectResults(conversionResult.types, allDiagnostics);
+}
+
+const PRIMITIVE_TYPE_MAP: Record<string, string> = {
+  string: "String",
+  number: "Float",
+  boolean: "Boolean",
+};
+
+interface TSTypeReference {
+  kind: string;
+  name: string | null;
+  elementType: TSTypeReference | null;
+  nullable: boolean;
+  scalarInfo?: { scalarName: string } | null;
+}
+
+interface GraphQLFieldType {
+  typeName: string;
+  nullable: boolean;
+  list: boolean;
+  listItemNullable: boolean | null;
+}
+
+interface GraphQLInputValue {
+  name: string;
+  type: GraphQLFieldType;
+  description: string | null;
+  deprecated: unknown;
+}
+
+interface GraphQLFieldDefinition {
+  name: string;
+  type: GraphQLFieldType;
+  args: ReadonlyArray<GraphQLInputValue> | null;
+  sourceLocation: { file: string; line: number; column: number };
+  resolverExportName: string | null;
+  description: string | null;
+  deprecated: unknown;
+}
+
+interface TypeExtension {
+  targetTypeName: string;
+  fields: ReadonlyArray<GraphQLFieldDefinition>;
+}
+
+function convertTsTypeToGraphQLType(tsType: TSTypeReference): GraphQLFieldType {
+  const nullable = tsType.nullable;
+
+  if (tsType.kind === "array") {
+    const elementType = tsType.elementType;
+    const elementTypeName = elementType
+      ? convertElementTypeName(elementType)
+      : "String";
+    const listItemNullable = elementType?.nullable ?? false;
+
+    return {
+      typeName: elementTypeName,
+      nullable,
+      list: true,
+      listItemNullable,
+    };
+  }
+
+  if (tsType.kind === "primitive") {
+    const graphqlType = PRIMITIVE_TYPE_MAP[tsType.name ?? ""] ?? "String";
+    return {
+      typeName: graphqlType,
+      nullable,
+      list: false,
+      listItemNullable: null,
+    };
+  }
+
+  if (tsType.kind === "reference") {
+    return {
+      typeName: tsType.name ?? "Unknown",
+      nullable,
+      list: false,
+      listItemNullable: null,
+    };
+  }
+
+  return {
+    typeName: tsType.name ?? "String",
+    nullable,
+    list: false,
+    listItemNullable: null,
+  };
+}
+
+function convertElementTypeName(elementType: TSTypeReference): string {
+  if (elementType.kind === "primitive") {
+    return PRIMITIVE_TYPE_MAP[elementType.name ?? ""] ?? "String";
+  }
+  if (elementType.kind === "reference") {
+    return elementType.name ?? "Unknown";
+  }
+  return elementType.name ?? "String";
+}
+
+interface ArgumentDefinition {
+  name: string;
+  tsType: TSTypeReference;
+  optional: boolean;
+  description: string | null;
+  deprecated: unknown;
+}
+
+function convertArgsToInputValues(
+  args: ReadonlyArray<ArgumentDefinition>,
+): GraphQLInputValue[] {
+  return args.map((arg) => ({
+    name: arg.name,
+    type: {
+      ...convertTsTypeToGraphQLType(arg.tsType),
+      nullable: arg.tsType.nullable || arg.optional,
+    },
+    description: arg.description,
+    deprecated: arg.deprecated,
+  }));
+}
+
+interface DefineApiResolverInfo {
+  fieldName: string;
+  resolverType: "query" | "mutation" | "field";
+  parentTypeName: string | null;
+  args: ReadonlyArray<ArgumentDefinition> | null;
+  returnType: TSTypeReference;
+  sourceFile: string;
+  description: string | null;
+  deprecated: unknown;
+}
+
+function convertDefineApiToFields(
+  resolvers: ReadonlyArray<DefineApiResolverInfo>,
+): {
+  queryFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
+  mutationFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
+  typeExtensions: ReadonlyArray<TypeExtension>;
+} {
+  const queryFields: GraphQLFieldDefinition[] = [];
+  const mutationFields: GraphQLFieldDefinition[] = [];
+  const typeExtensionMap = new Map<string, GraphQLFieldDefinition[]>();
+
+  for (const resolver of resolvers) {
+    const fieldDef: GraphQLFieldDefinition = {
+      name: resolver.fieldName,
+      type: convertTsTypeToGraphQLType(resolver.returnType),
+      args: resolver.args ? convertArgsToInputValues(resolver.args) : null,
+      sourceLocation: {
+        file: resolver.sourceFile,
+        line: 1,
+        column: 1,
+      },
+      resolverExportName: resolver.fieldName,
+      description: resolver.description,
+      deprecated: resolver.deprecated,
+    };
+
+    if (resolver.resolverType === "query") {
+      queryFields.push(fieldDef);
+    } else if (resolver.resolverType === "mutation") {
+      mutationFields.push(fieldDef);
+    } else if (resolver.resolverType === "field" && resolver.parentTypeName) {
+      const existing = typeExtensionMap.get(resolver.parentTypeName) ?? [];
+      existing.push(fieldDef);
+      typeExtensionMap.set(resolver.parentTypeName, existing);
+    }
+  }
+
+  const typeExtensions: TypeExtension[] = [];
+  for (const [targetTypeName, fields] of typeExtensionMap) {
+    typeExtensions.push({ targetTypeName, fields });
+  }
+
+  return {
+    queryFields: { fields: queryFields },
+    mutationFields: { fields: mutationFields },
+    typeExtensions,
+  };
+}
+
+function getDiagnosticKey(d: Diagnostic): string {
+  const locationKey = d.location
+    ? `${d.location.file}:${d.location.line}:${d.location.column}`
+    : "";
+  return `${d.code}:${d.message}:${d.severity}:${locationKey}`;
+}
+
+function deduplicateDiagnostics(
+  diagnostics: ReadonlyArray<Diagnostic>,
+): Diagnostic[] {
+  const seen = new Set<string>();
+  const result: Diagnostic[] = [];
+
+  for (const d of diagnostics) {
+    const key = getDiagnosticKey(d);
+    if (!seen.has(key)) {
+      seen.add(key);
+      result.push(d);
+    }
+  }
+
+  return result;
+}
+
+function collectDiagnostics(
+  allDiagnostics: ReadonlyArray<Diagnostic>,
+): Diagnostics {
+  const uniqueDiagnostics = deduplicateDiagnostics(allDiagnostics);
+  const errors = uniqueDiagnostics.filter((d) => d.severity === "error");
+  const warnings = uniqueDiagnostics.filter((d) => d.severity === "warning");
+
+  return { errors, warnings };
+}
+
+function normalizeDiagnosticPaths(
+  diagnostics: ReadonlyArray<Diagnostic>,
+  sourceRoot: string,
+): Diagnostic[] {
+  return diagnostics.map((d) => {
+    if (d.location === null) {
+      return d;
+    }
+    return {
+      ...d,
+      location: {
+        ...d.location,
+        file: relative(sourceRoot, d.location.file),
+      },
+    };
+  });
+}
+
+function extractResolversCore(
+  program: ts.Program,
+  sourceFiles: ReadonlyArray<string>,
+): ResolversResult {
+  const allDiagnostics: Diagnostic[] = [];
+
+  const defineApiExtractionResult = extractDefineApiResolvers(
+    program,
+    sourceFiles,
+  );
+  allDiagnostics.push(...defineApiExtractionResult.diagnostics);
+
+  const result = convertDefineApiToFields(
+    defineApiExtractionResult.resolvers as unknown as DefineApiResolverInfo[],
+  );
+  return {
+    queryFields: result.queryFields as ResolversResult["queryFields"],
+    mutationFields: result.mutationFields as ResolversResult["mutationFields"],
+    typeExtensions: result.typeExtensions as ResolversResult["typeExtensions"],
+    diagnostics: collectDiagnostics(allDiagnostics),
+  };
+}
+
 export async function executeGeneration(
   config: GenerationConfig,
 ): Promise<GenerationResult> {
-  const customScalarNames =
-    config.customScalars?.map((s) => s.graphqlName) ?? [];
-
   const typeScanResult = await scanDirectory(config.typesDir);
   const resolverScanResult = await scanResolverDirectory(config.resolversDir);
 
@@ -73,7 +363,7 @@ export async function executeGeneration(
   if (scanDiagnostics.length > 0) {
     return {
       success: false,
-      filesWritten: [],
+      files: [],
       diagnostics: scanDiagnostics,
     };
   }
@@ -88,34 +378,38 @@ export async function executeGeneration(
   if (programResult.diagnostics.length > 0 || !programResult.program) {
     return {
       success: false,
-      filesWritten: [],
+      files: [],
       diagnostics: [...programResult.diagnostics],
     };
   }
 
-  const typesResult = await extractTypes({
-    directory: config.typesDir,
+  const { program } = programResult;
+  const customScalarNames = config.customScalars?.map((s) => s.graphqlName) ?? [];
+
+  const typesResult = extractTypesCore(
+    program,
+    typeScanResult.files,
     customScalarNames,
-    program: programResult.program,
-  });
-  const resolversResult = await extractResolvers({
-    directory: config.resolversDir,
-    program: programResult.program,
-  });
+  );
+  const resolversResult = extractResolversCore(program, resolverScanResult.files);
 
   const allDiagnostics = collectAllDiagnostics(typesResult, resolversResult);
 
   if (hasErrors(typesResult, resolversResult)) {
     return {
       success: false,
-      filesWritten: [],
-      diagnostics: allDiagnostics,
+      files: [],
+      diagnostics: normalizeDiagnosticPaths(allDiagnostics, config.cwd),
     };
   }
 
   const schemaResult = generateSchema({
-    typesResult,
-    resolversResult,
+    typesResult: typesResult as Parameters<
+      typeof generateSchema
+    >[0]["typesResult"],
+    resolversResult: resolversResult as Parameters<
+      typeof generateSchema
+    >[0]["resolversResult"],
     outputDir: config.outputDir,
     customScalarNames,
     enablePruning: null,
@@ -127,12 +421,12 @@ export async function executeGeneration(
   if (schemaResult.hasErrors) {
     return {
       success: false,
-      filesWritten: [],
-      diagnostics: allDiagnostics,
+      files: [],
+      diagnostics: normalizeDiagnosticPaths(allDiagnostics, config.cwd),
     };
   }
 
-  const files: Array<{ filename: string; content: string }> = [];
+  const files: GeneratedFile[] = [];
 
   const outputAst = config.output?.ast;
   const outputSdl = config.output?.sdl;
@@ -155,22 +449,33 @@ export async function executeGeneration(
 
   files.push({ filename: "resolvers.ts", content: schemaResult.resolversCode });
 
-  const writeResult = await writeFiles({
-    outputDir: config.outputDir,
-    files,
-  });
-
-  if (!writeResult.success) {
-    return {
-      success: false,
-      filesWritten: writeResult.writtenPaths,
-      diagnostics: allDiagnostics,
-    };
-  }
-
   return {
     success: true,
-    filesWritten: writeResult.writtenPaths,
-    diagnostics: allDiagnostics,
+    files,
+    diagnostics: normalizeDiagnosticPaths(allDiagnostics, config.cwd),
+  };
+}
+
+export interface WriteFilesConfig {
+  readonly outputDir: string;
+  readonly files: ReadonlyArray<GeneratedFile>;
+}
+
+export interface WriteFilesResult {
+  readonly success: boolean;
+  readonly filesWritten: ReadonlyArray<string>;
+}
+
+export async function writeGeneratedFiles(
+  config: WriteFilesConfig,
+): Promise<WriteFilesResult> {
+  const result = await writeFiles({
+    outputDir: config.outputDir,
+    files: config.files.map((f) => ({ filename: f.filename, content: f.content })),
+  });
+
+  return {
+    success: result.success,
+    filesWritten: result.writtenPaths,
   };
 }

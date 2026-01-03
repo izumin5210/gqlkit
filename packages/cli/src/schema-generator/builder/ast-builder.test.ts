@@ -682,6 +682,7 @@ describe("ASTBuilder", () => {
         enumValues: null,
         description: null,
         deprecated: null,
+        sourceFile: null,
       };
       const node = buildObjectTypeDefinitionNode(baseType);
 
@@ -699,6 +700,7 @@ describe("ASTBuilder", () => {
         enumValues: null,
         description: null,
         deprecated: null,
+        sourceFile: null,
       };
       const node = buildObjectTypeDefinitionNode(baseType);
 
@@ -718,6 +720,7 @@ describe("ASTBuilder", () => {
         enumValues: null,
         description: null,
         deprecated: null,
+        sourceFile: null,
       };
       const node = buildUnionTypeDefinitionNode(baseType);
 
@@ -789,6 +792,7 @@ describe("ASTBuilder", () => {
         ],
         description: null,
         deprecated: null,
+        sourceFile: null,
       };
       const node = buildEnumTypeDefinitionNode(baseType);
 
@@ -827,6 +831,7 @@ describe("ASTBuilder", () => {
         ],
         description: null,
         deprecated: null,
+        sourceFile: null,
       };
       const node = buildEnumTypeDefinitionNode(baseType);
 
@@ -1197,6 +1202,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -1226,6 +1232,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
           {
             name: "User",
@@ -1247,6 +1254,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -1294,6 +1302,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
           {
             name: "Apple",
@@ -1303,6 +1312,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
           {
             name: "Mango",
@@ -1312,6 +1322,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -1345,6 +1356,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
           {
             name: "Zebra",
@@ -1354,6 +1366,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -1452,6 +1465,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -1484,6 +1498,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -1525,6 +1540,7 @@ describe("ASTBuilder", () => {
             ],
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -1566,6 +1582,7 @@ describe("ASTBuilder", () => {
             ],
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -1596,6 +1613,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
           {
             name: "User",
@@ -1628,6 +1646,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -1702,6 +1721,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [
@@ -1826,6 +1846,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
           {
             name: "User",
@@ -1858,6 +1879,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [
@@ -1955,6 +1977,7 @@ describe("ASTBuilder", () => {
             unionMembers: null,
             enumValues: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -1996,6 +2019,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -2024,6 +2048,7 @@ describe("ASTBuilder", () => {
             unionMembers: null,
             enumValues: null,
             description: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -2052,6 +2077,7 @@ describe("ASTBuilder", () => {
             unionMembers: null,
             enumValues: null,
             description: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -2092,6 +2118,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -2127,6 +2154,7 @@ describe("ASTBuilder", () => {
             fields: null,
             unionMembers: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -2162,6 +2190,7 @@ describe("ASTBuilder", () => {
             unionMembers: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -2197,6 +2226,7 @@ describe("ASTBuilder", () => {
             unionMembers: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -2225,6 +2255,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -2273,6 +2304,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],
@@ -2372,6 +2404,7 @@ describe("ASTBuilder", () => {
             enumValues: null,
             description: null,
             deprecated: null,
+            sourceFile: null,
           },
         ],
         inputTypes: [],

@@ -1,13 +1,9 @@
 import { mkdir, mkdtemp, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
-import path, { dirname, join, resolve } from "node:path";
-import { fileURLToPath } from "node:url";
+import path, { join } from "node:path";
 import ts from "typescript";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { extractResolvers } from "./extract-resolvers.js";
-
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const RUNTIME_PACKAGE_PATH = resolve(__dirname, "../../../runtime");
 
 describe("extractResolvers", () => {
   let tempDir: string;

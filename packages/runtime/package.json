@@ -20,7 +20,8 @@
   "license": "MIT",
   "scripts": {
     "build": "tsc --build",
-    "test": "pnpm -w vitest run --project=runtime --typecheck"
+    "test": "pnpm -w vitest run --project=runtime --typecheck",
+    "typecheck": "tsc --noEmit"
   },
   "peerDependencies": {
     "graphql": "^16.0.0"

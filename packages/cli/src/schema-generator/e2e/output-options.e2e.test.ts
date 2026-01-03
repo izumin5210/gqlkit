@@ -239,6 +239,7 @@ describe("E2E: Schema Output Options", () => {
         outputDir: "/src/gqlkit/generated",
         customScalarNames: null,
         enablePruning: null,
+        sourceRoot: null,
       });
 
       expect(!result.hasErrors);
@@ -341,6 +342,7 @@ describe("E2E: Schema Output Options", () => {
         outputDir: "/src/gqlkit/generated",
         customScalarNames: null,
         enablePruning: null,
+        sourceRoot: null,
       });
 
       expect(!result.hasErrors);
@@ -400,6 +402,7 @@ describe("E2E: Schema Output Options", () => {
         outputDir: "/src/gqlkit/generated",
         customScalarNames: ["DateTime", "UUID"],
         enablePruning: null,
+        sourceRoot: null,
       });
 
       expect(!result.hasErrors);
@@ -534,6 +537,7 @@ describe("E2E: Schema Output Options", () => {
         outputDir: "/src/gqlkit/generated",
         customScalarNames: null,
         enablePruning: true,
+        sourceRoot: null,
       });
 
       expect(!result.hasErrors);
@@ -686,6 +690,7 @@ describe("E2E: Schema Output Options", () => {
         outputDir: "/src/gqlkit/generated",
         customScalarNames: null,
         enablePruning: true,
+        sourceRoot: null,
       });
 
       expect(!result.hasErrors);
@@ -768,6 +773,7 @@ describe("E2E: Schema Output Options", () => {
         outputDir: "/src/gqlkit/generated",
         customScalarNames: ["DateTime"],
         enablePruning: true,
+        sourceRoot: null,
       });
 
       expect(!result.hasErrors);
@@ -861,6 +867,7 @@ describe("E2E: Schema Output Options", () => {
         outputDir: "/src/gqlkit/generated",
         customScalarNames: null,
         enablePruning: null,
+        sourceRoot: null,
       });
 
       expect(!result.hasErrors);
