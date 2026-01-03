@@ -22,22 +22,8 @@ export default defineConfig({
     coverage: {
       provider: "v8",
       reporter: ["text", "html", "lcov"],
-      include: [
-        "packages/cli/src/gen-orchestrator/**/*.ts",
-        "packages/cli/src/type-extractor/**/*.ts",
-        "packages/cli/src/resolver-extractor/**/*.ts",
-        "packages/cli/src/schema-generator/**/*.ts",
-        "packages/cli/src/shared/**/*.ts",
-      ],
-      exclude: [
-        "**/*.test.ts",
-        "**/testdata/**",
-        "**/index.ts",
-        "**/parent-type-resolver.ts",
-        "**/argument-validator.ts",
-      ],
+      exclude: ["**/*.test.ts", "**/testdata", "examples", "**/dist"],
     },
-
     projects: [
       {
         resolve: {
