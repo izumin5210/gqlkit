@@ -1,4 +1,5 @@
 import path from "node:path";
+import { toPosixPath } from "../../shared/index.js";
 import {
   type BuildDocumentOptions,
   buildDocumentNode,
@@ -33,7 +34,7 @@ export const typeDefs: DocumentNode = ${documentNodeCode} as DocumentNode;
 }
 
 function computeRelativeImportPath(fromDir: string, toFile: string): string {
-  const relativePath = path.relative(fromDir, toFile);
+  const relativePath = toPosixPath(path.relative(fromDir, toFile));
   const withoutExt = relativePath.replace(/\.ts$/, ".js");
   if (!withoutExt.startsWith(".")) {
     return `./${withoutExt}`;
