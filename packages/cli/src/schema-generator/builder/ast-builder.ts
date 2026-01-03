@@ -22,6 +22,7 @@ import {
   type UnionTypeDefinitionNode,
 } from "graphql";
 import type { GraphQLInputValue } from "../../resolver-extractor/index.js";
+import { toPosixPath } from "../../shared/index.js";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 import type {
   EnumValueInfo,
@@ -49,7 +50,7 @@ function appendSourceLocation(
     return description;
   }
 
-  const relativePath = path.relative(sourceRoot, sourceFile);
+  const relativePath = toPosixPath(path.relative(sourceRoot, sourceFile));
   const sourceLocation = `Defined in: ${relativePath}`;
 
   if (description) {
