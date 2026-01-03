@@ -1,0 +1,67 @@
+name: CI
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+
+jobs:
+  build:
+    strategy:
+      matrix:
+        command:
+          - name: build
+            run: pnpm build
+          - name: format-and-lint
+            run: pnpm check
+          - name: typecheck
+            run: pnpm typecheck
+          - name: knip
+            run: pnpm knip
+      fail-fast: false
+    runs-on: ubuntu-latest
+    name: ${{ matrix.command.name }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: ${{ matrix.command.name }}
+        run: ${{ matrix.command.run }}
+  test:
+    strategy:
+      matrix:
+        node-version: ["lts/-1", "lts/*"]
+        # os: ["ubuntu-latest", "windows-latest"]
+        os: ["ubuntu-latest"]
+      fail-fast: false
+    runs-on: ${{ matrix.os }}
+    name: test / Node.js ${{ matrix.node-version }} / ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v6
+        with:
+          node-version: ${{ matrix.node-version }}
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: test
+        run: |
+          pnpm build
+          pnpm test
+
+  status-check:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - test
+    permissions: {}
+    if: failure()
+    steps:
+      - run: exit 1
+
