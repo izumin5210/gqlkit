@@ -83,6 +83,9 @@ importers:
         specifier: ^2.4.2
         version: 2.6.1
     devDependencies:
+      '@gqlkit-ts/runtime':
+        specifier: workspace:*
+        version: link:../runtime
       '@types/node':
         specifier: ^22.19.3
         version: 22.19.3

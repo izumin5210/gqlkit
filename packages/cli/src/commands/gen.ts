@@ -3,6 +3,7 @@ import { define } from "gunshi";
 import { loadConfig } from "../config-loader/index.js";
 import {
   executeGeneration,
+  writeGeneratedFiles,
   type GenerationConfig,
 } from "../gen-orchestrator/orchestrator.js";
 import { createDiagnosticReporter } from "../gen-orchestrator/reporter/diagnostic-reporter.js";
@@ -39,11 +40,13 @@ export async function runGenCommand(
     ? dirname(configResult.configPath)
     : options.cwd;
 
+  const outputDir = join(options.cwd, "src/gqlkit/generated");
+
   const config: GenerationConfig = {
     cwd: options.cwd,
     typesDir: join(options.cwd, "src/gql/types"),
     resolversDir: join(options.cwd, "src/gql/resolvers"),
-    outputDir: join(options.cwd, "src/gqlkit/generated"),
+    outputDir,
     configDir,
     customScalars: configResult.config.scalars,
     output: configResult.config.output,
@@ -60,17 +63,27 @@ export async function runGenCommand(
     diagnosticReporter.reportDiagnostics(result.diagnostics);
   }
 
-  if (result.success) {
-    for (const filePath of result.filesWritten) {
-      progressReporter.fileWritten(filePath);
-    }
-    progressReporter.complete();
-    diagnosticReporter.reportSuccess("Generation complete!");
-    return { exitCode: 0 };
+  if (!result.success) {
+    diagnosticReporter.reportError("Generation failed");
+    return { exitCode: 1 };
   }
 
-  diagnosticReporter.reportError("Generation failed");
-  return { exitCode: 1 };
+  const writeResult = await writeGeneratedFiles({
+    outputDir,
+    files: result.files,
+  });
+
+  if (!writeResult.success) {
+    diagnosticReporter.reportError("Failed to write output files");
+    return { exitCode: 1 };
+  }
+
+  for (const filePath of writeResult.filesWritten) {
+    progressReporter.fileWritten(filePath);
+  }
+  progressReporter.complete();
+  diagnosticReporter.reportSuccess("Generation complete!");
+  return { exitCode: 0 };
 }
 
 export const genCommand = define({

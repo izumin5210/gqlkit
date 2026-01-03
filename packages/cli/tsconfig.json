@@ -1,6 +1,6 @@
 {
   // Visit https://aka.ms/tsconfig to read more about this file
-  "exclude": ["examples", "dist"],
+  "exclude": ["examples", "dist", "src/**/testdata"],
   "compilerOptions": {
     // File Layout
     "rootDir": "./src",
