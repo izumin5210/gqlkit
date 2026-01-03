@@ -21,6 +21,8 @@ jobs:
             run: pnpm knip
       fail-fast: false
     runs-on: ubuntu-latest
+    permissions:
+      contents: read
     name: ${{ matrix.command.name }}
     steps:
       - uses: actions/checkout@v6
@@ -40,6 +42,10 @@ jobs:
       fail-fast: false
     runs-on: ${{ matrix.os }}
     name: test / Node.js ${{ matrix.node-version }} / ${{ matrix.os }}
+    permissions:
+      contents: read
+    env:
+      COVERAGE: ${{ matrix.node-version == 'lts/*' && matrix.os == 'ubuntu-latest' }}
     steps:
       - uses: actions/checkout@v6
       - uses: pnpm/action-setup@v4
@@ -52,7 +58,8 @@ jobs:
       - name: test
         run: |
           pnpm build
-          pnpm test
+          pnpm test --coverage=${COVERAGE}
+      - uses: k1LoW/octocov-action@v1
 
   status-check:
     runs-on: ubuntu-latest
