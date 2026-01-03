@@ -29,6 +29,9 @@ Static code generation tool that analyzes TypeScript source files and produces G
   - Double quotes for strings
   - Space indentation
   - Auto organize imports on save
+- **knip**: Unused export detection and cleanup
+  - Ignores type/interface exports used in same file
+  - Configured via `knip.json` at root
 
 ### Testing
 
@@ -65,4 +68,4 @@ Static code generation tool that analyzes TypeScript source files and produces G
 
 ---
 _Document standards and patterns, not every dependency_
-_Updated: 2026-01-02 - Configuration file pattern_
+_Updated: 2026-01-03 - Added knip for unused export detection_

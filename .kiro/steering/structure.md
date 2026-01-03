@@ -52,7 +52,7 @@ Minimal runtime utilities for user codebases:
 - **Exports**: camelCase for values (e.g., `genCommand`, `extractTypes`)
 - **Type exports**: PascalCase (e.g., `User`, `GenerationConfig`)
 - **Test files**: Colocated with source (e.g., `foo.ts` + `foo.test.ts`)
-- **E2E tests**: In `e2e/` subdirectory within relevant module (e.g., `schema-generator/e2e/`)
+- **Golden file tests**: In `testdata/` directory with expected outputs in `expected/` subdirectory
 
 ## Import Organization
 
@@ -76,4 +76,4 @@ import { extractTypes } from "../type-extractor/index.js";
 
 ---
 _Document patterns, not file trees. New files following patterns shouldn't require updates_
-_Updated: 2026-01-02 - Added config/config-loader pipeline stages_
+_Updated: 2026-01-03 - Golden file testing pattern (replaced e2e/ pattern)_

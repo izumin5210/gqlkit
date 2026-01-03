@@ -10,8 +10,30 @@ gqlkit is a convention-driven code generator for GraphQL servers in TypeScript.
 
 ## Common Commands
 
-- **Lint/Format**: `pnpm check` - Runs Biome check with auto-fix
-- **Package manager**: pnpm (v10.26.1)
+```bash
+pnpm check      # Lint/format with Biome (auto-fix)
+pnpm test       # Run all tests
+pnpm typecheck  # Type check all packages
+pnpm knip       # Detect unused exports
+pnpm build      # Build all packages
+```
+
+**Run single test file:**
+```bash
+pnpm test -- packages/cli/src/gen-orchestrator/golden.test.ts
+```
+
+**Update golden file snapshots:**
+```bash
+UPDATE_GOLDEN=true pnpm test
+```
+
+**Coverage:**
+```bash
+pnpm test -- --coverage
+```
+
+**Package manager**: pnpm (v10.26.1)
 
 ## Project Architecture
 
@@ -39,9 +61,24 @@ gqlkit relies on strict conventions to enable deterministic schema generation wi
    - Field: `(parent, args, ctx, info) => Return`
    - Use `NoArgs` type for fields without arguments
 
+### Monorepo Structure
+
+```
+packages/
+  cli/       - @gqlkit-ts/cli: Code generation CLI (gqlkit gen)
+  runtime/   - @gqlkit-ts/runtime: Define API and branded scalar types
+examples/    - Example projects demonstrating usage
+```
+
+**CLI Pipeline** (`packages/cli/src/`):
+- `type-extractor/` - Scans TypeScript types from `src/gql/types`
+- `resolver-extractor/` - Scans resolver definitions from `src/gql/resolvers`
+- `schema-generator/` - Builds GraphQL AST and resolver maps
+- `gen-orchestrator/` - Coordinates pipeline stages, handles diagnostics
+
 ### Code Generation Flow
 
-`gqlkit gen` (to be implemented):
+`gqlkit gen`:
 1. Scans `src/gql/types` and `src/gql/resolvers`
 2. Builds internal type graph from TypeScript types
 3. Validates resolver signatures (parent/return types exist, resolver groups match)
@@ -89,12 +126,26 @@ This project follows Kiro-style Spec-Driven Development.
 
 **Language**: Think in English, generate responses in Japanese. All Markdown content written to project files (e.g., requirements.md, design.md, tasks.md) MUST be written in the target language configured for the specification (see spec.json.language).
 
+## Testing
+
+Uses **golden file testing** for CLI validation:
+- Test cases in `packages/cli/src/gen-orchestrator/testdata/`
+- Each case: `types/`, `resolvers/`, `expected/` directories
+- Tests compare generated output against `expected/` snapshots
+
+## Coding Conventions
+
+- **Nullability for internal types**: Use `null` (not `undefined` or optional) to represent "unset" values in types not exported to users
+- **Test strategy**: Prefer golden file tests for code analysis and generation logic
+- **Language**: All code comments and documentation must be written in English
+
 ## Code Quality
 
 - **Linter/Formatter**: Biome (configured in biome.jsonc)
   - Double quotes for JS/TS
   - Space indentation
   - Auto organize imports
+- **knip**: Unused export detection (`pnpm knip`)
 
 ## CLI Development
 
