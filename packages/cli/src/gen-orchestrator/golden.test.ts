@@ -35,10 +35,10 @@ function serializeDiagnostics(
 }
 
 function findFile(
-  files: ReadonlyArray<{ filename: string; content: string }>,
+  files: ReadonlyArray<{ filePath: string; content: string }>,
   filename: string,
 ): string | undefined {
-  return files.find((f) => f.filename === filename)?.content;
+  return files.find((f) => f.filePath.endsWith(`/${filename}`))?.content;
 }
 
 describe("Golden File Tests", async () => {

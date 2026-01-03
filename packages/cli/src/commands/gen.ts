@@ -1,4 +1,4 @@
-import { dirname, join } from "node:path";
+import { dirname } from "node:path";
 import { define } from "gunshi";
 import { loadConfig } from "../config-loader/index.js";
 import {
@@ -15,23 +15,6 @@ export interface RunGenCommandOptions {
 
 export interface RunGenCommandResult {
   readonly exitCode: number;
-}
-
-function getOutputDir(
-  cwd: string,
-  resolversPath: string | null,
-  typeDefsPath: string | null,
-  schemaPath: string | null,
-): string {
-  const paths = [resolversPath, typeDefsPath, schemaPath].filter(
-    (p): p is string => p !== null,
-  );
-
-  if (paths.length > 0 && paths[0]) {
-    return join(cwd, dirname(paths[0]));
-  }
-
-  return join(cwd, "src/gqlkit/__generated__");
 }
 
 export async function runGenCommand(
@@ -85,15 +68,7 @@ export async function runGenCommand(
     return { exitCode: 1 };
   }
 
-  const outputDir = getOutputDir(
-    options.cwd,
-    output.resolversPath,
-    output.typeDefsPath,
-    output.schemaPath,
-  );
-
   const writeResult = await writeGeneratedFiles({
-    outputDir,
     files: result.files,
   });
 

@@ -40,7 +40,7 @@ export interface GenerationConfig {
 }
 
 export interface GeneratedFile {
-  readonly filename: string;
+  readonly filePath: string;
   readonly content: string;
 }
 
@@ -227,16 +227,12 @@ function buildExcludePaths(
   return paths;
 }
 
-function getOutputDir(output: ResolvedOutputConfig): string | null {
-  const paths = [output.resolversPath, output.typeDefsPath, output.schemaPath]
-    .filter((p): p is string => p !== null)
-    .map((p) => dirname(p));
-
-  if (paths.length === 0) {
-    return null;
+function getOutputDir(output: ResolvedOutputConfig): string {
+  const path = output.resolversPath ?? output.typeDefsPath ?? output.schemaPath;
+  if (path !== null) {
+    return dirname(path);
   }
-
-  return paths[0] ?? null;
+  return "src/gqlkit/__generated__";
 }
 
 export async function executeGeneration(
@@ -296,11 +292,6 @@ export async function executeGeneration(
     };
   }
 
-  const outputDir = resolve(
-    config.cwd,
-    getOutputDir(config.output) ?? "src/gqlkit/__generated__",
-  );
-
   const schemaResult = generateSchema({
     typesResult: typesResult as Parameters<
       typeof generateSchema
@@ -308,7 +299,7 @@ export async function executeGeneration(
     resolversResult: resolversResult as Parameters<
       typeof generateSchema
     >[0]["resolversResult"],
-    outputDir,
+    outputDir: resolve(config.cwd, getOutputDir(config.output)),
     customScalarNames,
     enablePruning: null,
     sourceRoot: config.cwd,
@@ -327,25 +318,22 @@ export async function executeGeneration(
   const files: GeneratedFile[] = [];
 
   if (config.output.typeDefsPath !== null) {
-    const typeDefsFilename =
-      config.output.typeDefsPath.split("/").pop() ?? "typeDefs.ts";
     files.push({
-      filename: typeDefsFilename,
+      filePath: resolve(config.cwd, config.output.typeDefsPath),
       content: schemaResult.typeDefsCode,
     });
   }
 
   if (config.output.schemaPath !== null) {
-    const schemaFilename =
-      config.output.schemaPath.split("/").pop() ?? "schema.graphql";
-    files.push({ filename: schemaFilename, content: schemaResult.sdlContent });
+    files.push({
+      filePath: resolve(config.cwd, config.output.schemaPath),
+      content: schemaResult.sdlContent,
+    });
   }
 
   if (config.output.resolversPath !== null) {
-    const resolversFilename =
-      config.output.resolversPath.split("/").pop() ?? "resolvers.ts";
     files.push({
-      filename: resolversFilename,
+      filePath: resolve(config.cwd, config.output.resolversPath),
       content: schemaResult.resolversCode,
     });
   }
@@ -358,7 +346,6 @@ export async function executeGeneration(
 }
 
 export interface WriteFilesConfig {
-  readonly outputDir: string;
   readonly files: ReadonlyArray<GeneratedFile>;
 }
 
@@ -371,9 +358,8 @@ export async function writeGeneratedFiles(
   config: WriteFilesConfig,
 ): Promise<WriteFilesResult> {
   const result = await writeFiles({
-    outputDir: config.outputDir,
     files: config.files.map((f) => ({
-      filename: f.filename,
+      filePath: f.filePath,
       content: f.content,
     })),
   });
