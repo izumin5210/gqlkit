@@ -54,3 +54,13 @@ jobs:
           pnpm build
           pnpm test
 
+  status-check:
+    runs-on: ubuntu-latest
+    needs:
+      - build
+      - test
+    permissions: {}
+    if: failure()
+    steps:
+      - run: exit 1
+
