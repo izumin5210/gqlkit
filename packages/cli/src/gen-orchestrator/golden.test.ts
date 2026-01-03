@@ -1,5 +1,5 @@
 import { readdir, readFile } from "node:fs/promises";
-import { dirname, join } from "node:path";
+import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import type { GqlkitConfig } from "../config/index.js";
@@ -38,7 +38,7 @@ function findFile(
   files: ReadonlyArray<{ filePath: string; content: string }>,
   filename: string,
 ): string | undefined {
-  return files.find((f) => f.filePath.endsWith(`/${filename}`))?.content;
+  return files.find((f) => basename(f.filePath) === filename)?.content;
 }
 
 describe("Golden File Tests", async () => {
