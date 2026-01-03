@@ -1,25 +1,34 @@
 /**
- * Schema output options.
- * Allows configuring AST and SDL output paths separately.
+ * Output configuration for generated files.
+ * All paths are relative to project root.
  */
-export interface SchemaOutputConfig {
+export interface OutputConfig {
   /**
-   * Output path for AST (DocumentNode) format.
+   * Output path for resolver map file.
+   * - If relative, resolved from project root
+   * - If null, suppresses resolvers output
+   * - If undefined, uses default path
+   * @default "src/gqlkit/__generated__/resolvers.ts"
+   */
+  readonly resolversPath?: string | null;
+
+  /**
+   * Output path for GraphQL schema AST (DocumentNode).
    * - If relative, resolved from project root
    * - If null, suppresses AST output
    * - If undefined, uses default path
-   * @default "src/gqlkit/generated/schema.ts"
+   * @default "src/gqlkit/__generated__/typeDefs.ts"
    */
-  readonly ast?: string | null;
+  readonly typeDefsPath?: string | null;
 
   /**
-   * Output path for SDL format.
+   * Output path for GraphQL schema SDL.
    * - If relative, resolved from project root
    * - If null, suppresses SDL output
    * - If undefined, uses default path
-   * @default "src/gqlkit/generated/schema.graphql"
+   * @default "src/gqlkit/__generated__/schema.graphql"
    */
-  readonly sdl?: string | null;
+  readonly schemaPath?: string | null;
 }
 
 /**
@@ -28,16 +37,29 @@ export interface SchemaOutputConfig {
  */
 export interface GqlkitConfig {
   /**
+   * Source directory to scan for types and resolvers.
+   * All TypeScript files (.ts, .cts, .mts) under this directory will be scanned.
+   * @default "src/gqlkit"
+   */
+  readonly sourceDir?: string;
+
+  /**
+   * Glob patterns to exclude from source scanning.
+   * Patterns are matched against file paths relative to sourceDir.
+   * @default []
+   */
+  readonly sourceIgnoreGlobs?: ReadonlyArray<string>;
+
+  /**
+   * Output configuration for generated files.
+   */
+  readonly output?: OutputConfig;
+
+  /**
    * Custom scalar mapping definitions.
    * Configures the mapping between branded types and GraphQL scalars.
    */
   readonly scalars?: ReadonlyArray<ScalarMappingConfig>;
-
-  /**
-   * Schema output configuration.
-   * Allows configuring AST and SDL output paths separately.
-   */
-  readonly output?: SchemaOutputConfig;
 
   /**
    * Path to TypeScript configuration file.

@@ -1,8 +1,8 @@
 import { describe, expect, it } from "vitest";
 import type {
   GqlkitConfig,
+  OutputConfig,
   ScalarMappingConfig,
-  SchemaOutputConfig,
 } from "./types.js";
 
 describe("Config Types", () => {
@@ -80,66 +80,83 @@ describe("Config Types", () => {
     it("should allow config with output settings", () => {
       const config: GqlkitConfig = {
         output: {
-          ast: "src/gqlkit/generated/schema.ts",
-          sdl: "src/gqlkit/generated/schema.graphql",
+          resolversPath: "src/gqlkit/__generated__/resolvers.ts",
+          typeDefsPath: "src/gqlkit/__generated__/typeDefs.ts",
+          schemaPath: "src/gqlkit/__generated__/schema.graphql",
         },
       };
-      expect(config.output?.ast).toBe("src/gqlkit/generated/schema.ts");
-      expect(config.output?.sdl).toBe("src/gqlkit/generated/schema.graphql");
+      expect(config.output?.resolversPath).toBe(
+        "src/gqlkit/__generated__/resolvers.ts",
+      );
+      expect(config.output?.typeDefsPath).toBe(
+        "src/gqlkit/__generated__/typeDefs.ts",
+      );
+      expect(config.output?.schemaPath).toBe(
+        "src/gqlkit/__generated__/schema.graphql",
+      );
     });
 
     it("should allow config with output suppression using null", () => {
       const config: GqlkitConfig = {
         output: {
-          ast: null,
-          sdl: "schema.graphql",
+          resolversPath: null,
+          typeDefsPath: "typeDefs.ts",
+          schemaPath: "schema.graphql",
         },
       };
-      expect(config.output?.ast).toBe(null);
-      expect(config.output?.sdl).toBe("schema.graphql");
+      expect(config.output?.resolversPath).toBe(null);
+      expect(config.output?.typeDefsPath).toBe("typeDefs.ts");
+      expect(config.output?.schemaPath).toBe("schema.graphql");
     });
 
     it("should allow config with undefined output paths for defaults", () => {
       const config: GqlkitConfig = {
         output: {},
       };
-      expect(config.output?.ast).toBe(undefined);
-      expect(config.output?.sdl).toBe(undefined);
+      expect(config.output?.resolversPath).toBe(undefined);
+      expect(config.output?.typeDefsPath).toBe(undefined);
+      expect(config.output?.schemaPath).toBe(undefined);
     });
   });
 
-  describe("SchemaOutputConfig", () => {
+  describe("OutputConfig", () => {
     it("should allow all string paths", () => {
-      const config: SchemaOutputConfig = {
-        ast: "custom/path/schema.ts",
-        sdl: "custom/path/schema.graphql",
+      const config: OutputConfig = {
+        resolversPath: "custom/path/resolvers.ts",
+        typeDefsPath: "custom/path/typeDefs.ts",
+        schemaPath: "custom/path/schema.graphql",
       };
-      expect(config.ast).toBe("custom/path/schema.ts");
-      expect(config.sdl).toBe("custom/path/schema.graphql");
+      expect(config.resolversPath).toBe("custom/path/resolvers.ts");
+      expect(config.typeDefsPath).toBe("custom/path/typeDefs.ts");
+      expect(config.schemaPath).toBe("custom/path/schema.graphql");
     });
 
     it("should allow null for output suppression", () => {
-      const config: SchemaOutputConfig = {
-        ast: null,
-        sdl: null,
+      const config: OutputConfig = {
+        resolversPath: null,
+        typeDefsPath: null,
+        schemaPath: null,
       };
-      expect(config.ast).toBe(null);
-      expect(config.sdl).toBe(null);
+      expect(config.resolversPath).toBe(null);
+      expect(config.typeDefsPath).toBe(null);
+      expect(config.schemaPath).toBe(null);
     });
 
     it("should allow omitting properties for default paths", () => {
-      const config: SchemaOutputConfig = {};
-      expect(config.ast).toBe(undefined);
-      expect(config.sdl).toBe(undefined);
+      const config: OutputConfig = {};
+      expect(config.resolversPath).toBe(undefined);
+      expect(config.typeDefsPath).toBe(undefined);
+      expect(config.schemaPath).toBe(undefined);
     });
 
     it("should allow mixed configurations", () => {
-      const config: SchemaOutputConfig = {
-        ast: "schema.ts",
-        sdl: null,
+      const config: OutputConfig = {
+        resolversPath: "resolvers.ts",
+        typeDefsPath: null,
       };
-      expect(config.ast).toBe("schema.ts");
-      expect(config.sdl).toBe(null);
+      expect(config.resolversPath).toBe("resolvers.ts");
+      expect(config.typeDefsPath).toBe(null);
+      expect(config.schemaPath).toBe(undefined);
     });
   });
 });

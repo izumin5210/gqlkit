@@ -4,7 +4,7 @@
     "message": "Field 'value' references unresolved type 'T'",
     "severity": "error",
     "location": {
-      "file": "types/wrapper.ts",
+      "file": "src/gqlkit/wrapper.ts",
       "line": 1,
       "column": 1
     }
@@ -14,7 +14,7 @@
     "message": "Generic type 'Wrapper' is not supported. Consider using a concrete type instead.",
     "severity": "warning",
     "location": {
-      "file": "types/wrapper.ts",
+      "file": "src/gqlkit/wrapper.ts",
       "line": 6,
       "column": 1
     }

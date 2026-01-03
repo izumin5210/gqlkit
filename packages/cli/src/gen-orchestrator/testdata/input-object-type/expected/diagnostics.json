@@ -1,0 +1,8 @@
+[
+  {
+    "code": "DIRECTORY_NOT_FOUND",
+    "message": "Directory not found: /Users/izumin/src/github.com/izumin5210/gqlkit/packages/cli/src/gen-orchestrator/testdata/input-object-type/src/gqlkit",
+    "severity": "error",
+    "location": null
+  }
+]

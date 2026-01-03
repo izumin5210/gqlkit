@@ -4,6 +4,11 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import type { GqlkitConfig } from "../config/index.js";
 import type { ResolvedScalarMapping } from "../config-loader/index.js";
+import {
+  DEFAULT_RESOLVERS_PATH,
+  DEFAULT_SCHEMA_PATH,
+  DEFAULT_TYPEDEFS_PATH,
+} from "../config-loader/loader.js";
 import { executeGeneration } from "./orchestrator.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
@@ -46,8 +51,6 @@ describe("Golden File Tests", async () => {
   for (const caseName of caseNames) {
     it(caseName, async () => {
       const caseDir = join(testdataDir, caseName);
-      const typesDir = join(caseDir, "types");
-      const resolversDir = join(caseDir, "resolvers");
 
       const config = await readJsonIfExists<Partial<GqlkitConfig>>(
         join(caseDir, "config.json"),
@@ -60,30 +63,35 @@ describe("Golden File Tests", async () => {
           importPath: s.type.from,
         })) ?? null;
 
+      const sourceDir = config?.sourceDir ?? "src/gqlkit";
+
       const result = await executeGeneration({
         cwd: caseDir,
-        typesDir,
-        resolversDir,
-        outputDir: join(caseDir, "output"),
+        sourceDir,
+        sourceIgnoreGlobs: config?.sourceIgnoreGlobs ?? [],
+        output: {
+          resolversPath: DEFAULT_RESOLVERS_PATH,
+          typeDefsPath: DEFAULT_TYPEDEFS_PATH,
+          schemaPath: DEFAULT_SCHEMA_PATH,
+        },
         configDir: null,
         customScalars,
-        output: null,
         tsconfigPath: join(caseDir, "tsconfig.json"),
       });
 
       const expectedDir = join(caseDir, "expected");
 
       if (result.success) {
-        const schemaTs = findFile(result.files, "schema.ts");
+        const typeDefsTs = findFile(result.files, "typeDefs.ts");
         const schemaGraphql = findFile(result.files, "schema.graphql");
         const resolversTs = findFile(result.files, "resolvers.ts");
 
-        expect(schemaTs).toBeDefined();
+        expect(typeDefsTs).toBeDefined();
         expect(schemaGraphql).toBeDefined();
         expect(resolversTs).toBeDefined();
 
-        await expect(schemaTs).toMatchFileSnapshot(
-          join(expectedDir, "schema.ts"),
+        await expect(typeDefsTs).toMatchFileSnapshot(
+          join(expectedDir, "typeDefs.ts"),
         );
         await expect(schemaGraphql).toMatchFileSnapshot(
           join(expectedDir, "schema.graphql"),

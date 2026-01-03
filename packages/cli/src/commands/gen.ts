@@ -17,6 +17,23 @@ export interface RunGenCommandResult {
   readonly exitCode: number;
 }
 
+function getOutputDir(
+  cwd: string,
+  resolversPath: string | null,
+  typeDefsPath: string | null,
+  schemaPath: string | null,
+): string {
+  const paths = [resolversPath, typeDefsPath, schemaPath].filter(
+    (p): p is string => p !== null,
+  );
+
+  if (paths.length > 0 && paths[0]) {
+    return join(cwd, dirname(paths[0]));
+  }
+
+  return join(cwd, "src/gqlkit/__generated__");
+}
+
 export async function runGenCommand(
   options: RunGenCommandOptions,
 ): Promise<RunGenCommandResult> {
@@ -40,17 +57,17 @@ export async function runGenCommand(
     ? dirname(configResult.configPath)
     : options.cwd;
 
-  const outputDir = join(options.cwd, "src/gqlkit/generated");
+  const { sourceDir, sourceIgnoreGlobs, output, scalars, tsconfigPath } =
+    configResult.config;
 
   const config: GenerationConfig = {
     cwd: options.cwd,
-    typesDir: join(options.cwd, "src/gql/types"),
-    resolversDir: join(options.cwd, "src/gql/resolvers"),
-    outputDir,
+    sourceDir,
+    sourceIgnoreGlobs,
+    output,
     configDir,
-    customScalars: configResult.config.scalars,
-    output: configResult.config.output,
-    tsconfigPath: configResult.config.tsconfigPath,
+    customScalars: scalars,
+    tsconfigPath,
   };
 
   progressReporter.startPhase("Extracting types");
@@ -67,6 +84,13 @@ export async function runGenCommand(
     diagnosticReporter.reportError("Generation failed");
     return { exitCode: 1 };
   }
+
+  const outputDir = getOutputDir(
+    options.cwd,
+    output.resolversPath,
+    output.typeDefsPath,
+    output.schemaPath,
+  );
 
   const writeResult = await writeGeneratedFiles({
     outputDir,

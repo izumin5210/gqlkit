@@ -1,7 +1,9 @@
 import type { Diagnostic } from "../type-extractor/types/index.js";
 import {
-  DEFAULT_AST_OUTPUT_PATH,
-  DEFAULT_SDL_OUTPUT_PATH,
+  DEFAULT_RESOLVERS_PATH,
+  DEFAULT_SCHEMA_PATH,
+  DEFAULT_SOURCE_DIR,
+  DEFAULT_TYPEDEFS_PATH,
   type ResolvedConfig,
   type ResolvedOutputConfig,
   type ResolvedScalarMapping,
@@ -30,6 +32,19 @@ function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === "object" && value !== null && !Array.isArray(value);
 }
 
+function getDefaultPathForField(fieldName: string): string {
+  switch (fieldName) {
+    case "output.resolversPath":
+      return DEFAULT_RESOLVERS_PATH;
+    case "output.typeDefsPath":
+      return DEFAULT_TYPEDEFS_PATH;
+    case "output.schemaPath":
+      return DEFAULT_SCHEMA_PATH;
+    default:
+      return "";
+  }
+}
+
 function validateOutputPath(
   value: unknown,
   fieldName: string,
@@ -38,10 +53,7 @@ function validateOutputPath(
   const diagnostics: Diagnostic[] = [];
 
   if (value === undefined) {
-    const defaultPath =
-      fieldName === "output.ast"
-        ? DEFAULT_AST_OUTPUT_PATH
-        : DEFAULT_SDL_OUTPUT_PATH;
+    const defaultPath = getDefaultPathForField(fieldName);
     return { resolved: defaultPath, diagnostics: [] };
   }
 
@@ -70,6 +82,74 @@ function validateOutputPath(
   }
 
   return { resolved: value, diagnostics: [] };
+}
+
+function validateSourceDir(
+  value: unknown,
+  configPath: string,
+): { resolved: string | undefined; diagnostics: Diagnostic[] } {
+  const diagnostics: Diagnostic[] = [];
+
+  if (value === undefined) {
+    return { resolved: DEFAULT_SOURCE_DIR, diagnostics: [] };
+  }
+
+  if (typeof value !== "string") {
+    diagnostics.push({
+      code: "CONFIG_INVALID_TYPE",
+      message: "sourceDir must be a string",
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+    return { resolved: undefined, diagnostics };
+  }
+
+  if (value === "") {
+    diagnostics.push({
+      code: "CONFIG_INVALID_SOURCE_DIR",
+      message: "sourceDir cannot be empty",
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+    return { resolved: undefined, diagnostics };
+  }
+
+  return { resolved: value, diagnostics: [] };
+}
+
+function validateSourceIgnoreGlobs(
+  value: unknown,
+  configPath: string,
+): { resolved: ReadonlyArray<string> | undefined; diagnostics: Diagnostic[] } {
+  const diagnostics: Diagnostic[] = [];
+
+  if (value === undefined) {
+    return { resolved: [], diagnostics: [] };
+  }
+
+  if (!Array.isArray(value)) {
+    diagnostics.push({
+      code: "CONFIG_INVALID_IGNORE_GLOBS",
+      message: "sourceIgnoreGlobs must be an array of strings",
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+    return { resolved: undefined, diagnostics };
+  }
+
+  for (const item of value) {
+    if (typeof item !== "string") {
+      diagnostics.push({
+        code: "CONFIG_INVALID_IGNORE_GLOBS",
+        message: "sourceIgnoreGlobs must be an array of strings",
+        severity: "error",
+        location: { file: configPath, line: 1, column: 1 },
+      });
+      return { resolved: undefined, diagnostics };
+    }
+  }
+
+  return { resolved: value as ReadonlyArray<string>, diagnostics: [] };
 }
 
 function validateTsconfigPath(
@@ -114,8 +194,9 @@ function validateOutputConfig(
   if (output === undefined) {
     return {
       resolved: {
-        ast: DEFAULT_AST_OUTPUT_PATH,
-        sdl: DEFAULT_SDL_OUTPUT_PATH,
+        resolversPath: DEFAULT_RESOLVERS_PATH,
+        typeDefsPath: DEFAULT_TYPEDEFS_PATH,
+        schemaPath: DEFAULT_SCHEMA_PATH,
       },
       diagnostics: [],
     };
@@ -131,11 +212,25 @@ function validateOutputConfig(
     return { resolved: undefined, diagnostics };
   }
 
-  const astResult = validateOutputPath(output["ast"], "output.ast", configPath);
-  const sdlResult = validateOutputPath(output["sdl"], "output.sdl", configPath);
+  const resolversPathResult = validateOutputPath(
+    output["resolversPath"],
+    "output.resolversPath",
+    configPath,
+  );
+  const typeDefsPathResult = validateOutputPath(
+    output["typeDefsPath"],
+    "output.typeDefsPath",
+    configPath,
+  );
+  const schemaPathResult = validateOutputPath(
+    output["schemaPath"],
+    "output.schemaPath",
+    configPath,
+  );
 
-  diagnostics.push(...astResult.diagnostics);
-  diagnostics.push(...sdlResult.diagnostics);
+  diagnostics.push(...resolversPathResult.diagnostics);
+  diagnostics.push(...typeDefsPathResult.diagnostics);
+  diagnostics.push(...schemaPathResult.diagnostics);
 
   if (diagnostics.length > 0) {
     return { resolved: undefined, diagnostics };
@@ -143,8 +238,9 @@ function validateOutputConfig(
 
   return {
     resolved: {
-      ast: astResult.resolved,
-      sdl: sdlResult.resolved,
+      resolversPath: resolversPathResult.resolved,
+      typeDefsPath: typeDefsPathResult.resolved,
+      schemaPath: schemaPathResult.resolved,
     },
     diagnostics: [],
   };
@@ -252,6 +348,15 @@ export function validateConfig(
     return { valid: false, resolvedConfig: undefined, diagnostics };
   }
 
+  const sourceDirResult = validateSourceDir(config["sourceDir"], configPath);
+  diagnostics.push(...sourceDirResult.diagnostics);
+
+  const sourceIgnoreGlobsResult = validateSourceIgnoreGlobs(
+    config["sourceIgnoreGlobs"],
+    configPath,
+  );
+  diagnostics.push(...sourceIgnoreGlobsResult.diagnostics);
+
   const outputResult = validateOutputConfig(config["output"], configPath);
   diagnostics.push(...outputResult.diagnostics);
 
@@ -316,15 +421,22 @@ export function validateConfig(
     }
   }
 
-  if (diagnostics.length > 0 || !outputResult.resolved) {
+  if (
+    diagnostics.length > 0 ||
+    !sourceDirResult.resolved ||
+    !sourceIgnoreGlobsResult.resolved ||
+    !outputResult.resolved
+  ) {
     return { valid: false, resolvedConfig: undefined, diagnostics };
   }
 
   return {
     valid: true,
     resolvedConfig: {
-      scalars: resolvedScalars,
+      sourceDir: sourceDirResult.resolved,
+      sourceIgnoreGlobs: sourceIgnoreGlobsResult.resolved,
       output: outputResult.resolved,
+      scalars: resolvedScalars,
       tsconfigPath: tsconfigPathResult.resolved,
     },
     diagnostics: [],
