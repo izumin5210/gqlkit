@@ -1,6 +1,8 @@
 coverage:
-  acceptable: 60%
   if: true
+  acceptable: 60%
+  paths:
+    - coverage/lcov.info
 testExecutionTime:
   if: true
 diff:
