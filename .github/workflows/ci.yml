@@ -28,6 +28,8 @@ jobs:
       - uses: actions/setup-node@v6
         with:
           cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       - name: ${{ matrix.command.name }}
         run: ${{ matrix.command.run }}
   test:
@@ -45,6 +47,8 @@ jobs:
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       - name: test
         run: pnpm test
 
