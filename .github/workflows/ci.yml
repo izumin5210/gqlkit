@@ -24,6 +24,9 @@ jobs:
     name: ${{ matrix.command.name }}
     steps:
       - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v6
         with:
           cache: pnpm
@@ -39,9 +42,13 @@ jobs:
     name: test - Node.js ${{ matrix.node-version }} on ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v6
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 10
       - uses: actions/setup-node@v6
         with:
           node-version: ${{ matrix.node-version }}
           cache: pnpm
       - name: test
         run: pnpm test
+
