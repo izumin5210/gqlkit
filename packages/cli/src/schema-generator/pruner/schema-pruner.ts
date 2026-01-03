@@ -64,9 +64,9 @@ function extractCustomScalarDefinitions(
 }
 
 /**
- * DocumentNode から未使用の型を削除する。
- * Query、Mutation、Subscription から参照されていない型を削除対象とする。
- * カスタムスカラーは pruning 対象外として保持する。
+ * Remove unused types from DocumentNode.
+ * Types not referenced from Query, Mutation, or Subscription are removed.
+ * Custom scalars are preserved and excluded from pruning.
  */
 export function pruneDocumentNode(
   input: PruneDocumentNodeInput,

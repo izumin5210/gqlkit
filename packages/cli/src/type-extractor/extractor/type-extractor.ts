@@ -22,22 +22,6 @@ export interface ExtractionResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
-const DEFAULT_COMPILER_OPTIONS: ts.CompilerOptions = {
-  target: ts.ScriptTarget.ES2022,
-  module: ts.ModuleKind.NodeNext,
-  moduleResolution: ts.ModuleResolutionKind.Node16,
-  strict: true,
-  esModuleInterop: true,
-  skipLibCheck: true,
-  noEmit: true,
-};
-
-export function createProgramFromFiles(
-  files: ReadonlyArray<string>,
-): ts.Program {
-  return ts.createProgram([...files], DEFAULT_COMPILER_OPTIONS);
-}
-
 function isExported(node: ts.Node): boolean {
   const modifiers = ts.getCombinedModifierFlags(node as ts.Declaration);
   return (modifiers & ts.ModifierFlags.Export) !== 0;
@@ -352,17 +336,6 @@ function extractFieldsFromType(
   return { fields, unknownBrands };
 }
 
-function isStringEnum(node: ts.Node): boolean {
-  if (!ts.isEnumDeclaration(node)) return false;
-  const members = node.members;
-  if (members.length === 0) return false;
-
-  return members.every((member) => {
-    const initializer = member.initializer;
-    return initializer !== undefined && ts.isStringLiteral(initializer);
-  });
-}
-
 function isNumericEnum(node: ts.Node): boolean {
   if (!ts.isEnumDeclaration(node)) return false;
   const members = node.members;
@@ -411,10 +384,7 @@ function isConstEnum(node: ts.Node): boolean {
   return (modifiers & ts.ModifierFlags.Const) !== 0;
 }
 
-function isStringLiteralUnion(
-  type: ts.Type,
-  _checker: ts.TypeChecker,
-): boolean {
+function isStringLiteralUnion(type: ts.Type): boolean {
   if (!type.isUnion()) return false;
 
   const nonNullTypes = type.types.filter(
@@ -480,11 +450,7 @@ function extractStringLiteralUnionMembers(
   return members;
 }
 
-function determineTypeKind(
-  node: ts.Node,
-  type: ts.Type,
-  checker: ts.TypeChecker,
-): TypeKind {
+function determineTypeKind(node: ts.Node, type: ts.Type): TypeKind {
   if (ts.isInterfaceDeclaration(node)) {
     return "interface";
   }
@@ -496,7 +462,7 @@ function determineTypeKind(
           !(t.flags & ts.TypeFlags.Null) && !(t.flags & ts.TypeFlags.Undefined),
       );
 
-      if (isStringLiteralUnion(type, checker)) {
+      if (isStringLiteralUnion(type)) {
         return "enum";
       }
 
@@ -649,7 +615,7 @@ export function extractTypesFromProgram(
         }
 
         const type = checker.getDeclaredTypeOfSymbol(symbol);
-        const kind = determineTypeKind(node, type, checker);
+        const kind = determineTypeKind(node, type);
         const unionMembers = extractUnionMembers(type);
         const tsdocInfo = extractTSDocInfo(node, checker);
 

@@ -1,76 +1,76 @@
 /**
- * スキーマ出力オプション。
- * AST と SDL の出力パスを個別に設定できる。
+ * Schema output options.
+ * Allows configuring AST and SDL output paths separately.
  */
 export interface SchemaOutputConfig {
   /**
-   * AST (DocumentNode) 形式の出力パス。
-   * - 相対パスの場合、プロジェクトルートからの相対パス
-   * - null の場合、AST 出力を抑制
-   * - undefined の場合、デフォルトパス使用
+   * Output path for AST (DocumentNode) format.
+   * - If relative, resolved from project root
+   * - If null, suppresses AST output
+   * - If undefined, uses default path
    * @default "src/gqlkit/generated/schema.ts"
    */
   readonly ast?: string | null;
 
   /**
-   * SDL 形式の出力パス。
-   * - 相対パスの場合、プロジェクトルートからの相対パス
-   * - null の場合、SDL 出力を抑制
-   * - undefined の場合、デフォルトパス使用
+   * Output path for SDL format.
+   * - If relative, resolved from project root
+   * - If null, suppresses SDL output
+   * - If undefined, uses default path
    * @default "src/gqlkit/generated/schema.graphql"
    */
   readonly sdl?: string | null;
 }
 
 /**
- * gqlkit 設定ファイルの型定義。
- * `gqlkit.config.ts` で使用する。
+ * Type definition for gqlkit configuration file.
+ * Used in `gqlkit.config.ts`.
  */
 export interface GqlkitConfig {
   /**
-   * カスタムスカラーマッピングの定義。
-   * branded type と GraphQL scalar の対応を設定する。
+   * Custom scalar mapping definitions.
+   * Configures the mapping between branded types and GraphQL scalars.
    */
   readonly scalars?: ReadonlyArray<ScalarMappingConfig>;
 
   /**
-   * スキーマ出力設定。
-   * AST と SDL の出力パスを個別に設定できる。
+   * Schema output configuration.
+   * Allows configuring AST and SDL output paths separately.
    */
   readonly output?: SchemaOutputConfig;
 
   /**
-   * TypeScript 設定ファイルへのパス。
-   * - 相対パスの場合、設定ファイルからの相対パス
-   * - 絶対パスも指定可能
-   * - 未指定の場合、プロジェクトルートの tsconfig.json を自動検索
+   * Path to TypeScript configuration file.
+   * - If relative, resolved from config file
+   * - Absolute paths are also supported
+   * - If unspecified, automatically searches for tsconfig.json in project root
    */
   readonly tsconfigPath?: string;
 }
 
 /**
- * 個々のカスタムスカラーマッピング設定。
+ * Individual custom scalar mapping configuration.
  */
 export interface ScalarMappingConfig {
   /**
-   * GraphQL スキーマで使用するスカラー名。
-   * 例: "DateTime", "UUID", "URL"
+   * Scalar name to use in GraphQL schema.
+   * Example: "DateTime", "UUID", "URL"
    */
   readonly graphqlName: string;
 
   /**
-   * マッピング対象の TypeScript 型情報。
+   * TypeScript type information to map.
    */
   readonly type: {
     /**
-     * 型のインポートパス。
-     * 例: "./src/types/scalars", "@my-lib/scalars"
+     * Import path for the type.
+     * Example: "./src/types/scalars", "@my-lib/scalars"
      */
     readonly from: string;
 
     /**
-     * インポートする型名。
-     * 例: "DateTime", "UUID"
+     * Type name to import.
+     * Example: "DateTime", "UUID"
      */
     readonly name: string;
   };

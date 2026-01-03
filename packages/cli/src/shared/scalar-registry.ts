@@ -6,10 +6,6 @@
  * branded scalar types during type extraction.
  */
 
-import { join } from "node:path";
-import ts from "typescript";
-import type { ResolvedScalarMapping } from "../config-loader/index.js";
-
 /**
  * Represents the mapping information for a branded scalar type.
  */
@@ -34,18 +30,6 @@ export interface ExtendedScalarMappingInfo {
   readonly importPath: string;
   /** Whether this is a custom scalar */
   readonly isCustom: boolean;
-}
-
-/**
- * Configuration for creating a ScalarRegistry.
- */
-export interface ScalarRegistryConfig {
-  /** TypeScript program for module resolution */
-  readonly program: ts.Program;
-  /** Directory containing the config file (for resolving relative paths) */
-  readonly configDir: string | null;
-  /** Custom scalar mappings from config */
-  readonly customScalars: ReadonlyArray<ResolvedScalarMapping> | null;
 }
 
 /**
@@ -141,107 +125,4 @@ export function getScalarMapping(
  */
 export function isKnownBrandedScalar(brandName: string): boolean {
   return STANDARD_SCALAR_MAPPINGS.has(brandName);
-}
-
-const GQLKIT_RUNTIME_MODULE = "@gqlkit-ts/runtime";
-
-/**
- * Resolves an import path to an absolute file path using TypeScript's module resolution.
- */
-function resolveModulePath(
-  importPath: string,
-  containingDir: string,
-  compilerOptions: ts.CompilerOptions,
-  host: ts.ModuleResolutionHost,
-): string | undefined {
-  const containingFile = join(containingDir, "dummy.ts");
-  const result = ts.resolveModuleName(
-    importPath,
-    containingFile,
-    compilerOptions,
-    host,
-  );
-
-  if (result.resolvedModule) {
-    return result.resolvedModule.resolvedFileName;
-  }
-
-  return undefined;
-}
-
-/**
- * Creates a ScalarRegistry instance.
- *
- * The registry manages both standard branded types from @gqlkit-ts/runtime
- * and custom scalar mappings from the config file.
- */
-function createScalarRegistry(
-  config: ScalarRegistryConfig,
-): ScalarRegistry {
-  const { program, configDir, customScalars } = config;
-  const compilerOptions = program.getCompilerOptions();
-  const host: ts.ModuleResolutionHost = {
-    fileExists: ts.sys.fileExists,
-    readFile: ts.sys.readFile,
-    directoryExists: ts.sys.directoryExists,
-    getCurrentDirectory: () => compilerOptions.baseUrl ?? process.cwd(),
-    getDirectories: ts.sys.getDirectories,
-    ...(ts.sys.realpath ? { realpath: ts.sys.realpath } : {}),
-  };
-
-  const customMappings = new Map<string, ExtendedScalarMappingInfo>();
-
-  if (configDir && customScalars) {
-    for (const scalar of customScalars) {
-      const resolvedPath = resolveModulePath(
-        scalar.importPath,
-        configDir,
-        compilerOptions,
-        host,
-      );
-
-      if (resolvedPath) {
-        const key = `${resolvedPath}::${scalar.typeName}`;
-        customMappings.set(key, {
-          graphqlScalar: scalar.graphqlName,
-          typeName: scalar.typeName,
-          importPath: resolvedPath,
-          isCustom: true,
-        });
-      }
-    }
-  }
-
-  return {
-    getMapping(
-      typeName: string,
-      absoluteImportPath: string,
-    ): ExtendedScalarMappingInfo | undefined {
-      const customKey = `${absoluteImportPath}::${typeName}`;
-      const customMapping = customMappings.get(customKey);
-      if (customMapping) {
-        return customMapping;
-      }
-
-      if (absoluteImportPath === GQLKIT_RUNTIME_MODULE) {
-        const standardMapping = STANDARD_SCALAR_MAPPINGS.get(typeName);
-        if (standardMapping) {
-          return {
-            graphqlScalar: standardMapping.graphqlScalar,
-            typeName: standardMapping.brandName,
-            importPath: GQLKIT_RUNTIME_MODULE,
-            isCustom: false,
-          };
-        }
-      }
-
-      return undefined;
-    },
-
-    getCustomScalarNames(): ReadonlyArray<string> {
-      return [
-        ...new Set([...customMappings.values()].map((m) => m.graphqlScalar)),
-      ];
-    },
-  };
 }

@@ -1,8 +1,4 @@
-export {
-  type ExtractTypesOptions,
-  type ExtractTypesResult,
-  
-} from "./extract-types.js";
+export type { ExtractTypesResult } from "./extract-types.js";
 
 export type {
   Diagnostic,

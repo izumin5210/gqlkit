@@ -185,18 +185,3 @@ export function detectBrandedScalar(
     diagnostics,
   };
 }
-
-/**
- * Checks if a TypeScript type is a branded scalar type from @gqlkit-ts/runtime.
- *
- * @param type - The TypeScript type to check
- * @param checker - The TypeScript type checker
- * @returns true if the type is a known branded scalar, false otherwise
- */
-function isBrandedScalarType(
-  type: ts.Type,
-  checker: ts.TypeChecker,
-): boolean {
-  const result = detectBrandedScalar(type, checker);
-  return result.scalarInfo !== undefined;
-}

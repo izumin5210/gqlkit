@@ -15,13 +15,13 @@ export interface ResolvedScalarMapping {
 }
 
 /**
- * 解決済みの出力設定。
- * undefined はデフォルト値に解決された状態。
+ * Resolved output configuration.
+ * Undefined values are resolved to defaults.
  */
 export interface ResolvedOutputConfig {
-  /** AST 出力パス。null は出力抑制 */
+  /** AST output path. Null suppresses output */
   readonly ast: string | null;
-  /** SDL 出力パス。null は出力抑制 */
+  /** SDL output path. Null suppresses output */
   readonly sdl: string | null;
 }
 

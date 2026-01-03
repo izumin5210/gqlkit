@@ -4,15 +4,27 @@ import type {
   ResolvedOutputConfig,
   ResolvedScalarMapping,
 } from "../config-loader/index.js";
-import { extractDefineApiResolvers } from "../resolver-extractor/extractor/define-api-extractor.js";
-import { scanResolverDirectory } from "../resolver-extractor/scanner/file-scanner.js";
+import {
+  type ArgumentDefinition,
+  type DefineApiResolverInfo,
+  extractDefineApiResolvers,
+} from "../resolver-extractor/extractor/define-api-extractor.js";
+import type {
+  GraphQLFieldDefinition,
+  GraphQLInputValue,
+  TypeExtension,
+} from "../resolver-extractor/index.js";
 import { generateSchema } from "../schema-generator/index.js";
+import {
+  collectDiagnostics,
+  convertTsTypeToGraphQLType,
+  scanDirectory,
+} from "../shared/index.js";
 import { createSharedProgram } from "../shared/program-factory.js";
 import { collectResults } from "../type-extractor/collector/result-collector.js";
 import { convertToGraphQL } from "../type-extractor/converter/graphql-converter.js";
 import { extractTypesFromProgram } from "../type-extractor/extractor/type-extractor.js";
 import type { Diagnostic, Diagnostics } from "../type-extractor/index.js";
-import { scanDirectory } from "../type-extractor/scanner/file-scanner.js";
 import { validateTypes } from "../type-extractor/validator/type-validator.js";
 import { writeFiles } from "./writer/file-writer.js";
 
@@ -94,112 +106,6 @@ function extractTypesCore(
   return collectResults(conversionResult.types, allDiagnostics);
 }
 
-const PRIMITIVE_TYPE_MAP: Record<string, string> = {
-  string: "String",
-  number: "Float",
-  boolean: "Boolean",
-};
-
-interface TSTypeReference {
-  kind: string;
-  name: string | null;
-  elementType: TSTypeReference | null;
-  nullable: boolean;
-  scalarInfo?: { scalarName: string } | null;
-}
-
-interface GraphQLFieldType {
-  typeName: string;
-  nullable: boolean;
-  list: boolean;
-  listItemNullable: boolean | null;
-}
-
-interface GraphQLInputValue {
-  name: string;
-  type: GraphQLFieldType;
-  description: string | null;
-  deprecated: unknown;
-}
-
-interface GraphQLFieldDefinition {
-  name: string;
-  type: GraphQLFieldType;
-  args: ReadonlyArray<GraphQLInputValue> | null;
-  sourceLocation: { file: string; line: number; column: number };
-  resolverExportName: string | null;
-  description: string | null;
-  deprecated: unknown;
-}
-
-interface TypeExtension {
-  targetTypeName: string;
-  fields: ReadonlyArray<GraphQLFieldDefinition>;
-}
-
-function convertTsTypeToGraphQLType(tsType: TSTypeReference): GraphQLFieldType {
-  const nullable = tsType.nullable;
-
-  if (tsType.kind === "array") {
-    const elementType = tsType.elementType;
-    const elementTypeName = elementType
-      ? convertElementTypeName(elementType)
-      : "String";
-    const listItemNullable = elementType?.nullable ?? false;
-
-    return {
-      typeName: elementTypeName,
-      nullable,
-      list: true,
-      listItemNullable,
-    };
-  }
-
-  if (tsType.kind === "primitive") {
-    const graphqlType = PRIMITIVE_TYPE_MAP[tsType.name ?? ""] ?? "String";
-    return {
-      typeName: graphqlType,
-      nullable,
-      list: false,
-      listItemNullable: null,
-    };
-  }
-
-  if (tsType.kind === "reference") {
-    return {
-      typeName: tsType.name ?? "Unknown",
-      nullable,
-      list: false,
-      listItemNullable: null,
-    };
-  }
-
-  return {
-    typeName: tsType.name ?? "String",
-    nullable,
-    list: false,
-    listItemNullable: null,
-  };
-}
-
-function convertElementTypeName(elementType: TSTypeReference): string {
-  if (elementType.kind === "primitive") {
-    return PRIMITIVE_TYPE_MAP[elementType.name ?? ""] ?? "String";
-  }
-  if (elementType.kind === "reference") {
-    return elementType.name ?? "Unknown";
-  }
-  return elementType.name ?? "String";
-}
-
-interface ArgumentDefinition {
-  name: string;
-  tsType: TSTypeReference;
-  optional: boolean;
-  description: string | null;
-  deprecated: unknown;
-}
-
 function convertArgsToInputValues(
   args: ReadonlyArray<ArgumentDefinition>,
 ): GraphQLInputValue[] {
@@ -212,17 +118,6 @@ function convertArgsToInputValues(
     description: arg.description,
     deprecated: arg.deprecated,
   }));
-}
-
-interface DefineApiResolverInfo {
-  fieldName: string;
-  resolverType: "query" | "mutation" | "field";
-  parentTypeName: string | null;
-  args: ReadonlyArray<ArgumentDefinition> | null;
-  returnType: TSTypeReference;
-  sourceFile: string;
-  description: string | null;
-  deprecated: unknown;
 }
 
 function convertDefineApiToFields(
@@ -274,40 +169,6 @@ function convertDefineApiToFields(
   };
 }
 
-function getDiagnosticKey(d: Diagnostic): string {
-  const locationKey = d.location
-    ? `${d.location.file}:${d.location.line}:${d.location.column}`
-    : "";
-  return `${d.code}:${d.message}:${d.severity}:${locationKey}`;
-}
-
-function deduplicateDiagnostics(
-  diagnostics: ReadonlyArray<Diagnostic>,
-): Diagnostic[] {
-  const seen = new Set<string>();
-  const result: Diagnostic[] = [];
-
-  for (const d of diagnostics) {
-    const key = getDiagnosticKey(d);
-    if (!seen.has(key)) {
-      seen.add(key);
-      result.push(d);
-    }
-  }
-
-  return result;
-}
-
-function collectDiagnostics(
-  allDiagnostics: ReadonlyArray<Diagnostic>,
-): Diagnostics {
-  const uniqueDiagnostics = deduplicateDiagnostics(allDiagnostics);
-  const errors = uniqueDiagnostics.filter((d) => d.severity === "error");
-  const warnings = uniqueDiagnostics.filter((d) => d.severity === "warning");
-
-  return { errors, warnings };
-}
-
 function normalizeDiagnosticPaths(
   diagnostics: ReadonlyArray<Diagnostic>,
   sourceRoot: string,
@@ -353,7 +214,9 @@ export async function executeGeneration(
   config: GenerationConfig,
 ): Promise<GenerationResult> {
   const typeScanResult = await scanDirectory(config.typesDir);
-  const resolverScanResult = await scanResolverDirectory(config.resolversDir);
+  const resolverScanResult = await scanDirectory(config.resolversDir, {
+    excludePatterns: [".test.ts", ".spec.ts"],
+  });
 
   const scanDiagnostics: Diagnostic[] = [
     ...typeScanResult.errors,

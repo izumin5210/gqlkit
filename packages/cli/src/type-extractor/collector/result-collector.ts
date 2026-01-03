@@ -1,3 +1,4 @@
+import { deduplicateDiagnostics } from "../../shared/index.js";
 import type {
   Diagnostic,
   Diagnostics,
@@ -34,30 +35,6 @@ function sortType(type: GraphQLTypeInfo): GraphQLTypeInfo {
   }
 
   return type;
-}
-
-function getDiagnosticKey(d: Diagnostic): string {
-  const locationKey = d.location
-    ? `${d.location.file}:${d.location.line}:${d.location.column}`
-    : "";
-  return `${d.code}:${d.message}:${d.severity}:${locationKey}`;
-}
-
-function deduplicateDiagnostics(
-  diagnostics: ReadonlyArray<Diagnostic>,
-): Diagnostic[] {
-  const seen = new Set<string>();
-  const result: Diagnostic[] = [];
-
-  for (const d of diagnostics) {
-    const key = getDiagnosticKey(d);
-    if (!seen.has(key)) {
-      seen.add(key);
-      result.push(d);
-    }
-  }
-
-  return result;
 }
 
 export function collectResults(

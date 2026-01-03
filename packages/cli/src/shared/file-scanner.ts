@@ -1,14 +1,42 @@
 import { readdir, stat } from "node:fs/promises";
 import { join, resolve } from "node:path";
-import type { Diagnostic } from "../types/index.js";
+import type { Diagnostic } from "../type-extractor/types/index.js";
 
 export interface ScanResult {
   readonly files: ReadonlyArray<string>;
   readonly errors: ReadonlyArray<Diagnostic>;
 }
 
-async function collectFiles(directory: string, files: string[]): Promise<void> {
+export interface ScanOptions {
+  readonly excludePatterns?: ReadonlyArray<string>;
+}
+
+function isTypeScriptFile(fileName: string): boolean {
+  return fileName.endsWith(".ts");
+}
+
+function isTypeDefinitionFile(fileName: string): boolean {
+  return fileName.endsWith(".d.ts");
+}
+
+function matchesPattern(fileName: string, pattern: string): boolean {
+  return fileName.endsWith(pattern);
+}
+
+function shouldExcludeFile(
+  fileName: string,
+  excludePatterns: ReadonlyArray<string>,
+): boolean {
+  return excludePatterns.some((pattern) => matchesPattern(fileName, pattern));
+}
+
+async function collectFiles(
+  directory: string,
+  files: string[],
+  options: ScanOptions,
+): Promise<void> {
   const entries = await readdir(directory, { withFileTypes: true });
+  const excludePatterns = options.excludePatterns ?? [];
 
   for (const entry of entries) {
     const fullPath = join(directory, entry.name);
@@ -17,16 +45,23 @@ async function collectFiles(directory: string, files: string[]): Promise<void> {
       if (entry.name === "node_modules") {
         continue;
       }
-      await collectFiles(fullPath, files);
+      await collectFiles(fullPath, files, options);
     } else if (entry.isFile()) {
-      if (entry.name.endsWith(".ts") && !entry.name.endsWith(".d.ts")) {
+      if (
+        isTypeScriptFile(entry.name) &&
+        !isTypeDefinitionFile(entry.name) &&
+        !shouldExcludeFile(entry.name, excludePatterns)
+      ) {
         files.push(fullPath);
       }
     }
   }
 }
 
-export async function scanDirectory(directory: string): Promise<ScanResult> {
+export async function scanDirectory(
+  directory: string,
+  options: ScanOptions = {},
+): Promise<ScanResult> {
   const absolutePath = resolve(directory);
 
   try {
@@ -59,7 +94,7 @@ export async function scanDirectory(directory: string): Promise<ScanResult> {
   }
 
   const files: string[] = [];
-  await collectFiles(absolutePath, files);
+  await collectFiles(absolutePath, files, options);
 
   files.sort();
 

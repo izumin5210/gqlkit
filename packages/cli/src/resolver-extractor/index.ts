@@ -1,5 +1,5 @@
+export type { ScanResult } from "../shared/index.js";
 export type {
-  ExtractResolversOptions,
   ExtractResolversResult,
   GraphQLFieldDefinition,
   GraphQLInputValue,
@@ -7,5 +7,3 @@ export type {
   QueryFieldDefinitions,
   TypeExtension,
 } from "./extract-resolvers.js";
-
-export type { ScanResult } from "./scanner/file-scanner.js";
