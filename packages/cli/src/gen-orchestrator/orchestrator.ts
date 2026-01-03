@@ -19,6 +19,7 @@ import {
   collectDiagnostics,
   convertTsTypeToGraphQLType,
   scanDirectory,
+  toPosixPath,
 } from "../shared/index.js";
 import { createSharedProgram } from "../shared/program-factory.js";
 import { collectResults } from "../type-extractor/collector/result-collector.js";
@@ -181,7 +182,7 @@ function normalizeDiagnosticPaths(
       ...d,
       location: {
         ...d.location,
-        file: relative(sourceRoot, d.location.file),
+        file: toPosixPath(relative(sourceRoot, d.location.file)),
       },
     };
   });
