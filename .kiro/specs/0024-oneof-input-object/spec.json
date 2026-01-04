@@ -1,0 +1,22 @@
+{
+  "feature_name": "0024-oneof-input-object",
+  "created_at": "2026-01-04T01:10:12Z",
+  "updated_at": "2026-01-04T03:00:00Z",
+  "language": "ja",
+  "phase": "tasks-generated",
+  "approvals": {
+    "requirements": {
+      "generated": true,
+      "approved": true
+    },
+    "design": {
+      "generated": true,
+      "approved": true
+    },
+    "tasks": {
+      "generated": true,
+      "approved": true
+    }
+  },
+  "ready_for_implementation": false
+}

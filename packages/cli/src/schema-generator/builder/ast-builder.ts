@@ -94,6 +94,13 @@ function buildDeprecatedDirective(
   };
 }
 
+function buildOneOfDirective(): ConstDirectiveNode {
+  return {
+    kind: Kind.DIRECTIVE,
+    name: buildNameNode("oneOf"),
+  };
+}
+
 function buildNamedTypeNode(typeName: string): NamedTypeNode {
   return {
     kind: Kind.NAMED_TYPE,
@@ -303,6 +310,11 @@ function buildScalarTypeDefinitionNode(
 function buildInputFieldDefinitionNode(
   field: BaseField,
 ): InputValueDefinitionNode {
+  const directives: ConstDirectiveNode[] = [];
+  if (field.deprecated) {
+    directives.push(buildDeprecatedDirective(field.deprecated));
+  }
+
   return {
     kind: Kind.INPUT_VALUE_DEFINITION,
     name: buildNameNode(field.name),
@@ -310,6 +322,7 @@ function buildInputFieldDefinitionNode(
     ...(field.description
       ? { description: buildStringValueNode(field.description) }
       : {}),
+    ...(directives.length > 0 ? { directives } : {}),
   };
 }
 
@@ -325,11 +338,17 @@ function buildInputObjectTypeDefinitionNode(
     sourceRoot,
   );
 
+  const directives: ConstDirectiveNode[] = [];
+  if (inputType.isOneOf) {
+    directives.push(buildOneOfDirective());
+  }
+
   return {
     kind: Kind.INPUT_OBJECT_TYPE_DEFINITION,
     name: buildNameNode(inputType.name),
     fields: sortedFields.map(buildInputFieldDefinitionNode),
     ...(description ? { description: buildStringValueNode(description) } : {}),
+    ...(directives.length > 0 ? { directives } : {}),
   };
 }
 

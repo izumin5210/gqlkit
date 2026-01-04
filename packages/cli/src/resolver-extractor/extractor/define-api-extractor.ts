@@ -101,6 +101,19 @@ function convertTypeToTSTypeReference(
   const typeString = checker.typeToString(type);
 
   if (type.isUnion()) {
+    const aliasSymbol = type.aliasSymbol;
+    if (aliasSymbol) {
+      const name = aliasSymbol.getName();
+      return {
+        kind: "reference",
+        name,
+        elementType: null,
+        members: null,
+        nullable: false,
+        scalarInfo: null,
+      };
+    }
+
     const types = type.types;
     const hasNull = types.some((t) => (t.flags & ts.TypeFlags.Null) !== 0);
     const hasUndefined = types.some(

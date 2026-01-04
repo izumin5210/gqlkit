@@ -1,6 +1,11 @@
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 
-export type GraphQLTypeKind = "Object" | "Union" | "Enum" | "InputObject";
+export type GraphQLTypeKind =
+  | "Object"
+  | "Union"
+  | "Enum"
+  | "InputObject"
+  | "OneOfInputObject";
 
 export interface GraphQLFieldType {
   readonly typeName: string;

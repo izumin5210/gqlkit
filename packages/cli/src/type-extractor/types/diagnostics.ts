@@ -41,7 +41,8 @@ export type DiagnosticCode =
   | "CUSTOM_SCALAR_TYPE_NOT_FOUND"
   | "TSCONFIG_NOT_FOUND"
   | "TSCONFIG_PARSE_ERROR"
-  | "TSCONFIG_INVALID";
+  | "TSCONFIG_INVALID"
+  | "ONEOF_FIELD_NAME_CONFLICT";
 
 export interface Diagnostic {
   readonly code: DiagnosticCode;

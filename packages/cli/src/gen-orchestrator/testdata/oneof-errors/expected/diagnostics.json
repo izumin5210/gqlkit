@@ -1,0 +1,22 @@
+[
+  {
+    "code": "ONEOF_FIELD_NAME_CONFLICT",
+    "message": "OneOf input object 'ConflictingFieldsInput' has duplicate field name 'fooInput' from types 'FooInput' and 'fooInput'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/errors.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "ONEOF_FIELD_NAME_CONFLICT",
+    "message": "OneOf input object 'InlineObjectsInput' has duplicate field name '__type' from types '__type' and '__type'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/errors.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]
