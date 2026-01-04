@@ -105,7 +105,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/product.ts",
+        "value": "Filter product by ID\n\nDefined in: src/gqlkit/product.ts",
         "block": true
       }
     },
@@ -136,7 +136,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/product.ts",
+        "value": "Filter product by name\n\nDefined in: src/gqlkit/product.ts",
         "block": true
       }
     },
@@ -159,6 +159,11 @@ export const typeDefs: DocumentNode = {
               "kind": "Name",
               "value": "ByIdInput"
             }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Filter product by ID",
+            "block": true
           }
         },
         {
@@ -173,12 +178,40 @@ export const typeDefs: DocumentNode = {
               "kind": "Name",
               "value": "ByNameInput"
             }
-          }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Filter product by name",
+            "block": true
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use ByIdInput instead",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
         }
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/product.ts",
+        "value": "Specifies how to identify a product.\nExactly one field must be provided.\n\nDefined in: src/gqlkit/product.ts",
         "block": true
       },
       "directives": [

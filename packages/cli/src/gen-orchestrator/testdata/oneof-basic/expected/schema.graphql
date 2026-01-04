@@ -9,20 +9,35 @@ type Product {
 
 type Query
 
-"""Defined in: src/gqlkit/product.ts"""
+"""
+Filter product by ID
+
+Defined in: src/gqlkit/product.ts
+"""
 input ByIdInput {
   id: String!
 }
 
-"""Defined in: src/gqlkit/product.ts"""
+"""
+Filter product by name
+
+Defined in: src/gqlkit/product.ts
+"""
 input ByNameInput {
   name: String!
 }
 
-"""Defined in: src/gqlkit/product.ts"""
+"""
+Specifies how to identify a product.
+Exactly one field must be provided.
+
+Defined in: src/gqlkit/product.ts
+"""
 input ProductInput @oneOf {
+  """Filter product by ID"""
   byIdInput: ByIdInput
-  byNameInput: ByNameInput
+  """Filter product by name"""
+  byNameInput: ByNameInput @deprecated(reason: """Use ByIdInput instead""")
 }
 
 extend type Query {
