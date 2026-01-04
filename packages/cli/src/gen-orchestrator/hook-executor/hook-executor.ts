@@ -31,6 +31,12 @@ export interface HookExecutorResult {
   readonly results: ReadonlyArray<SingleHookResult>;
 }
 
+function normalizePathForShell(filePath: string): string {
+  // Convert Windows backslashes to forward slashes for shell-quote compatibility
+  // Forward slashes work as path separators in most Windows contexts
+  return filePath.replace(/\\/g, "/");
+}
+
 function buildCommand(
   command: string,
   filePaths: ReadonlyArray<string>,
@@ -38,7 +44,8 @@ function buildCommand(
   if (filePaths.length === 0) {
     return command;
   }
-  return `${command} ${quote([...filePaths])}`;
+  const normalizedPaths = filePaths.map(normalizePathForShell);
+  return `${command} ${quote(normalizedPaths)}`;
 }
 
 function getEnvWithNodeModulesBin(cwd: string): NodeJS.ProcessEnv {
