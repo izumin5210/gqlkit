@@ -32,6 +32,18 @@ export interface OutputConfig {
 }
 
 /**
+ * Hook configuration for lifecycle events.
+ */
+export interface HooksConfig {
+  /**
+   * Commands to execute after all files are written.
+   * Each command receives all written file paths as arguments.
+   * Commands are executed sequentially in order.
+   */
+  readonly afterAllFileWrite?: string | ReadonlyArray<string>;
+}
+
+/**
  * Type definition for gqlkit configuration file.
  * Used in `gqlkit.config.ts`.
  */
@@ -68,6 +80,11 @@ export interface GqlkitConfig {
    * - If unspecified, automatically searches for tsconfig.json in project root
    */
   readonly tsconfigPath?: string;
+
+  /**
+   * Hook configuration for lifecycle events.
+   */
+  readonly hooks?: HooksConfig;
 }
 
 /**

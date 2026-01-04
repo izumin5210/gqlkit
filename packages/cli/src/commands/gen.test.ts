@@ -207,4 +207,149 @@ describe("gen command", () => {
       ).toBeTruthy();
     });
   });
+
+  describe("hooks integration", () => {
+    it("should execute hooks after file generation", async () => {
+      const markerFile = join(testDir, "hook-executed.txt");
+      await setupProjectWithConfig(`
+        export default {
+          hooks: {
+            afterAllFileWrite: ["sh -c 'echo executed > ${markerFile}'"],
+          },
+        };
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      expect(result.exitCode).toBe(0);
+      const markerContent = await readFile(markerFile, "utf-8");
+      expect(markerContent.trim()).toBe("executed");
+    });
+
+    it("should execute multiple hooks sequentially", async () => {
+      const markerFile = join(testDir, "hook-order.txt");
+      await setupProjectWithConfig(`
+        export default {
+          hooks: {
+            afterAllFileWrite: [
+              "sh -c 'echo first >> ${markerFile}'",
+              "sh -c 'echo second >> ${markerFile}'",
+            ],
+          },
+        };
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      expect(result.exitCode).toBe(0);
+      const markerContent = await readFile(markerFile, "utf-8");
+      expect(markerContent.trim()).toBe("first\nsecond");
+    });
+
+    it("should pass written file paths to hooks", async () => {
+      const outputFile = join(testDir, "files.txt");
+      await setupProjectWithConfig(`
+        export default {
+          hooks: {
+            afterAllFileWrite: ["sh -c 'echo \\"$@\\" > ${outputFile}' --"],
+          },
+        };
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      expect(result.exitCode).toBe(0);
+      const content = await readFile(outputFile, "utf-8");
+      expect(content).toContain("typeDefs.ts");
+      expect(content).toContain("resolvers.ts");
+    });
+
+    it("should continue executing hooks when one fails", async () => {
+      const markerFile = join(testDir, "after-fail.txt");
+      await setupProjectWithConfig(`
+        export default {
+          hooks: {
+            afterAllFileWrite: [
+              "exit 1",
+              "sh -c 'echo executed > ${markerFile}'",
+            ],
+          },
+        };
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      expect(result.exitCode).toBe(1);
+      const markerContent = await readFile(markerFile, "utf-8");
+      expect(markerContent.trim()).toBe("executed");
+    });
+
+    it("should return exit code 1 when any hook fails", async () => {
+      await setupProjectWithConfig(`
+        export default {
+          hooks: {
+            afterAllFileWrite: ["exit 1"],
+          },
+        };
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      expect(result.exitCode).toBe(1);
+    });
+
+    it("should skip hooks when no files are written", async () => {
+      const markerFile = join(testDir, "hook-skipped.txt");
+      await setupProjectWithConfig(`
+        export default {
+          output: {
+            resolversPath: null,
+            typeDefsPath: null,
+            schemaPath: null,
+          },
+          hooks: {
+            afterAllFileWrite: ["sh -c 'echo executed > ${markerFile}'"],
+          },
+        };
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      expect(result.exitCode).toBe(0);
+      await expect(readFile(markerFile, "utf-8")).rejects.toThrow();
+    });
+
+    it("should skip hooks when generation fails", async () => {
+      const markerFile = join(testDir, "hook-not-run.txt");
+
+      await writeFile(
+        join(testDir, "gqlkit.config.ts"),
+        `
+          export default {
+            hooks: {
+              afterAllFileWrite: ["sh -c 'echo executed > ${markerFile}'"],
+            },
+          };
+        `,
+        "utf-8",
+      );
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      expect(result.exitCode).toBe(1);
+      await expect(readFile(markerFile, "utf-8")).rejects.toThrow();
+    });
+
+    it("should not execute hooks when hooks config is empty", async () => {
+      await setupProjectWithConfig(`
+        export default {
+          hooks: {},
+        };
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      expect(result.exitCode).toBe(0);
+    });
+  });
 });
