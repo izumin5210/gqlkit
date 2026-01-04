@@ -4,11 +4,6 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { executeHooks, type SingleHookResult } from "./hook-executor.js";
 
-// Convert Windows backslashes to forward slashes for shell command compatibility
-function toShellPath(filePath: string): string {
-  return filePath.replace(/\\/g, "/");
-}
-
 describe("HookExecutor", () => {
   let tempDir: string;
 
@@ -26,7 +21,7 @@ describe("HookExecutor", () => {
       fs.writeFileSync(testFile, "original content");
 
       const result = await executeHooks({
-        commands: ["echo 'hello'"],
+        commands: ["node -e \"console.log('hello')\""],
         filePaths: [testFile],
         cwd: tempDir,
       });
@@ -43,7 +38,10 @@ describe("HookExecutor", () => {
 
       const results: string[] = [];
       const result = await executeHooks({
-        commands: ["echo 'first'", "echo 'second'"],
+        commands: [
+          "node -e \"console.log('first')\"",
+          "node -e \"console.log('second')\"",
+        ],
         filePaths: [testFile],
         cwd: tempDir,
         onHookComplete: (r) => results.push(r.command),
@@ -51,7 +49,10 @@ describe("HookExecutor", () => {
 
       expect(result.success).toBe(true);
       expect(result.results.length).toBe(2);
-      expect(results).toEqual(["echo 'first'", "echo 'second'"]);
+      expect(results).toEqual([
+        "node -e \"console.log('first')\"",
+        "node -e \"console.log('second')\"",
+      ]);
     });
 
     it("should pass file paths as arguments to command", async () => {
@@ -60,17 +61,15 @@ describe("HookExecutor", () => {
       fs.writeFileSync(testFile1, "content1");
       fs.writeFileSync(testFile2, "content2");
 
-      const outputFile = path.join(tempDir, "output.txt");
       const result = await executeHooks({
-        commands: [`sh -c 'echo "$@" > ${toShellPath(outputFile)}' --`],
+        commands: ["node -e \"console.log(process.argv.slice(1).join(' '))\""],
         filePaths: [testFile1, testFile2],
         cwd: tempDir,
       });
 
       expect(result.success).toBe(true);
-      const output = fs.readFileSync(outputFile, "utf-8").trim();
-      expect(output).toContain("file1.txt");
-      expect(output).toContain("file2.txt");
+      expect(result.results[0]?.stdout).toContain("file1.txt");
+      expect(result.results[0]?.stdout).toContain("file2.txt");
     });
 
     it("should continue execution when a command fails", async () => {
@@ -79,7 +78,10 @@ describe("HookExecutor", () => {
 
       const completedCommands: string[] = [];
       const result = await executeHooks({
-        commands: ["exit 1", "echo 'after-failure'"],
+        commands: [
+          'node -e "process.exit(1)"',
+          "node -e \"console.log('after-failure')\"",
+        ],
         filePaths: [testFile],
         cwd: tempDir,
         onHookComplete: (r) => completedCommands.push(r.command),
@@ -98,7 +100,11 @@ describe("HookExecutor", () => {
       fs.writeFileSync(testFile, "content");
 
       const result = await executeHooks({
-        commands: ["echo 'success'", "exit 1", "echo 'also success'"],
+        commands: [
+          "node -e \"console.log('success')\"",
+          'node -e "process.exit(1)"',
+          "node -e \"console.log('also success')\"",
+        ],
         filePaths: [testFile],
         cwd: tempDir,
       });
@@ -112,17 +118,16 @@ describe("HookExecutor", () => {
     it("should use project root as working directory", async () => {
       const testFile = path.join(tempDir, "test.txt");
       fs.writeFileSync(testFile, "content");
-      const pwdFile = path.join(tempDir, "pwd.txt");
 
       const result = await executeHooks({
-        commands: [`sh -c 'pwd > ${toShellPath(pwdFile)}'`],
+        commands: ['node -e "console.log(process.cwd())"'],
         filePaths: [testFile],
         cwd: tempDir,
       });
 
       expect(result.success).toBe(true);
-      const pwd = fs.readFileSync(pwdFile, "utf-8").trim();
-      expect(fs.realpathSync(pwd)).toBe(fs.realpathSync(tempDir));
+      const cwd = result.results[0]?.stdout.trim();
+      expect(fs.realpathSync(cwd!)).toBe(fs.realpathSync(tempDir));
     });
 
     it("should handle command not found error", async () => {
@@ -143,17 +148,15 @@ describe("HookExecutor", () => {
     it("should quote file paths with special characters", async () => {
       const testFileWithSpaces = path.join(tempDir, "file with spaces.txt");
       fs.writeFileSync(testFileWithSpaces, "content");
-      const outputFile = path.join(tempDir, "output.txt");
 
       const result = await executeHooks({
-        commands: [`sh -c 'echo "$@" > ${toShellPath(outputFile)}' --`],
+        commands: ["node -e \"console.log(process.argv.slice(1).join(' '))\""],
         filePaths: [testFileWithSpaces],
         cwd: tempDir,
       });
 
       expect(result.success).toBe(true);
-      const output = fs.readFileSync(outputFile, "utf-8").trim();
-      expect(output).toContain("file with spaces.txt");
+      expect(result.results[0]?.stdout).toContain("file with spaces.txt");
     });
 
     it("should capture stdout and stderr", async () => {
@@ -161,7 +164,10 @@ describe("HookExecutor", () => {
       fs.writeFileSync(testFile, "content");
 
       const result = await executeHooks({
-        commands: ["echo 'stdout message'", "sh -c 'echo error >&2 && exit 1'"],
+        commands: [
+          "node -e \"console.log('stdout message')\"",
+          "node -e \"console.error('error'); process.exit(1)\"",
+        ],
         filePaths: [testFile],
         cwd: tempDir,
       });
@@ -176,15 +182,18 @@ describe("HookExecutor", () => {
 
       const hookResults: SingleHookResult[] = [];
       await executeHooks({
-        commands: ["echo 'first'", "echo 'second'"],
+        commands: [
+          "node -e \"console.log('first')\"",
+          "node -e \"console.log('second')\"",
+        ],
         filePaths: [testFile],
         cwd: tempDir,
         onHookComplete: (result) => hookResults.push(result),
       });
 
       expect(hookResults.length).toBe(2);
-      expect(hookResults[0]?.command).toBe("echo 'first'");
-      expect(hookResults[1]?.command).toBe("echo 'second'");
+      expect(hookResults[0]?.command).toBe("node -e \"console.log('first')\"");
+      expect(hookResults[1]?.command).toBe("node -e \"console.log('second')\"");
     });
   });
 });
