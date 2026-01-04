@@ -207,4 +207,119 @@ describe("gen command", () => {
       ).toBeTruthy();
     });
   });
+
+  describe("hooks integration", () => {
+    it("should execute hooks after file generation", async () => {
+      await setupProjectWithConfig(`
+        export default {
+          hooks: {
+            afterAllFileWrite: ["node -e \\"console.log('hook executed')\\""],
+          },
+        };
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      expect(result.exitCode).toBe(0);
+    });
+
+    it("should execute multiple hooks sequentially", async () => {
+      await setupProjectWithConfig(`
+        export default {
+          hooks: {
+            afterAllFileWrite: [
+              "node -e \\"console.log('first')\\"",
+              "node -e \\"console.log('second')\\"",
+            ],
+          },
+        };
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      expect(result.exitCode).toBe(0);
+    });
+
+    it("should continue executing hooks when one fails", async () => {
+      await setupProjectWithConfig(`
+        export default {
+          hooks: {
+            afterAllFileWrite: [
+              "node -e \\"process.exit(1)\\"",
+              "node -e \\"console.log('after-failure')\\"",
+            ],
+          },
+        };
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      expect(result.exitCode).toBe(1);
+    });
+
+    it("should return exit code 1 when any hook fails", async () => {
+      await setupProjectWithConfig(`
+        export default {
+          hooks: {
+            afterAllFileWrite: ["node -e \\"process.exit(1)\\""],
+          },
+        };
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      expect(result.exitCode).toBe(1);
+    });
+
+    it("should skip hooks when no files are written", async () => {
+      await setupProjectWithConfig(`
+        export default {
+          output: {
+            resolversPath: null,
+            typeDefsPath: null,
+            schemaPath: null,
+          },
+          hooks: {
+            afterAllFileWrite: ["node -e \\"process.exit(1)\\""],
+          },
+        };
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      // Should succeed because hooks are skipped when no files are written
+      expect(result.exitCode).toBe(0);
+    });
+
+    it("should skip hooks when generation fails", async () => {
+      await writeFile(
+        join(testDir, "gqlkit.config.ts"),
+        `
+          export default {
+            hooks: {
+              afterAllFileWrite: ["node -e \\"process.exit(1)\\""],
+            },
+          };
+        `,
+        "utf-8",
+      );
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      // Should fail due to generation failure, not hook failure
+      expect(result.exitCode).toBe(1);
+    });
+
+    it("should not execute hooks when hooks config is empty", async () => {
+      await setupProjectWithConfig(`
+        export default {
+          hooks: {},
+        };
+      `);
+
+      const result = await runGenCommand({ cwd: testDir });
+
+      expect(result.exitCode).toBe(0);
+    });
+  });
 });

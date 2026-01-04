@@ -593,5 +593,159 @@ describe("ConfigValidator", () => {
         expect(result.diagnostics[0]?.message).toContain("empty");
       });
     });
+
+    describe("hooks options", () => {
+      it("should resolve default empty hooks when not provided", () => {
+        const result = validateConfig({
+          config: {},
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.hooks.afterAllFileWrite).toEqual([]);
+      });
+
+      it("should accept single command string for afterAllFileWrite", () => {
+        const result = validateConfig({
+          config: {
+            hooks: {
+              afterAllFileWrite: "prettier --write",
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.hooks.afterAllFileWrite).toEqual([
+          "prettier --write",
+        ]);
+      });
+
+      it("should accept array of command strings for afterAllFileWrite", () => {
+        const result = validateConfig({
+          config: {
+            hooks: {
+              afterAllFileWrite: ["prettier --write", "eslint --fix"],
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.hooks.afterAllFileWrite).toEqual([
+          "prettier --write",
+          "eslint --fix",
+        ]);
+      });
+
+      it("should accept empty array for afterAllFileWrite", () => {
+        const result = validateConfig({
+          config: {
+            hooks: {
+              afterAllFileWrite: [],
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.hooks.afterAllFileWrite).toEqual([]);
+      });
+
+      it("should accept hooks object without afterAllFileWrite", () => {
+        const result = validateConfig({
+          config: {
+            hooks: {},
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.hooks.afterAllFileWrite).toEqual([]);
+      });
+
+      it("should return error for non-object hooks", () => {
+        const result = validateConfig({
+          config: {
+            hooks: "invalid",
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_TYPE");
+        expect(result.diagnostics[0]?.message).toContain("hooks");
+      });
+
+      it("should return error for invalid afterAllFileWrite type", () => {
+        const result = validateConfig({
+          config: {
+            hooks: {
+              afterAllFileWrite: 123,
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_HOOK_TYPE");
+        expect(result.diagnostics[0]?.message).toContain("afterAllFileWrite");
+      });
+
+      it("should return error for array with non-string elements", () => {
+        const result = validateConfig({
+          config: {
+            hooks: {
+              afterAllFileWrite: ["valid", 123, "also-valid"],
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_HOOK_TYPE");
+        expect(result.diagnostics[0]?.message).toContain("afterAllFileWrite");
+      });
+
+      it("should return error for empty command string", () => {
+        const result = validateConfig({
+          config: {
+            hooks: {
+              afterAllFileWrite: "",
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_HOOK_COMMAND");
+        expect(result.diagnostics[0]?.message).toContain("empty");
+      });
+
+      it("should return error for array containing empty string", () => {
+        const result = validateConfig({
+          config: {
+            hooks: {
+              afterAllFileWrite: ["prettier --write", "", "eslint --fix"],
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_HOOK_COMMAND");
+        expect(result.diagnostics[0]?.message).toContain("empty");
+      });
+    });
   });
 });

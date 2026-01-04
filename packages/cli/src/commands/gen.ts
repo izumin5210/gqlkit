@@ -1,6 +1,7 @@
 import { dirname } from "node:path";
 import { define } from "gunshi";
 import { loadConfig } from "../config-loader/index.js";
+import { executeHooks } from "../gen-orchestrator/hook-executor/hook-executor.js";
 import {
   executeGeneration,
   type GenerationConfig,
@@ -81,6 +82,43 @@ export async function runGenCommand(
     progressReporter.fileWritten(filePath);
   }
   progressReporter.complete();
+
+  const { hooks } = configResult.config;
+  let hookFailed = false;
+
+  if (
+    writeResult.filesWritten.length > 0 &&
+    hooks.afterAllFileWrite.length > 0
+  ) {
+    progressReporter.startHookPhase();
+
+    const hookResult = await executeHooks({
+      commands: hooks.afterAllFileWrite,
+      filePaths: writeResult.filesWritten,
+      cwd: options.cwd,
+      onHookComplete: (result) => {
+        if (result.success) {
+          progressReporter.hookCompleted(result.command);
+        } else {
+          progressReporter.hookFailed(
+            result.command,
+            result.exitCode,
+            result.stderr,
+          );
+        }
+      },
+    });
+
+    hookFailed = !hookResult.success;
+    const failedCount = hookResult.results.filter((r) => !r.success).length;
+    progressReporter.hookPhaseSummary(hookResult.results.length, failedCount);
+  }
+
+  if (hookFailed) {
+    diagnosticReporter.reportError("Hook execution failed");
+    return { exitCode: 1 };
+  }
+
   diagnosticReporter.reportSuccess("Generation complete!");
   return { exitCode: 0 };
 }
