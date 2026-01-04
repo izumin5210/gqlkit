@@ -94,7 +94,9 @@ function extractTypesCore(
   const extractionResult = extractTypesFromProgram(program, sourceFiles);
   allDiagnostics.push(...extractionResult.diagnostics);
 
-  const conversionResult = convertToGraphQL(extractionResult.types);
+  const conversionResult = convertToGraphQL(extractionResult.types, {
+    customScalarNames,
+  });
   allDiagnostics.push(...conversionResult.diagnostics);
 
   const validationResult = validateTypes({

@@ -4,6 +4,8 @@ export type {
   Diagnostic,
   DiagnosticCode,
   Diagnostics,
+  ExcludedFieldInfo,
+  ExclusionReason,
   SourceLocation,
 } from "./diagnostics.js";
 export type {

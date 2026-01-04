@@ -1,0 +1,42 @@
+[
+  {
+    "code": "ALL_FIELDS_EXCLUDED",
+    "message": "All fields of type 'ExternalType' were excluded. At least one GraphQL-representable field is required.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/external.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "FIELD_AUTO_EXCLUDED",
+    "message": "Field 'createdAt' of type 'ExternalType' was auto-excluded because type 'Date' is not representable in GraphQL.",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/external.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "FIELD_AUTO_EXCLUDED",
+    "message": "Field 'updatedAt' of type 'ExternalType' was auto-excluded because type 'Date' is not representable in GraphQL.",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/external.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "FIELD_AUTO_EXCLUDED",
+    "message": "Field '_internal' of type 'ExternalType' was auto-excluded because field names starting with underscore are reserved.",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/external.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

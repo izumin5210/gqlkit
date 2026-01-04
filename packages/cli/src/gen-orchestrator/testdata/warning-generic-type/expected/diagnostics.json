@@ -1,7 +1,7 @@
 [
   {
-    "code": "UNRESOLVED_REFERENCE",
-    "message": "Field 'value' references unresolved type 'T'",
+    "code": "ALL_FIELDS_EXCLUDED",
+    "message": "All fields of type 'Wrapper' were excluded. At least one GraphQL-representable field is required.",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/wrapper.ts",
@@ -16,6 +16,16 @@
     "location": {
       "file": "src/gqlkit/wrapper.ts",
       "line": 6,
+      "column": 1
+    }
+  },
+  {
+    "code": "FIELD_AUTO_EXCLUDED",
+    "message": "Field 'value' of type 'Wrapper' was auto-excluded because type 'T' is not representable in GraphQL.",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/wrapper.ts",
+      "line": 1,
       "column": 1
     }
   }

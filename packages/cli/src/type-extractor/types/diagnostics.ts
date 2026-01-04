@@ -42,7 +42,9 @@ export type DiagnosticCode =
   | "TSCONFIG_NOT_FOUND"
   | "TSCONFIG_PARSE_ERROR"
   | "TSCONFIG_INVALID"
-  | "ONEOF_FIELD_NAME_CONFLICT";
+  | "ONEOF_FIELD_NAME_CONFLICT"
+  | "FIELD_AUTO_EXCLUDED"
+  | "ALL_FIELDS_EXCLUDED";
 
 export interface Diagnostic {
   readonly code: DiagnosticCode;
@@ -54,4 +56,15 @@ export interface Diagnostic {
 export interface Diagnostics {
   readonly errors: ReadonlyArray<Diagnostic>;
   readonly warnings: ReadonlyArray<Diagnostic>;
+}
+
+export type ExclusionReason =
+  | { kind: "unsupported_type"; typeName: string }
+  | { kind: "underscore_prefix" };
+
+export interface ExcludedFieldInfo {
+  readonly fieldName: string;
+  readonly typeName: string;
+  readonly reason: ExclusionReason;
+  readonly location: SourceLocation;
 }

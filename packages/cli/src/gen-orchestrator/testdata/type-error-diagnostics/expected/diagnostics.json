@@ -1,7 +1,7 @@
 [
   {
-    "code": "UNRESOLVED_REFERENCE",
-    "message": "Field 'id' references unresolved type 'unknown'",
+    "code": "ALL_FIELDS_EXCLUDED",
+    "message": "All fields of type 'BadType' were excluded. At least one GraphQL-representable field is required.",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/bad.ts",
@@ -10,9 +10,19 @@
     }
   },
   {
-    "code": "UNRESOLVED_REFERENCE",
-    "message": "Field 'data' references unresolved type 'object'",
-    "severity": "error",
+    "code": "FIELD_AUTO_EXCLUDED",
+    "message": "Field 'id' of type 'BadType' was auto-excluded because type 'unknown' is not representable in GraphQL.",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/bad.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "FIELD_AUTO_EXCLUDED",
+    "message": "Field 'data' of type 'BadType' was auto-excluded because type 'object' is not representable in GraphQL.",
+    "severity": "warning",
     "location": {
       "file": "src/gqlkit/bad.ts",
       "line": 1,

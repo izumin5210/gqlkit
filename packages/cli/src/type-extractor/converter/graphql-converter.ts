@@ -1,9 +1,14 @@
 import { convertTsTypeToGraphQLType } from "../../shared/type-converter.js";
+import {
+  type FieldFilterContext,
+  filterFields,
+} from "../filter/field-filter.js";
 import type {
   Diagnostic,
   EnumMemberInfo,
   EnumValueInfo,
   ExtractedTypeInfo,
+  FieldDefinition,
   FieldInfo,
   GraphQLTypeInfo,
 } from "../types/index.js";
@@ -11,6 +16,10 @@ import type {
 export interface ConversionResult {
   readonly types: ReadonlyArray<GraphQLTypeInfo>;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
+}
+
+export interface ConversionOptions {
+  readonly customScalarNames?: ReadonlyArray<string>;
 }
 
 const RESERVED_TYPE_NAMES = new Set([
@@ -81,8 +90,8 @@ function convertEnumMembers(
   return { values, diagnostics };
 }
 
-function convertFields(extracted: ExtractedTypeInfo): FieldInfo[] {
-  return extracted.fields.map((field) => ({
+function convertFields(fields: ReadonlyArray<FieldDefinition>): FieldInfo[] {
+  return fields.map((field) => ({
     name: field.name,
     type: convertTsTypeToGraphQLType(field.tsType, field.optional),
     description: field.description,
@@ -90,8 +99,11 @@ function convertFields(extracted: ExtractedTypeInfo): FieldInfo[] {
   }));
 }
 
+const BUILT_IN_SCALARS = new Set(["String", "Int", "Float", "Boolean", "ID"]);
+
 export function convertToGraphQL(
   extractedTypes: ReadonlyArray<ExtractedTypeInfo>,
+  options: ConversionOptions = {},
 ): ConversionResult {
   const types: GraphQLTypeInfo[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -100,6 +112,17 @@ export function convertToGraphQL(
   for (const extracted of extractedTypes) {
     typeMap.set(extracted.metadata.name, extracted);
   }
+
+  const knownTypes = new Set(extractedTypes.map((t) => t.metadata.name));
+  const knownScalars = new Set([
+    ...BUILT_IN_SCALARS,
+    ...(options.customScalarNames ?? []),
+  ]);
+
+  const filterContext: FieldFilterContext = {
+    knownTypes,
+    knownScalars,
+  };
 
   for (const extracted of extractedTypes) {
     const { metadata } = extracted;
@@ -219,8 +242,19 @@ export function convertToGraphQL(
         });
       }
     } else {
-      const fields = convertFields(extracted);
       const isInput = isInputTypeName(metadata.name);
+
+      const filterResult = filterFields(extracted, filterContext);
+      diagnostics.push(...filterResult.diagnostics);
+
+      const hasAllFieldsExcludedError = filterResult.diagnostics.some(
+        (d) => d.code === "ALL_FIELDS_EXCLUDED",
+      );
+      if (hasAllFieldsExcludedError) {
+        continue;
+      }
+
+      const fields = convertFields(filterResult.fields);
 
       types.push({
         name: metadata.name,
