@@ -41,8 +41,11 @@ export function createProgressReporter(writer: OutputWriter): ProgressReporter {
     hookFailed(command: string, exitCode: number | null, stderr: string): void {
       const exitCodeStr = exitCode !== null ? ` (exit code: ${exitCode})` : "";
       writer.stderr(`    hook failed: ${command}${exitCodeStr}`);
-      if (stderr.trim()) {
-        writer.stderr(`      ${stderr.trim()}`);
+      const trimmedStderr = stderr.trim();
+      if (trimmedStderr) {
+        for (const line of trimmedStderr.split("\n")) {
+          writer.stderr(`      ${line}`);
+        }
       }
     },
     hookPhaseSummary(totalCount: number, failedCount: number): void {

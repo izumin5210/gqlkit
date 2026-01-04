@@ -1,6 +1,8 @@
 import { exec } from "node:child_process";
-import { resolve } from "node:path";
+import { delimiter, resolve } from "node:path";
 import { promisify } from "node:util";
+
+const isWindows = process.platform === "win32";
 
 const execAsync = promisify(exec);
 
@@ -31,6 +33,12 @@ export interface HookExecutorResult {
 }
 
 function quoteArg(arg: string): string {
+  if (isWindows) {
+    if (!/[^a-zA-Z0-9_\-./\\:]/.test(arg)) {
+      return arg;
+    }
+    return `"${arg.replace(/"/g, '\\"')}"`;
+  }
   if (!/[^a-zA-Z0-9_\-./]/.test(arg)) {
     return arg;
   }
@@ -41,6 +49,9 @@ function buildCommand(
   command: string,
   filePaths: ReadonlyArray<string>,
 ): string {
+  if (filePaths.length === 0) {
+    return command;
+  }
   const quotedPaths = filePaths.map(quoteArg).join(" ");
   return `${command} ${quotedPaths}`;
 }
@@ -50,7 +61,7 @@ function getEnvWithNodeModulesBin(cwd: string): NodeJS.ProcessEnv {
   const currentPath = process.env["PATH"] ?? "";
   return {
     ...process.env,
-    PATH: `${nodeModulesBin}:${currentPath}`,
+    PATH: `${nodeModulesBin}${delimiter}${currentPath}`,
   };
 }
 
@@ -66,7 +77,6 @@ async function executeSingleHook(
     const { stdout, stderr } = await execAsync(fullCommand, {
       cwd,
       env,
-      shell: "/bin/sh",
     });
 
     return {
