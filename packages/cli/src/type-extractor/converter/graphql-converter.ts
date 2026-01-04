@@ -145,6 +145,18 @@ export function convertToGraphQL(
         let hasConflict = false;
 
         for (const memberName of unionMembers) {
+          // Detect inline object literal types (TypeScript uses "__type" for anonymous types)
+          if (memberName === "__type") {
+            diagnostics.push({
+              code: "ONEOF_FIELD_NAME_CONFLICT",
+              message: `OneOf input object '${metadata.name}' contains inline object literal types. Please define named types (interface or type alias) for all union members.`,
+              severity: "error",
+              location: { file: metadata.sourceFile, line: 1, column: 1 },
+            });
+            hasConflict = true;
+            continue;
+          }
+
           const fieldName = toFieldName(memberName);
           const existingMember = fieldNameMap.get(fieldName);
           if (existingMember) {

@@ -11,7 +11,7 @@
   },
   {
     "code": "ONEOF_FIELD_NAME_CONFLICT",
-    "message": "OneOf input object 'InlineObjectsInput' has duplicate field name '__type' from types '__type' and '__type'",
+    "message": "OneOf input object 'InlineObjectsInput' contains inline object literal types. Please define named types (interface or type alias) for all union members.",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/errors.ts",
