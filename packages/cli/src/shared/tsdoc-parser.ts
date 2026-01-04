@@ -33,13 +33,14 @@ function getTagCommentText(
   comment: string | ts.NodeArray<ts.JSDocComment> | undefined,
 ): string | undefined {
   if (typeof comment === "string") {
-    const trimmed = comment.trim();
+    const trimmed = comment.replace(/\r\n/g, "\n").trim();
     return trimmed === "" ? undefined : trimmed;
   }
   if (Array.isArray(comment)) {
     const text = comment
       .map((part) => part.text)
       .join("")
+      .replace(/\r\n/g, "\n")
       .trim();
     return text === "" ? undefined : text;
   }
@@ -88,6 +89,10 @@ function extractDeprecatedFromDeclarations(
   return undefined;
 }
 
+function normalizeLineEndings(text: string): string {
+  return text.replace(/\r\n/g, "\n");
+}
+
 function extractDescriptionFromSymbol(
   symbol: ts.Symbol,
   checker: ts.TypeChecker,
@@ -95,7 +100,9 @@ function extractDescriptionFromSymbol(
   const documentationComment = symbol.getDocumentationComment(checker);
 
   if (documentationComment.length > 0) {
-    const description = ts.displayPartsToString(documentationComment).trim();
+    const description = normalizeLineEndings(
+      ts.displayPartsToString(documentationComment).trim(),
+    );
     if (description !== "") {
       return description;
     }
@@ -105,7 +112,7 @@ function extractDescriptionFromSymbol(
     symbol.getDeclarations(),
   );
   if (descriptionTagContent) {
-    return descriptionTagContent;
+    return normalizeLineEndings(descriptionTagContent);
   }
 
   return undefined;

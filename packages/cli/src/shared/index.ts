@@ -1,6 +1,5 @@
 export { collectDiagnostics, deduplicateDiagnostics } from "./diagnostics.js";
 export {
-  
   type ScanOptions,
   type ScanResult,
   scanDirectory,

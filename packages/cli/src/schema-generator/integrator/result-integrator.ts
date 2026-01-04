@@ -35,6 +35,7 @@ export interface InputType {
   readonly fields: ReadonlyArray<BaseField>;
   readonly sourceFile: string;
   readonly description: string | null;
+  readonly isOneOf: boolean;
 }
 
 export interface ExtensionField {
@@ -102,7 +103,7 @@ export function integrate(
   const inputTypes: InputType[] = [];
 
   for (const type of typesResult.types) {
-    if (type.kind === "InputObject") {
+    if (type.kind === "InputObject" || type.kind === "OneOfInputObject") {
       inputTypes.push({
         name: type.name,
         fields:
@@ -114,6 +115,7 @@ export function integrate(
           })) ?? [],
         sourceFile: type.sourceFile,
         description: type.description,
+        isOneOf: type.kind === "OneOfInputObject",
       });
     } else if (type.kind === "Enum") {
       baseTypes.push({

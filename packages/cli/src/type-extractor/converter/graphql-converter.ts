@@ -30,6 +30,10 @@ function isInputTypeName(name: string): boolean {
   return name.endsWith("Input");
 }
 
+function toFieldName(typeName: string): string {
+  return typeName.charAt(0).toLowerCase() + typeName.slice(1);
+}
+
 function toScreamingSnakeCase(value: string): string {
   return value
     .replace(/[-\s]+/g, "_")
@@ -92,6 +96,11 @@ export function convertToGraphQL(
   const types: GraphQLTypeInfo[] = [];
   const diagnostics: Diagnostic[] = [];
 
+  const typeMap = new Map<string, ExtractedTypeInfo>();
+  for (const extracted of extractedTypes) {
+    typeMap.set(extracted.metadata.name, extracted);
+  }
+
   for (const extracted of extractedTypes) {
     const { metadata } = extracted;
 
@@ -130,28 +139,85 @@ export function convertToGraphQL(
       });
     } else if (metadata.kind === "union") {
       if (isInputTypeName(metadata.name)) {
-        diagnostics.push({
-          code: "INVALID_INPUT_TYPE",
-          message: `Type '${metadata.name}' ends with 'Input' but is a union type. Input types must be object types.`,
-          severity: "error",
-          location: { file: metadata.sourceFile, line: 1, column: 1 },
+        const unionMembers = extracted.unionMembers ?? [];
+
+        const fieldNameMap = new Map<string, string>();
+        let hasConflict = false;
+
+        for (const memberName of unionMembers) {
+          // Detect inline object literal types (TypeScript uses "__type" for anonymous types)
+          if (memberName === "__type") {
+            diagnostics.push({
+              code: "ONEOF_FIELD_NAME_CONFLICT",
+              message: `OneOf input object '${metadata.name}' contains inline object literal types. Please define named types (interface or type alias) for all union members.`,
+              severity: "error",
+              location: { file: metadata.sourceFile, line: 1, column: 1 },
+            });
+            hasConflict = true;
+            continue;
+          }
+
+          const fieldName = toFieldName(memberName);
+          const existingMember = fieldNameMap.get(fieldName);
+          if (existingMember) {
+            diagnostics.push({
+              code: "ONEOF_FIELD_NAME_CONFLICT",
+              message: `OneOf input object '${metadata.name}' has duplicate field name '${fieldName}' from types '${existingMember}' and '${memberName}'`,
+              severity: "error",
+              location: { file: metadata.sourceFile, line: 1, column: 1 },
+            });
+            hasConflict = true;
+          } else {
+            fieldNameMap.set(fieldName, memberName);
+          }
+        }
+
+        if (hasConflict) {
+          continue;
+        }
+
+        const sortedMembers = [...unionMembers].sort();
+        const fields: FieldInfo[] = sortedMembers.map((memberName) => {
+          const memberType = typeMap.get(memberName);
+          return {
+            name: toFieldName(memberName),
+            type: {
+              typeName: memberName,
+              nullable: true,
+              list: false,
+              listItemNullable: null,
+            },
+            description: memberType?.metadata.description ?? null,
+            deprecated: memberType?.metadata.deprecated ?? null,
+          };
+        });
+
+        types.push({
+          name: metadata.name,
+          kind: "OneOfInputObject",
+          fields,
+          unionMembers: sortedMembers,
+          enumValues: null,
+          sourceFile: metadata.sourceFile,
+          description: metadata.description,
+          deprecated: metadata.deprecated,
+        });
+      } else {
+        const unionMembers = extracted.unionMembers
+          ? [...extracted.unionMembers].sort()
+          : [];
+
+        types.push({
+          name: metadata.name,
+          kind: "Union",
+          fields: null,
+          unionMembers,
+          enumValues: null,
+          sourceFile: metadata.sourceFile,
+          description: metadata.description,
+          deprecated: null,
         });
       }
-
-      const unionMembers = extracted.unionMembers
-        ? [...extracted.unionMembers].sort()
-        : [];
-
-      types.push({
-        name: metadata.name,
-        kind: "Union",
-        fields: null,
-        unionMembers,
-        enumValues: null,
-        sourceFile: metadata.sourceFile,
-        description: metadata.description,
-        deprecated: null,
-      });
     } else {
       const fields = convertFields(extracted);
       const isInput = isInputTypeName(metadata.name);
