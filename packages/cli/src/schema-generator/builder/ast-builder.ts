@@ -1,6 +1,5 @@
 import path from "node:path";
 import {
-  type ConstArgumentNode,
   type ConstDirectiveNode,
   type DefinitionNode,
   type DocumentNode,
@@ -74,23 +73,23 @@ function buildStringValueNode(value: string): StringValueNode {
   };
 }
 
+const DEFAULT_DEPRECATION_REASON = "No longer supported";
+
 function buildDeprecatedDirective(
   deprecated: DeprecationInfo,
 ): ConstDirectiveNode {
-  const args: ConstArgumentNode[] = [];
-
-  if (deprecated.reason) {
-    args.push({
-      kind: Kind.ARGUMENT,
-      name: buildNameNode("reason"),
-      value: buildStringValueNode(deprecated.reason),
-    });
-  }
+  const reason = deprecated.reason ?? DEFAULT_DEPRECATION_REASON;
 
   return {
     kind: Kind.DIRECTIVE,
     name: buildNameNode("deprecated"),
-    ...(args.length > 0 ? { arguments: args } : {}),
+    arguments: [
+      {
+        kind: Kind.ARGUMENT,
+        name: buildNameNode("reason"),
+        value: buildStringValueNode(reason),
+      },
+    ],
   };
 }
 
