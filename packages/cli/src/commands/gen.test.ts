@@ -4,6 +4,11 @@ import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { runGenCommand } from "./gen.js";
 
+// Convert Windows backslashes to forward slashes for shell command compatibility
+function toShellPath(filePath: string): string {
+  return filePath.replace(/\\/g, "/");
+}
+
 describe("gen command", () => {
   let testDir: string;
 
@@ -214,7 +219,7 @@ describe("gen command", () => {
       await setupProjectWithConfig(`
         export default {
           hooks: {
-            afterAllFileWrite: ["sh -c 'echo executed > ${markerFile}'"],
+            afterAllFileWrite: ["sh -c 'echo executed > ${toShellPath(markerFile)}'"],
           },
         };
       `);
@@ -232,8 +237,8 @@ describe("gen command", () => {
         export default {
           hooks: {
             afterAllFileWrite: [
-              "sh -c 'echo first >> ${markerFile}'",
-              "sh -c 'echo second >> ${markerFile}'",
+              "sh -c 'echo first >> ${toShellPath(markerFile)}'",
+              "sh -c 'echo second >> ${toShellPath(markerFile)}'",
             ],
           },
         };
@@ -251,7 +256,7 @@ describe("gen command", () => {
       await setupProjectWithConfig(`
         export default {
           hooks: {
-            afterAllFileWrite: ["sh -c 'echo \\"$@\\" > ${outputFile}' --"],
+            afterAllFileWrite: ["sh -c 'echo \\"$@\\" > ${toShellPath(outputFile)}' --"],
           },
         };
       `);
@@ -271,7 +276,7 @@ describe("gen command", () => {
           hooks: {
             afterAllFileWrite: [
               "exit 1",
-              "sh -c 'echo executed > ${markerFile}'",
+              "sh -c 'echo executed > ${toShellPath(markerFile)}'",
             ],
           },
         };
@@ -308,7 +313,7 @@ describe("gen command", () => {
             schemaPath: null,
           },
           hooks: {
-            afterAllFileWrite: ["sh -c 'echo executed > ${markerFile}'"],
+            afterAllFileWrite: ["sh -c 'echo executed > ${toShellPath(markerFile)}'"],
           },
         };
       `);
@@ -327,7 +332,7 @@ describe("gen command", () => {
         `
           export default {
             hooks: {
-              afterAllFileWrite: ["sh -c 'echo executed > ${markerFile}'"],
+              afterAllFileWrite: ["sh -c 'echo executed > ${toShellPath(markerFile)}'"],
             },
           };
         `,

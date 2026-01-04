@@ -4,6 +4,11 @@ import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { executeHooks, type SingleHookResult } from "./hook-executor.js";
 
+// Convert Windows backslashes to forward slashes for shell command compatibility
+function toShellPath(filePath: string): string {
+  return filePath.replace(/\\/g, "/");
+}
+
 describe("HookExecutor", () => {
   let tempDir: string;
 
@@ -57,15 +62,15 @@ describe("HookExecutor", () => {
 
       const outputFile = path.join(tempDir, "output.txt");
       const result = await executeHooks({
-        commands: [`sh -c 'echo "$@" > ${outputFile}' --`],
+        commands: [`sh -c 'echo "$@" > ${toShellPath(outputFile)}' --`],
         filePaths: [testFile1, testFile2],
         cwd: tempDir,
       });
 
       expect(result.success).toBe(true);
       const output = fs.readFileSync(outputFile, "utf-8").trim();
-      expect(output).toContain(testFile1);
-      expect(output).toContain(testFile2);
+      expect(output).toContain("file1.txt");
+      expect(output).toContain("file2.txt");
     });
 
     it("should continue execution when a command fails", async () => {
@@ -110,7 +115,7 @@ describe("HookExecutor", () => {
       const pwdFile = path.join(tempDir, "pwd.txt");
 
       const result = await executeHooks({
-        commands: [`sh -c 'pwd > ${pwdFile}'`],
+        commands: [`sh -c 'pwd > ${toShellPath(pwdFile)}'`],
         filePaths: [testFile],
         cwd: tempDir,
       });
@@ -141,7 +146,7 @@ describe("HookExecutor", () => {
       const outputFile = path.join(tempDir, "output.txt");
 
       const result = await executeHooks({
-        commands: [`sh -c 'echo "$@" > ${outputFile}' --`],
+        commands: [`sh -c 'echo "$@" > ${toShellPath(outputFile)}' --`],
         filePaths: [testFileWithSpaces],
         cwd: tempDir,
       });
