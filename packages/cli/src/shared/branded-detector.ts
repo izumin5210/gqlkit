@@ -5,7 +5,7 @@
  * from @gqlkit-ts/runtime and return their GraphQL scalar mapping.
  */
 
-import type ts from "typescript";
+import ts from "typescript";
 import type { Diagnostic } from "../type-extractor/types/index.js";
 import {
   getScalarMapping,
@@ -184,4 +184,115 @@ export function detectBrandedScalar(
     unknownBrand: undefined,
     diagnostics,
   };
+}
+
+/**
+ * Detects if a property uses a scalar type alias from @gqlkit-ts/runtime
+ * by examining the type node in the property declaration.
+ *
+ * This is necessary because TypeScript expands simple type aliases like
+ * `type IDString = string` to their underlying type. To preserve the
+ * original type reference, we need to look at the source code's type node.
+ *
+ * @param propSymbol - The property symbol to check
+ * @param checker - The TypeScript type checker
+ * @param options - Optional detection options including ScalarRegistry
+ * @returns Detection result with scalar info if found
+ */
+export function detectScalarFromPropertySymbol(
+  propSymbol: ts.Symbol,
+  checker: ts.TypeChecker,
+  options: DetectBrandedScalarOptions | null = null,
+): DetectionResult {
+  const diagnostics: Diagnostic[] = [];
+  const registry = options?.registry ?? null;
+
+  const declarations = propSymbol.getDeclarations();
+  if (!declarations || declarations.length === 0) {
+    return { scalarInfo: undefined, unknownBrand: undefined, diagnostics };
+  }
+
+  const declaration = declarations[0];
+  if (!declaration || !ts.isPropertySignature(declaration)) {
+    return { scalarInfo: undefined, unknownBrand: undefined, diagnostics };
+  }
+
+  const typeNode = declaration.type;
+  if (!typeNode || !ts.isTypeReferenceNode(typeNode)) {
+    return { scalarInfo: undefined, unknownBrand: undefined, diagnostics };
+  }
+
+  const typeName = typeNode.typeName;
+  if (!ts.isIdentifier(typeName)) {
+    return { scalarInfo: undefined, unknownBrand: undefined, diagnostics };
+  }
+
+  const typeNameSymbol = checker.getSymbolAtLocation(typeName);
+  if (!typeNameSymbol) {
+    return { scalarInfo: undefined, unknownBrand: undefined, diagnostics };
+  }
+
+  const symbolName = typeNameSymbol.getName();
+
+  // Check if it's a direct import alias from runtime
+  if (typeNameSymbol.flags & ts.SymbolFlags.Alias) {
+    try {
+      const aliasedSymbol = checker.getAliasedSymbol(typeNameSymbol);
+      if (aliasedSymbol) {
+        const aliasedDecls = aliasedSymbol.getDeclarations();
+        if (aliasedDecls && aliasedDecls.length > 0) {
+          const aliasedDeclFile = aliasedDecls[0]?.getSourceFile().fileName;
+          if (aliasedDeclFile?.includes("@gqlkit-ts/runtime")) {
+            if (isKnownBrandedScalar(symbolName)) {
+              const mapping = getScalarMapping(symbolName);
+              if (mapping) {
+                return {
+                  scalarInfo: {
+                    scalarName: mapping.graphqlScalar,
+                    brandName: mapping.brandName,
+                    baseType: mapping.baseType,
+                    isCustom: false,
+                  },
+                  unknownBrand: undefined,
+                  diagnostics: [],
+                };
+              }
+            }
+            return {
+              scalarInfo: undefined,
+              unknownBrand: {
+                typeName: symbolName,
+                importSource: "@gqlkit-ts/runtime",
+              },
+              diagnostics,
+            };
+          }
+
+          // Check for custom scalar from registry
+          if (registry && aliasedDeclFile) {
+            const customMapping = registry.getMapping(
+              symbolName,
+              aliasedDeclFile,
+            );
+            if (customMapping) {
+              return {
+                scalarInfo: {
+                  scalarName: customMapping.graphqlScalar,
+                  brandName: customMapping.typeName,
+                  baseType: undefined,
+                  isCustom: true,
+                },
+                unknownBrand: undefined,
+                diagnostics: [],
+              };
+            }
+          }
+        }
+      }
+    } catch {
+      // getAliasedSymbol can throw for non-alias symbols
+    }
+  }
+
+  return { scalarInfo: undefined, unknownBrand: undefined, diagnostics };
 }

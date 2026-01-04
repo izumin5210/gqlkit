@@ -1,6 +1,7 @@
 import ts from "typescript";
 import {
   detectBrandedScalar,
+  detectScalarFromPropertySymbol,
   type UnknownBrandInfo,
 } from "../../shared/branded-detector.js";
 import {
@@ -315,7 +316,39 @@ function extractFieldsFromType(
     }
 
     const tsdocInfo = extractTSDocFromSymbol(prop, checker);
-    const typeResult = convertTsTypeToReferenceWithBrandInfo(propType, checker);
+
+    // First try to detect scalar from property's type node (preserves type alias reference)
+    const scalarResult = detectScalarFromPropertySymbol(prop, checker);
+    let typeResult: TypeReferenceResult;
+
+    if (scalarResult.scalarInfo) {
+      typeResult = {
+        tsType: {
+          kind: "scalar",
+          name: scalarResult.scalarInfo.scalarName,
+          elementType: null,
+          members: null,
+          nullable: false,
+          scalarInfo: scalarResult.scalarInfo,
+        },
+        unknownBrand: undefined,
+      };
+    } else if (scalarResult.unknownBrand) {
+      typeResult = {
+        tsType: {
+          kind: "primitive",
+          name: "string",
+          elementType: null,
+          members: null,
+          nullable: false,
+          scalarInfo: null,
+        },
+        unknownBrand: scalarResult.unknownBrand,
+      };
+    } else {
+      // Fall back to type-based detection
+      typeResult = convertTsTypeToReferenceWithBrandInfo(propType, checker);
+    }
 
     if (typeResult.unknownBrand) {
       unknownBrands.push({

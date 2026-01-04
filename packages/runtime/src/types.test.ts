@@ -18,8 +18,8 @@ import {
   type NoArgs,
   type QueryResolver,
   type QueryResolverFn,
-  type ResolverBrand,
   type ResolverKind,
+  type ResolverMetadataKey,
 } from "./index.js";
 
 type User = {
@@ -209,31 +209,41 @@ describe("Type inference tests", () => {
       expect(result).toBe("test");
     });
 
-    it("should include kind in QueryResolver brand", () => {
-      type BrandType = QueryResolver<NoArgs, User>[ResolverBrand];
-      const brand: BrandType = { kind: "query", args: {}, result: {} as User };
-      expect(brand.kind).toBe("query");
+    it("should include kind in QueryResolver metadata", () => {
+      type MetadataType = NonNullable<
+        QueryResolver<NoArgs, User>[ResolverMetadataKey]
+      >;
+      const metadata: MetadataType = {
+        kind: "query",
+        args: {},
+        result: {} as User,
+      };
+      expect(metadata.kind).toBe("query");
     });
 
-    it("should include kind in MutationResolver brand", () => {
-      type BrandType = MutationResolver<NoArgs, User>[ResolverBrand];
-      const brand: BrandType = {
+    it("should include kind in MutationResolver metadata", () => {
+      type MetadataType = NonNullable<
+        MutationResolver<NoArgs, User>[ResolverMetadataKey]
+      >;
+      const metadata: MetadataType = {
         kind: "mutation",
         args: {},
         result: {} as User,
       };
-      expect(brand.kind).toBe("mutation");
+      expect(metadata.kind).toBe("mutation");
     });
 
-    it("should include kind and parent in FieldResolver brand", () => {
-      type BrandType = FieldResolver<User, NoArgs, string>[ResolverBrand];
-      const brand: BrandType = {
+    it("should include kind and parent in FieldResolver metadata", () => {
+      type MetadataType = NonNullable<
+        FieldResolver<User, NoArgs, string>[ResolverMetadataKey]
+      >;
+      const metadata: MetadataType = {
         kind: "field",
         parent: {} as User,
         args: {},
         result: "",
       };
-      expect(brand.kind).toBe("field");
+      expect(metadata.kind).toBe("field");
     });
 
     it("should support custom Context in branded types", () => {
@@ -389,8 +399,8 @@ describe("Type inference tests", () => {
     });
   });
 
-  describe("Branded Type verification (Task 5.4)", () => {
-    it("should return branded type from createGqlkitApis.defineQuery", () => {
+  describe("Resolver type metadata verification (Task 5.4)", () => {
+    it("should return resolver type with metadata from createGqlkitApis.defineQuery", () => {
       const apis = createGqlkitApis<{ userId: string }>();
 
       const query = apis.defineQuery<NoArgs, User>(
@@ -402,13 +412,13 @@ describe("Type inference tests", () => {
       );
 
       type QueryType = typeof query;
-      type BrandInfo = QueryType[ResolverBrand];
-      void ({} as BrandInfo["kind"] satisfies "query");
+      type MetadataInfo = NonNullable<QueryType[ResolverMetadataKey]>;
+      void ({} as MetadataInfo["kind"] satisfies "query");
 
       expect(query).toBeDefined();
     });
 
-    it("should return branded type from createGqlkitApis.defineMutation", () => {
+    it("should return resolver type with metadata from createGqlkitApis.defineMutation", () => {
       const apis = createGqlkitApis<{ userId: string }>();
 
       const mutation = apis.defineMutation<{ name: string }, User>(
@@ -420,13 +430,13 @@ describe("Type inference tests", () => {
       );
 
       type MutationType = typeof mutation;
-      type BrandInfo = MutationType[ResolverBrand];
-      void ({} as BrandInfo["kind"] satisfies "mutation");
+      type MetadataInfo = NonNullable<MutationType[ResolverMetadataKey]>;
+      void ({} as MetadataInfo["kind"] satisfies "mutation");
 
       expect(mutation).toBeDefined();
     });
 
-    it("should return branded type from createGqlkitApis.defineField", () => {
+    it("should return resolver type with metadata from createGqlkitApis.defineField", () => {
       const apis = createGqlkitApis<{ userId: string }>();
 
       const field = apis.defineField<User, NoArgs, string>(
@@ -436,8 +446,8 @@ describe("Type inference tests", () => {
       );
 
       type FieldType = typeof field;
-      type BrandInfo = FieldType[ResolverBrand];
-      void ({} as BrandInfo["kind"] satisfies "field");
+      type MetadataInfo = NonNullable<FieldType[ResolverMetadataKey]>;
+      void ({} as MetadataInfo["kind"] satisfies "field");
 
       expect(field).toBeDefined();
     });
@@ -579,11 +589,13 @@ describe("Type inference tests", () => {
       expect(fn).toBeDefined();
     });
 
-    it("should export ResolverBrand and ResolverKind types (Task 8.2)", () => {
+    it("should export ResolverMetadataKey and ResolverKind types (Task 8.2)", () => {
+      const key: ResolverMetadataKey = " $gqlkitResolver ";
       const queryKind: ResolverKind = "query";
       const mutationKind: ResolverKind = "mutation";
       const fieldKind: ResolverKind = "field";
 
+      expect(key).toBe(" $gqlkitResolver ");
       expect(queryKind).toBe("query");
       expect(mutationKind).toBe("mutation");
       expect(fieldKind).toBe("field");

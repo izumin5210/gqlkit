@@ -1,45 +1,33 @@
 import type { GraphQLResolveInfo } from "graphql";
 
 /**
- * Type-level symbol for identifying scalar types.
- * This symbol only exists at the type level and has no runtime representation.
- * Used by CLI to detect branded scalar types through type analysis.
- */
-declare const ScalarBrandSymbol: unique symbol;
-
-/**
- * Branded type for scalar types.
- * This type is used to create distinct types for GraphQL scalar types.
- * @typeParam K - The name of the scalar type brand
- */
-export type ScalarBrand<K extends string> = {
-  readonly [ScalarBrandSymbol]: K;
-};
-
-/**
- * Branded type for GraphQL ID scalar (string-based).
+ * Type alias for GraphQL ID scalar (string-based).
  * Use this when the ID is represented as a string in your system.
+ * The CLI detects this type by import path and name to map to GraphQL ID.
  */
-export type IDString = string & ScalarBrand<"IDString">;
+export type IDString = string;
 
 /**
- * Branded type for GraphQL ID scalar (number-based).
+ * Type alias for GraphQL ID scalar (number-based).
  * Use this when the ID is represented as a number in your system.
+ * The CLI detects this type by import path and name to map to GraphQL ID.
  */
-export type IDNumber = number & ScalarBrand<"IDNumber">;
+export type IDNumber = number;
 
 /**
- * Branded type for GraphQL Int scalar.
+ * Type alias for GraphQL Int scalar.
  * Use this to explicitly mark a field as an integer.
+ * The CLI detects this type by import path and name to map to GraphQL Int.
  */
-export type Int = number & ScalarBrand<"Int">;
+export type Int = number;
 
 /**
- * Branded type for GraphQL Float scalar.
+ * Type alias for GraphQL Float scalar.
  * Use this to explicitly mark a field as a floating-point number.
+ * The CLI detects this type by import path and name to map to GraphQL Float.
  * Note: Plain `number` type will also map to Float by default.
  */
-export type Float = number & ScalarBrand<"Float">;
+export type Float = number;
 
 /**
  * Type alias representing no arguments for a resolver.
@@ -88,17 +76,11 @@ export type FieldResolverFn<TParent, TArgs, TResult, TContext = unknown> = (
 ) => TResult | Promise<TResult>;
 
 /**
- * Type-level symbol for identifying resolvers.
- * This symbol only exists at the type level and has no runtime representation.
+ * The key for resolver metadata property.
+ * Uses a string with spaces to prevent accidental collisions with user-defined properties.
  * Used by CLI to detect resolvers through type analysis.
  */
-declare const ResolverBrandSymbol: unique symbol;
-
-/**
- * The type of the resolver brand symbol.
- * Export this type so users can access brand information from resolver types.
- */
-export type ResolverBrand = typeof ResolverBrandSymbol;
+export type ResolverMetadataKey = " $gqlkitResolver ";
 
 /**
  * The kind of resolver.
@@ -106,8 +88,7 @@ export type ResolverBrand = typeof ResolverBrandSymbol;
 export type ResolverKind = "query" | "mutation" | "field";
 
 /**
- * Branded Query resolver type.
- * Includes type-level metadata for CLI detection.
+ * Query resolver type with metadata for CLI detection.
  * @typeParam TArgs - The type of arguments the resolver accepts
  * @typeParam TResult - The return type of the resolver
  * @typeParam TContext - The context type (defaults to unknown)
@@ -117,7 +98,7 @@ export type QueryResolver<TArgs, TResult, TContext = unknown> = QueryResolverFn<
   TResult,
   TContext
 > & {
-  [ResolverBrandSymbol]: {
+  [" $gqlkitResolver "]?: {
     kind: "query";
     args: TArgs;
     result: TResult;
@@ -125,8 +106,7 @@ export type QueryResolver<TArgs, TResult, TContext = unknown> = QueryResolverFn<
 };
 
 /**
- * Branded Mutation resolver type.
- * Includes type-level metadata for CLI detection.
+ * Mutation resolver type with metadata for CLI detection.
  * @typeParam TArgs - The type of arguments the resolver accepts
  * @typeParam TResult - The return type of the resolver
  * @typeParam TContext - The context type (defaults to unknown)
@@ -136,7 +116,7 @@ export type MutationResolver<
   TResult,
   TContext = unknown,
 > = MutationResolverFn<TArgs, TResult, TContext> & {
-  [ResolverBrandSymbol]: {
+  [" $gqlkitResolver "]?: {
     kind: "mutation";
     args: TArgs;
     result: TResult;
@@ -144,8 +124,7 @@ export type MutationResolver<
 };
 
 /**
- * Branded Field resolver type.
- * Includes type-level metadata for CLI detection.
+ * Field resolver type with metadata for CLI detection.
  * @typeParam TParent - The parent type this field belongs to
  * @typeParam TArgs - The type of arguments the resolver accepts
  * @typeParam TResult - The return type of the resolver
@@ -157,7 +136,7 @@ export type FieldResolver<
   TResult,
   TContext = unknown,
 > = FieldResolverFn<TParent, TArgs, TResult, TContext> & {
-  [ResolverBrandSymbol]: {
+  [" $gqlkitResolver "]?: {
     kind: "field";
     parent: TParent;
     args: TArgs;

@@ -44,24 +44,36 @@ export interface ExtractDefineApiResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
-function detectResolverFromBrandedType(
+function detectResolverFromMetadataProperty(
   callExpr: ts.CallExpression,
   checker: ts.TypeChecker,
 ): DefineApiResolverType | undefined {
   const returnType = checker.getTypeAtLocation(callExpr);
 
   const properties = returnType.getProperties();
-  const brandProp = properties.find((p) => {
-    const name = p.getName();
-    return name.includes("ResolverBrandSymbol");
-  });
 
-  if (!brandProp) {
+  // Check for resolver metadata property with string literal key
+  const metadataProp = properties.find(
+    (p) => p.getName() === " $gqlkitResolver ",
+  );
+
+  if (!metadataProp) {
     return undefined;
   }
 
-  const brandType = checker.getTypeOfSymbol(brandProp);
-  const kindProp = brandType.getProperty("kind");
+  let metadataType = checker.getTypeOfSymbol(metadataProp);
+
+  // Handle optional property: filter out undefined from union type
+  if (metadataType.isUnion()) {
+    const nonUndefinedTypes = metadataType.types.filter(
+      (t) => (t.flags & ts.TypeFlags.Undefined) === 0,
+    );
+    if (nonUndefinedTypes.length === 1 && nonUndefinedTypes[0]) {
+      metadataType = nonUndefinedTypes[0];
+    }
+  }
+
+  const kindProp = metadataType.getProperty("kind");
   if (!kindProp) {
     return undefined;
   }
@@ -467,7 +479,7 @@ export function extractDefineApiResolvers(
           continue;
         }
 
-        const resolverType = detectResolverFromBrandedType(
+        const resolverType = detectResolverFromMetadataProperty(
           initializer,
           checker,
         );
