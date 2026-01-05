@@ -123,26 +123,25 @@ export type FieldResolverFn<TParent, TArgs, TResult, TContext = unknown> = (
 ) => TResult | Promise<TResult>;
 
 /**
- * Type-level symbol for identifying resolvers.
- * This symbol only exists at the type level and has no runtime representation.
- * Used by CLI to detect resolvers through type analysis.
- */
-declare const ResolverBrandSymbol: unique symbol;
-
-/**
- * The type of the resolver brand symbol.
- * Export this type so users can access brand information from resolver types.
- */
-export type ResolverBrand = typeof ResolverBrandSymbol;
-
-/**
  * The kind of resolver.
  */
 export type ResolverKind = "query" | "mutation" | "field";
 
 /**
- * Branded Query resolver type.
- * Includes type-level metadata for CLI detection.
+ * Resolver metadata structure embedded in intersection types.
+ * Used by CLI to detect and identify resolver types through type analysis.
+ */
+export interface ResolverMetadataShape {
+  readonly kind: ResolverKind;
+  readonly args: unknown;
+  readonly result: unknown;
+  readonly parent?: unknown;
+}
+
+/**
+ * Query resolver type with metadata.
+ * The metadata is embedded as an optional property with space-prefixed key
+ * to avoid collision with user-defined properties.
  * @typeParam TArgs - The type of arguments the resolver accepts
  * @typeParam TResult - The return type of the resolver
  * @typeParam TContext - The context type (defaults to unknown)
@@ -152,7 +151,7 @@ export type QueryResolver<TArgs, TResult, TContext = unknown> = QueryResolverFn<
   TResult,
   TContext
 > & {
-  [ResolverBrandSymbol]: {
+  " $gqlkitResolver"?: {
     kind: "query";
     args: TArgs;
     result: TResult;
@@ -160,8 +159,9 @@ export type QueryResolver<TArgs, TResult, TContext = unknown> = QueryResolverFn<
 };
 
 /**
- * Branded Mutation resolver type.
- * Includes type-level metadata for CLI detection.
+ * Mutation resolver type with metadata.
+ * The metadata is embedded as an optional property with space-prefixed key
+ * to avoid collision with user-defined properties.
  * @typeParam TArgs - The type of arguments the resolver accepts
  * @typeParam TResult - The return type of the resolver
  * @typeParam TContext - The context type (defaults to unknown)
@@ -171,7 +171,7 @@ export type MutationResolver<
   TResult,
   TContext = unknown,
 > = MutationResolverFn<TArgs, TResult, TContext> & {
-  [ResolverBrandSymbol]: {
+  " $gqlkitResolver"?: {
     kind: "mutation";
     args: TArgs;
     result: TResult;
@@ -179,8 +179,9 @@ export type MutationResolver<
 };
 
 /**
- * Branded Field resolver type.
- * Includes type-level metadata for CLI detection.
+ * Field resolver type with metadata.
+ * The metadata is embedded as an optional property with space-prefixed key
+ * to avoid collision with user-defined properties.
  * @typeParam TParent - The parent type this field belongs to
  * @typeParam TArgs - The type of arguments the resolver accepts
  * @typeParam TResult - The return type of the resolver
@@ -192,7 +193,7 @@ export type FieldResolver<
   TResult,
   TContext = unknown,
 > = FieldResolverFn<TParent, TArgs, TResult, TContext> & {
-  [ResolverBrandSymbol]: {
+  " $gqlkitResolver"?: {
     kind: "field";
     parent: TParent;
     args: TArgs;
