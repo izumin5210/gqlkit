@@ -1,4 +1,5 @@
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
+import type { CollectedScalarType } from "../type-extractor/collector/scalar-collector.js";
 import type { ExtractTypesResult } from "../type-extractor/index.js";
 import type { Diagnostic } from "../type-extractor/types/index.js";
 import { buildDocumentNode } from "./builder/ast-builder.js";
@@ -13,6 +14,7 @@ export interface GenerateSchemaInput {
   readonly resolversResult: ExtractResolversResult;
   readonly outputDir: string;
   readonly customScalarNames: ReadonlyArray<string> | null;
+  readonly customScalars: ReadonlyArray<CollectedScalarType> | null;
   readonly enablePruning: boolean | null;
   readonly sourceRoot: string | null;
 }
@@ -34,6 +36,7 @@ export function generateSchema(
     resolversResult,
     outputDir,
     customScalarNames,
+    customScalars,
     enablePruning,
     sourceRoot,
   } = input;
@@ -42,6 +45,7 @@ export function generateSchema(
     typesResult,
     resolversResult,
     customScalarNames,
+    customScalars,
   );
 
   let documentNode = buildDocumentNode(
@@ -66,7 +70,11 @@ export function generateSchema(
   const sdlContent = emitSdlContent(documentNode);
 
   const resolverInfo = collectResolverInfo(integratedResult);
-  const resolversCode = emitResolversCode(resolverInfo, outputDir);
+  const resolversCode = emitResolversCode(
+    resolverInfo,
+    outputDir,
+    customScalars ?? [],
+  );
 
   return {
     typeDefsCode,

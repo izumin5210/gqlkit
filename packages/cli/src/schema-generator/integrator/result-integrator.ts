@@ -5,6 +5,8 @@ import type {
   TypeExtension as ResolverTypeExtension,
 } from "../../resolver-extractor/index.js";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
+import type { CollectedScalarType } from "../../type-extractor/collector/scalar-collector.js";
+import { mergeDescriptions } from "../../type-extractor/collector/scalar-collector.js";
 import type { ExtractTypesResult } from "../../type-extractor/index.js";
 import type {
   Diagnostic,
@@ -53,11 +55,22 @@ export interface TypeExtension {
   readonly fields: ReadonlyArray<ExtensionField>;
 }
 
+/**
+ * Custom scalar information for schema generation.
+ */
+export interface CustomScalarInfo {
+  readonly scalarName: string;
+  readonly description: string | null;
+}
+
 export interface IntegratedResult {
   readonly baseTypes: ReadonlyArray<BaseType>;
   readonly inputTypes: ReadonlyArray<InputType>;
   readonly typeExtensions: ReadonlyArray<TypeExtension>;
+  /** @deprecated Use customScalars instead */
   readonly customScalarNames: ReadonlyArray<string> | null;
+  /** Custom scalars with description information */
+  readonly customScalars: ReadonlyArray<CustomScalarInfo> | null;
   readonly hasQuery: boolean;
   readonly hasMutation: boolean;
   readonly hasErrors: boolean;
@@ -91,6 +104,7 @@ export function integrate(
   typesResult: ExtractTypesResult,
   resolversResult: ExtractResolversResult,
   customScalarNames: ReadonlyArray<string> | null,
+  collectedScalars?: ReadonlyArray<CollectedScalarType> | null,
 ): IntegratedResult {
   const diagnostics: Diagnostic[] = [];
 
@@ -232,6 +246,22 @@ export function integrate(
 
   const hasErrors = diagnostics.some((d) => d.severity === "error");
 
+  const scalarDescriptionMap = new Map<string, string | null>();
+  if (collectedScalars) {
+    for (const scalar of collectedScalars) {
+      const description = mergeDescriptions(scalar.descriptions);
+      scalarDescriptionMap.set(scalar.scalarName, description);
+    }
+  }
+
+  const customScalars: CustomScalarInfo[] | null =
+    customScalarNames && customScalarNames.length > 0
+      ? customScalarNames.map((name) => ({
+          scalarName: name,
+          description: scalarDescriptionMap.get(name) ?? null,
+        }))
+      : null;
+
   return {
     baseTypes,
     inputTypes,
@@ -240,6 +270,7 @@ export function integrate(
       customScalarNames && customScalarNames.length > 0
         ? customScalarNames
         : null,
+    customScalars,
     hasQuery,
     hasMutation,
     hasErrors,

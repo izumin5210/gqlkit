@@ -88,29 +88,57 @@ export interface GqlkitConfig {
 }
 
 /**
- * Individual custom scalar mapping configuration.
+ * Custom scalar mapping configuration.
+ * Maps TypeScript types to GraphQL scalar types.
+ *
+ * @example
+ * // Global type (e.g., Date)
+ * { name: "DateTime", tsType: { name: "Date" } }
+ *
+ * // Module type
+ * { name: "DateTime", tsType: { name: "DateTimeString", from: "./src/types" } }
+ *
+ * // With usage constraint
+ * { name: "DateTime", tsType: { name: "Date" }, only: "input" }
+ *
+ * // With description
+ * { name: "DateTime", tsType: { name: "Date" }, description: "ISO 8601 format" }
  */
 export interface ScalarMappingConfig {
   /**
-   * Scalar name to use in GraphQL schema.
+   * GraphQL scalar name.
    * Example: "DateTime", "UUID", "URL"
    */
-  readonly graphqlName: string;
+  readonly name: string;
 
   /**
    * TypeScript type information to map.
    */
-  readonly type: {
+  readonly tsType: {
     /**
-     * Import path for the type.
-     * Example: "./src/types/scalars", "@my-lib/scalars"
-     */
-    readonly from: string;
-
-    /**
-     * Type name to import.
-     * Example: "DateTime", "UUID"
+     * TypeScript type name.
+     * Example: "Date", "DateTime", "UUID"
      */
     readonly name: string;
+
+    /**
+     * Import path for the type. If omitted, treated as a global type.
+     * Example: "./src/types/scalars", "@my-lib/scalars"
+     */
+    readonly from?: string;
   };
+
+  /**
+   * Usage constraint for the scalar type.
+   * - "input": Only use this type for input positions (arguments, input type fields)
+   * - "output": Only use this type for output positions (return types, object type fields)
+   * - undefined: Use for both input and output positions
+   */
+  readonly only?: "input" | "output";
+
+  /**
+   * Description for the scalar type.
+   * Will be included in the generated GraphQL schema.
+   */
+  readonly description?: string;
 }

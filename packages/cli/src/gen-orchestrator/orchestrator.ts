@@ -23,8 +23,17 @@ import {
 } from "../shared/index.js";
 import { createSharedProgram } from "../shared/program-factory.js";
 import { collectResults } from "../type-extractor/collector/result-collector.js";
+import {
+  type CollectedScalarType,
+  type ConfigScalarMapping,
+  collectScalars,
+  type ScalarMetadataInfo,
+} from "../type-extractor/collector/scalar-collector.js";
 import { convertToGraphQL } from "../type-extractor/converter/graphql-converter.js";
-import { extractTypesFromProgram } from "../type-extractor/extractor/type-extractor.js";
+import {
+  extractTypesFromProgram,
+  type GlobalTypeMapping,
+} from "../type-extractor/extractor/type-extractor.js";
 import type { Diagnostic, Diagnostics } from "../type-extractor/index.js";
 import { validateTypes } from "../type-extractor/validator/type-validator.js";
 import { writeFiles } from "./writer/file-writer.js";
@@ -53,6 +62,9 @@ export interface GenerationResult {
 interface TypesResult {
   types: ReturnType<typeof collectResults>["types"];
   diagnostics: Diagnostics;
+  detectedScalarNames: ReadonlyArray<string>;
+  detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
+  collectedScalars: ReadonlyArray<CollectedScalarType>;
 }
 
 interface ResolversResult {
@@ -88,22 +100,57 @@ function extractTypesCore(
   program: ts.Program,
   sourceFiles: ReadonlyArray<string>,
   customScalarNames: ReadonlyArray<string>,
+  globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
+  configScalars: ReadonlyArray<ConfigScalarMapping> = [],
+  sourceRoot: string | null = null,
 ): TypesResult {
   const allDiagnostics: Diagnostic[] = [];
 
-  const extractionResult = extractTypesFromProgram(program, sourceFiles);
+  const extractionResult = extractTypesFromProgram(program, sourceFiles, {
+    globalTypeMappings,
+  });
   allDiagnostics.push(...extractionResult.diagnostics);
+
+  const allCustomScalarNames = [
+    ...customScalarNames,
+    ...extractionResult.detectedScalarNames,
+  ];
+
+  const scalarValidationResult = collectScalars(
+    extractionResult.detectedScalars,
+    configScalars,
+    { sourceRoot },
+  );
+  const collectedScalars: CollectedScalarType[] = scalarValidationResult.success
+    ? [...scalarValidationResult.data]
+    : [];
+  if (!scalarValidationResult.success) {
+    for (const error of scalarValidationResult.errors) {
+      allDiagnostics.push({
+        code: error.code,
+        message: error.message,
+        severity: error.severity,
+        location: null,
+      });
+    }
+  }
 
   const conversionResult = convertToGraphQL(extractionResult.types);
   allDiagnostics.push(...conversionResult.diagnostics);
 
   const validationResult = validateTypes({
     types: conversionResult.types,
-    customScalarNames,
+    customScalarNames: allCustomScalarNames,
   });
   allDiagnostics.push(...validationResult.diagnostics);
 
-  return collectResults(conversionResult.types, allDiagnostics);
+  const result = collectResults(conversionResult.types, allDiagnostics);
+  return {
+    ...result,
+    detectedScalarNames: extractionResult.detectedScalarNames,
+    detectedScalars: extractionResult.detectedScalars,
+    collectedScalars,
+  };
 }
 
 function convertArgsToInputValues(
@@ -279,7 +326,45 @@ export async function executeGeneration(
   const customScalarNames =
     config.customScalars?.map((s) => s.graphqlName) ?? [];
 
-  const typesResult = extractTypesCore(program, sourceFiles, customScalarNames);
+  const globalTypeMappings: GlobalTypeMapping[] =
+    config.customScalars
+      ?.filter((s) => s.importPath === null)
+      .map((s) => ({
+        typeName: s.typeName,
+        scalarName: s.graphqlName,
+        only: s.only,
+      })) ?? [];
+
+  const configScalars: ConfigScalarMapping[] =
+    config.customScalars?.map((s) => {
+      let sourceFile = "";
+      if (s.importPath !== null) {
+        if (s.importPath.startsWith(".")) {
+          const baseDir = config.configDir ?? config.cwd;
+          sourceFile = `${resolve(baseDir, s.importPath)}.ts`;
+        } else {
+          sourceFile = s.importPath;
+        }
+      }
+      return {
+        scalarName: s.graphqlName,
+        typeName: s.typeName,
+        only: s.only,
+        sourceFile,
+        line: 1,
+        description: s.description,
+        fromConfig: true,
+      };
+    }) ?? [];
+
+  const typesResult = extractTypesCore(
+    program,
+    sourceFiles,
+    customScalarNames,
+    globalTypeMappings,
+    configScalars,
+    config.cwd,
+  );
   const resolversResult = extractResolversCore(program, sourceFiles);
 
   const allDiagnostics = collectAllDiagnostics(typesResult, resolversResult);
@@ -292,6 +377,11 @@ export async function executeGeneration(
     };
   }
 
+  const allCustomScalarNames = [
+    ...customScalarNames,
+    ...typesResult.detectedScalarNames,
+  ];
+
   const schemaResult = generateSchema({
     typesResult: typesResult as Parameters<
       typeof generateSchema
@@ -300,7 +390,8 @@ export async function executeGeneration(
       typeof generateSchema
     >[0]["resolversResult"],
     outputDir: resolve(config.cwd, getOutputDir(config.output)),
-    customScalarNames,
+    customScalarNames: allCustomScalarNames,
+    customScalars: typesResult.collectedScalars,
     enablePruning: null,
     sourceRoot: config.cwd,
   });

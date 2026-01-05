@@ -247,22 +247,119 @@ function validateOutputConfig(
   };
 }
 
-function validateScalarMapping(
-  scalar: unknown,
+function isNewFormat(
+  scalar: Record<string, unknown>,
+): scalar is Record<string, unknown> & { name: unknown; tsType: unknown } {
+  return "name" in scalar && "tsType" in scalar;
+}
+
+function isLegacyFormat(scalar: Record<string, unknown>): scalar is Record<
+  string,
+  unknown
+> & {
+  graphqlName: unknown;
+  type: unknown;
+} {
+  return "graphqlName" in scalar && "type" in scalar;
+}
+
+function validateNewScalarMapping(
+  scalar: Record<string, unknown>,
   index: number,
   configPath: string,
 ): { resolved: ResolvedScalarMapping | undefined; diagnostics: Diagnostic[] } {
   const diagnostics: Diagnostic[] = [];
 
-  if (!isRecord(scalar)) {
+  if (typeof scalar["name"] !== "string") {
     diagnostics.push({
-      code: "CONFIG_INVALID_TYPE",
-      message: `scalars[${index}] must be an object`,
+      code: "CONFIG_MISSING_PROPERTY",
+      message: `scalars[${index}].name is required and must be a string`,
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+  }
+
+  if (!isRecord(scalar["tsType"])) {
+    diagnostics.push({
+      code: "CONFIG_MISSING_PROPERTY",
+      message: `scalars[${index}].tsType is required and must be an object`,
       severity: "error",
       location: { file: configPath, line: 1, column: 1 },
     });
     return { resolved: undefined, diagnostics };
   }
+
+  const tsType = scalar["tsType"];
+
+  if (typeof tsType["name"] !== "string") {
+    diagnostics.push({
+      code: "CONFIG_MISSING_PROPERTY",
+      message: `scalars[${index}].tsType.name is required and must be a string`,
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+  }
+
+  const only = scalar["only"];
+  if (only !== undefined && only !== "input" && only !== "output") {
+    diagnostics.push({
+      code: "CONFIG_INVALID_ONLY_VALUE",
+      message: `scalars[${index}].only must be "input" or "output"`,
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+  }
+
+  const description = scalar["description"];
+  if (description !== undefined && typeof description !== "string") {
+    diagnostics.push({
+      code: "CONFIG_INVALID_TYPE",
+      message: `scalars[${index}].description must be a string`,
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+  }
+
+  if (diagnostics.length > 0) {
+    return { resolved: undefined, diagnostics };
+  }
+
+  const graphqlName = scalar["name"] as string;
+
+  if (
+    BUILTIN_SCALAR_NAMES.includes(
+      graphqlName as (typeof BUILTIN_SCALAR_NAMES)[number],
+    )
+  ) {
+    diagnostics.push({
+      code: "CONFIG_BUILTIN_OVERRIDE",
+      message: `Cannot override built-in scalar '${graphqlName}'. Built-in scalars: ID, String, Int, Float, Boolean`,
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+    return { resolved: undefined, diagnostics };
+  }
+
+  const importPath = typeof tsType["from"] === "string" ? tsType["from"] : null;
+
+  return {
+    resolved: {
+      graphqlName,
+      typeName: tsType["name"] as string,
+      importPath,
+      only: (only as "input" | "output" | undefined) ?? null,
+      description: (description as string | undefined) ?? null,
+    },
+    diagnostics,
+  };
+}
+
+function validateLegacyScalarMapping(
+  scalar: Record<string, unknown>,
+  index: number,
+  configPath: string,
+): { resolved: ResolvedScalarMapping | undefined; diagnostics: Diagnostic[] } {
+  const diagnostics: Diagnostic[] = [];
 
   if (typeof scalar["graphqlName"] !== "string") {
     diagnostics.push({
@@ -328,9 +425,45 @@ function validateScalarMapping(
       graphqlName,
       typeName: type["name"] as string,
       importPath: type["from"] as string,
+      only: null,
+      description: null,
     },
     diagnostics,
   };
+}
+
+function validateScalarMapping(
+  scalar: unknown,
+  index: number,
+  configPath: string,
+): { resolved: ResolvedScalarMapping | undefined; diagnostics: Diagnostic[] } {
+  const diagnostics: Diagnostic[] = [];
+
+  if (!isRecord(scalar)) {
+    diagnostics.push({
+      code: "CONFIG_INVALID_TYPE",
+      message: `scalars[${index}] must be an object`,
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+    return { resolved: undefined, diagnostics };
+  }
+
+  if (isNewFormat(scalar)) {
+    return validateNewScalarMapping(scalar, index, configPath);
+  }
+
+  if (isLegacyFormat(scalar)) {
+    return validateLegacyScalarMapping(scalar, index, configPath);
+  }
+
+  diagnostics.push({
+    code: "CONFIG_MISSING_PROPERTY",
+    message: `scalars[${index}] must have either (name, tsType) or (graphqlName, type)`,
+    severity: "error",
+    location: { file: configPath, line: 1, column: 1 },
+  });
+  return { resolved: undefined, diagnostics };
 }
 
 function validateHooksConfig(
@@ -467,7 +600,10 @@ export function validateConfig(
 
   const scalarsArray = config["scalars"] ?? [];
   const resolvedScalars: ResolvedScalarMapping[] = [];
-  const seenGraphqlNames = new Map<string, number>();
+  const seenGraphqlNamesWithOnly = new Map<
+    string,
+    { index: number; only: "input" | "output" | null }
+  >();
   const seenTypes = new Map<string, { index: number; names: string[] }>();
 
   for (let i = 0; i < scalarsArray.length; i++) {
@@ -476,23 +612,24 @@ export function validateConfig(
     diagnostics.push(...result.diagnostics);
 
     if (result.resolved) {
-      const { graphqlName, typeName, importPath } = result.resolved;
+      const { graphqlName, typeName, importPath, only } = result.resolved;
 
-      const existingGraphqlIndex = seenGraphqlNames.get(graphqlName);
-      if (existingGraphqlIndex !== undefined) {
+      const scalarOnlyKey = `${graphqlName}::${only ?? "both"}`;
+      const existing = seenGraphqlNamesWithOnly.get(scalarOnlyKey);
+      if (existing) {
         diagnostics.push({
           code: "CONFIG_DUPLICATE_MAPPING",
-          message: `Duplicate scalar mapping: '${graphqlName}' is defined multiple times`,
+          message: `Duplicate scalar mapping: '${graphqlName}' with ${only ? `only: "${only}"` : "no only constraint"} is defined multiple times`,
           severity: "error",
           location: { file: configPath, line: 1, column: 1 },
         });
       } else {
-        seenGraphqlNames.set(graphqlName, i);
+        seenGraphqlNamesWithOnly.set(scalarOnlyKey, { index: i, only });
       }
 
       const typeKey = `${importPath}::${typeName}`;
       const existingType = seenTypes.get(typeKey);
-      if (existingType) {
+      if (existingType && existingType.names[0] !== graphqlName) {
         existingType.names.push(graphqlName);
         diagnostics.push({
           code: "CONFIG_DUPLICATE_TYPE",
@@ -500,7 +637,7 @@ export function validateConfig(
           severity: "error",
           location: { file: configPath, line: 1, column: 1 },
         });
-      } else {
+      } else if (!existingType) {
         seenTypes.set(typeKey, { index: i, names: [graphqlName] });
       }
 

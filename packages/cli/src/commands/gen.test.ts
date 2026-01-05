@@ -76,7 +76,7 @@ describe("gen command", () => {
         "src/gqlkit/__generated__/resolvers.ts",
       );
       const content = await readFile(resolversPath, "utf-8");
-      expect(content.includes("resolvers")).toBeTruthy();
+      expect(content.includes("createResolvers")).toBeTruthy();
     });
 
     it("should return exit code 0 on success", async () => {

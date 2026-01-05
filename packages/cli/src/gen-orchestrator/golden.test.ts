@@ -58,9 +58,11 @@ describe("Golden File Tests", async () => {
 
       const customScalars: ResolvedScalarMapping[] | null =
         config?.scalars?.map((s) => ({
-          graphqlName: s.graphqlName,
-          typeName: s.type.name,
-          importPath: s.type.from,
+          graphqlName: s.name,
+          typeName: s.tsType.name,
+          importPath: s.tsType.from ?? null,
+          only: s.only ?? null,
+          description: s.description ?? null,
         })) ?? null;
 
       const sourceDir = config?.sourceDir ?? "src/gqlkit";

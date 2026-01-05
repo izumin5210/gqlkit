@@ -3,10 +3,12 @@ import {
   detectBrandedScalar,
   type UnknownBrandInfo,
 } from "../../shared/branded-detector.js";
+import { detectScalarMetadata } from "../../shared/metadata-detector.js";
 import {
   extractTSDocFromSymbol,
   extractTSDocInfo,
 } from "../../shared/tsdoc-parser.js";
+import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 import type {
   Diagnostic,
   EnumMemberInfo,
@@ -17,9 +19,29 @@ import type {
   TypeMetadata,
 } from "../types/index.js";
 
+/**
+ * Global type mapping configuration.
+ * Maps TypeScript type names to GraphQL scalar names when tsType.from is omitted.
+ */
+export interface GlobalTypeMapping {
+  /** TypeScript type name (e.g., "Date", "URL") */
+  readonly typeName: string;
+  /** GraphQL scalar name (e.g., "DateTime", "URL") */
+  readonly scalarName: string;
+  /** Usage constraint */
+  readonly only: "input" | "output" | null;
+}
+
+export interface ExtractionOptions {
+  /** Global type mappings from config (scalars with tsType.from omitted) */
+  readonly globalTypeMappings?: ReadonlyArray<GlobalTypeMapping>;
+}
+
 export interface ExtractionResult {
   readonly types: ReadonlyArray<ExtractedTypeInfo>;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
+  readonly detectedScalarNames: ReadonlyArray<string>;
+  readonly detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
 }
 
 function isExported(node: ts.Node): boolean {
@@ -63,10 +85,39 @@ interface TypeReferenceResult {
   readonly unknownBrand: UnknownBrandInfo | undefined;
 }
 
+function findGlobalTypeMapping(
+  typeName: string,
+  globalTypeMappings: ReadonlyArray<GlobalTypeMapping>,
+): GlobalTypeMapping | undefined {
+  return globalTypeMappings.find((m) => m.typeName === typeName);
+}
+
 function convertTsTypeToReferenceWithBrandInfo(
   type: ts.Type,
   checker: ts.TypeChecker,
+  globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
 ): TypeReferenceResult {
+  const metadataResult = detectScalarMetadata(type, checker);
+  if (metadataResult.scalarName && !metadataResult.isPrimitive) {
+    return {
+      tsType: {
+        kind: "scalar",
+        name: metadataResult.scalarName,
+        elementType: null,
+        members: null,
+        nullable: metadataResult.nullable,
+        scalarInfo: {
+          scalarName: metadataResult.scalarName,
+          brandName: metadataResult.scalarName,
+          baseType: undefined,
+          isCustom: true,
+          only: metadataResult.only,
+        },
+      },
+      unknownBrand: undefined,
+    };
+  }
+
   const brandedResult = detectBrandedScalar(type, checker);
   if (brandedResult.scalarInfo) {
     return {
@@ -130,6 +181,7 @@ function convertTsTypeToReferenceWithBrandInfo(
       const innerResult = convertTsTypeToReferenceWithBrandInfo(
         nonNullTypes[0]!,
         checker,
+        globalTypeMappings,
       );
       return {
         tsType: { ...innerResult.tsType, nullable },
@@ -138,7 +190,7 @@ function convertTsTypeToReferenceWithBrandInfo(
     }
 
     const memberResults = nonNullTypes.map((t) =>
-      convertTsTypeToReferenceWithBrandInfo(t, checker),
+      convertTsTypeToReferenceWithBrandInfo(t, checker, globalTypeMappings),
     );
     const unknownBrands = memberResults
       .map((r) => r.unknownBrand)
@@ -161,7 +213,11 @@ function convertTsTypeToReferenceWithBrandInfo(
     const typeArgs = (type as ts.TypeReference).typeArguments;
     const elementType = typeArgs?.[0];
     const elementResult = elementType
-      ? convertTsTypeToReferenceWithBrandInfo(elementType, checker)
+      ? convertTsTypeToReferenceWithBrandInfo(
+          elementType,
+          checker,
+          globalTypeMappings,
+        )
       : {
           tsType: {
             kind: "primitive" as const,
@@ -259,10 +315,33 @@ function convertTsTypeToReferenceWithBrandInfo(
   }
 
   if (type.symbol) {
+    const symbolName = type.symbol.getName();
+
+    const globalMapping = findGlobalTypeMapping(symbolName, globalTypeMappings);
+    if (globalMapping) {
+      return {
+        tsType: {
+          kind: "scalar",
+          name: globalMapping.scalarName,
+          elementType: null,
+          members: null,
+          nullable: false,
+          scalarInfo: {
+            scalarName: globalMapping.scalarName,
+            brandName: globalMapping.typeName,
+            baseType: undefined,
+            isCustom: true,
+            only: globalMapping.only,
+          },
+        },
+        unknownBrand: undefined,
+      };
+    }
+
     return {
       tsType: {
         kind: "reference",
-        name: type.symbol.getName(),
+        name: symbolName,
         elementType: null,
         members: null,
         nullable: false,
@@ -296,6 +375,7 @@ interface FieldExtractionResult {
 function extractFieldsFromType(
   type: ts.Type,
   checker: ts.TypeChecker,
+  globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
 ): FieldExtractionResult {
   const fields: FieldDefinition[] = [];
   const unknownBrands: Array<{
@@ -315,7 +395,11 @@ function extractFieldsFromType(
     }
 
     const tsdocInfo = extractTSDocFromSymbol(prop, checker);
-    const typeResult = convertTsTypeToReferenceWithBrandInfo(propType, checker);
+    const typeResult = convertTsTypeToReferenceWithBrandInfo(
+      propType,
+      checker,
+      globalTypeMappings,
+    );
 
     if (typeResult.unknownBrand) {
       unknownBrands.push({
@@ -506,10 +590,14 @@ function extractUnionMembers(type: ts.Type): string[] | undefined {
 export function extractTypesFromProgram(
   program: ts.Program,
   sourceFiles: ReadonlyArray<string>,
+  options: ExtractionOptions = {},
 ): ExtractionResult {
   const checker = program.getTypeChecker();
   const types: ExtractedTypeInfo[] = [];
   const diagnostics: Diagnostic[] = [];
+  const detectedScalarNames = new Set<string>();
+  const detectedScalars: ScalarMetadataInfo[] = [];
+  const globalTypeMappings = options.globalTypeMappings ?? [];
 
   for (const filePath of sourceFiles) {
     const sourceFile = program.getSourceFile(filePath);
@@ -615,6 +703,25 @@ export function extractTypesFromProgram(
         }
 
         const type = checker.getDeclaredTypeOfSymbol(symbol);
+
+        const scalarMetadata = detectScalarMetadata(type, checker);
+        if (scalarMetadata.scalarName && !scalarMetadata.isPrimitive) {
+          detectedScalarNames.add(scalarMetadata.scalarName);
+          const { line } = sourceFile.getLineAndCharacterOfPosition(
+            node.getStart(sourceFile),
+          );
+          const tsdocInfo = extractTSDocInfo(node, checker);
+          detectedScalars.push({
+            scalarName: scalarMetadata.scalarName,
+            typeName: name,
+            only: scalarMetadata.only,
+            sourceFile: filePath,
+            line: line + 1,
+            description: tsdocInfo.description ?? null,
+          });
+          return;
+        }
+
         const kind = determineTypeKind(node, type);
         const unionMembers = extractUnionMembers(type);
         const tsdocInfo = extractTSDocInfo(node, checker);
@@ -637,7 +744,7 @@ export function extractTypesFromProgram(
         const fieldResult =
           kind === "union"
             ? { fields: [], unknownBrands: [] }
-            : extractFieldsFromType(type, checker);
+            : extractFieldsFromType(type, checker, globalTypeMappings);
 
         for (const { fieldName, brandInfo } of fieldResult.unknownBrands) {
           const { line, character } = sourceFile.getLineAndCharacterOfPosition(
@@ -663,5 +770,10 @@ export function extractTypesFromProgram(
     });
   }
 
-  return { types, diagnostics };
+  return {
+    types,
+    diagnostics,
+    detectedScalarNames: [...detectedScalarNames],
+    detectedScalars,
+  };
 }

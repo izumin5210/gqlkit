@@ -1,45 +1,80 @@
 import type { GraphQLResolveInfo } from "graphql";
 
 /**
- * Type-level symbol for identifying scalar types.
- * This symbol only exists at the type level and has no runtime representation.
- * Used by CLI to detect branded scalar types through type analysis.
+ * Scalar metadata structure embedded in intersection types.
+ * Used by CLI to detect and identify scalar types through type analysis.
+ *
+ * @example
+ * ```typescript
+ * // A type with scalar metadata
+ * type MyScalar = Base & { " $gqlkitScalar"?: ScalarMetadataShape };
+ * ```
  */
-declare const ScalarBrandSymbol: unique symbol;
+export interface ScalarMetadataShape {
+  readonly name: string;
+  readonly only?: "input" | "output";
+}
 
 /**
- * Branded type for scalar types.
- * This type is used to create distinct types for GraphQL scalar types.
- * @typeParam K - The name of the scalar type brand
+ * Utility type for defining custom scalar types with metadata.
+ * The metadata is embedded as an optional property to maintain compatibility
+ * with the underlying base type.
+ *
+ * @typeParam Name - The GraphQL scalar name
+ * @typeParam Base - The underlying TypeScript type
+ * @typeParam Only - Usage constraint: "input" for input-only, "output" for output-only, undefined for both
+ *
+ * @example
+ * ```typescript
+ * // Basic custom scalar
+ * type DateTime = DefineScalar<"DateTime", Date>;
+ *
+ * // Input-only scalar
+ * type DateTimeInput = DefineScalar<"DateTime", Date, "input">;
+ *
+ * // Output-only scalar (can accept multiple base types)
+ * type DateTimeOutput = DefineScalar<"DateTime", Date | string, "output">;
+ * ```
  */
-export type ScalarBrand<K extends string> = {
-  readonly [ScalarBrandSymbol]: K;
+export type DefineScalar<
+  Name extends string,
+  Base,
+  Only extends "input" | "output" | undefined = undefined,
+> = Base & {
+  " $gqlkitScalar"?: {
+    name: Name;
+    only: Only;
+  };
 };
 
 /**
- * Branded type for GraphQL ID scalar (string-based).
- * Use this when the ID is represented as a string in your system.
- */
-export type IDString = string & ScalarBrand<"IDString">;
-
-/**
- * Branded type for GraphQL ID scalar (number-based).
- * Use this when the ID is represented as a number in your system.
- */
-export type IDNumber = number & ScalarBrand<"IDNumber">;
-
-/**
- * Branded type for GraphQL Int scalar.
+ * GraphQL Int scalar type.
  * Use this to explicitly mark a field as an integer.
+ * Includes metadata for CLI detection.
  */
-export type Int = number & ScalarBrand<"Int">;
+export type Int = DefineScalar<"Int", number>;
 
 /**
- * Branded type for GraphQL Float scalar.
+ * GraphQL Float scalar type.
  * Use this to explicitly mark a field as a floating-point number.
  * Note: Plain `number` type will also map to Float by default.
+ * Includes metadata for CLI detection.
  */
-export type Float = number & ScalarBrand<"Float">;
+export type Float = DefineScalar<"Float", number>;
+
+/**
+ * GraphQL ID scalar type (string-based).
+ * Use this when the ID is represented as a string in your system.
+ * Includes metadata for CLI detection.
+ */
+export type IDString = DefineScalar<"ID", string>;
+
+/**
+ * GraphQL ID scalar type (number-based).
+ * Use this when the ID is represented as a number in your system.
+ * Includes metadata for CLI detection.
+ */
+export type IDNumber = DefineScalar<"ID", number>;
 
 /**
  * Type alias representing no arguments for a resolver.

@@ -2,8 +2,10 @@
 
 import { users } from "../query.js";
 
-export const resolvers = {
+export function createResolvers() {
+  return {
     Query: {
       users: users,
     },
-} as const;
+  };
+}
