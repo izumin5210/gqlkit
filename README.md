@@ -360,32 +360,34 @@ input CreateUserInput {
 
 ### @oneOf input objects
 
-Union types with `Input` suffix generate `@oneOf` input objects:
+Union types with `Input` suffix using inline object literals generate `@oneOf` input objects. Each union member must have exactly one property:
 
 ```ts
-/** Filter by ID */
-export type ByIdInput = { id: string };
-
-/** Filter by name */
-export type ByNameInput = { name: string };
-
 /**
  * Specifies how to identify a product.
  * Exactly one field must be provided.
  */
-export type ProductInput = ByIdInput | ByNameInput;
+export type ProductInput =
+  | { id: string }
+  | { name: string }
+  | { location: LocationInput };
 ```
 
 Generates:
 
 ```graphql
+"""
+Specifies how to identify a product.
+Exactly one field must be provided.
+"""
 input ProductInput @oneOf {
-  """Filter by ID"""
-  byIdInput: ByIdInput
-  """Filter by name"""
-  byNameInput: ByNameInput
+  id: String
+  location: LocationInput
+  name: String
 }
 ```
+
+Each property becomes a nullable field in the generated input type. The `@oneOf` directive ensures exactly one field is provided at runtime.
 
 ### Field resolvers
 

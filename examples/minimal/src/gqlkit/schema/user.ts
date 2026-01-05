@@ -7,6 +7,12 @@ export interface User {
   isActive: boolean;
 }
 
+/**
+ * Filter to find a specific user.
+ * Exactly one field must be provided.
+ */
+export type UserFilterInput = { id: string } | { name: string };
+
 const users: User[] = [
   { id: "1", name: "Alice", age: 30, isActive: true },
   { id: "2", name: "Bob", age: 25, isActive: false },

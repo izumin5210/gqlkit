@@ -109,6 +109,58 @@ export const typeDefs: DocumentNode = {
       },
     },
     {
+      kind: "InputObjectTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "UserFilterInput",
+      },
+      fields: [
+        {
+          kind: "InputValueDefinition",
+          name: {
+            kind: "Name",
+            value: "id",
+          },
+          type: {
+            kind: "NamedType",
+            name: {
+              kind: "Name",
+              value: "String",
+            },
+          },
+        },
+        {
+          kind: "InputValueDefinition",
+          name: {
+            kind: "Name",
+            value: "name",
+          },
+          type: {
+            kind: "NamedType",
+            name: {
+              kind: "Name",
+              value: "String",
+            },
+          },
+        },
+      ],
+      description: {
+        kind: "StringValue",
+        value:
+          "Filter to find a specific user.\nExactly one field must be provided.\n\nDefined in: src/gqlkit/schema/user.ts",
+        block: true,
+      },
+      directives: [
+        {
+          kind: "Directive",
+          name: {
+            kind: "Name",
+            value: "oneOf",
+          },
+        },
+      ],
+    },
+    {
       kind: "ObjectTypeExtension",
       name: {
         kind: "Name",
