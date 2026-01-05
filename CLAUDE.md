@@ -33,7 +33,7 @@ UPDATE_GOLDEN=true pnpm test
 pnpm test -- --coverage
 ```
 
-**Package manager**: pnpm (v10.26.1)
+**Package manager**: pnpm (v10.26.2)
 
 ## Project Architecture
 
@@ -42,13 +42,13 @@ pnpm test -- --coverage
 gqlkit relies on strict conventions to enable deterministic schema generation without configuration:
 
 1. **Source directories**:
-   - Types: `src/gql/types` - TypeScript type/interface exports
-   - Resolvers: `src/gql/resolvers` - Resolver signatures and implementations
+   - Types: `src/gqlkit/types/` - TypeScript type/interface exports
+   - Resolvers: `src/gqlkit/resolvers/` - Resolver signatures and implementations
 
 2. **Type definitions**:
    - Plain TypeScript type exports (object/interface/union)
    - Field nullability and list-ness inferred from TypeScript types
-   - Only exports from `src/gql/types` are considered
+   - Only exports from `src/gqlkit/types/` are considered
 
 3. **Define API for resolvers** (using `@gqlkit-ts/runtime`):
    - `defineQuery<Args, Return>(resolver)` - Define Query field resolvers
@@ -71,21 +71,22 @@ examples/    - Example projects demonstrating usage
 ```
 
 **CLI Pipeline** (`packages/cli/src/`):
-- `type-extractor/` - Scans TypeScript types from `src/gql/types`
-- `resolver-extractor/` - Scans resolver definitions from `src/gql/resolvers`
+- `type-extractor/` - Scans TypeScript types from `src/gqlkit/types/`
+- `resolver-extractor/` - Scans resolver definitions from `src/gqlkit/resolvers/`
 - `schema-generator/` - Builds GraphQL AST and resolver maps
 - `gen-orchestrator/` - Coordinates pipeline stages, handles diagnostics
+- `shared/` - Shared utilities across pipeline stages
 
 ### Code Generation Flow
 
 `gqlkit gen`:
-1. Scans `src/gql/types` and `src/gql/resolvers`
+1. Scans `src/gqlkit/types/` and `src/gqlkit/resolvers/`
 2. Builds internal type graph from TypeScript types
 3. Validates resolver signatures (parent/return types exist, resolver groups match)
 4. Generates:
    - `typeDefs`: GraphQL schema AST (DocumentNode) representing type definitions
    - `resolvers`: Resolver map object aggregating all resolver implementations
-5. Outputs to `src/gqlkit/generated/**` (schema.ts, resolvers.ts)
+5. Outputs to `src/gqlkit/__generated__/` (schema.ts, resolvers.ts)
 
 ### Design Principles
 
@@ -130,8 +131,13 @@ This project follows Kiro-style Spec-Driven Development.
 
 Uses **golden file testing** for CLI validation:
 - Test cases in `packages/cli/src/gen-orchestrator/testdata/`
-- Each case: `types/`, `resolvers/`, `expected/` directories
+- Each case has an `expected/` directory with snapshot files
 - Tests compare generated output against `expected/` snapshots
+
+### Testing Guidelines
+
+- **Prefer golden file tests over unit tests**: For code analysis, schema generation, and code generation logic, avoid function-level unit tests. Instead, add test cases to `testdata/` to verify correct behavior and increase coverage.
+- **Keep testdata MECE**: Ensure test cases are Mutually Exclusive and Collectively Exhaustive—each case should cover a distinct scenario without overlap, and together they should cover all important behaviors.
 
 ## Coding Conventions
 
