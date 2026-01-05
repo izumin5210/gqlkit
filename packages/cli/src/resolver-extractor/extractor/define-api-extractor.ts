@@ -1,5 +1,6 @@
 import ts from "typescript";
 import { detectBrandedScalar } from "../../shared/branded-detector.js";
+import { getActualMetadataType } from "../../shared/metadata-detector.js";
 import {
   type DeprecationInfo,
   extractTSDocFromSymbol,
@@ -44,24 +45,30 @@ export interface ExtractDefineApiResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
-function detectResolverFromBrandedType(
+const RESOLVER_METADATA_PROPERTY = " $gqlkitResolver";
+
+/**
+ * Detects resolver type from metadata embedded in the type.
+ * Follows the same pattern as scalar metadata detection.
+ */
+function detectResolverFromMetadataType(
   callExpr: ts.CallExpression,
   checker: ts.TypeChecker,
 ): DefineApiResolverType | undefined {
   const returnType = checker.getTypeAtLocation(callExpr);
 
-  const properties = returnType.getProperties();
-  const brandProp = properties.find((p) => {
-    const name = p.getName();
-    return name.includes("ResolverBrandSymbol");
-  });
-
-  if (!brandProp) {
+  const metadataProp = returnType.getProperty(RESOLVER_METADATA_PROPERTY);
+  if (!metadataProp) {
     return undefined;
   }
 
-  const brandType = checker.getTypeOfSymbol(brandProp);
-  const kindProp = brandType.getProperty("kind");
+  const metadataType = checker.getTypeOfSymbol(metadataProp);
+  const actualType = getActualMetadataType(metadataType);
+  if (!actualType) {
+    return undefined;
+  }
+
+  const kindProp = actualType.getProperty("kind");
   if (!kindProp) {
     return undefined;
   }
@@ -467,7 +474,7 @@ export function extractDefineApiResolvers(
           continue;
         }
 
-        const resolverType = detectResolverFromBrandedType(
+        const resolverType = detectResolverFromMetadataType(
           initializer,
           checker,
         );
