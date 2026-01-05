@@ -1,0 +1,31 @@
+{
+  "scalars": [
+    {
+      "name": "DateTime",
+      "tsType": {
+        "name": "DateTimeInput",
+        "from": "./query"
+      },
+      "only": "input",
+      "description": "DateTime input type - receives number (timestamp) from parseValue/parseLiteral."
+    },
+    {
+      "name": "DateTime",
+      "tsType": {
+        "name": "DateTimeOutputNumber",
+        "from": "./event"
+      },
+      "only": "output",
+      "description": "DateTime output type - can return number (timestamp)."
+    },
+    {
+      "name": "DateTime",
+      "tsType": {
+        "name": "DateTimeOutputString",
+        "from": "./event"
+      },
+      "only": "output",
+      "description": "DateTime output type - can also return ISO string."
+    }
+  ]
+}

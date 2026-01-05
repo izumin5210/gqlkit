@@ -1,0 +1,26 @@
+{
+  "scalars": [
+    {
+      "name": "DateTime",
+      "tsType": {
+        "name": "DateTime1",
+        "from": "./event"
+      }
+    },
+    {
+      "name": "DateTime",
+      "tsType": {
+        "name": "DateTime2",
+        "from": "./event"
+      }
+    },
+    {
+      "name": "URL",
+      "tsType": {
+        "name": "URLOutput",
+        "from": "./event"
+      },
+      "only": "output"
+    }
+  ]
+}

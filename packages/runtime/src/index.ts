@@ -1,33 +1,82 @@
 import type { GraphQLResolveInfo } from "graphql";
 
 /**
- * Type alias for GraphQL ID scalar (string-based).
+ * The key for scalar metadata property.
+ * Uses a string with a leading space to prevent accidental collisions with user-defined properties.
+ * Used by CLI to detect scalar types through type analysis.
+ */
+export type ScalarMetadataKey = " $gqlkitScalar";
+
+/**
+ * The shape of scalar metadata embedded in intersection types.
+ * @property name - The GraphQL scalar name (e.g., "Int", "ID", "DateTime")
+ * @property only - Optional constraint: "input" for input-only, "output" for output-only, undefined for both
+ */
+export interface ScalarMetadataShape {
+  readonly name: string;
+  readonly only?: "input" | "output";
+}
+
+/**
+ * Utility type for defining custom scalar types with metadata.
+ * Creates an intersection type that embeds GraphQL scalar metadata while preserving
+ * compatibility with the underlying TypeScript type.
+ *
+ * @typeParam Name - The GraphQL scalar name (e.g., "DateTime", "URL")
+ * @typeParam Base - The underlying TypeScript type
+ * @typeParam Only - Optional usage constraint: "input" | "output" | undefined (default: undefined for both)
+ *
+ * @example
+ * ```typescript
+ * // Input/output both (default)
+ * type DateTime = DefineScalar<"DateTime", Date>;
+ *
+ * // Output only (resolver can return this)
+ * type DateTimeOutput = DefineScalar<"DateTime", Date | string, "output">;
+ *
+ * // Input only (resolver receives this)
+ * type DateTimeInput = DefineScalar<"DateTime", Date, "input">;
+ * ```
+ */
+export type DefineScalar<
+  Name extends string,
+  Base,
+  Only extends "input" | "output" | undefined = undefined,
+> = Base & {
+  " $gqlkitScalar"?: {
+    name: Name;
+    only: Only;
+  };
+};
+
+/**
+ * Type for GraphQL ID scalar (string-based).
  * Use this when the ID is represented as a string in your system.
- * The CLI detects this type by import path and name to map to GraphQL ID.
+ * The CLI detects this type by the embedded metadata to map to GraphQL ID.
  */
-export type IDString = string;
+export type IDString = DefineScalar<"ID", string>;
 
 /**
- * Type alias for GraphQL ID scalar (number-based).
+ * Type for GraphQL ID scalar (number-based).
  * Use this when the ID is represented as a number in your system.
- * The CLI detects this type by import path and name to map to GraphQL ID.
+ * The CLI detects this type by the embedded metadata to map to GraphQL ID.
  */
-export type IDNumber = number;
+export type IDNumber = DefineScalar<"ID", number>;
 
 /**
- * Type alias for GraphQL Int scalar.
+ * Type for GraphQL Int scalar.
  * Use this to explicitly mark a field as an integer.
- * The CLI detects this type by import path and name to map to GraphQL Int.
+ * The CLI detects this type by the embedded metadata to map to GraphQL Int.
  */
-export type Int = number;
+export type Int = DefineScalar<"Int", number>;
 
 /**
- * Type alias for GraphQL Float scalar.
+ * Type for GraphQL Float scalar.
  * Use this to explicitly mark a field as a floating-point number.
- * The CLI detects this type by import path and name to map to GraphQL Float.
+ * The CLI detects this type by the embedded metadata to map to GraphQL Float.
  * Note: Plain `number` type will also map to Float by default.
  */
-export type Float = number;
+export type Float = DefineScalar<"Float", number>;
 
 /**
  * Type alias representing no arguments for a resolver.

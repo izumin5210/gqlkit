@@ -1,0 +1,12 @@
+{
+  "scalars": [
+    {
+      "name": "DateTime",
+      "tsType": {
+        "name": "DateTime",
+        "from": "./scalars"
+      },
+      "description": "ISO 8601 format datetime string"
+    }
+  ]
+}

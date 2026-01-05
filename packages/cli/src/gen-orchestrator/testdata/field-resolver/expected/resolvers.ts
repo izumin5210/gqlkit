@@ -3,11 +3,20 @@
 import { users } from "../query.js";
 import { posts } from "../user.js";
 
-export const resolvers = {
+export function createResolvers(): {
+  Query: {
+    users: typeof users;
+  };
+  User: {
+    posts: typeof posts;
+  };
+} {
+  return {
     Query: {
       users: users,
     },
     User: {
       posts: posts,
     },
-} as const;
+  };
+}

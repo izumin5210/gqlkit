@@ -39,8 +39,8 @@ describe("ConfigLoader", () => {
 export default {
   scalars: [
     {
-      graphqlName: "DateTime",
-      type: { from: "./src/scalars", name: "DateTime" },
+      name: "DateTime",
+      tsType: { name: "DateTime", from: "./src/scalars" },
     },
   ],
 };
@@ -54,6 +54,8 @@ export default {
       expect(result.config.scalars[0]?.graphqlName).toBe("DateTime");
       expect(result.config.scalars[0]?.typeName).toBe("DateTime");
       expect(result.config.scalars[0]?.importPath).toBe("./src/scalars");
+      expect(result.config.scalars[0]?.only).toBe(null);
+      expect(result.config.scalars[0]?.description).toBe(null);
       expect(result.diagnostics.length).toBe(0);
     });
 
@@ -61,9 +63,9 @@ export default {
       const configContent = `
 export default {
   scalars: [
-    { graphqlName: "DateTime", type: { from: "./src/scalars", name: "DateTime" } },
-    { graphqlName: "UUID", type: { from: "./src/scalars", name: "UUID" } },
-    { graphqlName: "URL", type: { from: "@my-lib/types", name: "URL" } },
+    { name: "DateTime", tsType: { name: "DateTime", from: "./src/scalars" } },
+    { name: "UUID", tsType: { name: "UUID", from: "./src/scalars" } },
+    { name: "URL", tsType: { name: "URL", from: "@my-lib/types" } },
   ],
 };
 `;
@@ -99,7 +101,7 @@ export default {
       const configContent = `
 export default {
   scalars: [
-    { graphqlName: "DateTime", type: { from: "./src/scalars", name: "DateTime" } },
+    { name: "DateTime", tsType: { name: "DateTime", from: "./src/scalars" } },
   ],
 };
 `;

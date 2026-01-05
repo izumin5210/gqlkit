@@ -2,8 +2,14 @@
 
 import { createUser } from "../mutation.js";
 
-export const resolvers = {
+export function createResolvers(): {
+  Mutation: {
+    createUser: typeof createUser;
+  };
+} {
+  return {
     Mutation: {
       createUser: createUser,
     },
-} as const;
+  };
+}

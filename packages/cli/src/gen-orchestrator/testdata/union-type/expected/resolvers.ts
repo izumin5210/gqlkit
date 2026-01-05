@@ -2,8 +2,14 @@
 
 import { search } from "../query.js";
 
-export const resolvers = {
+export function createResolvers(): {
+  Query: {
+    search: typeof search;
+  };
+} {
+  return {
     Query: {
       search: search,
     },
-} as const;
+  };
+}

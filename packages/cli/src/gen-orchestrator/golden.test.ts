@@ -2,7 +2,6 @@ import { readdir, readFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import type { GqlkitConfig } from "../config/index.js";
 import type { ResolvedScalarMapping } from "../config-loader/index.js";
 import {
   DEFAULT_RESOLVERS_PATH,
@@ -10,6 +9,30 @@ import {
   DEFAULT_TYPEDEFS_PATH,
 } from "../config-loader/loader.js";
 import { executeGeneration } from "./orchestrator.js";
+
+interface OldScalarConfig {
+  graphqlName: string;
+  type: { name: string; from: string };
+}
+
+interface NewScalarConfig {
+  name: string;
+  tsType: { name: string; from?: string };
+  only?: "input" | "output";
+  description?: string;
+}
+
+interface TestConfig {
+  scalars?: Array<OldScalarConfig | NewScalarConfig>;
+  sourceDir?: string;
+  sourceIgnoreGlobs?: ReadonlyArray<string>;
+}
+
+function isNewScalarConfig(
+  scalar: OldScalarConfig | NewScalarConfig,
+): scalar is NewScalarConfig {
+  return "name" in scalar && "tsType" in scalar;
+}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const testdataDir = join(__dirname, "testdata");
@@ -52,16 +75,29 @@ describe("Golden File Tests", async () => {
     it(caseName, async () => {
       const caseDir = join(testdataDir, caseName);
 
-      const config = await readJsonIfExists<Partial<GqlkitConfig>>(
+      const config = await readJsonIfExists<TestConfig>(
         join(caseDir, "config.json"),
       );
 
       const customScalars: ResolvedScalarMapping[] | null =
-        config?.scalars?.map((s) => ({
-          graphqlName: s.graphqlName,
-          typeName: s.type.name,
-          importPath: s.type.from,
-        })) ?? null;
+        config?.scalars?.map((s) => {
+          if (isNewScalarConfig(s)) {
+            return {
+              graphqlName: s.name,
+              typeName: s.tsType.name,
+              importPath: s.tsType.from ?? null,
+              only: s.only ?? null,
+              description: s.description ?? null,
+            };
+          }
+          return {
+            graphqlName: s.graphqlName,
+            typeName: s.type.name,
+            importPath: s.type.from,
+            only: null,
+            description: null,
+          };
+        }) ?? null;
 
       const sourceDir = config?.sourceDir ?? "src/gqlkit";
 

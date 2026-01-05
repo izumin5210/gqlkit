@@ -2,9 +2,16 @@
 
 import { user, users } from "../query.js";
 
-export const resolvers = {
+export function createResolvers(): {
+  Query: {
+    user: typeof user;
+    users: typeof users;
+  };
+} {
+  return {
     Query: {
       user: user,
       users: users,
     },
-} as const;
+  };
+}

@@ -378,7 +378,9 @@ export function buildDocumentNode(
       (a, b) => a.localeCompare(b),
     );
     for (const scalarName of sortedScalarNames) {
-      definitions.push(buildScalarTypeDefinitionNode(scalarName));
+      const description =
+        integratedResult.customScalarDescriptions?.[scalarName];
+      definitions.push(buildScalarTypeDefinitionNode(scalarName, description));
     }
   }
 

@@ -1,0 +1,20 @@
+{
+  "scalars": [
+    {
+      "name": "DateTime",
+      "tsType": {
+        "name": "DateTime",
+        "from": "./event"
+      },
+      "description": "Custom DateTime scalar type for representing date and time values. Uses ISO 8601 format."
+    },
+    {
+      "name": "URL",
+      "tsType": {
+        "name": "URL",
+        "from": "./event"
+      },
+      "description": "URL scalar type for representing valid URLs."
+    }
+  ]
+}

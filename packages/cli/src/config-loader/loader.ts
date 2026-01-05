@@ -11,7 +11,9 @@ export interface LoadConfigOptions {
 export interface ResolvedScalarMapping {
   readonly graphqlName: string;
   readonly typeName: string;
-  readonly importPath: string;
+  readonly importPath: string | null;
+  readonly only: "input" | "output" | null;
+  readonly description: string | null;
 }
 
 /**

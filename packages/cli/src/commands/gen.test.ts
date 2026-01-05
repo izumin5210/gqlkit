@@ -76,7 +76,7 @@ describe("gen command", () => {
         "src/gqlkit/__generated__/resolvers.ts",
       );
       const content = await readFile(resolversPath, "utf-8");
-      expect(content.includes("resolvers")).toBeTruthy();
+      expect(content.includes("createResolvers")).toBeTruthy();
     });
 
     it("should return exit code 0 on success", async () => {
@@ -134,8 +134,8 @@ describe("gen command", () => {
         export default {
           scalars: [
             {
-              graphqlName: "String",
-              type: { from: "./scalars", name: "MyString" },
+              name: "String",
+              tsType: { name: "MyString", from: "./scalars" },
             },
           ],
         };
@@ -184,8 +184,8 @@ describe("gen command", () => {
           export default {
             scalars: [
               {
-                graphqlName: "DateTime",
-                type: { from: "./src/scalars", name: "DateTime" },
+                name: "DateTime",
+                tsType: { name: "DateTime", from: "./src/scalars" },
               },
             ],
           };

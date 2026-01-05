@@ -1,4 +1,5 @@
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
+import type { CollectedScalarType } from "../shared/scalar-collector.js";
 import type { ExtractTypesResult } from "../type-extractor/index.js";
 import type { Diagnostic } from "../type-extractor/types/index.js";
 import { buildDocumentNode } from "./builder/ast-builder.js";
@@ -6,13 +7,17 @@ import { emitResolversCode, emitTypeDefsCode } from "./emitter/code-emitter.js";
 import { emitSdlContent } from "./emitter/sdl-emitter.js";
 import { integrate } from "./integrator/result-integrator.js";
 import { pruneDocumentNode } from "./pruner/schema-pruner.js";
-import { collectResolverInfo } from "./resolver-collector/resolver-collector.js";
+import {
+  type CustomScalarInfo,
+  collectResolverInfo,
+} from "./resolver-collector/resolver-collector.js";
 
 export interface GenerateSchemaInput {
   readonly typesResult: ExtractTypesResult;
   readonly resolversResult: ExtractResolversResult;
   readonly outputDir: string;
   readonly customScalarNames: ReadonlyArray<string> | null;
+  readonly collectedScalars: ReadonlyArray<CollectedScalarType> | null;
   readonly enablePruning: boolean | null;
   readonly sourceRoot: string | null;
 }
@@ -26,6 +31,26 @@ export interface GenerateSchemaResult {
   readonly prunedTypes: ReadonlyArray<string> | null;
 }
 
+function buildCustomScalarInfos(
+  collectedScalars: ReadonlyArray<CollectedScalarType>,
+): CustomScalarInfo[] {
+  return collectedScalars.map((scalar) => {
+    const inputTypeName = scalar.inputType?.typeName ?? scalar.scalarName;
+    const outputTypeNames = scalar.outputTypes.map((t) => t.typeName);
+    const outputTypeName =
+      outputTypeNames.length > 0 ? outputTypeNames.join(" | ") : inputTypeName;
+
+    const typeImportPath = scalar.inputType?.sourceFile ?? null;
+
+    return {
+      scalarName: scalar.scalarName,
+      inputTypeName,
+      outputTypeName,
+      typeImportPath,
+    };
+  });
+}
+
 export function generateSchema(
   input: GenerateSchemaInput,
 ): GenerateSchemaResult {
@@ -34,6 +59,7 @@ export function generateSchema(
     resolversResult,
     outputDir,
     customScalarNames,
+    collectedScalars,
     enablePruning,
     sourceRoot,
   } = input;
@@ -65,7 +91,9 @@ export function generateSchema(
   );
   const sdlContent = emitSdlContent(documentNode);
 
-  const resolverInfo = collectResolverInfo(integratedResult);
+  const customScalarInfos =
+    collectedScalars !== null ? buildCustomScalarInfos(collectedScalars) : [];
+  const resolverInfo = collectResolverInfo(integratedResult, customScalarInfos);
   const resolversCode = emitResolversCode(resolverInfo, outputDir);
 
   return {

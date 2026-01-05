@@ -22,8 +22,8 @@ describe("ConfigValidator", () => {
         config: {
           scalars: [
             {
-              graphqlName: "DateTime",
-              type: { from: "./src/scalars", name: "DateTime" },
+              name: "DateTime",
+              tsType: { name: "DateTime", from: "./src/scalars" },
             },
           ],
         },
@@ -71,12 +71,12 @@ describe("ConfigValidator", () => {
       expect(result.diagnostics[0]?.message).toContain("scalars");
     });
 
-    it("should return error when scalar mapping is missing graphqlName", () => {
+    it("should return error when scalar mapping is missing name", () => {
       const result = validateConfig({
         config: {
           scalars: [
             {
-              type: { from: "./src/scalars", name: "DateTime" },
+              tsType: { name: "DateTime", from: "./src/scalars" },
             },
           ],
         },
@@ -86,15 +86,15 @@ describe("ConfigValidator", () => {
       expect(result.valid).toBe(false);
       expect(result.diagnostics.length).toBe(1);
       expect(result.diagnostics[0]?.code).toBe("CONFIG_MISSING_PROPERTY");
-      expect(result.diagnostics[0]?.message).toContain("graphqlName");
+      expect(result.diagnostics[0]?.message).toContain("name");
     });
 
-    it("should return error when scalar mapping is missing type", () => {
+    it("should return error when scalar mapping is missing tsType", () => {
       const result = validateConfig({
         config: {
           scalars: [
             {
-              graphqlName: "DateTime",
+              name: "DateTime",
             },
           ],
         },
@@ -104,16 +104,16 @@ describe("ConfigValidator", () => {
       expect(result.valid).toBe(false);
       expect(result.diagnostics.length).toBe(1);
       expect(result.diagnostics[0]?.code).toBe("CONFIG_MISSING_PROPERTY");
-      expect(result.diagnostics[0]?.message).toContain("type");
+      expect(result.diagnostics[0]?.message).toContain("tsType");
     });
 
-    it("should return error when type.from is missing", () => {
+    it("should return error when tsType.name is missing", () => {
       const result = validateConfig({
         config: {
           scalars: [
             {
-              graphqlName: "DateTime",
-              type: { name: "DateTime" },
+              name: "DateTime",
+              tsType: { from: "./src/scalars" },
             },
           ],
         },
@@ -123,26 +123,7 @@ describe("ConfigValidator", () => {
       expect(result.valid).toBe(false);
       expect(result.diagnostics.length).toBe(1);
       expect(result.diagnostics[0]?.code).toBe("CONFIG_MISSING_PROPERTY");
-      expect(result.diagnostics[0]?.message).toContain("type.from");
-    });
-
-    it("should return error when type.name is missing", () => {
-      const result = validateConfig({
-        config: {
-          scalars: [
-            {
-              graphqlName: "DateTime",
-              type: { from: "./src/scalars" },
-            },
-          ],
-        },
-        configPath,
-      });
-
-      expect(result.valid).toBe(false);
-      expect(result.diagnostics.length).toBe(1);
-      expect(result.diagnostics[0]?.code).toBe("CONFIG_MISSING_PROPERTY");
-      expect(result.diagnostics[0]?.message).toContain("type.name");
+      expect(result.diagnostics[0]?.message).toContain("tsType.name");
     });
 
     describe("built-in scalar override", () => {
@@ -152,8 +133,8 @@ describe("ConfigValidator", () => {
             config: {
               scalars: [
                 {
-                  graphqlName: builtinName,
-                  type: { from: "./src/scalars", name: "Custom" },
+                  name: builtinName,
+                  tsType: { name: "Custom", from: "./src/scalars" },
                 },
               ],
             },
@@ -169,17 +150,17 @@ describe("ConfigValidator", () => {
     });
 
     describe("duplicate detection", () => {
-      it("should return error for duplicate graphqlName", () => {
+      it("should return error for duplicate scalar name without only", () => {
         const result = validateConfig({
           config: {
             scalars: [
               {
-                graphqlName: "DateTime",
-                type: { from: "./src/scalars", name: "DateTime" },
+                name: "DateTime",
+                tsType: { name: "DateTime", from: "./src/scalars" },
               },
               {
-                graphqlName: "DateTime",
-                type: { from: "./src/other", name: "OtherDateTime" },
+                name: "DateTime",
+                tsType: { name: "OtherDateTime", from: "./src/other" },
               },
             ],
           },
@@ -197,12 +178,12 @@ describe("ConfigValidator", () => {
           config: {
             scalars: [
               {
-                graphqlName: "DateTime",
-                type: { from: "./src/scalars", name: "DateTime" },
+                name: "DateTime",
+                tsType: { name: "DateTime", from: "./src/scalars" },
               },
               {
-                graphqlName: "Timestamp",
-                type: { from: "./src/scalars", name: "DateTime" },
+                name: "Timestamp",
+                tsType: { name: "DateTime", from: "./src/scalars" },
               },
             ],
           },
@@ -220,12 +201,12 @@ describe("ConfigValidator", () => {
           config: {
             scalars: [
               {
-                graphqlName: "DateTime",
-                type: { from: "./src/scalars", name: "DateTime" },
+                name: "DateTime",
+                tsType: { name: "DateTime", from: "./src/scalars" },
               },
               {
-                graphqlName: "CustomDateTime",
-                type: { from: "./src/custom", name: "DateTime" },
+                name: "CustomDateTime",
+                tsType: { name: "DateTime", from: "./src/custom" },
               },
             ],
           },
@@ -234,6 +215,30 @@ describe("ConfigValidator", () => {
 
         expect(result.valid).toBe(true);
         expect(result.diagnostics.length).toBe(0);
+      });
+
+      it("should allow same scalar name with different only values", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                name: "DateTime",
+                tsType: { name: "DateTimeInput" },
+                only: "input",
+              },
+              {
+                name: "DateTime",
+                tsType: { name: "DateTimeOutput" },
+                only: "output",
+              },
+            ],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.diagnostics.length).toBe(0);
+        expect(result.resolvedConfig!.scalars.length).toBe(2);
       });
     });
 
@@ -434,6 +439,269 @@ describe("ConfigValidator", () => {
         expect(result.diagnostics[0]?.message).toContain(
           "must be an array of strings",
         );
+      });
+    });
+
+    describe("new scalars format (metadata-based)", () => {
+      it("should accept new scalar format with name and tsType", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                name: "DateTime",
+                tsType: { name: "Date" },
+              },
+            ],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.scalars.length).toBe(1);
+        expect(result.resolvedConfig!.scalars[0]?.graphqlName).toBe("DateTime");
+        expect(result.resolvedConfig!.scalars[0]?.typeName).toBe("Date");
+        expect(result.resolvedConfig!.scalars[0]?.importPath).toBe(null);
+        expect(result.resolvedConfig!.scalars[0]?.only).toBe(null);
+        expect(result.resolvedConfig!.scalars[0]?.description).toBe(null);
+      });
+
+      it("should accept scalar with tsType.from for module import", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                name: "DateTime",
+                tsType: { name: "DateTimeType", from: "./src/types" },
+              },
+            ],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.scalars[0]?.typeName).toBe(
+          "DateTimeType",
+        );
+        expect(result.resolvedConfig!.scalars[0]?.importPath).toBe(
+          "./src/types",
+        );
+      });
+
+      it("should accept scalar with only: input option", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                name: "DateTime",
+                tsType: { name: "Date" },
+                only: "input",
+              },
+            ],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.scalars[0]?.only).toBe("input");
+      });
+
+      it("should accept scalar with only: output option", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                name: "DateTime",
+                tsType: { name: "Date" },
+                only: "output",
+              },
+            ],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.scalars[0]?.only).toBe("output");
+      });
+
+      it("should accept scalar with description option", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                name: "DateTime",
+                tsType: { name: "Date" },
+                description: "ISO 8601 formatted date-time",
+              },
+            ],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.scalars[0]?.description).toBe(
+          "ISO 8601 formatted date-time",
+        );
+      });
+
+      it("should accept scalar with all options", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                name: "DateTime",
+                tsType: { name: "DateTimeInput", from: "./src/types" },
+                only: "input",
+                description: "Input date-time format",
+              },
+            ],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        const scalar = result.resolvedConfig!.scalars[0]!;
+        expect(scalar.graphqlName).toBe("DateTime");
+        expect(scalar.typeName).toBe("DateTimeInput");
+        expect(scalar.importPath).toBe("./src/types");
+        expect(scalar.only).toBe("input");
+        expect(scalar.description).toBe("Input date-time format");
+      });
+
+      it("should accept multiple scalars with same name but different only", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                name: "DateTime",
+                tsType: { name: "DateTimeInput" },
+                only: "input",
+              },
+              {
+                name: "DateTime",
+                tsType: { name: "DateTimeOutput" },
+                only: "output",
+              },
+            ],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.scalars.length).toBe(2);
+      });
+
+      it("should return error when name is missing", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                tsType: { name: "Date" },
+              },
+            ],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBeGreaterThan(0);
+        expect(result.diagnostics[0]?.message).toContain("name");
+      });
+
+      it("should return error when tsType is missing", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                name: "DateTime",
+              },
+            ],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBeGreaterThan(0);
+        expect(result.diagnostics[0]?.message).toContain("tsType");
+      });
+
+      it("should return error when tsType.name is missing", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                name: "DateTime",
+                tsType: { from: "./src/types" },
+              },
+            ],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBeGreaterThan(0);
+        expect(result.diagnostics[0]?.message).toContain("tsType.name");
+      });
+
+      it("should return error for invalid only value", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                name: "DateTime",
+                tsType: { name: "Date" },
+                only: "invalid",
+              },
+            ],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBeGreaterThan(0);
+        expect(result.diagnostics[0]?.message).toContain("only");
+      });
+
+      it("should return error for non-string description", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                name: "DateTime",
+                tsType: { name: "Date" },
+                description: 123,
+              },
+            ],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBeGreaterThan(0);
+        expect(result.diagnostics[0]?.message).toContain("description");
+      });
+
+      it("should still reject built-in scalar names", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                name: "String",
+                tsType: { name: "MyString" },
+              },
+            ],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_BUILTIN_OVERRIDE");
       });
     });
 

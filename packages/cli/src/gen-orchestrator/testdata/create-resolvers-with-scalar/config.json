@@ -1,0 +1,11 @@
+{
+  "scalars": [
+    {
+      "graphqlName": "DateTime",
+      "type": {
+        "name": "DateTime",
+        "from": "./event"
+      }
+    }
+  ]
+}

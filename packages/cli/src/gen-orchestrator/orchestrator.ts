@@ -22,6 +22,7 @@ import {
   toPosixPath,
 } from "../shared/index.js";
 import { createSharedProgram } from "../shared/program-factory.js";
+import type { CollectedScalarType } from "../shared/scalar-collector.js";
 import { collectResults } from "../type-extractor/collector/result-collector.js";
 import { convertToGraphQL } from "../type-extractor/converter/graphql-converter.js";
 import { extractTypesFromProgram } from "../type-extractor/extractor/type-extractor.js";
@@ -235,6 +236,48 @@ function getOutputDir(output: ResolvedOutputConfig): string {
   return "src/gqlkit/__generated__";
 }
 
+function buildCollectedScalars(
+  customScalars: ReadonlyArray<ResolvedScalarMapping>,
+  cwd: string,
+  sourceDir: string,
+): CollectedScalarType[] {
+  return customScalars.map((s) => {
+    let sourceFile: string | null = null;
+    if (s.importPath !== null) {
+      const absolutePath = resolve(cwd, sourceDir, `${s.importPath}.ts`);
+      sourceFile = absolutePath;
+    }
+
+    return {
+      scalarName: s.graphqlName,
+      inputType: {
+        typeName: s.typeName,
+        sourceFile,
+        line: null,
+      },
+      outputTypes: [
+        {
+          typeName: s.typeName,
+          sourceFile,
+          line: null,
+        },
+      ],
+      descriptions:
+        s.description !== null
+          ? [
+              {
+                text: s.description,
+                sourceFile: null,
+                line: null,
+                fromConfig: true,
+              },
+            ]
+          : [],
+      isCustom: true,
+    };
+  });
+}
+
 export async function executeGeneration(
   config: GenerationConfig,
 ): Promise<GenerationResult> {
@@ -292,6 +335,15 @@ export async function executeGeneration(
     };
   }
 
+  const collectedScalars =
+    config.customScalars !== null
+      ? buildCollectedScalars(
+          config.customScalars,
+          config.cwd,
+          config.sourceDir,
+        )
+      : null;
+
   const schemaResult = generateSchema({
     typesResult: typesResult as Parameters<
       typeof generateSchema
@@ -301,6 +353,7 @@ export async function executeGeneration(
     >[0]["resolversResult"],
     outputDir: resolve(config.cwd, getOutputDir(config.output)),
     customScalarNames,
+    collectedScalars,
     enablePruning: null,
     sourceRoot: config.cwd,
   });

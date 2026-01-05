@@ -16,9 +16,20 @@ export interface TypeResolvers {
   readonly fields: ReadonlyArray<FieldResolver>;
 }
 
+/**
+ * Information about a custom scalar type for resolver generation.
+ */
+export interface CustomScalarInfo {
+  readonly scalarName: string;
+  readonly inputTypeName: string;
+  readonly outputTypeName: string;
+  readonly typeImportPath: string | null;
+}
+
 export interface ResolverInfo {
   readonly types: ReadonlyArray<TypeResolvers>;
   readonly sourceFiles: ReadonlyArray<string>;
+  readonly customScalars: ReadonlyArray<CustomScalarInfo>;
 }
 
 function getResolverValueName(typeName: string): string {
@@ -52,6 +63,7 @@ function collectFieldResolvers(ext: TypeExtension): FieldResolver[] {
 
 export function collectResolverInfo(
   integratedResult: IntegratedResult,
+  customScalars?: ReadonlyArray<CustomScalarInfo>,
 ): ResolverInfo {
   const typeMap = new Map<string, FieldResolver[]>();
   const sourceFilesSet = new Set<string>();
@@ -81,5 +93,6 @@ export function collectResolverInfo(
   return {
     types,
     sourceFiles,
+    customScalars: customScalars ?? [],
   };
 }

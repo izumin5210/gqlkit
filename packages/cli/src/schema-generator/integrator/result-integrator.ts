@@ -58,6 +58,7 @@ export interface IntegratedResult {
   readonly inputTypes: ReadonlyArray<InputType>;
   readonly typeExtensions: ReadonlyArray<TypeExtension>;
   readonly customScalarNames: ReadonlyArray<string> | null;
+  readonly customScalarDescriptions: Readonly<Record<string, string>> | null;
   readonly hasQuery: boolean;
   readonly hasMutation: boolean;
   readonly hasErrors: boolean;
@@ -91,6 +92,7 @@ export function integrate(
   typesResult: ExtractTypesResult,
   resolversResult: ExtractResolversResult,
   customScalarNames: ReadonlyArray<string> | null,
+  customScalarDescriptions: Readonly<Record<string, string>> | null = null,
 ): IntegratedResult {
   const diagnostics: Diagnostic[] = [];
 
@@ -239,6 +241,11 @@ export function integrate(
     customScalarNames:
       customScalarNames && customScalarNames.length > 0
         ? customScalarNames
+        : null,
+    customScalarDescriptions:
+      customScalarDescriptions &&
+      Object.keys(customScalarDescriptions).length > 0
+        ? customScalarDescriptions
         : null,
     hasQuery,
     hasMutation,

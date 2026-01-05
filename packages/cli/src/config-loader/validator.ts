@@ -263,40 +263,60 @@ function validateScalarMapping(
     return { resolved: undefined, diagnostics };
   }
 
-  if (typeof scalar["graphqlName"] !== "string") {
+  if (typeof scalar["name"] !== "string") {
     diagnostics.push({
       code: "CONFIG_MISSING_PROPERTY",
-      message: `scalars[${index}].graphqlName is required and must be a string`,
+      message: `scalars[${index}].name is required and must be a string`,
       severity: "error",
       location: { file: configPath, line: 1, column: 1 },
     });
   }
 
-  if (!isRecord(scalar["type"])) {
+  if (!isRecord(scalar["tsType"])) {
     diagnostics.push({
       code: "CONFIG_MISSING_PROPERTY",
-      message: `scalars[${index}].type is required and must be an object`,
+      message: `scalars[${index}].tsType is required and must be an object`,
       severity: "error",
       location: { file: configPath, line: 1, column: 1 },
     });
     return { resolved: undefined, diagnostics };
   }
 
-  const type = scalar["type"];
+  const tsType = scalar["tsType"];
 
-  if (typeof type["from"] !== "string") {
+  if (typeof tsType["name"] !== "string") {
     diagnostics.push({
       code: "CONFIG_MISSING_PROPERTY",
-      message: `scalars[${index}].type.from is required and must be a string`,
+      message: `scalars[${index}].tsType.name is required and must be a string`,
       severity: "error",
       location: { file: configPath, line: 1, column: 1 },
     });
   }
 
-  if (typeof type["name"] !== "string") {
+  if (tsType["from"] !== undefined && typeof tsType["from"] !== "string") {
     diagnostics.push({
-      code: "CONFIG_MISSING_PROPERTY",
-      message: `scalars[${index}].type.name is required and must be a string`,
+      code: "CONFIG_INVALID_TYPE",
+      message: `scalars[${index}].tsType.from must be a string`,
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+  }
+
+  const only = scalar["only"];
+  if (only !== undefined && only !== "input" && only !== "output") {
+    diagnostics.push({
+      code: "CONFIG_INVALID_VALUE",
+      message: `scalars[${index}].only must be "input" or "output"`,
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+  }
+
+  const description = scalar["description"];
+  if (description !== undefined && typeof description !== "string") {
+    diagnostics.push({
+      code: "CONFIG_INVALID_TYPE",
+      message: `scalars[${index}].description must be a string`,
       severity: "error",
       location: { file: configPath, line: 1, column: 1 },
     });
@@ -306,7 +326,7 @@ function validateScalarMapping(
     return { resolved: undefined, diagnostics };
   }
 
-  const graphqlName = scalar["graphqlName"] as string;
+  const graphqlName = scalar["name"] as string;
 
   if (
     BUILTIN_SCALAR_NAMES.includes(
@@ -325,8 +345,10 @@ function validateScalarMapping(
   return {
     resolved: {
       graphqlName,
-      typeName: type["name"] as string,
-      importPath: type["from"] as string,
+      typeName: tsType["name"] as string,
+      importPath: (tsType["from"] as string | undefined) ?? null,
+      only: (only as "input" | "output" | undefined) ?? null,
+      description: (description as string | undefined) ?? null,
     },
     diagnostics,
   };
@@ -378,7 +400,7 @@ export function validateConfig(
 
   const scalarsArray = config["scalars"] ?? [];
   const resolvedScalars: ResolvedScalarMapping[] = [];
-  const seenGraphqlNames = new Map<string, number>();
+  const seenScalarKeys = new Map<string, number>();
   const seenTypes = new Map<string, { index: number; names: string[] }>();
 
   for (let i = 0; i < scalarsArray.length; i++) {
@@ -387,31 +409,35 @@ export function validateConfig(
     diagnostics.push(...result.diagnostics);
 
     if (result.resolved) {
-      const { graphqlName, typeName, importPath } = result.resolved;
+      const { graphqlName, typeName, importPath, only } = result.resolved;
 
-      const existingGraphqlIndex = seenGraphqlNames.get(graphqlName);
-      if (existingGraphqlIndex !== undefined) {
+      const scalarKey = `${graphqlName}::${only ?? "both"}`;
+      const existingScalarIndex = seenScalarKeys.get(scalarKey);
+      if (existingScalarIndex !== undefined) {
+        const onlyDesc = only
+          ? `with only: "${only}"`
+          : "without only constraint";
         diagnostics.push({
           code: "CONFIG_DUPLICATE_MAPPING",
-          message: `Duplicate scalar mapping: '${graphqlName}' is defined multiple times`,
+          message: `Duplicate scalar mapping: '${graphqlName}' ${onlyDesc} is defined multiple times`,
           severity: "error",
           location: { file: configPath, line: 1, column: 1 },
         });
       } else {
-        seenGraphqlNames.set(graphqlName, i);
+        seenScalarKeys.set(scalarKey, i);
       }
 
-      const typeKey = `${importPath}::${typeName}`;
+      const typeKey = `${importPath ?? "global"}::${typeName}`;
       const existingType = seenTypes.get(typeKey);
-      if (existingType) {
+      if (existingType && !existingType.names.includes(graphqlName)) {
         existingType.names.push(graphqlName);
         diagnostics.push({
           code: "CONFIG_DUPLICATE_TYPE",
-          message: `Type '${typeName}' from '${importPath}' is mapped to multiple scalars: ${existingType.names.join(", ")}`,
+          message: `Type '${typeName}' from '${importPath ?? "global"}' is mapped to multiple scalars: ${existingType.names.join(", ")}`,
           severity: "error",
           location: { file: configPath, line: 1, column: 1 },
         });
-      } else {
+      } else if (!existingType) {
         seenTypes.set(typeKey, { index: i, names: [graphqlName] });
       }
 
