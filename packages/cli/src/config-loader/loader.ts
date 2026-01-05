@@ -55,7 +55,7 @@ export interface LoadConfigResult {
 
 const CONFIG_FILE_NAME = "gqlkit.config.ts";
 
-export const DEFAULT_SOURCE_DIR = "src/gqlkit";
+export const DEFAULT_SOURCE_DIR = "src/gqlkit/schema";
 export const DEFAULT_RESOLVERS_PATH = "src/gqlkit/__generated__/resolvers.ts";
 export const DEFAULT_TYPEDEFS_PATH = "src/gqlkit/__generated__/typeDefs.ts";
 export const DEFAULT_SCHEMA_PATH = "src/gqlkit/__generated__/schema.graphql";

@@ -4,7 +4,7 @@
     "message": "Type extension references unknown type 'UnknownType'",
     "severity": "error",
     "location": {
-      "file": "src/gqlkit/unknown.ts",
+      "file": "src/gqlkit/schema/unknown.ts",
       "line": 1,
       "column": 1
     }

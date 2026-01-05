@@ -2,20 +2,20 @@
 
 type Mutation
 
-"""Defined in: src/gqlkit/user.ts"""
+"""Defined in: src/gqlkit/schema/user.ts"""
 type User {
   email: String
   id: String!
   name: String!
 }
 
-"""Defined in: src/gqlkit/user.ts"""
+"""Defined in: src/gqlkit/schema/user.ts"""
 input CreateUserInput {
   email: String
   name: String!
 }
 
 extend type Mutation {
-  """Defined in: src/gqlkit/mutation.ts"""
+  """Defined in: src/gqlkit/schema/mutation.ts"""
   createUser(input: CreateUserInput!): User!
 }

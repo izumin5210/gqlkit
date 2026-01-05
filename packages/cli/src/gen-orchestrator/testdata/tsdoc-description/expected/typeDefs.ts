@@ -86,7 +86,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "A user in the system.\n\nDefined in: src/gqlkit/user.ts",
+        "value": "A user in the system.\n\nDefined in: src/gqlkit/schema/user.ts",
         "block": true
       }
     },
@@ -131,7 +131,7 @@ export const typeDefs: DocumentNode = {
           },
           "description": {
             "kind": "StringValue",
-            "value": "Fetch a user by ID.\n\nDefined in: src/gqlkit/query.ts",
+            "value": "Fetch a user by ID.\n\nDefined in: src/gqlkit/schema/query.ts",
             "block": true
           }
         }

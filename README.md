@@ -24,11 +24,13 @@ npm install @gqlkit-ts/runtime graphql @graphql-tools/schema
 npm install -D @gqlkit-ts/cli
 ```
 
-### 2. Create a type definition
+### 2. Create types and resolvers
 
 ```ts
-// src/gqlkit/types/task.ts
-import type { IDString } from "@gqlkit-ts/runtime";
+// src/gqlkit/schema/task.ts
+import { createGqlkitApis, type IDString, type NoArgs } from "@gqlkit-ts/runtime";
+
+const { defineQuery, defineMutation } = createGqlkitApis();
 
 export type Task = {
   id: IDString;
@@ -36,24 +38,14 @@ export type Task = {
   completed: boolean;
 };
 
+const tasksData: Task[] = [];
+let nextId = 1;
+
+export const tasks = defineQuery<NoArgs, Task[]>(() => tasksData);
+
 export type CreateTaskInput = {
   title: string;
 };
-```
-
-### 3. Create resolvers
-
-```ts
-// src/gqlkit/resolvers/task.ts
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
-import type { CreateTaskInput, Task } from "../types/task.js";
-
-const { defineQuery, defineMutation } = createGqlkitApis();
-
-const tasks: Task[] = [];
-let nextId = 1;
-
-export const tasks_ = defineQuery<NoArgs, Task[]>(() => tasks);
 
 export const createTask = defineMutation<{ input: CreateTaskInput }, Task>(
   (_root, { input }) => {
@@ -62,13 +54,13 @@ export const createTask = defineMutation<{ input: CreateTaskInput }, Task>(
       title: input.title,
       completed: false,
     };
-    tasks.push(task);
+    tasksData.push(task);
     return task;
   }
 );
 ```
 
-### 4. Generate schema and resolvers
+### 3. Generate schema and resolvers
 
 ```bash
 gqlkit gen
@@ -79,7 +71,7 @@ This generates:
 - `src/gqlkit/__generated__/resolvers.ts` - Resolver map
 - `src/gqlkit/__generated__/schema.graphql` - SDL file
 
-### 5. Create the executable schema
+### 4. Create the executable schema
 
 ```ts
 // src/schema.ts
@@ -90,7 +82,7 @@ import { resolvers } from "./gqlkit/__generated__/resolvers.js";
 export const schema = makeExecutableSchema({ typeDefs, resolvers });
 ```
 
-### 6. Start a GraphQL server (e.g., Yoga)
+### 5. Start a GraphQL server (e.g., Yoga)
 
 ```bash
 npm install graphql-yoga
@@ -137,16 +129,19 @@ Default project layout:
 ```
 src/
   gqlkit/
-    types/       # TypeScript type definitions
-    resolvers/   # Resolver implementations
+    schema/        # Types and resolvers co-located
     __generated__/ # Generated files (auto-created)
 ```
 
-### 1. Define your GraphQL types in `src/gqlkit/types`
+### 1. Define types and resolvers together
 
 ```ts
-// src/gqlkit/types/User.ts
-import type { IDString, Int } from "@gqlkit-ts/runtime";
+// src/gqlkit/schema/user.ts
+import { createGqlkitApis, type IDString, type Int, type NoArgs } from "@gqlkit-ts/runtime";
+
+type Context = { currentUserId: string };
+
+const { defineQuery, defineField } = createGqlkitApis<Context>();
 
 /**
  * A user in the system
@@ -161,18 +156,6 @@ export type User = {
   /** Email address (null if not verified) */
   email: string | null;
 };
-```
-
-### 2. Define resolver signatures and implementations in `src/gqlkit/resolvers`
-
-```ts
-// src/gqlkit/resolvers/User.ts
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
-import type { User } from "../types/User";
-
-type Context = { currentUserId: string };
-
-const { defineQuery, defineField } = createGqlkitApis<Context>();
 
 export const me = defineQuery<NoArgs, User | null>((_root, _args, ctx) => {
   return findUserById(ctx.currentUserId);
@@ -184,13 +167,13 @@ export const profileUrl = defineField<User, NoArgs, string>((parent) => {
 });
 ```
 
-### 3. Generate schema and resolver wiring
+### 2. Generate schema and resolver wiring
 
 ```bash
 gqlkit gen
 ```
 
-### 4. Use the generated schema and resolvers
+### 3. Use the generated schema and resolvers
 
 ```ts
 // src/schema.ts
@@ -226,7 +209,7 @@ gqlkit provides scalar types to explicitly specify GraphQL scalar mappings:
 Define custom scalar types using the `DefineScalar` utility type:
 
 ```ts
-// src/gqlkit/scalars.ts
+// src/gqlkit/schema/scalars.ts
 import { DefineScalar } from "@gqlkit-ts/runtime";
 
 /**
@@ -263,7 +246,7 @@ Generates:
 """
 A user in the system
 
-Defined in: src/gqlkit/types/User.ts
+Defined in: src/gqlkit/schema/user.ts
 """
 type User {
   """Unique identifier"""
@@ -406,14 +389,19 @@ input ProductInput @oneOf {
 
 ### Field resolvers
 
-Add computed fields to object types using `defineField`:
+Add computed fields to object types using `defineField`. Define them alongside the type:
 
 ```ts
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
-import type { User } from "../types/User";
-import type { Post } from "../types/Post";
+// src/gqlkit/schema/user.ts
+import { createGqlkitApis, type IDString, type NoArgs } from "@gqlkit-ts/runtime";
+import type { Post } from "./post.js";
 
 const { defineField } = createGqlkitApis<Context>();
+
+export type User = {
+  id: IDString;
+  name: string;
+};
 
 /** Get posts authored by this user */
 export const posts = defineField<User, NoArgs, Post[]>(
@@ -433,7 +421,7 @@ If your code follows these conventions, schema generation is deterministic.
 
 ### 1) Source directory
 
-Default: `src/gqlkit`
+Default: `src/gqlkit/schema`
 
 All TypeScript files (.ts, .cts, .mts) under this directory are scanned for types and resolvers.
 
@@ -517,8 +505,8 @@ gqlkit can be configured via `gqlkit.config.ts`:
 import { defineConfig } from "@gqlkit-ts/cli";
 
 export default defineConfig({
-  // Source directory (default: "src/gqlkit")
-  sourceDir: "src/gqlkit",
+  // Source directory (default: "src/gqlkit/schema")
+  sourceDir: "src/gqlkit/schema",
 
   // Glob patterns to exclude from scanning
   sourceIgnoreGlobs: ["**/*.test.ts"],
@@ -527,7 +515,7 @@ export default defineConfig({
   scalars: [
     {
       name: "DateTime",
-      tsType: { from: "./src/gqlkit/scalars", name: "DateTime" },
+      tsType: { from: "./src/gqlkit/schema/scalars", name: "DateTime" },
       description: "ISO 8601 datetime",
     },
     {
@@ -564,7 +552,7 @@ export default defineConfig({
   scalars: [
     {
       name: "DateTime",
-      tsType: { from: "./src/gqlkit/scalars", name: "DateTime" },
+      tsType: { from: "./src/gqlkit/schema/scalars", name: "DateTime" },
       description: "ISO 8601 datetime string",
     },
     {

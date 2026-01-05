@@ -563,7 +563,7 @@ describe("ConfigValidator", () => {
 
         expect(result.valid).toBe(true);
         expect(result.resolvedConfig).toBeTruthy();
-        expect(result.resolvedConfig!.sourceDir).toBe("src/gqlkit");
+        expect(result.resolvedConfig!.sourceDir).toBe("src/gqlkit/schema");
       });
 
       it("should accept valid sourceDir string", () => {

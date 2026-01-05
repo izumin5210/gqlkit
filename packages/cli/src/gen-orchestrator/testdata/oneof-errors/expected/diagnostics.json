@@ -4,7 +4,7 @@
     "message": "OneOf input object 'ConflictingFieldsInput' has duplicate field name 'fooInput' from types 'FooInput' and 'fooInput'",
     "severity": "error",
     "location": {
-      "file": "src/gqlkit/errors.ts",
+      "file": "src/gqlkit/schema/errors.ts",
       "line": 1,
       "column": 1
     }
@@ -14,7 +14,7 @@
     "message": "OneOf input object 'InlineObjectsInput' contains inline object literal types. Please define named types (interface or type alias) for all union members.",
     "severity": "error",
     "location": {
-      "file": "src/gqlkit/errors.ts",
+      "file": "src/gqlkit/schema/errors.ts",
       "line": 1,
       "column": 1
     }

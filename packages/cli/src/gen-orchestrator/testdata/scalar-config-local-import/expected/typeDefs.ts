@@ -73,7 +73,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/event.ts",
+        "value": "Defined in: src/gqlkit/schema/event.ts",
         "block": true
       }
     },
@@ -116,7 +116,7 @@ export const typeDefs: DocumentNode = {
           },
           "description": {
             "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/query.ts",
+            "value": "Defined in: src/gqlkit/schema/query.ts",
             "block": true
           }
         }

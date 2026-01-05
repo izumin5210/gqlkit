@@ -2,7 +2,7 @@
 
 type Query
 
-"""Defined in: src/gqlkit/user.ts"""
+"""Defined in: src/gqlkit/schema/user.ts"""
 type User {
   email: String
   id: String!
@@ -10,8 +10,8 @@ type User {
 }
 
 extend type Query {
-  """Defined in: src/gqlkit/query.ts"""
+  """Defined in: src/gqlkit/schema/query.ts"""
   user(id: String!): User
-  """Defined in: src/gqlkit/query.ts"""
+  """Defined in: src/gqlkit/schema/query.ts"""
   users: [User!]!
 }

@@ -21,7 +21,7 @@ describe("ConfigLoader", () => {
 
       expect(result.configPath).toBe(undefined);
       expect(result.config).toEqual({
-        sourceDir: "src/gqlkit",
+        sourceDir: "src/gqlkit/schema",
         sourceIgnoreGlobs: [],
         output: {
           resolversPath: "src/gqlkit/__generated__/resolvers.ts",
@@ -123,7 +123,7 @@ export default {};
       const result = await loadConfig({ cwd: tempDir });
 
       expect(result.config).toEqual({
-        sourceDir: "src/gqlkit",
+        sourceDir: "src/gqlkit/schema",
         sourceIgnoreGlobs: [],
         output: {
           resolversPath: "src/gqlkit/__generated__/resolvers.ts",

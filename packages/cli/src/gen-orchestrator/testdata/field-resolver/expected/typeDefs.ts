@@ -66,7 +66,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/user.ts",
+        "value": "Defined in: src/gqlkit/schema/user.ts",
         "block": true
       }
     },
@@ -122,7 +122,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/user.ts",
+        "value": "Defined in: src/gqlkit/schema/user.ts",
         "block": true
       }
     },
@@ -157,7 +157,7 @@ export const typeDefs: DocumentNode = {
           },
           "description": {
             "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/query.ts",
+            "value": "Defined in: src/gqlkit/schema/query.ts",
             "block": true
           }
         }
@@ -194,7 +194,7 @@ export const typeDefs: DocumentNode = {
           },
           "description": {
             "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/user.ts",
+            "value": "Defined in: src/gqlkit/schema/user.ts",
             "block": true
           }
         }

@@ -65,7 +65,7 @@ describe("Golden File Tests", async () => {
           description: s.description ?? null,
         })) ?? null;
 
-      const sourceDir = config?.sourceDir ?? "src/gqlkit";
+      const sourceDir = config?.sourceDir ?? "src/gqlkit/schema";
 
       const result = await executeGeneration({
         cwd: caseDir,
