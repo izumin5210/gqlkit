@@ -23,6 +23,9 @@ importers:
       knip:
         specifier: ^5.79.0
         version: 5.79.0(@types/node@22.19.3)(typescript@5.9.3)
+      tsx:
+        specifier: ^4.21.0
+        version: 4.21.0
       typescript:
         specifier: ^5.9.3
         version: 5.9.3
@@ -32,9 +35,6 @@ importers:
 
   examples/full-featured:
     dependencies:
-      '@gqlkit-ts/cli':
-        specifier: workspace:*
-        version: link:../../packages/cli
       '@gqlkit-ts/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
@@ -48,18 +48,15 @@ importers:
         specifier: ^5.0.0
         version: 5.18.0(graphql@16.12.0)
     devDependencies:
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
+      '@gqlkit-ts/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       typescript:
         specifier: ^5.9.0
         version: 5.9.3
 
   examples/minimal:
     dependencies:
-      '@gqlkit-ts/cli':
-        specifier: workspace:*
-        version: link:../../packages/cli
       '@gqlkit-ts/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
@@ -73,9 +70,9 @@ importers:
         specifier: ^5.0.0
         version: 5.18.0(graphql@16.12.0)
     devDependencies:
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
+      '@gqlkit-ts/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
       typescript:
         specifier: ^5.9.0
         version: 5.9.3
@@ -97,37 +94,18 @@ importers:
       shell-quote:
         specifier: ^1.8.3
         version: 1.8.3
+      typescript:
+        specifier: ^5.9.3
+        version: 5.9.3
     devDependencies:
       '@gqlkit-ts/runtime':
         specifier: workspace:*
         version: link:../runtime
-      '@types/node':
-        specifier: ^22.19.3
-        version: 22.19.3
       '@types/shell-quote':
         specifier: ^1.7.5
         version: 1.7.5
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
 
-  packages/runtime:
-    devDependencies:
-      '@types/node':
-        specifier: ^22.19.3
-        version: 22.19.3
-      graphql:
-        specifier: ^16.12.0
-        version: 16.12.0
-      tsx:
-        specifier: ^4.21.0
-        version: 4.21.0
-      typescript:
-        specifier: 5.9.3
-        version: 5.9.3
+  packages/runtime: {}
 
 packages:
 
