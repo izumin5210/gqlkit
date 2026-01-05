@@ -212,7 +212,7 @@ export interface GqlkitApis<TContext> {
    * @typeParam TArgs - The type of arguments the resolver accepts
    * @typeParam TResult - The return type of the resolver
    * @param resolver - The resolver function
-   * @returns The resolver with branded type for CLI detection
+   * @returns The resolver with metadata for CLI detection
    */
   defineQuery: <TArgs, TResult>(
     resolver: QueryResolverFn<TArgs, TResult, TContext>,
@@ -223,7 +223,7 @@ export interface GqlkitApis<TContext> {
    * @typeParam TArgs - The type of arguments the resolver accepts
    * @typeParam TResult - The return type of the resolver
    * @param resolver - The resolver function
-   * @returns The resolver with branded type for CLI detection
+   * @returns The resolver with metadata for CLI detection
    */
   defineMutation: <TArgs, TResult>(
     resolver: MutationResolverFn<TArgs, TResult, TContext>,
@@ -235,7 +235,7 @@ export interface GqlkitApis<TContext> {
    * @typeParam TArgs - The type of arguments the resolver accepts
    * @typeParam TResult - The return type of the resolver
    * @param resolver - The resolver function
-   * @returns The resolver with branded type for CLI detection
+   * @returns The resolver with metadata for CLI detection
    */
   defineField: <TParent, TArgs, TResult>(
     resolver: FieldResolverFn<TParent, TArgs, TResult, TContext>,

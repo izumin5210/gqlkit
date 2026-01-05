@@ -1,6 +1,8 @@
 import ts from "typescript";
-import { detectBrandedScalar } from "../../shared/branded-detector.js";
-import { getActualMetadataType } from "../../shared/metadata-detector.js";
+import {
+  detectScalarMetadata,
+  getActualMetadataType,
+} from "../../shared/metadata-detector.js";
 import {
   type DeprecationInfo,
   extractTSDocFromSymbol,
@@ -93,15 +95,21 @@ function convertTypeToTSTypeReference(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): TSTypeReference {
-  const brandedResult = detectBrandedScalar(type, checker);
-  if (brandedResult.scalarInfo) {
+  const metadataResult = detectScalarMetadata(type, checker);
+  if (metadataResult.scalarName && !metadataResult.isPrimitive) {
     return {
       kind: "scalar",
-      name: brandedResult.scalarInfo.scalarName,
+      name: metadataResult.scalarName,
       elementType: null,
       members: null,
-      nullable: false,
-      scalarInfo: brandedResult.scalarInfo,
+      nullable: metadataResult.nullable,
+      scalarInfo: {
+        scalarName: metadataResult.scalarName,
+        typeName: metadataResult.scalarName,
+        baseType: undefined,
+        isCustom: true,
+        only: metadataResult.only,
+      },
     };
   }
 

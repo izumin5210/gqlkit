@@ -1,7 +1,22 @@
-import type { ScalarTypeInfo } from "../../shared/branded-detector.js";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 
 export type TypeKind = "object" | "interface" | "union" | "enum";
+
+/**
+ * Information about a detected scalar type.
+ */
+export interface ScalarTypeInfo {
+  /** The GraphQL scalar type name (ID, Int, Float, String, Boolean, or custom scalar name) */
+  readonly scalarName: string;
+  /** The TypeScript type name (e.g., "IDString", "Int", "DateTime") */
+  readonly typeName: string;
+  /** The underlying TypeScript primitive type (undefined for custom scalars) */
+  readonly baseType: "string" | "number" | undefined;
+  /** Whether this is a custom scalar */
+  readonly isCustom: boolean;
+  /** Usage constraint: "input" for input-only, "output" for output-only, null for both */
+  readonly only: "input" | "output" | null;
+}
 
 export interface TypeMetadata {
   readonly name: string;

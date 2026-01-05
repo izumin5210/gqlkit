@@ -21,7 +21,7 @@ function createScalarTypeRef(
     nullable: false,
     scalarInfo: {
       scalarName,
-      brandName: scalarName,
+      typeName: scalarName,
       baseType: undefined,
       isCustom: true,
       only,
