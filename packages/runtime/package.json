@@ -22,14 +22,5 @@
     "build": "tsc --build",
     "test": "pnpm -w vitest run --project=runtime --typecheck",
     "typecheck": "tsc --noEmit"
-  },
-  "peerDependencies": {
-    "graphql": "^16.0.0"
-  },
-  "devDependencies": {
-    "@types/node": "^22.19.3",
-    "graphql": "^16.12.0",
-    "tsx": "^4.21.0",
-    "typescript": "5.9.3"
   }
 }
