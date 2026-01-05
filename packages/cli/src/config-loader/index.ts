@@ -3,6 +3,7 @@ export {
   type LoadConfigResult,
   loadConfig,
   type ResolvedConfig,
+  type ResolvedHooksConfig,
   type ResolvedOutputConfig,
   type ResolvedScalarMapping,
 } from "./loader.js";

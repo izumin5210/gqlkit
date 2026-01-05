@@ -5,6 +5,7 @@ import {
   DEFAULT_SOURCE_DIR,
   DEFAULT_TYPEDEFS_PATH,
   type ResolvedConfig,
+  type ResolvedHooksConfig,
   type ResolvedOutputConfig,
   type ResolvedScalarMapping,
 } from "./loader.js";
@@ -354,6 +355,91 @@ function validateScalarMapping(
   };
 }
 
+function validateHooksConfig(
+  hooks: unknown,
+  configPath: string,
+): { resolved: ResolvedHooksConfig | undefined; diagnostics: Diagnostic[] } {
+  const diagnostics: Diagnostic[] = [];
+
+  if (hooks === undefined) {
+    return {
+      resolved: { afterAllFileWrite: [] },
+      diagnostics: [],
+    };
+  }
+
+  if (!isRecord(hooks)) {
+    diagnostics.push({
+      code: "CONFIG_INVALID_TYPE",
+      message: "hooks must be an object",
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+    return { resolved: undefined, diagnostics };
+  }
+
+  const afterAllFileWrite = hooks["afterAllFileWrite"];
+
+  if (afterAllFileWrite === undefined) {
+    return {
+      resolved: { afterAllFileWrite: [] },
+      diagnostics: [],
+    };
+  }
+
+  if (typeof afterAllFileWrite === "string") {
+    if (afterAllFileWrite === "") {
+      diagnostics.push({
+        code: "CONFIG_INVALID_HOOK_COMMAND",
+        message: "hooks.afterAllFileWrite contains empty command",
+        severity: "error",
+        location: { file: configPath, line: 1, column: 1 },
+      });
+      return { resolved: undefined, diagnostics };
+    }
+    return {
+      resolved: { afterAllFileWrite: [afterAllFileWrite] },
+      diagnostics: [],
+    };
+  }
+
+  if (Array.isArray(afterAllFileWrite)) {
+    for (const item of afterAllFileWrite) {
+      if (typeof item !== "string") {
+        diagnostics.push({
+          code: "CONFIG_INVALID_HOOK_TYPE",
+          message:
+            "hooks.afterAllFileWrite must be a string or array of strings",
+          severity: "error",
+          location: { file: configPath, line: 1, column: 1 },
+        });
+        return { resolved: undefined, diagnostics };
+      }
+      if (item === "") {
+        diagnostics.push({
+          code: "CONFIG_INVALID_HOOK_COMMAND",
+          message: "hooks.afterAllFileWrite contains empty command",
+          severity: "error",
+          location: { file: configPath, line: 1, column: 1 },
+        });
+        return { resolved: undefined, diagnostics };
+      }
+    }
+    return {
+      resolved: { afterAllFileWrite: afterAllFileWrite as string[] },
+      diagnostics: [],
+    };
+  }
+
+  diagnostics.push({
+    code: "CONFIG_INVALID_HOOK_TYPE",
+    message: "hooks.afterAllFileWrite must be a string or array of strings",
+    severity: "error",
+    location: { file: configPath, line: 1, column: 1 },
+  });
+  return { resolved: undefined, diagnostics };
+}
+
 export function validateConfig(
   options: ValidateConfigOptions,
 ): ValidateConfigResult {
@@ -387,6 +473,9 @@ export function validateConfig(
     configPath,
   );
   diagnostics.push(...tsconfigPathResult.diagnostics);
+
+  const hooksResult = validateHooksConfig(config["hooks"], configPath);
+  diagnostics.push(...hooksResult.diagnostics);
 
   if (config["scalars"] !== undefined && !Array.isArray(config["scalars"])) {
     diagnostics.push({
@@ -451,7 +540,8 @@ export function validateConfig(
     diagnostics.length > 0 ||
     !sourceDirResult.resolved ||
     !sourceIgnoreGlobsResult.resolved ||
-    !outputResult.resolved
+    !outputResult.resolved ||
+    !hooksResult.resolved
   ) {
     return { valid: false, resolvedConfig: undefined, diagnostics };
   }
@@ -464,6 +554,7 @@ export function validateConfig(
       output: outputResult.resolved,
       scalars: resolvedScalars,
       tsconfigPath: tsconfigPathResult.resolved,
+      hooks: hooksResult.resolved,
     },
     diagnostics: [],
   };

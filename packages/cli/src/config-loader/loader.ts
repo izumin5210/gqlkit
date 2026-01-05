@@ -29,12 +29,22 @@ export interface ResolvedOutputConfig {
   readonly schemaPath: string | null;
 }
 
+/**
+ * Resolved hook configuration.
+ * Commands are normalized to array format.
+ */
+export interface ResolvedHooksConfig {
+  /** Normalized to array (empty if not configured) */
+  readonly afterAllFileWrite: ReadonlyArray<string>;
+}
+
 export interface ResolvedConfig {
   readonly sourceDir: string;
   readonly sourceIgnoreGlobs: ReadonlyArray<string>;
   readonly output: ResolvedOutputConfig;
   readonly scalars: ReadonlyArray<ResolvedScalarMapping>;
   readonly tsconfigPath: string | null;
+  readonly hooks: ResolvedHooksConfig;
 }
 
 export interface LoadConfigResult {
@@ -56,12 +66,17 @@ const DEFAULT_OUTPUT_CONFIG: ResolvedOutputConfig = {
   schemaPath: DEFAULT_SCHEMA_PATH,
 };
 
+const DEFAULT_HOOKS_CONFIG: ResolvedHooksConfig = {
+  afterAllFileWrite: [],
+};
+
 const DEFAULT_RESOLVED_CONFIG: ResolvedConfig = {
   sourceDir: DEFAULT_SOURCE_DIR,
   sourceIgnoreGlobs: [],
   output: DEFAULT_OUTPUT_CONFIG,
   scalars: [],
   tsconfigPath: null,
+  hooks: DEFAULT_HOOKS_CONFIG,
 };
 
 export async function loadConfig(

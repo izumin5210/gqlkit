@@ -30,6 +30,9 @@ describe("ConfigLoader", () => {
         },
         scalars: [],
         tsconfigPath: null,
+        hooks: {
+          afterAllFileWrite: [],
+        },
       });
       expect(result.diagnostics.length).toBe(0);
     });
@@ -131,6 +134,9 @@ export default {};
         },
         scalars: [],
         tsconfigPath: null,
+        hooks: {
+          afterAllFileWrite: [],
+        },
       });
       expect(result.diagnostics.length).toBe(0);
     });
