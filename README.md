@@ -38,14 +38,14 @@ export type Task = {
   completed: boolean;
 };
 
+const tasksData: Task[] = [];
+let nextId = 1;
+
+export const tasks = defineQuery<NoArgs, Task[]>(() => tasksData);
+
 export type CreateTaskInput = {
   title: string;
 };
-
-const tasks: Task[] = [];
-let nextId = 1;
-
-export const tasks_ = defineQuery<NoArgs, Task[]>(() => tasks);
 
 export const createTask = defineMutation<{ input: CreateTaskInput }, Task>(
   (_root, { input }) => {
@@ -54,7 +54,7 @@ export const createTask = defineMutation<{ input: CreateTaskInput }, Task>(
       title: input.title,
       completed: false,
     };
-    tasks.push(task);
+    tasksData.push(task);
     return task;
   }
 );
