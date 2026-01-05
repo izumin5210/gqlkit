@@ -10,6 +10,11 @@ export const typeDefs: DocumentNode = {
       "name": {
         "kind": "Name",
         "value": "DateTime"
+      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Date input in ISO 8601 format\n\nDate output as Date object\n\nDate output as string for JSON serialization",
+        "block": true
       }
     },
     {

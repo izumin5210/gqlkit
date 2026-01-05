@@ -194,3 +194,78 @@ Use whichever pattern fits the work breakdown:
   - scalar-config-mapping: 設定ファイルマッピングのテストケース
   - scalar-errors: 各種エラーケースのテストケース
   - _Requirements: 1.1, 1.2, 1.3, 2.1, 2.2, 2.3, 2.4, 2.5, 3.5, 3.6, 4.2, 4.3, 4.4, 5.1, 5.2, 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 7.1, 7.2, 7.3, 7.4, 8.1, 8.2, 8.3, 8.4, 9.1, 9.2, 9.3, 9.4, 10.1, 10.2, 10.3, 10.4, 11.1, 11.2, 12.1, 12.2, 12.3, 12.4, 13.1, 13.2, 13.3, 14.1, 14.2, 15.1, 15.2, 15.3, 15.4, 15.5, 16.1, 16.2, 16.3, 17.1, 17.2, 17.3, 18.1, 18.2, 18.3_
+
+---
+
+## Fix Tasks (Implementation Gaps)
+
+> The following tasks address implementation gaps discovered during code review. See `z/scalar-metadata-issues.md` for detailed analysis.
+
+- [x] 9. DefineScalar Metadata 検出の修正
+  - DefineScalar で定義した型の metadata が正しく検出されていない問題を修正
+  - input/output 分離パターン（input 1つ + output 複数）が正しく処理されるよう修正
+  - scalar-input-output-split テストケースが成功するよう実装を修正
+  - _Requirements: 2.1, 2.2, 2.3, 2.4, 2.5, 4.2, 4.3, 4.4, 8.1, 8.2, 8.3, 8.4_
+
+- [x] 10. (P) Legacy 設定形式の削除
+  - `LegacyScalarMappingConfig` 型とその関連コードを完全に削除
+  - `ScalarMappingConfig` は新形式のみをサポートする型に変更
+  - custom-scalar-config テストケースを新形式に更新または削除
+  - design.md の breaking change 方針に準拠
+  - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
+
+- [x] 11. (P) 設定ファイルでのグローバル型マッピング実装
+  - `tsType.from` が省略された場合にグローバル型（Date 等）としてマッピングする機能を実装
+  - scalar-config-mapping テストケースが成功するよう期待値を更新
+  - グローバル型が正しく GraphQL scalar に変換されることを検証
+  - _Requirements: 6.3_
+
+- [x] 12. Scalar 検証エラー検出の実装
+- [x] 12.1 複数 input 型エラー検出の実装
+  - 同一 scalar に対して複数の input 用型が定義された場合のエラー検出を実装
+  - `only: "input"` 複数、`only` なし複数、両者混在の各パターンを検出
+  - エラーメッセージに競合する型名と定義場所を含める
+  - _Requirements: 12.1, 12.2, 12.3, 12.4_
+
+- [x] 12.2 input/output 型不足エラー検出の実装
+  - custom scalar に output 用の型がない場合のエラー検出を実装
+  - custom scalar に input 用の型がない場合のエラー検出を実装
+  - scalar-errors テストケースの期待値をエラー出力に更新
+  - _Requirements: 13.1, 13.2, 13.3_
+
+- [x] 13. createResolvers 関数への scalars 引数追加
+  - custom scalar が存在する場合に `{ scalars: {...} }` 引数を要求する関数シグネチャを生成
+  - 各 scalar に対して `GraphQLScalarType<TInput, TOutput>` 型を型パラメータとして設定
+  - 生成される Resolvers オブジェクトに scalar resolver を含める
+  - scalar-metadata-basic テストケースの期待値を更新
+  - _Requirements: 7.1, 7.2, 7.4_
+
+- [x] 14. Scalar の TSDoc Description 抽出実装
+  - scalar metadata 付き型の TSDoc コメントを description として抽出する機能を実装
+  - 複数の型がある場合は空行区切りで結合（ファイルパス alphabetical 順）
+  - 設定ファイルの description との結合も対応
+  - scalar-metadata-basic テストケースの期待値を description 付きに更新
+  - _Requirements: 9.1, 9.2, 9.3, 9.4_
+
+- [x] 15. Golden File テスト期待値の最終更新
+- [x] 15.1 scalar-input-output-split テストケースの修正
+  - diagnostics.json を削除（成功ケースなのでエラーは出ない）
+  - schema.graphql, resolvers.ts, typeDefs.ts を正しい期待値に更新
+  - input/output 型の分離が正しく反映されることを確認
+  - _Requirements: 8.1, 8.2, 8.3, 8.4_
+
+- [x] 15.2 scalar-config-mapping テストケースの修正
+  - diagnostics.json を削除（成功ケースなのでエラーは出ない）
+  - グローバル型マッピングが正しく動作する期待値を設定
+  - _Requirements: 6.3_
+
+- [x] 15.3 scalar-errors テストケースの修正
+  - 成功出力ファイル（schema.graphql, resolvers.ts, typeDefs.ts）を削除
+  - diagnostics.json に複数 input 型エラーと output 型不足エラーを設定
+  - エラーメッセージが actionable であることを確認
+  - _Requirements: 12.1, 12.4, 13.1, 13.3, 18.1, 18.2, 18.3_
+
+- [x] 15.4 scalar-metadata-basic テストケースの修正
+  - resolvers.ts を scalars 引数付きの createResolvers 関数に更新
+  - schema.graphql と typeDefs.ts に TSDoc description を追加
+  - _Requirements: 7.1, 7.2, 9.1_

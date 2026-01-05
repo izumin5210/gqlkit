@@ -2,11 +2,7 @@ import { readdir, readFile } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import type {
-  GqlkitConfig,
-  LegacyScalarMappingConfig,
-  NewScalarMappingConfig,
-} from "../config/index.js";
+import type { GqlkitConfig } from "../config/index.js";
 import type { ResolvedScalarMapping } from "../config-loader/index.js";
 import {
   DEFAULT_RESOLVERS_PATH,
@@ -61,26 +57,13 @@ describe("Golden File Tests", async () => {
       );
 
       const customScalars: ResolvedScalarMapping[] | null =
-        config?.scalars?.map((s) => {
-          if ("name" in s && "tsType" in s) {
-            const newFormat = s as NewScalarMappingConfig;
-            return {
-              graphqlName: newFormat.name,
-              typeName: newFormat.tsType.name,
-              importPath: newFormat.tsType.from ?? null,
-              only: newFormat.only ?? null,
-              description: newFormat.description ?? null,
-            };
-          }
-          const legacy = s as LegacyScalarMappingConfig;
-          return {
-            graphqlName: legacy.graphqlName,
-            typeName: legacy.type.name,
-            importPath: legacy.type.from,
-            only: null,
-            description: null,
-          };
-        }) ?? null;
+        config?.scalars?.map((s) => ({
+          graphqlName: s.name,
+          typeName: s.tsType.name,
+          importPath: s.tsType.from ?? null,
+          only: s.only ?? null,
+          description: s.description ?? null,
+        })) ?? null;
 
       const sourceDir = config?.sourceDir ?? "src/gqlkit";
 

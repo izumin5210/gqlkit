@@ -88,8 +88,8 @@ export interface GqlkitConfig {
 }
 
 /**
- * New scalar mapping configuration format.
- * Supports global types (without import path) and usage constraints.
+ * Custom scalar mapping configuration.
+ * Maps TypeScript types to GraphQL scalar types.
  *
  * @example
  * // Global type (e.g., Date)
@@ -104,7 +104,7 @@ export interface GqlkitConfig {
  * // With description
  * { name: "DateTime", tsType: { name: "Date" }, description: "ISO 8601 format" }
  */
-export interface NewScalarMappingConfig {
+export interface ScalarMappingConfig {
   /**
    * GraphQL scalar name.
    * Example: "DateTime", "UUID", "URL"
@@ -142,40 +142,3 @@ export interface NewScalarMappingConfig {
    */
   readonly description?: string;
 }
-
-/**
- * Legacy scalar mapping configuration format.
- * @deprecated Use NewScalarMappingConfig format instead.
- */
-export interface LegacyScalarMappingConfig {
-  /**
-   * Scalar name to use in GraphQL schema.
-   * Example: "DateTime", "UUID", "URL"
-   */
-  readonly graphqlName: string;
-
-  /**
-   * TypeScript type information to map.
-   */
-  readonly type: {
-    /**
-     * Import path for the type.
-     * Example: "./src/types/scalars", "@my-lib/scalars"
-     */
-    readonly from: string;
-
-    /**
-     * Type name to import.
-     * Example: "DateTime", "UUID"
-     */
-    readonly name: string;
-  };
-}
-
-/**
- * Individual custom scalar mapping configuration.
- * Supports both new format (name, tsType) and legacy format (graphqlName, type).
- */
-export type ScalarMappingConfig =
-  | NewScalarMappingConfig
-  | LegacyScalarMappingConfig;

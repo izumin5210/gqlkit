@@ -45,7 +45,10 @@ export type DiagnosticCode =
   | "TSCONFIG_NOT_FOUND"
   | "TSCONFIG_PARSE_ERROR"
   | "TSCONFIG_INVALID"
-  | "ONEOF_FIELD_NAME_CONFLICT";
+  | "ONEOF_FIELD_NAME_CONFLICT"
+  | "MULTIPLE_INPUT_TYPES"
+  | "MISSING_INPUT_TYPE"
+  | "MISSING_OUTPUT_TYPE";
 
 export interface Diagnostic {
   readonly code: DiagnosticCode;

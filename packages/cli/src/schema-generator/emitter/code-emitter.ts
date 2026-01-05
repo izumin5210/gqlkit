@@ -55,7 +55,11 @@ function collectScalarTypeImports(
   const seen = new Set<string>();
 
   for (const scalar of customScalars) {
-    if (scalar.inputType && !seen.has(scalar.inputType.typeName)) {
+    if (
+      scalar.inputType &&
+      scalar.inputType.sourceFile !== "" &&
+      !seen.has(scalar.inputType.typeName)
+    ) {
       imports.push({
         typeName: scalar.inputType.typeName,
         sourceFile: scalar.inputType.sourceFile,
@@ -64,7 +68,7 @@ function collectScalarTypeImports(
     }
 
     for (const outputType of scalar.outputTypes) {
-      if (!seen.has(outputType.typeName)) {
+      if (outputType.sourceFile !== "" && !seen.has(outputType.typeName)) {
         imports.push({
           typeName: outputType.typeName,
           sourceFile: outputType.sourceFile,

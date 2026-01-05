@@ -10,6 +10,23 @@ export const typeDefs: DocumentNode = {
       "name": {
         "kind": "Name",
         "value": "DateTime"
+      },
+      "description": {
+        "kind": "StringValue",
+        "value": "ISO 8601 format date-time",
+        "block": true
+      }
+    },
+    {
+      "kind": "ScalarTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "URL"
+      },
+      "description": {
+        "kind": "StringValue",
+        "value": "A valid URL string",
+        "block": true
       }
     },
     {
@@ -69,6 +86,20 @@ export const typeDefs: DocumentNode = {
               }
             }
           }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "website"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "URL"
+            }
+          }
         }
       ],
       "description": {
@@ -76,6 +107,51 @@ export const typeDefs: DocumentNode = {
         "value": "Defined in: src/gqlkit/event.ts",
         "block": true
       }
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
+      },
+      "fields": []
+    },
+    {
+      "kind": "ObjectTypeExtension",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "events"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Event"
+                  }
+                }
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Defined in: src/gqlkit/query.ts",
+            "block": true
+          }
+        }
+      ]
     }
   ]
 } as DocumentNode;

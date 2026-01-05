@@ -2,15 +2,16 @@
 
 import { GraphQLScalarType } from "graphql";
 import { events } from "../query.js";
-import type { DateTime } from "../scalars.js";
 
 export function createResolvers({ scalars }: {
   scalars: {
-    DateTime: GraphQLScalarType<DateTime, DateTime>;
+    DateTime: GraphQLScalarType<Date, Date>;
+    URL: GraphQLScalarType<URL, URL>;
   };
 }) {
   return {
     DateTime: scalars.DateTime,
+    URL: scalars.URL,
     Query: {
       events: events,
     },

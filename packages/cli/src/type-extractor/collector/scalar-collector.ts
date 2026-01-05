@@ -149,8 +149,23 @@ export function mergeDescriptions(
   return descriptions.map((d) => d.text).join("\n\n");
 }
 
-function formatTypeLocation(ref: ScalarTypeRef): string {
-  return `${ref.sourceFile}:${ref.line}`;
+function formatTypeLocation(
+  ref: ScalarTypeRef,
+  sourceRoot: string | null,
+): string {
+  const filePath =
+    sourceRoot !== null
+      ? ref.sourceFile.replace(sourceRoot, "").replace(/^[/\\]/, "")
+      : ref.sourceFile;
+  return `${filePath}:${ref.line}`;
+}
+
+/**
+ * Options for scalar collection.
+ */
+export interface CollectScalarsOptions {
+  /** Root path for normalizing source file paths in error messages */
+  readonly sourceRoot?: string | null;
 }
 
 /**
@@ -159,12 +174,15 @@ function formatTypeLocation(ref: ScalarTypeRef): string {
  *
  * @param scalarInfos - Scalar metadata from source files
  * @param configScalars - Scalar mappings from config file
+ * @param options - Collection options
  * @returns Result with collected scalars or diagnostics
  */
 export function collectScalars(
   scalarInfos: ReadonlyArray<ScalarMetadataInfo>,
   configScalars: ReadonlyArray<ConfigScalarMapping>,
+  options: CollectScalarsOptions = {},
 ): CollectScalarsResult {
+  const sourceRoot = options.sourceRoot ?? null;
   const scalarGroups = new Map<string, ScalarGroup>();
 
   const processInfo = (info: ScalarMetadataInfo, fromConfig: boolean): void => {
@@ -206,7 +224,7 @@ export function collectScalars(
   for (const [scalarName, group] of scalarGroups) {
     if (group.inputTypes.length > 1) {
       const typeLocations = group.inputTypes
-        .map((t) => `'${t.typeName}' at ${formatTypeLocation(t)}`)
+        .map((t) => `'${t.typeName}' at ${formatTypeLocation(t, sourceRoot)}`)
         .join(", ");
       diagnostics.push({
         code: "MULTIPLE_INPUT_TYPES",

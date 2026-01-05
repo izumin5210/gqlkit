@@ -521,6 +521,110 @@ describe("MetadataDetector", () => {
     });
   });
 
+  describe("DefineScalar utility type", () => {
+    it("should detect scalar from DefineScalar type alias used as field type", () => {
+      const sourceCode = `
+        type DefineScalar<
+          Name extends string,
+          Base,
+          Only extends "input" | "output" | undefined = undefined,
+        > = Base & {
+          " $gqlkitScalar"?: {
+            name: Name;
+            only: Only;
+          };
+        };
+
+        type DateTimeOutput = DefineScalar<"DateTime", string, "output">;
+
+        interface Event {
+          createdAt: DateTimeOutput;
+        }
+      `;
+      const { sourceFile, checker, cleanup } = createTestProgram(sourceCode);
+      try {
+        let eventInterface: ts.InterfaceDeclaration | undefined;
+
+        ts.forEachChild(sourceFile, (node) => {
+          if (
+            ts.isInterfaceDeclaration(node) &&
+            node.name.getText() === "Event"
+          ) {
+            eventInterface = node;
+          }
+        });
+
+        if (!eventInterface) throw new Error("Event interface not found");
+
+        const eventSymbol = checker.getSymbolAtLocation(eventInterface.name);
+        if (!eventSymbol) throw new Error("Event symbol not found");
+
+        const eventType = checker.getDeclaredTypeOfSymbol(eventSymbol);
+        const createdAtProp = eventType.getProperty("createdAt");
+        if (!createdAtProp) throw new Error("createdAt property not found");
+
+        const propType = checker.getTypeOfSymbol(createdAtProp);
+        const result = detectScalarMetadata(propType, checker);
+
+        expect(result.scalarName).toBe("DateTime");
+        expect(result.only).toBe("output");
+      } finally {
+        cleanup();
+      }
+    });
+
+    it("should detect scalar from DefineScalar with input only constraint", () => {
+      const sourceCode = `
+        type DefineScalar<
+          Name extends string,
+          Base,
+          Only extends "input" | "output" | undefined = undefined,
+        > = Base & {
+          " $gqlkitScalar"?: {
+            name: Name;
+            only: Only;
+          };
+        };
+
+        type DateTimeInput = DefineScalar<"DateTime", string, "input">;
+
+        interface Event {
+          createdAt: DateTimeInput;
+        }
+      `;
+      const { sourceFile, checker, cleanup } = createTestProgram(sourceCode);
+      try {
+        let eventInterface: ts.InterfaceDeclaration | undefined;
+
+        ts.forEachChild(sourceFile, (node) => {
+          if (
+            ts.isInterfaceDeclaration(node) &&
+            node.name.getText() === "Event"
+          ) {
+            eventInterface = node;
+          }
+        });
+
+        if (!eventInterface) throw new Error("Event interface not found");
+
+        const eventSymbol = checker.getSymbolAtLocation(eventInterface.name);
+        if (!eventSymbol) throw new Error("Event symbol not found");
+
+        const eventType = checker.getDeclaredTypeOfSymbol(eventSymbol);
+        const createdAtProp = eventType.getProperty("createdAt");
+        if (!createdAtProp) throw new Error("createdAt property not found");
+
+        const propType = checker.getTypeOfSymbol(createdAtProp);
+        const result = detectScalarMetadata(propType, checker);
+
+        expect(result.scalarName).toBe("DateTime");
+        expect(result.only).toBe("input");
+      } finally {
+        cleanup();
+      }
+    });
+  });
+
   describe("Non-scalar types", () => {
     it("should return null for object types", () => {
       const { type, checker, cleanup } = getTypeFromSource(
