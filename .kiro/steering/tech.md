@@ -64,8 +64,14 @@ Static code generation tool that analyzes TypeScript source files and produces G
 7. **TSDoc to GraphQL descriptions**: TSDoc comments are automatically extracted and converted to GraphQL schema descriptions, supporting `@deprecated` directives
 8. **Input Object convention**: Types with `*Input` suffix are recognized as GraphQL Input Object types for resolver arguments
 9. **Branded scalar types**: `@gqlkit-ts/runtime` provides `IDString`, `IDNumber`, `Int`, `Float` for explicit GraphQL scalar mapping. Plain `number` defaults to `Float`; use `Int` branded type for integer fields
-10. **Configuration file**: Optional `gqlkit.config.ts` with `defineConfig()` for custom scalar mappings and output options
+10. **DefineScalar utility type**: `DefineScalar<Name, Base, Only?>` from `@gqlkit-ts/runtime` for defining custom scalar types with embedded metadata. Supports input/output-only constraints
+11. **TypeScript type conversion patterns**:
+    - String enums become GraphQL enum types (enum value strings become GraphQL enum values)
+    - Union types of object types become GraphQL union types
+    - Types with `*Input` suffix become GraphQL input object types
+    - Union types with `*Input` suffix become `@oneOf` input objects
+12. **Configuration file**: Optional `gqlkit.config.ts` with `defineConfig()` for custom scalar mappings, output paths, and lifecycle hooks (e.g., `afterAllFileWrite`)
 
 ---
 _Document standards and patterns, not every dependency_
-_Updated: 2026-01-03 - Added knip for unused export detection_
+_Updated: 2026-01-05 - Added DefineScalar, type conversion patterns, and hooks configuration_

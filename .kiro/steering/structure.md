@@ -39,12 +39,13 @@ Minimal runtime utilities for user codebases:
 - `createGqlkitApis<TContext>()` factory function
 - Type definitions for resolvers (`QueryResolver`, `MutationResolver`, `FieldResolver`)
 - Branded scalar types (`IDString`, `IDNumber`, `Int`, `Float`) for explicit GraphQL scalar mapping
+- `DefineScalar<Name, Base, Only?>` utility type for custom scalar definitions
 - `NoArgs` helper type
 
 ### User Convention Directories (gqlkit-managed)
-**Types**: `src/gql/types/` - User-defined GraphQL types
-**Resolvers**: `src/gql/resolvers/` - Resolver implementations
-**Output**: `src/gqlkit/generated/` - Generated schema.ts and resolvers.ts
+**Types**: `src/gqlkit/types/` - User-defined GraphQL types
+**Resolvers**: `src/gqlkit/resolvers/` - Resolver implementations
+**Output**: `src/gqlkit/__generated__/` - Generated typeDefs.ts, resolvers.ts, schema.graphql
 
 ## Naming Conventions
 
@@ -76,4 +77,4 @@ import { extractTypes } from "../type-extractor/index.js";
 
 ---
 _Document patterns, not file trees. New files following patterns shouldn't require updates_
-_Updated: 2026-01-03 - Golden file testing pattern (replaced e2e/ pattern)_
+_Updated: 2026-01-05 - Updated convention directories from src/gql/ to src/gqlkit/_
