@@ -314,16 +314,20 @@ enum UserStatus {
 
 ### Enum types
 
-TypeScript string enums are converted to GraphQL enum types:
+String literal unions are converted to GraphQL enum types:
 
 ```ts
 /**
  * User account status
  */
+export type UserStatus = "ACTIVE" | "INACTIVE";
+```
+
+TypeScript string enums are also supported:
+
+```ts
 export enum UserStatus {
-  /** User is active */
   Active = "ACTIVE",
-  /** User is inactive */
   Inactive = "INACTIVE",
 }
 ```
