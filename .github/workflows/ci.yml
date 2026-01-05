@@ -34,6 +34,9 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: ${{ matrix.command.name }}
         run: ${{ matrix.command.run }}
+      - name: Check for uncommitted changes
+        run: git diff --exit-code
+
   test:
     strategy:
       matrix:
