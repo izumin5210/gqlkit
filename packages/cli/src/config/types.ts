@@ -69,7 +69,7 @@ export interface GqlkitConfig {
 
   /**
    * Custom scalar mapping definitions.
-   * Configures the mapping between branded types and GraphQL scalars.
+   * Configures the mapping between TypeScript types and GraphQL scalars.
    */
   readonly scalars?: ReadonlyArray<ScalarMappingConfig>;
 

@@ -1,8 +1,4 @@
 import ts from "typescript";
-import {
-  detectBrandedScalar,
-  type UnknownBrandInfo,
-} from "../../shared/branded-detector.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
 import {
   extractTSDocFromSymbol,
@@ -82,7 +78,6 @@ function isBooleanUnion(type: ts.Type): boolean {
 
 interface TypeReferenceResult {
   readonly tsType: TSTypeReference;
-  readonly unknownBrand: UnknownBrandInfo | undefined;
 }
 
 function findGlobalTypeMapping(
@@ -108,42 +103,12 @@ function convertTsTypeToReferenceWithBrandInfo(
         nullable: metadataResult.nullable,
         scalarInfo: {
           scalarName: metadataResult.scalarName,
-          brandName: metadataResult.scalarName,
+          typeName: metadataResult.scalarName,
           baseType: undefined,
           isCustom: true,
           only: metadataResult.only,
         },
       },
-      unknownBrand: undefined,
-    };
-  }
-
-  const brandedResult = detectBrandedScalar(type, checker);
-  if (brandedResult.scalarInfo) {
-    return {
-      tsType: {
-        kind: "scalar",
-        name: brandedResult.scalarInfo.scalarName,
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: brandedResult.scalarInfo,
-      },
-      unknownBrand: undefined,
-    };
-  }
-
-  if (brandedResult.unknownBrand) {
-    return {
-      tsType: {
-        kind: "primitive",
-        name: "string",
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-      },
-      unknownBrand: brandedResult.unknownBrand,
     };
   }
 
@@ -162,7 +127,6 @@ function convertTsTypeToReferenceWithBrandInfo(
         nullable: hasNull || hasUndefined,
         scalarInfo: null,
       },
-      unknownBrand: undefined,
     };
   }
 
@@ -185,16 +149,12 @@ function convertTsTypeToReferenceWithBrandInfo(
       );
       return {
         tsType: { ...innerResult.tsType, nullable },
-        unknownBrand: innerResult.unknownBrand,
       };
     }
 
     const memberResults = nonNullTypes.map((t) =>
       convertTsTypeToReferenceWithBrandInfo(t, checker, globalTypeMappings),
     );
-    const unknownBrands = memberResults
-      .map((r) => r.unknownBrand)
-      .filter((b): b is UnknownBrandInfo => b !== undefined);
 
     return {
       tsType: {
@@ -205,7 +165,6 @@ function convertTsTypeToReferenceWithBrandInfo(
         nullable,
         scalarInfo: null,
       },
-      unknownBrand: unknownBrands[0],
     };
   }
 
@@ -227,7 +186,6 @@ function convertTsTypeToReferenceWithBrandInfo(
             nullable: false,
             scalarInfo: null,
           },
-          unknownBrand: undefined,
         };
 
     return {
@@ -239,7 +197,6 @@ function convertTsTypeToReferenceWithBrandInfo(
         nullable: false,
         scalarInfo: null,
       },
-      unknownBrand: elementResult.unknownBrand,
     };
   }
 
@@ -255,7 +212,6 @@ function convertTsTypeToReferenceWithBrandInfo(
         nullable: false,
         scalarInfo: null,
       },
-      unknownBrand: undefined,
     };
   }
   if (type.flags & ts.TypeFlags.Number) {
@@ -268,7 +224,6 @@ function convertTsTypeToReferenceWithBrandInfo(
         nullable: false,
         scalarInfo: null,
       },
-      unknownBrand: undefined,
     };
   }
   if (
@@ -284,7 +239,6 @@ function convertTsTypeToReferenceWithBrandInfo(
         nullable: false,
         scalarInfo: null,
       },
-      unknownBrand: undefined,
     };
   }
   if (type.flags & ts.TypeFlags.StringLiteral) {
@@ -297,7 +251,6 @@ function convertTsTypeToReferenceWithBrandInfo(
         nullable: false,
         scalarInfo: null,
       },
-      unknownBrand: undefined,
     };
   }
   if (type.flags & ts.TypeFlags.NumberLiteral) {
@@ -310,7 +263,6 @@ function convertTsTypeToReferenceWithBrandInfo(
         nullable: false,
         scalarInfo: null,
       },
-      unknownBrand: undefined,
     };
   }
 
@@ -328,13 +280,12 @@ function convertTsTypeToReferenceWithBrandInfo(
           nullable: false,
           scalarInfo: {
             scalarName: globalMapping.scalarName,
-            brandName: globalMapping.typeName,
+            typeName: globalMapping.typeName,
             baseType: undefined,
             isCustom: true,
             only: globalMapping.only,
           },
         },
-        unknownBrand: undefined,
       };
     }
 
@@ -347,7 +298,6 @@ function convertTsTypeToReferenceWithBrandInfo(
         nullable: false,
         scalarInfo: null,
       },
-      unknownBrand: undefined,
     };
   }
 
@@ -360,28 +310,15 @@ function convertTsTypeToReferenceWithBrandInfo(
       nullable: false,
       scalarInfo: null,
     },
-    unknownBrand: undefined,
   };
-}
-
-interface FieldExtractionResult {
-  readonly fields: FieldDefinition[];
-  readonly unknownBrands: ReadonlyArray<{
-    readonly fieldName: string;
-    readonly brandInfo: UnknownBrandInfo;
-  }>;
 }
 
 function extractFieldsFromType(
   type: ts.Type,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
-): FieldExtractionResult {
+): FieldDefinition[] {
   const fields: FieldDefinition[] = [];
-  const unknownBrands: Array<{
-    fieldName: string;
-    brandInfo: UnknownBrandInfo;
-  }> = [];
   const properties = type.getProperties();
 
   for (const prop of properties) {
@@ -401,13 +338,6 @@ function extractFieldsFromType(
       globalTypeMappings,
     );
 
-    if (typeResult.unknownBrand) {
-      unknownBrands.push({
-        fieldName: prop.getName(),
-        brandInfo: typeResult.unknownBrand,
-      });
-    }
-
     fields.push({
       name: prop.getName(),
       tsType: typeResult.tsType,
@@ -417,7 +347,7 @@ function extractFieldsFromType(
     });
   }
 
-  return { fields, unknownBrands };
+  return fields;
 }
 
 function isNumericEnum(node: ts.Node): boolean {
@@ -741,26 +671,14 @@ export function extractTypesFromProgram(
           return;
         }
 
-        const fieldResult =
+        const fields =
           kind === "union"
-            ? { fields: [], unknownBrands: [] }
+            ? []
             : extractFieldsFromType(type, checker, globalTypeMappings);
-
-        for (const { fieldName, brandInfo } of fieldResult.unknownBrands) {
-          const { line, character } = sourceFile.getLineAndCharacterOfPosition(
-            node.getStart(sourceFile),
-          );
-          diagnostics.push({
-            code: "UNKNOWN_BRANDED_SCALAR",
-            message: `Unknown branded scalar type '${brandInfo.typeName}' from '${brandInfo.importSource}' in field '${fieldName}' of type '${name}'. Falling back to String type.`,
-            severity: "warning",
-            location: { file: filePath, line: line + 1, column: character + 1 },
-          });
-        }
 
         const typeInfo: ExtractedTypeInfo = {
           metadata,
-          fields: fieldResult.fields,
+          fields,
           unionMembers: unionMembers ?? null,
           enumMembers: null,
         };
