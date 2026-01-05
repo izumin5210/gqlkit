@@ -16,7 +16,7 @@ describe("gen command", () => {
   });
 
   async function setupProject(): Promise<void> {
-    const sourceDir = join(testDir, "src/gqlkit");
+    const sourceDir = join(testDir, "src/gqlkit/schema");
 
     await mkdir(sourceDir, { recursive: true });
 
@@ -155,7 +155,7 @@ describe("gen command", () => {
         "utf-8",
       );
 
-      const sourceDir = join(testDir, "src/gqlkit");
+      const sourceDir = join(testDir, "src/gqlkit/schema");
       await mkdir(sourceDir, { recursive: true });
       await writeFile(
         join(sourceDir, "event.ts"),

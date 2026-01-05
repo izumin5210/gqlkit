@@ -1,5 +1,5 @@
 import type { IDString } from "@gqlkit-ts/runtime";
-import type { DateTime } from "../scalars.js";
+import type { DateTime } from "./scalars.js";
 
 /**
  * A comment on a post

@@ -66,7 +66,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/product.ts",
+        "value": "Defined in: src/gqlkit/schema/product.ts",
         "block": true
       }
     },
@@ -105,7 +105,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Filter product by ID\n\nDefined in: src/gqlkit/product.ts",
+        "value": "Filter product by ID\n\nDefined in: src/gqlkit/schema/product.ts",
         "block": true
       }
     },
@@ -136,7 +136,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Filter product by name\n\nDefined in: src/gqlkit/product.ts",
+        "value": "Filter product by name\n\nDefined in: src/gqlkit/schema/product.ts",
         "block": true
       }
     },
@@ -211,7 +211,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Specifies how to identify a product.\nExactly one field must be provided.\n\nDefined in: src/gqlkit/product.ts",
+        "value": "Specifies how to identify a product.\nExactly one field must be provided.\n\nDefined in: src/gqlkit/schema/product.ts",
         "block": true
       },
       "directives": [
@@ -268,7 +268,7 @@ export const typeDefs: DocumentNode = {
           },
           "description": {
             "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/query.ts",
+            "value": "Defined in: src/gqlkit/schema/query.ts",
             "block": true
           }
         }

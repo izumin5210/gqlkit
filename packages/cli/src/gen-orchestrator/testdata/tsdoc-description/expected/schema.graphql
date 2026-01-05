@@ -5,7 +5,7 @@ type Query
 """
 A user in the system.
 
-Defined in: src/gqlkit/user.ts
+Defined in: src/gqlkit/schema/user.ts
 """
 type User {
   """Email address"""
@@ -20,7 +20,7 @@ extend type Query {
   """
   Fetch a user by ID.
   
-  Defined in: src/gqlkit/query.ts
+  Defined in: src/gqlkit/schema/query.ts
   """
   user(id: String!): User
 }

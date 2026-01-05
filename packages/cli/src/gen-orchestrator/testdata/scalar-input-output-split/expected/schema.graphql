@@ -9,7 +9,7 @@ Date output as string for JSON serialization
 """
 scalar DateTime
 
-"""Defined in: src/gqlkit/event.ts"""
+"""Defined in: src/gqlkit/schema/event.ts"""
 type Event {
   createdAt: DateTime!
   id: String!
@@ -20,17 +20,17 @@ type Mutation
 
 type Query
 
-"""Defined in: src/gqlkit/event.ts"""
+"""Defined in: src/gqlkit/schema/event.ts"""
 input CreateEventInput {
   name: String!
 }
 
 extend type Mutation {
-  """Defined in: src/gqlkit/mutation.ts"""
+  """Defined in: src/gqlkit/schema/mutation.ts"""
   createEvent(input: CreateEventInput!): Event!
 }
 
 extend type Query {
-  """Defined in: src/gqlkit/query.ts"""
+  """Defined in: src/gqlkit/schema/query.ts"""
   events: [Event!]!
 }

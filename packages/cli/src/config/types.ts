@@ -51,7 +51,7 @@ export interface GqlkitConfig {
   /**
    * Source directory to scan for types and resolvers.
    * All TypeScript files (.ts, .cts, .mts) under this directory will be scanned.
-   * @default "src/gqlkit"
+   * @default "src/gqlkit/schema"
    */
   readonly sourceDir?: string;
 

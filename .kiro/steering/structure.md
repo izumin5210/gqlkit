@@ -43,8 +43,7 @@ Minimal runtime utilities for user codebases:
 - `NoArgs` helper type
 
 ### User Convention Directories (gqlkit-managed)
-**Types**: `src/gqlkit/types/` - User-defined GraphQL types
-**Resolvers**: `src/gqlkit/resolvers/` - Resolver implementations
+**Schema**: `src/gqlkit/schema/` - Types and resolvers co-located in the same files
 **Output**: `src/gqlkit/__generated__/` - Generated typeDefs.ts, resolvers.ts, schema.graphql
 
 ## Naming Conventions
@@ -77,4 +76,4 @@ import { extractTypes } from "../type-extractor/index.js";
 
 ---
 _Document patterns, not file trees. New files following patterns shouldn't require updates_
-_Updated: 2026-01-05 - Updated convention directories from src/gql/ to src/gqlkit/_
+_Updated: 2026-01-05 - Updated convention directories: sourceDir changed from src/gqlkit/ to src/gqlkit/schema/_

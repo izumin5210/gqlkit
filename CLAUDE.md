@@ -41,14 +41,14 @@ pnpm test -- --coverage
 
 gqlkit relies on strict conventions to enable deterministic schema generation without configuration:
 
-1. **Source directories**:
-   - Types: `src/gqlkit/types/` - TypeScript type/interface exports
-   - Resolvers: `src/gqlkit/resolvers/` - Resolver signatures and implementations
+1. **Source directory**: `src/gqlkit/schema/`
+   - Types and resolvers co-located in the same files
+   - Each file can contain type definitions and related resolvers together
 
 2. **Type definitions**:
    - Plain TypeScript type exports (object/interface/union)
    - Field nullability and list-ness inferred from TypeScript types
-   - Only exports from `src/gqlkit/types/` are considered
+   - All exports from `src/gqlkit/schema/` are considered
 
 3. **Define API for resolvers** (using `@gqlkit-ts/runtime`):
    - `defineQuery<Args, Return>(resolver)` - Define Query field resolvers
@@ -71,8 +71,8 @@ examples/    - Example projects demonstrating usage
 ```
 
 **CLI Pipeline** (`packages/cli/src/`):
-- `type-extractor/` - Scans TypeScript types from `src/gqlkit/types/`
-- `resolver-extractor/` - Scans resolver definitions from `src/gqlkit/resolvers/`
+- `type-extractor/` - Scans TypeScript types from `src/gqlkit/schema/`
+- `resolver-extractor/` - Scans resolver definitions from `src/gqlkit/schema/`
 - `schema-generator/` - Builds GraphQL AST and resolver maps
 - `gen-orchestrator/` - Coordinates pipeline stages, handles diagnostics
 - `shared/` - Shared utilities across pipeline stages
@@ -80,7 +80,7 @@ examples/    - Example projects demonstrating usage
 ### Code Generation Flow
 
 `gqlkit gen`:
-1. Scans `src/gqlkit/types/` and `src/gqlkit/resolvers/`
+1. Scans `src/gqlkit/schema/`
 2. Builds internal type graph from TypeScript types
 3. Validates resolver signatures (parent/return types exist, resolver groups match)
 4. Generates:

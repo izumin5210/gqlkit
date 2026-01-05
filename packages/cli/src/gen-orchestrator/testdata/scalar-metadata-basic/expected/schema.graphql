@@ -3,7 +3,7 @@
 """ISO 8601 format date-time string"""
 scalar DateTime
 
-"""Defined in: src/gqlkit/event.ts"""
+"""Defined in: src/gqlkit/schema/event.ts"""
 type Event {
   createdAt: DateTime!
   id: String!
@@ -13,6 +13,6 @@ type Event {
 type Query
 
 extend type Query {
-  """Defined in: src/gqlkit/query.ts"""
+  """Defined in: src/gqlkit/schema/query.ts"""
   events: [Event!]!
 }

@@ -1,5 +1,11 @@
-import { defineQuery, type NoArgs } from "../gqlkit.js";
-import type { User } from "../types/user.js";
+import { defineQuery, type NoArgs } from "./gqlkit.js";
+
+export interface User {
+  id: string;
+  name: string;
+  age: number;
+  isActive: boolean;
+}
 
 const users: User[] = [
   { id: "1", name: "Alice", age: 30, isActive: true },
