@@ -4,10 +4,7 @@ export type {
   DescriptionSource,
   ScalarMetadataInfo,
 } from "./collector/scalar-collector.js";
-export {
-  collectScalars,
-  mergeDescriptions,
-} from "./collector/scalar-collector.js";
+;
 export type { ExtractTypesResult } from "./extract-types.js";
 
 export type {

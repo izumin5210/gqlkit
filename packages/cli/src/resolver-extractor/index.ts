@@ -12,5 +12,5 @@ export {
   type OnlyConstraintViolationCode,
   type ValidateOnlyConstraintsOptions,
   type ValidationContext,
-  validateOnlyConstraints,
+  
 } from "./validator/only-validator.js";
