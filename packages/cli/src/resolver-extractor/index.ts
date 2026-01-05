@@ -7,10 +7,9 @@ export type {
   QueryFieldDefinitions,
   TypeExtension,
 } from "./extract-resolvers.js";
-export {
-  type OnlyConstraintViolation,
-  type OnlyConstraintViolationCode,
-  type ValidateOnlyConstraintsOptions,
-  type ValidationContext,
-  
+export type {
+  OnlyConstraintViolation,
+  OnlyConstraintViolationCode,
+  ValidateOnlyConstraintsOptions,
+  ValidationContext,
 } from "./validator/only-validator.js";
