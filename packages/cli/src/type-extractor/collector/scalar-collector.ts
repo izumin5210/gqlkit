@@ -157,7 +157,7 @@ function formatTypeLocation(
     sourceRoot !== null
       ? ref.sourceFile.replace(sourceRoot, "").replace(/^[/\\]/, "")
       : ref.sourceFile;
-  return `${filePath}:${ref.line}`;
+  return `${filePath.replace(/\\/g, "/")}:${ref.line}`;
 }
 
 /**
