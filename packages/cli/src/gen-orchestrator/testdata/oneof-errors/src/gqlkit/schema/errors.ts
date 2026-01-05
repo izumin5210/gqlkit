@@ -1,11 +1,20 @@
-export interface FooInput {
-  foo: string;
+export interface Product {
+  id: string;
+  name: string;
 }
 
-export interface fooInput {
-  bar: string;
-}
+export type MultiplePropertiesInput =
+  | { id: string; name: string }
+  | { code: string };
 
-export type ConflictingFieldsInput = FooInput | fooInput;
+export type EmptyObjectInput =
+  | {}
+  | { id: string };
 
-export type InlineObjectsInput = { a: string } | { b: string };
+export type DuplicatePropertyInput =
+  | { id: string }
+  | { id: number };
+
+export type InvalidTypeInput =
+  | { product: Product }
+  | { id: string };

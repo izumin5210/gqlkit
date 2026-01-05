@@ -57,9 +57,21 @@ export interface EnumMemberInfo {
   readonly deprecated: DeprecationInfo | null;
 }
 
+export interface InlineObjectProperty {
+  readonly propertyName: string;
+  readonly propertyType: TSTypeReference;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
+}
+
+export interface InlineObjectMember {
+  readonly properties: ReadonlyArray<InlineObjectProperty>;
+}
+
 export interface ExtractedTypeInfo {
   readonly metadata: TypeMetadata;
   readonly fields: ReadonlyArray<FieldDefinition>;
   readonly unionMembers: ReadonlyArray<string> | null;
+  readonly inlineObjectMembers: ReadonlyArray<InlineObjectMember> | null;
   readonly enumMembers: ReadonlyArray<EnumMemberInfo> | null;
 }

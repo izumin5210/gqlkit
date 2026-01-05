@@ -6,6 +6,9 @@ import type {
   ExtractedTypeInfo,
   FieldInfo,
   GraphQLTypeInfo,
+  InlineObjectMember,
+  InlineObjectProperty,
+  SourceLocation,
 } from "../types/index.js";
 
 export interface ConversionResult {
@@ -28,10 +31,6 @@ const GRAPHQL_ENUM_VALUE_PATTERN = /^[_A-Za-z][_0-9A-Za-z]*$/;
 
 function isInputTypeName(name: string): boolean {
   return name.endsWith("Input");
-}
-
-function toFieldName(typeName: string): string {
-  return typeName.charAt(0).toLowerCase() + typeName.slice(1);
 }
 
 function toScreamingSnakeCase(value: string): string {
@@ -90,6 +89,126 @@ function convertFields(extracted: ExtractedTypeInfo): FieldInfo[] {
   }));
 }
 
+const GRAPHQL_SCALAR_TYPES = new Set([
+  "String",
+  "Int",
+  "Float",
+  "Boolean",
+  "ID",
+]);
+
+const PRIMITIVE_TO_GRAPHQL: Record<string, string> = {
+  string: "String",
+  number: "Float",
+  boolean: "Boolean",
+};
+
+function isValidOneOfFieldType(
+  typeName: string,
+  typeMap: Map<string, ExtractedTypeInfo>,
+): boolean {
+  if (GRAPHQL_SCALAR_TYPES.has(typeName)) {
+    return true;
+  }
+  if (PRIMITIVE_TO_GRAPHQL[typeName]) {
+    return true;
+  }
+  const referencedType = typeMap.get(typeName);
+  if (referencedType && isInputTypeName(referencedType.metadata.name)) {
+    return true;
+  }
+  return false;
+}
+
+interface OneOfValidationResult {
+  readonly valid: boolean;
+  readonly diagnostics: Diagnostic[];
+  readonly fields: FieldInfo[];
+}
+
+function validateAndConvertInlineObjectMembers(
+  members: ReadonlyArray<InlineObjectMember>,
+  typeName: string,
+  location: SourceLocation,
+  typeMap: Map<string, ExtractedTypeInfo>,
+): OneOfValidationResult {
+  const diagnostics: Diagnostic[] = [];
+  const fields: FieldInfo[] = [];
+  const propertyNames = new Set<string>();
+  const allProperties: InlineObjectProperty[] = [];
+
+  for (let i = 0; i < members.length; i++) {
+    const member = members[i]!;
+    const props = member.properties;
+
+    if (props.length === 0) {
+      diagnostics.push({
+        code: "ONEOF_EMPTY_OBJECT",
+        message: `OneOf input '${typeName}' member at index ${i} is an empty object. Each member must have exactly one property.`,
+        severity: "error",
+        location,
+      });
+      continue;
+    }
+
+    if (props.length > 1) {
+      diagnostics.push({
+        code: "ONEOF_MULTIPLE_PROPERTIES",
+        message: `OneOf input '${typeName}' member at index ${i} has ${props.length} properties. Each member must have exactly one property.`,
+        severity: "error",
+        location,
+      });
+      continue;
+    }
+
+    allProperties.push(props[0]!);
+  }
+
+  for (const prop of allProperties) {
+    if (propertyNames.has(prop.propertyName)) {
+      diagnostics.push({
+        code: "ONEOF_DUPLICATE_PROPERTY",
+        message: `OneOf input '${typeName}' has duplicate property name '${prop.propertyName}'.`,
+        severity: "error",
+        location,
+      });
+      continue;
+    }
+    propertyNames.add(prop.propertyName);
+
+    const graphqlType = convertTsTypeToGraphQLType(prop.propertyType, false);
+    const referencedTypeName = graphqlType.typeName;
+
+    if (!isValidOneOfFieldType(referencedTypeName, typeMap)) {
+      diagnostics.push({
+        code: "ONEOF_INVALID_FIELD_TYPE",
+        message: `OneOf input '${typeName}' field '${prop.propertyName}' has invalid type '${referencedTypeName}'. Only scalar types and Input Object types are allowed.`,
+        severity: "error",
+        location,
+      });
+      continue;
+    }
+
+    fields.push({
+      name: prop.propertyName,
+      type: {
+        typeName: graphqlType.typeName,
+        nullable: true,
+        list: graphqlType.list,
+        listItemNullable: graphqlType.listItemNullable,
+      },
+      description: prop.description,
+      deprecated: prop.deprecated,
+    });
+  }
+
+  return {
+    valid: diagnostics.length === 0,
+    diagnostics,
+    fields: fields.sort((a, b) => a.name.localeCompare(b.name)),
+  };
+}
+
 export function convertToGraphQL(
   extractedTypes: ReadonlyArray<ExtractedTypeInfo>,
 ): ConversionResult {
@@ -139,69 +258,32 @@ export function convertToGraphQL(
       });
     } else if (metadata.kind === "union") {
       if (isInputTypeName(metadata.name)) {
-        const unionMembers = extracted.unionMembers ?? [];
+        const inlineObjectMembers = extracted.inlineObjectMembers ?? [];
 
-        const fieldNameMap = new Map<string, string>();
-        let hasConflict = false;
+        if (inlineObjectMembers.length > 0) {
+          const location = { file: metadata.sourceFile, line: 1, column: 1 };
+          const validationResult = validateAndConvertInlineObjectMembers(
+            inlineObjectMembers,
+            metadata.name,
+            location,
+            typeMap,
+          );
 
-        for (const memberName of unionMembers) {
-          // Detect inline object literal types (TypeScript uses "__type" for anonymous types)
-          if (memberName === "__type") {
-            diagnostics.push({
-              code: "ONEOF_FIELD_NAME_CONFLICT",
-              message: `OneOf input object '${metadata.name}' contains inline object literal types. Please define named types (interface or type alias) for all union members.`,
-              severity: "error",
-              location: { file: metadata.sourceFile, line: 1, column: 1 },
+          diagnostics.push(...validationResult.diagnostics);
+
+          if (validationResult.valid) {
+            types.push({
+              name: metadata.name,
+              kind: "OneOfInputObject",
+              fields: validationResult.fields,
+              unionMembers: null,
+              enumValues: null,
+              sourceFile: metadata.sourceFile,
+              description: metadata.description,
+              deprecated: metadata.deprecated,
             });
-            hasConflict = true;
-            continue;
-          }
-
-          const fieldName = toFieldName(memberName);
-          const existingMember = fieldNameMap.get(fieldName);
-          if (existingMember) {
-            diagnostics.push({
-              code: "ONEOF_FIELD_NAME_CONFLICT",
-              message: `OneOf input object '${metadata.name}' has duplicate field name '${fieldName}' from types '${existingMember}' and '${memberName}'`,
-              severity: "error",
-              location: { file: metadata.sourceFile, line: 1, column: 1 },
-            });
-            hasConflict = true;
-          } else {
-            fieldNameMap.set(fieldName, memberName);
           }
         }
-
-        if (hasConflict) {
-          continue;
-        }
-
-        const sortedMembers = [...unionMembers].sort();
-        const fields: FieldInfo[] = sortedMembers.map((memberName) => {
-          const memberType = typeMap.get(memberName);
-          return {
-            name: toFieldName(memberName),
-            type: {
-              typeName: memberName,
-              nullable: true,
-              list: false,
-              listItemNullable: null,
-            },
-            description: memberType?.metadata.description ?? null,
-            deprecated: memberType?.metadata.deprecated ?? null,
-          };
-        });
-
-        types.push({
-          name: metadata.name,
-          kind: "OneOfInputObject",
-          fields,
-          unionMembers: sortedMembers,
-          enumValues: null,
-          sourceFile: metadata.sourceFile,
-          description: metadata.description,
-          deprecated: metadata.deprecated,
-        });
       } else {
         const unionMembers = extracted.unionMembers
           ? [...extracted.unionMembers].sort()

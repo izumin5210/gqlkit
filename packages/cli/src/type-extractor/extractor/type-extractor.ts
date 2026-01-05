@@ -10,6 +10,8 @@ import type {
   EnumMemberInfo,
   ExtractedTypeInfo,
   FieldDefinition,
+  InlineObjectMember,
+  InlineObjectProperty,
   TSTypeReference,
   TypeKind,
   TypeMetadata,
@@ -493,6 +495,76 @@ function determineTypeKind(node: ts.Node, type: ts.Type): TypeKind {
   return "object";
 }
 
+function isAnonymousObjectType(memberType: ts.Type): boolean {
+  if (!memberType.symbol) return true;
+  const symbolName = memberType.symbol.getName();
+  return symbolName === "__type" || symbolName === "";
+}
+
+interface InlineObjectExtractionResult {
+  readonly members: InlineObjectMember[];
+  readonly hasInlineObjects: boolean;
+  readonly hasNamedTypes: boolean;
+}
+
+function extractInlineObjectMembers(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+  globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
+): InlineObjectExtractionResult | null {
+  if (!type.isUnion()) {
+    return null;
+  }
+
+  const nonNullTypes = type.types.filter(
+    (t) =>
+      !(t.flags & ts.TypeFlags.Null) && !(t.flags & ts.TypeFlags.Undefined),
+  );
+
+  const allObjectTypes = nonNullTypes.every(
+    (t) => t.flags & ts.TypeFlags.Object,
+  );
+
+  if (nonNullTypes.length < 2 || !allObjectTypes) {
+    return null;
+  }
+
+  let hasInlineObjects = false;
+  let hasNamedTypes = false;
+  const members: InlineObjectMember[] = [];
+
+  for (const memberType of nonNullTypes) {
+    if (isAnonymousObjectType(memberType)) {
+      hasInlineObjects = true;
+      const properties = memberType.getProperties();
+      const memberProperties: InlineObjectProperty[] = [];
+
+      for (const prop of properties) {
+        const propType = checker.getTypeOfSymbol(prop);
+        const tsdocInfo = extractTSDocFromSymbol(prop, checker);
+        const typeResult = convertTsTypeToReferenceWithBrandInfo(
+          propType,
+          checker,
+          globalTypeMappings,
+        );
+
+        memberProperties.push({
+          propertyName: prop.getName(),
+          propertyType: typeResult.tsType,
+          description: tsdocInfo.description ?? null,
+          deprecated: tsdocInfo.deprecated ?? null,
+        });
+      }
+
+      members.push({ properties: memberProperties });
+    } else {
+      hasNamedTypes = true;
+    }
+  }
+
+  return { members, hasInlineObjects, hasNamedTypes };
+}
+
 function extractUnionMembers(type: ts.Type): string[] | undefined {
   if (!type.isUnion()) {
     return undefined;
@@ -508,10 +580,14 @@ function extractUnionMembers(type: ts.Type): string[] | undefined {
   );
 
   if (nonNullTypes.length > 1 && allObjectTypes) {
-    return nonNullTypes
+    const namedMembers = nonNullTypes
+      .filter((t) => !isAnonymousObjectType(t))
       .map((t) => t.symbol?.getName() ?? "")
-      .filter((name) => name !== "")
-      .sort();
+      .filter((name) => name !== "" && name !== "__type");
+
+    if (namedMembers.length > 0) {
+      return namedMembers.sort();
+    }
   }
 
   return undefined;
@@ -601,7 +677,13 @@ export function extractTypesFromProgram(
           deprecated: tsdocInfo.deprecated,
         };
 
-        types.push({ metadata, fields: [], unionMembers: null, enumMembers });
+        types.push({
+          metadata,
+          fields: [],
+          unionMembers: null,
+          inlineObjectMembers: null,
+          enumMembers,
+        });
         return;
       }
 
@@ -654,6 +736,11 @@ export function extractTypesFromProgram(
 
         const kind = determineTypeKind(node, type);
         const unionMembers = extractUnionMembers(type);
+        const inlineObjectResult = extractInlineObjectMembers(
+          type,
+          checker,
+          globalTypeMappings,
+        );
         const tsdocInfo = extractTSDocInfo(node, checker);
 
         const metadata: TypeMetadata = {
@@ -667,7 +754,13 @@ export function extractTypesFromProgram(
 
         if (kind === "enum") {
           const enumMembers = extractStringLiteralUnionMembers(type, checker);
-          types.push({ metadata, fields: [], unionMembers: null, enumMembers });
+          types.push({
+            metadata,
+            fields: [],
+            unionMembers: null,
+            inlineObjectMembers: null,
+            enumMembers,
+          });
           return;
         }
 
@@ -676,10 +769,17 @@ export function extractTypesFromProgram(
             ? []
             : extractFieldsFromType(type, checker, globalTypeMappings);
 
+        const inlineObjectMembers =
+          inlineObjectResult?.hasInlineObjects &&
+          !inlineObjectResult.hasNamedTypes
+            ? inlineObjectResult.members
+            : null;
+
         const typeInfo: ExtractedTypeInfo = {
           metadata,
           fields,
           unionMembers: unionMembers ?? null,
+          inlineObjectMembers,
           enumMembers: null,
         };
 

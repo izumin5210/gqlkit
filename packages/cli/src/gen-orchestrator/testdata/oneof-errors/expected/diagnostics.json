@@ -1,7 +1,7 @@
 [
   {
-    "code": "ONEOF_FIELD_NAME_CONFLICT",
-    "message": "OneOf input object 'ConflictingFieldsInput' has duplicate field name 'fooInput' from types 'FooInput' and 'fooInput'",
+    "code": "ONEOF_MULTIPLE_PROPERTIES",
+    "message": "OneOf input 'MultiplePropertiesInput' member at index 0 has 2 properties. Each member must have exactly one property.",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/errors.ts",
@@ -10,8 +10,28 @@
     }
   },
   {
-    "code": "ONEOF_FIELD_NAME_CONFLICT",
-    "message": "OneOf input object 'InlineObjectsInput' contains inline object literal types. Please define named types (interface or type alias) for all union members.",
+    "code": "ONEOF_EMPTY_OBJECT",
+    "message": "OneOf input 'EmptyObjectInput' member at index 0 is an empty object. Each member must have exactly one property.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/errors.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "ONEOF_DUPLICATE_PROPERTY",
+    "message": "OneOf input 'DuplicatePropertyInput' has duplicate property name 'id'.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/errors.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "ONEOF_INVALID_FIELD_TYPE",
+    "message": "OneOf input 'InvalidTypeInput' field 'product' has invalid type 'Product'. Only scalar types and Input Object types are allowed.",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/errors.ts",
