@@ -30,6 +30,8 @@ export interface ExtendedScalarMappingInfo {
   readonly importPath: string;
   /** Whether this is a custom scalar */
   readonly isCustom: boolean;
+  /** Usage constraint: "input" for input-only, "output" for output-only, undefined for both */
+  readonly only?: "input" | "output";
 }
 
 /**

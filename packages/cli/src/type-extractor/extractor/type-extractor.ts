@@ -3,6 +3,7 @@ import {
   detectBrandedScalar,
   type UnknownBrandInfo,
 } from "../../shared/branded-detector.js";
+import { detectScalarMetadata } from "../../shared/metadata-detector.js";
 import {
   extractTSDocFromSymbol,
   extractTSDocInfo,
@@ -20,6 +21,7 @@ import type {
 export interface ExtractionResult {
   readonly types: ReadonlyArray<ExtractedTypeInfo>;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
+  readonly detectedScalarNames: ReadonlyArray<string>;
 }
 
 function isExported(node: ts.Node): boolean {
@@ -67,6 +69,27 @@ function convertTsTypeToReferenceWithBrandInfo(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): TypeReferenceResult {
+  const metadataResult = detectScalarMetadata(type, checker);
+  if (metadataResult.scalarName && !metadataResult.isPrimitive) {
+    return {
+      tsType: {
+        kind: "scalar",
+        name: metadataResult.scalarName,
+        elementType: null,
+        members: null,
+        nullable: metadataResult.nullable,
+        scalarInfo: {
+          scalarName: metadataResult.scalarName,
+          brandName: metadataResult.scalarName,
+          baseType: undefined,
+          isCustom: true,
+          only: metadataResult.only,
+        },
+      },
+      unknownBrand: undefined,
+    };
+  }
+
   const brandedResult = detectBrandedScalar(type, checker);
   if (brandedResult.scalarInfo) {
     return {
@@ -510,6 +533,7 @@ export function extractTypesFromProgram(
   const checker = program.getTypeChecker();
   const types: ExtractedTypeInfo[] = [];
   const diagnostics: Diagnostic[] = [];
+  const detectedScalarNames = new Set<string>();
 
   for (const filePath of sourceFiles) {
     const sourceFile = program.getSourceFile(filePath);
@@ -615,6 +639,13 @@ export function extractTypesFromProgram(
         }
 
         const type = checker.getDeclaredTypeOfSymbol(symbol);
+
+        const scalarMetadata = detectScalarMetadata(type, checker);
+        if (scalarMetadata.scalarName && !scalarMetadata.isPrimitive) {
+          detectedScalarNames.add(scalarMetadata.scalarName);
+          return;
+        }
+
         const kind = determineTypeKind(node, type);
         const unionMembers = extractUnionMembers(type);
         const tsdocInfo = extractTSDocInfo(node, checker);
@@ -663,5 +694,5 @@ export function extractTypesFromProgram(
     });
   }
 
-  return { types, diagnostics };
+  return { types, diagnostics, detectedScalarNames: [...detectedScalarNames] };
 }

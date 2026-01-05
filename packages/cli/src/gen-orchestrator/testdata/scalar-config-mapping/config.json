@@ -1,0 +1,14 @@
+{
+  "scalars": [
+    {
+      "name": "DateTime",
+      "tsType": { "name": "Date" },
+      "description": "ISO 8601 format date-time"
+    },
+    {
+      "name": "URL",
+      "tsType": { "name": "URL" },
+      "description": "A valid URL string"
+    }
+  ]
+}

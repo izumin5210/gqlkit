@@ -53,11 +53,22 @@ export interface TypeExtension {
   readonly fields: ReadonlyArray<ExtensionField>;
 }
 
+/**
+ * Custom scalar information for schema generation.
+ */
+export interface CustomScalarInfo {
+  readonly scalarName: string;
+  readonly description: string | null;
+}
+
 export interface IntegratedResult {
   readonly baseTypes: ReadonlyArray<BaseType>;
   readonly inputTypes: ReadonlyArray<InputType>;
   readonly typeExtensions: ReadonlyArray<TypeExtension>;
+  /** @deprecated Use customScalars instead */
   readonly customScalarNames: ReadonlyArray<string> | null;
+  /** Custom scalars with description information */
+  readonly customScalars: ReadonlyArray<CustomScalarInfo> | null;
   readonly hasQuery: boolean;
   readonly hasMutation: boolean;
   readonly hasErrors: boolean;
@@ -232,6 +243,14 @@ export function integrate(
 
   const hasErrors = diagnostics.some((d) => d.severity === "error");
 
+  const customScalars: CustomScalarInfo[] | null =
+    customScalarNames && customScalarNames.length > 0
+      ? customScalarNames.map((name) => ({
+          scalarName: name,
+          description: null,
+        }))
+      : null;
+
   return {
     baseTypes,
     inputTypes,
@@ -240,6 +259,7 @@ export function integrate(
       customScalarNames && customScalarNames.length > 0
         ? customScalarNames
         : null,
+    customScalars,
     hasQuery,
     hasMutation,
     hasErrors,

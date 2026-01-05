@@ -53,6 +53,7 @@ export interface GenerationResult {
 interface TypesResult {
   types: ReturnType<typeof collectResults>["types"];
   diagnostics: Diagnostics;
+  detectedScalarNames: ReadonlyArray<string>;
 }
 
 interface ResolversResult {
@@ -94,16 +95,25 @@ function extractTypesCore(
   const extractionResult = extractTypesFromProgram(program, sourceFiles);
   allDiagnostics.push(...extractionResult.diagnostics);
 
+  const allCustomScalarNames = [
+    ...customScalarNames,
+    ...extractionResult.detectedScalarNames,
+  ];
+
   const conversionResult = convertToGraphQL(extractionResult.types);
   allDiagnostics.push(...conversionResult.diagnostics);
 
   const validationResult = validateTypes({
     types: conversionResult.types,
-    customScalarNames,
+    customScalarNames: allCustomScalarNames,
   });
   allDiagnostics.push(...validationResult.diagnostics);
 
-  return collectResults(conversionResult.types, allDiagnostics);
+  const result = collectResults(conversionResult.types, allDiagnostics);
+  return {
+    ...result,
+    detectedScalarNames: extractionResult.detectedScalarNames,
+  };
 }
 
 function convertArgsToInputValues(
@@ -292,6 +302,11 @@ export async function executeGeneration(
     };
   }
 
+  const allCustomScalarNames = [
+    ...customScalarNames,
+    ...typesResult.detectedScalarNames,
+  ];
+
   const schemaResult = generateSchema({
     typesResult: typesResult as Parameters<
       typeof generateSchema
@@ -300,7 +315,7 @@ export async function executeGeneration(
       typeof generateSchema
     >[0]["resolversResult"],
     outputDir: resolve(config.cwd, getOutputDir(config.output)),
-    customScalarNames,
+    customScalarNames: allCustomScalarNames,
     enablePruning: null,
     sourceRoot: config.cwd,
   });

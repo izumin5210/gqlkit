@@ -88,9 +88,66 @@ export interface GqlkitConfig {
 }
 
 /**
- * Individual custom scalar mapping configuration.
+ * New scalar mapping configuration format.
+ * Supports global types (without import path) and usage constraints.
+ *
+ * @example
+ * // Global type (e.g., Date)
+ * { name: "DateTime", tsType: { name: "Date" } }
+ *
+ * // Module type
+ * { name: "DateTime", tsType: { name: "DateTimeString", from: "./src/types" } }
+ *
+ * // With usage constraint
+ * { name: "DateTime", tsType: { name: "Date" }, only: "input" }
+ *
+ * // With description
+ * { name: "DateTime", tsType: { name: "Date" }, description: "ISO 8601 format" }
  */
-export interface ScalarMappingConfig {
+export interface NewScalarMappingConfig {
+  /**
+   * GraphQL scalar name.
+   * Example: "DateTime", "UUID", "URL"
+   */
+  readonly name: string;
+
+  /**
+   * TypeScript type information to map.
+   */
+  readonly tsType: {
+    /**
+     * TypeScript type name.
+     * Example: "Date", "DateTime", "UUID"
+     */
+    readonly name: string;
+
+    /**
+     * Import path for the type. If omitted, treated as a global type.
+     * Example: "./src/types/scalars", "@my-lib/scalars"
+     */
+    readonly from?: string;
+  };
+
+  /**
+   * Usage constraint for the scalar type.
+   * - "input": Only use this type for input positions (arguments, input type fields)
+   * - "output": Only use this type for output positions (return types, object type fields)
+   * - undefined: Use for both input and output positions
+   */
+  readonly only?: "input" | "output";
+
+  /**
+   * Description for the scalar type.
+   * Will be included in the generated GraphQL schema.
+   */
+  readonly description?: string;
+}
+
+/**
+ * Legacy scalar mapping configuration format.
+ * @deprecated Use NewScalarMappingConfig format instead.
+ */
+export interface LegacyScalarMappingConfig {
   /**
    * Scalar name to use in GraphQL schema.
    * Example: "DateTime", "UUID", "URL"
@@ -114,3 +171,11 @@ export interface ScalarMappingConfig {
     readonly name: string;
   };
 }
+
+/**
+ * Individual custom scalar mapping configuration.
+ * Supports both new format (name, tsType) and legacy format (graphqlName, type).
+ */
+export type ScalarMappingConfig =
+  | NewScalarMappingConfig
+  | LegacyScalarMappingConfig;

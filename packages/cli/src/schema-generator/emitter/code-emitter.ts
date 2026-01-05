@@ -1,5 +1,6 @@
 import path from "node:path";
 import { toPosixPath } from "../../shared/index.js";
+import type { CollectedScalarType } from "../../type-extractor/collector/scalar-collector.js";
 import {
   type BuildDocumentOptions,
   buildDocumentNode,
@@ -42,13 +43,109 @@ function computeRelativeImportPath(fromDir: string, toFile: string): string {
   return withoutExt;
 }
 
+interface ScalarTypeImport {
+  readonly typeName: string;
+  readonly sourceFile: string;
+}
+
+function collectScalarTypeImports(
+  customScalars: ReadonlyArray<CollectedScalarType>,
+): ScalarTypeImport[] {
+  const imports: ScalarTypeImport[] = [];
+  const seen = new Set<string>();
+
+  for (const scalar of customScalars) {
+    if (scalar.inputType && !seen.has(scalar.inputType.typeName)) {
+      imports.push({
+        typeName: scalar.inputType.typeName,
+        sourceFile: scalar.inputType.sourceFile,
+      });
+      seen.add(scalar.inputType.typeName);
+    }
+
+    for (const outputType of scalar.outputTypes) {
+      if (!seen.has(outputType.typeName)) {
+        imports.push({
+          typeName: outputType.typeName,
+          sourceFile: outputType.sourceFile,
+        });
+        seen.add(outputType.typeName);
+      }
+    }
+  }
+
+  return imports;
+}
+
+function buildScalarTypeImports(
+  scalarTypeImports: ScalarTypeImport[],
+  outputDir: string,
+): string[] {
+  const importsByFile = new Map<string, string[]>();
+
+  for (const imp of scalarTypeImports) {
+    const existing = importsByFile.get(imp.sourceFile) ?? [];
+    existing.push(imp.typeName);
+    importsByFile.set(imp.sourceFile, existing);
+  }
+
+  const imports: string[] = [];
+  const sortedFiles = [...importsByFile.keys()].sort();
+
+  for (const sourceFile of sortedFiles) {
+    const typeNames = importsByFile.get(sourceFile) ?? [];
+    const importPath = computeRelativeImportPath(outputDir, sourceFile);
+    imports.push(
+      `import type { ${typeNames.sort().join(", ")} } from "${importPath}";`,
+    );
+  }
+
+  return imports;
+}
+
+function buildScalarTypeParameter(scalar: CollectedScalarType): string {
+  const inputTypeName = scalar.inputType?.typeName ?? "unknown";
+  const outputTypeNames = scalar.outputTypes.map((t) => t.typeName);
+  const outputTypeUnion = outputTypeNames.join(" | ");
+  return `GraphQLScalarType<${inputTypeName}, ${outputTypeUnion}>`;
+}
+
+function buildScalarsArgumentType(
+  customScalars: ReadonlyArray<CollectedScalarType>,
+): string {
+  const entries = customScalars
+    .map((scalar) => {
+      const typeParam = buildScalarTypeParameter(scalar);
+      return `    ${scalar.scalarName}: ${typeParam};`;
+    })
+    .join("\n");
+
+  return `{\n  scalars: {\n${entries}\n  };\n}`;
+}
+
+function buildScalarResolverEntries(
+  customScalars: ReadonlyArray<CollectedScalarType>,
+): string[] {
+  return customScalars.map(
+    (scalar) => `    ${scalar.scalarName}: scalars.${scalar.scalarName},`,
+  );
+}
+
 export function emitResolversCode(
   resolverInfo: ResolverInfo,
   outputDir: string,
+  customScalars: ReadonlyArray<CollectedScalarType> = [],
 ): string {
+  const hasCustomScalars = customScalars.length > 0;
   const imports: string[] = [];
   const importedValues = new Set<string>();
 
+  // Add GraphQLScalarType import if we have custom scalars
+  if (hasCustomScalars) {
+    imports.push('import { GraphQLScalarType } from "graphql";');
+  }
+
+  // Add resolver imports
   for (const sourceFile of resolverInfo.sourceFiles) {
     const resolverValueNames = new Set<string>();
 
@@ -75,7 +172,21 @@ export function emitResolversCode(
     }
   }
 
+  // Add scalar type imports
+  if (hasCustomScalars) {
+    const scalarTypeImports = collectScalarTypeImports(customScalars);
+    const scalarImports = buildScalarTypeImports(scalarTypeImports, outputDir);
+    imports.push(...scalarImports);
+  }
+
+  // Build resolver entries for Query/Mutation/etc
   const typeEntries: string[] = [];
+
+  // Add scalar resolver entries first if we have custom scalars
+  if (hasCustomScalars) {
+    typeEntries.push(...buildScalarResolverEntries(customScalars));
+  }
+
   for (const type of resolverInfo.types) {
     const fieldEntries = type.fields.map((field) => {
       if (field.isDirectExport) {
@@ -88,12 +199,19 @@ export function emitResolversCode(
     );
   }
 
+  // Build function signature
+  const functionSignature = hasCustomScalars
+    ? `export function createResolvers({ scalars }: ${buildScalarsArgumentType(customScalars)})`
+    : "export function createResolvers()";
+
   return `${GENERATED_FILE_HEADER}
 
 ${imports.join("\n")}
 
-export const resolvers = {
+${functionSignature} {
+  return {
 ${typeEntries.join("\n")}
-} as const;
+  };
+}
 `;
 }

@@ -3,6 +3,255 @@ import { describe, expect, test } from "vitest";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 import { buildDocumentNode } from "./ast-builder.js";
 
+describe("buildScalarTypeDefinitionNode", () => {
+  test("6.1 should generate scalar with description from TSDoc", () => {
+    const result = buildDocumentNode({
+      baseTypes: [],
+      inputTypes: [],
+      typeExtensions: [],
+      customScalarNames: null,
+      customScalars: [
+        {
+          scalarName: "DateTime",
+          description: "ISO 8601 date time format",
+        },
+      ],
+      hasQuery: false,
+      hasMutation: false,
+      hasErrors: false,
+      diagnostics: [],
+    });
+
+    const scalarDef = result.definitions.find(
+      (def) =>
+        def.kind === Kind.SCALAR_TYPE_DEFINITION &&
+        def.name.value === "DateTime",
+    );
+
+    expect(scalarDef).toBeDefined();
+    if (scalarDef?.kind !== Kind.SCALAR_TYPE_DEFINITION) {
+      throw new Error("Expected ScalarTypeDefinitionNode");
+    }
+
+    expect(scalarDef.description).toBeDefined();
+    expect(scalarDef.description?.value).toBe("ISO 8601 date time format");
+  });
+
+  test("6.1 should generate scalar without description when not provided", () => {
+    const result = buildDocumentNode({
+      baseTypes: [],
+      inputTypes: [],
+      typeExtensions: [],
+      customScalarNames: null,
+      customScalars: [
+        {
+          scalarName: "DateTime",
+          description: null,
+        },
+      ],
+      hasQuery: false,
+      hasMutation: false,
+      hasErrors: false,
+      diagnostics: [],
+    });
+
+    const scalarDef = result.definitions.find(
+      (def) =>
+        def.kind === Kind.SCALAR_TYPE_DEFINITION &&
+        def.name.value === "DateTime",
+    );
+
+    expect(scalarDef).toBeDefined();
+    if (scalarDef?.kind !== Kind.SCALAR_TYPE_DEFINITION) {
+      throw new Error("Expected ScalarTypeDefinitionNode");
+    }
+
+    expect(scalarDef.description).toBeUndefined();
+  });
+
+  test("6.2 should join multiple descriptions with blank line separator", () => {
+    const result = buildDocumentNode({
+      baseTypes: [],
+      inputTypes: [],
+      typeExtensions: [],
+      customScalarNames: null,
+      customScalars: [
+        {
+          scalarName: "DateTime",
+          description: "First description\n\nSecond description",
+        },
+      ],
+      hasQuery: false,
+      hasMutation: false,
+      hasErrors: false,
+      diagnostics: [],
+    });
+
+    const scalarDef = result.definitions.find(
+      (def) =>
+        def.kind === Kind.SCALAR_TYPE_DEFINITION &&
+        def.name.value === "DateTime",
+    );
+
+    expect(scalarDef).toBeDefined();
+    if (scalarDef?.kind !== Kind.SCALAR_TYPE_DEFINITION) {
+      throw new Error("Expected ScalarTypeDefinitionNode");
+    }
+
+    expect(scalarDef.description?.value).toBe(
+      "First description\n\nSecond description",
+    );
+  });
+
+  test("6.3 should generate ScalarTypeDefinitionNode for custom scalar", () => {
+    const result = buildDocumentNode({
+      baseTypes: [],
+      inputTypes: [],
+      typeExtensions: [],
+      customScalarNames: null,
+      customScalars: [
+        {
+          scalarName: "DateTime",
+          description: "Custom date time scalar",
+        },
+        {
+          scalarName: "URL",
+          description: "URL scalar type",
+        },
+      ],
+      hasQuery: false,
+      hasMutation: false,
+      hasErrors: false,
+      diagnostics: [],
+    });
+
+    const scalarDefs = result.definitions.filter(
+      (def) => def.kind === Kind.SCALAR_TYPE_DEFINITION,
+    );
+
+    expect(scalarDefs).toHaveLength(2);
+
+    const dateTimeDef = scalarDefs.find(
+      (def) =>
+        def.kind === Kind.SCALAR_TYPE_DEFINITION &&
+        def.name.value === "DateTime",
+    );
+    const urlDef = scalarDefs.find(
+      (def) =>
+        def.kind === Kind.SCALAR_TYPE_DEFINITION && def.name.value === "URL",
+    );
+
+    expect(dateTimeDef).toBeDefined();
+    expect(urlDef).toBeDefined();
+  });
+
+  test("6.3 should sort scalars alphabetically by name", () => {
+    const result = buildDocumentNode({
+      baseTypes: [],
+      inputTypes: [],
+      typeExtensions: [],
+      customScalarNames: null,
+      customScalars: [
+        {
+          scalarName: "URL",
+          description: null,
+        },
+        {
+          scalarName: "DateTime",
+          description: null,
+        },
+      ],
+      hasQuery: false,
+      hasMutation: false,
+      hasErrors: false,
+      diagnostics: [],
+    });
+
+    const scalarDefs = result.definitions.filter(
+      (def) => def.kind === Kind.SCALAR_TYPE_DEFINITION,
+    );
+
+    expect(scalarDefs).toHaveLength(2);
+    expect(
+      scalarDefs[0]?.kind === Kind.SCALAR_TYPE_DEFINITION &&
+        scalarDefs[0]?.name.value,
+    ).toBe("DateTime");
+    expect(
+      scalarDefs[1]?.kind === Kind.SCALAR_TYPE_DEFINITION &&
+        scalarDefs[1]?.name.value,
+    ).toBe("URL");
+  });
+
+  test("6.3 should not generate definitions for built-in scalars (handled by excluding them from customScalars)", () => {
+    const result = buildDocumentNode({
+      baseTypes: [],
+      inputTypes: [],
+      typeExtensions: [],
+      customScalarNames: null,
+      customScalars: [
+        {
+          scalarName: "DateTime",
+          description: "Custom scalar only",
+        },
+      ],
+      hasQuery: false,
+      hasMutation: false,
+      hasErrors: false,
+      diagnostics: [],
+    });
+
+    const scalarDefs = result.definitions.filter(
+      (def) => def.kind === Kind.SCALAR_TYPE_DEFINITION,
+    );
+
+    expect(scalarDefs).toHaveLength(1);
+    expect(
+      scalarDefs[0]?.kind === Kind.SCALAR_TYPE_DEFINITION &&
+        scalarDefs[0]?.name.value,
+    ).toBe("DateTime");
+  });
+
+  test("should handle null customScalars (backward compatibility)", () => {
+    const result = buildDocumentNode({
+      baseTypes: [],
+      inputTypes: [],
+      typeExtensions: [],
+      customScalarNames: null,
+      customScalars: null,
+      hasQuery: false,
+      hasMutation: false,
+      hasErrors: false,
+      diagnostics: [],
+    });
+
+    const scalarDefs = result.definitions.filter(
+      (def) => def.kind === Kind.SCALAR_TYPE_DEFINITION,
+    );
+
+    expect(scalarDefs).toHaveLength(0);
+  });
+
+  test("should handle customScalarNames for backward compatibility", () => {
+    const result = buildDocumentNode({
+      baseTypes: [],
+      inputTypes: [],
+      typeExtensions: [],
+      customScalarNames: ["DateTime", "URL"],
+      customScalars: null,
+      hasQuery: false,
+      hasMutation: false,
+      hasErrors: false,
+      diagnostics: [],
+    });
+
+    const scalarDefs = result.definitions.filter(
+      (def) => def.kind === Kind.SCALAR_TYPE_DEFINITION,
+    );
+
+    expect(scalarDefs).toHaveLength(2);
+  });
+});
+
 describe("buildDeprecatedDirective", () => {
   test("should include reason argument when reason is provided", () => {
     const result = buildDocumentNode({
@@ -36,6 +285,7 @@ describe("buildDeprecatedDirective", () => {
       inputTypes: [],
       typeExtensions: [],
       customScalarNames: null,
+      customScalars: null,
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,
@@ -98,6 +348,7 @@ describe("buildDeprecatedDirective", () => {
       inputTypes: [],
       typeExtensions: [],
       customScalarNames: null,
+      customScalars: null,
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,
@@ -161,6 +412,7 @@ describe("buildDeprecatedDirective", () => {
       inputTypes: [],
       typeExtensions: [],
       customScalarNames: null,
+      customScalars: null,
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,
@@ -225,6 +477,7 @@ describe("buildDeprecatedDirective", () => {
       inputTypes: [],
       typeExtensions: [],
       customScalarNames: null,
+      customScalars: null,
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,

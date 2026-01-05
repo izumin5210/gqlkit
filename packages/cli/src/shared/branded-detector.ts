@@ -26,6 +26,8 @@ export interface ScalarTypeInfo {
   readonly baseType: "string" | "number" | undefined;
   /** Whether this is a custom scalar */
   readonly isCustom: boolean;
+  /** Usage constraint: "input" for input-only, "output" for output-only, null for both */
+  readonly only: "input" | "output" | null;
 }
 
 /**
@@ -90,6 +92,7 @@ export function detectBrandedScalar(
                 brandName: mapping.brandName,
                 baseType: mapping.baseType,
                 isCustom: false,
+                only: null,
               },
               unknownBrand: undefined,
               diagnostics: [],
@@ -118,6 +121,7 @@ export function detectBrandedScalar(
               brandName: customMapping.typeName,
               baseType: undefined,
               isCustom: true,
+              only: customMapping.only ?? null,
             },
             unknownBrand: undefined,
             diagnostics: [],
@@ -142,6 +146,7 @@ export function detectBrandedScalar(
                 brandName: mapping.brandName,
                 baseType: mapping.baseType,
                 isCustom: false,
+                only: null,
               },
               unknownBrand: undefined,
               diagnostics: [],
@@ -170,6 +175,7 @@ export function detectBrandedScalar(
               brandName: customMapping.typeName,
               baseType: undefined,
               isCustom: true,
+              only: customMapping.only ?? null,
             },
             unknownBrand: undefined,
             diagnostics: [],

@@ -6,6 +6,7 @@ export {
 export type {
   BaseField,
   BaseType,
+  CustomScalarInfo,
   ExtensionField,
   IntegratedResult,
   TypeExtension,

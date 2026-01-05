@@ -372,7 +372,19 @@ export function buildDocumentNode(
   const sourceRoot = options?.sourceRoot;
   const definitions: DefinitionNode[] = [];
 
-  if (integratedResult.customScalarNames) {
+  if (integratedResult.customScalars) {
+    const sortedScalars = [...integratedResult.customScalars].sort((a, b) =>
+      a.scalarName.localeCompare(b.scalarName),
+    );
+    for (const scalar of sortedScalars) {
+      definitions.push(
+        buildScalarTypeDefinitionNode(
+          scalar.scalarName,
+          scalar.description ?? undefined,
+        ),
+      );
+    }
+  } else if (integratedResult.customScalarNames) {
     const sortedScalarNames = [...integratedResult.customScalarNames].sort(
       (a, b) => a.localeCompare(b),
     );

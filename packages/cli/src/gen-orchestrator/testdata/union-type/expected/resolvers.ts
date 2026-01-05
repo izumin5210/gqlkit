@@ -2,8 +2,10 @@
 
 import { search } from "../query.js";
 
-export const resolvers = {
+export function createResolvers() {
+  return {
     Query: {
       search: search,
     },
-} as const;
+  };
+}
