@@ -11,12 +11,12 @@ jobs:
     strategy:
       matrix:
         command:
-          - name: build
-            run: pnpm build
           - name: format-and-lint
             run: pnpm check
           - name: typecheck
-            run: pnpm typecheck
+            run: pnpm build && pnpm typecheck
+          - name: gen
+            run: pnpm build && pnpm -r gen
           - name: knip
             run: pnpm knip
       fail-fast: false

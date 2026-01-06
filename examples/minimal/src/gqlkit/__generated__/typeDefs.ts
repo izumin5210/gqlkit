@@ -14,7 +14,7 @@ export const typeDefs: DocumentNode = {
       fields: [],
       description: {
         kind: "StringValue",
-        value: "Defined in: src/gqlkit/gqlkit.ts",
+        value: "Defined in: src/gqlkit/schema/gqlkit.ts",
         block: true,
       },
     },
@@ -104,7 +104,7 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value: "Defined in: src/gqlkit/types/user.ts",
+        value: "Defined in: src/gqlkit/schema/user.ts",
         block: true,
       },
     },
@@ -139,7 +139,7 @@ export const typeDefs: DocumentNode = {
           },
           description: {
             kind: "StringValue",
-            value: "Defined in: src/gqlkit/resolvers/user.ts",
+            value: "Defined in: src/gqlkit/schema/user.ts",
             block: true,
           },
         },
@@ -169,18 +169,15 @@ export const typeDefs: DocumentNode = {
             },
           ],
           type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "User",
-              },
+            kind: "NamedType",
+            name: {
+              kind: "Name",
+              value: "User",
             },
           },
           description: {
             kind: "StringValue",
-            value: "Defined in: src/gqlkit/resolvers/user.ts",
+            value: "Defined in: src/gqlkit/schema/user.ts",
             block: true,
           },
         },

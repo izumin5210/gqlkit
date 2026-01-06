@@ -1,8 +1,34 @@
 import { createServer } from "node:http";
 import { makeExecutableSchema } from "@graphql-tools/schema";
+import { GraphQLScalarType, Kind } from "graphql";
 import { createYoga } from "graphql-yoga";
-import { resolvers } from "./gqlkit/__generated__/resolvers.js";
-import { typeDefs } from "./gqlkit/__generated__/schema.js";
+import { createResolvers } from "./gqlkit/__generated__/resolvers.js";
+import { typeDefs } from "./gqlkit/__generated__/typeDefs.js";
+
+import type { DateTime } from "./gqlkit/schema/scalars.js";
+
+const DateTimeScalar = new GraphQLScalarType<DateTime, DateTime>({
+  name: "DateTime",
+  description: "ISO 8601 date-time string",
+  serialize(value) {
+    return value as DateTime;
+  },
+  parseValue(value) {
+    return value as DateTime;
+  },
+  parseLiteral(ast) {
+    if (ast.kind === Kind.STRING) {
+      return ast.value as DateTime;
+    }
+    throw new Error("DateTime must be a string");
+  },
+});
+
+const resolvers = createResolvers({
+  scalars: {
+    DateTime: DateTimeScalar,
+  },
+});
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });
 
