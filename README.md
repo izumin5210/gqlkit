@@ -295,6 +295,71 @@ enum UserStatus {
 }
 ```
 
+### @defaultValue for input fields and arguments
+
+Specify default values for input object fields and resolver arguments using the `@defaultValue` JSDoc tag. The value must be a valid GraphQL literal:
+
+```ts
+/** Input for creating a new user */
+export interface CreateUserInput {
+  /** @defaultValue "Guest" */
+  name: string;
+  /** @defaultValue 18 */
+  age: Int;
+  /** @defaultValue true */
+  active: boolean;
+  /** @defaultValue null */
+  bio: string | null;
+}
+```
+
+Generates:
+
+```graphql
+input CreateUserInput {
+  name: String! = "Guest"
+  age: Int! = 18
+  active: Boolean! = true
+  bio: String = null
+}
+```
+
+Complex types (enums, lists, objects) are also supported:
+
+```ts
+export interface FilterInput {
+  /** @defaultValue ACTIVE */
+  status: UserStatus;
+  /** @defaultValue ["tag1", "tag2"] */
+  tags: string[];
+  /** @defaultValue { x: 0, y: 0 } */
+  position: PositionInput;
+}
+```
+
+Default values can also be applied to resolver arguments:
+
+```ts
+export const users = defineQuery<
+  {
+    /** @defaultValue 10 */
+    limit: Int;
+    /** @defaultValue 0 */
+    offset: Int;
+  },
+  User[]
+>((_, args) => findUsers(args.limit, args.offset));
+```
+
+Type validation ensures the default value matches the field type:
+
+- String fields → string values only
+- Int fields → integer values only
+- Float fields → numeric values (int or float)
+- Boolean fields → boolean values only
+- Non-null fields → null is not allowed
+- Enum fields → valid enum values only
+
 ### Enum types
 
 String literal unions are converted to GraphQL enum types:
