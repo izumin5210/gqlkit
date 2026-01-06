@@ -18,3 +18,17 @@ export type DuplicatePropertyInput =
 export type InvalidTypeInput =
   | { product: Product }
   | { id: string };
+
+export interface ByIdInput {
+  id: string;
+}
+
+export interface ByNameInput {
+  name: string;
+}
+
+export type NamedTypeUnionInput = ByIdInput | ByNameInput;
+
+export type MixedMembersInput =
+  | { id: string }
+  | ByNameInput;

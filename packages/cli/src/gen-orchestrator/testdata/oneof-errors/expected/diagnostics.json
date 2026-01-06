@@ -1,5 +1,25 @@
 [
   {
+    "code": "ONEOF_NAMED_TYPE_UNION",
+    "message": "Input union type 'NamedTypeUnionInput' uses named type references instead of inline object literals. Use inline object pattern: type NamedTypeUnionInput = { field1: Type1 } | { field2: Type2 }",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/errors.ts",
+      "line": 30,
+      "column": 1
+    }
+  },
+  {
+    "code": "ONEOF_MIXED_MEMBERS",
+    "message": "Input union type 'MixedMembersInput' mixes inline object literals with named type references. Use only inline object literals for oneOf input types.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/errors.ts",
+      "line": 32,
+      "column": 1
+    }
+  },
+  {
     "code": "ONEOF_MULTIPLE_PROPERTIES",
     "message": "OneOf input 'MultiplePropertiesInput' member at index 0 has 2 properties. Each member must have exactly one property.",
     "severity": "error",

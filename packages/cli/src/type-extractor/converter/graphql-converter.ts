@@ -114,8 +114,13 @@ function isValidOneOfFieldType(
     return true;
   }
   const referencedType = typeMap.get(typeName);
-  if (referencedType && isInputTypeName(referencedType.metadata.name)) {
-    return true;
+  if (referencedType) {
+    if (referencedType.metadata.kind === "enum") {
+      return true;
+    }
+    if (isInputTypeName(referencedType.metadata.name)) {
+      return true;
+    }
   }
   return false;
 }
