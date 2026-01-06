@@ -1,6 +1,6 @@
 import { createServer } from "node:http";
-import { GraphQLScalarType, Kind } from "graphql";
 import { makeExecutableSchema } from "@graphql-tools/schema";
+import { GraphQLScalarType, Kind } from "graphql";
 import { createYoga } from "graphql-yoga";
 import { createResolvers } from "./gqlkit/__generated__/resolvers.js";
 import { typeDefs } from "./gqlkit/__generated__/typeDefs.js";
