@@ -1,3 +1,4 @@
+import type { ConstValueNode } from "graphql";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 
 export type TypeKind = "object" | "interface" | "union" | "enum";
@@ -48,6 +49,7 @@ export interface FieldDefinition {
   readonly optional: boolean;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly defaultValue: ConstValueNode | null;
 }
 
 export interface EnumMemberInfo {

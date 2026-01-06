@@ -164,6 +164,7 @@ function convertArgsToInputValues(
     },
     description: arg.description,
     deprecated: arg.deprecated,
+    defaultValue: arg.defaultValue,
   }));
 }
 

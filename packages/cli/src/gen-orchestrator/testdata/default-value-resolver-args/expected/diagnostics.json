@@ -1,0 +1,42 @@
+[
+  {
+    "code": "PARSE_ERROR",
+    "message": "Invalid @defaultValue: Syntax Error: Expected Name, found Int \"10\".",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/query.ts",
+      "line": 12,
+      "column": 3
+    }
+  },
+  {
+    "code": "PARSE_ERROR",
+    "message": "Invalid @defaultValue: Syntax Error: Expected Name, found Int \"0\".",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/query.ts",
+      "line": 14,
+      "column": 3
+    }
+  },
+  {
+    "code": "PARSE_ERROR",
+    "message": "Invalid @defaultValue: Syntax Error: Expected Name, found String \"name\".",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/query.ts",
+      "line": 16,
+      "column": 3
+    }
+  },
+  {
+    "code": "PARSE_ERROR",
+    "message": "Invalid @defaultValue: \"true\" is not a valid GraphQL literal.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/query.ts",
+      "line": 18,
+      "column": 3
+    }
+  }
+]

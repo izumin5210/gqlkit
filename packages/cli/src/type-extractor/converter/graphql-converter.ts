@@ -86,6 +86,7 @@ function convertFields(extracted: ExtractedTypeInfo): FieldInfo[] {
     type: convertTsTypeToGraphQLType(field.tsType, field.optional),
     description: field.description,
     deprecated: field.deprecated,
+    defaultValue: field.defaultValue,
   }));
 }
 

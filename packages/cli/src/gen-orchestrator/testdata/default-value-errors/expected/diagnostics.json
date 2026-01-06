@@ -1,0 +1,22 @@
+[
+  {
+    "code": "PARSE_ERROR",
+    "message": "Invalid @defaultValue: \"invalid_syntax_here\" is not a valid GraphQL literal.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/types.ts",
+      "line": 7,
+      "column": 3
+    }
+  },
+  {
+    "code": "PARSE_ERROR",
+    "message": "@defaultValue tag is empty. Provide a valid GraphQL literal value.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/types.ts",
+      "line": 9,
+      "column": 3
+    }
+  }
+]

@@ -1,3 +1,4 @@
+import type { ConstValueNode } from "graphql";
 import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
 import type {
   Diagnostics,
@@ -10,6 +11,7 @@ export interface GraphQLInputValue {
   readonly type: GraphQLFieldType;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly defaultValue: ConstValueNode | null;
 }
 
 export interface GraphQLFieldDefinition {

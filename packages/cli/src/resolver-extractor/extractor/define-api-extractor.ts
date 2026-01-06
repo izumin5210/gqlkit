@@ -1,4 +1,6 @@
+import type { ConstValueNode } from "graphql";
 import ts from "typescript";
+import { parseDefaultValue } from "../../shared/default-value-parser.js";
 import {
   detectScalarMetadata,
   getActualMetadataType,
@@ -7,9 +9,11 @@ import {
   type DeprecationInfo,
   extractTSDocFromSymbol,
   extractTSDocInfo,
+  type TSDocInfo,
 } from "../../shared/tsdoc-parser.js";
 import type {
   Diagnostic,
+  SourceLocation,
   TSTypeReference,
 } from "../../type-extractor/types/index.js";
 
@@ -27,6 +31,7 @@ export interface ArgumentDefinition {
   readonly optional: boolean;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly defaultValue: ConstValueNode | null;
 }
 
 export interface DefineApiResolverInfo {
@@ -269,10 +274,10 @@ function isInlineTypeLiteralDeclaration(declaration: ts.Declaration): boolean {
 function extractTSDocFromPropertyWithPriority(
   prop: ts.Symbol,
   checker: ts.TypeChecker,
-): { description: string | null; deprecated: DeprecationInfo | null } {
+): TSDocInfo {
   const declarations = prop.getDeclarations();
   if (!declarations || declarations.length === 0) {
-    return { description: null, deprecated: null };
+    return { description: null, deprecated: null, defaultValue: null };
   }
 
   const inlineDeclaration = declarations.find(isInlineTypeLiteralDeclaration);
@@ -289,11 +294,19 @@ function extractTSDocFromPropertyWithPriority(
   return extractTSDocFromSymbol(prop, checker);
 }
 
+interface ExtractArgsResult {
+  readonly args: ArgumentDefinition[];
+  readonly diagnostics: Diagnostic[];
+}
+
 function extractArgsFromType(
   argsType: ts.Type,
   checker: ts.TypeChecker,
-): ArgumentDefinition[] {
+  sourceFile: ts.SourceFile,
+  filePath: string,
+): ExtractArgsResult {
   const args: ArgumentDefinition[] = [];
+  const diagnostics: Diagnostic[] = [];
   const properties = argsType.getProperties();
 
   for (const prop of properties) {
@@ -308,28 +321,55 @@ function extractArgsFromType(
 
     const tsdocInfo = extractTSDocFromPropertyWithPriority(prop, checker);
 
+    let defaultValue: ConstValueNode | null = null;
+    if (tsdocInfo.defaultValue) {
+      let location: SourceLocation = { file: filePath, line: 1, column: 1 };
+      if (declaration) {
+        const { line, character } = sourceFile.getLineAndCharacterOfPosition(
+          declaration.getStart(sourceFile),
+        );
+        location = { file: filePath, line: line + 1, column: character + 1 };
+      }
+      const parseResult = parseDefaultValue(
+        tsdocInfo.defaultValue.rawValue,
+        location,
+      );
+      if (parseResult.value) {
+        defaultValue = parseResult.value;
+      }
+      if (parseResult.diagnostic) {
+        diagnostics.push(parseResult.diagnostic);
+      }
+    }
+
     args.push({
       name: prop.getName(),
       tsType: convertTypeToTSTypeReference(propType, checker),
       optional,
       description: tsdocInfo.description,
       deprecated: tsdocInfo.deprecated,
+      defaultValue,
     });
   }
 
-  return args;
+  return { args, diagnostics };
+}
+
+interface ExtractTypeArgumentsResult {
+  parentTypeName: string | null;
+  argsType: TSTypeReference | null;
+  args: ArgumentDefinition[] | null;
+  returnType: TSTypeReference;
+  diagnostics: Diagnostic[];
 }
 
 function extractTypeArgumentsFromCall(
   node: ts.CallExpression,
   checker: ts.TypeChecker,
   resolverType: DefineApiResolverType,
-): {
-  parentTypeName: string | null;
-  argsType: TSTypeReference | null;
-  args: ArgumentDefinition[] | null;
-  returnType: TSTypeReference;
-} | null {
+  sourceFile: ts.SourceFile,
+  filePath: string,
+): ExtractTypeArgumentsResult | null {
   const typeArgs = node.typeArguments;
   if (!typeArgs) {
     return null;
@@ -356,13 +396,16 @@ function extractTypeArgumentsFromCall(
     const isNoArgs =
       argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
-    const args = isNoArgs ? null : extractArgsFromType(argsType, checker);
+    const argsResult = isNoArgs
+      ? null
+      : extractArgsFromType(argsType, checker, sourceFile, filePath);
 
     return {
       parentTypeName: parentTypeName ?? null,
       argsType: isNoArgs ? null : argsTypeRef,
-      args: args && args.length > 0 ? args : null,
+      args: argsResult && argsResult.args.length > 0 ? argsResult.args : null,
       returnType: convertTypeToTSTypeReference(returnType, checker),
+      diagnostics: argsResult?.diagnostics ?? [],
     };
   }
 
@@ -384,13 +427,16 @@ function extractTypeArgumentsFromCall(
   const isNoArgs =
     argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
-  const args = isNoArgs ? null : extractArgsFromType(argsType, checker);
+  const argsResult = isNoArgs
+    ? null
+    : extractArgsFromType(argsType, checker, sourceFile, filePath);
 
   return {
     parentTypeName: null,
     argsType: isNoArgs ? null : argsTypeRef,
-    args: args && args.length > 0 ? args : null,
+    args: argsResult && argsResult.args.length > 0 ? argsResult.args : null,
     returnType: convertTypeToTSTypeReference(returnType, checker),
+    diagnostics: argsResult?.diagnostics ?? [],
   };
 }
 
@@ -499,6 +545,8 @@ export function extractDefineApiResolvers(
           initializer,
           checker,
           resolverType,
+          sourceFile,
+          filePath,
         );
 
         if (!typeInfo) {
@@ -517,6 +565,8 @@ export function extractDefineApiResolvers(
           });
           continue;
         }
+
+        diagnostics.push(...typeInfo.diagnostics);
 
         const tsdocInfo = extractTSDocInfo(node, checker);
 

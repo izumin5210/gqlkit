@@ -1,4 +1,6 @@
+import type { ConstValueNode } from "graphql";
 import ts from "typescript";
+import { parseDefaultValue } from "../../shared/default-value-parser.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
 import {
   extractTSDocFromSymbol,
@@ -12,6 +14,7 @@ import type {
   FieldDefinition,
   InlineObjectMember,
   InlineObjectProperty,
+  SourceLocation,
   TSTypeReference,
   TypeKind,
   TypeMetadata,
@@ -315,12 +318,20 @@ function convertTsTypeToReferenceWithBrandInfo(
   };
 }
 
+interface FieldExtractionResult {
+  readonly fields: FieldDefinition[];
+  readonly diagnostics: ReadonlyArray<Diagnostic>;
+}
+
 function extractFieldsFromType(
   type: ts.Type,
   checker: ts.TypeChecker,
+  sourceFile: ts.SourceFile,
+  filePath: string,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
-): FieldDefinition[] {
+): FieldExtractionResult {
   const fields: FieldDefinition[] = [];
+  const diagnostics: Diagnostic[] = [];
   const properties = type.getProperties();
 
   for (const prop of properties) {
@@ -340,16 +351,38 @@ function extractFieldsFromType(
       globalTypeMappings,
     );
 
+    let defaultValue: ConstValueNode | null = null;
+    if (tsdocInfo.defaultValue) {
+      let location: SourceLocation = { file: filePath, line: 1, column: 1 };
+      if (declaration) {
+        const { line, character } = sourceFile.getLineAndCharacterOfPosition(
+          declaration.getStart(sourceFile),
+        );
+        location = { file: filePath, line: line + 1, column: character + 1 };
+      }
+      const parseResult = parseDefaultValue(
+        tsdocInfo.defaultValue.rawValue,
+        location,
+      );
+      if (parseResult.value) {
+        defaultValue = parseResult.value;
+      }
+      if (parseResult.diagnostic) {
+        diagnostics.push(parseResult.diagnostic);
+      }
+    }
+
     fields.push({
       name: prop.getName(),
       tsType: typeResult.tsType,
       optional,
       description: tsdocInfo.description ?? null,
       deprecated: tsdocInfo.deprecated ?? null,
+      defaultValue,
     });
   }
 
-  return fields;
+  return { fields, diagnostics };
 }
 
 function isNumericEnum(node: ts.Node): boolean {
@@ -764,10 +797,18 @@ export function extractTypesFromProgram(
           return;
         }
 
-        const fields =
+        const fieldResult =
           kind === "union"
-            ? []
-            : extractFieldsFromType(type, checker, globalTypeMappings);
+            ? { fields: [], diagnostics: [] }
+            : extractFieldsFromType(
+                type,
+                checker,
+                sourceFile,
+                filePath,
+                globalTypeMappings,
+              );
+
+        diagnostics.push(...fieldResult.diagnostics);
 
         if (name.endsWith("Input") && kind === "union") {
           if (
@@ -807,7 +848,7 @@ export function extractTypesFromProgram(
 
         const typeInfo: ExtractedTypeInfo = {
           metadata,
-          fields,
+          fields: fieldResult.fields,
           unionMembers: unionMembers ?? null,
           inlineObjectMembers,
           enumMembers: null,

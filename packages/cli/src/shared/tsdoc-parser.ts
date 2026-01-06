@@ -5,9 +5,14 @@ export interface DeprecationInfo {
   readonly reason: string | null;
 }
 
+export interface DefaultValueInfo {
+  readonly rawValue: string;
+}
+
 export interface TSDocInfo {
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly defaultValue: DefaultValueInfo | null;
 }
 
 function getSymbolFromNode(
@@ -89,6 +94,28 @@ function extractDeprecatedFromDeclarations(
   return undefined;
 }
 
+function extractDefaultValueFromDeclarations(
+  declarations: ReadonlyArray<ts.Declaration> | undefined,
+): DefaultValueInfo | undefined {
+  if (!declarations) {
+    return undefined;
+  }
+
+  for (const declaration of declarations) {
+    const jsdocTags = ts.getJSDocTags(declaration);
+    for (const tag of jsdocTags) {
+      if (tag.tagName.text === "defaultValue") {
+        const rawValue = getTagCommentText(tag.comment);
+        return {
+          rawValue: rawValue ?? "",
+        };
+      }
+    }
+  }
+
+  return undefined;
+}
+
 function normalizeLineEndings(text: string): string {
   return text.replace(/\r\n/g, "\n");
 }
@@ -125,17 +152,18 @@ export function extractTSDocInfo(
   const symbol = getSymbolFromNode(node, checker);
 
   if (!symbol) {
-    return { description: null, deprecated: null };
+    return { description: null, deprecated: null, defaultValue: null };
   }
 
+  const declarations = symbol.getDeclarations();
   const description = extractDescriptionFromSymbol(symbol, checker);
-  const deprecated = extractDeprecatedFromDeclarations(
-    symbol.getDeclarations(),
-  );
+  const deprecated = extractDeprecatedFromDeclarations(declarations);
+  const defaultValue = extractDefaultValueFromDeclarations(declarations);
 
   return {
     description: description ?? null,
     deprecated: deprecated ?? null,
+    defaultValue: defaultValue ?? null,
   };
 }
 
@@ -143,13 +171,14 @@ export function extractTSDocFromSymbol(
   symbol: ts.Symbol,
   checker: ts.TypeChecker,
 ): TSDocInfo {
+  const declarations = symbol.getDeclarations();
   const description = extractDescriptionFromSymbol(symbol, checker);
-  const deprecated = extractDeprecatedFromDeclarations(
-    symbol.getDeclarations(),
-  );
+  const deprecated = extractDeprecatedFromDeclarations(declarations);
+  const defaultValue = extractDefaultValueFromDeclarations(declarations);
 
   return {
     description: description ?? null,
     deprecated: deprecated ?? null,
+    defaultValue: defaultValue ?? null,
   };
 }

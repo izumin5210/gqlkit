@@ -1,3 +1,4 @@
+import type { ConstValueNode } from "graphql";
 import type {
   ExtractResolversResult,
   GraphQLFieldDefinition,
@@ -19,6 +20,7 @@ export interface BaseField {
   readonly type: GraphQLFieldType;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly defaultValue: ConstValueNode | null;
 }
 
 export interface BaseType {
@@ -126,6 +128,7 @@ export function integrate(
             type: field.type,
             description: field.description,
             deprecated: field.deprecated,
+            defaultValue: field.defaultValue,
           })) ?? [],
         sourceFile: type.sourceFile,
         description: type.description,
@@ -152,6 +155,7 @@ export function integrate(
             type: field.type,
             description: field.description,
             deprecated: field.deprecated,
+            defaultValue: field.defaultValue,
           })) ?? null,
         unionMembers: null,
         enumValues: null,

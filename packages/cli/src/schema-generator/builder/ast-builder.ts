@@ -159,6 +159,9 @@ function buildInputValueDefinitionNode(
       ? { description: buildStringValueNode(inputValue.description) }
       : {}),
     ...(directives.length > 0 ? { directives } : {}),
+    ...(inputValue.defaultValue
+      ? { defaultValue: inputValue.defaultValue }
+      : {}),
   };
 }
 
@@ -322,6 +325,7 @@ function buildInputFieldDefinitionNode(
       ? { description: buildStringValueNode(field.description) }
       : {}),
     ...(directives.length > 0 ? { directives } : {}),
+    ...(field.defaultValue ? { defaultValue: field.defaultValue } : {}),
   };
 }
 

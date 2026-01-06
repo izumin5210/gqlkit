@@ -1,3 +1,4 @@
+import type { ConstValueNode } from "graphql";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 
 export type GraphQLTypeKind =
@@ -19,6 +20,7 @@ export interface FieldInfo {
   readonly type: GraphQLFieldType;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly defaultValue: ConstValueNode | null;
 }
 
 export interface EnumValueInfo {
