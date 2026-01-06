@@ -17,6 +17,17 @@ type User {
   name: String!
 }
 
+"""
+Filter to find a specific user.
+Exactly one field must be provided.
+
+Defined in: src/gqlkit/schema/user.ts
+"""
+input UserFilterInput @oneOf {
+  id: String
+  name: String
+}
+
 extend type Query {
   """
   Defined in: src/gqlkit/schema/user.ts

@@ -1,23 +1,30 @@
-/**
- * Filter product by ID
- */
-export interface ByIdInput {
-  id: string;
-}
+import type { Int } from "@gqlkit-ts/runtime";
 
 /**
- * Filter product by name
- * @deprecated Use ByIdInput instead
+ * Product location within the warehouse
  */
-export interface ByNameInput {
-  name: string;
+export interface ProductLocationInput {
+  aisleNumber: Int;
+  shelfNumber: Int;
+  positionOnShelf: Int;
 }
 
 /**
  * Specifies how to identify a product.
  * Exactly one field must be provided.
  */
-export type ProductInput = ByIdInput | ByNameInput;
+export type ProductInput =
+  | { id: string }
+  | { name: string }
+  | { location: ProductLocationInput };
+
+/**
+ * Search by various criteria
+ */
+export type SearchInput =
+  | { query: string }
+  | { categoryId: string }
+  | { priceMax: number };
 
 export interface Product {
   id: string;

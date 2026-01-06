@@ -1,14 +1,17 @@
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
-import type { Product, ProductInput } from "./product.js";
+import type { Product, ProductInput, SearchInput } from "./product.js";
 
-type Context = unknown;
+export const product = (
+  _root: unknown,
+  args: { input: ProductInput },
+): Product => {
+  void args;
+  return { id: "1", name: "Product", price: 100 };
+};
 
-const { defineQuery } = createGqlkitApis<Context>();
-
-export const product = defineQuery<{ input: ProductInput }, Product>(
-  (_root, _args) => ({
-    id: "1",
-    name: "Product",
-    price: 100,
-  }),
-);
+export const search = (
+  _root: unknown,
+  args: { input: SearchInput },
+): Product[] => {
+  void args;
+  return [];
+};

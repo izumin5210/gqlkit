@@ -71,76 +71,6 @@ export const typeDefs: DocumentNode = {
       }
     },
     {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
-      },
-      "fields": []
-    },
-    {
-      "kind": "InputObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "ByIdInput"
-      },
-      "fields": [
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Filter product by ID\n\nDefined in: src/gqlkit/schema/product.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "InputObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "ByNameInput"
-      },
-      "fields": [
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "name"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Filter product by name\n\nDefined in: src/gqlkit/schema/product.ts",
-        "block": true
-      }
-    },
-    {
       "kind": "InputObjectTypeDefinition",
       "name": {
         "kind": "Name",
@@ -151,62 +81,43 @@ export const typeDefs: DocumentNode = {
           "kind": "InputValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "byIdInput"
+            "value": "id"
           },
           "type": {
             "kind": "NamedType",
             "name": {
               "kind": "Name",
-              "value": "ByIdInput"
+              "value": "String"
             }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Filter product by ID",
-            "block": true
           }
         },
         {
           "kind": "InputValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "byNameInput"
+            "value": "location"
           },
           "type": {
             "kind": "NamedType",
             "name": {
               "kind": "Name",
-              "value": "ByNameInput"
+              "value": "ProductLocationInput"
             }
+          }
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "name"
           },
-          "description": {
-            "kind": "StringValue",
-            "value": "Filter product by name",
-            "block": true
-          },
-          "directives": [
-            {
-              "kind": "Directive",
-              "name": {
-                "kind": "Name",
-                "value": "deprecated"
-              },
-              "arguments": [
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "reason"
-                  },
-                  "value": {
-                    "kind": "StringValue",
-                    "value": "Use ByIdInput instead",
-                    "block": true
-                  }
-                }
-              ]
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
             }
-          ]
+          }
         }
       ],
       "description": {
@@ -225,51 +136,131 @@ export const typeDefs: DocumentNode = {
       ]
     },
     {
-      "kind": "ObjectTypeExtension",
+      "kind": "InputObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "Query"
+        "value": "ProductLocationInput"
       },
       "fields": [
         {
-          "kind": "FieldDefinition",
+          "kind": "InputValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "product"
+            "value": "aisleNumber"
           },
-          "arguments": [
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "input"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "ProductInput"
-                  }
-                }
-              }
-            }
-          ],
           "type": {
             "kind": "NonNullType",
             "type": {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "Product"
+                "value": "Int"
               }
             }
+          }
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "positionOnShelf"
           },
-          "description": {
-            "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/schema/query.ts",
-            "block": true
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Int"
+              }
+            }
+          }
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "shelfNumber"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Int"
+              }
+            }
+          }
+        }
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Product location within the warehouse\n\nDefined in: src/gqlkit/schema/product.ts",
+        "block": true
+      }
+    },
+    {
+      "kind": "InputObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "SearchInput"
+      },
+      "fields": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "categoryId"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "priceMax"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Float"
+            }
+          }
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "query"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Search by various criteria\n\nDefined in: src/gqlkit/schema/product.ts",
+        "block": true
+      },
+      "directives": [
+        {
+          "kind": "Directive",
+          "name": {
+            "kind": "Name",
+            "value": "oneOf"
           }
         }
       ]

@@ -16,6 +16,8 @@ export type {
   EnumMemberInfo,
   ExtractedTypeInfo,
   FieldDefinition,
+  InlineObjectMember,
+  InlineObjectProperty,
   ScalarTypeInfo,
   TSTypeReference,
   TypeKind,

@@ -7,26 +7,6 @@ type Product {
   price: Float!
 }
 
-type Query
-
-"""
-Filter product by ID
-
-Defined in: src/gqlkit/schema/product.ts
-"""
-input ByIdInput {
-  id: String!
-}
-
-"""
-Filter product by name
-
-Defined in: src/gqlkit/schema/product.ts
-"""
-input ByNameInput {
-  name: String!
-}
-
 """
 Specifies how to identify a product.
 Exactly one field must be provided.
@@ -34,13 +14,29 @@ Exactly one field must be provided.
 Defined in: src/gqlkit/schema/product.ts
 """
 input ProductInput @oneOf {
-  """Filter product by ID"""
-  byIdInput: ByIdInput
-  """Filter product by name"""
-  byNameInput: ByNameInput @deprecated(reason: """Use ByIdInput instead""")
+  id: String
+  location: ProductLocationInput
+  name: String
 }
 
-extend type Query {
-  """Defined in: src/gqlkit/schema/query.ts"""
-  product(input: ProductInput!): Product!
+"""
+Product location within the warehouse
+
+Defined in: src/gqlkit/schema/product.ts
+"""
+input ProductLocationInput {
+  aisleNumber: Int!
+  positionOnShelf: Int!
+  shelfNumber: Int!
+}
+
+"""
+Search by various criteria
+
+Defined in: src/gqlkit/schema/product.ts
+"""
+input SearchInput @oneOf {
+  categoryId: String
+  priceMax: Float
+  query: String
 }
