@@ -33,7 +33,7 @@ export function parseDefaultValue(
   }
 
   try {
-    const documentNode = parse(`{_:${trimmedValue}}`);
+    const documentNode = parse(`{_(x:${trimmedValue})}`, { noLocation: true });
     const operationDef = documentNode.definitions[0];
 
     if (
@@ -52,7 +52,11 @@ export function parseDefaultValue(
     }
 
     const selection = operationDef.selectionSet.selections[0];
-    if (selection?.kind !== Kind.FIELD || !selection.arguments) {
+    if (
+      selection?.kind !== Kind.FIELD ||
+      !selection.arguments ||
+      selection.arguments.length === 0
+    ) {
       return {
         value: null,
         diagnostic: {

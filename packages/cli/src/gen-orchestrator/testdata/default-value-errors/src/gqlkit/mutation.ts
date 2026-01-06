@@ -1,18 +1,10 @@
 import { createGqlkitApis } from "@gqlkit-ts/runtime";
+import type { TypeMismatchInput, Result } from "./types.js";
 
 type Context = unknown;
 
-interface Result {
-  id: string;
-}
-
-interface InvalidDefaultInput {
-  field1: string;
-  field2: string;
-}
-
 const { defineMutation } = createGqlkitApis<Context>();
 
-export const doSomething = defineMutation<{ input: InvalidDefaultInput }, Result>(
+export const testTypeMismatch = defineMutation<{ input: TypeMismatchInput }, Result>(
   (_root, _args) => ({ id: "1" }),
 );

@@ -54,7 +54,11 @@ export type DiagnosticCode =
   | "ONEOF_NAMED_TYPE_UNION"
   | "MULTIPLE_INPUT_TYPES"
   | "MISSING_INPUT_TYPE"
-  | "MISSING_OUTPUT_TYPE";
+  | "MISSING_OUTPUT_TYPE"
+  | "DEFAULT_VALUE_TYPE_MISMATCH"
+  | "NULL_DEFAULT_FOR_NON_NULL"
+  | "UNKNOWN_ENUM_VALUE"
+  | "INVALID_INPUT_OBJECT_FIELD";
 
 export interface Diagnostic {
   readonly code: DiagnosticCode;

@@ -1,21 +1,71 @@
 [
   {
-    "code": "PARSE_ERROR",
-    "message": "Invalid @defaultValue: \"invalid_syntax_here\" is not a valid GraphQL literal.",
+    "code": "DEFAULT_VALUE_TYPE_MISMATCH",
+    "message": "Field 'stringField' expects String type, but got integer.",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/types.ts",
-      "line": 7,
+      "line": 8,
       "column": 3
     }
   },
   {
-    "code": "PARSE_ERROR",
-    "message": "@defaultValue tag is empty. Provide a valid GraphQL literal value.",
+    "code": "DEFAULT_VALUE_TYPE_MISMATCH",
+    "message": "Field 'intField' expects Float type, but got string.",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/types.ts",
-      "line": 9,
+      "line": 10,
+      "column": 3
+    }
+  },
+  {
+    "code": "DEFAULT_VALUE_TYPE_MISMATCH",
+    "message": "Field 'floatField' expects Float type, but got string.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/types.ts",
+      "line": 12,
+      "column": 3
+    }
+  },
+  {
+    "code": "DEFAULT_VALUE_TYPE_MISMATCH",
+    "message": "Field 'boolField' expects Boolean type, but got string.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/types.ts",
+      "line": 14,
+      "column": 3
+    }
+  },
+  {
+    "code": "NULL_DEFAULT_FOR_NON_NULL",
+    "message": "Field 'nonNullField' is non-nullable but has null default value.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/types.ts",
+      "line": 16,
+      "column": 3
+    }
+  },
+  {
+    "code": "INVALID_ENUM_DEFAULT_VALUE",
+    "message": "Field 'enumField' has invalid enum value 'UNKNOWN_VALUE'. Valid values: ACTIVE, INACTIVE",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/types.ts",
+      "line": 18,
+      "column": 3
+    }
+  },
+  {
+    "code": "DEFAULT_VALUE_TYPE_MISMATCH",
+    "message": "Field 'listField' expects a list, but got string.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/types.ts",
+      "line": 20,
       "column": 3
     }
   }

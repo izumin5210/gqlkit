@@ -13,7 +13,13 @@ import type {
   Diagnostic,
   EnumValueInfo,
   GraphQLFieldType,
+  SourceLocation,
 } from "../../type-extractor/types/index.js";
+import {
+  type InputObjectInfo,
+  type ValidationContext,
+  validateDefaultValue,
+} from "../validator/default-value-validator.js";
 
 export interface BaseField {
   readonly name: string;
@@ -248,6 +254,23 @@ export function integrate(
     }
   }
 
+  const validationContext = buildValidationContext(
+    baseTypes,
+    inputTypes,
+    customScalarNames,
+  );
+  validateInputTypeDefaults(
+    typesResult,
+    inputTypes,
+    validationContext,
+    diagnostics,
+  );
+  validateResolverArgDefaults(
+    resolversResult,
+    validationContext,
+    diagnostics,
+  );
+
   const hasErrors = diagnostics.some((d) => d.severity === "error");
 
   const scalarDescriptionMap = new Map<string, string | null>();
@@ -280,4 +303,109 @@ export function integrate(
     hasErrors,
     diagnostics,
   };
+}
+
+function buildValidationContext(
+  baseTypes: ReadonlyArray<BaseType>,
+  inputTypes: ReadonlyArray<InputType>,
+  customScalarNames: ReadonlyArray<string> | null,
+): ValidationContext {
+  const knownEnums = new Map<string, ReadonlyArray<string>>();
+  for (const type of baseTypes) {
+    if (type.kind === "Enum" && type.enumValues) {
+      knownEnums.set(
+        type.name,
+        type.enumValues.map((v) => v.name),
+      );
+    }
+  }
+
+  const knownInputObjects = new Map<string, InputObjectInfo>();
+  for (const inputType of inputTypes) {
+    knownInputObjects.set(inputType.name, {
+      name: inputType.name,
+      fields: inputType.fields.map((f) => ({
+        name: f.name,
+        type: f.type,
+      })),
+    });
+  }
+
+  return {
+    knownEnums,
+    knownInputObjects,
+    customScalars: new Set(customScalarNames ?? []),
+  };
+}
+
+function validateInputTypeDefaults(
+  typesResult: ExtractTypesResult,
+  inputTypes: ReadonlyArray<InputType>,
+  context: ValidationContext,
+  diagnostics: Diagnostic[],
+): void {
+  const typeSourceFiles = new Map<string, string>();
+  for (const type of typesResult.types) {
+    typeSourceFiles.set(type.name, type.sourceFile);
+  }
+
+  for (const inputType of inputTypes) {
+    const sourceFile = typeSourceFiles.get(inputType.name);
+    if (!sourceFile) continue;
+
+    for (const field of inputType.fields) {
+      if (field.defaultValue) {
+        const location: SourceLocation = {
+          file: sourceFile,
+          line: 1,
+          column: 1,
+        };
+        const result = validateDefaultValue(
+          field.type,
+          field.defaultValue,
+          field.name,
+          location,
+          context,
+        );
+        diagnostics.push(...result.diagnostics);
+      }
+    }
+  }
+}
+
+function validateResolverArgDefaults(
+  resolversResult: ExtractResolversResult,
+  context: ValidationContext,
+  diagnostics: Diagnostic[],
+): void {
+  const validateFieldArgs = (field: GraphQLFieldDefinition): void => {
+    if (!field.args) return;
+
+    for (const arg of field.args) {
+      if (arg.defaultValue) {
+        const result = validateDefaultValue(
+          arg.type,
+          arg.defaultValue,
+          arg.name,
+          field.sourceLocation,
+          context,
+        );
+        diagnostics.push(...result.diagnostics);
+      }
+    }
+  };
+
+  for (const field of resolversResult.queryFields.fields) {
+    validateFieldArgs(field);
+  }
+
+  for (const field of resolversResult.mutationFields.fields) {
+    validateFieldArgs(field);
+  }
+
+  for (const ext of resolversResult.typeExtensions) {
+    for (const field of ext.fields) {
+      validateFieldArgs(field);
+    }
+  }
 }
