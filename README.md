@@ -360,7 +360,7 @@ input CreateUserInput {
 
 ### @oneOf input objects
 
-Union types with `Input` suffix using inline object literals generate `@oneOf` input objects. Each union member must have exactly one property:
+Union types with `Input` suffix using inline object literals generate `@oneOf` input objects. Each union member must be an inline object literal with exactly one property. Property values can be scalar types, enum types, or references to Input Object types:
 
 ```ts
 /**

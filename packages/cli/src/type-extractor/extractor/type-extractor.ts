@@ -769,6 +769,36 @@ export function extractTypesFromProgram(
             ? []
             : extractFieldsFromType(type, checker, globalTypeMappings);
 
+        if (name.endsWith("Input") && kind === "union") {
+          if (
+            inlineObjectResult?.hasInlineObjects &&
+            inlineObjectResult.hasNamedTypes
+          ) {
+            const { line } = sourceFile.getLineAndCharacterOfPosition(
+              node.getStart(sourceFile),
+            );
+            diagnostics.push({
+              code: "ONEOF_MIXED_MEMBERS",
+              message: `Input union type '${name}' mixes inline object literals with named type references. Use only inline object literals for oneOf input types.`,
+              severity: "error",
+              location: { file: filePath, line: line + 1, column: 1 },
+            });
+          } else if (
+            inlineObjectResult?.hasNamedTypes &&
+            !inlineObjectResult.hasInlineObjects
+          ) {
+            const { line } = sourceFile.getLineAndCharacterOfPosition(
+              node.getStart(sourceFile),
+            );
+            diagnostics.push({
+              code: "ONEOF_NAMED_TYPE_UNION",
+              message: `Input union type '${name}' uses named type references instead of inline object literals. Use inline object pattern: type ${name} = { field1: Type1 } | { field2: Type2 }`,
+              severity: "error",
+              location: { file: filePath, line: line + 1, column: 1 },
+            });
+          }
+        }
+
         const inlineObjectMembers =
           inlineObjectResult?.hasInlineObjects &&
           !inlineObjectResult.hasNamedTypes
