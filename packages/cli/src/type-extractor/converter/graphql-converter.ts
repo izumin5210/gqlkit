@@ -205,6 +205,7 @@ function validateAndConvertInlineObjectMembers(
       },
       description: prop.description,
       deprecated: prop.deprecated,
+      defaultValue: null,
     });
   }
 

@@ -6,6 +6,8 @@ type Post {
   title: String!
 }
 
+type Query
+
 """Defined in: src/gqlkit/schema/search-result.ts"""
 union SearchResult = Post | User
 
@@ -13,4 +15,9 @@ union SearchResult = Post | User
 type User {
   id: String!
   name: String!
+}
+
+extend type Query {
+  """Defined in: src/gqlkit/schema/query.ts"""
+  search(query: String!): [SearchResult!]!
 }

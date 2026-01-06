@@ -265,11 +265,7 @@ export function integrate(
     validationContext,
     diagnostics,
   );
-  validateResolverArgDefaults(
-    resolversResult,
-    validationContext,
-    diagnostics,
-  );
+  validateResolverArgDefaults(resolversResult, validationContext, diagnostics);
 
   const hasErrors = diagnostics.some((d) => d.severity === "error");
 

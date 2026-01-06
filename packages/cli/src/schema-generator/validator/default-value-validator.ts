@@ -1,4 +1,4 @@
-import { Kind, type ConstValueNode } from "graphql";
+import { type ConstValueNode, Kind } from "graphql";
 import type {
   Diagnostic,
   GraphQLFieldType,

@@ -1,4 +1,4 @@
-import { Kind, type ConstValueNode } from "graphql";
+import { type ConstValueNode, Kind } from "graphql";
 import { describe, expect, it } from "vitest";
 import type { GraphQLFieldType } from "../../type-extractor/types/graphql.js";
 import {
@@ -437,11 +437,21 @@ describe("validateDefaultValue", () => {
           fields: [
             {
               name: "name",
-              type: { typeName: "String", nullable: false, list: false, listItemNullable: null },
+              type: {
+                typeName: "String",
+                nullable: false,
+                list: false,
+                listItemNullable: null,
+              },
             },
             {
               name: "age",
-              type: { typeName: "Int", nullable: true, list: false, listItemNullable: null },
+              type: {
+                typeName: "Int",
+                nullable: true,
+                list: false,
+                listItemNullable: null,
+              },
             },
           ],
         },
