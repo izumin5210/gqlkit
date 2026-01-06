@@ -16,25 +16,6 @@ export const typeDefs: DocumentNode = {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "email"
-          },
-          "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "String"
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Email address",
-            "block": true
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
             "value": "id"
           },
           "type": {
@@ -46,11 +27,6 @@ export const typeDefs: DocumentNode = {
                 "value": "String"
               }
             }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Unique identifier",
-            "block": true
           }
         },
         {
@@ -68,17 +44,12 @@ export const typeDefs: DocumentNode = {
                 "value": "String"
               }
             }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Display name",
-            "block": true
           }
         }
       ],
       "description": {
         "kind": "StringValue",
-        "value": "A user in the system.\n\nDefined in: src/gqlkit/schema/user.ts",
+        "value": "Defined in: src/gqlkit/schema/user.ts",
         "block": true
       }
     }

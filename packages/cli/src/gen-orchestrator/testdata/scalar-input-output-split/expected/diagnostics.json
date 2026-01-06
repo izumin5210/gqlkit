@@ -4,7 +4,7 @@
     "message": "Field 'createdAt' references unresolved type 'DefineScalar<\"DateTime\", Date, \"output\">'",
     "severity": "error",
     "location": {
-      "file": "src/gqlkit/event.ts",
+      "file": "src/gqlkit/schema/event.ts",
       "line": 1,
       "column": 1
     }

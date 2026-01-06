@@ -2,7 +2,6 @@
 
 """Defined in: src/gqlkit/schema/user.ts"""
 type User {
-  email: String
   id: String!
   name: String!
 }

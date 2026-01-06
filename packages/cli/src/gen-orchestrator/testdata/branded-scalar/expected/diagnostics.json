@@ -1,0 +1,12 @@
+[
+  {
+    "code": "UNRESOLVED_REFERENCE",
+    "message": "Field 'id' references unresolved type 'IDString'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/user.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

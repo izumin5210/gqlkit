@@ -1,52 +1,8 @@
 [
   {
-    "code": "PARSE_ERROR",
-    "message": "Invalid @defaultValue: Syntax Error: Expected Name, found String \"Guest\".",
+    "code": "DIRECTORY_NOT_FOUND",
+    "message": "Directory not found: /Users/izumin/src/github.com/izumin5210/gqlkit-izumin5210-default-values/packages/cli/src/gen-orchestrator/testdata/default-value-basic/src/gqlkit/schema",
     "severity": "error",
-    "location": {
-      "file": "src/gqlkit/types.ts",
-      "line": 8,
-      "column": 3
-    }
-  },
-  {
-    "code": "PARSE_ERROR",
-    "message": "Invalid @defaultValue: Syntax Error: Expected Name, found Int \"18\".",
-    "severity": "error",
-    "location": {
-      "file": "src/gqlkit/types.ts",
-      "line": 10,
-      "column": 3
-    }
-  },
-  {
-    "code": "PARSE_ERROR",
-    "message": "Invalid @defaultValue: Syntax Error: Expected Name, found Float \"1.5\".",
-    "severity": "error",
-    "location": {
-      "file": "src/gqlkit/types.ts",
-      "line": 12,
-      "column": 3
-    }
-  },
-  {
-    "code": "PARSE_ERROR",
-    "message": "Invalid @defaultValue: \"true\" is not a valid GraphQL literal.",
-    "severity": "error",
-    "location": {
-      "file": "src/gqlkit/types.ts",
-      "line": 14,
-      "column": 3
-    }
-  },
-  {
-    "code": "PARSE_ERROR",
-    "message": "Invalid @defaultValue: \"null\" is not a valid GraphQL literal.",
-    "severity": "error",
-    "location": {
-      "file": "src/gqlkit/types.ts",
-      "line": 16,
-      "column": 3
-    }
+    "location": null
   }
 ]

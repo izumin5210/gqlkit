@@ -13,10 +13,3 @@ type Event {
   name: String!
   website: URL
 }
-
-type Query
-
-extend type Query {
-  """Defined in: src/gqlkit/schema/query.ts"""
-  events: [Event!]!
-}

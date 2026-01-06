@@ -7,20 +7,8 @@ type Post {
   title: String!
 }
 
-type Query
-
 """Defined in: src/gqlkit/schema/user.ts"""
 type User {
   id: String!
   name: String!
-}
-
-extend type Query {
-  """Defined in: src/gqlkit/schema/query.ts"""
-  users: [User!]!
-}
-
-extend type User {
-  """Defined in: src/gqlkit/schema/user.ts"""
-  posts: [Post!]!
 }
