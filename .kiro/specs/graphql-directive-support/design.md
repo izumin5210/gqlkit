@@ -780,42 +780,120 @@ interface Diagnostic {
 
 **現象**: `WithDirectives<string | null, [...]>` が `String` ではなく `String!` として出力される
 
-**根本原因**: TypeScript は `(string | null) & { $gqlkitDirectives: ... }` を交差型ではなくユニオン型として正規化する（ユニオンに対する交差の分配）。さらに、`null & { ... }` は `never` に正規化されるため、**TypeScript の型システムレベルで nullability が失われる**。これは TypeScript Compiler API の制約であり、gqlkit 側では回避できない。
+**根本原因**: TypeScript は `(string | null) & { $gqlkitDirectives: ... }` を交差型ではなくユニオン型として正規化する（ユニオンに対する交差の分配）。さらに、`null & { ... }` は `never` に正規化されるため、**TypeScript の型システムレベルで nullability が失われる**。
 
-**実装方針の変更**: 当初計画していた `checker.getUnionType()` によるユニオン型再構築は TypeScript の公開 API に存在しないため実装不可。代わりに、ユニオン型のメンバーを再帰的にチェックするロジックと、type-extractor で nullability を追跡するロジックを追加したが、TypeScript の型正規化により `WithDirectives<T | null, [...]>` の nullability は失われ、非 nullable として出力される。
+**解決策**: `$gqlkitOriginalType` プロパティを追加し、元の型 `T` を保持する。これは `$gqlkitDirectives` とは独立したプロパティとして配置し、将来的に他のメタデータ型（スカラーなど）でも再利用可能な汎用的な仕組みとする。
+
+```typescript
+// Before (問題あり):
+type WithDirectives<T, Ds> = T & {
+  readonly " $gqlkitDirectives"?: Ds;
+};
+
+// After (解決):
+type WithDirectives<T, Ds> = T & {
+  readonly " $gqlkitDirectives"?: {
+    readonly directives: Ds;
+  };
+  readonly " $gqlkitOriginalType"?: T;  // ← 汎用的な元の型保持プロパティ
+};
+```
+
+**設計の意図**:
+- `$gqlkitOriginalType` は `$gqlkitDirectives` の外に配置し、汎用的なプロパティとして定義
+- 今後、交差型でメタ情報を付与するケースが発生した場合にも同じパターンで対応可能
+- 型を解析する各所で `$gqlkitOriginalType` がある場合はそちらを優先的に参照
+
+**型正規化の影響と解決の仕組み**:
+
+```typescript
+type Test = WithDirectives<string | null, [AuthDirective]>;
+
+// TypeScript の正規化後:
+// (string & { " $gqlkitDirectives"?: {...}; " $gqlkitOriginalType"?: string | null })
+// | (null & { ... })
+// = (string & { ... }) | never
+// = string & { " $gqlkitDirectives"?: {...}; " $gqlkitOriginalType"?: string | null }
+
+// 外側の型は string になるが、$gqlkitOriginalType には string | null がそのまま残る
+```
 
 **修正対象**:
-- `packages/cli/src/shared/directive-detector.ts`
-- `packages/cli/src/type-extractor/extractor/type-extractor.ts`
+- `packages/runtime/src/index.ts` - `WithDirectives` 型定義の修正
+- `packages/cli/src/shared/directive-detector.ts` - `unwrapDirectiveType()` で `$gqlkitOriginalType` から型を取得
+- `packages/cli/src/shared/directive-detector.ts` - `detectDirectiveMetadata()` で新構造から directives を取得
 
 **修正内容**:
 
 ```typescript
-// hasDirectiveMetadata() - ユニオン型のメンバーを再帰的にチェック
-if (type.isUnion()) {
-  for (const member of type.types) {
-    if (hasDirectiveMetadata(member)) {
-      return true;
+// packages/runtime/src/index.ts
+export type WithDirectives<
+  T,
+  Ds extends ReadonlyArray<
+    Directive<
+      string,
+      Record<string, unknown>,
+      DirectiveLocation | DirectiveLocation[]
+    >
+  >,
+> = T & {
+  readonly " $gqlkitDirectives"?: {
+    readonly directives: Ds;
+  };
+  readonly " $gqlkitOriginalType"?: T;
+};
+
+// packages/cli/src/shared/directive-detector.ts
+const ORIGINAL_TYPE_PROPERTY = " $gqlkitOriginalType";
+
+// unwrapDirectiveType() - $gqlkitOriginalType から元の型を取得
+function unwrapDirectiveType(type: ts.Type, checker: ts.TypeChecker): ts.Type {
+  if (!hasDirectiveMetadata(type)) {
+    return type;
+  }
+
+  // $gqlkitOriginalType プロパティを優先的にチェック
+  const originalTypeProp = type.getProperty(ORIGINAL_TYPE_PROPERTY);
+  if (originalTypeProp) {
+    const rawOriginalType = checker.getTypeOfSymbol(originalTypeProp);
+    const originalType = getActualMetadataType(rawOriginalType);
+    if (originalType) {
+      return originalType;
     }
   }
+
+  // Fallback: intersection/union の既存ロジック
+  // ...
 }
 
-// unwrapDirectiveType() - ユニオン型からディレクティブメタデータを除去
-// 注: TypeScript が null & object = never に正規化するため、
-// 元の nullable 情報は失われる
-if (type.isUnion()) {
-  for (const member of type.types) {
-    if (member.flags & ts.TypeFlags.Null || member.flags & ts.TypeFlags.Undefined) {
-      continue;
-    }
-    if (hasDirectiveMetadata(member)) {
-      return unwrapDirectiveType(member, checker);
+// detectDirectiveMetadataFromProperty() - 新構造から directives を取得
+function detectDirectiveMetadataFromProperty(
+  directivesProp: ts.Symbol,
+  checker: ts.TypeChecker,
+): DirectiveDetectionResult {
+  const rawDirectivesType = checker.getTypeOfSymbol(directivesProp);
+  const directivesType = getActualMetadataType(rawDirectivesType);
+
+  if (!directivesType) {
+    return createEmptyResult();
+  }
+
+  // 新構造: { directives: Ds }
+  const directiveArrayProp = directivesType.getProperty("directives");
+  if (directiveArrayProp) {
+    const directiveArrayType = checker.getTypeOfSymbol(directiveArrayProp);
+    const actualType = getActualMetadataType(directiveArrayType);
+    if (actualType) {
+      return extractDirectivesFromTupleOrArray(actualType, checker);
     }
   }
+
+  // Fallback: 旧構造（後方互換性）- 直接配列形式
+  return extractDirectivesFromTupleOrArray(directivesType, checker);
 }
 ```
 
-**既知の制限**: `WithDirectives<T | null, [...]>` は TypeScript の型正規化により nullability が失われ、`String!` として出力される。nullable なフィールドにディレクティブを付与する場合は、オプショナルプロパティ (`field?: string`) を使用することを推奨。
+**後方互換性**: 既存の `WithDirectives` 使用コード（`T & { " $gqlkitDirectives"?: Ds }` 形式）は引き続き動作する。CLI は両方の構造を検出できるようフォールバックロジックを含む。
 
 **要件トレーサビリティ**: 5.1, 5.2 (型定義からのディレクティブ使用抽出)
 

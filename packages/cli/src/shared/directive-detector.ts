@@ -11,6 +11,7 @@ import { getActualMetadataType } from "./metadata-detector.js";
 const DIRECTIVE_METADATA_PROPERTY = " $gqlkitDirectives";
 const DIRECTIVE_NAME_PROPERTY = " $directiveName";
 const DIRECTIVE_ARGS_PROPERTY = " $directiveArgs";
+const ORIGINAL_TYPE_PROPERTY = " $gqlkitOriginalType";
 
 /**
  * Represents a single directive argument value.
@@ -319,6 +320,25 @@ function detectDirectiveMetadataFromProperty(
     return createEmptyResult();
   }
 
+  // New structure: { directives: Ds }
+  // Check if the type has a "directives" property
+  const directivesArrayProp = directivesType.getProperty("directives");
+  if (directivesArrayProp) {
+    const rawDirectivesArrayType = checker.getTypeOfSymbol(directivesArrayProp);
+    const directivesArrayType = getActualMetadataType(rawDirectivesArrayType);
+    if (directivesArrayType) {
+      return extractDirectivesFromType(directivesArrayType, checker);
+    }
+  }
+
+  // Fallback: Old structure - direct array/tuple form (for backward compatibility)
+  return extractDirectivesFromType(directivesType, checker);
+}
+
+function extractDirectivesFromType(
+  directivesType: ts.Type,
+  checker: ts.TypeChecker,
+): DirectiveDetectionResult {
   const directives: DirectiveInfo[] = [];
   const errors: DirectiveDetectionError[] = [];
 
@@ -399,8 +419,11 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
 
 /**
  * Unwraps a WithDirectives type and returns the base type.
- * For WithDirectives<T, Ds> which is T & { " $gqlkitDirectives"?: Ds },
- * this extracts and returns T.
+ * For WithDirectives<T, Ds> which is T & { " $gqlkitDirectives"?: { directives: Ds }; " $gqlkitOriginalType"?: T },
+ * this extracts and returns T from the $gqlkitOriginalType property.
+ *
+ * The $gqlkitOriginalType property preserves nullability information that would otherwise
+ * be lost due to TypeScript's union type normalization.
  *
  * If the type is not wrapped with WithDirectives, returns the original type.
  */
@@ -412,11 +435,35 @@ export function unwrapDirectiveType(
     return type;
   }
 
+  // First, try to get the original type from $gqlkitOriginalType property
+  const originalTypeProp = type.getProperty(ORIGINAL_TYPE_PROPERTY);
+  if (originalTypeProp) {
+    const rawOriginalType = checker.getTypeOfSymbol(originalTypeProp);
+    const originalType = getActualMetadataType(rawOriginalType);
+    if (originalType) {
+      return originalType;
+    }
+  }
+
+  // Check intersection members for $gqlkitOriginalType
   if (type.isIntersection()) {
+    for (const member of type.types) {
+      const originalProp = member.getProperty(ORIGINAL_TYPE_PROPERTY);
+      if (originalProp) {
+        const rawOriginalType = checker.getTypeOfSymbol(originalProp);
+        const originalType = getActualMetadataType(rawOriginalType);
+        if (originalType) {
+          return originalType;
+        }
+      }
+    }
+
+    // Fallback: filter out metadata members
     const nonDirectiveMembers: ts.Type[] = [];
     for (const member of type.types) {
       const directivesProp = member.getProperty(DIRECTIVE_METADATA_PROPERTY);
-      if (!directivesProp) {
+      const originalTypeProp = member.getProperty(ORIGINAL_TYPE_PROPERTY);
+      if (!directivesProp && !originalTypeProp) {
         nonDirectiveMembers.push(member);
       }
     }

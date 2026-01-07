@@ -267,3 +267,33 @@
 - [x] 12.2 enum 引数値のスキーマ出力を検証する golden file テストを追加する
   - `directive-args` および `directive-basic`、`directive-multiple`、`directive-undefined` テストケースを更新し、`["ADMIN", "USER"]` などの enum パターン引数が EnumValue（クォートなし）で出力されることを検証する
   - _Requirements: 5.5, 8.4_
+
+## Task 13. バグ修正: WithDirectives の nullable 型情報保持（$gqlkitOriginalType アプローチ）
+
+Task 11 では TypeScript のユニオン型正規化による制約を回避できなかったため、`$gqlkitOriginalType` プロパティを使用した新しいアプローチで nullable 型情報を正しく保持する。`$gqlkitOriginalType` は `$gqlkitDirectives` の外に配置し、将来的に他のメタデータ型でも再利用可能な汎用的な仕組みとする。
+
+- [x] 13.1 `WithDirectives` 型定義に `$gqlkitOriginalType` プロパティを追加する
+  - メタデータ構造を `{ " $gqlkitDirectives"?: { directives: Ds }; " $gqlkitOriginalType"?: T }` 形式に拡張する
+  - `$gqlkitOriginalType` は `$gqlkitDirectives` の外に配置し、汎用的な元の型保持プロパティとして定義する
+  - TypeScript のユニオン型正規化で外側の型が変わっても `$gqlkitOriginalType` 内の元の型パラメータは保持される
+  - `@gqlkit-ts/runtime` パッケージの型定義を更新する
+  - 既存の `WithDirectives` 使用コードとの後方互換性を維持する
+  - _Requirements: 2.1, 2.2, 2.4_
+
+- [x] 13.2 (P) `unwrapDirectiveType()` で `$gqlkitOriginalType` から元の型を取得する
+  - `$gqlkitOriginalType` プロパティを優先的にチェックし、存在する場合はそこから元の型を取得する
+  - 後方互換性のため、intersection/union の既存ロジックをフォールバックとして維持する
+  - Task 13.1 完了後に実施
+  - _Requirements: 5.1, 5.2_
+
+- [x] 13.3 (P) `detectDirectiveMetadataFromProperty()` で新構造から directives を取得する
+  - 新構造 `{ directives: Ds }` から `directives` プロパティを取得するロジックを追加する
+  - 後方互換性のため、旧構造（直接配列形式）に対するフォールバックロジックを維持する
+  - Task 13.1 完了後に実施
+  - _Requirements: 5.3, 5.4_
+
+- [x] 13.4 nullable 型のディレクティブ付与を検証する golden file テストを更新する
+  - `directive-basic` テストケースを更新し、nullable 型 (`string | null`) へのディレクティブ付与が正しく nullable として出力されることを検証する
+  - `WithDirectives<string | null, [...]>` が `String` として出力されることを確認する
+  - Task 13.1, 13.2, 13.3 完了後に実施
+  - _Requirements: 5.1, 5.2_

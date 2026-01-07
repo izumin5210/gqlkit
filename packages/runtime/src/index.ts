@@ -43,8 +43,17 @@ export type Directive<
 
 /**
  * Attaches directive metadata to a type.
- * The metadata is embedded as an optional property to maintain compatibility
+ * The metadata is embedded as optional properties to maintain compatibility
  * with the underlying type.
+ *
+ * The structure uses two properties:
+ * - `$gqlkitDirectives`: Contains the directive array wrapped in an object
+ * - `$gqlkitOriginalType`: Preserves the original type T to maintain nullability information
+ *
+ * This design is necessary because TypeScript normalizes `(T | null) & { metadata }` to
+ * `(T & { metadata }) | never`, which loses the null part of the union. By storing
+ * the original type in `$gqlkitOriginalType`, we can recover the full type information
+ * during CLI analysis.
  *
  * @typeParam T - The base type to attach directives to
  * @typeParam Ds - Array of directives to attach
@@ -56,11 +65,16 @@ export type Directive<
  *   id: WithDirectives<IDString, [AuthDirective<["USER"]>]>;
  * };
  *
- * // Type-level directive
+ * // Type-level directive with nullable field
  * type Admin = WithDirectives<{
  *   id: string;
- *   name: string;
+ *   nickname: string | null;
  * }, [AuthDirective<["ADMIN"]>]>;
+ *
+ * // Nullable field with directive (nullability preserved via $gqlkitOriginalType)
+ * type Profile = {
+ *   bio: WithDirectives<string | null, [AuthDirective<["USER"]>]>;
+ * };
  * ```
  */
 export type WithDirectives<
@@ -73,7 +87,10 @@ export type WithDirectives<
     >
   >,
 > = T & {
-  readonly " $gqlkitDirectives"?: Ds;
+  readonly " $gqlkitDirectives"?: {
+    readonly directives: Ds;
+  };
+  readonly " $gqlkitOriginalType"?: T;
 };
 
 /**

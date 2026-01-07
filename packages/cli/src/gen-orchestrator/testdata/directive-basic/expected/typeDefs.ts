@@ -147,6 +147,47 @@ export const typeDefs: DocumentNode = {
               }
             }
           }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "nickname"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "auth"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "role"
+                  },
+                  "value": {
+                    "kind": "ListValue",
+                    "values": [
+                      {
+                        "kind": "EnumValue",
+                        "value": "USER"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
         }
       ],
       "description": {

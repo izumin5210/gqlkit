@@ -408,6 +408,21 @@ function extractFieldsFromType(
         }
       }
       actualPropType = unwrapDirectiveType(propType, checker);
+
+      // Check if the unwrapped type (from $gqlkitOriginalType) is nullable
+      // This handles cases where TypeScript normalizes intersection types
+      // and loses the null from the outer union
+      if (!directiveNullable && actualPropType.isUnion()) {
+        const hasNull = actualPropType.types.some(
+          (t) => t.flags & ts.TypeFlags.Null,
+        );
+        const hasUndefined = actualPropType.types.some(
+          (t) => t.flags & ts.TypeFlags.Undefined,
+        );
+        if (hasNull || hasUndefined) {
+          directiveNullable = true;
+        }
+      }
     }
 
     const typeResult = convertTsTypeToReferenceWithBrandInfo(
