@@ -16,5 +16,5 @@ export const users = defineQuery<NoArgs, User[]>(() => []);
 export const me = defineQuery<
   NoArgs,
   User,
-  WithDirectives<User, [AuthDirective<{ role: ["USER"] }>]>
+  [AuthDirective<{ role: ["USER"] }>]
 >(() => ({ id: "1", email: null, nickname: null }));

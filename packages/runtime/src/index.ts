@@ -238,19 +238,25 @@ export interface ResolverMetadataShape {
  * @typeParam TArgs - The type of arguments the resolver accepts
  * @typeParam TResult - The return type of the resolver
  * @typeParam TContext - The context type (defaults to unknown)
- * @typeParam TDirectiveResult - Optional type with directive metadata (defaults to TResult)
+ * @typeParam TDirectives - Array of directives to attach to this field (defaults to [])
  */
 export type QueryResolver<
   TArgs,
   TResult,
   TContext = unknown,
-  TDirectiveResult extends TResult = TResult,
+  TDirectives extends ReadonlyArray<
+    Directive<
+      string,
+      Record<string, unknown>,
+      DirectiveLocation | DirectiveLocation[]
+    >
+  > = [],
 > = QueryResolverFn<TArgs, TResult, TContext> & {
   " $gqlkitResolver"?: {
     kind: "query";
     args: TArgs;
     result: TResult;
-    directiveResult: TDirectiveResult;
+    directives: TDirectives;
   };
 };
 
@@ -261,19 +267,25 @@ export type QueryResolver<
  * @typeParam TArgs - The type of arguments the resolver accepts
  * @typeParam TResult - The return type of the resolver
  * @typeParam TContext - The context type (defaults to unknown)
- * @typeParam TDirectiveResult - Optional type with directive metadata (defaults to TResult)
+ * @typeParam TDirectives - Array of directives to attach to this field (defaults to [])
  */
 export type MutationResolver<
   TArgs,
   TResult,
   TContext = unknown,
-  TDirectiveResult extends TResult = TResult,
+  TDirectives extends ReadonlyArray<
+    Directive<
+      string,
+      Record<string, unknown>,
+      DirectiveLocation | DirectiveLocation[]
+    >
+  > = [],
 > = MutationResolverFn<TArgs, TResult, TContext> & {
   " $gqlkitResolver"?: {
     kind: "mutation";
     args: TArgs;
     result: TResult;
-    directiveResult: TDirectiveResult;
+    directives: TDirectives;
   };
 };
 
@@ -285,21 +297,27 @@ export type MutationResolver<
  * @typeParam TArgs - The type of arguments the resolver accepts
  * @typeParam TResult - The return type of the resolver
  * @typeParam TContext - The context type (defaults to unknown)
- * @typeParam TDirectiveResult - Optional type with directive metadata (defaults to TResult)
+ * @typeParam TDirectives - Array of directives to attach to this field (defaults to [])
  */
 export type FieldResolver<
   TParent,
   TArgs,
   TResult,
   TContext = unknown,
-  TDirectiveResult extends TResult = TResult,
+  TDirectives extends ReadonlyArray<
+    Directive<
+      string,
+      Record<string, unknown>,
+      DirectiveLocation | DirectiveLocation[]
+    >
+  > = [],
 > = FieldResolverFn<TParent, TArgs, TResult, TContext> & {
   " $gqlkitResolver"?: {
     kind: "field";
     parent: TParent;
     args: TArgs;
     result: TResult;
-    directiveResult: TDirectiveResult;
+    directives: TDirectives;
   };
 };
 
@@ -313,7 +331,7 @@ export interface GqlkitApis<TContext> {
    * Defines a Query field resolver with the specified Context type.
    * @typeParam TArgs - The type of arguments the resolver accepts
    * @typeParam TResult - The return type of the resolver
-   * @typeParam TDirectiveResult - Optional type with directive metadata (defaults to TResult)
+   * @typeParam TDirectives - Array of directives to attach to this field (defaults to [])
    * @param resolver - The resolver function
    * @returns The resolver with metadata for CLI detection
    *
@@ -323,20 +341,30 @@ export interface GqlkitApis<TContext> {
    * export const users = defineQuery<NoArgs, User[]>(() => []);
    *
    * // With directives
-   * export const me = defineQuery<NoArgs, User, WithDirectives<User, [AuthDirective<["USER"]>]>>(
+   * export const me = defineQuery<NoArgs, User, [AuthDirective<{ role: ["USER"] }>]>(
    *   (root, args, ctx) => ctx.currentUser
    * );
    * ```
    */
-  defineQuery: <TArgs, TResult, TDirectiveResult extends TResult = TResult>(
+  defineQuery: <
+    TArgs,
+    TResult,
+    TDirectives extends ReadonlyArray<
+      Directive<
+        string,
+        Record<string, unknown>,
+        DirectiveLocation | DirectiveLocation[]
+      >
+    > = [],
+  >(
     resolver: QueryResolverFn<TArgs, TResult, TContext>,
-  ) => QueryResolver<TArgs, TResult, TContext, TDirectiveResult>;
+  ) => QueryResolver<TArgs, TResult, TContext, TDirectives>;
 
   /**
    * Defines a Mutation field resolver with the specified Context type.
    * @typeParam TArgs - The type of arguments the resolver accepts
    * @typeParam TResult - The return type of the resolver
-   * @typeParam TDirectiveResult - Optional type with directive metadata (defaults to TResult)
+   * @typeParam TDirectives - Array of directives to attach to this field (defaults to [])
    * @param resolver - The resolver function
    * @returns The resolver with metadata for CLI detection
    *
@@ -346,21 +374,31 @@ export interface GqlkitApis<TContext> {
    * export const createUser = defineMutation<CreateUserInput, User>((root, args) => ({ ... }));
    *
    * // With directives
-   * export const deleteUser = defineMutation<{ id: string }, boolean, WithDirectives<boolean, [AuthDirective<["ADMIN"]>]>>(
+   * export const deleteUser = defineMutation<{ id: string }, boolean, [AuthDirective<{ role: ["ADMIN"] }>]>(
    *   (root, args, ctx) => true
    * );
    * ```
    */
-  defineMutation: <TArgs, TResult, TDirectiveResult extends TResult = TResult>(
+  defineMutation: <
+    TArgs,
+    TResult,
+    TDirectives extends ReadonlyArray<
+      Directive<
+        string,
+        Record<string, unknown>,
+        DirectiveLocation | DirectiveLocation[]
+      >
+    > = [],
+  >(
     resolver: MutationResolverFn<TArgs, TResult, TContext>,
-  ) => MutationResolver<TArgs, TResult, TContext, TDirectiveResult>;
+  ) => MutationResolver<TArgs, TResult, TContext, TDirectives>;
 
   /**
    * Defines an object type field resolver with the specified Context type.
    * @typeParam TParent - The parent type this field belongs to
    * @typeParam TArgs - The type of arguments the resolver accepts
    * @typeParam TResult - The return type of the resolver
-   * @typeParam TDirectiveResult - Optional type with directive metadata (defaults to TResult)
+   * @typeParam TDirectives - Array of directives to attach to this field (defaults to [])
    * @param resolver - The resolver function
    * @returns The resolver with metadata for CLI detection
    *
@@ -370,7 +408,7 @@ export interface GqlkitApis<TContext> {
    * export const userPosts = defineField<User, NoArgs, Post[]>((parent) => []);
    *
    * // With directives
-   * export const userEmail = defineField<User, NoArgs, string, WithDirectives<string, [AuthDirective<["ADMIN"]>]>>(
+   * export const userEmail = defineField<User, NoArgs, string, [AuthDirective<{ role: ["ADMIN"] }>]>(
    *   (parent) => parent.email
    * );
    * ```
@@ -379,10 +417,16 @@ export interface GqlkitApis<TContext> {
     TParent,
     TArgs,
     TResult,
-    TDirectiveResult extends TResult = TResult,
+    TDirectives extends ReadonlyArray<
+      Directive<
+        string,
+        Record<string, unknown>,
+        DirectiveLocation | DirectiveLocation[]
+      >
+    > = [],
   >(
     resolver: FieldResolverFn<TParent, TArgs, TResult, TContext>,
-  ) => FieldResolver<TParent, TArgs, TResult, TContext, TDirectiveResult>;
+  ) => FieldResolver<TParent, TArgs, TResult, TContext, TDirectives>;
 }
 
 /**

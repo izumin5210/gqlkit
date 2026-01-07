@@ -1,7 +1,7 @@
 import ts from "typescript";
 import {
   type DirectiveInfo,
-  detectDirectiveMetadata,
+  extractDirectivesFromType,
 } from "../../shared/directive-detector.js";
 import {
   detectScalarMetadata,
@@ -334,7 +334,7 @@ function extractDirectivesFromTypeNode(
   }
 
   const type = checker.getTypeFromTypeNode(typeNode);
-  const directiveResult = detectDirectiveMetadata(type, checker);
+  const directiveResult = extractDirectivesFromType(type, checker);
 
   if (directiveResult.directives.length > 0) {
     return directiveResult.directives;

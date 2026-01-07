@@ -335,7 +335,11 @@ function detectDirectiveMetadataFromProperty(
   return extractDirectivesFromType(directivesType, checker);
 }
 
-function extractDirectivesFromType(
+/**
+ * Extracts directives from a tuple or array type.
+ * Use this to extract directives from a type like [AuthDirective, CacheDirective].
+ */
+export function extractDirectivesFromType(
   directivesType: ts.Type,
   checker: ts.TypeChecker,
 ): DirectiveDetectionResult {

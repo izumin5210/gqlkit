@@ -16,7 +16,7 @@ export type {
   DirectiveDetectionResult,
   DirectiveInfo,
 } from "./directive-detector.js";
-;
+
 export {
   type ScanOptions,
   type ScanResult,
