@@ -4,6 +4,7 @@ import type {
   GraphQLInputValue,
   TypeExtension as ResolverTypeExtension,
 } from "../../resolver-extractor/index.js";
+import type { DirectiveInfo } from "../../shared/directive-detector.js";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 import type { CollectedScalarType } from "../../type-extractor/collector/scalar-collector.js";
 import { mergeDescriptions } from "../../type-extractor/collector/scalar-collector.js";
@@ -19,6 +20,7 @@ export interface BaseField {
   readonly type: GraphQLFieldType;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
 export interface BaseType {
@@ -30,6 +32,7 @@ export interface BaseType {
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
   readonly sourceFile: string | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
 export interface InputType {
@@ -48,6 +51,7 @@ export interface ExtensionField {
   readonly resolverExportName: string | null;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
 export interface TypeExtension {
@@ -88,6 +92,7 @@ function convertToExtensionField(
     resolverExportName: field.resolverExportName,
     description: field.description,
     deprecated: field.deprecated,
+    directives: field.directives,
   };
 }
 
@@ -126,6 +131,7 @@ export function integrate(
             type: field.type,
             description: field.description,
             deprecated: field.deprecated,
+            directives: field.directives,
           })) ?? [],
         sourceFile: type.sourceFile,
         description: type.description,
@@ -141,6 +147,7 @@ export function integrate(
         description: type.description,
         deprecated: type.deprecated,
         sourceFile: type.sourceFile,
+        directives: type.directives,
       });
     } else if (type.kind === "Object") {
       baseTypes.push({
@@ -152,12 +159,14 @@ export function integrate(
             type: field.type,
             description: field.description,
             deprecated: field.deprecated,
+            directives: field.directives,
           })) ?? null,
         unionMembers: null,
         enumValues: null,
         description: type.description,
         deprecated: type.deprecated,
         sourceFile: type.sourceFile,
+        directives: type.directives,
       });
     } else {
       baseTypes.push({
@@ -169,6 +178,7 @@ export function integrate(
         description: type.description,
         deprecated: null,
         sourceFile: type.sourceFile,
+        directives: type.directives,
       });
     }
   }
@@ -186,6 +196,7 @@ export function integrate(
       description: null,
       deprecated: null,
       sourceFile: null,
+      directives: null,
     });
   }
   if (hasMutation) {
@@ -198,6 +209,7 @@ export function integrate(
       description: null,
       deprecated: null,
       sourceFile: null,
+      directives: null,
     });
   }
 

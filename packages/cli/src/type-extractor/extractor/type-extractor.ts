@@ -1,4 +1,10 @@
 import ts from "typescript";
+import {
+  type DirectiveInfo,
+  detectDirectiveMetadata,
+  hasDirectiveMetadata,
+  unwrapWithDirectivesType,
+} from "../../shared/directive-detector.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
 import {
   extractTSDocFromSymbol,
@@ -315,15 +321,61 @@ function convertTsTypeToReferenceWithBrandInfo(
   };
 }
 
+function collectPropertiesFromType(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+): ts.Symbol[] {
+  if (type.isIntersection()) {
+    const allProps = new Map<string, ts.Symbol>();
+    for (const member of type.types) {
+      let resolvedMember = member;
+
+      if (member.symbol) {
+        const declaredType = checker.getDeclaredTypeOfSymbol(member.symbol);
+        if (declaredType && declaredType !== member) {
+          resolvedMember = declaredType;
+        }
+      }
+
+      const memberProps = collectPropertiesFromType(resolvedMember, checker);
+      for (const prop of memberProps) {
+        const propName = prop.getName();
+        if (!allProps.has(propName)) {
+          allProps.set(propName, prop);
+        }
+      }
+    }
+    return [...allProps.values()];
+  }
+
+  const properties = type.getProperties();
+  if (properties.length > 0) {
+    return [...properties];
+  }
+
+  const apparentType = checker.getApparentType(type);
+  if (apparentType !== type) {
+    return [...apparentType.getProperties()];
+  }
+
+  return [];
+}
+
 function extractFieldsFromType(
   type: ts.Type,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
 ): FieldDefinition[] {
   const fields: FieldDefinition[] = [];
-  const properties = type.getProperties();
+  const properties = collectPropertiesFromType(type, checker);
 
   for (const prop of properties) {
+    const propName = prop.getName();
+
+    if (propName.startsWith(" $")) {
+      continue;
+    }
+
     const propType = checker.getTypeOfSymbol(prop);
     const declarations = prop.getDeclarations();
     const declaration = declarations?.[0];
@@ -334,18 +386,31 @@ function extractFieldsFromType(
     }
 
     const tsdocInfo = extractTSDocFromSymbol(prop, checker);
+
+    let directives: ReadonlyArray<DirectiveInfo> | null = null;
+    let actualPropType = propType;
+
+    if (hasDirectiveMetadata(propType)) {
+      const directiveResult = detectDirectiveMetadata(propType, checker);
+      if (directiveResult.directives.length > 0) {
+        directives = directiveResult.directives;
+      }
+      actualPropType = unwrapWithDirectivesType(propType, checker);
+    }
+
     const typeResult = convertTsTypeToReferenceWithBrandInfo(
-      propType,
+      actualPropType,
       checker,
       globalTypeMappings,
     );
 
     fields.push({
-      name: prop.getName(),
+      name: propName,
       tsType: typeResult.tsType,
       optional,
       description: tsdocInfo.description ?? null,
       deprecated: tsdocInfo.deprecated ?? null,
+      directives,
     });
   }
 
@@ -675,6 +740,7 @@ export function extractTypesFromProgram(
           exportKind: hasDefaultExport ? "default" : "named",
           description: tsdocInfo.description,
           deprecated: tsdocInfo.deprecated,
+          directives: null,
         };
 
         types.push({
@@ -734,10 +800,39 @@ export function extractTypesFromProgram(
           return;
         }
 
-        const kind = determineTypeKind(node, type);
-        const unionMembers = extractUnionMembers(type);
+        let typeDirectives: ReadonlyArray<DirectiveInfo> | null = null;
+        let actualType = type;
+
+        if (hasDirectiveMetadata(type)) {
+          const directiveResult = detectDirectiveMetadata(type, checker);
+          if (directiveResult.directives.length > 0) {
+            typeDirectives = directiveResult.directives;
+          }
+          if (directiveResult.errors.length > 0) {
+            const { line: errorLine, character: errorColumn } =
+              sourceFile.getLineAndCharacterOfPosition(
+                node.getStart(sourceFile),
+              );
+            for (const error of directiveResult.errors) {
+              diagnostics.push({
+                code: error.code,
+                message: `Type '${name}': ${error.message}`,
+                severity: "error",
+                location: {
+                  file: filePath,
+                  line: errorLine + 1,
+                  column: errorColumn + 1,
+                },
+              });
+            }
+          }
+          actualType = unwrapWithDirectivesType(type, checker);
+        }
+
+        const kind = determineTypeKind(node, actualType);
+        const unionMembers = extractUnionMembers(actualType);
         const inlineObjectResult = extractInlineObjectMembers(
-          type,
+          actualType,
           checker,
           globalTypeMappings,
         );
@@ -750,10 +845,14 @@ export function extractTypesFromProgram(
           exportKind: hasDefaultExport ? "default" : "named",
           description: tsdocInfo.description,
           deprecated: tsdocInfo.deprecated,
+          directives: typeDirectives,
         };
 
         if (kind === "enum") {
-          const enumMembers = extractStringLiteralUnionMembers(type, checker);
+          const enumMembers = extractStringLiteralUnionMembers(
+            actualType,
+            checker,
+          );
           types.push({
             metadata,
             fields: [],
@@ -767,7 +866,7 @@ export function extractTypesFromProgram(
         const fields =
           kind === "union"
             ? []
-            : extractFieldsFromType(type, checker, globalTypeMappings);
+            : extractFieldsFromType(actualType, checker, globalTypeMappings);
 
         if (name.endsWith("Input") && kind === "union") {
           if (

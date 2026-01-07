@@ -191,6 +191,7 @@ function convertDefineApiToFields(
       resolverExportName: resolver.fieldName,
       description: resolver.description,
       deprecated: resolver.deprecated,
+      directives: resolver.directives,
     };
 
     if (resolver.resolverType === "query") {

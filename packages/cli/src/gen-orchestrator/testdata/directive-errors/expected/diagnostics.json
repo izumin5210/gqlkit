@@ -1,0 +1,22 @@
+[
+  {
+    "code": "EMPTY_DIRECTIVE_NAME",
+    "message": "Type 'TypeWithEmptyDirectiveName': Directive name cannot be empty",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 21,
+      "column": 1
+    }
+  },
+  {
+    "code": "UNRESOLVABLE_ARGUMENT",
+    "message": "Type 'TypeWithUnresolvableArg': Cannot resolve argument 'value' for directive '@unresolvable'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 26,
+      "column": 1
+    }
+  }
+]

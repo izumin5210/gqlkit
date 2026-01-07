@@ -1,6 +1,56 @@
 import type { GraphQLResolveInfo } from "graphql";
 
 /**
+ * Represents a GraphQL directive with name and arguments.
+ * Used to define custom directives that can be attached to types and fields.
+ *
+ * @typeParam Name - The directive name (without @)
+ * @typeParam Args - The argument types for the directive
+ *
+ * @example
+ * ```typescript
+ * type AuthDirective<R extends string[]> = Directive<"auth", { roles: R }>;
+ * type CacheDirective = Directive<"cache", { maxAge: number }>;
+ * ```
+ */
+export type Directive<
+  Name extends string,
+  Args extends Record<string, unknown> = Record<string, never>,
+> = {
+  readonly " $directiveName": Name;
+  readonly " $directiveArgs": Args;
+};
+
+/**
+ * Attaches directive metadata to a type.
+ * The metadata is embedded as an optional property to maintain compatibility
+ * with the underlying type.
+ *
+ * @typeParam T - The base type to attach directives to
+ * @typeParam Ds - Array of directives to attach
+ *
+ * @example
+ * ```typescript
+ * // Field-level directive
+ * type User = {
+ *   id: WithDirectives<IDString, [AuthDirective<["USER"]>]>;
+ * };
+ *
+ * // Type-level directive
+ * type Admin = WithDirectives<{
+ *   id: string;
+ *   name: string;
+ * }, [AuthDirective<["ADMIN"]>]>;
+ * ```
+ */
+export type WithDirectives<
+  T,
+  Ds extends ReadonlyArray<Directive<string, Record<string, unknown>>>,
+> = T & {
+  readonly " $gqlkitDirectives"?: Ds;
+};
+
+/**
  * Scalar metadata structure embedded in intersection types.
  * Used by CLI to detect and identify scalar types through type analysis.
  *
@@ -145,16 +195,19 @@ export interface ResolverMetadataShape {
  * @typeParam TArgs - The type of arguments the resolver accepts
  * @typeParam TResult - The return type of the resolver
  * @typeParam TContext - The context type (defaults to unknown)
+ * @typeParam TDirectiveResult - Optional type with directive metadata (defaults to TResult)
  */
-export type QueryResolver<TArgs, TResult, TContext = unknown> = QueryResolverFn<
+export type QueryResolver<
   TArgs,
   TResult,
-  TContext
-> & {
+  TContext = unknown,
+  TDirectiveResult extends TResult = TResult,
+> = QueryResolverFn<TArgs, TResult, TContext> & {
   " $gqlkitResolver"?: {
     kind: "query";
     args: TArgs;
     result: TResult;
+    directiveResult: TDirectiveResult;
   };
 };
 
@@ -165,16 +218,19 @@ export type QueryResolver<TArgs, TResult, TContext = unknown> = QueryResolverFn<
  * @typeParam TArgs - The type of arguments the resolver accepts
  * @typeParam TResult - The return type of the resolver
  * @typeParam TContext - The context type (defaults to unknown)
+ * @typeParam TDirectiveResult - Optional type with directive metadata (defaults to TResult)
  */
 export type MutationResolver<
   TArgs,
   TResult,
   TContext = unknown,
+  TDirectiveResult extends TResult = TResult,
 > = MutationResolverFn<TArgs, TResult, TContext> & {
   " $gqlkitResolver"?: {
     kind: "mutation";
     args: TArgs;
     result: TResult;
+    directiveResult: TDirectiveResult;
   };
 };
 
@@ -186,18 +242,21 @@ export type MutationResolver<
  * @typeParam TArgs - The type of arguments the resolver accepts
  * @typeParam TResult - The return type of the resolver
  * @typeParam TContext - The context type (defaults to unknown)
+ * @typeParam TDirectiveResult - Optional type with directive metadata (defaults to TResult)
  */
 export type FieldResolver<
   TParent,
   TArgs,
   TResult,
   TContext = unknown,
+  TDirectiveResult extends TResult = TResult,
 > = FieldResolverFn<TParent, TArgs, TResult, TContext> & {
   " $gqlkitResolver"?: {
     kind: "field";
     parent: TParent;
     args: TArgs;
     result: TResult;
+    directiveResult: TDirectiveResult;
   };
 };
 
@@ -211,35 +270,76 @@ export interface GqlkitApis<TContext> {
    * Defines a Query field resolver with the specified Context type.
    * @typeParam TArgs - The type of arguments the resolver accepts
    * @typeParam TResult - The return type of the resolver
+   * @typeParam TDirectiveResult - Optional type with directive metadata (defaults to TResult)
    * @param resolver - The resolver function
    * @returns The resolver with metadata for CLI detection
+   *
+   * @example
+   * ```typescript
+   * // Without directives
+   * export const users = defineQuery<NoArgs, User[]>(() => []);
+   *
+   * // With directives
+   * export const me = defineQuery<NoArgs, User, WithDirectives<User, [AuthDirective<["USER"]>]>>(
+   *   (root, args, ctx) => ctx.currentUser
+   * );
+   * ```
    */
-  defineQuery: <TArgs, TResult>(
+  defineQuery: <TArgs, TResult, TDirectiveResult extends TResult = TResult>(
     resolver: QueryResolverFn<TArgs, TResult, TContext>,
-  ) => QueryResolver<TArgs, TResult, TContext>;
+  ) => QueryResolver<TArgs, TResult, TContext, TDirectiveResult>;
 
   /**
    * Defines a Mutation field resolver with the specified Context type.
    * @typeParam TArgs - The type of arguments the resolver accepts
    * @typeParam TResult - The return type of the resolver
+   * @typeParam TDirectiveResult - Optional type with directive metadata (defaults to TResult)
    * @param resolver - The resolver function
    * @returns The resolver with metadata for CLI detection
+   *
+   * @example
+   * ```typescript
+   * // Without directives
+   * export const createUser = defineMutation<CreateUserInput, User>((root, args) => ({ ... }));
+   *
+   * // With directives
+   * export const deleteUser = defineMutation<{ id: string }, boolean, WithDirectives<boolean, [AuthDirective<["ADMIN"]>]>>(
+   *   (root, args, ctx) => true
+   * );
+   * ```
    */
-  defineMutation: <TArgs, TResult>(
+  defineMutation: <TArgs, TResult, TDirectiveResult extends TResult = TResult>(
     resolver: MutationResolverFn<TArgs, TResult, TContext>,
-  ) => MutationResolver<TArgs, TResult, TContext>;
+  ) => MutationResolver<TArgs, TResult, TContext, TDirectiveResult>;
 
   /**
    * Defines an object type field resolver with the specified Context type.
    * @typeParam TParent - The parent type this field belongs to
    * @typeParam TArgs - The type of arguments the resolver accepts
    * @typeParam TResult - The return type of the resolver
+   * @typeParam TDirectiveResult - Optional type with directive metadata (defaults to TResult)
    * @param resolver - The resolver function
    * @returns The resolver with metadata for CLI detection
+   *
+   * @example
+   * ```typescript
+   * // Without directives
+   * export const userPosts = defineField<User, NoArgs, Post[]>((parent) => []);
+   *
+   * // With directives
+   * export const userEmail = defineField<User, NoArgs, string, WithDirectives<string, [AuthDirective<["ADMIN"]>]>>(
+   *   (parent) => parent.email
+   * );
+   * ```
    */
-  defineField: <TParent, TArgs, TResult>(
+  defineField: <
+    TParent,
+    TArgs,
+    TResult,
+    TDirectiveResult extends TResult = TResult,
+  >(
     resolver: FieldResolverFn<TParent, TArgs, TResult, TContext>,
-  ) => FieldResolver<TParent, TArgs, TResult, TContext>;
+  ) => FieldResolver<TParent, TArgs, TResult, TContext, TDirectiveResult>;
 }
 
 /**
@@ -271,21 +371,22 @@ export interface GqlkitApis<TContext> {
  * ```
  */
 export function createGqlkitApis<TContext = unknown>(): GqlkitApis<TContext> {
-  return {
+  const apis = {
     defineQuery: <TArgs, TResult>(
       resolver: QueryResolverFn<TArgs, TResult, TContext>,
-    ): QueryResolver<TArgs, TResult, TContext> => {
-      return resolver as QueryResolver<TArgs, TResult, TContext>;
+    ) => {
+      return resolver;
     },
     defineMutation: <TArgs, TResult>(
       resolver: MutationResolverFn<TArgs, TResult, TContext>,
-    ): MutationResolver<TArgs, TResult, TContext> => {
-      return resolver as MutationResolver<TArgs, TResult, TContext>;
+    ) => {
+      return resolver;
     },
     defineField: <TParent, TArgs, TResult>(
       resolver: FieldResolverFn<TParent, TArgs, TResult, TContext>,
-    ): FieldResolver<TParent, TArgs, TResult, TContext> => {
-      return resolver as FieldResolver<TParent, TArgs, TResult, TContext>;
+    ) => {
+      return resolver;
     },
   };
+  return apis as unknown as GqlkitApis<TContext>;
 }

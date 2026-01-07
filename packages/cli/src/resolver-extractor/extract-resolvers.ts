@@ -1,3 +1,4 @@
+import type { DirectiveInfo } from "../shared/directive-detector.js";
 import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
 import type {
   Diagnostics,
@@ -20,6 +21,7 @@ export interface GraphQLFieldDefinition {
   readonly resolverExportName: string | null;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
 export interface QueryFieldDefinitions {

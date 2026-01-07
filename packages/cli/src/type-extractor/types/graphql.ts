@@ -1,3 +1,4 @@
+import type { DirectiveInfo } from "../../shared/directive-detector.js";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 
 export type GraphQLTypeKind =
@@ -19,6 +20,7 @@ export interface FieldInfo {
   readonly type: GraphQLFieldType;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
 export interface EnumValueInfo {
@@ -37,4 +39,5 @@ export interface GraphQLTypeInfo {
   readonly sourceFile: string;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }

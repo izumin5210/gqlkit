@@ -1,3 +1,4 @@
+import type { DirectiveInfo } from "../../shared/directive-detector.js";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 
 export type TypeKind = "object" | "interface" | "union" | "enum";
@@ -25,6 +26,7 @@ export interface TypeMetadata {
   readonly exportKind: "named" | "default";
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
 export interface TSTypeReference {
@@ -48,6 +50,7 @@ export interface FieldDefinition {
   readonly optional: boolean;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
 export interface EnumMemberInfo {

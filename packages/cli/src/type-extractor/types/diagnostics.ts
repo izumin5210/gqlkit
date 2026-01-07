@@ -54,7 +54,9 @@ export type DiagnosticCode =
   | "ONEOF_NAMED_TYPE_UNION"
   | "MULTIPLE_INPUT_TYPES"
   | "MISSING_INPUT_TYPE"
-  | "MISSING_OUTPUT_TYPE";
+  | "MISSING_OUTPUT_TYPE"
+  | "EMPTY_DIRECTIVE_NAME"
+  | "UNRESOLVABLE_ARGUMENT";
 
 export interface Diagnostic {
   readonly code: DiagnosticCode;

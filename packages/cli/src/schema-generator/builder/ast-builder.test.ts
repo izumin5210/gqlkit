@@ -264,6 +264,7 @@ describe("buildDeprecatedDirective", () => {
           deprecated: null,
           unionMembers: null,
           enumValues: null,
+          directives: null,
           fields: [
             {
               name: "oldField",
@@ -278,6 +279,7 @@ describe("buildDeprecatedDirective", () => {
                 isDeprecated: true,
                 reason: "Use newField instead",
               } satisfies DeprecationInfo,
+              directives: null,
             },
           ],
         },
@@ -327,6 +329,7 @@ describe("buildDeprecatedDirective", () => {
           deprecated: null,
           unionMembers: null,
           enumValues: null,
+          directives: null,
           fields: [
             {
               name: "oldField",
@@ -341,6 +344,7 @@ describe("buildDeprecatedDirective", () => {
                 isDeprecated: true,
                 reason: null,
               } satisfies DeprecationInfo,
+              directives: null,
             },
           ],
         },
@@ -390,6 +394,7 @@ describe("buildDeprecatedDirective", () => {
           deprecated: null,
           fields: null,
           unionMembers: null,
+          directives: null,
           enumValues: [
             {
               name: "ACTIVE",
@@ -455,6 +460,7 @@ describe("buildDeprecatedDirective", () => {
           deprecated: null,
           fields: null,
           unionMembers: null,
+          directives: null,
           enumValues: [
             {
               name: "ACTIVE",

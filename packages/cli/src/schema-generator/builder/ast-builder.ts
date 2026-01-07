@@ -1,6 +1,8 @@
 import path from "node:path";
 import {
+  type ConstArgumentNode,
   type ConstDirectiveNode,
+  type ConstValueNode,
   type DefinitionNode,
   type DocumentNode,
   type EnumTypeDefinitionNode,
@@ -21,6 +23,11 @@ import {
   type UnionTypeDefinitionNode,
 } from "graphql";
 import type { GraphQLInputValue } from "../../resolver-extractor/index.js";
+import type {
+  DirectiveArgument,
+  DirectiveArgumentValue,
+  DirectiveInfo,
+} from "../../shared/directive-detector.js";
 import { toPosixPath } from "../../shared/index.js";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 import type {
@@ -100,6 +107,83 @@ function buildOneOfDirective(): ConstDirectiveNode {
   };
 }
 
+function buildDirectiveArgumentValue(
+  value: DirectiveArgumentValue,
+): ConstValueNode {
+  switch (value.kind) {
+    case "string":
+      return {
+        kind: Kind.STRING,
+        value: value.value,
+      };
+    case "number":
+      return Number.isInteger(value.value)
+        ? { kind: Kind.INT, value: String(value.value) }
+        : { kind: Kind.FLOAT, value: String(value.value) };
+    case "boolean":
+      return {
+        kind: Kind.BOOLEAN,
+        value: value.value,
+      };
+    case "enum":
+      return {
+        kind: Kind.ENUM,
+        value: value.value,
+      };
+    case "list":
+      return {
+        kind: Kind.LIST,
+        values: value.values.map(buildDirectiveArgumentValue),
+      };
+    case "object":
+      return {
+        kind: Kind.OBJECT,
+        fields: value.fields.map((f) => ({
+          kind: Kind.OBJECT_FIELD as const,
+          name: buildNameNode(f.name),
+          value: buildDirectiveArgumentValue(f.value),
+        })),
+      };
+  }
+}
+
+function buildDirectiveArgument(arg: DirectiveArgument): ConstArgumentNode {
+  return {
+    kind: Kind.ARGUMENT,
+    name: buildNameNode(arg.name),
+    value: buildDirectiveArgumentValue(arg.value),
+  };
+}
+
+function buildCustomDirective(directive: DirectiveInfo): ConstDirectiveNode {
+  const args = directive.args.map(buildDirectiveArgument);
+
+  return {
+    kind: Kind.DIRECTIVE,
+    name: buildNameNode(directive.name),
+    ...(args.length > 0 ? { arguments: args } : {}),
+  };
+}
+
+function buildDirectives(
+  directives: ReadonlyArray<DirectiveInfo> | null,
+  deprecated: DeprecationInfo | null,
+): ConstDirectiveNode[] {
+  const result: ConstDirectiveNode[] = [];
+
+  if (deprecated) {
+    result.push(buildDeprecatedDirective(deprecated));
+  }
+
+  if (directives) {
+    for (const directive of directives) {
+      result.push(buildCustomDirective(directive));
+    }
+  }
+
+  return result;
+}
+
 function buildNamedTypeNode(typeName: string): NamedTypeNode {
   return {
     kind: Kind.NAMED_TYPE,
@@ -167,10 +251,7 @@ function sortByName<T extends { name: string }>(items: ReadonlyArray<T>): T[] {
 }
 
 function buildBaseFieldDefinitionNode(field: BaseField): FieldDefinitionNode {
-  const directives: ConstDirectiveNode[] = [];
-  if (field.deprecated) {
-    directives.push(buildDeprecatedDirective(field.deprecated));
-  }
+  const directives = buildDirectives(field.directives, field.deprecated);
 
   return {
     kind: Kind.FIELD_DEFINITION,
@@ -187,10 +268,7 @@ function buildFieldDefinitionNode(
   field: ExtensionField,
   sourceRoot?: string,
 ): FieldDefinitionNode {
-  const directives: ConstDirectiveNode[] = [];
-  if (field.deprecated) {
-    directives.push(buildDeprecatedDirective(field.deprecated));
-  }
+  const directives = buildDirectives(field.directives, field.deprecated);
 
   const args = field.args?.map(buildInputValueDefinitionNode);
 
@@ -215,10 +293,7 @@ function buildObjectTypeDefinitionNode(
   sourceRoot?: string,
 ): ObjectTypeDefinitionNode {
   const sortedFields = baseType.fields ? sortByName(baseType.fields) : [];
-  const directives: ConstDirectiveNode[] = [];
-  if (baseType.deprecated) {
-    directives.push(buildDeprecatedDirective(baseType.deprecated));
-  }
+  const directives = buildDirectives(baseType.directives, baseType.deprecated);
 
   const description = appendSourceLocation(
     baseType.description,
@@ -309,10 +384,7 @@ function buildScalarTypeDefinitionNode(
 function buildInputFieldDefinitionNode(
   field: BaseField,
 ): InputValueDefinitionNode {
-  const directives: ConstDirectiveNode[] = [];
-  if (field.deprecated) {
-    directives.push(buildDeprecatedDirective(field.deprecated));
-  }
+  const directives = buildDirectives(field.directives, field.deprecated);
 
   return {
     kind: Kind.INPUT_VALUE_DEFINITION,
