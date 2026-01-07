@@ -17,6 +17,11 @@ export type {
   DirectiveInfo,
 } from "./directive-detector.js";
 export {
+  detectDirectiveMetadata,
+  hasDirectiveMetadata,
+  unwrapDirectiveType,
+} from "./directive-detector.js";
+export {
   type ScanOptions,
   type ScanResult,
   scanDirectory,

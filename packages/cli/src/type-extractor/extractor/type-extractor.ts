@@ -3,7 +3,7 @@ import {
   type DirectiveInfo,
   detectDirectiveMetadata,
   hasDirectiveMetadata,
-  unwrapWithDirectivesType,
+  unwrapDirectiveType,
 } from "../../shared/directive-detector.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
 import {
@@ -387,15 +387,15 @@ function extractFieldsFromType(
 
     const tsdocInfo = extractTSDocFromSymbol(prop, checker);
 
-    let directives: ReadonlyArray<DirectiveInfo> | null = null;
     let actualPropType = propType;
+    let directives: ReadonlyArray<DirectiveInfo> | null = null;
 
     if (hasDirectiveMetadata(propType)) {
       const directiveResult = detectDirectiveMetadata(propType, checker);
       if (directiveResult.directives.length > 0) {
         directives = directiveResult.directives;
       }
-      actualPropType = unwrapWithDirectivesType(propType, checker);
+      actualPropType = unwrapDirectiveType(propType, checker);
     }
 
     const typeResult = convertTsTypeToReferenceWithBrandInfo(
@@ -826,7 +826,7 @@ export function extractTypesFromProgram(
               });
             }
           }
-          actualType = unwrapWithDirectivesType(type, checker);
+          actualType = type;
         }
 
         const kind = determineTypeKind(node, actualType);

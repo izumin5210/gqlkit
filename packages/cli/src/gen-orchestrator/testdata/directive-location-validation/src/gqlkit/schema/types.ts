@@ -1,8 +1,8 @@
+import { createGqlkitApis } from "@gqlkit-ts/runtime";
 import type {
   Directive,
   IDString,
   WithDirectives,
-  createGqlkitApis,
   NoArgs,
 } from "@gqlkit-ts/runtime";
 

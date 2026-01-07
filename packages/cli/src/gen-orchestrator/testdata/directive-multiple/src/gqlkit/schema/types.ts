@@ -1,8 +1,8 @@
+import { createGqlkitApis } from "@gqlkit-ts/runtime";
 import type {
   Directive,
   IDString,
   WithDirectives,
-  createGqlkitApis,
   NoArgs,
 } from "@gqlkit-ts/runtime";
 
@@ -33,13 +33,11 @@ export type TypeWithRealisticDirectives = WithDirectives<
   [AuthDirective, CacheDirective, RateLimitDirective]
 >;
 
-interface Post {
+export interface Post {
   id: IDString;
   title: string;
   fieldWithDirectives: WithDirectives<string, [AuthDirective, CacheDirective]>;
 }
-
-export type { Post };
 
 interface User {
   id: IDString;
@@ -47,3 +45,4 @@ interface User {
 }
 
 export const users = defineQuery<NoArgs, User[]>(() => []);
+export const posts = defineQuery<NoArgs, Post[]>(() => []);

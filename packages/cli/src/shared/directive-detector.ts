@@ -347,21 +347,6 @@ function detectDirectiveMetadataFromProperty(
 }
 
 /**
- * Unwraps a WithDirectives type and returns the inner type.
- * If the type is not wrapped with WithDirectives, returns the original type.
- *
- * For WithDirectives<T, Ds>, this extracts T from the intersection T & { " $gqlkitDirectives"?: Ds }.
- * Since the original type preserves all properties, we return the original type itself
- * but mark that directives should be filtered during property enumeration.
- */
-export function unwrapWithDirectivesType(
-  type: ts.Type,
-  _checker: ts.TypeChecker,
-): ts.Type {
-  return type;
-}
-
-/**
  * Checks if a type is wrapped with WithDirectives.
  */
 export function hasDirectiveMetadata(type: ts.Type): boolean {
@@ -380,4 +365,31 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
   }
 
   return false;
+}
+
+/**
+ * Unwraps a WithDirectives type and returns the base type.
+ * For WithDirectives<T, Ds> which is T & { " $gqlkitDirectives"?: Ds },
+ * this extracts and returns T.
+ *
+ * If the type is not wrapped with WithDirectives, returns the original type.
+ */
+export function unwrapDirectiveType(
+  type: ts.Type,
+  _checker: ts.TypeChecker,
+): ts.Type {
+  if (!hasDirectiveMetadata(type)) {
+    return type;
+  }
+
+  if (type.isIntersection()) {
+    for (const member of type.types) {
+      const directivesProp = member.getProperty(DIRECTIVE_METADATA_PROPERTY);
+      if (!directivesProp) {
+        return member;
+      }
+    }
+  }
+
+  return type;
 }

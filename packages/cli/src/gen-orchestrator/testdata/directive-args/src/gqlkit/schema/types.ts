@@ -1,8 +1,8 @@
+import { createGqlkitApis } from "@gqlkit-ts/runtime";
 import type {
   Directive,
   IDString,
   WithDirectives,
-  createGqlkitApis,
   NoArgs,
 } from "@gqlkit-ts/runtime";
 
@@ -15,10 +15,17 @@ interface BaseItem {
   name: string;
 }
 
+export enum Priority {
+  LOW = "LOW",
+  MEDIUM = "MEDIUM",
+  HIGH = "HIGH",
+}
+
 type StringArgDirective = Directive<"stringArg", { value: "hello" }>;
 type NumberArgDirective = Directive<"numberArg", { intValue: 42; floatValue: 3.14 }>;
 type BooleanArgDirective = Directive<"booleanArg", { enabled: true; disabled: false }>;
 type EnumArgDirective = Directive<"enumArg", { level: "HIGH" }>;
+type RealEnumArgDirective = Directive<"realEnumArg", { priority: Priority.HIGH }>;
 type ArrayArgDirective = Directive<"arrayArg", { values: ["a", "b", "c"] }>;
 type ObjectArgDirective = Directive<"objectArg", { config: { key: "name"; count: 10 } }>;
 
@@ -29,6 +36,8 @@ export type TypeWithNumberArg = WithDirectives<BaseItem, [NumberArgDirective]>;
 export type TypeWithBooleanArg = WithDirectives<BaseItem, [BooleanArgDirective]>;
 
 export type TypeWithEnumArg = WithDirectives<BaseItem, [EnumArgDirective]>;
+
+export type TypeWithRealEnumArg = WithDirectives<BaseItem, [RealEnumArgDirective]>;
 
 export type TypeWithArrayArg = WithDirectives<BaseItem, [ArrayArgDirective]>;
 
