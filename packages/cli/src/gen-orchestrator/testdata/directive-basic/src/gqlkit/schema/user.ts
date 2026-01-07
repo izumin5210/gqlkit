@@ -5,6 +5,6 @@ export interface User {
   name: string;
 }
 
-type AuthDirective = Directive<"auth", { roles: ["USER", "ADMIN"] }>;
+export type AuthDirective = Directive<"auth", { roles: ["USER", "ADMIN"] }, "OBJECT">;
 
 export type ProtectedUser = WithDirectives<User, [AuthDirective]>;

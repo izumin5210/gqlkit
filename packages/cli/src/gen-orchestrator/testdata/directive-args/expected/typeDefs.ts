@@ -6,6 +6,258 @@ export const typeDefs: DocumentNode = {
   "kind": "Document",
   "definitions": [
     {
+      "kind": "DirectiveDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "arrayArg"
+      },
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "OBJECT"
+        }
+      ],
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "values"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "DirectiveDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "booleanArg"
+      },
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "OBJECT"
+        }
+      ],
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "disabled"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
+            }
+          }
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "enabled"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "DirectiveDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "enumArg"
+      },
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "OBJECT"
+        }
+      ],
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "level"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "DirectiveDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "numberArg"
+      },
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "OBJECT"
+        }
+      ],
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "floatValue"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "intValue"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "DirectiveDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "objectArg"
+      },
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "OBJECT"
+        }
+      ]
+    },
+    {
+      "kind": "DirectiveDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "realEnumArg"
+      },
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "OBJECT"
+        }
+      ],
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "priority"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "DirectiveDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "stringArg"
+      },
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "OBJECT"
+        }
+      ],
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "value"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "kind": "EnumTypeDefinition",
       "name": {
         "kind": "Name",

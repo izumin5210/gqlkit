@@ -21,13 +21,13 @@ export enum Priority {
   HIGH = "HIGH",
 }
 
-type StringArgDirective = Directive<"stringArg", { value: "hello" }>;
-type NumberArgDirective = Directive<"numberArg", { intValue: 42; floatValue: 3.14 }>;
-type BooleanArgDirective = Directive<"booleanArg", { enabled: true; disabled: false }>;
-type EnumArgDirective = Directive<"enumArg", { level: "HIGH" }>;
-type RealEnumArgDirective = Directive<"realEnumArg", { priority: Priority.HIGH }>;
-type ArrayArgDirective = Directive<"arrayArg", { values: ["a", "b", "c"] }>;
-type ObjectArgDirective = Directive<"objectArg", { config: { key: "name"; count: 10 } }>;
+export type StringArgDirective = Directive<"stringArg", { value: "hello" }, "OBJECT">;
+export type NumberArgDirective = Directive<"numberArg", { intValue: 42; floatValue: 3.14 }, "OBJECT">;
+export type BooleanArgDirective = Directive<"booleanArg", { enabled: true; disabled: false }, "OBJECT">;
+export type EnumArgDirective = Directive<"enumArg", { level: "HIGH" }, "OBJECT">;
+export type RealEnumArgDirective = Directive<"realEnumArg", { priority: Priority.HIGH }, "OBJECT">;
+export type ArrayArgDirective = Directive<"arrayArg", { values: ["a", "b", "c"] }, "OBJECT">;
+export type ObjectArgDirective = Directive<"objectArg", { config: { key: "name"; count: 10 } }, "OBJECT">;
 
 export type TypeWithStringArg = WithDirectives<BaseItem, [StringArgDirective]>;
 

@@ -6,6 +6,45 @@ export const typeDefs: DocumentNode = {
   "kind": "Document",
   "definitions": [
     {
+      "kind": "DirectiveDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "auth"
+      },
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "OBJECT"
+        }
+      ],
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "roles"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",

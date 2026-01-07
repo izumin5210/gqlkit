@@ -6,6 +6,235 @@ export const typeDefs: DocumentNode = {
   "kind": "Document",
   "definitions": [
     {
+      "kind": "DirectiveDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "auth"
+      },
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "FIELD_DEFINITION"
+        },
+        {
+          "kind": "Name",
+          "value": "OBJECT"
+        }
+      ],
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "roles"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
+                }
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "DirectiveDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "cache"
+      },
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "FIELD_DEFINITION"
+        },
+        {
+          "kind": "Name",
+          "value": "OBJECT"
+        }
+      ],
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "maxAge"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "DirectiveDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "first"
+      },
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "OBJECT"
+        }
+      ],
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "order"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "DirectiveDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "rateLimit"
+      },
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "OBJECT"
+        }
+      ],
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "limit"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "window"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "DirectiveDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "second"
+      },
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "OBJECT"
+        }
+      ],
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "order"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "DirectiveDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "third"
+      },
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "OBJECT"
+        }
+      ],
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "order"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",

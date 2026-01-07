@@ -10,9 +10,9 @@ type Context = unknown;
 
 const { defineQuery } = createGqlkitApis<Context>();
 
-type FirstDirective = Directive<"first", { order: 1 }>;
-type SecondDirective = Directive<"second", { order: 2 }>;
-type ThirdDirective = Directive<"third", { order: 3 }>;
+export type FirstDirective = Directive<"first", { order: 1 }, "OBJECT">;
+export type SecondDirective = Directive<"second", { order: 2 }, "OBJECT">;
+export type ThirdDirective = Directive<"third", { order: 3 }, "OBJECT">;
 
 interface BaseItem {
   id: IDString;
@@ -24,9 +24,9 @@ export type TypeWithMultipleDirectives = WithDirectives<
   [FirstDirective, SecondDirective, ThirdDirective]
 >;
 
-type CacheDirective = Directive<"cache", { maxAge: 3600 }>;
-type AuthDirective = Directive<"auth", { roles: ["USER", "ADMIN"] }>;
-type RateLimitDirective = Directive<"rateLimit", { limit: 100; window: 60 }>;
+export type CacheDirective = Directive<"cache", { maxAge: 3600 }, "OBJECT" | "FIELD_DEFINITION">;
+export type AuthDirective = Directive<"auth", { roles: ["USER", "ADMIN"] }, "OBJECT" | "FIELD_DEFINITION">;
+export type RateLimitDirective = Directive<"rateLimit", { limit: 100; window: 60 }, "OBJECT">;
 
 export type TypeWithRealisticDirectives = WithDirectives<
   BaseItem,

@@ -120,15 +120,15 @@ function extractDirectiveLocations(
   }
 
   const rawLocationType = checker.getTypeOfSymbol(locationProp);
-  const locationType = getActualMetadataType(rawLocationType);
-  if (!locationType) {
-    return ["FIELD_DEFINITION"];
-  }
-
   const locations: DirectiveLocation[] = [];
 
-  if (locationType.isUnion()) {
-    for (const member of locationType.types) {
+  if (rawLocationType.isUnion()) {
+    // Handle union types like "OBJECT" | "FIELD_DEFINITION" | undefined
+    for (const member of rawLocationType.types) {
+      // Skip undefined members
+      if (member.flags & ts.TypeFlags.Undefined) {
+        continue;
+      }
       if (member.isStringLiteral()) {
         const value = member.value as DirectiveLocation;
         if (isValidLocation(value)) {
@@ -136,10 +136,19 @@ function extractDirectiveLocations(
         }
       }
     }
-  } else if (locationType.isStringLiteral()) {
-    const value = locationType.value as DirectiveLocation;
+  } else if (rawLocationType.isStringLiteral()) {
+    const value = rawLocationType.value as DirectiveLocation;
     if (isValidLocation(value)) {
       locations.push(value);
+    }
+  } else {
+    // Try to unwrap optional type (T | undefined where T is a single type)
+    const locationType = getActualMetadataType(rawLocationType);
+    if (locationType?.isStringLiteral()) {
+      const value = locationType.value as DirectiveLocation;
+      if (isValidLocation(value)) {
+        locations.push(value);
+      }
     }
   }
 
