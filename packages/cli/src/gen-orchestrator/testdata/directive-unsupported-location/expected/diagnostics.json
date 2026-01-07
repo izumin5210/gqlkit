@@ -1,0 +1,32 @@
+[
+  {
+    "code": "UNSUPPORTED_DIRECTIVE_LOCATION",
+    "message": "Type 'Order': Directive '@interfaceMarker' uses unsupported location INTERFACE",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "UNSUPPORTED_DIRECTIVE_LOCATION",
+    "message": "Type 'Product': Directive '@scalarSpec' uses unsupported location SCALAR",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "UNSUPPORTED_DIRECTIVE_LOCATION",
+    "message": "Type 'User': Directive '@schemaOnly' uses unsupported location SCHEMA",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

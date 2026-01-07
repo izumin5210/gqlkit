@@ -4,6 +4,7 @@ import {
   type ConstDirectiveNode,
   type ConstValueNode,
   type DefinitionNode,
+  type DirectiveDefinitionNode,
   type DocumentNode,
   type EnumTypeDefinitionNode,
   type EnumValueDefinitionNode,
@@ -23,6 +24,7 @@ import {
   type UnionTypeDefinitionNode,
 } from "graphql";
 import type { GraphQLInputValue } from "../../resolver-extractor/index.js";
+import type { DirectiveDefinitionInfo } from "../../shared/directive-definition-extractor.js";
 import type {
   DirectiveArgument,
   DirectiveArgumentValue,
@@ -437,12 +439,53 @@ function buildObjectTypeExtensionNode(
   };
 }
 
+function buildDirectiveDefinitionNode(
+  directiveDef: DirectiveDefinitionInfo,
+): DirectiveDefinitionNode {
+  const sortedArgs = [...directiveDef.args].sort((a, b) =>
+    a.name.localeCompare(b.name),
+  );
+
+  const args: InputValueDefinitionNode[] = sortedArgs.map((arg) => ({
+    kind: Kind.INPUT_VALUE_DEFINITION,
+    name: buildNameNode(arg.name),
+    type: buildFieldTypeNode(arg.type),
+    ...(arg.description
+      ? { description: buildStringValueNode(arg.description) }
+      : {}),
+  }));
+
+  const sortedLocations = [...directiveDef.locations].sort((a, b) =>
+    a.localeCompare(b),
+  );
+
+  return {
+    kind: Kind.DIRECTIVE_DEFINITION,
+    name: buildNameNode(directiveDef.name),
+    repeatable: false,
+    locations: sortedLocations.map(buildNameNode),
+    ...(args.length > 0 ? { arguments: args } : {}),
+    ...(directiveDef.description
+      ? { description: buildStringValueNode(directiveDef.description) }
+      : {}),
+  };
+}
+
 export function buildDocumentNode(
   integratedResult: IntegratedResult,
   options?: BuildDocumentOptions,
 ): DocumentNode {
   const sourceRoot = options?.sourceRoot;
   const definitions: DefinitionNode[] = [];
+
+  if (integratedResult.directiveDefinitions) {
+    const sortedDirectives = [...integratedResult.directiveDefinitions].sort(
+      (a, b) => a.name.localeCompare(b.name),
+    );
+    for (const directiveDef of sortedDirectives) {
+      definitions.push(buildDirectiveDefinitionNode(directiveDef));
+    }
+  }
 
   if (integratedResult.customScalars) {
     const sortedScalars = [...integratedResult.customScalars].sort((a, b) =>

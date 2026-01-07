@@ -1,4 +1,5 @@
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
+import type { DirectiveDefinitionInfo } from "../shared/directive-definition-extractor.js";
 import type { CollectedScalarType } from "../type-extractor/collector/scalar-collector.js";
 import type { ExtractTypesResult } from "../type-extractor/index.js";
 import type { Diagnostic } from "../type-extractor/types/index.js";
@@ -15,6 +16,7 @@ export interface GenerateSchemaInput {
   readonly outputDir: string;
   readonly customScalarNames: ReadonlyArray<string> | null;
   readonly customScalars: ReadonlyArray<CollectedScalarType> | null;
+  readonly directiveDefinitions: ReadonlyArray<DirectiveDefinitionInfo> | null;
   readonly enablePruning: boolean | null;
   readonly sourceRoot: string | null;
 }
@@ -37,6 +39,7 @@ export function generateSchema(
     outputDir,
     customScalarNames,
     customScalars,
+    directiveDefinitions,
     enablePruning,
     sourceRoot,
   } = input;
@@ -46,6 +49,7 @@ export function generateSchema(
     resolversResult,
     customScalarNames,
     customScalars,
+    directiveDefinitions,
   );
 
   let documentNode = buildDocumentNode(

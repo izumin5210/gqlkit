@@ -1,24 +1,44 @@
 import type { GraphQLResolveInfo } from "graphql";
 
 /**
- * Represents a GraphQL directive with name and arguments.
+ * Represents the locations where a directive can be applied.
+ * This corresponds to GraphQL Type System Directive Locations.
+ */
+export type DirectiveLocation =
+  | "SCHEMA"
+  | "SCALAR"
+  | "OBJECT"
+  | "FIELD_DEFINITION"
+  | "ARGUMENT_DEFINITION"
+  | "INTERFACE"
+  | "UNION"
+  | "ENUM"
+  | "ENUM_VALUE"
+  | "INPUT_OBJECT"
+  | "INPUT_FIELD_DEFINITION";
+
+/**
+ * Represents a GraphQL directive with name, arguments, and location.
  * Used to define custom directives that can be attached to types and fields.
  *
  * @typeParam Name - The directive name (without @)
  * @typeParam Args - The argument types for the directive
+ * @typeParam Location - The location(s) where the directive can be applied
  *
  * @example
  * ```typescript
- * type AuthDirective<R extends string[]> = Directive<"auth", { roles: R }>;
- * type CacheDirective = Directive<"cache", { maxAge: number }>;
+ * type AuthDirective<R extends string[]> = Directive<"auth", { roles: R }, "FIELD_DEFINITION">;
+ * type CacheDirective = Directive<"cache", { maxAge: number }, "FIELD_DEFINITION" | "OBJECT">;
  * ```
  */
 export type Directive<
   Name extends string,
   Args extends Record<string, unknown> = Record<string, never>,
+  Location extends DirectiveLocation | DirectiveLocation[] = DirectiveLocation,
 > = {
   readonly " $directiveName": Name;
   readonly " $directiveArgs": Args;
+  readonly " $directiveLocation": Location;
 };
 
 /**
@@ -45,7 +65,13 @@ export type Directive<
  */
 export type WithDirectives<
   T,
-  Ds extends ReadonlyArray<Directive<string, Record<string, unknown>>>,
+  Ds extends ReadonlyArray<
+    Directive<
+      string,
+      Record<string, unknown>,
+      DirectiveLocation | DirectiveLocation[]
+    >
+  >,
 > = T & {
   readonly " $gqlkitDirectives"?: Ds;
 };
