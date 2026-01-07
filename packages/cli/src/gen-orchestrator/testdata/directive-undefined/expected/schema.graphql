@@ -3,12 +3,11 @@
 type Query
 
 """Defined in: src/gqlkit/schema/types.ts"""
-type User @external(source: "api") {
-  id: ID!
-  name: String!
+type User {
+  id: String! @auth(role: ["USER"])
 }
 
 extend type Query {
   """Defined in: src/gqlkit/schema/types.ts"""
-  users: [User!]!
+  user: User
 }

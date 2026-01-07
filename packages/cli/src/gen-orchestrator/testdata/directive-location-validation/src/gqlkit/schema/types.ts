@@ -1,26 +1,10 @@
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
-import type {
-  Directive,
-  IDString,
-  WithDirectives,
-  NoArgs,
-} from "@gqlkit-ts/runtime";
+import { createGqlkitApis, type NoArgs, type Directive, type WithDirectives } from "@gqlkit-ts/runtime";
 
-type Context = unknown;
+export type ObjectOnlyDirective = Directive<"objectOnly", Record<string, never>, "OBJECT">;
 
-const { defineQuery } = createGqlkitApis<Context>();
+export type User = {
+  id: WithDirectives<string, [ObjectOnlyDirective]>;
+};
 
-export type FieldOnlyDirective = Directive<
-  "fieldOnly",
-  { reason: "test" },
-  "FIELD_DEFINITION"
->;
-
-interface BaseUser {
-  id: IDString;
-  name: string;
-}
-
-export type User = WithDirectives<BaseUser, [FieldOnlyDirective]>;
-
-export const users = defineQuery<NoArgs, User[]>(() => []);
+const { defineQuery } = createGqlkitApis();
+export const user = defineQuery<NoArgs, User | null>(() => null);

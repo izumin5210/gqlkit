@@ -9,13 +9,13 @@ export const typeDefs: DocumentNode = {
       "kind": "DirectiveDefinition",
       "name": {
         "kind": "Name",
-        "value": "arrayArg"
+        "value": "cache"
       },
       "repeatable": false,
       "locations": [
         {
           "kind": "Name",
-          "value": "OBJECT"
+          "value": "FIELD_DEFINITION"
         }
       ],
       "arguments": [
@@ -23,21 +23,32 @@ export const typeDefs: DocumentNode = {
           "kind": "InputValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "values"
+            "value": "maxAge"
           },
           "type": {
             "kind": "NonNullType",
             "type": {
-              "kind": "ListType",
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "String"
-                  }
-                }
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "scope"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Scope"
               }
             }
           }
@@ -48,33 +59,16 @@ export const typeDefs: DocumentNode = {
       "kind": "DirectiveDefinition",
       "name": {
         "kind": "Name",
-        "value": "booleanArg"
+        "value": "log"
       },
       "repeatable": false,
       "locations": [
         {
           "kind": "Name",
-          "value": "OBJECT"
+          "value": "FIELD_DEFINITION"
         }
       ],
       "arguments": [
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "disabled"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "Boolean"
-              }
-            }
-          }
-        },
         {
           "kind": "InputValueDefinition",
           "name": {
@@ -91,23 +85,7 @@ export const typeDefs: DocumentNode = {
               }
             }
           }
-        }
-      ]
-    },
-    {
-      "kind": "DirectiveDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "enumArg"
-      },
-      "repeatable": false,
-      "locations": [
-        {
-          "kind": "Name",
-          "value": "OBJECT"
-        }
-      ],
-      "arguments": [
+        },
         {
           "kind": "InputValueDefinition",
           "name": {
@@ -128,88 +106,17 @@ export const typeDefs: DocumentNode = {
       ]
     },
     {
-      "kind": "DirectiveDefinition",
+      "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "numberArg"
+        "value": "Data"
       },
-      "repeatable": false,
-      "locations": [
+      "fields": [
         {
-          "kind": "Name",
-          "value": "OBJECT"
-        }
-      ],
-      "arguments": [
-        {
-          "kind": "InputValueDefinition",
+          "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "floatValue"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "Float"
-              }
-            }
-          }
-        },
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "intValue"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "Float"
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "kind": "DirectiveDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "objectArg"
-      },
-      "repeatable": false,
-      "locations": [
-        {
-          "kind": "Name",
-          "value": "OBJECT"
-        }
-      ]
-    },
-    {
-      "kind": "DirectiveDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "realEnumArg"
-      },
-      "repeatable": false,
-      "locations": [
-        {
-          "kind": "Name",
-          "value": "OBJECT"
-        }
-      ],
-      "arguments": [
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "priority"
+            "value": "cached"
           },
           "type": {
             "kind": "NonNullType",
@@ -220,29 +127,46 @@ export const typeDefs: DocumentNode = {
                 "value": "String"
               }
             }
-          }
-        }
-      ]
-    },
-    {
-      "kind": "DirectiveDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "stringArg"
-      },
-      "repeatable": false,
-      "locations": [
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "cache"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "maxAge"
+                  },
+                  "value": {
+                    "kind": "IntValue",
+                    "value": "3600"
+                  }
+                },
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "scope"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "PUBLIC"
+                  }
+                }
+              ]
+            }
+          ]
+        },
         {
-          "kind": "Name",
-          "value": "OBJECT"
-        }
-      ],
-      "arguments": [
-        {
-          "kind": "InputValueDefinition",
+          "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "value"
+            "value": "logged"
           },
           "type": {
             "kind": "NonNullType",
@@ -253,37 +177,40 @@ export const typeDefs: DocumentNode = {
                 "value": "String"
               }
             }
-          }
-        }
-      ]
-    },
-    {
-      "kind": "EnumTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "Priority"
-      },
-      "values": [
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "LOW"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "MEDIUM"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "HIGH"
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "log"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "enabled"
+                  },
+                  "value": {
+                    "kind": "BooleanValue",
+                    "value": true
+                  }
+                },
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "level"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "DEBUG"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ],
       "description": {
@@ -301,44 +228,24 @@ export const typeDefs: DocumentNode = {
       "fields": []
     },
     {
-      "kind": "ObjectTypeDefinition",
+      "kind": "EnumTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "TypeWithArrayArg"
+        "value": "Scope"
       },
-      "fields": [
+      "values": [
         {
-          "kind": "FieldDefinition",
+          "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "ID"
-              }
-            }
+            "value": "PUBLIC"
           }
         },
         {
-          "kind": "FieldDefinition",
+          "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "name"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
+            "value": "PRIVATE"
           }
         }
       ],
@@ -346,507 +253,7 @@ export const typeDefs: DocumentNode = {
         "kind": "StringValue",
         "value": "Defined in: src/gqlkit/schema/types.ts",
         "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "arrayArg"
-          },
-          "arguments": [
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "values"
-              },
-              "value": {
-                "kind": "ListValue",
-                "values": [
-                  {
-                    "kind": "StringValue",
-                    "value": "a"
-                  },
-                  {
-                    "kind": "StringValue",
-                    "value": "b"
-                  },
-                  {
-                    "kind": "StringValue",
-                    "value": "c"
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "TypeWithBooleanArg"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "ID"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "name"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/types.ts",
-        "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "booleanArg"
-          },
-          "arguments": [
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "enabled"
-              },
-              "value": {
-                "kind": "BooleanValue",
-                "value": true
-              }
-            },
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "disabled"
-              },
-              "value": {
-                "kind": "BooleanValue",
-                "value": false
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "TypeWithEnumArg"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "ID"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "name"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/types.ts",
-        "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "enumArg"
-          },
-          "arguments": [
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "level"
-              },
-              "value": {
-                "kind": "StringValue",
-                "value": "HIGH"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "TypeWithNumberArg"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "ID"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "name"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/types.ts",
-        "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "numberArg"
-          },
-          "arguments": [
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "intValue"
-              },
-              "value": {
-                "kind": "IntValue",
-                "value": "42"
-              }
-            },
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "floatValue"
-              },
-              "value": {
-                "kind": "FloatValue",
-                "value": "3.14"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "TypeWithObjectArg"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "ID"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "name"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/types.ts",
-        "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "objectArg"
-          },
-          "arguments": [
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "config"
-              },
-              "value": {
-                "kind": "ObjectValue",
-                "fields": [
-                  {
-                    "kind": "ObjectField",
-                    "name": {
-                      "kind": "Name",
-                      "value": "key"
-                    },
-                    "value": {
-                      "kind": "StringValue",
-                      "value": "name"
-                    }
-                  },
-                  {
-                    "kind": "ObjectField",
-                    "name": {
-                      "kind": "Name",
-                      "value": "count"
-                    },
-                    "value": {
-                      "kind": "IntValue",
-                      "value": "10"
-                    }
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "TypeWithRealEnumArg"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "ID"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "name"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/types.ts",
-        "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "realEnumArg"
-          },
-          "arguments": [
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "priority"
-              },
-              "value": {
-                "kind": "StringValue",
-                "value": "HIGH"
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "TypeWithStringArg"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "ID"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "name"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/types.ts",
-        "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "stringArg"
-          },
-          "arguments": [
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "value"
-              },
-              "value": {
-                "kind": "StringValue",
-                "value": "hello"
-              }
-            }
-          ]
-        }
-      ]
+      }
     },
     {
       "kind": "ObjectTypeExtension",
@@ -859,21 +266,15 @@ export const typeDefs: DocumentNode = {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "users"
+            "value": "data"
           },
           "type": {
             "kind": "NonNullType",
             "type": {
-              "kind": "ListType",
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "User"
-                  }
-                }
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Data"
               }
             }
           },

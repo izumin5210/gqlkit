@@ -1,22 +1,9 @@
-import {
-  createGqlkitApis,
-  type NoArgs,
-  type WithDirectives,
-} from "@gqlkit-ts/runtime";
-import type { AuthDirective } from "./directives.js";
-import type { User } from "./user.js";
+import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
 
-type Context = unknown;
+export type User = {
+  id: string;
+  name: string;
+};
 
-const { defineQuery } = createGqlkitApis<Context>();
-
+const { defineQuery } = createGqlkitApis();
 export const users = defineQuery<NoArgs, User[]>(() => []);
-
-export const me = defineQuery<
-  NoArgs,
-  User,
-  WithDirectives<User, [AuthDirective<{ roles: ["USER", "ADMIN"] }>]>
->(() => ({
-  id: "1" as User["id"],
-  name: "Test",
-}));

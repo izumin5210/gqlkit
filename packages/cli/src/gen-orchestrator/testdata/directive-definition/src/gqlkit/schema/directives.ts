@@ -1,21 +1,5 @@
-import type { Directive } from "@gqlkit-ts/runtime";
+import { type Directive } from "@gqlkit-ts/runtime";
 
-export type Role = "USER" | "ADMIN" | "MODERATOR";
-
-/**
- * Authentication directive for protected fields.
- */
-export type AuthDirective<TArgs extends { roles: Role[] }> = Directive<
-  "auth",
-  TArgs,
-  "FIELD_DEFINITION"
->;
-
-/**
- * Cache directive for caching query results.
- */
-export type CacheDirective<TArgs extends { maxAge: number }> = Directive<
-  "cache",
-  TArgs,
-  "OBJECT"
->;
+export type Role = "USER" | "ADMIN";
+export type AuthDirective<TArgs extends { role: Role[] }> = Directive<"auth", TArgs, "FIELD_DEFINITION">;
+export type CacheDirective<TArgs extends { maxAge: number }> = Directive<"cache", TArgs, ["FIELD_DEFINITION", "OBJECT"]>;

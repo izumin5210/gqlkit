@@ -1,16 +1,19 @@
-import {
-  createGqlkitApis,
-  type IDString,
-  type NoArgs,
-} from "@gqlkit-ts/runtime";
+import { createGqlkitApis, type NoArgs, type Directive, type WithDirectives } from "@gqlkit-ts/runtime";
 
-type Context = unknown;
+export type Role = "USER" | "ADMIN";
+export type AuthDirective<TArgs extends { role: Role[] }> = Directive<"auth", TArgs, "FIELD_DEFINITION">;
 
-interface User {
-  id: IDString;
-  name: string;
-}
+export type User = {
+  id: string;
+  email: WithDirectives<string | null, [AuthDirective<{ role: ["ADMIN"] }>]>;
+};
 
-const { defineQuery } = createGqlkitApis<Context>();
+const { defineQuery } = createGqlkitApis();
 
 export const users = defineQuery<NoArgs, User[]>(() => []);
+
+export const me = defineQuery<
+  NoArgs,
+  User,
+  WithDirectives<User, [AuthDirective<{ role: ["USER"] }>]>
+>(() => ({ id: "1", email: null }));

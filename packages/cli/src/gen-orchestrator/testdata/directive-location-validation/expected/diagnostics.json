@@ -1,7 +1,7 @@
 [
   {
     "code": "INVALID_DIRECTIVE_LOCATION",
-    "message": "Type 'User': Directive '@fieldOnly' cannot be used on OBJECT (allowed: FIELD_DEFINITION)",
+    "message": "Field 'User.id': Directive '@objectOnly' cannot be used on FIELD_DEFINITION (allowed: OBJECT)",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/types.ts",

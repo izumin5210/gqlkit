@@ -23,7 +23,7 @@ export const typeDefs: DocumentNode = {
           "kind": "InputValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "roles"
+            "value": "role"
           },
           "type": {
             "kind": "NonNullType",
@@ -42,12 +42,7 @@ export const typeDefs: DocumentNode = {
             }
           }
         }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Authentication directive for protected fields.",
-        "block": true
-      }
+      ]
     },
     {
       "kind": "DirectiveDefinition",
@@ -59,7 +54,7 @@ export const typeDefs: DocumentNode = {
       "locations": [
         {
           "kind": "Name",
-          "value": "OBJECT"
+          "value": "FIELD_DEFINITION"
         }
       ],
       "arguments": [
@@ -79,81 +74,6 @@ export const typeDefs: DocumentNode = {
               }
             }
           }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Cache directive for caching query results.",
-        "block": true
-      }
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "CachedUser"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "ID"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "name"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/user.ts",
-        "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "cache"
-          },
-          "arguments": [
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "maxAge"
-              },
-              "value": {
-                "kind": "IntValue",
-                "value": "3600"
-              }
-            }
-          ]
         }
       ]
     },
@@ -185,13 +105,6 @@ export const typeDefs: DocumentNode = {
             "kind": "Name",
             "value": "ADMIN"
           }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "MODERATOR"
-          }
         }
       ],
       "description": {
@@ -219,7 +132,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "ID"
+                "value": "String"
               }
             }
           }
@@ -244,7 +157,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/user.ts",
+        "value": "Defined in: src/gqlkit/schema/query.ts",
         "block": true
       }
     },
@@ -255,59 +168,6 @@ export const typeDefs: DocumentNode = {
         "value": "Query"
       },
       "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "me"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "User"
-              }
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/schema/query.ts",
-            "block": true
-          },
-          "directives": [
-            {
-              "kind": "Directive",
-              "name": {
-                "kind": "Name",
-                "value": "auth"
-              },
-              "arguments": [
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "roles"
-                  },
-                  "value": {
-                    "kind": "ListValue",
-                    "values": [
-                      {
-                        "kind": "StringValue",
-                        "value": "USER"
-                      },
-                      {
-                        "kind": "StringValue",
-                        "value": "ADMIN"
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          ]
-        },
         {
           "kind": "FieldDefinition",
           "name": {

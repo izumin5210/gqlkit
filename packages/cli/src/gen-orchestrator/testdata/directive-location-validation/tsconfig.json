@@ -1,11 +1,12 @@
 {
   "compilerOptions": {
-    "target": "ES2022",
-    "module": "NodeNext",
-    "moduleResolution": "NodeNext",
+    "target": "es2022",
+    "module": "nodenext",
+    "moduleResolution": "node16",
     "strict": true,
+    "esModuleInterop": true,
     "skipLibCheck": true,
-    "declaration": true,
-    "esModuleInterop": true
+    "noEmit": true,
+    "preserveSymlinks": true
   }
 }

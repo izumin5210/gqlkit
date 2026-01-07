@@ -35,34 +35,7 @@ export const typeDefs: DocumentNode = {
                 "value": "String"
               }
             }
-          },
-          "directives": [
-            {
-              "kind": "Directive",
-              "name": {
-                "kind": "Name",
-                "value": "auth"
-              },
-              "arguments": [
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "role"
-                  },
-                  "value": {
-                    "kind": "ListValue",
-                    "values": [
-                      {
-                        "kind": "StringValue",
-                        "value": "USER"
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          ]
+          }
         }
       ],
       "description": {

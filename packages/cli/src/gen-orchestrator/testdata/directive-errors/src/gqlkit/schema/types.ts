@@ -1,36 +1,10 @@
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
-import type {
-  Directive,
-  IDString,
-  WithDirectives,
-  NoArgs,
-} from "@gqlkit-ts/runtime";
+import { createGqlkitApis, type NoArgs, type Directive, type WithDirectives } from "@gqlkit-ts/runtime";
 
-type Context = unknown;
+type EmptyNameDirective = Directive<"", Record<string, never>, "FIELD_DEFINITION">;
 
-const { defineQuery } = createGqlkitApis<Context>();
+export type User = {
+  id: WithDirectives<string, [EmptyNameDirective]>;
+};
 
-type EmptyNameDirective = Directive<"", { value: "test" }>;
-type UnresolvableArgDirective = Directive<"unresolvable", { value: unknown }>;
-
-interface BaseItem {
-  id: IDString;
-  name: string;
-}
-
-export type TypeWithEmptyDirectiveName = WithDirectives<
-  BaseItem,
-  [EmptyNameDirective]
->;
-
-export type TypeWithUnresolvableArg = WithDirectives<
-  BaseItem,
-  [UnresolvableArgDirective]
->;
-
-interface User {
-  id: IDString;
-  name: string;
-}
-
-export const users = defineQuery<NoArgs, User[]>(() => []);
+const { defineQuery } = createGqlkitApis();
+export const user = defineQuery<NoArgs, User | null>(() => null);

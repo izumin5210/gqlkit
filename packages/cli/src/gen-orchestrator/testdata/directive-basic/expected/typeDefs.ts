@@ -15,7 +15,7 @@ export const typeDefs: DocumentNode = {
       "locations": [
         {
           "kind": "Name",
-          "value": "OBJECT"
+          "value": "FIELD_DEFINITION"
         }
       ],
       "arguments": [
@@ -23,7 +23,7 @@ export const typeDefs: DocumentNode = {
           "kind": "InputValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "roles"
+            "value": "role"
           },
           "type": {
             "kind": "NonNullType",
@@ -35,7 +35,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "String"
+                    "value": "Role"
                   }
                 }
               }
@@ -48,88 +48,37 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ProtectedUser"
+        "value": "Query"
       },
-      "fields": [
+      "fields": []
+    },
+    {
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Role"
+      },
+      "values": [
         {
-          "kind": "FieldDefinition",
+          "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "ID"
-              }
-            }
+            "value": "USER"
           }
         },
         {
-          "kind": "FieldDefinition",
+          "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "name"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
+            "value": "ADMIN"
           }
         }
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/user.ts",
+        "value": "Defined in: src/gqlkit/schema/query.ts",
         "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "auth"
-          },
-          "arguments": [
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "roles"
-              },
-              "value": {
-                "kind": "ListValue",
-                "values": [
-                  {
-                    "kind": "StringValue",
-                    "value": "USER"
-                  },
-                  {
-                    "kind": "StringValue",
-                    "value": "ADMIN"
-                  }
-                ]
-              }
-            }
-          ]
-        }
-      ]
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
-      },
-      "fields": []
+      }
     },
     {
       "kind": "ObjectTypeDefinition",
@@ -142,7 +91,7 @@ export const typeDefs: DocumentNode = {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "id"
+            "value": "email"
           },
           "type": {
             "kind": "NonNullType",
@@ -150,16 +99,43 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "ID"
+                "value": "String"
               }
             }
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "auth"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "role"
+                  },
+                  "value": {
+                    "kind": "ListValue",
+                    "values": [
+                      {
+                        "kind": "StringValue",
+                        "value": "ADMIN"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "name"
+            "value": "id"
           },
           "type": {
             "kind": "NonNullType",
@@ -175,7 +151,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/user.ts",
+        "value": "Defined in: src/gqlkit/schema/query.ts",
         "block": true
       }
     },
@@ -186,6 +162,55 @@ export const typeDefs: DocumentNode = {
         "value": "Query"
       },
       "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "me"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "User"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Defined in: src/gqlkit/schema/query.ts",
+            "block": true
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "auth"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "role"
+                  },
+                  "value": {
+                    "kind": "ListValue",
+                    "values": [
+                      {
+                        "kind": "StringValue",
+                        "value": "USER"
+                      }
+                    ]
+                  }
+                }
+              ]
+            }
+          ]
+        },
         {
           "kind": "FieldDefinition",
           "name": {
