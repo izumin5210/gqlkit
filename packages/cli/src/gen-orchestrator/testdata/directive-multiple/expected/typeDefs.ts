@@ -185,7 +185,7 @@ export const typeDefs: DocumentNode = {
                     "kind": "ListValue",
                     "values": [
                       {
-                        "kind": "StringValue",
+                        "kind": "EnumValue",
                         "value": "ADMIN"
                       }
                     ]

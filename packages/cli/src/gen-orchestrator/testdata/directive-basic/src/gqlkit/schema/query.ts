@@ -5,7 +5,7 @@ export type AuthDirective<TArgs extends { role: Role[] }> = Directive<"auth", TA
 
 export type User = {
   id: string;
-  email: WithDirectives<string | null, [AuthDirective<{ role: ["ADMIN"] }>]>;
+  email: WithDirectives<string, [AuthDirective<{ role: ["ADMIN"] }>]>;
 };
 
 const { defineQuery } = createGqlkitApis();

@@ -2,7 +2,7 @@
 
 directive @auth(role: [Role!]!) on FIELD_DEFINITION
 
-directive @cache(maxAge: Float!) on FIELD_DEFINITION
+directive @cache(maxAge: Float!) on FIELD_DEFINITION | OBJECT
 
 type Query
 

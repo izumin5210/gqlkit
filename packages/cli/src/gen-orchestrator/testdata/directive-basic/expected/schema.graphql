@@ -12,13 +12,13 @@ enum Role {
 
 """Defined in: src/gqlkit/schema/query.ts"""
 type User {
-  email: String! @auth(role: ["ADMIN"])
+  email: String! @auth(role: [ADMIN])
   id: String!
 }
 
 extend type Query {
   """Defined in: src/gqlkit/schema/query.ts"""
-  me: User! @auth(role: ["USER"])
+  me: User! @auth(role: [USER])
   """Defined in: src/gqlkit/schema/query.ts"""
   users: [User!]!
 }

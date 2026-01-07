@@ -83,6 +83,10 @@ function resolveArgumentValue(
   checker: ts.TypeChecker,
 ): DirectiveArgumentValue | null {
   if (type.isStringLiteral()) {
+    // Check enum pattern: starts with uppercase and contains only uppercase letters, digits, and underscores
+    if (/^[A-Z][A-Z0-9_]*$/.test(type.value)) {
+      return { kind: "enum", value: type.value };
+    }
     return { kind: "string", value: type.value };
   }
 
@@ -282,6 +286,22 @@ export function detectDirectiveMetadata(
         }
       }
     }
+    // Handle union types: (T & Directive) | null
+    if (type.isUnion()) {
+      for (const member of type.types) {
+        // Skip null/undefined members
+        if (
+          member.flags & ts.TypeFlags.Null ||
+          member.flags & ts.TypeFlags.Undefined
+        ) {
+          continue;
+        }
+        const result = detectDirectiveMetadata(member, checker);
+        if (result.directives.length > 0) {
+          return result;
+        }
+      }
+    }
     return createEmptyResult();
   }
 
@@ -364,6 +384,16 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
     }
   }
 
+  // Handle union types: (T & Directive) | null is normalized by TypeScript
+  // to (T & Directive) | null, so we need to check each member recursively
+  if (type.isUnion()) {
+    for (const member of type.types) {
+      if (hasDirectiveMetadata(member)) {
+        return true;
+      }
+    }
+  }
+
   return false;
 }
 
@@ -376,17 +406,39 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
  */
 export function unwrapDirectiveType(
   type: ts.Type,
-  _checker: ts.TypeChecker,
+  checker: ts.TypeChecker,
 ): ts.Type {
   if (!hasDirectiveMetadata(type)) {
     return type;
   }
 
   if (type.isIntersection()) {
+    const nonDirectiveMembers: ts.Type[] = [];
     for (const member of type.types) {
       const directivesProp = member.getProperty(DIRECTIVE_METADATA_PROPERTY);
       if (!directivesProp) {
-        return member;
+        nonDirectiveMembers.push(member);
+      }
+    }
+    if (nonDirectiveMembers.length === 1 && nonDirectiveMembers[0]) {
+      return nonDirectiveMembers[0];
+    }
+  }
+
+  // Handle union types: (T & Directive) | null
+  // We extract the base type from the non-null member and return it.
+  // Nullability is handled separately in the type-extractor.
+  if (type.isUnion()) {
+    for (const member of type.types) {
+      // Skip null/undefined members
+      if (
+        member.flags & ts.TypeFlags.Null ||
+        member.flags & ts.TypeFlags.Undefined
+      ) {
+        continue;
+      }
+      if (hasDirectiveMetadata(member)) {
+        return unwrapDirectiveType(member, checker);
       }
     }
   }

@@ -772,6 +772,192 @@ interface Diagnostic {
 - 未定義ディレクティブ警告
 - 診断メッセージの位置情報正確性
 
+## Bug Fixes (Post-Implementation Discovery)
+
+テストデータ再設計時に発見された以下のバグを修正する必要がある。
+
+### Bug 1: WithDirectives が nullable 型情報を失う
+
+**現象**: `WithDirectives<string | null, [...]>` が `String` ではなく `String!` として出力される
+
+**根本原因**: TypeScript は `(string | null) & { $gqlkitDirectives: ... }` を交差型ではなくユニオン型として正規化する（ユニオンに対する交差の分配）。さらに、`null & { ... }` は `never` に正規化されるため、**TypeScript の型システムレベルで nullability が失われる**。これは TypeScript Compiler API の制約であり、gqlkit 側では回避できない。
+
+**実装方針の変更**: 当初計画していた `checker.getUnionType()` によるユニオン型再構築は TypeScript の公開 API に存在しないため実装不可。代わりに、ユニオン型のメンバーを再帰的にチェックするロジックと、type-extractor で nullability を追跡するロジックを追加したが、TypeScript の型正規化により `WithDirectives<T | null, [...]>` の nullability は失われ、非 nullable として出力される。
+
+**修正対象**:
+- `packages/cli/src/shared/directive-detector.ts`
+- `packages/cli/src/type-extractor/extractor/type-extractor.ts`
+
+**修正内容**:
+
+```typescript
+// hasDirectiveMetadata() - ユニオン型のメンバーを再帰的にチェック
+if (type.isUnion()) {
+  for (const member of type.types) {
+    if (hasDirectiveMetadata(member)) {
+      return true;
+    }
+  }
+}
+
+// unwrapDirectiveType() - ユニオン型からディレクティブメタデータを除去
+// 注: TypeScript が null & object = never に正規化するため、
+// 元の nullable 情報は失われる
+if (type.isUnion()) {
+  for (const member of type.types) {
+    if (member.flags & ts.TypeFlags.Null || member.flags & ts.TypeFlags.Undefined) {
+      continue;
+    }
+    if (hasDirectiveMetadata(member)) {
+      return unwrapDirectiveType(member, checker);
+    }
+  }
+}
+```
+
+**既知の制限**: `WithDirectives<T | null, [...]>` は TypeScript の型正規化により nullability が失われ、`String!` として出力される。nullable なフィールドにディレクティブを付与する場合は、オプショナルプロパティ (`field?: string`) を使用することを推奨。
+
+**要件トレーサビリティ**: 5.1, 5.2 (型定義からのディレクティブ使用抽出)
+
+### Bug 2: Enum 引数値が StringValue として出力される
+
+**現象**: `@auth(role: ["ADMIN"])` がクォート付き（StringValue）で出力され、クォートなし（EnumValue）で出力されない
+
+**根本原因**: `resolveArgumentValue()` が文字列リテラルを即座に string として分類し、enum パターンをチェックしていない。
+
+**修正対象**: `packages/cli/src/shared/directive-detector.ts`
+
+**修正内容**:
+
+```typescript
+// resolveArgumentValue() - 85-86行目を修正
+function resolveArgumentValue(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+): DirectiveArgumentValue | null {
+  if (type.isStringLiteral()) {
+    // enum パターンをチェック: 大文字で始まり、大文字・数字・アンダースコアのみ
+    if (/^[A-Z][A-Z0-9_]*$/.test(type.value)) {
+      return { kind: "enum", value: type.value };
+    }
+    return { kind: "string", value: type.value };
+  }
+  // ... 以下既存コード
+}
+```
+
+**要件トレーサビリティ**: 5.5, 8.4 (ディレクティブ引数値の解決とスキーマ出力)
+
+### Bug 3: 複数の directive Location が最初の1つしか出力されない
+
+**現象**: `Directive<..., ["FIELD_DEFINITION", "OBJECT"]>` が `on FIELD_DEFINITION | OBJECT` ではなく `on FIELD_DEFINITION` のみ出力される
+
+**根本原因**: `extractDirectiveLocations()` は配列/タプル型を処理せず、ユニオン型と単一の文字列リテラルのみを処理している。
+
+**修正対象**: `packages/cli/src/shared/directive-definition-extractor.ts`
+
+**修正内容**:
+
+```typescript
+// extractDirectiveLocations() - 113-156行目を修正
+function extractDirectiveLocations(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+): DirectiveLocation[] {
+  const locationProp = type.getProperty(DIRECTIVE_LOCATION_PROPERTY);
+  if (!locationProp) {
+    return ["FIELD_DEFINITION"];
+  }
+
+  const rawLocationType = checker.getTypeOfSymbol(locationProp);
+  const locations: DirectiveLocation[] = [];
+
+  // 配列/タプル型を処理
+  if (checker.isTupleType(rawLocationType)) {
+    const typeArgs = checker.getTypeArguments(rawLocationType as ts.TypeReference);
+    for (const arg of typeArgs) {
+      if (arg.flags & ts.TypeFlags.Undefined) {
+        continue;
+      }
+      if (arg.isStringLiteral()) {
+        const value = arg.value as DirectiveLocation;
+        if (isValidLocation(value)) {
+          locations.push(value);
+        }
+      }
+    }
+    if (locations.length > 0) {
+      return locations;
+    }
+  }
+
+  if (checker.isArrayType(rawLocationType)) {
+    const typeArgs = checker.getTypeArguments(rawLocationType as ts.TypeReference);
+    if (typeArgs.length > 0 && typeArgs[0]) {
+      const elemType = typeArgs[0];
+      if (elemType.isUnion()) {
+        for (const member of elemType.types) {
+          if (member.flags & ts.TypeFlags.Undefined) {
+            continue;
+          }
+          if (member.isStringLiteral()) {
+            const value = member.value as DirectiveLocation;
+            if (isValidLocation(value)) {
+              locations.push(value);
+            }
+          }
+        }
+        if (locations.length > 0) {
+          return locations;
+        }
+      }
+    }
+  }
+
+  // 既存のユニオン型/単一文字列リテラル処理
+  if (rawLocationType.isUnion()) {
+    for (const member of rawLocationType.types) {
+      if (member.flags & ts.TypeFlags.Undefined) {
+        continue;
+      }
+      if (member.isStringLiteral()) {
+        const value = member.value as DirectiveLocation;
+        if (isValidLocation(value)) {
+          locations.push(value);
+        }
+      }
+    }
+  } else if (rawLocationType.isStringLiteral()) {
+    const value = rawLocationType.value as DirectiveLocation;
+    if (isValidLocation(value)) {
+      locations.push(value);
+    }
+  } else {
+    const locationType = getActualMetadataType(rawLocationType);
+    if (locationType?.isStringLiteral()) {
+      const value = locationType.value as DirectiveLocation;
+      if (isValidLocation(value)) {
+        locations.push(value);
+      }
+    }
+  }
+
+  return locations.length > 0 ? locations : ["FIELD_DEFINITION"];
+}
+```
+
+**要件トレーサビリティ**: 4.4, 7.4 (ディレクティブ定義の Location 抽出とスキーマ生成)
+
+### バグ修正テストケース
+
+これらのバグ修正を検証するため、以下のテストケースを追加・更新する:
+
+| テストケース | 検証内容 |
+|-------------|---------|
+| `directive-basic` | nullable 型 (`string \| null`) のディレクティブ付与と正しい nullability 出力 |
+| `directive-args` | enum パターン引数 (`["ADMIN", "USER"]`) が EnumValue として出力されること |
+| `directive-definition` | 複数 Location (`["FIELD_DEFINITION", "OBJECT"]`) が `on FIELD_DEFINITION \| OBJECT` として出力されること |
+
 ## Supporting References
 
 ### Directive Argument Value Mapping

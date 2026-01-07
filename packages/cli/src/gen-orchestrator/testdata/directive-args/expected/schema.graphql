@@ -6,8 +6,8 @@ directive @log(enabled: Boolean!, level: String!) on FIELD_DEFINITION
 
 """Defined in: src/gqlkit/schema/types.ts"""
 type Data {
-  cached: String! @cache(maxAge: 3600, scope: "PUBLIC")
-  logged: String! @log(enabled: true, level: "DEBUG")
+  cached: String! @cache(maxAge: 3600, scope: PUBLIC)
+  logged: String! @log(enabled: true, level: DEBUG)
 }
 
 type Query

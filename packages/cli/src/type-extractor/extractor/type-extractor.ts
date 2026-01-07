@@ -389,11 +389,23 @@ function extractFieldsFromType(
 
     let actualPropType = propType;
     let directives: ReadonlyArray<DirectiveInfo> | null = null;
+    let directiveNullable = false;
 
     if (hasDirectiveMetadata(propType)) {
       const directiveResult = detectDirectiveMetadata(propType, checker);
       if (directiveResult.directives.length > 0) {
         directives = directiveResult.directives;
+      }
+      // Check if the original type is nullable before unwrapping
+      // TypeScript normalizes WithDirectives<T | null, [...]> to (T & Directive) | null
+      if (propType.isUnion()) {
+        const hasNull = propType.types.some((t) => t.flags & ts.TypeFlags.Null);
+        const hasUndefined = propType.types.some(
+          (t) => t.flags & ts.TypeFlags.Undefined,
+        );
+        if (hasNull || hasUndefined) {
+          directiveNullable = true;
+        }
       }
       actualPropType = unwrapDirectiveType(propType, checker);
     }
@@ -404,9 +416,15 @@ function extractFieldsFromType(
       globalTypeMappings,
     );
 
+    // Preserve nullability from original WithDirectives type
+    const tsType =
+      directiveNullable && !typeResult.tsType.nullable
+        ? { ...typeResult.tsType, nullable: true }
+        : typeResult.tsType;
+
     fields.push({
       name: propName,
-      tsType: typeResult.tsType,
+      tsType,
       optional,
       description: tsdocInfo.description ?? null,
       deprecated: tsdocInfo.deprecated ?? null,

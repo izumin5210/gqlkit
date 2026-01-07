@@ -17,7 +17,7 @@ enum Role {
 """Defined in: src/gqlkit/schema/types.ts"""
 type User {
   id: String!
-  secret: String! @auth(role: ["ADMIN"]) @cache(maxAge: 60) @log
+  secret: String! @auth(role: [ADMIN]) @cache(maxAge: 60) @log
 }
 
 extend type Query {

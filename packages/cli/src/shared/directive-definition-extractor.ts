@@ -122,10 +122,56 @@ function extractDirectiveLocations(
   const rawLocationType = checker.getTypeOfSymbol(locationProp);
   const locations: DirectiveLocation[] = [];
 
+  // Handle tuple types like ["FIELD_DEFINITION", "OBJECT"]
+  if (checker.isTupleType(rawLocationType)) {
+    const typeArgs = checker.getTypeArguments(
+      rawLocationType as ts.TypeReference,
+    );
+    for (const arg of typeArgs) {
+      if (arg.flags & ts.TypeFlags.Undefined) {
+        continue;
+      }
+      if (arg.isStringLiteral()) {
+        const value = arg.value as DirectiveLocation;
+        if (isValidLocation(value)) {
+          locations.push(value);
+        }
+      }
+    }
+    if (locations.length > 0) {
+      return locations;
+    }
+  }
+
+  // Handle array types
+  if (checker.isArrayType(rawLocationType)) {
+    const typeArgs = checker.getTypeArguments(
+      rawLocationType as ts.TypeReference,
+    );
+    if (typeArgs.length > 0 && typeArgs[0]) {
+      const elemType = typeArgs[0];
+      if (elemType.isUnion()) {
+        for (const member of elemType.types) {
+          if (member.flags & ts.TypeFlags.Undefined) {
+            continue;
+          }
+          if (member.isStringLiteral()) {
+            const value = member.value as DirectiveLocation;
+            if (isValidLocation(value)) {
+              locations.push(value);
+            }
+          }
+        }
+        if (locations.length > 0) {
+          return locations;
+        }
+      }
+    }
+  }
+
+  // Handle union types like "OBJECT" | "FIELD_DEFINITION" | undefined
   if (rawLocationType.isUnion()) {
-    // Handle union types like "OBJECT" | "FIELD_DEFINITION" | undefined
     for (const member of rawLocationType.types) {
-      // Skip undefined members
       if (member.flags & ts.TypeFlags.Undefined) {
         continue;
       }

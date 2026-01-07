@@ -55,6 +55,10 @@ export const typeDefs: DocumentNode = {
         {
           "kind": "Name",
           "value": "FIELD_DEFINITION"
+        },
+        {
+          "kind": "Name",
+          "value": "OBJECT"
         }
       ],
       "arguments": [

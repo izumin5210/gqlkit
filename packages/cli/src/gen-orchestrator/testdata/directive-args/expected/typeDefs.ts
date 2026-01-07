@@ -154,7 +154,7 @@ export const typeDefs: DocumentNode = {
                     "value": "scope"
                   },
                   "value": {
-                    "kind": "StringValue",
+                    "kind": "EnumValue",
                     "value": "PUBLIC"
                   }
                 }
@@ -204,7 +204,7 @@ export const typeDefs: DocumentNode = {
                     "value": "level"
                   },
                   "value": {
-                    "kind": "StringValue",
+                    "kind": "EnumValue",
                     "value": "DEBUG"
                   }
                 }
