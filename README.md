@@ -639,6 +639,195 @@ input ProductInput @oneOf {
 
 Each property becomes a nullable field in the generated input type. The `@oneOf` directive ensures exactly one field is provided at runtime.
 
+### Default values for input fields and arguments
+
+Specify default values for Input Object fields and resolver arguments using `GqlFieldDef` with the `defaultValue` option:
+
+#### Basic default values
+
+```ts
+import { type GqlFieldDef, type Int } from "@gqlkit-ts/runtime";
+
+export type PaginationInput = {
+  limit: GqlFieldDef<Int, { defaultValue: 10 }>;
+  offset: GqlFieldDef<Int, { defaultValue: 0 }>;
+  includeArchived: GqlFieldDef<boolean, { defaultValue: false }>;
+};
+
+export type SearchInput = {
+  query: string;
+  caseSensitive: GqlFieldDef<boolean, { defaultValue: true }>;
+  maxResults: GqlFieldDef<Int | null, { defaultValue: null }>;
+};
+
+export type GreetingInput = {
+  name: GqlFieldDef<string, { defaultValue: "World" }>;
+  prefix: GqlFieldDef<string, { defaultValue: "Hello" }>;
+};
+```
+
+Generates:
+
+```graphql
+input PaginationInput {
+  limit: Int! = 10
+  offset: Int! = 0
+  includeArchived: Boolean! = false
+}
+
+input SearchInput {
+  query: String!
+  caseSensitive: Boolean! = true
+  maxResults: Int = null
+}
+
+input GreetingInput {
+  name: String! = "World"
+  prefix: String! = "Hello"
+}
+```
+
+#### Complex default values
+
+Default values support arrays, objects, and enum values:
+
+```ts
+export type Status = "ACTIVE" | "INACTIVE" | "PENDING";
+
+export type Priority = "LOW" | "MEDIUM" | "HIGH";
+
+export type NestedConfig = {
+  enabled: boolean;
+  value: Int;
+};
+
+export type FilterInput = {
+  status: GqlFieldDef<Status, { defaultValue: "ACTIVE" }>;
+  priorities: GqlFieldDef<Priority[], { defaultValue: ["MEDIUM", "HIGH"] }>;
+  tags: GqlFieldDef<string[], { defaultValue: ["default"] }>;
+};
+
+export type SettingsInput = {
+  config: GqlFieldDef<NestedConfig, { defaultValue: { enabled: true; value: 100 } }>;
+  limits: GqlFieldDef<Int[], { defaultValue: [10, 20, 30] }>;
+};
+```
+
+Generates:
+
+```graphql
+input FilterInput {
+  status: Status! = ACTIVE
+  priorities: [Priority!]! = [MEDIUM, HIGH]
+  tags: [String!]! = ["default"]
+}
+
+input SettingsInput {
+  config: NestedConfig! = {enabled: true, value: 100}
+  limits: [Int!]! = [10, 20, 30]
+}
+```
+
+#### Default values with directives
+
+You can combine `defaultValue` with `directives`:
+
+```ts
+import { type GqlFieldDef, type Directive, type Int } from "@gqlkit-ts/runtime";
+
+export type LengthDirective<TArgs extends { min: number; max: number }> =
+  Directive<"length", TArgs, "INPUT_FIELD_DEFINITION" | "ARGUMENT_DEFINITION">;
+
+export type RangeDirective<TArgs extends { min: number; max: number }> =
+  Directive<"range", TArgs, "INPUT_FIELD_DEFINITION" | "ARGUMENT_DEFINITION">;
+
+export type CreateUserInput = {
+  name: GqlFieldDef<string, {
+    defaultValue: "Anonymous";
+    directives: [LengthDirective<{ min: 1; max: 100 }>];
+  }>;
+  age: GqlFieldDef<Int, {
+    defaultValue: 18;
+    directives: [RangeDirective<{ min: 0; max: 150 }>];
+  }>;
+  email: GqlFieldDef<string | null, {
+    defaultValue: null;
+    directives: [LengthDirective<{ min: 5; max: 255 }>];
+  }>;
+};
+```
+
+Generates:
+
+```graphql
+input CreateUserInput {
+  name: String! = "Anonymous" @length(min: 1, max: 100)
+  age: Int! = 18 @range(min: 0, max: 150)
+  email: String = null @length(min: 5, max: 255)
+}
+```
+
+#### Default values in resolver arguments
+
+Default values in Input Objects are also applied to resolver arguments:
+
+```ts
+import { createGqlkitApis, type GqlFieldDef, type Int } from "@gqlkit-ts/runtime";
+
+const { defineQuery } = createGqlkitApis();
+
+export type PaginationInput = {
+  limit: GqlFieldDef<Int, { defaultValue: 10 }>;
+  offset: GqlFieldDef<Int, { defaultValue: 0 }>;
+};
+
+export type User = {
+  id: string;
+  name: string;
+};
+
+export const users = defineQuery<PaginationInput, User[]>(() => []);
+```
+
+Generates:
+
+```graphql
+type Query {
+  users(limit: Int! = 10, offset: Int! = 0): [User!]!
+}
+```
+
+#### Supported default value types
+
+| Value type | Example | GraphQL output |
+|------------|---------|----------------|
+| String | `"hello"` | `"hello"` |
+| Number (Int) | `10` | `10` |
+| Number (Float) | `3.14` | `3.14` |
+| Boolean | `true`, `false` | `true`, `false` |
+| Null | `null` | `null` |
+| Array | `[1, 2, 3]` | `[1, 2, 3]` |
+| Object | `{ key: "value" }` | `{key: "value"}` |
+| Enum | `"ACTIVE"` (when field type is enum) | `ACTIVE` |
+
+#### Important: Literal types required
+
+Default values must be specified as TypeScript literal types. Non-literal types will cause a warning:
+
+```ts
+// ✅ OK: Literal types
+export type GoodInput = {
+  limit: GqlFieldDef<Int, { defaultValue: 10 }>;
+  name: GqlFieldDef<string, { defaultValue: "default" }>;
+};
+
+// ❌ Error: Non-literal types
+export type BadInput = {
+  limit: GqlFieldDef<Int, { defaultValue: number }>;     // Warning: must be literal
+  name: GqlFieldDef<string, { defaultValue: string }>;   // Warning: must be literal
+};
+```
+
 ### Field resolvers
 
 Add computed fields to object types using `defineField`. Define them alongside the type:
