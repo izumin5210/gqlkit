@@ -1,5 +1,7 @@
 import ts from "typescript";
+import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
+  type DirectiveArgumentValue,
   type DirectiveInfo,
   detectDirectiveMetadata,
   hasDirectiveMetadata,
@@ -388,12 +390,20 @@ function extractFieldsFromType(
     let actualPropType = propType;
     let directives: ReadonlyArray<DirectiveInfo> | null = null;
     let directiveNullable = false;
+    let defaultValue: DirectiveArgumentValue | null = null;
 
     if (hasDirectiveMetadata(propType)) {
       const directiveResult = detectDirectiveMetadata(propType, checker);
       if (directiveResult.directives.length > 0) {
         directives = directiveResult.directives;
       }
+
+      // Detect default value from $gqlkitFieldMeta
+      const defaultValueResult = detectDefaultValueMetadata(propType, checker);
+      if (defaultValueResult.defaultValue) {
+        defaultValue = defaultValueResult.defaultValue;
+      }
+
       // Check if the original type is nullable before unwrapping
       // TypeScript normalizes WithDirectives<T | null, [...]> to (T & Directive) | null
       if (propType.isUnion()) {
@@ -442,6 +452,7 @@ function extractFieldsFromType(
       description: tsdocInfo.description ?? null,
       deprecated: tsdocInfo.deprecated ?? null,
       directives,
+      defaultValue,
     });
   }
 

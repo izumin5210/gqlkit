@@ -1,3 +1,10 @@
+export {
+  type DefaultValueDetectionError,
+  type DefaultValueDetectionErrorCode,
+  type DefaultValueDetectionResult,
+  detectDefaultValueMetadata,
+  hasDefaultValueMetadata,
+} from "./default-value-detector.js";
 export { collectDiagnostics, deduplicateDiagnostics } from "./diagnostics.js";
 export {
   type DirectiveArgumentDefinition,
@@ -8,13 +15,14 @@ export {
   type DirectiveLocation,
   extractDirectiveDefinitions,
 } from "./directive-definition-extractor.js";
-export type {
-  DirectiveArgument,
-  DirectiveArgumentValue,
-  DirectiveDetectionError,
-  DirectiveDetectionErrorCode,
-  DirectiveDetectionResult,
-  DirectiveInfo,
+export {
+  type DirectiveArgument,
+  type DirectiveArgumentValue,
+  type DirectiveDetectionError,
+  type DirectiveDetectionErrorCode,
+  type DirectiveDetectionResult,
+  type DirectiveInfo,
+  resolveArgumentValue,
 } from "./directive-detector.js";
 
 export {

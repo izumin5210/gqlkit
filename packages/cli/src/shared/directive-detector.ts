@@ -31,6 +31,7 @@ export type DirectiveArgumentValue =
   | { readonly kind: "string"; readonly value: string }
   | { readonly kind: "number"; readonly value: number }
   | { readonly kind: "boolean"; readonly value: boolean }
+  | { readonly kind: "null"; readonly value: null }
   | { readonly kind: "enum"; readonly value: string }
   | {
       readonly kind: "list";
@@ -90,10 +91,14 @@ function createEmptyResult(): DirectiveDetectionResult {
 /**
  * Resolves a directive argument value from a TypeScript type.
  */
-function resolveArgumentValue(
+export function resolveArgumentValue(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): DirectiveArgumentValue | null {
+  if (type.flags & ts.TypeFlags.Null) {
+    return { kind: "null", value: null };
+  }
+
   if (type.isStringLiteral()) {
     // Check enum pattern: starts with uppercase and contains only uppercase letters, digits, and underscores
     if (/^[A-Z][A-Z0-9_]*$/.test(type.value)) {
@@ -410,10 +415,21 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
     return true;
   }
 
+  // Also check for the original type property (GqlFieldDef marker)
+  const originalTypeProp = type.getProperty(ORIGINAL_TYPE_PROPERTY);
+  if (originalTypeProp) {
+    return true;
+  }
+
   if (type.isIntersection()) {
     for (const member of type.types) {
       const prop = getMetaProperty(member);
       if (prop) {
+        return true;
+      }
+      // Also check for original type property in intersection members
+      const origProp = member.getProperty(ORIGINAL_TYPE_PROPERTY);
+      if (origProp) {
         return true;
       }
     }
@@ -426,6 +442,14 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
       if (hasDirectiveMetadata(member)) {
         return true;
       }
+    }
+  }
+
+  // Check for GqlFieldDef type alias by examining the alias symbol
+  if (type.aliasSymbol) {
+    const aliasName = type.aliasSymbol.getName();
+    if (aliasName === "GqlFieldDef" || aliasName === "GqlTypeDef") {
+      return true;
     }
   }
 
@@ -446,10 +470,6 @@ export function unwrapDirectiveType(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): ts.Type {
-  if (!hasDirectiveMetadata(type)) {
-    return type;
-  }
-
   // First, try to get the original type from $gqlkitOriginalType property
   const originalTypeProp = type.getProperty(ORIGINAL_TYPE_PROPERTY);
   if (originalTypeProp) {
@@ -499,9 +519,23 @@ export function unwrapDirectiveType(
       ) {
         continue;
       }
-      if (hasDirectiveMetadata(member)) {
-        return unwrapDirectiveType(member, checker);
+      // Recursively unwrap if this member has metadata
+      const unwrapped = unwrapDirectiveType(member, checker);
+      if (unwrapped !== member) {
+        return unwrapped;
       }
+    }
+  }
+
+  // Handle GqlFieldDef type alias detected via type string
+  // This handles cases where TypeScript doesn't expose the intersection structure
+  // but the type string shows it's a GqlFieldDef type
+  const typeString = checker.typeToString(type);
+  if (typeString.startsWith("GqlFieldDef<")) {
+    // Try to extract the first type argument (the base type)
+    // Pattern: GqlFieldDef<T, Meta> where T is the base type
+    if (type.aliasTypeArguments && type.aliasTypeArguments.length > 0) {
+      return type.aliasTypeArguments[0]!;
     }
   }
 

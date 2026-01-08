@@ -8,7 +8,10 @@ import type {
   DirectiveDefinitionInfo,
   DirectiveLocation,
 } from "../../shared/directive-definition-extractor.js";
-import type { DirectiveInfo } from "../../shared/directive-detector.js";
+import type {
+  DirectiveArgumentValue,
+  DirectiveInfo,
+} from "../../shared/directive-detector.js";
 import {
   detectCircularInterfaceReferences,
   validateInterfaceImplementations,
@@ -29,6 +32,7 @@ export interface BaseField {
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
   readonly directives: ReadonlyArray<DirectiveInfo> | null;
+  readonly defaultValue: DirectiveArgumentValue | null;
 }
 
 export interface BaseType {
@@ -245,6 +249,7 @@ export function integrate(
             description: field.description,
             deprecated: field.deprecated,
             directives: field.directives,
+            defaultValue: field.defaultValue,
           })) ?? [],
         sourceFile: type.sourceFile,
         description: type.description,
@@ -274,6 +279,7 @@ export function integrate(
             description: field.description,
             deprecated: field.deprecated,
             directives: field.directives,
+            defaultValue: field.defaultValue,
           })) ?? null,
         unionMembers: null,
         enumValues: null,
@@ -294,6 +300,7 @@ export function integrate(
             description: field.description,
             deprecated: field.deprecated,
             directives: field.directives,
+            defaultValue: field.defaultValue,
           })) ?? null,
         unionMembers: null,
         enumValues: null,

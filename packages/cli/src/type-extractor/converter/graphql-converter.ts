@@ -87,6 +87,7 @@ function convertFields(extracted: ExtractedTypeInfo): FieldInfo[] {
     description: field.description,
     deprecated: field.deprecated,
     directives: field.directives,
+    defaultValue: field.defaultValue,
   }));
 }
 
@@ -206,6 +207,7 @@ function validateAndConvertInlineObjectMembers(
       description: prop.description,
       deprecated: prop.deprecated,
       directives: null,
+      defaultValue: null,
     });
   }
 
