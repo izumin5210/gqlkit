@@ -3,6 +3,7 @@ import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 
 export type GraphQLTypeKind =
   | "Object"
+  | "Interface"
   | "Union"
   | "Enum"
   | "InputObject"
@@ -36,6 +37,7 @@ export interface GraphQLTypeInfo {
   readonly fields: ReadonlyArray<FieldInfo> | null;
   readonly unionMembers: ReadonlyArray<string> | null;
   readonly enumValues: ReadonlyArray<EnumValueInfo> | null;
+  readonly implementedInterfaces: ReadonlyArray<string> | null;
   readonly sourceFile: string;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;

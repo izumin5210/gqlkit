@@ -5,6 +5,11 @@ import {
   hasDirectiveMetadata,
   unwrapDirectiveType,
 } from "../../shared/directive-detector.js";
+import {
+  extractImplementsFromDefineInterface,
+  extractImplementsFromGqlTypeDef,
+  isDefineInterfaceTypeAlias,
+} from "../../shared/interface-detector.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
 import {
   extractTSDocFromSymbol,
@@ -328,16 +333,9 @@ function collectPropertiesFromType(
   if (type.isIntersection()) {
     const allProps = new Map<string, ts.Symbol>();
     for (const member of type.types) {
-      let resolvedMember = member;
-
-      if (member.symbol) {
-        const declaredType = checker.getDeclaredTypeOfSymbol(member.symbol);
-        if (declaredType && declaredType !== member) {
-          resolvedMember = declaredType;
-        }
-      }
-
-      const memberProps = collectPropertiesFromType(resolvedMember, checker);
+      // getProperties() works for both named and anonymous types
+      // Avoid getDeclaredTypeOfSymbol as it may return empty for anonymous types
+      const memberProps = member.getProperties();
       for (const prop of memberProps) {
         const propName = prop.getName();
         if (!allProps.has(propName)) {
@@ -564,12 +562,20 @@ function extractStringLiteralUnionMembers(
   return members;
 }
 
-function determineTypeKind(node: ts.Node, type: ts.Type): TypeKind {
+function determineTypeKind(
+  node: ts.Node,
+  type: ts.Type,
+  sourceFile: ts.SourceFile,
+): TypeKind {
   if (ts.isInterfaceDeclaration(node)) {
     return "interface";
   }
 
   if (ts.isTypeAliasDeclaration(node)) {
+    if (isDefineInterfaceTypeAlias(node, sourceFile)) {
+      return "graphqlInterface";
+    }
+
     if (type.isUnion()) {
       const nonNullTypes = type.types.filter(
         (t) =>
@@ -581,7 +587,10 @@ function determineTypeKind(node: ts.Node, type: ts.Type): TypeKind {
       }
 
       const allObjectTypes = nonNullTypes.every(
-        (t) => t.flags & ts.TypeFlags.Object || t.symbol !== undefined,
+        (t) =>
+          (t.flags & ts.TypeFlags.Object) !== 0 ||
+          (t.flags & ts.TypeFlags.Intersection) !== 0 ||
+          t.symbol !== undefined,
       );
       if (nonNullTypes.length > 1 && allObjectTypes) {
         return "union";
@@ -594,9 +603,23 @@ function determineTypeKind(node: ts.Node, type: ts.Type): TypeKind {
 }
 
 function isAnonymousObjectType(memberType: ts.Type): boolean {
+  // For type aliases (including GqlTypeDef which creates intersection types),
+  // use aliasSymbol to get the original type name
+  if (memberType.aliasSymbol) {
+    return false;
+  }
   if (!memberType.symbol) return true;
   const symbolName = memberType.symbol.getName();
   return symbolName === "__type" || symbolName === "";
+}
+
+function getNamedTypeName(memberType: ts.Type): string {
+  // For type aliases (e.g., GqlTypeDef<...>), use aliasSymbol
+  if (memberType.aliasSymbol) {
+    return memberType.aliasSymbol.getName();
+  }
+  // For regular types, use symbol
+  return memberType.symbol?.getName() ?? "";
 }
 
 interface InlineObjectExtractionResult {
@@ -620,7 +643,9 @@ function extractInlineObjectMembers(
   );
 
   const allObjectTypes = nonNullTypes.every(
-    (t) => t.flags & ts.TypeFlags.Object,
+    (t) =>
+      (t.flags & ts.TypeFlags.Object) !== 0 ||
+      (t.flags & ts.TypeFlags.Intersection) !== 0,
   );
 
   if (nonNullTypes.length < 2 || !allObjectTypes) {
@@ -674,13 +699,16 @@ function extractUnionMembers(type: ts.Type): string[] | undefined {
   );
 
   const allObjectTypes = nonNullTypes.every(
-    (t) => t.flags & ts.TypeFlags.Object || t.symbol !== undefined,
+    (t) =>
+      (t.flags & ts.TypeFlags.Object) !== 0 ||
+      (t.flags & ts.TypeFlags.Intersection) !== 0 ||
+      t.symbol !== undefined,
   );
 
   if (nonNullTypes.length > 1 && allObjectTypes) {
     const namedMembers = nonNullTypes
       .filter((t) => !isAnonymousObjectType(t))
-      .map((t) => t.symbol?.getName() ?? "")
+      .map((t) => getNamedTypeName(t))
       .filter((name) => name !== "" && name !== "__type");
 
     if (namedMembers.length > 0) {
@@ -782,6 +810,7 @@ export function extractTypesFromProgram(
           unionMembers: null,
           inlineObjectMembers: null,
           enumMembers,
+          implementedInterfaces: null,
         });
         return;
       }
@@ -862,7 +891,7 @@ export function extractTypesFromProgram(
           actualType = type;
         }
 
-        const kind = determineTypeKind(node, actualType);
+        const kind = determineTypeKind(node, actualType, sourceFile);
         const unionMembers = extractUnionMembers(actualType);
         const inlineObjectResult = extractInlineObjectMembers(
           actualType,
@@ -870,6 +899,29 @@ export function extractTypesFromProgram(
           globalTypeMappings,
         );
         const tsdocInfo = extractTSDocInfo(node, checker);
+
+        let implementedInterfaces: ReadonlyArray<string> | null = null;
+        if (ts.isTypeAliasDeclaration(node)) {
+          if (kind === "graphqlInterface") {
+            const interfaces = extractImplementsFromDefineInterface(
+              node,
+              sourceFile,
+              checker,
+            );
+            if (interfaces.length > 0) {
+              implementedInterfaces = interfaces;
+            }
+          } else {
+            const interfaces = extractImplementsFromGqlTypeDef(
+              node,
+              sourceFile,
+              checker,
+            );
+            if (interfaces.length > 0) {
+              implementedInterfaces = interfaces;
+            }
+          }
+        }
 
         const metadata: TypeMetadata = {
           name,
@@ -892,6 +944,7 @@ export function extractTypesFromProgram(
             unionMembers: null,
             inlineObjectMembers: null,
             enumMembers,
+            implementedInterfaces: null,
           });
           return;
         }
@@ -943,6 +996,7 @@ export function extractTypesFromProgram(
           unionMembers: unionMembers ?? null,
           inlineObjectMembers,
           enumMembers: null,
+          implementedInterfaces,
         };
 
         types.push(typeInfo);

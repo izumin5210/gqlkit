@@ -1,0 +1,12 @@
+[
+  {
+    "code": "INTERFACE_CIRCULAR_REFERENCE",
+    "message": "Circular interface inheritance detected: InterfaceA -> InterfaceB -> InterfaceC -> InterfaceA",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/interfaces.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

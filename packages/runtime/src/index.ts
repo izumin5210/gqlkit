@@ -103,6 +103,65 @@ export type GqlFieldDef<
 };
 
 /**
+ * Marker type for DefineInterface - used internally for type discrimination.
+ */
+export type DefineInterfaceMarker = Record<string, unknown>;
+
+/**
+ * Interface metadata structure embedded in intersection types.
+ * Used by CLI to detect and identify interface types through type analysis.
+ *
+ * @typeParam Meta - The metadata configuration object containing implements
+ */
+export interface GqlInterfaceMetaShape<
+  Meta extends {
+    implements?: ReadonlyArray<DefineInterfaceMarker>;
+  } = object,
+> {
+  readonly " $gqlkitInterface": true;
+  readonly implements?: Meta["implements"];
+}
+
+/**
+ * GraphQL interface type definition utility.
+ * Use this to define GraphQL interface types that can be implemented by object types.
+ *
+ * @typeParam T - The interface field definitions as an object type
+ * @typeParam Meta - Optional metadata containing implements for interface inheritance
+ *
+ * @example
+ * ```typescript
+ * // Basic interface definition
+ * export type Node = DefineInterface<{
+ *   id: IDString;
+ * }>;
+ *
+ * export type Timestamped = DefineInterface<{
+ *   createdAt: DateTime;
+ *   updatedAt: DateTime;
+ * }>;
+ *
+ * // Interface inheriting other interfaces
+ * export type Entity = DefineInterface<
+ *   {
+ *     id: IDString;
+ *     createdAt: DateTime;
+ *     updatedAt: DateTime;
+ *   },
+ *   { implements: [Node, Timestamped] }
+ * >;
+ * ```
+ */
+export type DefineInterface<
+  T extends Record<string, unknown>,
+  Meta extends {
+    implements?: ReadonlyArray<DefineInterfaceMarker>;
+  } = object,
+> = T & {
+  readonly " $gqlkitInterfaceMeta"?: GqlInterfaceMetaShape<Meta>;
+};
+
+/**
  * Metadata structure for type-level GraphQL metadata.
  * Used to attach directives and other metadata to types.
  *
@@ -110,16 +169,18 @@ export type GqlFieldDef<
  */
 export interface GqlTypeMetaShape<
   Meta extends {
-    directives: ReadonlyArray<
+    directives?: ReadonlyArray<
       Directive<
         string,
         Record<string, unknown>,
         DirectiveLocation | DirectiveLocation[]
       >
     >;
+    implements?: ReadonlyArray<DefineInterfaceMarker>;
   },
 > {
-  readonly directives: Meta["directives"];
+  readonly directives?: Meta["directives"];
+  readonly implements?: Meta["implements"];
 }
 
 /**
@@ -128,14 +189,15 @@ export interface GqlTypeMetaShape<
  * with the underlying type.
  *
  * The structure uses two properties:
- * - `$gqlkitTypeMeta`: Contains the metadata object with directives
+ * - `$gqlkitTypeMeta`: Contains the metadata object with directives and implements
  * - `$gqlkitOriginalType`: Preserves the original type T to maintain nullability information
  *
  * @typeParam T - The base type to attach metadata to
- * @typeParam Meta - The metadata configuration object containing directives
+ * @typeParam Meta - The metadata configuration object containing directives and/or implements
  *
  * @example
  * ```typescript
+ * // Type with directives only
  * type User = GqlTypeDef<
  *   {
  *     id: string;
@@ -143,19 +205,42 @@ export interface GqlTypeMetaShape<
  *   },
  *   { directives: [CacheDirective<{ maxAge: 60 }>] }
  * >;
+ *
+ * // Type implementing an interface
+ * type User = GqlTypeDef<
+ *   {
+ *     id: IDString;
+ *     name: string;
+ *   },
+ *   { implements: [Node] }
+ * >;
+ *
+ * // Type with both directives and implements
+ * type Post = GqlTypeDef<
+ *   {
+ *     id: IDString;
+ *     title: string;
+ *     createdAt: DateTime;
+ *   },
+ *   {
+ *     implements: [Node, Timestamped],
+ *     directives: [CacheDirective<{ maxAge: 60 }>]
+ *   }
+ * >;
  * ```
  */
 export type GqlTypeDef<
   T,
   Meta extends {
-    directives: ReadonlyArray<
+    directives?: ReadonlyArray<
       Directive<
         string,
         Record<string, unknown>,
         DirectiveLocation | DirectiveLocation[]
       >
     >;
-  },
+    implements?: ReadonlyArray<DefineInterfaceMarker>;
+  } = { directives: [] },
 > = T & {
   readonly " $gqlkitTypeMeta"?: GqlTypeMetaShape<Meta>;
   readonly " $gqlkitOriginalType"?: T;

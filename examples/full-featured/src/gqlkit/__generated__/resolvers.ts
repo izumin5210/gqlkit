@@ -2,6 +2,7 @@
 
 import type { GraphQLScalarType } from "graphql";
 import { search } from "../schema/content.js";
+import { __typename, node } from "../schema/node.js";
 import {
   allPosts,
   author,
@@ -41,6 +42,9 @@ export function createResolvers({
       deleteUser: deleteUser,
       updateUser: updateUser,
     },
+    Node: {
+      __typename: __typename,
+    },
     Post: {
       author: author,
       comments: comments,
@@ -51,6 +55,7 @@ export function createResolvers({
       allPosts: allPosts,
       allUsers: allUsers,
       me: me,
+      node: node,
       post: post,
       search: search,
       user: user,
