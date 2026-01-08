@@ -295,6 +295,122 @@ enum UserStatus {
 }
 ```
 
+### Custom directives
+
+Define custom directives using the `Directive` utility type and attach them using `GqlFieldDef` or `GqlTypeDef`:
+
+#### Defining directives
+
+```ts
+// src/gqlkit/schema/directives.ts
+import { type Directive } from "@gqlkit-ts/runtime";
+
+export type Role = "USER" | "ADMIN";
+
+// Directive with typed arguments
+export type AuthDirective<TArgs extends { role: Role[] }> = Directive<
+  "auth",
+  TArgs,
+  "FIELD_DEFINITION"
+>;
+
+// Directive with multiple locations
+export type CacheDirective<TArgs extends { maxAge: number }> = Directive<
+  "cache",
+  TArgs,
+  ["FIELD_DEFINITION", "OBJECT"]
+>;
+```
+
+Generates:
+
+```graphql
+directive @auth(role: [Role!]!) on FIELD_DEFINITION
+directive @cache(maxAge: Float!) on FIELD_DEFINITION | OBJECT
+```
+
+#### Attaching directives to fields
+
+Use `GqlFieldDef` to attach directives to object type fields:
+
+```ts
+import { type GqlFieldDef, type IDString } from "@gqlkit-ts/runtime";
+import { type AuthDirective, type Role } from "./directives.js";
+
+export type User = {
+  id: IDString;
+  name: string;
+  // Field with directive
+  email: GqlFieldDef<string, { directives: [AuthDirective<{ role: ["ADMIN"] }>] }>;
+  // Nullable field with directive
+  phone: GqlFieldDef<string | null, { directives: [AuthDirective<{ role: ["USER"] }>] }>;
+};
+```
+
+Generates:
+
+```graphql
+type User {
+  id: ID!
+  name: String!
+  email: String! @auth(role: [ADMIN])
+  phone: String @auth(role: [USER])
+}
+```
+
+#### Attaching directives to types
+
+Use `GqlTypeDef` to attach directives to type definitions:
+
+```ts
+import { type GqlTypeDef, type IDString } from "@gqlkit-ts/runtime";
+import { type CacheDirective } from "./directives.js";
+
+export type Post = GqlTypeDef<
+  {
+    id: IDString;
+    title: string;
+  },
+  { directives: [CacheDirective<{ maxAge: 60 }>] }
+>;
+```
+
+Generates:
+
+```graphql
+type Post @cache(maxAge: 60) {
+  id: ID!
+  title: String!
+}
+```
+
+#### Attaching directives to Query/Mutation fields
+
+Add a third type parameter to `defineQuery`, `defineMutation`, or `defineField`:
+
+```ts
+import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import { type AuthDirective } from "./directives.js";
+import type { User } from "./user.js";
+
+const { defineQuery } = createGqlkitApis<Context>();
+
+// Query field with directive
+export const me = defineQuery<
+  NoArgs,
+  User,
+  [AuthDirective<{ role: ["USER"] }>]
+>((_root, _args, ctx) => ctx.currentUser);
+```
+
+Generates:
+
+```graphql
+type Query {
+  me: User! @auth(role: [USER])
+}
+```
+
 ### Enum types
 
 String literal unions are converted to GraphQL enum types:
