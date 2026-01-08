@@ -623,99 +623,24 @@ export const typeDefs: DocumentNode = {
       },
     },
     {
-      kind: "ObjectTypeDefinition",
+      kind: "UnionTypeDefinition",
       name: {
         kind: "Name",
         value: "SearchResult",
       },
-      fields: [
+      types: [
         {
-          kind: "FieldDefinition",
+          kind: "NamedType",
           name: {
             kind: "Name",
-            value: "authorId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "ID",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the user who wrote this comment\nPost author's ID",
-            block: true,
+            value: "Comment",
           },
         },
         {
-          kind: "FieldDefinition",
+          kind: "NamedType",
           name: {
             kind: "Name",
-            value: "body",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Comment text content\nPost content body",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "createdAt",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "DateTime",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "When the comment was created\nWhen the post was created",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "ID",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value:
-              "Unique identifier for the comment\nUnique identifier for the post",
-            block: true,
+            value: "Post",
           },
         },
       ],
@@ -727,99 +652,24 @@ export const typeDefs: DocumentNode = {
       },
     },
     {
-      kind: "ObjectTypeDefinition",
+      kind: "UnionTypeDefinition",
       name: {
         kind: "Name",
         value: "TimelineItem",
       },
-      fields: [
+      types: [
         {
-          kind: "FieldDefinition",
+          kind: "NamedType",
           name: {
             kind: "Name",
-            value: "authorId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "ID",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the user who wrote this comment\nPost author's ID",
-            block: true,
+            value: "Comment",
           },
         },
         {
-          kind: "FieldDefinition",
+          kind: "NamedType",
           name: {
             kind: "Name",
-            value: "body",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Comment text content\nPost content body",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "createdAt",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "DateTime",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "When the comment was created\nWhen the post was created",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "ID",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value:
-              "Unique identifier for the comment\nUnique identifier for the post",
-            block: true,
+            value: "Post",
           },
         },
       ],

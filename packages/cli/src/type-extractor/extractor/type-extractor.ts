@@ -587,7 +587,10 @@ function determineTypeKind(
       }
 
       const allObjectTypes = nonNullTypes.every(
-        (t) => t.flags & ts.TypeFlags.Object || t.symbol !== undefined,
+        (t) =>
+          (t.flags & ts.TypeFlags.Object) !== 0 ||
+          (t.flags & ts.TypeFlags.Intersection) !== 0 ||
+          t.symbol !== undefined,
       );
       if (nonNullTypes.length > 1 && allObjectTypes) {
         return "union";
@@ -600,9 +603,23 @@ function determineTypeKind(
 }
 
 function isAnonymousObjectType(memberType: ts.Type): boolean {
+  // For type aliases (including GqlTypeDef which creates intersection types),
+  // use aliasSymbol to get the original type name
+  if (memberType.aliasSymbol) {
+    return false;
+  }
   if (!memberType.symbol) return true;
   const symbolName = memberType.symbol.getName();
   return symbolName === "__type" || symbolName === "";
+}
+
+function getNamedTypeName(memberType: ts.Type): string {
+  // For type aliases (e.g., GqlTypeDef<...>), use aliasSymbol
+  if (memberType.aliasSymbol) {
+    return memberType.aliasSymbol.getName();
+  }
+  // For regular types, use symbol
+  return memberType.symbol?.getName() ?? "";
 }
 
 interface InlineObjectExtractionResult {
@@ -626,7 +643,9 @@ function extractInlineObjectMembers(
   );
 
   const allObjectTypes = nonNullTypes.every(
-    (t) => t.flags & ts.TypeFlags.Object,
+    (t) =>
+      (t.flags & ts.TypeFlags.Object) !== 0 ||
+      (t.flags & ts.TypeFlags.Intersection) !== 0,
   );
 
   if (nonNullTypes.length < 2 || !allObjectTypes) {
@@ -680,13 +699,16 @@ function extractUnionMembers(type: ts.Type): string[] | undefined {
   );
 
   const allObjectTypes = nonNullTypes.every(
-    (t) => t.flags & ts.TypeFlags.Object || t.symbol !== undefined,
+    (t) =>
+      (t.flags & ts.TypeFlags.Object) !== 0 ||
+      (t.flags & ts.TypeFlags.Intersection) !== 0 ||
+      t.symbol !== undefined,
   );
 
   if (nonNullTypes.length > 1 && allObjectTypes) {
     const namedMembers = nonNullTypes
       .filter((t) => !isAnonymousObjectType(t))
-      .map((t) => t.symbol?.getName() ?? "")
+      .map((t) => getNamedTypeName(t))
       .filter((name) => name !== "" && name !== "__type");
 
     if (namedMembers.length > 0) {

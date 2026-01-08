@@ -1,5 +1,5 @@
-import type { Diagnostic } from "../type-extractor/types/index.js";
 import type { GraphQLTypeInfo } from "../type-extractor/types/graphql.js";
+import type { Diagnostic } from "../type-extractor/types/index.js";
 
 export interface InterfaceValidationResult {
   readonly isValid: boolean;
@@ -17,7 +17,10 @@ export function validateInterfaceImplementations(
   }
 
   for (const type of types) {
-    if (!type.implementedInterfaces || type.implementedInterfaces.length === 0) {
+    if (
+      !type.implementedInterfaces ||
+      type.implementedInterfaces.length === 0
+    ) {
       continue;
     }
 
@@ -56,9 +59,7 @@ export function validateInterfaceImplementations(
         continue;
       }
 
-      const typeFields = new Map(
-        type.fields?.map((f) => [f.name, f]) ?? [],
-      );
+      const typeFields = new Map(type.fields?.map((f) => [f.name, f]) ?? []);
 
       for (const interfaceField of interfaceType.fields) {
         const typeField = typeFields.get(interfaceField.name);
@@ -123,10 +124,7 @@ function isTypeCompatible(
   }
 
   if (implementingType.list) {
-    if (
-      implementingType.listItemNullable &&
-      !interfaceType.listItemNullable
-    ) {
+    if (implementingType.listItemNullable && !interfaceType.listItemNullable) {
       return false;
     }
   }
@@ -139,6 +137,7 @@ export function detectCircularInterfaceReferences(
 ): InterfaceValidationResult {
   const diagnostics: Diagnostic[] = [];
   const typeMap = new Map<string, GraphQLTypeInfo>();
+  const reportedCycles = new Set<string>();
 
   for (const type of types) {
     if (type.kind === "Interface") {
@@ -151,20 +150,24 @@ export function detectCircularInterfaceReferences(
       continue;
     }
 
-    const visited = new Set<string>();
-    const path: string[] = [];
-
-    if (hasCircularReference(type.name, typeMap, visited, path)) {
-      diagnostics.push({
-        code: "INTERFACE_CIRCULAR_REFERENCE",
-        message: `Circular interface inheritance detected: ${path.join(" -> ")}`,
-        severity: "error",
-        location: {
-          file: type.sourceFile,
-          line: 1,
-          column: 1,
-        },
-      });
+    const cyclePath = findCircularReference(type.name, typeMap, new Set(), []);
+    if (cyclePath) {
+      const cycleStart = cyclePath.indexOf(cyclePath[cyclePath.length - 1]!);
+      const cycleMembers = cyclePath.slice(cycleStart, -1);
+      const cycleKey = [...cycleMembers].sort().join(",");
+      if (!reportedCycles.has(cycleKey)) {
+        reportedCycles.add(cycleKey);
+        diagnostics.push({
+          code: "INTERFACE_CIRCULAR_REFERENCE",
+          message: `Circular interface inheritance detected: ${cyclePath.join(" -> ")}`,
+          severity: "error",
+          location: {
+            file: type.sourceFile,
+            line: 1,
+            column: 1,
+          },
+        });
+      }
     }
   }
 
@@ -174,15 +177,14 @@ export function detectCircularInterfaceReferences(
   };
 }
 
-function hasCircularReference(
+function findCircularReference(
   typeName: string,
   typeMap: Map<string, GraphQLTypeInfo>,
   visited: Set<string>,
   path: string[],
-): boolean {
+): string[] | null {
   if (visited.has(typeName)) {
-    path.push(typeName);
-    return true;
+    return [...path, typeName];
   }
 
   visited.add(typeName);
@@ -190,14 +192,20 @@ function hasCircularReference(
 
   const type = typeMap.get(typeName);
   if (!type || !type.implementedInterfaces) {
-    return false;
+    return null;
   }
 
   for (const interfaceName of type.implementedInterfaces) {
-    if (hasCircularReference(interfaceName, typeMap, new Set(visited), [...path])) {
-      return true;
+    const result = findCircularReference(
+      interfaceName,
+      typeMap,
+      new Set(visited),
+      [...path],
+    );
+    if (result) {
+      return result;
     }
   }
 
-  return false;
+  return null;
 }

@@ -114,15 +114,20 @@ function extractInterfaceNamesFromTupleNode(
   sourceFile: ts.SourceFile,
 ): ReadonlyArray<string> {
   if (ts.isTupleTypeNode(typeNode)) {
-    return typeNode.elements.map((elem) => {
-      if (ts.isTypeReferenceNode(elem)) {
-        return elem.typeName.getText(sourceFile);
-      }
-      return null;
-    }).filter((name): name is string => name !== null);
+    return typeNode.elements
+      .map((elem) => {
+        if (ts.isTypeReferenceNode(elem)) {
+          return elem.typeName.getText(sourceFile);
+        }
+        return null;
+      })
+      .filter((name): name is string => name !== null);
   }
 
-  if (ts.isArrayTypeNode(typeNode) && ts.isTypeReferenceNode(typeNode.elementType)) {
+  if (
+    ts.isArrayTypeNode(typeNode) &&
+    ts.isTypeReferenceNode(typeNode.elementType)
+  ) {
     return [typeNode.elementType.typeName.getText(sourceFile)];
   }
 
@@ -132,7 +137,7 @@ function extractInterfaceNamesFromTupleNode(
 /**
  * Checks if a type is a GraphQL interface type (uses DefineInterface).
  */
-export function isGraphQLInterfaceType(
+function isGraphQLInterfaceType(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): boolean {
@@ -162,7 +167,10 @@ export function isGraphQLInterfaceType(
   const markerType = checker.getTypeOfSymbol(interfaceMarker);
   const actualMarkerType = getActualMetadataType(markerType);
 
-  if (actualMarkerType && actualMarkerType.flags & ts.TypeFlags.BooleanLiteral) {
+  if (
+    actualMarkerType &&
+    actualMarkerType.flags & ts.TypeFlags.BooleanLiteral
+  ) {
     const typeStr = checker.typeToString(actualMarkerType);
     return typeStr === "true";
   }
@@ -174,7 +182,7 @@ export function isGraphQLInterfaceType(
  * Extracts implemented interfaces from a type's metadata.
  * Works for both DefineInterface (interface inheritance) and GqlTypeDef (type implements).
  */
-export function extractImplementedInterfaces(
+function extractImplementedInterfaces(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): ReadonlyArray<string> {
@@ -230,7 +238,8 @@ function extractInterfaceNamesFromTupleType(
 
   if (checker.isTupleType(type)) {
     const tupleType = type as ts.TypeReference;
-    const typeArgs = tupleType.typeArguments ?? checker.getTypeArguments(tupleType);
+    const typeArgs =
+      tupleType.typeArguments ?? checker.getTypeArguments(tupleType);
 
     for (const typeArg of typeArgs) {
       const name = extractInterfaceNameFromType(typeArg, checker);
@@ -276,7 +285,7 @@ function extractInterfaceNameFromType(
 /**
  * Detects interface metadata from a TypeScript type.
  */
-export function detectInterfaceMetadata(
+function detectInterfaceMetadata(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): InterfaceDetectionResult {

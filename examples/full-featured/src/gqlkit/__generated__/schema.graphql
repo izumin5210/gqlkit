@@ -148,56 +148,14 @@ Union type representing any content that can be searched
 
 Defined in: src/gqlkit/schema/content.ts
 """
-type SearchResult {
-  """
-  ID of the user who wrote this comment
-  Post author's ID
-  """
-  authorId: ID!
-  """
-  Comment text content
-  Post content body
-  """
-  body: String!
-  """
-  When the comment was created
-  When the post was created
-  """
-  createdAt: DateTime!
-  """
-  Unique identifier for the comment
-  Unique identifier for the post
-  """
-  id: ID!
-}
+union SearchResult = Comment | Post
 
 """
 Timeline content (posts and comments mixed)
 
 Defined in: src/gqlkit/schema/content.ts
 """
-type TimelineItem {
-  """
-  ID of the user who wrote this comment
-  Post author's ID
-  """
-  authorId: ID!
-  """
-  Comment text content
-  Post content body
-  """
-  body: String!
-  """
-  When the comment was created
-  When the post was created
-  """
-  createdAt: DateTime!
-  """
-  Unique identifier for the comment
-  Unique identifier for the post
-  """
-  id: ID!
-}
+union TimelineItem = Comment | Post
 
 """
 Timestamped interface - represents entities that track creation time.

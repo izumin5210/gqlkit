@@ -500,12 +500,13 @@ export function detectCircularInterfaceReferences(
 | Field | Detail |
 |-------|--------|
 | Intent | Interface 型定義と implements 宣言を抽出する |
-| Requirements | 3.1, 3.2, 3.3, 3.4 |
+| Requirements | 3.1, 3.2, 3.3, 3.4, 3.5 |
 
 **Responsibilities & Constraints**
 - `DefineInterface` を使用した型定義の検出
 - `GqlTypeDef` の `implements` オプションからの interface 参照抽出
 - 既存の型抽出フローへの統合
+- 既存の Union 型検出との互換性維持
 
 **Dependencies**
 - Inbound: extractTypesFromProgram - 型抽出処理 (P0)
@@ -550,6 +551,7 @@ export interface GraphQLTypeInfo {
 - `determineTypeKind` 関数を拡張して `$gqlkitInterfaceMeta` を検出
 - `extractFieldsFromType` は interface 型にも適用（Object 型と同じロジック）
 - `implements` の抽出は `$gqlkitTypeMeta.implements` プロパティから型参照を解決
+- **Union 型との互換性**: `GqlTypeDef<T, Meta>` は交差型（`T & { $gqlkitTypeMeta?: ... }`）を生成するため、`determineTypeKind` での Union 判定時に `ts.TypeFlags.Intersection` フラグを持つ型も Object 型として扱う必要がある
 
 ### CLI/schema-generator Layer
 

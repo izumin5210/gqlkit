@@ -41,6 +41,7 @@ gqlkit の規約駆動アプローチに従い、`DefineInterface<Fields>` ユ�
 2. When interface 型を抽出する際, the type-extractor shall フィールド名、フィールド型、nullability 情報を抽出する
 3. When 型定義に `implements` オプションがある場合, the type-extractor shall 実装する interface 型への参照を抽出する
 4. The type-extractor shall interface 型と、interface を実装する型の両方を内部型グラフに登録する
+5. When `GqlTypeDef` で定義された型（implements オプション付き）が union 型のメンバーとして使用された場合, the type-extractor shall その union を引き続き GraphQL Union として正しく認識する
 
 ### Requirement 4: GraphQL スキーマ生成
 

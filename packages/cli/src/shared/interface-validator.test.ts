@@ -11,7 +11,12 @@ describe("validateInterfaceImplementations", () => {
         fields: [
           {
             name: "id",
-            type: { typeName: "ID", nullable: false, list: false, listItemNullable: null },
+            type: {
+              typeName: "ID",
+              nullable: false,
+              list: false,
+              listItemNullable: null,
+            },
             description: null,
             deprecated: null,
             directives: null,
@@ -31,7 +36,12 @@ describe("validateInterfaceImplementations", () => {
         fields: [
           {
             name: "name",
-            type: { typeName: "String", nullable: false, list: false, listItemNullable: null },
+            type: {
+              typeName: "String",
+              nullable: false,
+              list: false,
+              listItemNullable: null,
+            },
             description: null,
             deprecated: null,
             directives: null,
@@ -53,7 +63,8 @@ describe("validateInterfaceImplementations", () => {
     expect(result.diagnostics).toHaveLength(1);
     expect(result.diagnostics[0]).toMatchObject({
       code: "INTERFACE_MISSING_FIELD",
-      message: "Type 'User' implements interface 'Node' but is missing field 'id'",
+      message:
+        "Type 'User' implements interface 'Node' but is missing field 'id'",
       severity: "error",
     });
   });
@@ -66,7 +77,12 @@ describe("validateInterfaceImplementations", () => {
         fields: [
           {
             name: "id",
-            type: { typeName: "ID", nullable: false, list: false, listItemNullable: null },
+            type: {
+              typeName: "ID",
+              nullable: false,
+              list: false,
+              listItemNullable: null,
+            },
             description: null,
             deprecated: null,
             directives: null,
@@ -86,14 +102,24 @@ describe("validateInterfaceImplementations", () => {
         fields: [
           {
             name: "id",
-            type: { typeName: "ID", nullable: false, list: false, listItemNullable: null },
+            type: {
+              typeName: "ID",
+              nullable: false,
+              list: false,
+              listItemNullable: null,
+            },
             description: null,
             deprecated: null,
             directives: null,
           },
           {
             name: "name",
-            type: { typeName: "String", nullable: false, list: false, listItemNullable: null },
+            type: {
+              typeName: "String",
+              nullable: false,
+              list: false,
+              listItemNullable: null,
+            },
             description: null,
             deprecated: null,
             directives: null,

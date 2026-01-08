@@ -217,10 +217,14 @@ export function integrate(
   diagnostics.push(...resolversResult.diagnostics.errors);
   diagnostics.push(...resolversResult.diagnostics.warnings);
 
-  const interfaceValidation = validateInterfaceImplementations(typesResult.types);
+  const interfaceValidation = validateInterfaceImplementations(
+    typesResult.types,
+  );
   diagnostics.push(...interfaceValidation.diagnostics);
 
-  const circularValidation = detectCircularInterfaceReferences(typesResult.types);
+  const circularValidation = detectCircularInterfaceReferences(
+    typesResult.types,
+  );
   diagnostics.push(...circularValidation.diagnostics);
 
   const baseTypes: BaseType[] = [];

@@ -143,3 +143,16 @@ GraphQL interface 型サポートの実装タスク。Runtime 型定義から始
   - Node interface のような実践的なパターンを示す
   - ドキュメントコメントを含め、使い方が明確になるようにする
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 2.1, 2.2_
+
+- [x] 9. バグ修正とテスト追加（PR レビュー対応）
+- [x] 9.1 (P) Union 型リグレッションを修正する
+  - `GqlTypeDef` で定義された型が union メンバーとして使用される場合、Union 型として認識されない問題を修正
+  - `determineTypeKind` 関数で、交差型（`ts.TypeFlags.Intersection`）を持つ union メンバーも Object 型として扱うよう修正
+  - `examples/full-featured` の `SearchResult` と `TimelineItem` が正しく `union` として生成されることを検証
+  - _Requirements: 3.5_
+
+- [x] 9.2 (P) 循環継承検出のテストケースを追加する
+  - `interface-circular-reference` テストケースを追加し、循環検出が正しく動作することを検証
+  - Interface A implements B, B implements C, C implements A のような循環パターンを定義
+  - 循環経路を含むエラーメッセージが正しく生成されることを確認
+  - _Requirements: 6.4_
