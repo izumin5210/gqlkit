@@ -2,8 +2,8 @@ export {
   type DefaultValueDetectionError,
   type DefaultValueDetectionErrorCode,
   type DefaultValueDetectionResult,
-  detectDefaultValueMetadata,
-  hasDefaultValueMetadata,
+  
+  
 } from "./default-value-detector.js";
 export { collectDiagnostics, deduplicateDiagnostics } from "./diagnostics.js";
 export {
@@ -22,7 +22,7 @@ export {
   type DirectiveDetectionErrorCode,
   type DirectiveDetectionResult,
   type DirectiveInfo,
-  resolveArgumentValue,
+  
 } from "./directive-detector.js";
 
 export {
