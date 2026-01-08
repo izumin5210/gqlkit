@@ -66,7 +66,8 @@ export type DiagnosticCode =
   | "INTERFACE_NOT_INTERFACE"
   | "INTERFACE_MISSING_FIELD"
   | "INTERFACE_FIELD_TYPE_MISMATCH"
-  | "INTERFACE_CIRCULAR_REFERENCE";
+  | "INTERFACE_CIRCULAR_REFERENCE"
+  | "UNRESOLVABLE_DEFAULT_VALUE";
 
 export interface Diagnostic {
   readonly code: DiagnosticCode;

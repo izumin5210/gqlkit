@@ -110,8 +110,43 @@ export function detectDefaultValueMetadata(
   }
 
   const rawDefaultValueType = checker.getTypeOfSymbol(defaultValueProp);
+  const typeString = checker.typeToString(rawDefaultValueType);
+
+  // If defaultValue is undefined (not specified in Meta), return empty result
+  // Check raw type first before unwrapping
+  if (rawDefaultValueType.flags & ts.TypeFlags.Undefined) {
+    return createEmptyResult();
+  }
+
+  // Check if the type is a union that only contains undefined
+  // This handles cases where Meta["defaultValue"] resolves to undefined
+  if (rawDefaultValueType.isUnion()) {
+    const nonUndefinedTypes = rawDefaultValueType.types.filter(
+      (t) => !(t.flags & ts.TypeFlags.Undefined),
+    );
+    if (nonUndefinedTypes.length === 0) {
+      return createEmptyResult();
+    }
+  }
+
+  // If the type string is "undefined", skip (handles edge cases)
+  if (typeString === "undefined") {
+    return createEmptyResult();
+  }
+
+  // If the type is unknown, it means Meta["defaultValue"] was not explicitly specified
+  // and TypeScript inferred it from the constraint (defaultValue?: unknown)
+  if (rawDefaultValueType.flags & ts.TypeFlags.Unknown) {
+    return createEmptyResult();
+  }
+
   const defaultValueType = getActualMetadataType(rawDefaultValueType);
   if (!defaultValueType) {
+    return createEmptyResult();
+  }
+
+  // Also check the unwrapped type for undefined
+  if (defaultValueType.flags & ts.TypeFlags.Undefined) {
     return createEmptyResult();
   }
 

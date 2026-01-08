@@ -361,12 +361,20 @@ function collectPropertiesFromType(
   return [];
 }
 
+interface FieldExtractionResult {
+  fields: FieldDefinition[];
+  diagnostics: Diagnostic[];
+}
+
 function extractFieldsFromType(
   type: ts.Type,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
-): FieldDefinition[] {
+  sourceFile?: ts.SourceFile,
+  filePath?: string,
+): FieldExtractionResult {
   const fields: FieldDefinition[] = [];
+  const diagnostics: Diagnostic[] = [];
   const properties = collectPropertiesFromType(type, checker);
 
   for (const prop of properties) {
@@ -402,6 +410,30 @@ function extractFieldsFromType(
       const defaultValueResult = detectDefaultValueMetadata(propType, checker);
       if (defaultValueResult.defaultValue) {
         defaultValue = defaultValueResult.defaultValue;
+      }
+      if (defaultValueResult.errors.length > 0 && sourceFile && filePath) {
+        for (const _error of defaultValueResult.errors) {
+          const location =
+            declaration && sourceFile
+              ? (() => {
+                  const { line, character } =
+                    sourceFile.getLineAndCharacterOfPosition(
+                      declaration.getStart(sourceFile),
+                    );
+                  return {
+                    file: filePath,
+                    line: line + 1,
+                    column: character + 1,
+                  };
+                })()
+              : null;
+          diagnostics.push({
+            code: "UNRESOLVABLE_DEFAULT_VALUE",
+            message: `Default value for field '${propName}' must be a literal type (string, number, boolean, null, array, object, or enum)`,
+            severity: "warning",
+            location,
+          });
+        }
       }
 
       // Check if the original type is nullable before unwrapping
@@ -456,7 +488,7 @@ function extractFieldsFromType(
     });
   }
 
-  return fields;
+  return { fields, diagnostics };
 }
 
 function isNumericEnum(node: ts.Node): boolean {
@@ -960,10 +992,18 @@ export function extractTypesFromProgram(
           return;
         }
 
-        const fields =
+        const fieldResult =
           kind === "union"
-            ? []
-            : extractFieldsFromType(actualType, checker, globalTypeMappings);
+            ? { fields: [], diagnostics: [] }
+            : extractFieldsFromType(
+                actualType,
+                checker,
+                globalTypeMappings,
+                sourceFile,
+                filePath,
+              );
+        const fields = fieldResult.fields;
+        diagnostics.push(...fieldResult.diagnostics);
 
         if (name.endsWith("Input") && kind === "union") {
           if (
