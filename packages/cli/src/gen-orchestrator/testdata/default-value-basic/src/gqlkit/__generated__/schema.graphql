@@ -21,14 +21,14 @@ input GreetingInput {
 
 """Defined in: src/gqlkit/schema/types.ts"""
 input PaginationInput {
-  includeArchived: Boolean = false
+  includeArchived: Boolean! = false
   limit: Int! = 10
   offset: Int! = 0
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 input SearchInput {
-  caseSensitive: Boolean = true
+  caseSensitive: Boolean! = true
   maxResults: Int = null
   query: String!
 }
@@ -37,7 +37,7 @@ extend type Query {
   """Defined in: src/gqlkit/schema/types.ts"""
   greet(name: String! = "World", prefix: String! = "Hello"): String!
   """Defined in: src/gqlkit/schema/types.ts"""
-  search(query: String!, caseSensitive: Boolean = true, maxResults: Int = null): [User!]!
+  search(query: String!, caseSensitive: Boolean! = true, maxResults: Int = null): [User!]!
   """Defined in: src/gqlkit/schema/types.ts"""
-  users(limit: Int! = 10, offset: Int! = 0, includeArchived: Boolean = false): [User!]!
+  users(limit: Int! = 10, offset: Int! = 0, includeArchived: Boolean! = false): [User!]!
 }

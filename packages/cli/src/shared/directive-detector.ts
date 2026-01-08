@@ -470,7 +470,37 @@ export function unwrapDirectiveType(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): ts.Type {
-  // First, try to get the original type from $gqlkitOriginalType property
+  // 1. Check aliasTypeArguments first (most reliable)
+  //    Get T directly from GqlFieldDef<T, Meta> or GqlTypeDef<T, Meta>
+  //    This works when the type alias hasn't been expanded by TypeScript
+  if (type.aliasTypeArguments && type.aliasTypeArguments.length > 0) {
+    const aliasSymbolName = type.aliasSymbol?.getName() ?? "";
+    if (aliasSymbolName === "GqlFieldDef" || aliasSymbolName === "GqlTypeDef") {
+      return type.aliasTypeArguments[0]!;
+    }
+  }
+
+  // 2. Check intersection members' aliasTypeArguments
+  //    When TypeScript expands the type alias to an intersection,
+  //    one of the intersection members might still have aliasTypeArguments
+  if (type.isIntersection()) {
+    for (const member of type.types) {
+      if (member.aliasTypeArguments && member.aliasTypeArguments.length > 0) {
+        const memberAliasSymbolName = member.aliasSymbol?.getName() ?? "";
+        if (
+          memberAliasSymbolName === "GqlFieldDef" ||
+          memberAliasSymbolName === "GqlTypeDef"
+        ) {
+          return member.aliasTypeArguments[0]!;
+        }
+      }
+    }
+  }
+
+  // 3. Fall back to $gqlkitOriginalType property
+  // This property preserves the original type information including array types.
+  // The type's symbol name may be __type (internal TypeScript symbol), but that's
+  // handled by the caller using checker.typeToString() for correct type name resolution.
   const originalTypeProp = type.getProperty(ORIGINAL_TYPE_PROPERTY);
   if (originalTypeProp) {
     const rawOriginalType = checker.getTypeOfSymbol(originalTypeProp);
@@ -524,18 +554,6 @@ export function unwrapDirectiveType(
       if (unwrapped !== member) {
         return unwrapped;
       }
-    }
-  }
-
-  // Handle GqlFieldDef type alias detected via type string
-  // This handles cases where TypeScript doesn't expose the intersection structure
-  // but the type string shows it's a GqlFieldDef type
-  const typeString = checker.typeToString(type);
-  if (typeString.startsWith("GqlFieldDef<")) {
-    // Try to extract the first type argument (the base type)
-    // Pattern: GqlFieldDef<T, Meta> where T is the base type
-    if (type.aliasTypeArguments && type.aliasTypeArguments.length > 0) {
-      return type.aliasTypeArguments[0]!;
     }
   }
 

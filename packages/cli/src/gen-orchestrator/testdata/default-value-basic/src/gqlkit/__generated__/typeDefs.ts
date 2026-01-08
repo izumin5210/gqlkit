@@ -166,10 +166,13 @@ export const typeDefs: DocumentNode = {
             "value": "includeArchived"
           },
           "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "Boolean"
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
             }
           },
           "defaultValue": {
@@ -240,10 +243,13 @@ export const typeDefs: DocumentNode = {
             "value": "caseSensitive"
           },
           "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "Boolean"
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
             }
           },
           "defaultValue": {
@@ -396,10 +402,13 @@ export const typeDefs: DocumentNode = {
                 "value": "caseSensitive"
               },
               "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Boolean"
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Boolean"
+                  }
                 }
               },
               "defaultValue": {
@@ -503,10 +512,13 @@ export const typeDefs: DocumentNode = {
                 "value": "includeArchived"
               },
               "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Boolean"
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Boolean"
+                  }
                 }
               },
               "defaultValue": {

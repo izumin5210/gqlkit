@@ -1,4 +1,5 @@
 import ts from "typescript";
+import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   type DirectiveArgumentValue,
@@ -106,7 +107,13 @@ function convertTypeToTSTypeReference(
   checker: ts.TypeChecker,
 ): TSTypeReference {
   const metadataResult = detectScalarMetadata(type, checker);
-  if (metadataResult.scalarName && !metadataResult.isPrimitive) {
+  // Skip scalar detection if it's an array of scalars (e.g., Int[])
+  // Array types should be handled by the array handling logic below
+  if (
+    metadataResult.scalarName &&
+    !metadataResult.isPrimitive &&
+    !metadataResult.isList
+  ) {
     return {
       kind: "scalar",
       name: metadataResult.scalarName,
@@ -204,7 +211,7 @@ function convertTypeToTSTypeReference(
   const symbol = type.getSymbol();
   if (symbol) {
     const name = symbol.getName();
-    if (name !== "__type" && name !== "Array") {
+    if (!isInternalTypeSymbol(name)) {
       return {
         kind: "reference",
         name,

@@ -9,12 +9,12 @@ type Result {
 
 """Defined in: src/gqlkit/schema/types.ts"""
 input BadInput {
-  nonLiteralBoolean: Boolean
+  nonLiteralBoolean: Boolean!
   nonLiteralNumber: Int!
   nonLiteralString: String!
 }
 
 extend type Query {
   """Defined in: src/gqlkit/schema/types.ts"""
-  bad(nonLiteralString: String!, nonLiteralNumber: Int!, nonLiteralBoolean: Boolean): Result!
+  bad(nonLiteralString: String!, nonLiteralNumber: Int!, nonLiteralBoolean: Boolean!): Result!
 }
