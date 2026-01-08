@@ -37,21 +37,21 @@ input AdvancedInput {
 """Defined in: src/gqlkit/schema/types.ts"""
 input FilterInput {
   priorities: [String!]! = [MEDIUM, HIGH]
-  status: String = ACTIVE
+  status: String! = ACTIVE
   tags: [String!]! = ["default"]
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 input SettingsInput {
-  config: __type! = {enabled: true, value: 100}
-  limits: Int! = [10, 20, 30]
+  config: NestedConfig! = {enabled: true, value: 100}
+  limits: [Int!]! = [10, 20, 30]
 }
 
 extend type Query {
   """Defined in: src/gqlkit/schema/types.ts"""
   advanced(nestedArray: [String!]! = [["a", "b"], ["c", "d"]], enumList: [Status!]! = [ACTIVE, PENDING]): String!
   """Defined in: src/gqlkit/schema/types.ts"""
-  settings(config: NestedConfig! = {enabled: true, value: 100}, limits: Int! = [10, 20, 30]): NestedConfig!
+  settings(config: NestedConfig! = {enabled: true, value: 100}, limits: [Int!]! = [10, 20, 30]): NestedConfig!
   """Defined in: src/gqlkit/schema/types.ts"""
-  tasks(status: String = ACTIVE, priorities: [Priority!]! = [MEDIUM, HIGH], tags: [String!]! = ["default"]): [Task!]!
+  tasks(status: Status! = ACTIVE, priorities: [Priority!]! = [MEDIUM, HIGH], tags: [String!]! = ["default"]): [Task!]!
 }

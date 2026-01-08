@@ -58,10 +58,13 @@ export const typeDefs: DocumentNode = {
             "value": "nonLiteralBoolean"
           },
           "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "Boolean"
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
             }
           }
         },
@@ -161,10 +164,13 @@ export const typeDefs: DocumentNode = {
                 "value": "nonLiteralBoolean"
               },
               "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "Boolean"
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Boolean"
+                  }
                 }
               }
             }

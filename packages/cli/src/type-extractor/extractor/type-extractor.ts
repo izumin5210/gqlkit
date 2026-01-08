@@ -1,4 +1,5 @@
 import ts from "typescript";
+import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   type DirectiveArgumentValue,
@@ -108,7 +109,13 @@ function convertTsTypeToReferenceWithBrandInfo(
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
 ): TypeReferenceResult {
   const metadataResult = detectScalarMetadata(type, checker);
-  if (metadataResult.scalarName && !metadataResult.isPrimitive) {
+  // Skip scalar detection if it's an array of scalars (e.g., Int[])
+  // Array types should be handled by the array handling logic below
+  if (
+    metadataResult.scalarName &&
+    !metadataResult.isPrimitive &&
+    !metadataResult.isList
+  ) {
     return {
       tsType: {
         kind: "scalar",
@@ -284,36 +291,42 @@ function convertTsTypeToReferenceWithBrandInfo(
   if (type.symbol) {
     const symbolName = type.symbol.getName();
 
-    const globalMapping = findGlobalTypeMapping(symbolName, globalTypeMappings);
-    if (globalMapping) {
+    // Skip internal TypeScript symbols (see constants.ts for details)
+    if (!isInternalTypeSymbol(symbolName)) {
+      const globalMapping = findGlobalTypeMapping(
+        symbolName,
+        globalTypeMappings,
+      );
+      if (globalMapping) {
+        return {
+          tsType: {
+            kind: "scalar",
+            name: globalMapping.scalarName,
+            elementType: null,
+            members: null,
+            nullable: false,
+            scalarInfo: {
+              scalarName: globalMapping.scalarName,
+              typeName: globalMapping.typeName,
+              baseType: undefined,
+              isCustom: true,
+              only: globalMapping.only,
+            },
+          },
+        };
+      }
+
       return {
         tsType: {
-          kind: "scalar",
-          name: globalMapping.scalarName,
+          kind: "reference",
+          name: symbolName,
           elementType: null,
           members: null,
           nullable: false,
-          scalarInfo: {
-            scalarName: globalMapping.scalarName,
-            typeName: globalMapping.typeName,
-            baseType: undefined,
-            isCustom: true,
-            only: globalMapping.only,
-          },
+          scalarInfo: null,
         },
       };
     }
-
-    return {
-      tsType: {
-        kind: "reference",
-        name: symbolName,
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-      },
-    };
   }
 
   return {
