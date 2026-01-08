@@ -1,7 +1,7 @@
 [
   {
     "code": "UNRESOLVABLE_DEFAULT_VALUE",
-    "message": "Default value for field 'nonLiteralString' must be a literal type (string, number, boolean, null, array, object, or enum)",
+    "message": "Field 'nonLiteralString': Default value must be a literal type (string, number, boolean, null, array, object, or enum)",
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
@@ -11,7 +11,7 @@
   },
   {
     "code": "UNRESOLVABLE_DEFAULT_VALUE",
-    "message": "Default value for field 'nonLiteralNumber' must be a literal type (string, number, boolean, null, array, object, or enum)",
+    "message": "Field 'nonLiteralNumber': Default value must be a literal type (string, number, boolean, null, array, object, or enum)",
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
@@ -21,7 +21,7 @@
   },
   {
     "code": "UNRESOLVABLE_DEFAULT_VALUE",
-    "message": "Default value for field 'nonLiteralBoolean' must be a literal type (string, number, boolean, null, array, object, or enum)",
+    "message": "Field 'nonLiteralBoolean': Default value must be a literal type (string, number, boolean, null, array, object, or enum)",
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
@@ -31,7 +31,7 @@
   },
   {
     "code": "UNRESOLVABLE_DEFAULT_VALUE",
-    "message": "Default value for field 'nonLiteralString' must be a literal type (string, number, boolean, null, array, object, or enum)",
+    "message": "Field 'nonLiteralString': Default value must be a literal type (string, number, boolean, null, array, object, or enum)",
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
@@ -41,7 +41,7 @@
   },
   {
     "code": "UNRESOLVABLE_DEFAULT_VALUE",
-    "message": "Default value for field 'nonLiteralNumber' must be a literal type (string, number, boolean, null, array, object, or enum)",
+    "message": "Field 'nonLiteralNumber': Default value must be a literal type (string, number, boolean, null, array, object, or enum)",
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
@@ -51,7 +51,7 @@
   },
   {
     "code": "UNRESOLVABLE_DEFAULT_VALUE",
-    "message": "Default value for field 'nonLiteralBoolean' must be a literal type (string, number, boolean, null, array, object, or enum)",
+    "message": "Field 'nonLiteralBoolean': Default value must be a literal type (string, number, boolean, null, array, object, or enum)",
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",

@@ -412,7 +412,7 @@ function extractFieldsFromType(
         defaultValue = defaultValueResult.defaultValue;
       }
       if (defaultValueResult.errors.length > 0 && sourceFile && filePath) {
-        for (const _error of defaultValueResult.errors) {
+        for (const error of defaultValueResult.errors) {
           const location =
             declaration && sourceFile
               ? (() => {
@@ -428,8 +428,8 @@ function extractFieldsFromType(
                 })()
               : null;
           diagnostics.push({
-            code: "UNRESOLVABLE_DEFAULT_VALUE",
-            message: `Default value for field '${propName}' must be a literal type (string, number, boolean, null, array, object, or enum)`,
+            code: error.code,
+            message: `Field '${propName}': ${error.message}`,
             severity: "warning",
             location,
           });
