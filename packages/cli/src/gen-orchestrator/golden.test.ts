@@ -1,4 +1,4 @@
-import { readdir, readFile } from "node:fs/promises";
+import { access, readdir, readFile, unlink } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
@@ -13,6 +13,31 @@ import { executeGeneration } from "./orchestrator.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const testdataDir = join(__dirname, "testdata");
+const isUpdateMode = process.env["UPDATE_GOLDEN"] === "true";
+
+async function fileExists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function assertFileNotExists(
+  path: string,
+  description: string,
+): Promise<void> {
+  if (await fileExists(path)) {
+    if (isUpdateMode) {
+      await unlink(path);
+    } else {
+      throw new Error(
+        `${description} should not exist but found at: ${path}. Run with UPDATE_GOLDEN=true to remove it.`,
+      );
+    }
+  }
+}
 
 async function readJsonIfExists<T>(path: string): Promise<T | null> {
   try {
@@ -83,6 +108,10 @@ describe("Golden File Tests", async () => {
 
       const expectedDir = join(caseDir, "src/gqlkit/__generated__");
 
+      await expect(
+        serializeDiagnostics(result.diagnostics),
+      ).toMatchFileSnapshot(join(expectedDir, "diagnostics.json"));
+
       if (result.success) {
         const typeDefsTs = findFile(result.files, "typeDefs.ts");
         const schemaGraphql = findFile(result.files, "schema.graphql");
@@ -102,9 +131,18 @@ describe("Golden File Tests", async () => {
           join(expectedDir, "resolvers.ts"),
         );
       } else {
-        await expect(
-          serializeDiagnostics(result.diagnostics),
-        ).toMatchFileSnapshot(join(expectedDir, "diagnostics.json"));
+        await assertFileNotExists(
+          join(expectedDir, "typeDefs.ts"),
+          "typeDefs.ts",
+        );
+        await assertFileNotExists(
+          join(expectedDir, "schema.graphql"),
+          "schema.graphql",
+        );
+        await assertFileNotExists(
+          join(expectedDir, "resolvers.ts"),
+          "resolvers.ts",
+        );
       }
     });
   }

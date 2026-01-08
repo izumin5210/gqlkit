@@ -1,0 +1,42 @@
+[
+  {
+    "code": "UNSUPPORTED_SYNTAX",
+    "message": "Generic type 'AuthDirective' is not supported. Consider using a concrete type instead.",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/directives.ts",
+      "line": 4,
+      "column": 1
+    }
+  },
+  {
+    "code": "UNSUPPORTED_SYNTAX",
+    "message": "Generic type 'CacheDirective' is not supported. Consider using a concrete type instead.",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/directives.ts",
+      "line": 5,
+      "column": 1
+    }
+  },
+  {
+    "code": "UNSUPPORTED_SYNTAX",
+    "message": "Generic type 'AuthDirective' is not supported. Consider using a concrete type instead.",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/directives.ts",
+      "line": 4,
+      "column": 1
+    }
+  },
+  {
+    "code": "UNSUPPORTED_SYNTAX",
+    "message": "Generic type 'CacheDirective' is not supported. Consider using a concrete type instead.",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/directives.ts",
+      "line": 5,
+      "column": 1
+    }
+  }
+]
