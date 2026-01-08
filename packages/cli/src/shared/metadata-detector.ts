@@ -64,6 +64,10 @@ function createDefaultResult(): ScalarMetadataResult {
  * Extracts the actual type from an optional property type (T | undefined).
  * Used by both scalar and resolver metadata detection.
  *
+ * For simple cases like `T | undefined`, returns T.
+ * For union cases like `T | null | undefined`, returns the original union type
+ * so the caller can analyze it (e.g., check for null members).
+ *
  * @param metadataType - The type of the metadata property (may be union with undefined)
  * @returns The actual type excluding undefined, or null if extraction fails
  */
@@ -74,6 +78,14 @@ export function getActualMetadataType(metadataType: ts.Type): ts.Type | null {
     );
     if (nonUndefinedTypes.length === 1) {
       return nonUndefinedTypes[0]!;
+    }
+    // If there are multiple non-undefined types (e.g., string | null),
+    // return the original metadataType. The caller should analyze this
+    // union type and handle null members appropriately.
+    if (nonUndefinedTypes.length > 1) {
+      // Return the original type - caller will need to filter out undefined
+      // when checking for nullability
+      return metadataType;
     }
     return null;
   }

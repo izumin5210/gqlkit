@@ -1,6 +1,167 @@
 import type { GraphQLResolveInfo } from "graphql";
 
 /**
+ * Represents the locations where a directive can be applied.
+ * This corresponds to GraphQL Type System Directive Locations.
+ */
+export type DirectiveLocation =
+  | "SCHEMA"
+  | "SCALAR"
+  | "OBJECT"
+  | "FIELD_DEFINITION"
+  | "ARGUMENT_DEFINITION"
+  | "INTERFACE"
+  | "UNION"
+  | "ENUM"
+  | "ENUM_VALUE"
+  | "INPUT_OBJECT"
+  | "INPUT_FIELD_DEFINITION";
+
+/**
+ * Represents a GraphQL directive with name, arguments, and location.
+ * Used to define custom directives that can be attached to types and fields.
+ *
+ * @typeParam Name - The directive name (without @)
+ * @typeParam Args - The argument types for the directive
+ * @typeParam Location - The location(s) where the directive can be applied
+ *
+ * @example
+ * ```typescript
+ * type AuthDirective<R extends string[]> = Directive<"auth", { roles: R }, "FIELD_DEFINITION">;
+ * type CacheDirective = Directive<"cache", { maxAge: number }, "FIELD_DEFINITION" | "OBJECT">;
+ * ```
+ */
+export type Directive<
+  Name extends string,
+  Args extends Record<string, unknown> = Record<string, never>,
+  Location extends DirectiveLocation | DirectiveLocation[] = DirectiveLocation,
+> = {
+  readonly " $directiveName": Name;
+  readonly " $directiveArgs": Args;
+  readonly " $directiveLocation": Location;
+};
+
+/**
+ * Metadata structure for field-level GraphQL metadata.
+ * Used to attach directives and other metadata to individual fields.
+ *
+ * @typeParam Meta - The metadata configuration object
+ */
+export interface GqlFieldMetaShape<
+  Meta extends {
+    directives: ReadonlyArray<
+      Directive<
+        string,
+        Record<string, unknown>,
+        DirectiveLocation | DirectiveLocation[]
+      >
+    >;
+  },
+> {
+  readonly directives: Meta["directives"];
+}
+
+/**
+ * Attaches metadata to a field type.
+ * The metadata is embedded as optional properties to maintain compatibility
+ * with the underlying type.
+ *
+ * The structure uses two properties:
+ * - `$gqlkitFieldMeta`: Contains the metadata object with directives
+ * - `$gqlkitOriginalType`: Preserves the original type T to maintain nullability information
+ *
+ * This design is necessary because TypeScript normalizes `(T | null) & { metadata }` to
+ * `(T & { metadata }) | never`, which loses the null part of the union. By storing
+ * the original type in `$gqlkitOriginalType`, we can recover the full type information
+ * during CLI analysis.
+ *
+ * @typeParam T - The base type to attach metadata to
+ * @typeParam Meta - The metadata configuration object containing directives
+ *
+ * @example
+ * ```typescript
+ * type User = {
+ *   id: GqlFieldDef<IDString, { directives: [AuthDirective<{ role: ["USER"] }>] }>;
+ *   bio: GqlFieldDef<string | null, { directives: [AuthDirective<{ role: ["ADMIN"] }>] }>;
+ * };
+ * ```
+ */
+export type GqlFieldDef<
+  T,
+  Meta extends {
+    directives: ReadonlyArray<
+      Directive<
+        string,
+        Record<string, unknown>,
+        DirectiveLocation | DirectiveLocation[]
+      >
+    >;
+  },
+> = T & {
+  readonly " $gqlkitFieldMeta"?: GqlFieldMetaShape<Meta>;
+  readonly " $gqlkitOriginalType"?: T;
+};
+
+/**
+ * Metadata structure for type-level GraphQL metadata.
+ * Used to attach directives and other metadata to types.
+ *
+ * @typeParam Meta - The metadata configuration object
+ */
+export interface GqlTypeMetaShape<
+  Meta extends {
+    directives: ReadonlyArray<
+      Directive<
+        string,
+        Record<string, unknown>,
+        DirectiveLocation | DirectiveLocation[]
+      >
+    >;
+  },
+> {
+  readonly directives: Meta["directives"];
+}
+
+/**
+ * Attaches metadata to a type definition.
+ * The metadata is embedded as optional properties to maintain compatibility
+ * with the underlying type.
+ *
+ * The structure uses two properties:
+ * - `$gqlkitTypeMeta`: Contains the metadata object with directives
+ * - `$gqlkitOriginalType`: Preserves the original type T to maintain nullability information
+ *
+ * @typeParam T - The base type to attach metadata to
+ * @typeParam Meta - The metadata configuration object containing directives
+ *
+ * @example
+ * ```typescript
+ * type User = GqlTypeDef<
+ *   {
+ *     id: string;
+ *     name: string;
+ *   },
+ *   { directives: [CacheDirective<{ maxAge: 60 }>] }
+ * >;
+ * ```
+ */
+export type GqlTypeDef<
+  T,
+  Meta extends {
+    directives: ReadonlyArray<
+      Directive<
+        string,
+        Record<string, unknown>,
+        DirectiveLocation | DirectiveLocation[]
+      >
+    >;
+  },
+> = T & {
+  readonly " $gqlkitTypeMeta"?: GqlTypeMetaShape<Meta>;
+  readonly " $gqlkitOriginalType"?: T;
+};
+
+/**
  * Scalar metadata structure embedded in intersection types.
  * Used by CLI to detect and identify scalar types through type analysis.
  *
@@ -145,16 +306,25 @@ export interface ResolverMetadataShape {
  * @typeParam TArgs - The type of arguments the resolver accepts
  * @typeParam TResult - The return type of the resolver
  * @typeParam TContext - The context type (defaults to unknown)
+ * @typeParam TDirectives - Array of directives to attach to this field (defaults to [])
  */
-export type QueryResolver<TArgs, TResult, TContext = unknown> = QueryResolverFn<
+export type QueryResolver<
   TArgs,
   TResult,
-  TContext
-> & {
+  TContext = unknown,
+  TDirectives extends ReadonlyArray<
+    Directive<
+      string,
+      Record<string, unknown>,
+      DirectiveLocation | DirectiveLocation[]
+    >
+  > = [],
+> = QueryResolverFn<TArgs, TResult, TContext> & {
   " $gqlkitResolver"?: {
     kind: "query";
     args: TArgs;
     result: TResult;
+    directives: TDirectives;
   };
 };
 
@@ -165,16 +335,25 @@ export type QueryResolver<TArgs, TResult, TContext = unknown> = QueryResolverFn<
  * @typeParam TArgs - The type of arguments the resolver accepts
  * @typeParam TResult - The return type of the resolver
  * @typeParam TContext - The context type (defaults to unknown)
+ * @typeParam TDirectives - Array of directives to attach to this field (defaults to [])
  */
 export type MutationResolver<
   TArgs,
   TResult,
   TContext = unknown,
+  TDirectives extends ReadonlyArray<
+    Directive<
+      string,
+      Record<string, unknown>,
+      DirectiveLocation | DirectiveLocation[]
+    >
+  > = [],
 > = MutationResolverFn<TArgs, TResult, TContext> & {
   " $gqlkitResolver"?: {
     kind: "mutation";
     args: TArgs;
     result: TResult;
+    directives: TDirectives;
   };
 };
 
@@ -186,18 +365,27 @@ export type MutationResolver<
  * @typeParam TArgs - The type of arguments the resolver accepts
  * @typeParam TResult - The return type of the resolver
  * @typeParam TContext - The context type (defaults to unknown)
+ * @typeParam TDirectives - Array of directives to attach to this field (defaults to [])
  */
 export type FieldResolver<
   TParent,
   TArgs,
   TResult,
   TContext = unknown,
+  TDirectives extends ReadonlyArray<
+    Directive<
+      string,
+      Record<string, unknown>,
+      DirectiveLocation | DirectiveLocation[]
+    >
+  > = [],
 > = FieldResolverFn<TParent, TArgs, TResult, TContext> & {
   " $gqlkitResolver"?: {
     kind: "field";
     parent: TParent;
     args: TArgs;
     result: TResult;
+    directives: TDirectives;
   };
 };
 
@@ -211,35 +399,102 @@ export interface GqlkitApis<TContext> {
    * Defines a Query field resolver with the specified Context type.
    * @typeParam TArgs - The type of arguments the resolver accepts
    * @typeParam TResult - The return type of the resolver
+   * @typeParam TDirectives - Array of directives to attach to this field (defaults to [])
    * @param resolver - The resolver function
    * @returns The resolver with metadata for CLI detection
+   *
+   * @example
+   * ```typescript
+   * // Without directives
+   * export const users = defineQuery<NoArgs, User[]>(() => []);
+   *
+   * // With directives
+   * export const me = defineQuery<NoArgs, User, [AuthDirective<{ role: ["USER"] }>]>(
+   *   (root, args, ctx) => ctx.currentUser
+   * );
+   * ```
    */
-  defineQuery: <TArgs, TResult>(
+  defineQuery: <
+    TArgs,
+    TResult,
+    TDirectives extends ReadonlyArray<
+      Directive<
+        string,
+        Record<string, unknown>,
+        DirectiveLocation | DirectiveLocation[]
+      >
+    > = [],
+  >(
     resolver: QueryResolverFn<TArgs, TResult, TContext>,
-  ) => QueryResolver<TArgs, TResult, TContext>;
+  ) => QueryResolver<TArgs, TResult, TContext, TDirectives>;
 
   /**
    * Defines a Mutation field resolver with the specified Context type.
    * @typeParam TArgs - The type of arguments the resolver accepts
    * @typeParam TResult - The return type of the resolver
+   * @typeParam TDirectives - Array of directives to attach to this field (defaults to [])
    * @param resolver - The resolver function
    * @returns The resolver with metadata for CLI detection
+   *
+   * @example
+   * ```typescript
+   * // Without directives
+   * export const createUser = defineMutation<CreateUserInput, User>((root, args) => ({ ... }));
+   *
+   * // With directives
+   * export const deleteUser = defineMutation<{ id: string }, boolean, [AuthDirective<{ role: ["ADMIN"] }>]>(
+   *   (root, args, ctx) => true
+   * );
+   * ```
    */
-  defineMutation: <TArgs, TResult>(
+  defineMutation: <
+    TArgs,
+    TResult,
+    TDirectives extends ReadonlyArray<
+      Directive<
+        string,
+        Record<string, unknown>,
+        DirectiveLocation | DirectiveLocation[]
+      >
+    > = [],
+  >(
     resolver: MutationResolverFn<TArgs, TResult, TContext>,
-  ) => MutationResolver<TArgs, TResult, TContext>;
+  ) => MutationResolver<TArgs, TResult, TContext, TDirectives>;
 
   /**
    * Defines an object type field resolver with the specified Context type.
    * @typeParam TParent - The parent type this field belongs to
    * @typeParam TArgs - The type of arguments the resolver accepts
    * @typeParam TResult - The return type of the resolver
+   * @typeParam TDirectives - Array of directives to attach to this field (defaults to [])
    * @param resolver - The resolver function
    * @returns The resolver with metadata for CLI detection
+   *
+   * @example
+   * ```typescript
+   * // Without directives
+   * export const userPosts = defineField<User, NoArgs, Post[]>((parent) => []);
+   *
+   * // With directives
+   * export const userEmail = defineField<User, NoArgs, string, [AuthDirective<{ role: ["ADMIN"] }>]>(
+   *   (parent) => parent.email
+   * );
+   * ```
    */
-  defineField: <TParent, TArgs, TResult>(
+  defineField: <
+    TParent,
+    TArgs,
+    TResult,
+    TDirectives extends ReadonlyArray<
+      Directive<
+        string,
+        Record<string, unknown>,
+        DirectiveLocation | DirectiveLocation[]
+      >
+    > = [],
+  >(
     resolver: FieldResolverFn<TParent, TArgs, TResult, TContext>,
-  ) => FieldResolver<TParent, TArgs, TResult, TContext>;
+  ) => FieldResolver<TParent, TArgs, TResult, TContext, TDirectives>;
 }
 
 /**
@@ -271,21 +526,22 @@ export interface GqlkitApis<TContext> {
  * ```
  */
 export function createGqlkitApis<TContext = unknown>(): GqlkitApis<TContext> {
-  return {
+  const apis = {
     defineQuery: <TArgs, TResult>(
       resolver: QueryResolverFn<TArgs, TResult, TContext>,
-    ): QueryResolver<TArgs, TResult, TContext> => {
-      return resolver as QueryResolver<TArgs, TResult, TContext>;
+    ) => {
+      return resolver;
     },
     defineMutation: <TArgs, TResult>(
       resolver: MutationResolverFn<TArgs, TResult, TContext>,
-    ): MutationResolver<TArgs, TResult, TContext> => {
-      return resolver as MutationResolver<TArgs, TResult, TContext>;
+    ) => {
+      return resolver;
     },
     defineField: <TParent, TArgs, TResult>(
       resolver: FieldResolverFn<TParent, TArgs, TResult, TContext>,
-    ): FieldResolver<TParent, TArgs, TResult, TContext> => {
-      return resolver as FieldResolver<TParent, TArgs, TResult, TContext>;
+    ) => {
+      return resolver;
     },
   };
+  return apis as unknown as GqlkitApis<TContext>;
 }

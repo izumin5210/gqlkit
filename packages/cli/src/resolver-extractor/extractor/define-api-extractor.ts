@@ -1,5 +1,9 @@
 import ts from "typescript";
 import {
+  type DirectiveInfo,
+  extractDirectivesFromType,
+} from "../../shared/directive-detector.js";
+import {
   detectScalarMetadata,
   getActualMetadataType,
 } from "../../shared/metadata-detector.js";
@@ -40,6 +44,7 @@ export interface DefineApiResolverInfo {
   readonly exportedInputTypes: ReadonlyArray<ExportedInputType>;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
 export interface ExtractDefineApiResult {
@@ -320,6 +325,24 @@ function extractArgsFromType(
   return args;
 }
 
+function extractDirectivesFromTypeNode(
+  typeNode: ts.TypeNode | undefined,
+  checker: ts.TypeChecker,
+): ReadonlyArray<DirectiveInfo> | null {
+  if (!typeNode) {
+    return null;
+  }
+
+  const type = checker.getTypeFromTypeNode(typeNode);
+  const directiveResult = extractDirectivesFromType(type, checker);
+
+  if (directiveResult.directives.length > 0) {
+    return directiveResult.directives;
+  }
+
+  return null;
+}
+
 function extractTypeArgumentsFromCall(
   node: ts.CallExpression,
   checker: ts.TypeChecker,
@@ -329,6 +352,7 @@ function extractTypeArgumentsFromCall(
   argsType: TSTypeReference | null;
   args: ArgumentDefinition[] | null;
   returnType: TSTypeReference;
+  directives: ReadonlyArray<DirectiveInfo> | null;
 } | null {
   const typeArgs = node.typeArguments;
   if (!typeArgs) {
@@ -342,6 +366,7 @@ function extractTypeArgumentsFromCall(
     const parentTypeNode = typeArgs[0];
     const argsTypeNode = typeArgs[1];
     const returnTypeNode = typeArgs[2];
+    const directiveTypeNode = typeArgs[3];
 
     if (!parentTypeNode || !argsTypeNode || !returnTypeNode) {
       return null;
@@ -358,11 +383,17 @@ function extractTypeArgumentsFromCall(
 
     const args = isNoArgs ? null : extractArgsFromType(argsType, checker);
 
+    const directives = extractDirectivesFromTypeNode(
+      directiveTypeNode,
+      checker,
+    );
+
     return {
       parentTypeName: parentTypeName ?? null,
       argsType: isNoArgs ? null : argsTypeRef,
       args: args && args.length > 0 ? args : null,
       returnType: convertTypeToTSTypeReference(returnType, checker),
+      directives,
     };
   }
 
@@ -372,6 +403,7 @@ function extractTypeArgumentsFromCall(
 
   const argsTypeNode = typeArgs[0];
   const returnTypeNode = typeArgs[1];
+  const directiveTypeNode = typeArgs[2];
 
   if (!argsTypeNode || !returnTypeNode) {
     return null;
@@ -386,11 +418,14 @@ function extractTypeArgumentsFromCall(
 
   const args = isNoArgs ? null : extractArgsFromType(argsType, checker);
 
+  const directives = extractDirectivesFromTypeNode(directiveTypeNode, checker);
+
   return {
     parentTypeName: null,
     argsType: isNoArgs ? null : argsTypeRef,
     args: args && args.length > 0 ? args : null,
     returnType: convertTypeToTSTypeReference(returnType, checker),
+    directives,
   };
 }
 
@@ -531,6 +566,7 @@ export function extractDefineApiResolvers(
           exportedInputTypes,
           description: tsdocInfo.description,
           deprecated: tsdocInfo.deprecated,
+          directives: typeInfo.directives,
         });
       }
     });

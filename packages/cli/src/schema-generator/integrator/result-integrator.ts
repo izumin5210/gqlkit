@@ -4,6 +4,11 @@ import type {
   GraphQLInputValue,
   TypeExtension as ResolverTypeExtension,
 } from "../../resolver-extractor/index.js";
+import type {
+  DirectiveDefinitionInfo,
+  DirectiveLocation,
+} from "../../shared/directive-definition-extractor.js";
+import type { DirectiveInfo } from "../../shared/directive-detector.js";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 import type { CollectedScalarType } from "../../type-extractor/collector/scalar-collector.js";
 import { mergeDescriptions } from "../../type-extractor/collector/scalar-collector.js";
@@ -19,6 +24,7 @@ export interface BaseField {
   readonly type: GraphQLFieldType;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
 export interface BaseType {
@@ -30,6 +36,7 @@ export interface BaseType {
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
   readonly sourceFile: string | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
 export interface InputType {
@@ -48,6 +55,7 @@ export interface ExtensionField {
   readonly resolverExportName: string | null;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
 export interface TypeExtension {
@@ -71,6 +79,8 @@ export interface IntegratedResult {
   readonly customScalarNames: ReadonlyArray<string> | null;
   /** Custom scalars with description information */
   readonly customScalars: ReadonlyArray<CustomScalarInfo> | null;
+  /** Directive definitions extracted from type aliases */
+  readonly directiveDefinitions: ReadonlyArray<DirectiveDefinitionInfo> | null;
   readonly hasQuery: boolean;
   readonly hasMutation: boolean;
   readonly hasErrors: boolean;
@@ -88,6 +98,7 @@ function convertToExtensionField(
     resolverExportName: field.resolverExportName,
     description: field.description,
     deprecated: field.deprecated,
+    directives: field.directives,
   };
 }
 
@@ -100,12 +111,100 @@ function convertResolverTypeExtension(
   };
 }
 
+const UNSUPPORTED_LOCATIONS: ReadonlySet<DirectiveLocation> = new Set([
+  "SCHEMA",
+  "SCALAR",
+  "INTERFACE",
+  "UNION",
+  "ENUM",
+]);
+
+type UsageLocation =
+  | "OBJECT"
+  | "FIELD_DEFINITION"
+  | "INPUT_OBJECT"
+  | "INPUT_FIELD_DEFINITION";
+
+interface DirectiveUsageContext {
+  readonly directiveName: string;
+  readonly usageLocation: UsageLocation;
+  readonly targetName: string;
+  readonly sourceFile: string;
+  readonly line: number;
+}
+
+function validateDirectiveUsage(
+  context: DirectiveUsageContext,
+  directiveDefMap: Map<string, DirectiveDefinitionInfo>,
+  diagnostics: Diagnostic[],
+): void {
+  const { directiveName, usageLocation, targetName, sourceFile, line } =
+    context;
+
+  const def = directiveDefMap.get(directiveName);
+  if (!def) {
+    diagnostics.push({
+      code: "UNDEFINED_DIRECTIVE",
+      message: `${targetName}: Directive '@${directiveName}' is not defined`,
+      severity: "warning",
+      location: { file: sourceFile, line, column: 1 },
+    });
+    return;
+  }
+
+  for (const loc of def.locations) {
+    if (UNSUPPORTED_LOCATIONS.has(loc)) {
+      diagnostics.push({
+        code: "UNSUPPORTED_DIRECTIVE_LOCATION",
+        message: `${targetName}: Directive '@${directiveName}' uses unsupported location ${loc}`,
+        severity: "error",
+        location: { file: sourceFile, line, column: 1 },
+      });
+      return;
+    }
+  }
+
+  const allowedLocations = getCompatibleLocations(usageLocation);
+  const hasValidLocation = def.locations.some((loc) =>
+    allowedLocations.includes(loc),
+  );
+
+  if (!hasValidLocation) {
+    diagnostics.push({
+      code: "INVALID_DIRECTIVE_LOCATION",
+      message: `${targetName}: Directive '@${directiveName}' cannot be used on ${usageLocation} (allowed: ${def.locations.join(", ")})`,
+      severity: "error",
+      location: { file: sourceFile, line, column: 1 },
+    });
+  }
+}
+
+function getCompatibleLocations(
+  usageLocation: UsageLocation,
+): DirectiveLocation[] {
+  switch (usageLocation) {
+    case "OBJECT":
+      return ["OBJECT"];
+    case "FIELD_DEFINITION":
+      return ["FIELD_DEFINITION"];
+    case "INPUT_OBJECT":
+      return ["INPUT_OBJECT"];
+    case "INPUT_FIELD_DEFINITION":
+      return ["INPUT_FIELD_DEFINITION"];
+  }
+}
+
 export function integrate(
   typesResult: ExtractTypesResult,
   resolversResult: ExtractResolversResult,
   customScalarNames: ReadonlyArray<string> | null,
   collectedScalars?: ReadonlyArray<CollectedScalarType> | null,
+  directiveDefinitions?: ReadonlyArray<DirectiveDefinitionInfo> | null,
 ): IntegratedResult {
+  const directiveTypeAliasNames = new Set(
+    directiveDefinitions?.map((d) => d.typeAliasName) ?? [],
+  );
+
   const diagnostics: Diagnostic[] = [];
 
   diagnostics.push(...typesResult.diagnostics.errors);
@@ -117,6 +216,10 @@ export function integrate(
   const inputTypes: InputType[] = [];
 
   for (const type of typesResult.types) {
+    if (directiveTypeAliasNames.has(type.name)) {
+      continue;
+    }
+
     if (type.kind === "InputObject" || type.kind === "OneOfInputObject") {
       inputTypes.push({
         name: type.name,
@@ -126,6 +229,7 @@ export function integrate(
             type: field.type,
             description: field.description,
             deprecated: field.deprecated,
+            directives: field.directives,
           })) ?? [],
         sourceFile: type.sourceFile,
         description: type.description,
@@ -141,6 +245,7 @@ export function integrate(
         description: type.description,
         deprecated: type.deprecated,
         sourceFile: type.sourceFile,
+        directives: type.directives,
       });
     } else if (type.kind === "Object") {
       baseTypes.push({
@@ -152,12 +257,14 @@ export function integrate(
             type: field.type,
             description: field.description,
             deprecated: field.deprecated,
+            directives: field.directives,
           })) ?? null,
         unionMembers: null,
         enumValues: null,
         description: type.description,
         deprecated: type.deprecated,
         sourceFile: type.sourceFile,
+        directives: type.directives,
       });
     } else {
       baseTypes.push({
@@ -169,6 +276,7 @@ export function integrate(
         description: type.description,
         deprecated: null,
         sourceFile: type.sourceFile,
+        directives: type.directives,
       });
     }
   }
@@ -186,6 +294,7 @@ export function integrate(
       description: null,
       deprecated: null,
       sourceFile: null,
+      directives: null,
     });
   }
   if (hasMutation) {
@@ -198,6 +307,7 @@ export function integrate(
       description: null,
       deprecated: null,
       sourceFile: null,
+      directives: null,
     });
   }
 
@@ -244,6 +354,81 @@ export function integrate(
     }
   }
 
+  const directiveDefMap = new Map<string, DirectiveDefinitionInfo>();
+  for (const def of directiveDefinitions ?? []) {
+    directiveDefMap.set(def.name, def);
+  }
+
+  for (const type of typesResult.types) {
+    if (directiveTypeAliasNames.has(type.name)) {
+      continue;
+    }
+
+    const usageLocation: UsageLocation =
+      type.kind === "InputObject" || type.kind === "OneOfInputObject"
+        ? "INPUT_OBJECT"
+        : "OBJECT";
+
+    if (type.directives) {
+      for (const directive of type.directives) {
+        validateDirectiveUsage(
+          {
+            directiveName: directive.name,
+            usageLocation,
+            targetName: `Type '${type.name}'`,
+            sourceFile: type.sourceFile,
+            line: 1,
+          },
+          directiveDefMap,
+          diagnostics,
+        );
+      }
+    }
+
+    const fieldUsageLocation: UsageLocation =
+      type.kind === "InputObject" || type.kind === "OneOfInputObject"
+        ? "INPUT_FIELD_DEFINITION"
+        : "FIELD_DEFINITION";
+
+    for (const field of type.fields ?? []) {
+      if (field.directives) {
+        for (const directive of field.directives) {
+          validateDirectiveUsage(
+            {
+              directiveName: directive.name,
+              usageLocation: fieldUsageLocation,
+              targetName: `Field '${type.name}.${field.name}'`,
+              sourceFile: type.sourceFile,
+              line: 1,
+            },
+            directiveDefMap,
+            diagnostics,
+          );
+        }
+      }
+    }
+  }
+
+  for (const ext of typeExtensions) {
+    for (const field of ext.fields) {
+      if (field.directives) {
+        for (const directive of field.directives) {
+          validateDirectiveUsage(
+            {
+              directiveName: directive.name,
+              usageLocation: "FIELD_DEFINITION",
+              targetName: `Field '${ext.targetTypeName}.${field.name}'`,
+              sourceFile: field.resolverSourceFile,
+              line: 1,
+            },
+            directiveDefMap,
+            diagnostics,
+          );
+        }
+      }
+    }
+  }
+
   const hasErrors = diagnostics.some((d) => d.severity === "error");
 
   const scalarDescriptionMap = new Map<string, string | null>();
@@ -271,6 +456,10 @@ export function integrate(
         ? customScalarNames
         : null,
     customScalars,
+    directiveDefinitions:
+      directiveDefinitions && directiveDefinitions.length > 0
+        ? directiveDefinitions
+        : null,
     hasQuery,
     hasMutation,
     hasErrors,

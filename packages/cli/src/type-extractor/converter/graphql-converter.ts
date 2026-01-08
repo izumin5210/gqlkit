@@ -86,6 +86,7 @@ function convertFields(extracted: ExtractedTypeInfo): FieldInfo[] {
     type: convertTsTypeToGraphQLType(field.tsType, field.optional),
     description: field.description,
     deprecated: field.deprecated,
+    directives: field.directives,
   }));
 }
 
@@ -204,6 +205,7 @@ function validateAndConvertInlineObjectMembers(
       },
       description: prop.description,
       deprecated: prop.deprecated,
+      directives: null,
     });
   }
 
@@ -260,6 +262,7 @@ export function convertToGraphQL(
         sourceFile: metadata.sourceFile,
         description: metadata.description,
         deprecated: metadata.deprecated,
+        directives: metadata.directives,
       });
     } else if (metadata.kind === "union") {
       if (isInputTypeName(metadata.name)) {
@@ -286,6 +289,7 @@ export function convertToGraphQL(
               sourceFile: metadata.sourceFile,
               description: metadata.description,
               deprecated: metadata.deprecated,
+              directives: metadata.directives,
             });
           }
         }
@@ -303,6 +307,7 @@ export function convertToGraphQL(
           sourceFile: metadata.sourceFile,
           description: metadata.description,
           deprecated: null,
+          directives: metadata.directives,
         });
       }
     } else {
@@ -318,6 +323,7 @@ export function convertToGraphQL(
         sourceFile: metadata.sourceFile,
         description: metadata.description,
         deprecated: metadata.deprecated,
+        directives: metadata.directives,
       });
     }
   }

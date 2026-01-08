@@ -18,6 +18,8 @@ import { generateSchema } from "../schema-generator/index.js";
 import {
   collectDiagnostics,
   convertTsTypeToGraphQLType,
+  type DirectiveDefinitionInfo,
+  extractDirectiveDefinitions,
   scanDirectory,
   toPosixPath,
 } from "../shared/index.js";
@@ -191,6 +193,7 @@ function convertDefineApiToFields(
       resolverExportName: resolver.fieldName,
       description: resolver.description,
       deprecated: resolver.deprecated,
+      directives: resolver.directives,
     };
 
     if (resolver.resolverType === "query") {
@@ -367,7 +370,29 @@ export async function executeGeneration(
   );
   const resolversResult = extractResolversCore(program, sourceFiles);
 
+  const directiveDefinitionResult = extractDirectiveDefinitions(
+    program,
+    sourceFiles,
+  );
+  const directiveDefinitions: DirectiveDefinitionInfo[] =
+    directiveDefinitionResult.definitions.length > 0
+      ? [...directiveDefinitionResult.definitions]
+      : [];
+
   const allDiagnostics = collectAllDiagnostics(typesResult, resolversResult);
+
+  for (const error of directiveDefinitionResult.errors) {
+    allDiagnostics.push({
+      code: error.code,
+      message: error.message,
+      severity: "error",
+      location: {
+        file: error.sourceFile,
+        line: error.line,
+        column: 1,
+      },
+    });
+  }
 
   if (hasErrors(typesResult, resolversResult)) {
     return {
@@ -392,6 +417,8 @@ export async function executeGeneration(
     outputDir: resolve(config.cwd, getOutputDir(config.output)),
     customScalarNames: allCustomScalarNames,
     customScalars: typesResult.collectedScalars,
+    directiveDefinitions:
+      directiveDefinitions.length > 0 ? directiveDefinitions : null,
     enablePruning: null,
     sourceRoot: config.cwd,
   });
