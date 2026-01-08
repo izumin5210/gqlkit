@@ -333,8 +333,8 @@ function collectPropertiesFromType(
   if (type.isIntersection()) {
     const allProps = new Map<string, ts.Symbol>();
     for (const member of type.types) {
-      // Inline object literal types return properties directly
-      // getDeclaredTypeOfSymbol may return empty for anonymous types
+      // getProperties() works for both named and anonymous types
+      // Avoid getDeclaredTypeOfSymbol as it may return empty for anonymous types
       const memberProps = member.getProperties();
       for (const prop of memberProps) {
         const propName = prop.getName();
