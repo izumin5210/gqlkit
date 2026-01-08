@@ -28,7 +28,7 @@
  * When we encounter `__type`, we should fall back to using `checker.typeToString()`
  * which preserves the human-readable type name.
  */
-export const TS_ANONYMOUS_TYPE_SYMBOL = "__type";
+const TS_ANONYMOUS_TYPE_SYMBOL = "__type";
 
 /**
  * Array type symbol name.
@@ -37,7 +37,7 @@ export const TS_ANONYMOUS_TYPE_SYMBOL = "__type";
  * This should be handled separately using `checker.isArrayType()` rather than
  * treating it as a named type reference.
  */
-export const TS_ARRAY_TYPE_SYMBOL = "Array";
+const TS_ARRAY_TYPE_SYMBOL = "Array";
 
 /**
  * Checks if a symbol name represents a TypeScript internal/anonymous type
