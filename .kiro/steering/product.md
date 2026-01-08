@@ -11,7 +11,9 @@ gqlkit is a convention-driven code generator for GraphQL servers in TypeScript. 
 - **Documentation extraction**: TSDoc comments automatically become GraphQL schema descriptions with `@deprecated` support
 - **Branded scalar types**: Type-safe distinction between GraphQL scalar types (ID, Int, Float) via branded TypeScript types from `@gqlkit-ts/runtime`
 - **Custom scalar definition**: `DefineScalar<Name, Base>` utility type for inline custom scalar types with embedded metadata, or config-based mappings via `gqlkit.config.ts`
-- **Comprehensive type support**: Enum, Union, Input Object, and `@oneOf` input object types from TypeScript conventions
+- **Comprehensive type support**: Enum, Union, Input Object, Interface, and `@oneOf` input object types from TypeScript conventions
+- **Interface type definition**: `DefineInterface` utility type for GraphQL interfaces with inheritance support via `implements`
+- **Default values**: Input field and argument default values via `GqlFieldDef<T, { defaultValue: ... }>`
 - **Multiple output formats**: Generate schema AST (DocumentNode) or SDL string, with optional schema pruning
 
 ## Target Use Cases
@@ -27,4 +29,4 @@ gqlkit provides a "kit" experience: consistent conventions paired with consisten
 
 ---
 _Focus on patterns and purpose, not exhaustive feature lists_
-_Updated: 2026-01-05 - DefineScalar utility type and comprehensive type support_
+_Updated: 2026-01-09 - Added Interface type support (DefineInterface, implements) and default value support for input fields_

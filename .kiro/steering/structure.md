@@ -40,6 +40,10 @@ Minimal runtime utilities for user codebases:
 - Type definitions for resolvers (`QueryResolver`, `MutationResolver`, `FieldResolver`)
 - Branded scalar types (`IDString`, `IDNumber`, `Int`, `Float`) for explicit GraphQL scalar mapping
 - `DefineScalar<Name, Base, Only?>` utility type for custom scalar definitions
+- `DefineInterface<T, Meta?>` utility type for GraphQL interface definitions
+- `GqlTypeDef<T, Meta>` for type-level metadata (directives, implements)
+- `GqlFieldDef<T, Meta>` for field-level metadata (directives, defaultValue)
+- `Directive<Name, Args, Location>` utility type for custom directive definitions
 - `NoArgs` helper type
 
 ### User Convention Directories (gqlkit-managed)
@@ -52,7 +56,7 @@ Minimal runtime utilities for user codebases:
 - **Exports**: camelCase for values (e.g., `genCommand`, `extractTypes`)
 - **Type exports**: PascalCase (e.g., `User`, `GenerationConfig`)
 - **Test files**: Colocated with source (e.g., `foo.ts` + `foo.test.ts`)
-- **Golden file tests**: In `testdata/` directory with expected outputs in `expected/` subdirectory
+- **Golden file tests**: In `testdata/` directory with expected outputs in `src/gqlkit/__generated__/` within each test case
 
 ## Import Organization
 
@@ -76,4 +80,4 @@ import { extractTypes } from "../type-extractor/index.js";
 
 ---
 _Document patterns, not file trees. New files following patterns shouldn't require updates_
-_Updated: 2026-01-05 - Updated convention directories: sourceDir changed from src/gqlkit/ to src/gqlkit/schema/_
+_Updated: 2026-01-09 - Added runtime utility types (DefineInterface, GqlTypeDef, GqlFieldDef, Directive)_
