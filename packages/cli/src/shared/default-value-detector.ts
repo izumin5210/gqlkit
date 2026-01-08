@@ -169,14 +169,3 @@ export function detectDefaultValueMetadata(
     ],
   };
 }
-
-/**
- * Checks if a type has default value metadata.
- */
-function hasDefaultValueMetadata(type: ts.Type): boolean {
-  const metaProp = getFieldMetaProperty(type);
-  if (!metaProp) {
-    return false;
-  }
-  return true;
-}
