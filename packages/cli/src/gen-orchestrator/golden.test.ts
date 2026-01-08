@@ -81,7 +81,7 @@ describe("Golden File Tests", async () => {
         tsconfigPath: join(caseDir, "tsconfig.json"),
       });
 
-      const expectedDir = join(caseDir, "expected");
+      const expectedDir = join(caseDir, "src/gqlkit/__generated__");
 
       if (result.success) {
         const typeDefsTs = findFile(result.files, "typeDefs.ts");

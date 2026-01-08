@@ -131,8 +131,9 @@ This project follows Kiro-style Spec-Driven Development.
 
 Uses **golden file testing** for CLI validation:
 - Test cases in `packages/cli/src/gen-orchestrator/testdata/`
-- Each case has an `expected/` directory with snapshot files
-- Tests compare generated output against `expected/` snapshots
+- Golden files (snapshots) are placed in `src/gqlkit/__generated__/` within each test case directory
+  - This mirrors the actual output location of `gqlkit gen`, so running CLI in a test case directory produces files in the same location as the golden files
+- Tests compare generated output against these snapshot files
 
 ### Testing Guidelines
 

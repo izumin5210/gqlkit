@@ -2,7 +2,7 @@
 
 type Query
 
-"""Defined in: src/gqlkit/user.ts"""
+"""Defined in: src/gqlkit/schema/user.ts"""
 type User {
   email: String
   emailAddress: String @deprecated(reason: """Use email instead""")
@@ -11,7 +11,7 @@ type User {
   name: String!
 }
 
-"""Defined in: src/gqlkit/user.ts"""
+"""Defined in: src/gqlkit/schema/user.ts"""
 enum UserStatus {
   ACTIVE
   LEGACY @deprecated(reason: """Use ACTIVE instead""")
@@ -19,10 +19,10 @@ enum UserStatus {
 }
 
 extend type Query {
-  """Defined in: src/gqlkit/query.ts"""
+  """Defined in: src/gqlkit/schema/query.ts"""
   allUsers: [User!]! @deprecated(reason: """Use users instead""")
-  """Defined in: src/gqlkit/query.ts"""
+  """Defined in: src/gqlkit/schema/query.ts"""
   user: User
-  """Defined in: src/gqlkit/query.ts"""
+  """Defined in: src/gqlkit/schema/query.ts"""
   users: [User!]!
 }
