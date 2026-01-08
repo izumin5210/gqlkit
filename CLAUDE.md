@@ -46,15 +46,23 @@ gqlkit relies on strict conventions to enable deterministic schema generation wi
    - Each file can contain type definitions and related resolvers together
 
 2. **Type definitions**:
-   - Plain TypeScript type exports (object/interface/union)
+   - Plain TypeScript type exports (object/interface/union/enum)
    - Field nullability and list-ness inferred from TypeScript types
    - All exports from `src/gqlkit/schema/` are considered
+   - TSDoc/JSDoc comments become GraphQL descriptions (`@deprecated` supported)
+   - Utility types for advanced features:
+     - `DefineInterface<T, Meta?>` - GraphQL interface types
+     - `GqlTypeDef<T, Meta>` - Type-level metadata (implements, directives)
+     - `GqlFieldDef<T, Meta>` - Field-level metadata (defaultValue, directives)
+     - `Directive<Name, Args, Location>` - Custom directive definitions
 
 3. **Define API for resolvers** (using `@gqlkit-ts/runtime`):
-   - `defineQuery<Args, Return>(resolver)` - Define Query field resolvers
-   - `defineMutation<Args, Return>(resolver)` - Define Mutation field resolvers
-   - `defineField<Parent, Args, Return>(resolver)` - Define type field resolvers
+   - `createGqlkitApis<TContext>()` factory returns typed resolver definition functions
+   - `defineQuery<Args, Return, Directives?>(resolver)` - Define Query field resolvers
+   - `defineMutation<Args, Return, Directives?>(resolver)` - Define Mutation field resolvers
+   - `defineField<Parent, Args, Return, Directives?>(resolver)` - Define type field resolvers
    - Export name becomes the GraphQL field name
+   - Optional third type parameter for attaching directives to resolver fields
 
 4. **Resolver function signatures**:
    - Query/Mutation: `(root, args, ctx, info) => Return`
@@ -66,16 +74,29 @@ gqlkit relies on strict conventions to enable deterministic schema generation wi
 ```
 packages/
   cli/       - @gqlkit-ts/cli: Code generation CLI (gqlkit gen)
-  runtime/   - @gqlkit-ts/runtime: Define API and branded scalar types
+  runtime/   - @gqlkit-ts/runtime: Define API, utility types, and branded scalars
 examples/    - Example projects demonstrating usage
 ```
 
+**Runtime package exports** (`@gqlkit-ts/runtime`):
+- `createGqlkitApis<TContext>()` - Factory for resolver definition functions
+- Branded scalar types: `IDString`, `IDNumber`, `Int`, `Float`
+- `DefineScalar<Name, Base, Only?>` - Custom scalar type definition
+- `DefineInterface<T, Meta?>` - GraphQL interface type definition
+- `GqlTypeDef<T, Meta>` - Type metadata (implements, directives)
+- `GqlFieldDef<T, Meta>` - Field metadata (defaultValue, directives)
+- `Directive<Name, Args, Location>` - Custom directive definition
+- `NoArgs` - Helper type for fields without arguments
+
 **CLI Pipeline** (`packages/cli/src/`):
-- `type-extractor/` - Scans TypeScript types from `src/gqlkit/schema/`
-- `resolver-extractor/` - Scans resolver definitions from `src/gqlkit/schema/`
+- `commands/` - CLI command definitions using gunshi's `define()`
+- `config/` - Configuration type definitions and `defineConfig()` helper
+- `config-loader/` - Configuration file loading and validation
+- `type-extractor/` - Scans and analyzes TypeScript types from `src/gqlkit/schema/`
+- `resolver-extractor/` - Scans and analyzes resolver definitions from `src/gqlkit/schema/`
 - `schema-generator/` - Builds GraphQL AST and resolver maps
-- `gen-orchestrator/` - Coordinates pipeline stages, handles diagnostics
-- `shared/` - Shared utilities across pipeline stages
+- `gen-orchestrator/` - Coordinates pipeline stages (reporter, writer)
+- `shared/` - Cross-cutting utilities (e.g., TSDoc parsing)
 
 ### Code Generation Flow
 
@@ -95,6 +116,26 @@ examples/    - Example projects demonstrating usage
 - **HTTP server integration is out of scope**: Focus on TS → schema AST + resolver map transformation
 - **Deterministic**: Same code → same outputs, always
 - **GraphQL-tools compatible**: Generated outputs work seamlessly with makeExecutableSchema
+
+### TypeScript to GraphQL Type Mapping
+
+| TypeScript | GraphQL |
+|------------|---------|
+| `string` | `String!` |
+| `number` | `Float!` |
+| `boolean` | `Boolean!` |
+| `IDString`, `IDNumber` | `ID!` |
+| `Int` (branded) | `Int!` |
+| `Float` (branded) | `Float!` |
+| `T \| null` | `T` (nullable) |
+| `T[]` | `[T!]!` |
+| String literal union | Enum type |
+| TypeScript `enum` | Enum type |
+| Union of object types | Union type |
+| `*Input` suffix types | Input Object type |
+| Union with `*Input` suffix | `@oneOf` input object |
+| `DefineInterface<T>` | Interface type |
+| `DefineScalar<Name, Base>` | Custom scalar |
 
 ## Development Workflow
 
