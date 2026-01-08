@@ -1,9 +1,7 @@
-export {
-  type DefaultValueDetectionError,
-  type DefaultValueDetectionErrorCode,
-  type DefaultValueDetectionResult,
-  
-  
+export type {
+  DefaultValueDetectionError,
+  DefaultValueDetectionErrorCode,
+  DefaultValueDetectionResult,
 } from "./default-value-detector.js";
 export { collectDiagnostics, deduplicateDiagnostics } from "./diagnostics.js";
 export {
@@ -15,14 +13,13 @@ export {
   type DirectiveLocation,
   extractDirectiveDefinitions,
 } from "./directive-definition-extractor.js";
-export {
-  type DirectiveArgument,
-  type DirectiveArgumentValue,
-  type DirectiveDetectionError,
-  type DirectiveDetectionErrorCode,
-  type DirectiveDetectionResult,
-  type DirectiveInfo,
-  
+export type {
+  DirectiveArgument,
+  DirectiveArgumentValue,
+  DirectiveDetectionError,
+  DirectiveDetectionErrorCode,
+  DirectiveDetectionResult,
+  DirectiveInfo,
 } from "./directive-detector.js";
 
 export {
