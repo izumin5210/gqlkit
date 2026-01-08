@@ -452,6 +452,140 @@ Generates:
 union SearchResult = Comment | Post
 ```
 
+### Interface types
+
+Define GraphQL interface types using the `DefineInterface` utility type:
+
+```ts
+// src/gqlkit/schema/node.ts
+import { type DefineInterface, type IDString } from "@gqlkit-ts/runtime";
+import type { DateTime } from "./scalars.js";
+
+/**
+ * Node interface - represents any entity with a unique identifier.
+ */
+export type Node = DefineInterface<{
+  /** Global unique identifier */
+  id: IDString;
+}>;
+
+/**
+ * Timestamped interface - entities that track creation time.
+ */
+export type Timestamped = DefineInterface<{
+  createdAt: DateTime;
+}>;
+```
+
+Generates:
+
+```graphql
+"""Node interface - represents any entity with a unique identifier."""
+interface Node {
+  """Global unique identifier"""
+  id: ID!
+}
+
+"""Timestamped interface - entities that track creation time."""
+interface Timestamped {
+  createdAt: DateTime!
+}
+```
+
+#### Interface inheritance
+
+Interfaces can inherit from other interfaces:
+
+```ts
+/**
+ * Entity interface - combines Node and Timestamped.
+ */
+export type Entity = DefineInterface<
+  {
+    id: IDString;
+    createdAt: DateTime;
+  },
+  { implements: [Node, Timestamped] }
+>;
+```
+
+Generates:
+
+```graphql
+"""Entity interface - combines Node and Timestamped."""
+interface Entity implements Node & Timestamped {
+  id: ID!
+  createdAt: DateTime!
+}
+```
+
+#### Implementing interfaces
+
+Use `GqlTypeDef` with the `implements` option to declare that a type implements interfaces:
+
+```ts
+import { type GqlTypeDef, type IDString } from "@gqlkit-ts/runtime";
+import type { Node, Timestamped } from "./node.js";
+import type { DateTime } from "./scalars.js";
+
+/**
+ * A user in the system.
+ */
+export type User = GqlTypeDef<
+  {
+    id: IDString;
+    name: string;
+    email: string | null;
+    createdAt: DateTime;
+  },
+  { implements: [Node, Timestamped] }
+>;
+```
+
+Generates:
+
+```graphql
+"""A user in the system."""
+type User implements Node & Timestamped {
+  id: ID!
+  name: String!
+  email: String
+  createdAt: DateTime!
+}
+```
+
+You can combine `implements` with `directives`:
+
+```ts
+export type Post = GqlTypeDef<
+  {
+    id: IDString;
+    title: string;
+    createdAt: DateTime;
+  },
+  {
+    implements: [Node, Timestamped],
+    directives: [CacheDirective<{ maxAge: 60 }>]
+  }
+>;
+```
+
+#### Interface field resolvers
+
+Add computed fields to interface types using `defineField`:
+
+```ts
+import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import type { Node } from "./node.js";
+
+const { defineField } = createGqlkitApis<Context>();
+
+/** Get the typename of a Node */
+export const __typename = defineField<Node, NoArgs, string>(
+  (parent) => parent.constructor.name
+);
+```
+
 ### Input object types
 
 TypeScript interfaces/types with `Input` suffix are treated as GraphQL input types:
