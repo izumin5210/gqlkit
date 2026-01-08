@@ -2,16 +2,27 @@
  * Directive metadata detector.
  *
  * This module provides functions to detect directive metadata embedded
- * in TypeScript intersection types using the $gqlkitDirectives property.
+ * in TypeScript intersection types using the $gqlkitFieldMeta or $gqlkitTypeMeta properties.
  */
 
 import ts from "typescript";
 import { getActualMetadataType } from "./metadata-detector.js";
 
-const DIRECTIVE_METADATA_PROPERTY = " $gqlkitDirectives";
+const FIELD_META_PROPERTY = " $gqlkitFieldMeta";
+const TYPE_META_PROPERTY = " $gqlkitTypeMeta";
 const DIRECTIVE_NAME_PROPERTY = " $directiveName";
 const DIRECTIVE_ARGS_PROPERTY = " $directiveArgs";
 const ORIGINAL_TYPE_PROPERTY = " $gqlkitOriginalType";
+
+/**
+ * Gets the metadata property from a type, checking both field and type meta properties.
+ */
+function getMetaProperty(type: ts.Type): ts.Symbol | undefined {
+  return (
+    type.getProperty(FIELD_META_PROPERTY) ??
+    type.getProperty(TYPE_META_PROPERTY)
+  );
+}
 
 /**
  * Represents a single directive argument value.
@@ -265,7 +276,7 @@ function extractDirectiveFromType(
  * Detects directive metadata from a TypeScript type.
  *
  * This function analyzes TypeScript types to detect directive metadata:
- * - Intersection types with " $gqlkitDirectives" property indicate directives
+ * - Intersection types with " $gqlkitFieldMeta" or " $gqlkitTypeMeta" property indicate directives
  * - Each directive has a name and optional arguments
  * - Arguments are resolved from TypeScript literal types
  *
@@ -277,11 +288,11 @@ export function detectDirectiveMetadata(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): DirectiveDetectionResult {
-  const directivesProp = type.getProperty(DIRECTIVE_METADATA_PROPERTY);
-  if (!directivesProp) {
+  const metaProp = getMetaProperty(type);
+  if (!metaProp) {
     if (type.isIntersection()) {
       for (const member of type.types) {
-        const memberProp = member.getProperty(DIRECTIVE_METADATA_PROPERTY);
+        const memberProp = getMetaProperty(member);
         if (memberProp) {
           return detectDirectiveMetadataFromProperty(memberProp, checker);
         }
@@ -306,7 +317,7 @@ export function detectDirectiveMetadata(
     return createEmptyResult();
   }
 
-  return detectDirectiveMetadataFromProperty(directivesProp, checker);
+  return detectDirectiveMetadataFromProperty(metaProp, checker);
 }
 
 function detectDirectiveMetadataFromProperty(
@@ -391,25 +402,25 @@ export function extractDirectivesFromType(
 }
 
 /**
- * Checks if a type is wrapped with WithDirectives.
+ * Checks if a type is wrapped with GqlFieldDef or GqlTypeDef.
  */
 export function hasDirectiveMetadata(type: ts.Type): boolean {
-  const directivesProp = type.getProperty(DIRECTIVE_METADATA_PROPERTY);
-  if (directivesProp) {
+  const metaProp = getMetaProperty(type);
+  if (metaProp) {
     return true;
   }
 
   if (type.isIntersection()) {
     for (const member of type.types) {
-      const prop = member.getProperty(DIRECTIVE_METADATA_PROPERTY);
+      const prop = getMetaProperty(member);
       if (prop) {
         return true;
       }
     }
   }
 
-  // Handle union types: (T & Directive) | null is normalized by TypeScript
-  // to (T & Directive) | null, so we need to check each member recursively
+  // Handle union types: (T & Meta) | null is normalized by TypeScript
+  // to (T & Meta) | null, so we need to check each member recursively
   if (type.isUnion()) {
     for (const member of type.types) {
       if (hasDirectiveMetadata(member)) {
@@ -422,14 +433,14 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
 }
 
 /**
- * Unwraps a WithDirectives type and returns the base type.
- * For WithDirectives<T, Ds> which is T & { " $gqlkitDirectives"?: { directives: Ds }; " $gqlkitOriginalType"?: T },
+ * Unwraps a GqlFieldDef or GqlTypeDef type and returns the base type.
+ * For GqlFieldDef<T, Meta> which is T & { " $gqlkitFieldMeta"?: ...; " $gqlkitOriginalType"?: T },
  * this extracts and returns T from the $gqlkitOriginalType property.
  *
  * The $gqlkitOriginalType property preserves nullability information that would otherwise
  * be lost due to TypeScript's union type normalization.
  *
- * If the type is not wrapped with WithDirectives, returns the original type.
+ * If the type is not wrapped with GqlFieldDef or GqlTypeDef, returns the original type.
  */
 export function unwrapDirectiveType(
   type: ts.Type,
@@ -465,9 +476,9 @@ export function unwrapDirectiveType(
     // Fallback: filter out metadata members
     const nonDirectiveMembers: ts.Type[] = [];
     for (const member of type.types) {
-      const directivesProp = member.getProperty(DIRECTIVE_METADATA_PROPERTY);
+      const metaProp = getMetaProperty(member);
       const originalTypeProp = member.getProperty(ORIGINAL_TYPE_PROPERTY);
-      if (!directivesProp && !originalTypeProp) {
+      if (!metaProp && !originalTypeProp) {
         nonDirectiveMembers.push(member);
       }
     }
@@ -476,7 +487,7 @@ export function unwrapDirectiveType(
     }
   }
 
-  // Handle union types: (T & Directive) | null
+  // Handle union types: (T & Meta) | null
   // We extract the base type from the non-null member and return it.
   // Nullability is handled separately in the type-extractor.
   if (type.isUnion()) {

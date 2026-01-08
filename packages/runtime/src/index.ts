@@ -42,12 +42,32 @@ export type Directive<
 };
 
 /**
- * Attaches directive metadata to a type.
+ * Metadata structure for field-level GraphQL metadata.
+ * Used to attach directives and other metadata to individual fields.
+ *
+ * @typeParam Meta - The metadata configuration object
+ */
+export interface GqlFieldMetaShape<
+  Meta extends {
+    directives: ReadonlyArray<
+      Directive<
+        string,
+        Record<string, unknown>,
+        DirectiveLocation | DirectiveLocation[]
+      >
+    >;
+  },
+> {
+  readonly directives: Meta["directives"];
+}
+
+/**
+ * Attaches metadata to a field type.
  * The metadata is embedded as optional properties to maintain compatibility
  * with the underlying type.
  *
  * The structure uses two properties:
- * - `$gqlkitDirectives`: Contains the directive array wrapped in an object
+ * - `$gqlkitFieldMeta`: Contains the metadata object with directives
  * - `$gqlkitOriginalType`: Preserves the original type T to maintain nullability information
  *
  * This design is necessary because TypeScript normalizes `(T | null) & { metadata }` to
@@ -55,41 +75,89 @@ export type Directive<
  * the original type in `$gqlkitOriginalType`, we can recover the full type information
  * during CLI analysis.
  *
- * @typeParam T - The base type to attach directives to
- * @typeParam Ds - Array of directives to attach
+ * @typeParam T - The base type to attach metadata to
+ * @typeParam Meta - The metadata configuration object containing directives
  *
  * @example
  * ```typescript
- * // Field-level directive
  * type User = {
- *   id: WithDirectives<IDString, [AuthDirective<["USER"]>]>;
- * };
- *
- * // Type-level directive with nullable field
- * type Admin = WithDirectives<{
- *   id: string;
- *   nickname: string | null;
- * }, [AuthDirective<["ADMIN"]>]>;
- *
- * // Nullable field with directive (nullability preserved via $gqlkitOriginalType)
- * type Profile = {
- *   bio: WithDirectives<string | null, [AuthDirective<["USER"]>]>;
+ *   id: GqlFieldDef<IDString, { directives: [AuthDirective<{ role: ["USER"] }>] }>;
+ *   bio: GqlFieldDef<string | null, { directives: [AuthDirective<{ role: ["ADMIN"] }>] }>;
  * };
  * ```
  */
-export type WithDirectives<
+export type GqlFieldDef<
   T,
-  Ds extends ReadonlyArray<
-    Directive<
-      string,
-      Record<string, unknown>,
-      DirectiveLocation | DirectiveLocation[]
-    >
-  >,
+  Meta extends {
+    directives: ReadonlyArray<
+      Directive<
+        string,
+        Record<string, unknown>,
+        DirectiveLocation | DirectiveLocation[]
+      >
+    >;
+  },
 > = T & {
-  readonly " $gqlkitDirectives"?: {
-    readonly directives: Ds;
-  };
+  readonly " $gqlkitFieldMeta"?: GqlFieldMetaShape<Meta>;
+  readonly " $gqlkitOriginalType"?: T;
+};
+
+/**
+ * Metadata structure for type-level GraphQL metadata.
+ * Used to attach directives and other metadata to types.
+ *
+ * @typeParam Meta - The metadata configuration object
+ */
+export interface GqlTypeMetaShape<
+  Meta extends {
+    directives: ReadonlyArray<
+      Directive<
+        string,
+        Record<string, unknown>,
+        DirectiveLocation | DirectiveLocation[]
+      >
+    >;
+  },
+> {
+  readonly directives: Meta["directives"];
+}
+
+/**
+ * Attaches metadata to a type definition.
+ * The metadata is embedded as optional properties to maintain compatibility
+ * with the underlying type.
+ *
+ * The structure uses two properties:
+ * - `$gqlkitTypeMeta`: Contains the metadata object with directives
+ * - `$gqlkitOriginalType`: Preserves the original type T to maintain nullability information
+ *
+ * @typeParam T - The base type to attach metadata to
+ * @typeParam Meta - The metadata configuration object containing directives
+ *
+ * @example
+ * ```typescript
+ * type User = GqlTypeDef<
+ *   {
+ *     id: string;
+ *     name: string;
+ *   },
+ *   { directives: [CacheDirective<{ maxAge: 60 }>] }
+ * >;
+ * ```
+ */
+export type GqlTypeDef<
+  T,
+  Meta extends {
+    directives: ReadonlyArray<
+      Directive<
+        string,
+        Record<string, unknown>,
+        DirectiveLocation | DirectiveLocation[]
+      >
+    >;
+  },
+> = T & {
+  readonly " $gqlkitTypeMeta"?: GqlTypeMetaShape<Meta>;
   readonly " $gqlkitOriginalType"?: T;
 };
 
