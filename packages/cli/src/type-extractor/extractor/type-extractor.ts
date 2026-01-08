@@ -5,6 +5,11 @@ import {
   hasDirectiveMetadata,
   unwrapDirectiveType,
 } from "../../shared/directive-detector.js";
+import {
+  extractImplementsFromDefineInterface,
+  extractImplementsFromGqlTypeDef,
+  isDefineInterfaceTypeAlias,
+} from "../../shared/interface-detector.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
 import {
   extractTSDocFromSymbol,
@@ -328,16 +333,9 @@ function collectPropertiesFromType(
   if (type.isIntersection()) {
     const allProps = new Map<string, ts.Symbol>();
     for (const member of type.types) {
-      let resolvedMember = member;
-
-      if (member.symbol) {
-        const declaredType = checker.getDeclaredTypeOfSymbol(member.symbol);
-        if (declaredType && declaredType !== member) {
-          resolvedMember = declaredType;
-        }
-      }
-
-      const memberProps = collectPropertiesFromType(resolvedMember, checker);
+      // Inline object literal types return properties directly
+      // getDeclaredTypeOfSymbol may return empty for anonymous types
+      const memberProps = member.getProperties();
       for (const prop of memberProps) {
         const propName = prop.getName();
         if (!allProps.has(propName)) {
@@ -564,12 +562,20 @@ function extractStringLiteralUnionMembers(
   return members;
 }
 
-function determineTypeKind(node: ts.Node, type: ts.Type): TypeKind {
+function determineTypeKind(
+  node: ts.Node,
+  type: ts.Type,
+  sourceFile: ts.SourceFile,
+): TypeKind {
   if (ts.isInterfaceDeclaration(node)) {
     return "interface";
   }
 
   if (ts.isTypeAliasDeclaration(node)) {
+    if (isDefineInterfaceTypeAlias(node, sourceFile)) {
+      return "graphqlInterface";
+    }
+
     if (type.isUnion()) {
       const nonNullTypes = type.types.filter(
         (t) =>
@@ -782,6 +788,7 @@ export function extractTypesFromProgram(
           unionMembers: null,
           inlineObjectMembers: null,
           enumMembers,
+          implementedInterfaces: null,
         });
         return;
       }
@@ -862,7 +869,7 @@ export function extractTypesFromProgram(
           actualType = type;
         }
 
-        const kind = determineTypeKind(node, actualType);
+        const kind = determineTypeKind(node, actualType, sourceFile);
         const unionMembers = extractUnionMembers(actualType);
         const inlineObjectResult = extractInlineObjectMembers(
           actualType,
@@ -870,6 +877,29 @@ export function extractTypesFromProgram(
           globalTypeMappings,
         );
         const tsdocInfo = extractTSDocInfo(node, checker);
+
+        let implementedInterfaces: ReadonlyArray<string> | null = null;
+        if (ts.isTypeAliasDeclaration(node)) {
+          if (kind === "graphqlInterface") {
+            const interfaces = extractImplementsFromDefineInterface(
+              node,
+              sourceFile,
+              checker,
+            );
+            if (interfaces.length > 0) {
+              implementedInterfaces = interfaces;
+            }
+          } else {
+            const interfaces = extractImplementsFromGqlTypeDef(
+              node,
+              sourceFile,
+              checker,
+            );
+            if (interfaces.length > 0) {
+              implementedInterfaces = interfaces;
+            }
+          }
+        }
 
         const metadata: TypeMetadata = {
           name,
@@ -892,6 +922,7 @@ export function extractTypesFromProgram(
             unionMembers: null,
             inlineObjectMembers: null,
             enumMembers,
+            implementedInterfaces: null,
           });
           return;
         }
@@ -943,6 +974,7 @@ export function extractTypesFromProgram(
           unionMembers: unionMembers ?? null,
           inlineObjectMembers,
           enumMembers: null,
+          implementedInterfaces,
         };
 
         types.push(typeInfo);

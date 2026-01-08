@@ -1,7 +1,7 @@
 import type { DirectiveInfo } from "../../shared/directive-detector.js";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 
-export type TypeKind = "object" | "interface" | "union" | "enum";
+export type TypeKind = "object" | "interface" | "union" | "enum" | "graphqlInterface";
 
 /**
  * Information about a detected scalar type.
@@ -77,4 +77,5 @@ export interface ExtractedTypeInfo {
   readonly unionMembers: ReadonlyArray<string> | null;
   readonly inlineObjectMembers: ReadonlyArray<InlineObjectMember> | null;
   readonly enumMembers: ReadonlyArray<EnumMemberInfo> | null;
+  readonly implementedInterfaces: ReadonlyArray<string> | null;
 }

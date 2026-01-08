@@ -6,11 +6,12 @@ ISO 8601 date-time string (custom scalar)
 scalar DateTime
 
 """
-A comment on a post
+A comment on a post.
+Implements Node (identifiable) and Timestamped (has createdAt).
 
 Defined in: src/gqlkit/schema/comment.ts
 """
-type Comment {
+type Comment implements Node & Timestamped {
   """
   ID of the user who wrote this comment
   """
@@ -44,14 +45,46 @@ type Context {
   currentUserId: String
 }
 
+"""
+Entity interface - combines Node and Timestamped for a common base.
+This interface inherits from both Node and Timestamped.
+
+Defined in: src/gqlkit/schema/node.ts
+"""
+interface Entity implements Node & Timestamped {
+  """
+  When the entity was created
+  """
+  createdAt: DateTime!
+  """
+  Global unique identifier
+  """
+  id: ID!
+}
+
 type Mutation
 
 """
-A blog post
+Node interface - represents any entity with a unique identifier.
+This is a common pattern in GraphQL APIs (e.g., Relay specification).
+Types implementing this interface can be fetched by their ID.
+
+Defined in: src/gqlkit/schema/node.ts
+"""
+interface Node {
+  """
+  Global unique identifier for the entity
+  """
+  id: ID!
+}
+
+"""
+A blog post.
+Implements Node (identifiable) and Timestamped (has createdAt).
 
 Defined in: src/gqlkit/schema/post.ts
 """
-type Post {
+type Post implements Node & Timestamped {
   """
   Post author's ID
   """
@@ -115,21 +148,77 @@ Union type representing any content that can be searched
 
 Defined in: src/gqlkit/schema/content.ts
 """
-union SearchResult = Comment | Post
+type SearchResult {
+  """
+  ID of the user who wrote this comment
+  Post author's ID
+  """
+  authorId: ID!
+  """
+  Comment text content
+  Post content body
+  """
+  body: String!
+  """
+  When the comment was created
+  When the post was created
+  """
+  createdAt: DateTime!
+  """
+  Unique identifier for the comment
+  Unique identifier for the post
+  """
+  id: ID!
+}
 
 """
 Timeline content (posts and comments mixed)
 
 Defined in: src/gqlkit/schema/content.ts
 """
-union TimelineItem = Comment | Post
+type TimelineItem {
+  """
+  ID of the user who wrote this comment
+  Post author's ID
+  """
+  authorId: ID!
+  """
+  Comment text content
+  Post content body
+  """
+  body: String!
+  """
+  When the comment was created
+  When the post was created
+  """
+  createdAt: DateTime!
+  """
+  Unique identifier for the comment
+  Unique identifier for the post
+  """
+  id: ID!
+}
 
 """
-A user in the system
+Timestamped interface - represents entities that track creation time.
+Types implementing this interface have a createdAt field.
+
+Defined in: src/gqlkit/schema/node.ts
+"""
+interface Timestamped {
+  """
+  When the entity was created
+  """
+  createdAt: DateTime!
+}
+
+"""
+A user in the system.
+Implements Node (identifiable) and Timestamped (has createdAt).
 
 Defined in: src/gqlkit/schema/user.ts
 """
-type User {
+type User implements Node & Timestamped {
   """
   User's age in years
   """
@@ -259,6 +348,16 @@ extend type Mutation {
   updateUser(id: String!, input: UpdateUserInput!): User
 }
 
+extend interface Node {
+  """
+  Get the typename of a Node.
+  In a real implementation, this would resolve the actual type.
+
+  Defined in: src/gqlkit/schema/node.ts
+  """
+  __typename: String!
+}
+
 extend type Post {
   """
   Get the author of this post
@@ -305,6 +404,13 @@ extend type Query {
   Defined in: src/gqlkit/schema/user.ts
   """
   me: User
+  """
+  Fetch any Node by its ID.
+  This is a common pattern for generic entity lookup.
+
+  Defined in: src/gqlkit/schema/node.ts
+  """
+  node(id: String!): Node
   """
   Get a post by ID
 

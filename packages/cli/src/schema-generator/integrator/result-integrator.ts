@@ -9,6 +9,10 @@ import type {
   DirectiveLocation,
 } from "../../shared/directive-definition-extractor.js";
 import type { DirectiveInfo } from "../../shared/directive-detector.js";
+import {
+  detectCircularInterfaceReferences,
+  validateInterfaceImplementations,
+} from "../../shared/interface-validator.js";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 import type { CollectedScalarType } from "../../type-extractor/collector/scalar-collector.js";
 import { mergeDescriptions } from "../../type-extractor/collector/scalar-collector.js";
@@ -29,10 +33,11 @@ export interface BaseField {
 
 export interface BaseType {
   readonly name: string;
-  readonly kind: "Object" | "Union" | "Enum";
+  readonly kind: "Object" | "Interface" | "Union" | "Enum";
   readonly fields: ReadonlyArray<BaseField> | null;
   readonly unionMembers: ReadonlyArray<string> | null;
   readonly enumValues: ReadonlyArray<EnumValueInfo> | null;
+  readonly implementedInterfaces: ReadonlyArray<string> | null;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
   readonly sourceFile: string | null;
@@ -212,6 +217,12 @@ export function integrate(
   diagnostics.push(...resolversResult.diagnostics.errors);
   diagnostics.push(...resolversResult.diagnostics.warnings);
 
+  const interfaceValidation = validateInterfaceImplementations(typesResult.types);
+  diagnostics.push(...interfaceValidation.diagnostics);
+
+  const circularValidation = detectCircularInterfaceReferences(typesResult.types);
+  diagnostics.push(...circularValidation.diagnostics);
+
   const baseTypes: BaseType[] = [];
   const inputTypes: InputType[] = [];
 
@@ -242,6 +253,27 @@ export function integrate(
         fields: null,
         unionMembers: null,
         enumValues: type.enumValues,
+        implementedInterfaces: null,
+        description: type.description,
+        deprecated: type.deprecated,
+        sourceFile: type.sourceFile,
+        directives: type.directives,
+      });
+    } else if (type.kind === "Interface") {
+      baseTypes.push({
+        name: type.name,
+        kind: type.kind,
+        fields:
+          type.fields?.map((field) => ({
+            name: field.name,
+            type: field.type,
+            description: field.description,
+            deprecated: field.deprecated,
+            directives: field.directives,
+          })) ?? null,
+        unionMembers: null,
+        enumValues: null,
+        implementedInterfaces: type.implementedInterfaces ?? null,
         description: type.description,
         deprecated: type.deprecated,
         sourceFile: type.sourceFile,
@@ -261,6 +293,7 @@ export function integrate(
           })) ?? null,
         unionMembers: null,
         enumValues: null,
+        implementedInterfaces: type.implementedInterfaces ?? null,
         description: type.description,
         deprecated: type.deprecated,
         sourceFile: type.sourceFile,
@@ -273,6 +306,7 @@ export function integrate(
         fields: null,
         unionMembers: type.unionMembers,
         enumValues: null,
+        implementedInterfaces: null,
         description: type.description,
         deprecated: null,
         sourceFile: type.sourceFile,
@@ -291,6 +325,7 @@ export function integrate(
       fields: [],
       unionMembers: null,
       enumValues: null,
+      implementedInterfaces: null,
       description: null,
       deprecated: null,
       sourceFile: null,
@@ -304,6 +339,7 @@ export function integrate(
       fields: [],
       unionMembers: null,
       enumValues: null,
+      implementedInterfaces: null,
       description: null,
       deprecated: null,
       sourceFile: null,

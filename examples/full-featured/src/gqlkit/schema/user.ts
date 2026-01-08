@@ -1,39 +1,44 @@
-import type { IDString, Int } from "@gqlkit-ts/runtime";
+import type { GqlTypeDef, IDString, Int } from "@gqlkit-ts/runtime";
 import {
   defineField,
   defineMutation,
   defineQuery,
   type NoArgs,
 } from "./gqlkit.js";
+import type { Node, Timestamped } from "./node.js";
 import type { Post } from "./post.js";
 import type { Role } from "./role.js";
 import type { DateTime } from "./scalars.js";
 import type { UserStatus } from "./status.js";
 
 /**
- * A user in the system
+ * A user in the system.
+ * Implements Node (identifiable) and Timestamped (has createdAt).
  */
-export interface User {
-  /** Unique identifier for the user */
-  id: IDString;
-  /** User's display name */
-  name: string;
-  /** User's email address (null if not verified) */
-  email: string | null;
-  /** User's age in years */
-  age: Int;
-  /** Current account status */
-  status: UserStatus;
-  /** User's role */
-  role: Role;
-  /** When the user was created */
-  createdAt: DateTime;
-  /**
-   * User's legacy username
-   * @deprecated Use `name` field instead
-   */
-  username: string | null;
-}
+export type User = GqlTypeDef<
+  {
+    /** Unique identifier for the user */
+    id: IDString;
+    /** User's display name */
+    name: string;
+    /** User's email address (null if not verified) */
+    email: string | null;
+    /** User's age in years */
+    age: Int;
+    /** Current account status */
+    status: UserStatus;
+    /** User's role */
+    role: Role;
+    /** When the user was created */
+    createdAt: DateTime;
+    /**
+     * User's legacy username
+     * @deprecated Use `name` field instead
+     */
+    username: string | null;
+  },
+  { implements: [Node, Timestamped] }
+>;
 
 /** Input for creating a new user */
 export interface CreateUserInput {

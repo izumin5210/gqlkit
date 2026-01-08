@@ -22,6 +22,15 @@ export {
   type ScanResult,
   scanDirectory,
 } from "./file-scanner.js";
+export {
+  type InterfaceDetectionResult,
+  detectInterfaceMetadata,
+  extractImplementedInterfaces,
+  extractImplementsFromDefineInterface,
+  extractImplementsFromGqlTypeDef,
+  isDefineInterfaceTypeAlias,
+  isGraphQLInterfaceType,
+} from "./interface-detector.js";
 export { convertTsTypeToGraphQLType } from "./type-converter.js";
 
 export function toPosixPath(filePath: string): string {

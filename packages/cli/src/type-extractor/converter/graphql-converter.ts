@@ -259,6 +259,24 @@ export function convertToGraphQL(
         fields: null,
         unionMembers: null,
         enumValues,
+        implementedInterfaces: null,
+        sourceFile: metadata.sourceFile,
+        description: metadata.description,
+        deprecated: metadata.deprecated,
+        directives: metadata.directives,
+      });
+    } else if (metadata.kind === "graphqlInterface") {
+      const fields = convertFields(extracted);
+
+      types.push({
+        name: metadata.name,
+        kind: "Interface",
+        fields,
+        unionMembers: null,
+        enumValues: null,
+        implementedInterfaces: extracted.implementedInterfaces
+          ? [...extracted.implementedInterfaces]
+          : null,
         sourceFile: metadata.sourceFile,
         description: metadata.description,
         deprecated: metadata.deprecated,
@@ -286,6 +304,7 @@ export function convertToGraphQL(
               fields: validationResult.fields,
               unionMembers: null,
               enumValues: null,
+              implementedInterfaces: null,
               sourceFile: metadata.sourceFile,
               description: metadata.description,
               deprecated: metadata.deprecated,
@@ -304,6 +323,7 @@ export function convertToGraphQL(
           fields: null,
           unionMembers,
           enumValues: null,
+          implementedInterfaces: null,
           sourceFile: metadata.sourceFile,
           description: metadata.description,
           deprecated: null,
@@ -320,6 +340,9 @@ export function convertToGraphQL(
         fields,
         unionMembers: null,
         enumValues: null,
+        implementedInterfaces: extracted.implementedInterfaces
+          ? [...extracted.implementedInterfaces]
+          : null,
         sourceFile: metadata.sourceFile,
         description: metadata.description,
         deprecated: metadata.deprecated,

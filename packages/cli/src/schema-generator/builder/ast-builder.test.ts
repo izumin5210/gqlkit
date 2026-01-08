@@ -272,6 +272,7 @@ describe("buildDeprecatedDirective", () => {
           deprecated: null,
           unionMembers: null,
           enumValues: null,
+          implementedInterfaces: null,
           directives: null,
           fields: [
             {
@@ -338,6 +339,7 @@ describe("buildDeprecatedDirective", () => {
           deprecated: null,
           unionMembers: null,
           enumValues: null,
+          implementedInterfaces: null,
           directives: null,
           fields: [
             {
@@ -404,6 +406,7 @@ describe("buildDeprecatedDirective", () => {
           deprecated: null,
           fields: null,
           unionMembers: null,
+          implementedInterfaces: null,
           directives: null,
           enumValues: [
             {
@@ -471,6 +474,7 @@ describe("buildDeprecatedDirective", () => {
           deprecated: null,
           fields: null,
           unionMembers: null,
+          implementedInterfaces: null,
           directives: null,
           enumValues: [
             {

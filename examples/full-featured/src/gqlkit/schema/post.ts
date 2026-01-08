@@ -1,4 +1,4 @@
-import type { IDString } from "@gqlkit-ts/runtime";
+import type { GqlTypeDef, IDString } from "@gqlkit-ts/runtime";
 import type { Comment } from "./comment.js";
 import {
   defineField,
@@ -6,31 +6,36 @@ import {
   defineQuery,
   type NoArgs,
 } from "./gqlkit.js";
+import type { Node, Timestamped } from "./node.js";
 import type { DateTime } from "./scalars.js";
 import type { PostStatus } from "./status.js";
 import type { User } from "./user.js";
 
 /**
- * A blog post
+ * A blog post.
+ * Implements Node (identifiable) and Timestamped (has createdAt).
  */
-export interface Post {
-  /** Unique identifier for the post */
-  id: IDString;
-  /** Post title */
-  title: string;
-  /** Post content body */
-  body: string;
-  /** Publication status */
-  status: PostStatus;
-  /** Post author's ID */
-  authorId: IDString;
-  /** Tags associated with this post (may contain null for deleted tags) */
-  tags: (string | null)[];
-  /** When the post was published (null if draft) */
-  publishedAt: DateTime | null;
-  /** When the post was created */
-  createdAt: DateTime;
-}
+export type Post = GqlTypeDef<
+  {
+    /** Unique identifier for the post */
+    id: IDString;
+    /** Post title */
+    title: string;
+    /** Post content body */
+    body: string;
+    /** Publication status */
+    status: PostStatus;
+    /** Post author's ID */
+    authorId: IDString;
+    /** Tags associated with this post (may contain null for deleted tags) */
+    tags: (string | null)[];
+    /** When the post was published (null if draft) */
+    publishedAt: DateTime | null;
+    /** When the post was created */
+    createdAt: DateTime;
+  },
+  { implements: [Node, Timestamped] }
+>;
 
 /** Input for creating a new post */
 export interface CreatePostInput {

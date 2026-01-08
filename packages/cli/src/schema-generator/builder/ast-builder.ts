@@ -11,6 +11,8 @@ import {
   type FieldDefinitionNode,
   type InputObjectTypeDefinitionNode,
   type InputValueDefinitionNode,
+  type InterfaceTypeDefinitionNode,
+  type InterfaceTypeExtensionNode,
   Kind,
   type ListTypeNode,
   type NamedTypeNode,
@@ -303,12 +305,50 @@ function buildObjectTypeDefinitionNode(
     sourceRoot,
   );
 
+  const interfaces =
+    baseType.implementedInterfaces && baseType.implementedInterfaces.length > 0
+      ? [...baseType.implementedInterfaces]
+          .sort((a, b) => a.localeCompare(b))
+          .map(buildNamedTypeNode)
+      : undefined;
+
   return {
     kind: Kind.OBJECT_TYPE_DEFINITION,
     name: buildNameNode(baseType.name),
     fields: sortedFields.map(buildBaseFieldDefinitionNode),
     ...(description ? { description: buildStringValueNode(description) } : {}),
     ...(directives.length > 0 ? { directives } : {}),
+    ...(interfaces ? { interfaces } : {}),
+  };
+}
+
+function buildInterfaceTypeDefinitionNode(
+  baseType: BaseType,
+  sourceRoot?: string,
+): InterfaceTypeDefinitionNode {
+  const sortedFields = baseType.fields ? sortByName(baseType.fields) : [];
+  const directives = buildDirectives(baseType.directives, baseType.deprecated);
+
+  const description = appendSourceLocation(
+    baseType.description,
+    baseType.sourceFile,
+    sourceRoot,
+  );
+
+  const interfaces =
+    baseType.implementedInterfaces && baseType.implementedInterfaces.length > 0
+      ? [...baseType.implementedInterfaces]
+          .sort((a, b) => a.localeCompare(b))
+          .map(buildNamedTypeNode)
+      : undefined;
+
+  return {
+    kind: Kind.INTERFACE_TYPE_DEFINITION,
+    name: buildNameNode(baseType.name),
+    fields: sortedFields.map(buildBaseFieldDefinitionNode),
+    ...(description ? { description: buildStringValueNode(description) } : {}),
+    ...(directives.length > 0 ? { directives } : {}),
+    ...(interfaces ? { interfaces } : {}),
   };
 }
 
@@ -439,6 +479,20 @@ function buildObjectTypeExtensionNode(
   };
 }
 
+function buildInterfaceTypeExtensionNode(
+  typeExtension: TypeExtension,
+  sourceRoot?: string,
+): InterfaceTypeExtensionNode {
+  const sortedFields = sortByName(typeExtension.fields);
+  return {
+    kind: Kind.INTERFACE_TYPE_EXTENSION,
+    name: buildNameNode(typeExtension.targetTypeName),
+    fields: sortedFields.map((field) =>
+      buildFieldDefinitionNode(field, sourceRoot),
+    ),
+  };
+}
+
 function buildDirectiveDefinitionNode(
   directiveDef: DirectiveDefinitionInfo,
 ): DirectiveDefinitionNode {
@@ -513,7 +567,9 @@ export function buildDocumentNode(
   );
 
   for (const baseType of sortedBaseTypes) {
-    if (baseType.kind === "Object") {
+    if (baseType.kind === "Interface") {
+      definitions.push(buildInterfaceTypeDefinitionNode(baseType, sourceRoot));
+    } else if (baseType.kind === "Object") {
       definitions.push(buildObjectTypeDefinitionNode(baseType, sourceRoot));
     } else if (baseType.kind === "Union") {
       definitions.push(buildUnionTypeDefinitionNode(baseType, sourceRoot));
@@ -530,12 +586,22 @@ export function buildDocumentNode(
     definitions.push(buildInputObjectTypeDefinitionNode(inputType, sourceRoot));
   }
 
+  const interfaceTypeNames = new Set(
+    integratedResult.baseTypes
+      .filter((t) => t.kind === "Interface")
+      .map((t) => t.name),
+  );
+
   const sortedExtensions = [...integratedResult.typeExtensions].sort((a, b) =>
     a.targetTypeName.localeCompare(b.targetTypeName),
   );
 
   for (const ext of sortedExtensions) {
-    definitions.push(buildObjectTypeExtensionNode(ext, sourceRoot));
+    if (interfaceTypeNames.has(ext.targetTypeName)) {
+      definitions.push(buildInterfaceTypeExtensionNode(ext, sourceRoot));
+    } else {
+      definitions.push(buildObjectTypeExtensionNode(ext, sourceRoot));
+    }
   }
 
   return {

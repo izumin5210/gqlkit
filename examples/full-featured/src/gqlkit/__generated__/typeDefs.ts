@@ -166,9 +166,25 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "A comment on a post\n\nDefined in: src/gqlkit/schema/comment.ts",
+          "A comment on a post.\nImplements Node (identifiable) and Timestamped (has createdAt).\n\nDefined in: src/gqlkit/schema/comment.ts",
         block: true,
       },
+      interfaces: [
+        {
+          kind: "NamedType",
+          name: {
+            kind: "Name",
+            value: "Node",
+          },
+        },
+        {
+          kind: "NamedType",
+          name: {
+            kind: "Name",
+            value: "Timestamped",
+          },
+        },
+      ],
     },
     {
       kind: "ObjectTypeDefinition",
@@ -199,12 +215,124 @@ export const typeDefs: DocumentNode = {
       },
     },
     {
+      kind: "InterfaceTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "Entity",
+      },
+      fields: [
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "createdAt",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "DateTime",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value: "When the entity was created",
+            block: true,
+          },
+        },
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "id",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "ID",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value: "Global unique identifier",
+            block: true,
+          },
+        },
+      ],
+      description: {
+        kind: "StringValue",
+        value:
+          "Entity interface - combines Node and Timestamped for a common base.\nThis interface inherits from both Node and Timestamped.\n\nDefined in: src/gqlkit/schema/node.ts",
+        block: true,
+      },
+      interfaces: [
+        {
+          kind: "NamedType",
+          name: {
+            kind: "Name",
+            value: "Node",
+          },
+        },
+        {
+          kind: "NamedType",
+          name: {
+            kind: "Name",
+            value: "Timestamped",
+          },
+        },
+      ],
+    },
+    {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
         value: "Mutation",
       },
       fields: [],
+    },
+    {
+      kind: "InterfaceTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "Node",
+      },
+      fields: [
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "id",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "ID",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value: "Global unique identifier for the entity",
+            block: true,
+          },
+        },
+      ],
+      description: {
+        kind: "StringValue",
+        value:
+          "Node interface - represents any entity with a unique identifier.\nThis is a common pattern in GraphQL APIs (e.g., Relay specification).\nTypes implementing this interface can be fetched by their ID.\n\nDefined in: src/gqlkit/schema/node.ts",
+        block: true,
+      },
     },
     {
       kind: "ObjectTypeDefinition",
@@ -393,9 +521,26 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value: "A blog post\n\nDefined in: src/gqlkit/schema/post.ts",
+        value:
+          "A blog post.\nImplements Node (identifiable) and Timestamped (has createdAt).\n\nDefined in: src/gqlkit/schema/post.ts",
         block: true,
       },
+      interfaces: [
+        {
+          kind: "NamedType",
+          name: {
+            kind: "Name",
+            value: "Node",
+          },
+        },
+        {
+          kind: "NamedType",
+          name: {
+            kind: "Name",
+            value: "Timestamped",
+          },
+        },
+      ],
     },
     {
       kind: "EnumTypeDefinition",
@@ -478,24 +623,99 @@ export const typeDefs: DocumentNode = {
       },
     },
     {
-      kind: "UnionTypeDefinition",
+      kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
         value: "SearchResult",
       },
-      types: [
+      fields: [
         {
-          kind: "NamedType",
+          kind: "FieldDefinition",
           name: {
             kind: "Name",
-            value: "Comment",
+            value: "authorId",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "ID",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value: "ID of the user who wrote this comment\nPost author's ID",
+            block: true,
           },
         },
         {
-          kind: "NamedType",
+          kind: "FieldDefinition",
           name: {
             kind: "Name",
-            value: "Post",
+            value: "body",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "String",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value: "Comment text content\nPost content body",
+            block: true,
+          },
+        },
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "createdAt",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "DateTime",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value: "When the comment was created\nWhen the post was created",
+            block: true,
+          },
+        },
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "id",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "ID",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value:
+              "Unique identifier for the comment\nUnique identifier for the post",
+            block: true,
           },
         },
       ],
@@ -507,24 +727,99 @@ export const typeDefs: DocumentNode = {
       },
     },
     {
-      kind: "UnionTypeDefinition",
+      kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
         value: "TimelineItem",
       },
-      types: [
+      fields: [
         {
-          kind: "NamedType",
+          kind: "FieldDefinition",
           name: {
             kind: "Name",
-            value: "Comment",
+            value: "authorId",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "ID",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value: "ID of the user who wrote this comment\nPost author's ID",
+            block: true,
           },
         },
         {
-          kind: "NamedType",
+          kind: "FieldDefinition",
           name: {
             kind: "Name",
-            value: "Post",
+            value: "body",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "String",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value: "Comment text content\nPost content body",
+            block: true,
+          },
+        },
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "createdAt",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "DateTime",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value: "When the comment was created\nWhen the post was created",
+            block: true,
+          },
+        },
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "id",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "ID",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value:
+              "Unique identifier for the comment\nUnique identifier for the post",
+            block: true,
           },
         },
       ],
@@ -532,6 +827,43 @@ export const typeDefs: DocumentNode = {
         kind: "StringValue",
         value:
           "Timeline content (posts and comments mixed)\n\nDefined in: src/gqlkit/schema/content.ts",
+        block: true,
+      },
+    },
+    {
+      kind: "InterfaceTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "Timestamped",
+      },
+      fields: [
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "createdAt",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "DateTime",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value: "When the entity was created",
+            block: true,
+          },
+        },
+      ],
+      description: {
+        kind: "StringValue",
+        value:
+          "Timestamped interface - represents entities that track creation time.\nTypes implementing this interface have a createdAt field.\n\nDefined in: src/gqlkit/schema/node.ts",
         block: true,
       },
     },
@@ -738,9 +1070,26 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value: "A user in the system\n\nDefined in: src/gqlkit/schema/user.ts",
+        value:
+          "A user in the system.\nImplements Node (identifiable) and Timestamped (has createdAt).\n\nDefined in: src/gqlkit/schema/user.ts",
         block: true,
       },
+      interfaces: [
+        {
+          kind: "NamedType",
+          name: {
+            kind: "Name",
+            value: "Node",
+          },
+        },
+        {
+          kind: "NamedType",
+          name: {
+            kind: "Name",
+            value: "Timestamped",
+          },
+        },
+      ],
     },
     {
       kind: "EnumTypeDefinition",
@@ -1220,6 +1569,38 @@ export const typeDefs: DocumentNode = {
       ],
     },
     {
+      kind: "InterfaceTypeExtension",
+      name: {
+        kind: "Name",
+        value: "Node",
+      },
+      fields: [
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "__typename",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "String",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value:
+              "Get the typename of a Node.\nIn a real implementation, this would resolve the actual type.\n\nDefined in: src/gqlkit/schema/node.ts",
+            block: true,
+          },
+        },
+      ],
+    },
+    {
       kind: "ObjectTypeExtension",
       name: {
         kind: "Name",
@@ -1449,6 +1830,45 @@ export const typeDefs: DocumentNode = {
             kind: "StringValue",
             value:
               "Get the currently authenticated user\n\nDefined in: src/gqlkit/schema/user.ts",
+            block: true,
+          },
+        },
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "node",
+          },
+          arguments: [
+            {
+              kind: "InputValueDefinition",
+              name: {
+                kind: "Name",
+                value: "id",
+              },
+              type: {
+                kind: "NonNullType",
+                type: {
+                  kind: "NamedType",
+                  name: {
+                    kind: "Name",
+                    value: "String",
+                  },
+                },
+              },
+            },
+          ],
+          type: {
+            kind: "NamedType",
+            name: {
+              kind: "Name",
+              value: "Node",
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value:
+              "Fetch any Node by its ID.\nThis is a common pattern for generic entity lookup.\n\nDefined in: src/gqlkit/schema/node.ts",
             block: true,
           },
         },
