@@ -1,3 +1,8 @@
+export type {
+  DefaultValueDetectionError,
+  DefaultValueDetectionErrorCode,
+  DefaultValueDetectionResult,
+} from "./default-value-detector.js";
 export { collectDiagnostics, deduplicateDiagnostics } from "./diagnostics.js";
 export {
   type DirectiveArgumentDefinition,

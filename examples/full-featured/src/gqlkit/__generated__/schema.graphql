@@ -297,7 +297,7 @@ extend type Mutation {
 
   Defined in: src/gqlkit/schema/user.ts
   """
-  deleteUser(id: String!): String!
+  deleteUser(id: String!): Boolean!
   """
   Update an existing user
 
@@ -328,7 +328,7 @@ extend type Post {
 
   Defined in: src/gqlkit/schema/post.ts
   """
-  comments(limit: Float, includeReplies: String): [Comment!]!
+  comments(limit: Float, includeReplies: Boolean): [Comment!]!
   """
   Get the excerpt of the post body
 
@@ -340,7 +340,7 @@ extend type Post {
 
   Defined in: src/gqlkit/schema/post.ts
   """
-  isPublished: String!
+  isPublished: Boolean!
 }
 
 extend type Query {
@@ -407,7 +407,7 @@ extend type User {
 
   Defined in: src/gqlkit/schema/user.ts
   """
-  isAdmin: String!
+  isAdmin: Boolean!
   """
   Get the count of posts by this user
 

@@ -67,6 +67,7 @@ function createDefaultResult(): ScalarMetadataResult {
  * For simple cases like `T | undefined`, returns T.
  * For union cases like `T | null | undefined`, returns the original union type
  * so the caller can analyze it (e.g., check for null members).
+ * For boolean types (true | false | undefined), reconstructs the boolean type.
  *
  * @param metadataType - The type of the metadata property (may be union with undefined)
  * @returns The actual type excluding undefined, or null if extraction fails
@@ -78,6 +79,16 @@ export function getActualMetadataType(metadataType: ts.Type): ts.Type | null {
     );
     if (nonUndefinedTypes.length === 1) {
       return nonUndefinedTypes[0]!;
+    }
+    // Special case: boolean (true | false) optionally with undefined
+    // TypeScript represents boolean | undefined as true | false | undefined
+    if (
+      nonUndefinedTypes.length === 2 &&
+      nonUndefinedTypes.every((t) => t.flags & ts.TypeFlags.BooleanLiteral)
+    ) {
+      // This is effectively "boolean" - return the first member to preserve
+      // the boolean literal nature, or we could return the union
+      return metadataType;
     }
     // If there are multiple non-undefined types (e.g., string | null),
     // return the original metadataType. The caller should analyze this

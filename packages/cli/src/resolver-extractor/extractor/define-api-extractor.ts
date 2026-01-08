@@ -1,7 +1,11 @@
 import ts from "typescript";
+import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
+  type DirectiveArgumentValue,
   type DirectiveInfo,
   extractDirectivesFromType,
+  hasDirectiveMetadata,
+  unwrapDirectiveType,
 } from "../../shared/directive-detector.js";
 import {
   detectScalarMetadata,
@@ -31,6 +35,7 @@ export interface ArgumentDefinition {
   readonly optional: boolean;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly defaultValue: DirectiveArgumentValue | null;
 }
 
 export interface DefineApiResolverInfo {
@@ -153,6 +158,21 @@ function convertTypeToTSTypeReference(
     }
 
     if (nonNullTypes.length > 1) {
+      // Check if this is a boolean literal union (true | false)
+      const isBooleanLiteralUnion = nonNullTypes.every(
+        (t) => t.flags & ts.TypeFlags.BooleanLiteral,
+      );
+      if (isBooleanLiteralUnion) {
+        return {
+          kind: "primitive",
+          name: "boolean",
+          elementType: null,
+          members: null,
+          nullable,
+          scalarInfo: null,
+        };
+      }
+
       return {
         kind: "union",
         name: null,
@@ -294,6 +314,30 @@ function extractTSDocFromPropertyWithPriority(
   return extractTSDocFromSymbol(prop, checker);
 }
 
+/**
+ * Checks if a type should be unwrapped as a GqlFieldDef type.
+ * This handles cases where TypeScript represents the type differently
+ * when accessed through type references vs. direct declarations.
+ */
+function shouldUnwrapAsGqlFieldDef(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+): boolean {
+  // First check using the standard method
+  if (hasDirectiveMetadata(type)) {
+    return true;
+  }
+
+  // Fallback: check if the type string contains GqlFieldDef
+  // This handles cases where TypeScript represents the type differently
+  const typeString = checker.typeToString(type);
+  if (typeString.startsWith("GqlFieldDef<") || typeString === "GqlFieldDef") {
+    return true;
+  }
+
+  return false;
+}
+
 function extractArgsFromType(
   argsType: ts.Type,
   checker: ts.TypeChecker,
@@ -313,12 +357,24 @@ function extractArgsFromType(
 
     const tsdocInfo = extractTSDocFromPropertyWithPriority(prop, checker);
 
+    let defaultValue: DirectiveArgumentValue | null = null;
+    let actualPropType = propType;
+
+    if (shouldUnwrapAsGqlFieldDef(propType, checker)) {
+      const defaultValueResult = detectDefaultValueMetadata(propType, checker);
+      if (defaultValueResult.defaultValue) {
+        defaultValue = defaultValueResult.defaultValue;
+      }
+      actualPropType = unwrapDirectiveType(propType, checker);
+    }
+
     args.push({
       name: prop.getName(),
-      tsType: convertTypeToTSTypeReference(propType, checker),
+      tsType: convertTypeToTSTypeReference(actualPropType, checker),
       optional,
       description: tsdocInfo.description,
       deprecated: tsdocInfo.deprecated,
+      defaultValue,
     });
   }
 

@@ -129,6 +129,10 @@ function buildDirectiveArgumentValue(
         kind: Kind.BOOLEAN,
         value: value.value,
       };
+    case "null":
+      return {
+        kind: Kind.NULL,
+      };
     case "enum":
       return {
         kind: Kind.ENUM,
@@ -245,6 +249,9 @@ function buildInputValueDefinitionNode(
     type: buildFieldTypeNode(inputValue.type),
     ...(inputValue.description
       ? { description: buildStringValueNode(inputValue.description) }
+      : {}),
+    ...(inputValue.defaultValue
+      ? { defaultValue: buildDirectiveArgumentValue(inputValue.defaultValue) }
       : {}),
     ...(directives.length > 0 ? { directives } : {}),
   };
@@ -434,6 +441,9 @@ function buildInputFieldDefinitionNode(
     type: buildFieldTypeNode(field.type),
     ...(field.description
       ? { description: buildStringValueNode(field.description) }
+      : {}),
+    ...(field.defaultValue
+      ? { defaultValue: buildDirectiveArgumentValue(field.defaultValue) }
       : {}),
     ...(directives.length > 0 ? { directives } : {}),
   };

@@ -1,5 +1,7 @@
 import ts from "typescript";
+import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
+  type DirectiveArgumentValue,
   type DirectiveInfo,
   detectDirectiveMetadata,
   hasDirectiveMetadata,
@@ -359,12 +361,20 @@ function collectPropertiesFromType(
   return [];
 }
 
+interface FieldExtractionResult {
+  fields: FieldDefinition[];
+  diagnostics: Diagnostic[];
+}
+
 function extractFieldsFromType(
   type: ts.Type,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
-): FieldDefinition[] {
+  sourceFile?: ts.SourceFile,
+  filePath?: string,
+): FieldExtractionResult {
   const fields: FieldDefinition[] = [];
+  const diagnostics: Diagnostic[] = [];
   const properties = collectPropertiesFromType(type, checker);
 
   for (const prop of properties) {
@@ -388,12 +398,44 @@ function extractFieldsFromType(
     let actualPropType = propType;
     let directives: ReadonlyArray<DirectiveInfo> | null = null;
     let directiveNullable = false;
+    let defaultValue: DirectiveArgumentValue | null = null;
 
     if (hasDirectiveMetadata(propType)) {
       const directiveResult = detectDirectiveMetadata(propType, checker);
       if (directiveResult.directives.length > 0) {
         directives = directiveResult.directives;
       }
+
+      // Detect default value from $gqlkitFieldMeta
+      const defaultValueResult = detectDefaultValueMetadata(propType, checker);
+      if (defaultValueResult.defaultValue) {
+        defaultValue = defaultValueResult.defaultValue;
+      }
+      if (defaultValueResult.errors.length > 0 && sourceFile && filePath) {
+        for (const error of defaultValueResult.errors) {
+          const location =
+            declaration && sourceFile
+              ? (() => {
+                  const { line, character } =
+                    sourceFile.getLineAndCharacterOfPosition(
+                      declaration.getStart(sourceFile),
+                    );
+                  return {
+                    file: filePath,
+                    line: line + 1,
+                    column: character + 1,
+                  };
+                })()
+              : null;
+          diagnostics.push({
+            code: error.code,
+            message: `Field '${propName}': ${error.message}`,
+            severity: "warning",
+            location,
+          });
+        }
+      }
+
       // Check if the original type is nullable before unwrapping
       // TypeScript normalizes WithDirectives<T | null, [...]> to (T & Directive) | null
       if (propType.isUnion()) {
@@ -442,10 +484,11 @@ function extractFieldsFromType(
       description: tsdocInfo.description ?? null,
       deprecated: tsdocInfo.deprecated ?? null,
       directives,
+      defaultValue,
     });
   }
 
-  return fields;
+  return { fields, diagnostics };
 }
 
 function isNumericEnum(node: ts.Node): boolean {
@@ -949,10 +992,18 @@ export function extractTypesFromProgram(
           return;
         }
 
-        const fields =
+        const fieldResult =
           kind === "union"
-            ? []
-            : extractFieldsFromType(actualType, checker, globalTypeMappings);
+            ? { fields: [], diagnostics: [] }
+            : extractFieldsFromType(
+                actualType,
+                checker,
+                globalTypeMappings,
+                sourceFile,
+                filePath,
+              );
+        const fields = fieldResult.fields;
+        diagnostics.push(...fieldResult.diagnostics);
 
         if (name.endsWith("Input") && kind === "union") {
           if (

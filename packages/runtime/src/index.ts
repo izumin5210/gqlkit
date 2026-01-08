@@ -43,22 +43,24 @@ export type Directive<
 
 /**
  * Metadata structure for field-level GraphQL metadata.
- * Used to attach directives and other metadata to individual fields.
+ * Used to attach directives, default values, and other metadata to individual fields.
  *
  * @typeParam Meta - The metadata configuration object
  */
 export interface GqlFieldMetaShape<
   Meta extends {
-    directives: ReadonlyArray<
+    directives?: ReadonlyArray<
       Directive<
         string,
         Record<string, unknown>,
         DirectiveLocation | DirectiveLocation[]
       >
     >;
+    defaultValue?: unknown;
   },
 > {
-  readonly directives: Meta["directives"];
+  readonly directives?: Meta["directives"];
+  readonly defaultValue?: Meta["defaultValue"];
 }
 
 /**
@@ -67,7 +69,7 @@ export interface GqlFieldMetaShape<
  * with the underlying type.
  *
  * The structure uses two properties:
- * - `$gqlkitFieldMeta`: Contains the metadata object with directives
+ * - `$gqlkitFieldMeta`: Contains the metadata object with directives and defaultValue
  * - `$gqlkitOriginalType`: Preserves the original type T to maintain nullability information
  *
  * This design is necessary because TypeScript normalizes `(T | null) & { metadata }` to
@@ -76,27 +78,40 @@ export interface GqlFieldMetaShape<
  * during CLI analysis.
  *
  * @typeParam T - The base type to attach metadata to
- * @typeParam Meta - The metadata configuration object containing directives
+ * @typeParam Meta - The metadata configuration object containing directives and/or defaultValue
  *
  * @example
  * ```typescript
+ * // With directives
  * type User = {
  *   id: GqlFieldDef<IDString, { directives: [AuthDirective<{ role: ["USER"] }>] }>;
  *   bio: GqlFieldDef<string | null, { directives: [AuthDirective<{ role: ["ADMIN"] }>] }>;
+ * };
+ *
+ * // With default value
+ * type PaginationInput = {
+ *   limit: GqlFieldDef<Int, { defaultValue: 10 }>;
+ *   offset: GqlFieldDef<Int, { defaultValue: 0 }>;
+ * };
+ *
+ * // With both directives and default value
+ * type SearchInput = {
+ *   query: GqlFieldDef<string, { defaultValue: ""; directives: [SomeDirective] }>;
  * };
  * ```
  */
 export type GqlFieldDef<
   T,
   Meta extends {
-    directives: ReadonlyArray<
+    directives?: ReadonlyArray<
       Directive<
         string,
         Record<string, unknown>,
         DirectiveLocation | DirectiveLocation[]
       >
     >;
-  },
+    defaultValue?: unknown;
+  } = object,
 > = T & {
   readonly " $gqlkitFieldMeta"?: GqlFieldMetaShape<Meta>;
   readonly " $gqlkitOriginalType"?: T;
