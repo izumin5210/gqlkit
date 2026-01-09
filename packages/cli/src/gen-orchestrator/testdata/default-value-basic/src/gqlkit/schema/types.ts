@@ -1,4 +1,9 @@
-import { createGqlkitApis, type NoArgs, type GqlFieldDef, type Int } from "@gqlkit-ts/runtime";
+import {
+  createGqlkitApis,
+  type GqlFieldDef,
+  type Int,
+  type NoArgs,
+} from "@gqlkit-ts/runtime";
 
 export type PaginationInput = {
   limit: GqlFieldDef<Int, { defaultValue: 10 }>;
@@ -28,14 +33,10 @@ export type User = {
 
 const { defineQuery } = createGqlkitApis();
 
-export const users = defineQuery<PaginationInput, User[]>(
-  () => []
-);
+export const users = defineQuery<PaginationInput, User[]>(() => []);
 
-export const search = defineQuery<SearchInput, User[]>(
-  () => []
-);
+export const search = defineQuery<SearchInput, User[]>(() => []);
 
 export const greet = defineQuery<GreetingInput, string>(
-  (_, args) => `${args.prefix}, ${args.name}!`
+  (_, args) => `${args.prefix}, ${args.name}!`,
 );

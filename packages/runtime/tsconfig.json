@@ -1,34 +1,15 @@
 {
+  "extends": "../../tsconfig.base.json",
   "exclude": ["dist"],
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",
 
-    "module": "nodenext",
-    "target": "es2022",
-    "moduleResolution": "node16",
     "lib": ["es2024"],
     "types": ["node"],
 
     "sourceMap": true,
     "declaration": true,
-    "declarationMap": true,
-
-    "noUncheckedIndexedAccess": true,
-    "exactOptionalPropertyTypes": true,
-
-    "noImplicitReturns": true,
-    "noImplicitOverride": true,
-    "noUnusedLocals": true,
-    "noUnusedParameters": true,
-    "noFallthroughCasesInSwitch": true,
-    "noPropertyAccessFromIndexSignature": true,
-
-    "strict": true,
-    "verbatimModuleSyntax": true,
-    "isolatedModules": true,
-    "noUncheckedSideEffectImports": true,
-    "moduleDetection": "force",
-    "skipLibCheck": true
+    "declarationMap": true
   }
 }

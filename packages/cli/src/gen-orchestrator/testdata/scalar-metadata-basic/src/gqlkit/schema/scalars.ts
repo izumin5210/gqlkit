@@ -1,4 +1,4 @@
-import { DefineScalar } from "@gqlkit-ts/runtime";
+import type { DefineScalar } from "@gqlkit-ts/runtime";
 
 /**
  * ISO 8601 format date-time string

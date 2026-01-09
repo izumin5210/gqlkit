@@ -5,7 +5,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/query.ts",
-      "line": 4,
+      "line": 9,
       "column": 1
     }
   },
@@ -15,7 +15,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/query.ts",
-      "line": 4,
+      "line": 9,
       "column": 1
     }
   }

@@ -1,7 +1,4 @@
-import {
-  type NoArgs,
-  createGqlkitApis,
-} from "@gqlkit-ts/runtime";
+import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
 import type { Post } from "./post.js";
 
 const { defineQuery } = createGqlkitApis();

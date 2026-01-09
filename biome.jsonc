@@ -6,8 +6,8 @@
     "useIgnoreFile": true
   },
   "files": {
-    "ignoreUnknown": false,
-    "includes": ["**", "!**/testdata"]
+    "includes": ["**", "!**/testdata/**/__generated__"],
+    "ignoreUnknown": false
   },
   "formatter": {
     "enabled": true,

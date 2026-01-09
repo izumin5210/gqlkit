@@ -1,4 +1,8 @@
-import type { DefineInterface, DefineScalar, IDString } from "@gqlkit-ts/runtime";
+import type {
+  DefineInterface,
+  DefineScalar,
+  IDString,
+} from "@gqlkit-ts/runtime";
 
 /**
  * Custom DateTime scalar.
