@@ -35,6 +35,6 @@
   },
   "devDependencies": {
     "@gqlkit-ts/runtime": "workspace:*",
-    "@types/shell-quote": "^1.7.5"
+    "@types/shell-quote": "1.7.5"
   }
 }
