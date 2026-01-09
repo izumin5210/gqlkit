@@ -118,7 +118,7 @@ function extractDescriptionFromSymbol(
   return undefined;
 }
 
-export function extractTSDocInfo(
+export function extractTsDocInfo(
   node: ts.Node,
   checker: ts.TypeChecker,
 ): TSDocInfo {
@@ -139,7 +139,7 @@ export function extractTSDocInfo(
   };
 }
 
-export function extractTSDocFromSymbol(
+export function extractTsDocFromSymbol(
   symbol: ts.Symbol,
   checker: ts.TypeChecker,
 ): TSDocInfo {

@@ -102,7 +102,7 @@ export const BUILT_IN_SCALARS = new Set([
  */
 export function isBuiltInScalar(typeName: string): boolean {
   return BUILT_IN_SCALARS.has(
-    typeName as (typeof BUILT_IN_SCALARS extends Set<infer T> ? T : never),
+    typeName as typeof BUILT_IN_SCALARS extends Set<infer T> ? T : never,
   );
 }
 

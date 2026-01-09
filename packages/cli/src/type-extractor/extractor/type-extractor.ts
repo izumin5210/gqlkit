@@ -1,13 +1,6 @@
 import ts from "typescript";
 import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
-import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } from "../../shared/inline-object-extractor.js";
-import { getSourceLocationFromNode } from "../../shared/source-location.js";
-import {
-  getNonNullableTypes,
-  isNullableUnion,
-  isNullOrUndefined,
-} from "../../shared/typescript-utils.js";
 import {
   type DirectiveArgumentValue,
   type DirectiveInfo,
@@ -15,6 +8,7 @@ import {
   hasDirectiveMetadata,
   unwrapDirectiveType,
 } from "../../shared/directive-detector.js";
+import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } from "../../shared/inline-object-extractor.js";
 import { isInlineObjectType } from "../../shared/inline-object-utils.js";
 import {
   extractImplementsFromDefineInterface,
@@ -22,10 +16,16 @@ import {
   isDefineInterfaceTypeAlias,
 } from "../../shared/interface-detector.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
+import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
-  extractTSDocFromSymbol,
-  extractTSDocInfo,
+  extractTsDocFromSymbol,
+  extractTsDocInfo,
 } from "../../shared/tsdoc-parser.js";
+import {
+  getNonNullableTypes,
+  isNullableUnion,
+  isNullOrUndefined,
+} from "../../shared/typescript-utils.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 import type {
   Diagnostic,
@@ -110,7 +110,7 @@ function extractInlineObjectProperties(
   return extractInlineObjectPropertiesShared(
     type,
     checker,
-    (t, c) => convertTsTypeToReferenceWithBrandInfo(t, c, globalTypeMappings).tsType,
+    (t, c) => convertTsTypeToReference(t, c, globalTypeMappings).tsType,
   );
 }
 
@@ -121,7 +121,7 @@ function findGlobalTypeMapping(
   return globalTypeMappings.find((m) => m.typeName === typeName);
 }
 
-function convertTsTypeToReferenceWithBrandInfo(
+function convertTsTypeToReference(
   type: ts.Type,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
@@ -191,7 +191,7 @@ function convertTsTypeToReferenceWithBrandInfo(
     const nonNullTypes = getNonNullableTypes(type);
 
     if (nonNullTypes.length === 1) {
-      const innerResult = convertTsTypeToReferenceWithBrandInfo(
+      const innerResult = convertTsTypeToReference(
         nonNullTypes[0]!,
         checker,
         globalTypeMappings,
@@ -202,7 +202,7 @@ function convertTsTypeToReferenceWithBrandInfo(
     }
 
     const memberResults = nonNullTypes.map((t) =>
-      convertTsTypeToReferenceWithBrandInfo(t, checker, globalTypeMappings),
+      convertTsTypeToReference(t, checker, globalTypeMappings),
     );
 
     return {
@@ -222,11 +222,7 @@ function convertTsTypeToReferenceWithBrandInfo(
     const typeArgs = (type as ts.TypeReference).typeArguments;
     const elementType = typeArgs?.[0];
     const elementResult = elementType
-      ? convertTsTypeToReferenceWithBrandInfo(
-          elementType,
-          checker,
-          globalTypeMappings,
-        )
+      ? convertTsTypeToReference(elementType, checker, globalTypeMappings)
       : {
           tsType: {
             kind: "primitive" as const,
@@ -398,7 +394,7 @@ function convertTsTypeToReferenceWithBrandInfo(
   };
 }
 
-function collectPropertiesFromType(
+function extractPropertiesFromType(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): ts.Symbol[] {
@@ -443,7 +439,7 @@ function extractFieldsFromType(
 ): FieldExtractionResult {
   const fields: FieldDefinition[] = [];
   const diagnostics: Diagnostic[] = [];
-  const properties = collectPropertiesFromType(type, checker);
+  const properties = extractPropertiesFromType(type, checker);
 
   for (const prop of properties) {
     const propName = prop.getName();
@@ -461,7 +457,7 @@ function extractFieldsFromType(
       optional = declaration.questionToken !== undefined;
     }
 
-    const tsdocInfo = extractTSDocFromSymbol(prop, checker);
+    const tsdocInfo = extractTsDocFromSymbol(prop, checker);
 
     let actualPropType = propType;
     let directives: ReadonlyArray<DirectiveInfo> | null = null;
@@ -505,7 +501,7 @@ function extractFieldsFromType(
       }
     }
 
-    const typeResult = convertTsTypeToReferenceWithBrandInfo(
+    const typeResult = convertTsTypeToReference(
       actualPropType,
       checker,
       globalTypeMappings,
@@ -602,7 +598,7 @@ function extractEnumMembers(
     if (initializer && ts.isStringLiteral(initializer)) {
       const symbol = checker.getSymbolAtLocation(member.name);
       const tsdocInfo = symbol
-        ? extractTSDocFromSymbol(symbol, checker)
+        ? extractTsDocFromSymbol(symbol, checker)
         : { description: undefined, deprecated: undefined };
 
       members.push({
@@ -739,8 +735,8 @@ function extractInlineObjectMembers(
 
       for (const prop of properties) {
         const propType = checker.getTypeOfSymbol(prop);
-        const tsdocInfo = extractTSDocFromSymbol(prop, checker);
-        const typeResult = convertTsTypeToReferenceWithBrandInfo(
+        const tsdocInfo = extractTsDocFromSymbol(prop, checker);
+        const typeResult = convertTsTypeToReference(
           propType,
           checker,
           globalTypeMappings,
@@ -858,7 +854,7 @@ export function extractTypesFromProgram(
         }
 
         const enumMembers = extractEnumMembers(node, checker);
-        const tsdocInfo = extractTSDocInfo(node, checker);
+        const tsdocInfo = extractTsDocInfo(node, checker);
         const metadata: TypeMetadata = {
           name,
           kind: "enum",
@@ -911,7 +907,7 @@ export function extractTypesFromProgram(
         const scalarMetadata = detectScalarMetadata(type, checker);
         if (scalarMetadata.scalarName && !scalarMetadata.isPrimitive) {
           detectedScalarNames.add(scalarMetadata.scalarName);
-          const tsdocInfo = extractTSDocInfo(node, checker);
+          const tsdocInfo = extractTsDocInfo(node, checker);
           detectedScalars.push({
             scalarName: scalarMetadata.scalarName,
             typeName: name,
@@ -951,7 +947,7 @@ export function extractTypesFromProgram(
           checker,
           globalTypeMappings,
         );
-        const tsdocInfo = extractTSDocInfo(node, checker);
+        const tsdocInfo = extractTsDocInfo(node, checker);
 
         let implementedInterfaces: ReadonlyArray<string> | null = null;
         if (ts.isTypeAliasDeclaration(node)) {

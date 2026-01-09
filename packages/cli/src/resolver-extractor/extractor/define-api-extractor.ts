@@ -1,15 +1,9 @@
 import ts from "typescript";
 import {
-  METADATA_PROPERTIES,
   isInternalTypeSymbol,
+  METADATA_PROPERTIES,
 } from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
-import { extractInlineObjectProperties } from "../../shared/inline-object-extractor.js";
-import { getSourceLocationFromNode } from "../../shared/source-location.js";
-import {
-  getNonNullableTypes,
-  isNullableUnion,
-} from "../../shared/typescript-utils.js";
 import {
   type DirectiveArgumentValue,
   type DirectiveInfo,
@@ -17,16 +11,22 @@ import {
   hasDirectiveMetadata,
   unwrapDirectiveType,
 } from "../../shared/directive-detector.js";
+import { extractInlineObjectProperties } from "../../shared/inline-object-extractor.js";
 import { isInlineObjectType } from "../../shared/inline-object-utils.js";
 import {
   detectScalarMetadata,
   getActualMetadataType,
 } from "../../shared/metadata-detector.js";
+import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
   type DeprecationInfo,
-  extractTSDocFromSymbol,
-  extractTSDocInfo,
+  extractTsDocFromSymbol,
+  extractTsDocInfo,
 } from "../../shared/tsdoc-parser.js";
+import {
+  getNonNullableTypes,
+  isNullableUnion,
+} from "../../shared/typescript-utils.js";
 import type {
   Diagnostic,
   TSTypeReference,
@@ -112,7 +112,7 @@ function isExported(node: ts.Node): boolean {
   return (modifiers & ts.ModifierFlags.Export) !== 0;
 }
 
-function convertTypeToTSTypeReference(
+function convertTsTypeToReference(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): TSTypeReference {
@@ -162,7 +162,7 @@ function convertTypeToTSTypeReference(
     const nonNullTypes = getNonNullableTypes(type);
 
     if (nonNullTypes.length === 1 && nonNullTypes[0]) {
-      const innerType = convertTypeToTSTypeReference(nonNullTypes[0], checker);
+      const innerType = convertTsTypeToReference(nonNullTypes[0], checker);
       return { ...innerType, nullable };
     }
 
@@ -187,9 +187,7 @@ function convertTypeToTSTypeReference(
         kind: "union",
         name: null,
         elementType: null,
-        members: nonNullTypes.map((t) =>
-          convertTypeToTSTypeReference(t, checker),
-        ),
+        members: nonNullTypes.map((t) => convertTsTypeToReference(t, checker)),
         nullable,
         scalarInfo: null,
         inlineObjectProperties: null,
@@ -204,7 +202,7 @@ function convertTypeToTSTypeReference(
       return {
         kind: "array",
         name: null,
-        elementType: convertTypeToTSTypeReference(elementType, checker),
+        elementType: convertTsTypeToReference(elementType, checker),
         members: null,
         nullable: false,
         scalarInfo: null,
@@ -217,7 +215,7 @@ function convertTypeToTSTypeReference(
     const inlineProperties = extractInlineObjectProperties(
       type,
       checker,
-      convertTypeToTSTypeReference,
+      convertTsTypeToReference,
     );
     return {
       kind: "inlineObject",
@@ -341,11 +339,11 @@ function extractTSDocFromPropertyWithPriority(
       (inlineDeclaration as ts.PropertySignature).name,
     );
     if (inlineSymbol) {
-      return extractTSDocFromSymbol(inlineSymbol, checker);
+      return extractTsDocFromSymbol(inlineSymbol, checker);
     }
   }
 
-  return extractTSDocFromSymbol(prop, checker);
+  return extractTsDocFromSymbol(prop, checker);
 }
 
 /**
@@ -404,7 +402,7 @@ function extractArgsFromType(
 
     args.push({
       name: prop.getName(),
-      tsType: convertTypeToTSTypeReference(actualPropType, checker),
+      tsType: convertTsTypeToReference(actualPropType, checker),
       optional,
       description: tsdocInfo.description,
       deprecated: tsdocInfo.deprecated,
@@ -467,7 +465,7 @@ function extractTypeArgumentsFromCall(
 
     const parentTypeName = getTypeNameFromNode(parentTypeNode);
 
-    const argsTypeRef = convertTypeToTSTypeReference(argsType, checker);
+    const argsTypeRef = convertTsTypeToReference(argsType, checker);
     const isNoArgs =
       argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
@@ -482,7 +480,7 @@ function extractTypeArgumentsFromCall(
       parentTypeName: parentTypeName ?? null,
       argsType: isNoArgs ? null : argsTypeRef,
       args: args && args.length > 0 ? args : null,
-      returnType: convertTypeToTSTypeReference(returnType, checker),
+      returnType: convertTsTypeToReference(returnType, checker),
       directives,
     };
   }
@@ -502,7 +500,7 @@ function extractTypeArgumentsFromCall(
   const argsType = checker.getTypeFromTypeNode(argsTypeNode);
   const returnType = checker.getTypeFromTypeNode(returnTypeNode);
 
-  const argsTypeRef = convertTypeToTSTypeReference(argsType, checker);
+  const argsTypeRef = convertTsTypeToReference(argsType, checker);
   const isNoArgs =
     argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
@@ -514,7 +512,7 @@ function extractTypeArgumentsFromCall(
     parentTypeName: null,
     argsType: isNoArgs ? null : argsTypeRef,
     args: args && args.length > 0 ? args : null,
-    returnType: convertTypeToTSTypeReference(returnType, checker),
+    returnType: convertTsTypeToReference(returnType, checker),
     directives,
   };
 }
@@ -529,7 +527,7 @@ function extractExportedInputTypes(
     if (ts.isTypeAliasDeclaration(node) && isExported(node)) {
       const name = node.name.getText(sourceFile);
       const type = checker.getTypeAtLocation(node.name);
-      const tsType = convertTypeToTSTypeReference(type, checker);
+      const tsType = convertTsTypeToReference(type, checker);
 
       exportedTypes.push({
         name,
@@ -628,7 +626,7 @@ export function extractDefineApiResolvers(
           continue;
         }
 
-        const tsdocInfo = extractTSDocInfo(node, checker);
+        const tsdocInfo = extractTsDocInfo(node, checker);
 
         resolvers.push({
           fieldName,

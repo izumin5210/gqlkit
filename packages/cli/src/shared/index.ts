@@ -3,21 +3,6 @@ export type {
   DefaultValueDetectionErrorCode,
   DefaultValueDetectionResult,
 } from "./default-value-detector.js";
-export {
-  extractNullability,
-  getNonNullableTypes,
-  isNullableUnion,
-  isNullOrUndefined,
-} from "./typescript-utils.js";
-export {
-  type SourceLocation,
-  getSourceLocationFromNode,
-  getSourceLocationFromSymbol,
-} from "./source-location.js";
-export {
-  type TypeConverter,
-  extractInlineObjectProperties,
-} from "./inline-object-extractor.js";
 export { collectDiagnostics, deduplicateDiagnostics } from "./diagnostics.js";
 export {
   type DirectiveArgumentDefinition,
@@ -36,13 +21,27 @@ export type {
   DirectiveDetectionResult,
   DirectiveInfo,
 } from "./directive-detector.js";
-
 export {
   type ScanOptions,
   type ScanResult,
   scanDirectory,
 } from "./file-scanner.js";
+export {
+  extractInlineObjectProperties,
+  type TypeConverter,
+} from "./inline-object-extractor.js";
+export {
+  getSourceLocationFromNode,
+  getSourceLocationFromSymbol,
+  type SourceLocation,
+} from "./source-location.js";
 export { convertTsTypeToGraphQLType } from "./type-converter.js";
+export {
+  extractNullability,
+  getNonNullableTypes,
+  isNullableUnion,
+  isNullOrUndefined,
+} from "./typescript-utils.js";
 
 export function toPosixPath(filePath: string): string {
   return filePath.replace(/\\/g, "/");

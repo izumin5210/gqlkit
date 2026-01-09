@@ -1,4 +1,8 @@
 import ts from "typescript";
+import type {
+  InlineObjectPropertyDef,
+  TSTypeReference,
+} from "../type-extractor/types/index.js";
 import { detectDefaultValueMetadata } from "./default-value-detector.js";
 import {
   type DirectiveArgumentValue,
@@ -8,12 +12,8 @@ import {
   unwrapDirectiveType,
 } from "./directive-detector.js";
 import { getSourceLocationFromNode } from "./source-location.js";
-import { extractTSDocFromSymbol } from "./tsdoc-parser.js";
+import { extractTsDocFromSymbol } from "./tsdoc-parser.js";
 import { isNullableUnion } from "./typescript-utils.js";
-import type {
-  InlineObjectPropertyDef,
-  TSTypeReference,
-} from "../type-extractor/types/index.js";
 
 export type TypeConverter = (
   type: ts.Type,
@@ -51,7 +51,7 @@ export function extractInlineObjectProperties(
       optional = declaration.questionToken !== undefined;
     }
 
-    const tsdocInfo = extractTSDocFromSymbol(prop, checker);
+    const tsdocInfo = extractTsDocFromSymbol(prop, checker);
 
     let actualPropType = propType;
     let directives: ReadonlyArray<DirectiveInfo> | null = null;
