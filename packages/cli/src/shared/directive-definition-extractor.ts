@@ -7,11 +7,17 @@
 
 import ts from "typescript";
 import type { GraphQLFieldType } from "../type-extractor/types/graphql.js";
+import { METADATA_PROPERTIES } from "./constants.js";
 import { getActualMetadataType } from "./metadata-detector.js";
+import {
+  getNonNullableTypes,
+  isNullableUnion,
+  isNullOrUndefined,
+} from "./typescript-utils.js";
 
-const DIRECTIVE_NAME_PROPERTY = " $directiveName";
-const DIRECTIVE_ARGS_PROPERTY = " $directiveArgs";
-const DIRECTIVE_LOCATION_PROPERTY = " $directiveLocation";
+const DIRECTIVE_NAME_PROPERTY = METADATA_PROPERTIES.DIRECTIVE_NAME;
+const DIRECTIVE_ARGS_PROPERTY = METADATA_PROPERTIES.DIRECTIVE_ARGS;
+const DIRECTIVE_LOCATION_PROPERTY = METADATA_PROPERTIES.DIRECTIVE_LOCATION;
 
 /**
  * Represents a directive location.
@@ -284,15 +290,8 @@ function convertToGraphQLType(
   }
 
   if (type.isUnion()) {
-    const nonNullTypes = type.types.filter(
-      (t) =>
-        !(t.flags & ts.TypeFlags.Null) && !(t.flags & ts.TypeFlags.Undefined),
-    );
-    const hasNull = type.types.some((t) => t.flags & ts.TypeFlags.Null);
-    const hasUndefined = type.types.some(
-      (t) => t.flags & ts.TypeFlags.Undefined,
-    );
-    const nullable = hasNull || hasUndefined;
+    const nonNullTypes = getNonNullableTypes(type);
+    const nullable = isNullableUnion(type);
 
     if (nonNullTypes.length === 1 && nonNullTypes[0]) {
       const innerType = convertToGraphQLType(nonNullTypes[0], checker);
@@ -320,11 +319,7 @@ function convertToGraphQLType(
       let elementType = typeArgs[0];
 
       if (checker.isTupleType(type) && typeArgs.length > 1) {
-        const nonNullTypes = typeArgs.filter(
-          (t) =>
-            !(t.flags & ts.TypeFlags.Null) &&
-            !(t.flags & ts.TypeFlags.Undefined),
-        );
+        const nonNullTypes = typeArgs.filter((t) => !isNullOrUndefined(t));
         if (nonNullTypes.length > 0 && nonNullTypes[0]) {
           elementType = nonNullTypes[0];
         }
@@ -344,11 +339,7 @@ function convertToGraphQLType(
       }
 
       if (elementType.isUnion()) {
-        const nonNullMembers = elementType.types.filter(
-          (t) =>
-            !(t.flags & ts.TypeFlags.Null) &&
-            !(t.flags & ts.TypeFlags.Undefined),
-        );
+        const nonNullMembers = getNonNullableTypes(elementType);
         if (
           nonNullMembers.length > 0 &&
           nonNullMembers.every((t) => t.isStringLiteral())
@@ -361,9 +352,7 @@ function convertToGraphQLType(
           };
         }
 
-        const hasNull = elementType.types.some(
-          (t) => t.flags & ts.TypeFlags.Null,
-        );
+        const hasNull = isNullableUnion(elementType);
 
         if (nonNullMembers.length === 1 && nonNullMembers[0]) {
           const innerType = convertToGraphQLType(nonNullMembers[0], checker);

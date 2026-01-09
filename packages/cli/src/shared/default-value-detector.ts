@@ -6,11 +6,12 @@
  */
 
 import ts from "typescript";
+import { METADATA_PROPERTIES } from "./constants.js";
 import type { DirectiveArgumentValue } from "./directive-detector.js";
 import { resolveArgumentValue } from "./directive-detector.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 
-const FIELD_META_PROPERTY = " $gqlkitFieldMeta";
+const FIELD_META_PROPERTY = METADATA_PROPERTIES.FIELD_META;
 const DEFAULT_VALUE_PROPERTY = "defaultValue";
 
 /**

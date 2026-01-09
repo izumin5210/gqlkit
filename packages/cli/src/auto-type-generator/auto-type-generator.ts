@@ -153,7 +153,7 @@ function collectInlineObjectsFromField(
             fieldPath: nestedPath,
           };
 
-      collectNestedInlineObjects(
+      extractNestedInlineObjects(
         prop.tsType.inlineObjectProperties,
         nestedContext,
         nestedPath,
@@ -167,7 +167,7 @@ function collectInlineObjectsFromField(
   }
 }
 
-function collectNestedInlineObjects(
+function extractNestedInlineObjects(
   properties: ReadonlyArray<InlineObjectPropertyDef>,
   context: AutoTypeNameContext,
   currentPath: ReadonlyArray<string>,
@@ -206,7 +206,7 @@ function collectNestedInlineObjects(
             fieldPath: nestedPath,
           };
 
-      collectNestedInlineObjects(
+      extractNestedInlineObjects(
         prop.tsType.inlineObjectProperties,
         nestedContext,
         nestedPath,
@@ -274,7 +274,7 @@ function collectInlineObjectsFromResolverArgs(
       nullable: arg.type.nullable,
     });
 
-    collectNestedInlineObjectsFromArg(
+    extractNestedInlineObjectsFromArg(
       arg.inlineObjectProperties,
       resolverType,
       field.name,
@@ -287,7 +287,7 @@ function collectInlineObjectsFromResolverArgs(
   }
 }
 
-function collectNestedInlineObjectsFromArg(
+function extractNestedInlineObjectsFromArg(
   properties: ReadonlyArray<InlineObjectPropertyDef>,
   resolverType: "query" | "mutation" | "field",
   fieldName: string,
@@ -319,7 +319,7 @@ function collectNestedInlineObjectsFromArg(
         nullable: prop.tsType.nullable,
       });
 
-      collectNestedInlineObjectsFromArg(
+      extractNestedInlineObjectsFromArg(
         prop.tsType.inlineObjectProperties,
         resolverType,
         fieldName,

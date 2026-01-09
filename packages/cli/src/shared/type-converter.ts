@@ -2,12 +2,7 @@ import type {
   GraphQLFieldType,
   TSTypeReference,
 } from "../type-extractor/types/index.js";
-
-const PRIMITIVE_TYPE_MAP: Record<string, string> = {
-  string: "String",
-  number: "Float",
-  boolean: "Boolean",
-};
+import { PRIMITIVE_TYPE_MAP } from "./constants.js";
 
 function convertElementTypeName(elementType: TSTypeReference): string {
   if (elementType.kind === "scalar") {

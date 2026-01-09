@@ -6,13 +6,14 @@
  */
 
 import ts from "typescript";
+import { METADATA_PROPERTIES } from "./constants.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 
-const FIELD_META_PROPERTY = " $gqlkitFieldMeta";
-const TYPE_META_PROPERTY = " $gqlkitTypeMeta";
-const DIRECTIVE_NAME_PROPERTY = " $directiveName";
-const DIRECTIVE_ARGS_PROPERTY = " $directiveArgs";
-const ORIGINAL_TYPE_PROPERTY = " $gqlkitOriginalType";
+const FIELD_META_PROPERTY = METADATA_PROPERTIES.FIELD_META;
+const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
+const DIRECTIVE_NAME_PROPERTY = METADATA_PROPERTIES.DIRECTIVE_NAME;
+const DIRECTIVE_ARGS_PROPERTY = METADATA_PROPERTIES.DIRECTIVE_ARGS;
+const ORIGINAL_TYPE_PROPERTY = METADATA_PROPERTIES.ORIGINAL_TYPE;
 
 /**
  * Gets the metadata property from a type, checking both field and type meta properties.

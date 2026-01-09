@@ -75,10 +75,21 @@ interface TypesResult {
 }
 
 interface ResolversResult {
-  queryFields: { fields: ReadonlyArray<unknown> };
-  mutationFields: { fields: ReadonlyArray<unknown> };
-  typeExtensions: ReadonlyArray<unknown>;
+  queryFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
+  mutationFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
+  typeExtensions: ReadonlyArray<TypeExtension>;
   diagnostics: Diagnostics;
+}
+
+interface PipelineContext {
+  readonly config: GenerationConfig;
+  readonly sourceFiles: ReadonlyArray<string>;
+  readonly program: ts.Program | null;
+  readonly typesResult: TypesResult | null;
+  readonly resolversResult: ResolversResult | null;
+  readonly directiveDefinitions: DirectiveDefinitionInfo[] | null;
+  readonly diagnostics: Diagnostic[];
+  readonly aborted: boolean;
 }
 
 function collectAllDiagnostics(
@@ -269,13 +280,11 @@ function extractResolversCore(
   );
   allDiagnostics.push(...defineApiExtractionResult.diagnostics);
 
-  const result = convertDefineApiToFields(
-    defineApiExtractionResult.resolvers as unknown as DefineApiResolverInfo[],
-  );
+  const result = convertDefineApiToFields(defineApiExtractionResult.resolvers);
   return {
-    queryFields: result.queryFields as ResolversResult["queryFields"],
-    mutationFields: result.mutationFields as ResolversResult["mutationFields"],
-    typeExtensions: result.typeExtensions as ResolversResult["typeExtensions"],
+    queryFields: result.queryFields,
+    mutationFields: result.mutationFields,
+    typeExtensions: result.typeExtensions,
     diagnostics: collectDiagnostics(allDiagnostics),
   };
 }
@@ -305,47 +314,71 @@ function getOutputDir(output: ResolvedOutputConfig): string {
   return "src/gqlkit/__generated__";
 }
 
-export async function executeGeneration(
-  config: GenerationConfig,
-): Promise<GenerationResult> {
-  const absoluteSourceDir = resolve(config.cwd, config.sourceDir);
+function createInitialContext(config: GenerationConfig): PipelineContext {
+  return {
+    config,
+    sourceFiles: [],
+    program: null,
+    typesResult: null,
+    resolversResult: null,
+    directiveDefinitions: null,
+    diagnostics: [],
+    aborted: false,
+  };
+}
 
-  const excludePaths = buildExcludePaths(config.cwd, config.output);
+async function scanSourceFilesStep(
+  ctx: PipelineContext,
+): Promise<PipelineContext> {
+  const absoluteSourceDir = resolve(ctx.config.cwd, ctx.config.sourceDir);
+  const excludePaths = buildExcludePaths(ctx.config.cwd, ctx.config.output);
 
   const scanResult = await scanDirectory(absoluteSourceDir, {
-    excludeGlobs: [...config.sourceIgnoreGlobs, "**/*.test.ts", "**/*.spec.ts"],
+    excludeGlobs: [
+      ...ctx.config.sourceIgnoreGlobs,
+      "**/*.test.ts",
+      "**/*.spec.ts",
+    ],
     excludePaths,
   });
 
   if (scanResult.errors.length > 0) {
     return {
-      success: false,
-      files: [],
-      diagnostics: scanResult.errors,
+      ...ctx,
+      diagnostics: [...ctx.diagnostics, ...scanResult.errors],
+      aborted: true,
     };
   }
 
-  const sourceFiles = scanResult.files;
+  return { ...ctx, sourceFiles: scanResult.files };
+}
+
+function createProgramStep(ctx: PipelineContext): PipelineContext {
+  if (ctx.aborted) return ctx;
 
   const programResult = createSharedProgram({
-    cwd: config.cwd,
-    tsconfigPath: config.tsconfigPath ?? null,
-    typeFiles: sourceFiles,
-    resolverFiles: sourceFiles,
+    cwd: ctx.config.cwd,
+    tsconfigPath: ctx.config.tsconfigPath ?? null,
+    typeFiles: ctx.sourceFiles,
+    resolverFiles: ctx.sourceFiles,
   });
 
   if (programResult.diagnostics.length > 0 || !programResult.program) {
     return {
-      success: false,
-      files: [],
-      diagnostics: normalizeDiagnosticPaths(
-        programResult.diagnostics,
-        config.cwd,
-      ),
+      ...ctx,
+      diagnostics: [...ctx.diagnostics, ...programResult.diagnostics],
+      aborted: true,
     };
   }
 
-  const { program } = programResult;
+  return { ...ctx, program: programResult.program };
+}
+
+function prepareScalarConfig(config: GenerationConfig): {
+  customScalarNames: string[];
+  globalTypeMappings: GlobalTypeMapping[];
+  configScalars: ConfigScalarMapping[];
+} {
   const customScalarNames =
     config.customScalars?.map((s) => s.graphqlName) ?? [];
 
@@ -380,29 +413,51 @@ export async function executeGeneration(
       };
     }) ?? [];
 
+  return { customScalarNames, globalTypeMappings, configScalars };
+}
+
+function extractTypesStep(ctx: PipelineContext): PipelineContext {
+  if (ctx.aborted || !ctx.program) return ctx;
+
+  const { customScalarNames, globalTypeMappings, configScalars } =
+    prepareScalarConfig(ctx.config);
+
   const typesResult = extractTypesCore(
-    program,
-    sourceFiles,
+    ctx.program,
+    ctx.sourceFiles,
     customScalarNames,
     globalTypeMappings,
     configScalars,
-    config.cwd,
+    ctx.config.cwd,
   );
-  const resolversResult = extractResolversCore(program, sourceFiles);
+
+  return { ...ctx, typesResult };
+}
+
+function extractResolversStep(ctx: PipelineContext): PipelineContext {
+  if (ctx.aborted || !ctx.program) return ctx;
+
+  const resolversResult = extractResolversCore(ctx.program, ctx.sourceFiles);
+
+  return { ...ctx, resolversResult };
+}
+
+function extractDirectivesStep(ctx: PipelineContext): PipelineContext {
+  if (ctx.aborted || !ctx.program) return ctx;
 
   const directiveDefinitionResult = extractDirectiveDefinitions(
-    program,
-    sourceFiles,
+    ctx.program,
+    ctx.sourceFiles,
   );
+
   const directiveDefinitions: DirectiveDefinitionInfo[] =
     directiveDefinitionResult.definitions.length > 0
       ? [...directiveDefinitionResult.definitions]
       : [];
 
-  const allDiagnostics = collectAllDiagnostics(typesResult, resolversResult);
-
+  const newDiagnostics = [...ctx.diagnostics];
   for (const error of directiveDefinitionResult.errors) {
-    allDiagnostics.push({
+    newDiagnostics.push({
       code: error.code,
       message: error.message,
       severity: "error",
@@ -414,46 +469,73 @@ export async function executeGeneration(
     });
   }
 
-  if (hasErrors(typesResult, resolversResult)) {
+  return { ...ctx, directiveDefinitions, diagnostics: newDiagnostics };
+}
+
+function validateExtractionStep(ctx: PipelineContext): PipelineContext {
+  if (ctx.aborted || !ctx.typesResult || !ctx.resolversResult) return ctx;
+
+  const allDiagnostics = [
+    ...ctx.diagnostics,
+    ...collectAllDiagnostics(ctx.typesResult, ctx.resolversResult),
+  ];
+
+  if (hasErrors(ctx.typesResult, ctx.resolversResult)) {
     return {
-      success: false,
-      files: [],
-      diagnostics: normalizeDiagnosticPaths(allDiagnostics, config.cwd),
+      ...ctx,
+      diagnostics: allDiagnostics,
+      aborted: true,
     };
   }
 
+  return { ...ctx, diagnostics: allDiagnostics };
+}
+
+function generateSchemaStep(ctx: PipelineContext): {
+  ctx: PipelineContext;
+  schemaResult: ReturnType<typeof generateSchema> | null;
+} {
+  if (ctx.aborted || !ctx.typesResult || !ctx.resolversResult) {
+    return { ctx, schemaResult: null };
+  }
+
+  const { customScalarNames } = prepareScalarConfig(ctx.config);
   const allCustomScalarNames = [
     ...customScalarNames,
-    ...typesResult.detectedScalarNames,
+    ...ctx.typesResult.detectedScalarNames,
   ];
 
   const schemaResult = generateSchema({
-    typesResult: typesResult as Parameters<
-      typeof generateSchema
-    >[0]["typesResult"],
-    extractedTypes: typesResult.extractedTypes,
-    resolversResult: resolversResult as Parameters<
-      typeof generateSchema
-    >[0]["resolversResult"],
-    outputDir: resolve(config.cwd, getOutputDir(config.output)),
+    typesResult: ctx.typesResult,
+    extractedTypes: ctx.typesResult.extractedTypes,
+    resolversResult: ctx.resolversResult,
+    outputDir: resolve(ctx.config.cwd, getOutputDir(ctx.config.output)),
     customScalarNames: allCustomScalarNames,
-    customScalars: typesResult.collectedScalars,
+    customScalars: ctx.typesResult.collectedScalars,
     directiveDefinitions:
-      directiveDefinitions.length > 0 ? directiveDefinitions : null,
+      ctx.directiveDefinitions && ctx.directiveDefinitions.length > 0
+        ? ctx.directiveDefinitions
+        : null,
     enablePruning: null,
-    sourceRoot: config.cwd,
+    sourceRoot: ctx.config.cwd,
   });
 
-  allDiagnostics.push(...schemaResult.diagnostics);
+  const newDiagnostics = [...ctx.diagnostics, ...schemaResult.diagnostics];
 
   if (schemaResult.hasErrors) {
     return {
-      success: false,
-      files: [],
-      diagnostics: normalizeDiagnosticPaths(allDiagnostics, config.cwd),
+      ctx: { ...ctx, diagnostics: newDiagnostics, aborted: true },
+      schemaResult: null,
     };
   }
 
+  return { ctx: { ...ctx, diagnostics: newDiagnostics }, schemaResult };
+}
+
+function generateOutputFiles(
+  config: GenerationConfig,
+  schemaResult: ReturnType<typeof generateSchema>,
+): GeneratedFile[] {
   const files: GeneratedFile[] = [];
 
   if (config.output.typeDefsPath !== null) {
@@ -477,10 +559,46 @@ export async function executeGeneration(
     });
   }
 
+  return files;
+}
+
+export async function executeGeneration(
+  config: GenerationConfig,
+): Promise<GenerationResult> {
+  let ctx = createInitialContext(config);
+
+  ctx = await scanSourceFilesStep(ctx);
+  ctx = createProgramStep(ctx);
+  ctx = extractTypesStep(ctx);
+  ctx = extractResolversStep(ctx);
+  ctx = extractDirectivesStep(ctx);
+  ctx = validateExtractionStep(ctx);
+
+  if (ctx.aborted) {
+    return {
+      success: false,
+      files: [],
+      diagnostics: normalizeDiagnosticPaths(ctx.diagnostics, config.cwd),
+    };
+  }
+
+  const { ctx: schemaCtx, schemaResult } = generateSchemaStep(ctx);
+  ctx = schemaCtx;
+
+  if (ctx.aborted || !schemaResult) {
+    return {
+      success: false,
+      files: [],
+      diagnostics: normalizeDiagnosticPaths(ctx.diagnostics, config.cwd),
+    };
+  }
+
+  const files = generateOutputFiles(config, schemaResult);
+
   return {
     success: true,
     files,
-    diagnostics: normalizeDiagnosticPaths(allDiagnostics, config.cwd),
+    diagnostics: normalizeDiagnosticPaths(ctx.diagnostics, config.cwd),
   };
 }
 

@@ -6,8 +6,10 @@
  */
 
 import ts from "typescript";
+import { METADATA_PROPERTIES } from "./constants.js";
+import { isNullOrUndefined } from "./typescript-utils.js";
 
-const SCALAR_METADATA_PROPERTY = " $gqlkitScalar";
+const SCALAR_METADATA_PROPERTY = METADATA_PROPERTIES.SCALAR;
 
 /**
  * Error information for mixed scalar union detection.
@@ -198,12 +200,6 @@ function detectPrimitiveScalar(type: ts.Type): InternalMetadata | null {
   }
 
   return null;
-}
-
-function isNullOrUndefined(type: ts.Type): boolean {
-  return !!(
-    type.flags & ts.TypeFlags.Null || type.flags & ts.TypeFlags.Undefined
-  );
 }
 
 function isBooleanLiteralUnion(types: readonly ts.Type[]): boolean {

@@ -1,3 +1,8 @@
+import {
+  BUILT_IN_SCALARS,
+  isBuiltInScalar,
+  PRIMITIVE_TYPE_MAP,
+} from "../../shared/constants.js";
 import { convertTsTypeToGraphQLType } from "../../shared/type-converter.js";
 import type {
   Diagnostic,
@@ -17,11 +22,7 @@ export interface ConversionResult {
 }
 
 const RESERVED_TYPE_NAMES = new Set([
-  "Int",
-  "Float",
-  "String",
-  "Boolean",
-  "ID",
+  ...BUILT_IN_SCALARS,
   "Query",
   "Mutation",
   "Subscription",
@@ -91,28 +92,14 @@ function convertFields(extracted: ExtractedTypeInfo): FieldInfo[] {
   }));
 }
 
-const GRAPHQL_SCALAR_TYPES = new Set([
-  "String",
-  "Int",
-  "Float",
-  "Boolean",
-  "ID",
-]);
-
-const PRIMITIVE_TO_GRAPHQL: Record<string, string> = {
-  string: "String",
-  number: "Float",
-  boolean: "Boolean",
-};
-
 function isValidOneOfFieldType(
   typeName: string,
   typeMap: Map<string, ExtractedTypeInfo>,
 ): boolean {
-  if (GRAPHQL_SCALAR_TYPES.has(typeName)) {
+  if (isBuiltInScalar(typeName)) {
     return true;
   }
-  if (PRIMITIVE_TO_GRAPHQL[typeName]) {
+  if (PRIMITIVE_TYPE_MAP[typeName]) {
     return true;
   }
   const referencedType = typeMap.get(typeName);

@@ -8,6 +8,7 @@ import {
   hasDirectiveMetadata,
   unwrapDirectiveType,
 } from "../../shared/directive-detector.js";
+import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } from "../../shared/inline-object-extractor.js";
 import { isInlineObjectType } from "../../shared/inline-object-utils.js";
 import {
   extractImplementsFromDefineInterface,
@@ -15,10 +16,16 @@ import {
   isDefineInterfaceTypeAlias,
 } from "../../shared/interface-detector.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
+import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
-  extractTSDocFromSymbol,
-  extractTSDocInfo,
+  extractTsDocFromSymbol,
+  extractTsDocInfo,
 } from "../../shared/tsdoc-parser.js";
+import {
+  getNonNullableTypes,
+  isNullableUnion,
+  isNullOrUndefined,
+} from "../../shared/typescript-utils.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 import type {
   Diagnostic,
@@ -84,10 +91,7 @@ function isDefaultExport(node: ts.Node, sourceFile: ts.SourceFile): boolean {
 
 function isBooleanUnion(type: ts.Type): boolean {
   if (!type.isUnion()) return false;
-  const nonNullTypes = type.types.filter(
-    (t) =>
-      !(t.flags & ts.TypeFlags.Null) && !(t.flags & ts.TypeFlags.Undefined),
-  );
+  const nonNullTypes = getNonNullableTypes(type);
   return (
     nonNullTypes.length === 2 &&
     nonNullTypes.every((t) => t.flags & ts.TypeFlags.BooleanLiteral)
@@ -103,105 +107,11 @@ function extractInlineObjectProperties(
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping>,
 ): InlineObjectPropertyDef[] {
-  const properties: InlineObjectPropertyDef[] = [];
-  const typeProperties = type.getProperties();
-
-  for (const prop of typeProperties) {
-    const propName = prop.getName();
-    if (propName.startsWith(" $")) {
-      continue;
-    }
-
-    const propType = checker.getTypeOfSymbol(prop);
-    const declarations = prop.getDeclarations();
-    const declaration = declarations?.[0];
-
-    let optional = false;
-    if (declaration && ts.isPropertySignature(declaration)) {
-      optional = declaration.questionToken !== undefined;
-    }
-
-    const tsdocInfo = extractTSDocFromSymbol(prop, checker);
-
-    let actualPropType = propType;
-    let directives: ReadonlyArray<DirectiveInfo> | null = null;
-    let directiveNullable = false;
-    let defaultValue: DirectiveArgumentValue | null = null;
-
-    if (hasDirectiveMetadata(propType)) {
-      const directiveResult = detectDirectiveMetadata(propType, checker);
-      if (directiveResult.directives.length > 0) {
-        directives = directiveResult.directives;
-      }
-
-      const defaultValueResult = detectDefaultValueMetadata(propType, checker);
-      if (defaultValueResult.defaultValue) {
-        defaultValue = defaultValueResult.defaultValue;
-      }
-
-      if (propType.isUnion()) {
-        const hasNull = propType.types.some((t) => t.flags & ts.TypeFlags.Null);
-        const hasUndefined = propType.types.some(
-          (t) => t.flags & ts.TypeFlags.Undefined,
-        );
-        if (hasNull || hasUndefined) {
-          directiveNullable = true;
-        }
-      }
-      actualPropType = unwrapDirectiveType(propType, checker);
-
-      if (!directiveNullable && actualPropType.isUnion()) {
-        const hasNull = actualPropType.types.some(
-          (t) => t.flags & ts.TypeFlags.Null,
-        );
-        const hasUndefined = actualPropType.types.some(
-          (t) => t.flags & ts.TypeFlags.Undefined,
-        );
-        if (hasNull || hasUndefined) {
-          directiveNullable = true;
-        }
-      }
-    }
-
-    const typeResult = convertTsTypeToReferenceWithBrandInfo(
-      actualPropType,
-      checker,
-      globalTypeMappings,
-    );
-
-    const tsType =
-      directiveNullable && !typeResult.tsType.nullable
-        ? { ...typeResult.tsType, nullable: true }
-        : typeResult.tsType;
-
-    const propSourceLocation = declaration
-      ? (() => {
-          const declarationSourceFile = declaration.getSourceFile();
-          const { line, character } =
-            declarationSourceFile.getLineAndCharacterOfPosition(
-              declaration.getStart(declarationSourceFile),
-            );
-          return {
-            file: declarationSourceFile.fileName,
-            line: line + 1,
-            column: character + 1,
-          };
-        })()
-      : null;
-
-    properties.push({
-      name: propName,
-      tsType,
-      optional,
-      description: tsdocInfo.description ?? null,
-      deprecated: tsdocInfo.deprecated ?? null,
-      directives,
-      defaultValue,
-      sourceLocation: propSourceLocation,
-    });
-  }
-
-  return properties;
+  return extractInlineObjectPropertiesShared(
+    type,
+    checker,
+    (t, c) => convertTsTypeToReference(t, c, globalTypeMappings).tsType,
+  );
 }
 
 function findGlobalTypeMapping(
@@ -211,7 +121,7 @@ function findGlobalTypeMapping(
   return globalTypeMappings.find((m) => m.typeName === typeName);
 }
 
-function convertTsTypeToReferenceWithBrandInfo(
+function convertTsTypeToReference(
   type: ts.Type,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
@@ -244,18 +154,14 @@ function convertTsTypeToReferenceWithBrandInfo(
   }
 
   if (isBooleanUnion(type)) {
-    const hasNull =
-      type.isUnion() && type.types.some((t) => t.flags & ts.TypeFlags.Null);
-    const hasUndefined =
-      type.isUnion() &&
-      type.types.some((t) => t.flags & ts.TypeFlags.Undefined);
+    const nullable = isNullableUnion(type);
     return {
       tsType: {
         kind: "primitive",
         name: "boolean",
         elementType: null,
         members: null,
-        nullable: hasNull || hasUndefined,
+        nullable,
         scalarInfo: null,
         inlineObjectProperties: null,
       },
@@ -263,11 +169,7 @@ function convertTsTypeToReferenceWithBrandInfo(
   }
 
   if (type.isUnion()) {
-    const hasNull = type.types.some((t) => t.flags & ts.TypeFlags.Null);
-    const hasUndefined = type.types.some(
-      (t) => t.flags & ts.TypeFlags.Undefined,
-    );
-    const nullable = hasNull || hasUndefined;
+    const nullable = isNullableUnion(type);
 
     // Preserve type alias name for enum types (string literal unions)
     const aliasSymbol = type.aliasSymbol;
@@ -286,13 +188,10 @@ function convertTsTypeToReferenceWithBrandInfo(
       };
     }
 
-    const nonNullTypes = type.types.filter(
-      (t) =>
-        !(t.flags & ts.TypeFlags.Null) && !(t.flags & ts.TypeFlags.Undefined),
-    );
+    const nonNullTypes = getNonNullableTypes(type);
 
     if (nonNullTypes.length === 1) {
-      const innerResult = convertTsTypeToReferenceWithBrandInfo(
+      const innerResult = convertTsTypeToReference(
         nonNullTypes[0]!,
         checker,
         globalTypeMappings,
@@ -303,7 +202,7 @@ function convertTsTypeToReferenceWithBrandInfo(
     }
 
     const memberResults = nonNullTypes.map((t) =>
-      convertTsTypeToReferenceWithBrandInfo(t, checker, globalTypeMappings),
+      convertTsTypeToReference(t, checker, globalTypeMappings),
     );
 
     return {
@@ -323,11 +222,7 @@ function convertTsTypeToReferenceWithBrandInfo(
     const typeArgs = (type as ts.TypeReference).typeArguments;
     const elementType = typeArgs?.[0];
     const elementResult = elementType
-      ? convertTsTypeToReferenceWithBrandInfo(
-          elementType,
-          checker,
-          globalTypeMappings,
-        )
+      ? convertTsTypeToReference(elementType, checker, globalTypeMappings)
       : {
           tsType: {
             kind: "primitive" as const,
@@ -499,7 +394,7 @@ function convertTsTypeToReferenceWithBrandInfo(
   };
 }
 
-function collectPropertiesFromType(
+function extractPropertiesFromType(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): ts.Symbol[] {
@@ -541,12 +436,10 @@ function extractFieldsFromType(
   type: ts.Type,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
-  sourceFile?: ts.SourceFile,
-  filePath?: string,
 ): FieldExtractionResult {
   const fields: FieldDefinition[] = [];
   const diagnostics: Diagnostic[] = [];
-  const properties = collectPropertiesFromType(type, checker);
+  const properties = extractPropertiesFromType(type, checker);
 
   for (const prop of properties) {
     const propName = prop.getName();
@@ -564,7 +457,7 @@ function extractFieldsFromType(
       optional = declaration.questionToken !== undefined;
     }
 
-    const tsdocInfo = extractTSDocFromSymbol(prop, checker);
+    const tsdocInfo = extractTsDocFromSymbol(prop, checker);
 
     let actualPropType = propType;
     let directives: ReadonlyArray<DirectiveInfo> | null = null;
@@ -582,61 +475,33 @@ function extractFieldsFromType(
       if (defaultValueResult.defaultValue) {
         defaultValue = defaultValueResult.defaultValue;
       }
-      if (defaultValueResult.errors.length > 0 && sourceFile && filePath) {
+      if (defaultValueResult.errors.length > 0) {
         for (const error of defaultValueResult.errors) {
-          const location =
-            declaration && sourceFile
-              ? (() => {
-                  const { line, character } =
-                    sourceFile.getLineAndCharacterOfPosition(
-                      declaration.getStart(sourceFile),
-                    );
-                  return {
-                    file: filePath,
-                    line: line + 1,
-                    column: character + 1,
-                  };
-                })()
-              : null;
           diagnostics.push({
             code: error.code,
             message: `Field '${propName}': ${error.message}`,
             severity: "warning",
-            location,
+            location: getSourceLocationFromNode(declaration),
           });
         }
       }
 
       // Check if the original type is nullable before unwrapping
       // TypeScript normalizes WithDirectives<T | null, [...]> to (T & Directive) | null
-      if (propType.isUnion()) {
-        const hasNull = propType.types.some((t) => t.flags & ts.TypeFlags.Null);
-        const hasUndefined = propType.types.some(
-          (t) => t.flags & ts.TypeFlags.Undefined,
-        );
-        if (hasNull || hasUndefined) {
-          directiveNullable = true;
-        }
+      if (isNullableUnion(propType)) {
+        directiveNullable = true;
       }
       actualPropType = unwrapDirectiveType(propType, checker);
 
       // Check if the unwrapped type (from $gqlkitOriginalType) is nullable
       // This handles cases where TypeScript normalizes intersection types
       // and loses the null from the outer union
-      if (!directiveNullable && actualPropType.isUnion()) {
-        const hasNull = actualPropType.types.some(
-          (t) => t.flags & ts.TypeFlags.Null,
-        );
-        const hasUndefined = actualPropType.types.some(
-          (t) => t.flags & ts.TypeFlags.Undefined,
-        );
-        if (hasNull || hasUndefined) {
-          directiveNullable = true;
-        }
+      if (!directiveNullable && isNullableUnion(actualPropType)) {
+        directiveNullable = true;
       }
     }
 
-    const typeResult = convertTsTypeToReferenceWithBrandInfo(
+    const typeResult = convertTsTypeToReference(
       actualPropType,
       checker,
       globalTypeMappings,
@@ -648,21 +513,6 @@ function extractFieldsFromType(
         ? { ...typeResult.tsType, nullable: true }
         : typeResult.tsType;
 
-    const fieldSourceLocation =
-      declaration && sourceFile && filePath
-        ? (() => {
-            const { line, character } =
-              sourceFile.getLineAndCharacterOfPosition(
-                declaration.getStart(sourceFile),
-              );
-            return {
-              file: filePath,
-              line: line + 1,
-              column: character + 1,
-            };
-          })()
-        : null;
-
     fields.push({
       name: propName,
       tsType,
@@ -671,7 +521,7 @@ function extractFieldsFromType(
       deprecated: tsdocInfo.deprecated ?? null,
       directives,
       defaultValue,
-      sourceLocation: fieldSourceLocation,
+      sourceLocation: getSourceLocationFromNode(declaration),
     });
   }
 
@@ -729,10 +579,7 @@ function isConstEnum(node: ts.Node): boolean {
 function isStringLiteralUnion(type: ts.Type): boolean {
   if (!type.isUnion()) return false;
 
-  const nonNullTypes = type.types.filter(
-    (t) =>
-      !(t.flags & ts.TypeFlags.Null) && !(t.flags & ts.TypeFlags.Undefined),
-  );
+  const nonNullTypes = getNonNullableTypes(type);
 
   if (nonNullTypes.length === 0) return false;
 
@@ -751,7 +598,7 @@ function extractEnumMembers(
     if (initializer && ts.isStringLiteral(initializer)) {
       const symbol = checker.getSymbolAtLocation(member.name);
       const tsdocInfo = symbol
-        ? extractTSDocFromSymbol(symbol, checker)
+        ? extractTsDocFromSymbol(symbol, checker)
         : { description: undefined, deprecated: undefined };
 
       members.push({
@@ -775,7 +622,7 @@ function extractStringLiteralUnionMembers(
   const members: EnumMemberInfo[] = [];
 
   for (const t of type.types) {
-    if (t.flags & ts.TypeFlags.Null || t.flags & ts.TypeFlags.Undefined) {
+    if (isNullOrUndefined(t)) {
       continue;
     }
     if (t.flags & ts.TypeFlags.StringLiteral) {
@@ -807,10 +654,7 @@ function determineTypeKind(
     }
 
     if (type.isUnion()) {
-      const nonNullTypes = type.types.filter(
-        (t) =>
-          !(t.flags & ts.TypeFlags.Null) && !(t.flags & ts.TypeFlags.Undefined),
-      );
+      const nonNullTypes = getNonNullableTypes(type);
 
       if (isStringLiteralUnion(type)) {
         return "enum";
@@ -867,10 +711,7 @@ function extractInlineObjectMembers(
     return null;
   }
 
-  const nonNullTypes = type.types.filter(
-    (t) =>
-      !(t.flags & ts.TypeFlags.Null) && !(t.flags & ts.TypeFlags.Undefined),
-  );
+  const nonNullTypes = getNonNullableTypes(type);
 
   const allObjectTypes = nonNullTypes.every(
     (t) =>
@@ -894,8 +735,8 @@ function extractInlineObjectMembers(
 
       for (const prop of properties) {
         const propType = checker.getTypeOfSymbol(prop);
-        const tsdocInfo = extractTSDocFromSymbol(prop, checker);
-        const typeResult = convertTsTypeToReferenceWithBrandInfo(
+        const tsdocInfo = extractTsDocFromSymbol(prop, checker);
+        const typeResult = convertTsTypeToReference(
           propType,
           checker,
           globalTypeMappings,
@@ -923,10 +764,7 @@ function extractUnionMembers(type: ts.Type): string[] | undefined {
     return undefined;
   }
 
-  const nonNullTypes = type.types.filter(
-    (t) =>
-      !(t.flags & ts.TypeFlags.Null) && !(t.flags & ts.TypeFlags.Undefined),
-  );
+  const nonNullTypes = getNonNullableTypes(type);
 
   const allObjectTypes = nonNullTypes.every(
     (t) =>
@@ -983,14 +821,7 @@ export function extractTypesFromProgram(
         }
 
         const name = node.name.getText(sourceFile);
-        const { line, character } = sourceFile.getLineAndCharacterOfPosition(
-          node.getStart(sourceFile),
-        );
-        const location = {
-          file: filePath,
-          line: line + 1,
-          column: character + 1,
-        };
+        const location = getSourceLocationFromNode(node)!;
 
         if (isConstEnum(node)) {
           diagnostics.push({
@@ -1023,7 +854,7 @@ export function extractTypesFromProgram(
         }
 
         const enumMembers = extractEnumMembers(node, checker);
-        const tsdocInfo = extractTSDocInfo(node, checker);
+        const tsdocInfo = extractTsDocInfo(node, checker);
         const metadata: TypeMetadata = {
           name,
           kind: "enum",
@@ -1055,23 +886,14 @@ export function extractTypesFromProgram(
         }
 
         const name = node.name.getText(sourceFile);
-        const { line: typeLine, character: typeColumn } =
-          sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
-        const typeSourceLocation = {
-          file: filePath,
-          line: typeLine + 1,
-          column: typeColumn + 1,
-        };
+        const typeSourceLocation = getSourceLocationFromNode(node)!;
 
         if (node.typeParameters && node.typeParameters.length > 0) {
-          const { line, character } = sourceFile.getLineAndCharacterOfPosition(
-            node.getStart(sourceFile),
-          );
           diagnostics.push({
             code: "UNSUPPORTED_SYNTAX",
             message: `Generic type '${name}' is not supported. Consider using a concrete type instead.`,
             severity: "warning",
-            location: { file: filePath, line: line + 1, column: character + 1 },
+            location: typeSourceLocation,
           });
         }
 
@@ -1085,16 +907,13 @@ export function extractTypesFromProgram(
         const scalarMetadata = detectScalarMetadata(type, checker);
         if (scalarMetadata.scalarName && !scalarMetadata.isPrimitive) {
           detectedScalarNames.add(scalarMetadata.scalarName);
-          const { line } = sourceFile.getLineAndCharacterOfPosition(
-            node.getStart(sourceFile),
-          );
-          const tsdocInfo = extractTSDocInfo(node, checker);
+          const tsdocInfo = extractTsDocInfo(node, checker);
           detectedScalars.push({
             scalarName: scalarMetadata.scalarName,
             typeName: name,
             only: scalarMetadata.only,
             sourceFile: filePath,
-            line: line + 1,
+            line: typeSourceLocation.line,
             description: tsdocInfo.description ?? null,
           });
           return;
@@ -1109,20 +928,12 @@ export function extractTypesFromProgram(
             typeDirectives = directiveResult.directives;
           }
           if (directiveResult.errors.length > 0) {
-            const { line: errorLine, character: errorColumn } =
-              sourceFile.getLineAndCharacterOfPosition(
-                node.getStart(sourceFile),
-              );
             for (const error of directiveResult.errors) {
               diagnostics.push({
                 code: error.code,
                 message: `Type '${name}': ${error.message}`,
                 severity: "error",
-                location: {
-                  file: filePath,
-                  line: errorLine + 1,
-                  column: errorColumn + 1,
-                },
+                location: typeSourceLocation,
               });
             }
           }
@@ -1136,7 +947,7 @@ export function extractTypesFromProgram(
           checker,
           globalTypeMappings,
         );
-        const tsdocInfo = extractTSDocInfo(node, checker);
+        const tsdocInfo = extractTsDocInfo(node, checker);
 
         let implementedInterfaces: ReadonlyArray<string> | null = null;
         if (ts.isTypeAliasDeclaration(node)) {
@@ -1191,13 +1002,7 @@ export function extractTypesFromProgram(
         const fieldResult =
           kind === "union"
             ? { fields: [], diagnostics: [] }
-            : extractFieldsFromType(
-                actualType,
-                checker,
-                globalTypeMappings,
-                sourceFile,
-                filePath,
-              );
+            : extractFieldsFromType(actualType, checker, globalTypeMappings);
         const fields = fieldResult.fields;
         diagnostics.push(...fieldResult.diagnostics);
 
@@ -1206,27 +1011,27 @@ export function extractTypesFromProgram(
             inlineObjectResult?.hasInlineObjects &&
             inlineObjectResult.hasNamedTypes
           ) {
-            const { line } = sourceFile.getLineAndCharacterOfPosition(
-              node.getStart(sourceFile),
-            );
             diagnostics.push({
               code: "ONEOF_MIXED_MEMBERS",
               message: `Input union type '${name}' mixes inline object literals with named type references. Use only inline object literals for oneOf input types.`,
               severity: "error",
-              location: { file: filePath, line: line + 1, column: 1 },
+              location: {
+                ...typeSourceLocation,
+                column: 1,
+              },
             });
           } else if (
             inlineObjectResult?.hasNamedTypes &&
             !inlineObjectResult.hasInlineObjects
           ) {
-            const { line } = sourceFile.getLineAndCharacterOfPosition(
-              node.getStart(sourceFile),
-            );
             diagnostics.push({
               code: "ONEOF_NAMED_TYPE_UNION",
               message: `Input union type '${name}' uses named type references instead of inline object literals. Use inline object pattern: type ${name} = { field1: Type1 } | { field2: Type2 }`,
               severity: "error",
-              location: { file: filePath, line: line + 1, column: 1 },
+              location: {
+                ...typeSourceLocation,
+                column: 1,
+              },
             });
           }
         }

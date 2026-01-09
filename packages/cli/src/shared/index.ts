@@ -21,12 +21,13 @@ export type {
   DirectiveDetectionResult,
   DirectiveInfo,
 } from "./directive-detector.js";
-
 export {
   type ScanOptions,
   type ScanResult,
   scanDirectory,
 } from "./file-scanner.js";
+export type { TypeConverter } from "./inline-object-extractor.js";
+export type { SourceLocation } from "./source-location.js";
 export { convertTsTypeToGraphQLType } from "./type-converter.js";
 
 export function toPosixPath(filePath: string): string {
