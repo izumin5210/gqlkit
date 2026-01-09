@@ -71,10 +71,16 @@ Static code generation tool that analyzes TypeScript source files and produces G
     - Types with `*Input` suffix become GraphQL input object types
     - Union types with `*Input` suffix become `@oneOf` input objects
     - `DefineInterface<T>` becomes GraphQL interface types
+    - Inline object types become auto-generated named types with predictable naming conventions
 12. **Interface types**: `DefineInterface<T, { implements?: [...] }>` for GraphQL interfaces. `GqlTypeDef<T, { implements: [...] }>` for object types implementing interfaces. Supports interface inheritance
 13. **Default values**: `GqlFieldDef<T, { defaultValue: literal }>` for input field defaults. Supports primitives, arrays, objects, and enum values. Requires TypeScript literal types (not `number` but `10`)
 14. **Configuration file**: Optional `gqlkit.config.ts` with `defineConfig()` for custom scalar mappings, output paths, and lifecycle hooks (e.g., `afterAllFileWrite`)
+15. **Auto-type generation naming conventions**: Predictable naming for inline object types:
+    - Object field: `{ParentTypeName}{PascalCaseFieldName}`
+    - Input field: `{ParentTypeNameWithoutInputSuffix}{PascalCaseFieldName}Input`
+    - Query/Mutation arg: `{PascalCaseFieldName}{PascalCaseArgName}Input`
+    - Field resolver arg: `{ParentTypeName}{PascalCaseFieldName}{PascalCaseArgName}Input`
 
 ---
 _Document standards and patterns, not every dependency_
-_Updated: 2026-01-09 - Added Interface types (DefineInterface, implements) and default value support (GqlFieldDef defaultValue)_
+_Updated: 2026-01-09 - Added auto-type generation from inline object types_
