@@ -1,0 +1,12 @@
+[
+  {
+    "code": "AUTO_TYPE_NAME_COLLISION_USER",
+    "message": "Auto-generated type 'UserProfile' conflicts with user-defined type at src/gqlkit/schema/types.ts:15. Consider renaming the field or using an explicit type definition.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 7,
+      "column": 3
+    }
+  }
+]

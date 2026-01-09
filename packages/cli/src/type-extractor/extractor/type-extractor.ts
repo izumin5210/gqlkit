@@ -8,6 +8,7 @@ import {
   hasDirectiveMetadata,
   unwrapDirectiveType,
 } from "../../shared/directive-detector.js";
+import { isInlineObjectType } from "../../shared/inline-object-utils.js";
 import {
   extractImplementsFromDefineInterface,
   extractImplementsFromGqlTypeDef,
@@ -26,6 +27,7 @@ import type {
   FieldDefinition,
   InlineObjectMember,
   InlineObjectProperty,
+  InlineObjectPropertyDef,
   TSTypeReference,
   TypeKind,
   TypeMetadata,
@@ -96,6 +98,112 @@ interface TypeReferenceResult {
   readonly tsType: TSTypeReference;
 }
 
+function extractInlineObjectProperties(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+  globalTypeMappings: ReadonlyArray<GlobalTypeMapping>,
+): InlineObjectPropertyDef[] {
+  const properties: InlineObjectPropertyDef[] = [];
+  const typeProperties = type.getProperties();
+
+  for (const prop of typeProperties) {
+    const propName = prop.getName();
+    if (propName.startsWith(" $")) {
+      continue;
+    }
+
+    const propType = checker.getTypeOfSymbol(prop);
+    const declarations = prop.getDeclarations();
+    const declaration = declarations?.[0];
+
+    let optional = false;
+    if (declaration && ts.isPropertySignature(declaration)) {
+      optional = declaration.questionToken !== undefined;
+    }
+
+    const tsdocInfo = extractTSDocFromSymbol(prop, checker);
+
+    let actualPropType = propType;
+    let directives: ReadonlyArray<DirectiveInfo> | null = null;
+    let directiveNullable = false;
+    let defaultValue: DirectiveArgumentValue | null = null;
+
+    if (hasDirectiveMetadata(propType)) {
+      const directiveResult = detectDirectiveMetadata(propType, checker);
+      if (directiveResult.directives.length > 0) {
+        directives = directiveResult.directives;
+      }
+
+      const defaultValueResult = detectDefaultValueMetadata(propType, checker);
+      if (defaultValueResult.defaultValue) {
+        defaultValue = defaultValueResult.defaultValue;
+      }
+
+      if (propType.isUnion()) {
+        const hasNull = propType.types.some((t) => t.flags & ts.TypeFlags.Null);
+        const hasUndefined = propType.types.some(
+          (t) => t.flags & ts.TypeFlags.Undefined,
+        );
+        if (hasNull || hasUndefined) {
+          directiveNullable = true;
+        }
+      }
+      actualPropType = unwrapDirectiveType(propType, checker);
+
+      if (!directiveNullable && actualPropType.isUnion()) {
+        const hasNull = actualPropType.types.some(
+          (t) => t.flags & ts.TypeFlags.Null,
+        );
+        const hasUndefined = actualPropType.types.some(
+          (t) => t.flags & ts.TypeFlags.Undefined,
+        );
+        if (hasNull || hasUndefined) {
+          directiveNullable = true;
+        }
+      }
+    }
+
+    const typeResult = convertTsTypeToReferenceWithBrandInfo(
+      actualPropType,
+      checker,
+      globalTypeMappings,
+    );
+
+    const tsType =
+      directiveNullable && !typeResult.tsType.nullable
+        ? { ...typeResult.tsType, nullable: true }
+        : typeResult.tsType;
+
+    const propSourceLocation = declaration
+      ? (() => {
+          const declarationSourceFile = declaration.getSourceFile();
+          const { line, character } =
+            declarationSourceFile.getLineAndCharacterOfPosition(
+              declaration.getStart(declarationSourceFile),
+            );
+          return {
+            file: declarationSourceFile.fileName,
+            line: line + 1,
+            column: character + 1,
+          };
+        })()
+      : null;
+
+    properties.push({
+      name: propName,
+      tsType,
+      optional,
+      description: tsdocInfo.description ?? null,
+      deprecated: tsdocInfo.deprecated ?? null,
+      directives,
+      defaultValue,
+      sourceLocation: propSourceLocation,
+    });
+  }
+
+  return properties;
+}
+
 function findGlobalTypeMapping(
   typeName: string,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping>,
@@ -130,6 +238,7 @@ function convertTsTypeToReferenceWithBrandInfo(
           isCustom: true,
           only: metadataResult.only,
         },
+        inlineObjectProperties: null,
       },
     };
   }
@@ -148,6 +257,7 @@ function convertTsTypeToReferenceWithBrandInfo(
         members: null,
         nullable: hasNull || hasUndefined,
         scalarInfo: null,
+        inlineObjectProperties: null,
       },
     };
   }
@@ -171,6 +281,7 @@ function convertTsTypeToReferenceWithBrandInfo(
           members: null,
           nullable,
           scalarInfo: null,
+          inlineObjectProperties: null,
         },
       };
     }
@@ -203,6 +314,7 @@ function convertTsTypeToReferenceWithBrandInfo(
         members: memberResults.map((r) => r.tsType),
         nullable,
         scalarInfo: null,
+        inlineObjectProperties: null,
       },
     };
   }
@@ -224,6 +336,7 @@ function convertTsTypeToReferenceWithBrandInfo(
             members: null,
             nullable: false,
             scalarInfo: null,
+            inlineObjectProperties: null,
           },
         };
 
@@ -235,6 +348,7 @@ function convertTsTypeToReferenceWithBrandInfo(
         members: null,
         nullable: false,
         scalarInfo: null,
+        inlineObjectProperties: null,
       },
     };
   }
@@ -250,6 +364,7 @@ function convertTsTypeToReferenceWithBrandInfo(
         members: null,
         nullable: false,
         scalarInfo: null,
+        inlineObjectProperties: null,
       },
     };
   }
@@ -262,6 +377,7 @@ function convertTsTypeToReferenceWithBrandInfo(
         members: null,
         nullable: false,
         scalarInfo: null,
+        inlineObjectProperties: null,
       },
     };
   }
@@ -277,6 +393,7 @@ function convertTsTypeToReferenceWithBrandInfo(
         members: null,
         nullable: false,
         scalarInfo: null,
+        inlineObjectProperties: null,
       },
     };
   }
@@ -289,6 +406,7 @@ function convertTsTypeToReferenceWithBrandInfo(
         members: null,
         nullable: false,
         scalarInfo: null,
+        inlineObjectProperties: null,
       },
     };
   }
@@ -301,6 +419,26 @@ function convertTsTypeToReferenceWithBrandInfo(
         members: null,
         nullable: false,
         scalarInfo: null,
+        inlineObjectProperties: null,
+      },
+    };
+  }
+
+  if (isInlineObjectType(type)) {
+    const inlineProperties = extractInlineObjectProperties(
+      type,
+      checker,
+      globalTypeMappings,
+    );
+    return {
+      tsType: {
+        kind: "inlineObject",
+        name: null,
+        elementType: null,
+        members: null,
+        nullable: false,
+        scalarInfo: null,
+        inlineObjectProperties: inlineProperties,
       },
     };
   }
@@ -329,6 +467,7 @@ function convertTsTypeToReferenceWithBrandInfo(
               isCustom: true,
               only: globalMapping.only,
             },
+            inlineObjectProperties: null,
           },
         };
       }
@@ -341,6 +480,7 @@ function convertTsTypeToReferenceWithBrandInfo(
           members: null,
           nullable: false,
           scalarInfo: null,
+          inlineObjectProperties: null,
         },
       };
     }
@@ -354,6 +494,7 @@ function convertTsTypeToReferenceWithBrandInfo(
       members: null,
       nullable: false,
       scalarInfo: null,
+      inlineObjectProperties: null,
     },
   };
 }
@@ -507,6 +648,21 @@ function extractFieldsFromType(
         ? { ...typeResult.tsType, nullable: true }
         : typeResult.tsType;
 
+    const fieldSourceLocation =
+      declaration && sourceFile && filePath
+        ? (() => {
+            const { line, character } =
+              sourceFile.getLineAndCharacterOfPosition(
+                declaration.getStart(sourceFile),
+              );
+            return {
+              file: filePath,
+              line: line + 1,
+              column: character + 1,
+            };
+          })()
+        : null;
+
     fields.push({
       name: propName,
       tsType,
@@ -515,6 +671,7 @@ function extractFieldsFromType(
       deprecated: tsdocInfo.deprecated ?? null,
       directives,
       defaultValue,
+      sourceLocation: fieldSourceLocation,
     });
   }
 
@@ -871,6 +1028,7 @@ export function extractTypesFromProgram(
           name,
           kind: "enum",
           sourceFile: filePath,
+          sourceLocation: location,
           exportKind: hasDefaultExport ? "default" : "named",
           description: tsdocInfo.description,
           deprecated: tsdocInfo.deprecated,
@@ -897,6 +1055,13 @@ export function extractTypesFromProgram(
         }
 
         const name = node.name.getText(sourceFile);
+        const { line: typeLine, character: typeColumn } =
+          sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+        const typeSourceLocation = {
+          file: filePath,
+          line: typeLine + 1,
+          column: typeColumn + 1,
+        };
 
         if (node.typeParameters && node.typeParameters.length > 0) {
           const { line, character } = sourceFile.getLineAndCharacterOfPosition(
@@ -1000,6 +1165,7 @@ export function extractTypesFromProgram(
           name,
           kind,
           sourceFile: filePath,
+          sourceLocation: typeSourceLocation,
           exportKind: hasDefaultExport ? "default" : "named",
           description: tsdocInfo.description,
           deprecated: tsdocInfo.deprecated,

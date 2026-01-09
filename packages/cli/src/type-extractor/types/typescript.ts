@@ -3,6 +3,7 @@ import type {
   DirectiveInfo,
 } from "../../shared/directive-detector.js";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
+import type { SourceLocation } from "./diagnostics.js";
 
 export type TypeKind =
   | "object"
@@ -31,25 +32,41 @@ export interface TypeMetadata {
   readonly name: string;
   readonly kind: TypeKind;
   readonly sourceFile: string;
+  readonly sourceLocation: SourceLocation;
   readonly exportKind: "named" | "default";
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
   readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
+export type TSTypeReferenceKind =
+  | "primitive"
+  | "reference"
+  | "array"
+  | "union"
+  | "literal"
+  | "scalar"
+  | "inlineObject";
+
 export interface TSTypeReference {
-  readonly kind:
-    | "primitive"
-    | "reference"
-    | "array"
-    | "union"
-    | "literal"
-    | "scalar";
+  readonly kind: TSTypeReferenceKind;
   readonly name: string | null;
   readonly elementType: TSTypeReference | null;
   readonly members: ReadonlyArray<TSTypeReference> | null;
   readonly nullable: boolean;
   readonly scalarInfo: ScalarTypeInfo | null;
+  readonly inlineObjectProperties: ReadonlyArray<InlineObjectPropertyDef> | null;
+}
+
+export interface InlineObjectPropertyDef {
+  readonly name: string;
+  readonly tsType: TSTypeReference;
+  readonly optional: boolean;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
+  readonly defaultValue: DirectiveArgumentValue | null;
+  readonly sourceLocation: SourceLocation | null;
 }
 
 export interface FieldDefinition {
@@ -60,6 +77,7 @@ export interface FieldDefinition {
   readonly deprecated: DeprecationInfo | null;
   readonly directives: ReadonlyArray<DirectiveInfo> | null;
   readonly defaultValue: DirectiveArgumentValue | null;
+  readonly sourceLocation: SourceLocation | null;
 }
 
 export interface EnumMemberInfo {

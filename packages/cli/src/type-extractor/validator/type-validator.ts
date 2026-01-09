@@ -11,6 +11,7 @@ export interface ValidateTypesOptions {
 }
 
 const BUILT_IN_SCALARS = new Set(["String", "Int", "Float", "Boolean", "ID"]);
+const PLACEHOLDER_TYPES = new Set(["__INLINE_OBJECT__"]);
 
 function isOptionsObject(
   arg: ReadonlyArray<GraphQLTypeInfo> | ValidateTypesOptions,
@@ -41,7 +42,11 @@ export function validateTypes(
       for (const field of type.fields) {
         const typeName = field.type.typeName;
 
-        if (!typeNames.has(typeName) && !knownScalars.has(typeName)) {
+        if (
+          !typeNames.has(typeName) &&
+          !knownScalars.has(typeName) &&
+          !PLACEHOLDER_TYPES.has(typeName)
+        ) {
           diagnostics.push({
             code: "UNRESOLVED_REFERENCE",
             message: `Field '${field.name}' references unresolved type '${typeName}'`,

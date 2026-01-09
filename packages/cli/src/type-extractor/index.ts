@@ -11,6 +11,7 @@ export type {
   Diagnostic,
   DiagnosticCode,
   Diagnostics,
+  ExtractedTypeInfo,
   FieldInfo,
   GraphQLFieldType,
   GraphQLTypeInfo,

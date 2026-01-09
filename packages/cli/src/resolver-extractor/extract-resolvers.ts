@@ -6,6 +6,7 @@ import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
 import type {
   Diagnostics,
   GraphQLFieldType,
+  InlineObjectPropertyDef,
   SourceLocation,
 } from "../type-extractor/types/index.js";
 
@@ -15,6 +16,7 @@ export interface GraphQLInputValue {
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
   readonly defaultValue: DirectiveArgumentValue | null;
+  readonly inlineObjectProperties: ReadonlyArray<InlineObjectPropertyDef> | null;
 }
 
 export interface GraphQLFieldDefinition {
