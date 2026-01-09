@@ -6,88 +6,30 @@ export const typeDefs: DocumentNode = {
   "kind": "Document",
   "definitions": [
     {
-      "kind": "DirectiveDefinition",
+      "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "auth"
+        "value": "AuthDirective"
       },
-      "repeatable": false,
-      "locations": [
-        {
-          "kind": "Name",
-          "value": "FIELD_DEFINITION"
-        }
-      ],
-      "arguments": [
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "role"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "ListType",
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "Role"
-                  }
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "kind": "DirectiveDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "cache"
-      },
-      "repeatable": false,
-      "locations": [
-        {
-          "kind": "Name",
-          "value": "FIELD_DEFINITION"
-        },
-        {
-          "kind": "Name",
-          "value": "OBJECT"
-        }
-      ],
-      "arguments": [
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "maxAge"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "Float"
-              }
-            }
-          }
-        }
-      ]
+      "fields": [],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/directives.ts",
+        "block": true
+      }
     },
     {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "Query"
+        "value": "CacheDirective"
       },
-      "fields": []
+      "fields": [],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/directives.ts",
+        "block": true
+      }
     },
     {
       "kind": "EnumTypeDefinition",
@@ -164,43 +106,6 @@ export const typeDefs: DocumentNode = {
         "value": "Defined in: src/gqlkit/schema/query.ts",
         "block": true
       }
-    },
-    {
-      "kind": "ObjectTypeExtension",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "users"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "ListType",
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "User"
-                  }
-                }
-              }
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/schema/query.ts",
-            "block": true
-          }
-        }
-      ]
     }
   ]
 } as DocumentNode;

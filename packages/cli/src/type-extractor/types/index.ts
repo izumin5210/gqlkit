@@ -18,8 +18,10 @@ export type {
   FieldDefinition,
   InlineObjectMember,
   InlineObjectProperty,
+  InlineObjectPropertyDef,
   ScalarTypeInfo,
   TSTypeReference,
+  TSTypeReferenceKind,
   TypeKind,
   TypeMetadata,
 } from "./typescript.js";

@@ -5,33 +5,25 @@ Node interface - represents any entity with a unique identifier.
 
 Defined in: src/gqlkit/schema/types.ts
 """
-interface Node {
-  id: ID!
-}
+interface Node
 
 """
 Post type that implements Node.
 
 Defined in: src/gqlkit/schema/types.ts
 """
-type Post implements Node {
-  id: ID!
-  title: String!
-}
+type Post implements Node
 
 """
 Union type of User and Post (both implementing Node via GqlTypeDef).
 
 Defined in: src/gqlkit/schema/types.ts
 """
-union SearchResult = Post | User
+type SearchResult
 
 """
 User type that implements Node.
 
 Defined in: src/gqlkit/schema/types.ts
 """
-type User implements Node {
-  id: ID!
-  name: String!
-}
+type User implements Node

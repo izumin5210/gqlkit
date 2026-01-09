@@ -19,6 +19,9 @@ function convertElementTypeName(elementType: TSTypeReference): string {
   if (elementType.kind === "reference") {
     return elementType.name ?? "Unknown";
   }
+  if (elementType.kind === "inlineObject") {
+    return "__INLINE_OBJECT__";
+  }
   return elementType.name ?? "String";
 }
 
@@ -65,6 +68,15 @@ export function convertTsTypeToGraphQLType(
   if (tsType.kind === "reference") {
     return {
       typeName: tsType.name ?? "Unknown",
+      nullable,
+      list: false,
+      listItemNullable: null,
+    };
+  }
+
+  if (tsType.kind === "inlineObject") {
+    return {
+      typeName: "__INLINE_OBJECT__",
       nullable,
       list: false,
       listItemNullable: null,

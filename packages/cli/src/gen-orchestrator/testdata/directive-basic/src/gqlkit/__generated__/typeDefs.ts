@@ -6,51 +6,17 @@ export const typeDefs: DocumentNode = {
   "kind": "Document",
   "definitions": [
     {
-      "kind": "DirectiveDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "auth"
-      },
-      "repeatable": false,
-      "locations": [
-        {
-          "kind": "Name",
-          "value": "FIELD_DEFINITION"
-        }
-      ],
-      "arguments": [
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "role"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "ListType",
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "Role"
-                  }
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "Query"
+        "value": "AuthDirective"
       },
-      "fields": []
+      "fields": [],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/query.ts",
+        "block": true
+      }
     },
     {
       "kind": "EnumTypeDefinition",
@@ -102,34 +68,7 @@ export const typeDefs: DocumentNode = {
                 "value": "String"
               }
             }
-          },
-          "directives": [
-            {
-              "kind": "Directive",
-              "name": {
-                "kind": "Name",
-                "value": "auth"
-              },
-              "arguments": [
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "role"
-                  },
-                  "value": {
-                    "kind": "ListValue",
-                    "values": [
-                      {
-                        "kind": "EnumValue",
-                        "value": "ADMIN"
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          ]
+          }
         },
         {
           "kind": "FieldDefinition",
@@ -160,34 +99,7 @@ export const typeDefs: DocumentNode = {
               "kind": "Name",
               "value": "String"
             }
-          },
-          "directives": [
-            {
-              "kind": "Directive",
-              "name": {
-                "kind": "Name",
-                "value": "auth"
-              },
-              "arguments": [
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "role"
-                  },
-                  "value": {
-                    "kind": "ListValue",
-                    "values": [
-                      {
-                        "kind": "EnumValue",
-                        "value": "USER"
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          ]
+          }
         }
       ],
       "description": {
@@ -195,92 +107,6 @@ export const typeDefs: DocumentNode = {
         "value": "Defined in: src/gqlkit/schema/query.ts",
         "block": true
       }
-    },
-    {
-      "kind": "ObjectTypeExtension",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "me"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "User"
-              }
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/schema/query.ts",
-            "block": true
-          },
-          "directives": [
-            {
-              "kind": "Directive",
-              "name": {
-                "kind": "Name",
-                "value": "auth"
-              },
-              "arguments": [
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "role"
-                  },
-                  "value": {
-                    "kind": "ListValue",
-                    "values": [
-                      {
-                        "kind": "EnumValue",
-                        "value": "USER"
-                      }
-                    ]
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "users"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "ListType",
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "User"
-                  }
-                }
-              }
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/schema/query.ts",
-            "block": true
-          }
-        }
-      ]
     }
   ]
 } as DocumentNode;

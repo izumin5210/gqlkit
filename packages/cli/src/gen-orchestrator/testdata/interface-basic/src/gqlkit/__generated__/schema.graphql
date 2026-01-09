@@ -5,24 +5,11 @@ The Node interface for Relay-style pagination.
 
 Defined in: src/gqlkit/schema/node.ts
 """
-interface Node {
-  id: ID!
-}
-
-type Query
+interface Node
 
 """
 A user in the system.
 
 Defined in: src/gqlkit/schema/user.ts
 """
-type User implements Node {
-  email: String
-  id: ID!
-  name: String!
-}
-
-extend type Query {
-  """Defined in: src/gqlkit/schema/query.ts"""
-  users: [User!]!
-}
+type User implements Node

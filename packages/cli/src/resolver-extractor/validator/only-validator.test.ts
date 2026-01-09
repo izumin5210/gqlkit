@@ -26,6 +26,7 @@ function createScalarTypeRef(
       isCustom: true,
       only,
     },
+    inlineObjectProperties: null,
   };
 }
 
@@ -37,6 +38,7 @@ function createArrayTypeRef(elementType: TSTypeReference): TSTypeReference {
     members: null,
     nullable: false,
     scalarInfo: null,
+    inlineObjectProperties: null,
   };
 }
 
@@ -55,6 +57,7 @@ function createObjectTypeRef(name: string): TSTypeReference {
     members: null,
     nullable: false,
     scalarInfo: null,
+    inlineObjectProperties: null,
   };
 }
 

@@ -76,51 +76,6 @@ export const typeDefs: DocumentNode = {
         "value": "Defined in: src/gqlkit/schema/event.ts",
         "block": true
       }
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
-      },
-      "fields": []
-    },
-    {
-      "kind": "ObjectTypeExtension",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "events"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "ListType",
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "Event"
-                  }
-                }
-              }
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/schema/query.ts",
-            "block": true
-          }
-        }
-      ]
     }
   ]
 } as DocumentNode;

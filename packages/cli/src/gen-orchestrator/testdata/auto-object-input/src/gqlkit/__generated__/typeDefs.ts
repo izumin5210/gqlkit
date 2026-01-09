@@ -6,25 +6,17 @@ export const typeDefs: DocumentNode = {
   "kind": "Document",
   "definitions": [
     {
-      "kind": "ObjectTypeDefinition",
+      "kind": "InputObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "Query"
-      },
-      "fields": []
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "User"
+        "value": "CreateUserInput"
       },
       "fields": [
         {
-          "kind": "FieldDefinition",
+          "kind": "InputValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "age"
+            "value": "email"
           },
           "type": {
             "kind": "NonNullType",
@@ -32,30 +24,13 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "Int"
+                "value": "String"
               }
             }
           }
         },
         {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "ID"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
+          "kind": "InputValueDefinition",
           "name": {
             "kind": "Name",
             "value": "name"
@@ -70,50 +45,90 @@ export const typeDefs: DocumentNode = {
               }
             }
           }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/user.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "ObjectTypeExtension",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
-      },
-      "fields": [
+        },
         {
-          "kind": "FieldDefinition",
+          "kind": "InputValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "users"
+            "value": "profile"
           },
           "type": {
             "kind": "NonNullType",
             "type": {
-              "kind": "ListType",
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "User"
-                  }
-                }
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "__INLINE_OBJECT__"
               }
             }
           },
           "description": {
             "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/schema/query.ts",
+            "value": "Profile information",
             "block": true
           }
         }
-      ]
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Input for creating a new user\n\nDefined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
+    },
+    {
+      "kind": "InputObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "CreateUserProfileInput"
+      },
+      "fields": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "age"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "any"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "User's age with default value",
+            "block": true
+          }
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "bio"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "User biography",
+            "block": true
+          }
+        }
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
     }
   ]
 } as DocumentNode;

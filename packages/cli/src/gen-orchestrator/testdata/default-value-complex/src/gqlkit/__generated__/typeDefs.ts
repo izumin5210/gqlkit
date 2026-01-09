@@ -89,14 +89,6 @@ export const typeDefs: DocumentNode = {
       }
     },
     {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
-      },
-      "fields": []
-    },
-    {
       "kind": "EnumTypeDefinition",
       "name": {
         "kind": "Name",
@@ -207,19 +199,6 @@ export const typeDefs: DocumentNode = {
                 }
               }
             }
-          },
-          "defaultValue": {
-            "kind": "ListValue",
-            "values": [
-              {
-                "kind": "EnumValue",
-                "value": "ACTIVE"
-              },
-              {
-                "kind": "EnumValue",
-                "value": "PENDING"
-              }
-            ]
           }
         },
         {
@@ -243,37 +222,6 @@ export const typeDefs: DocumentNode = {
                 }
               }
             }
-          },
-          "defaultValue": {
-            "kind": "ListValue",
-            "values": [
-              {
-                "kind": "ListValue",
-                "values": [
-                  {
-                    "kind": "StringValue",
-                    "value": "a"
-                  },
-                  {
-                    "kind": "StringValue",
-                    "value": "b"
-                  }
-                ]
-              },
-              {
-                "kind": "ListValue",
-                "values": [
-                  {
-                    "kind": "StringValue",
-                    "value": "c"
-                  },
-                  {
-                    "kind": "StringValue",
-                    "value": "d"
-                  }
-                ]
-              }
-            ]
           }
         }
       ],
@@ -311,19 +259,6 @@ export const typeDefs: DocumentNode = {
                 }
               }
             }
-          },
-          "defaultValue": {
-            "kind": "ListValue",
-            "values": [
-              {
-                "kind": "EnumValue",
-                "value": "MEDIUM"
-              },
-              {
-                "kind": "EnumValue",
-                "value": "HIGH"
-              }
-            ]
           }
         },
         {
@@ -341,10 +276,6 @@ export const typeDefs: DocumentNode = {
                 "value": "Status"
               }
             }
-          },
-          "defaultValue": {
-            "kind": "EnumValue",
-            "value": "ACTIVE"
           }
         },
         {
@@ -368,15 +299,6 @@ export const typeDefs: DocumentNode = {
                 }
               }
             }
-          },
-          "defaultValue": {
-            "kind": "ListValue",
-            "values": [
-              {
-                "kind": "StringValue",
-                "value": "default"
-              }
-            ]
           }
         }
       ],
@@ -408,33 +330,6 @@ export const typeDefs: DocumentNode = {
                 "value": "NestedConfig"
               }
             }
-          },
-          "defaultValue": {
-            "kind": "ObjectValue",
-            "fields": [
-              {
-                "kind": "ObjectField",
-                "name": {
-                  "kind": "Name",
-                  "value": "enabled"
-                },
-                "value": {
-                  "kind": "BooleanValue",
-                  "value": true
-                }
-              },
-              {
-                "kind": "ObjectField",
-                "name": {
-                  "kind": "Name",
-                  "value": "value"
-                },
-                "value": {
-                  "kind": "IntValue",
-                  "value": "100"
-                }
-              }
-            ]
           }
         },
         {
@@ -458,23 +353,6 @@ export const typeDefs: DocumentNode = {
                 }
               }
             }
-          },
-          "defaultValue": {
-            "kind": "ListValue",
-            "values": [
-              {
-                "kind": "IntValue",
-                "value": "10"
-              },
-              {
-                "kind": "IntValue",
-                "value": "20"
-              },
-              {
-                "kind": "IntValue",
-                "value": "30"
-              }
-            ]
           }
         }
       ],
@@ -483,356 +361,6 @@ export const typeDefs: DocumentNode = {
         "value": "Defined in: src/gqlkit/schema/types.ts",
         "block": true
       }
-    },
-    {
-      "kind": "ObjectTypeExtension",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "advanced"
-          },
-          "arguments": [
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "nestedArray"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "ListType",
-                  "type": {
-                    "kind": "NonNullType",
-                    "type": {
-                      "kind": "NamedType",
-                      "name": {
-                        "kind": "Name",
-                        "value": "String"
-                      }
-                    }
-                  }
-                }
-              },
-              "defaultValue": {
-                "kind": "ListValue",
-                "values": [
-                  {
-                    "kind": "ListValue",
-                    "values": [
-                      {
-                        "kind": "StringValue",
-                        "value": "a"
-                      },
-                      {
-                        "kind": "StringValue",
-                        "value": "b"
-                      }
-                    ]
-                  },
-                  {
-                    "kind": "ListValue",
-                    "values": [
-                      {
-                        "kind": "StringValue",
-                        "value": "c"
-                      },
-                      {
-                        "kind": "StringValue",
-                        "value": "d"
-                      }
-                    ]
-                  }
-                ]
-              }
-            },
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "enumList"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "ListType",
-                  "type": {
-                    "kind": "NonNullType",
-                    "type": {
-                      "kind": "NamedType",
-                      "name": {
-                        "kind": "Name",
-                        "value": "Status"
-                      }
-                    }
-                  }
-                }
-              },
-              "defaultValue": {
-                "kind": "ListValue",
-                "values": [
-                  {
-                    "kind": "EnumValue",
-                    "value": "ACTIVE"
-                  },
-                  {
-                    "kind": "EnumValue",
-                    "value": "PENDING"
-                  }
-                ]
-              }
-            }
-          ],
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/schema/types.ts",
-            "block": true
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "settings"
-          },
-          "arguments": [
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "config"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "NestedConfig"
-                  }
-                }
-              },
-              "defaultValue": {
-                "kind": "ObjectValue",
-                "fields": [
-                  {
-                    "kind": "ObjectField",
-                    "name": {
-                      "kind": "Name",
-                      "value": "enabled"
-                    },
-                    "value": {
-                      "kind": "BooleanValue",
-                      "value": true
-                    }
-                  },
-                  {
-                    "kind": "ObjectField",
-                    "name": {
-                      "kind": "Name",
-                      "value": "value"
-                    },
-                    "value": {
-                      "kind": "IntValue",
-                      "value": "100"
-                    }
-                  }
-                ]
-              }
-            },
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "limits"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "ListType",
-                  "type": {
-                    "kind": "NonNullType",
-                    "type": {
-                      "kind": "NamedType",
-                      "name": {
-                        "kind": "Name",
-                        "value": "Int"
-                      }
-                    }
-                  }
-                }
-              },
-              "defaultValue": {
-                "kind": "ListValue",
-                "values": [
-                  {
-                    "kind": "IntValue",
-                    "value": "10"
-                  },
-                  {
-                    "kind": "IntValue",
-                    "value": "20"
-                  },
-                  {
-                    "kind": "IntValue",
-                    "value": "30"
-                  }
-                ]
-              }
-            }
-          ],
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "NestedConfig"
-              }
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/schema/types.ts",
-            "block": true
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "tasks"
-          },
-          "arguments": [
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "status"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "Status"
-                  }
-                }
-              },
-              "defaultValue": {
-                "kind": "EnumValue",
-                "value": "ACTIVE"
-              }
-            },
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "priorities"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "ListType",
-                  "type": {
-                    "kind": "NonNullType",
-                    "type": {
-                      "kind": "NamedType",
-                      "name": {
-                        "kind": "Name",
-                        "value": "Priority"
-                      }
-                    }
-                  }
-                }
-              },
-              "defaultValue": {
-                "kind": "ListValue",
-                "values": [
-                  {
-                    "kind": "EnumValue",
-                    "value": "MEDIUM"
-                  },
-                  {
-                    "kind": "EnumValue",
-                    "value": "HIGH"
-                  }
-                ]
-              }
-            },
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "tags"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "ListType",
-                  "type": {
-                    "kind": "NonNullType",
-                    "type": {
-                      "kind": "NamedType",
-                      "name": {
-                        "kind": "Name",
-                        "value": "String"
-                      }
-                    }
-                  }
-                }
-              },
-              "defaultValue": {
-                "kind": "ListValue",
-                "values": [
-                  {
-                    "kind": "StringValue",
-                    "value": "default"
-                  }
-                ]
-              }
-            }
-          ],
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "ListType",
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "Task"
-                  }
-                }
-              }
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/schema/types.ts",
-            "block": true
-          }
-        }
-      ]
     }
   ]
 } as DocumentNode;

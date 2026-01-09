@@ -36,7 +36,11 @@ import {
   extractTypesFromProgram,
   type GlobalTypeMapping,
 } from "../type-extractor/extractor/type-extractor.js";
-import type { Diagnostic, Diagnostics } from "../type-extractor/index.js";
+import type {
+  Diagnostic,
+  Diagnostics,
+  ExtractedTypeInfo,
+} from "../type-extractor/index.js";
 import { validateTypes } from "../type-extractor/validator/type-validator.js";
 import { writeFiles } from "./writer/file-writer.js";
 
@@ -63,6 +67,7 @@ export interface GenerationResult {
 
 interface TypesResult {
   types: ReturnType<typeof collectResults>["types"];
+  extractedTypes: ReadonlyArray<ExtractedTypeInfo>;
   diagnostics: Diagnostics;
   detectedScalarNames: ReadonlyArray<string>;
   detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
@@ -149,6 +154,7 @@ function extractTypesCore(
   const result = collectResults(conversionResult.types, allDiagnostics);
   return {
     ...result,
+    extractedTypes: extractionResult.types,
     detectedScalarNames: extractionResult.detectedScalarNames,
     detectedScalars: extractionResult.detectedScalars,
     collectedScalars,
@@ -220,16 +226,28 @@ function convertDefineApiToFields(
   };
 }
 
+function normalizePathInMessage(message: string, sourceRoot: string): string {
+  const escapedSourceRoot = sourceRoot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const pattern = new RegExp(`${escapedSourceRoot}/`, "g");
+  return message.replace(pattern, "");
+}
+
 function normalizeDiagnosticPaths(
   diagnostics: ReadonlyArray<Diagnostic>,
   sourceRoot: string,
 ): Diagnostic[] {
   return diagnostics.map((d) => {
+    const normalizedMessage = normalizePathInMessage(d.message, sourceRoot);
+
     if (d.location === null) {
-      return d;
+      return {
+        ...d,
+        message: normalizedMessage,
+      };
     }
     return {
       ...d,
+      message: normalizedMessage,
       location: {
         ...d.location,
         file: toPosixPath(relative(sourceRoot, d.location.file)),
@@ -412,6 +430,7 @@ export async function executeGeneration(
     typesResult: typesResult as Parameters<
       typeof generateSchema
     >[0]["typesResult"],
+    extractedTypes: typesResult.extractedTypes,
     resolversResult: resolversResult as Parameters<
       typeof generateSchema
     >[0]["resolversResult"],

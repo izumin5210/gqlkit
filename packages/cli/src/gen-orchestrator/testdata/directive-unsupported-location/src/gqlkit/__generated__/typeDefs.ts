@@ -6,26 +6,17 @@ export const typeDefs: DocumentNode = {
   "kind": "Document",
   "definitions": [
     {
-      "kind": "DirectiveDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "scalarOnly"
-      },
-      "repeatable": false,
-      "locations": [
-        {
-          "kind": "Name",
-          "value": "SCALAR"
-        }
-      ]
-    },
-    {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "Query"
+        "value": "ScalarDirective"
       },
-      "fields": []
+      "fields": [],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
     },
     {
       "kind": "ObjectTypeDefinition",
@@ -57,34 +48,6 @@ export const typeDefs: DocumentNode = {
         "value": "Defined in: src/gqlkit/schema/types.ts",
         "block": true
       }
-    },
-    {
-      "kind": "ObjectTypeExtension",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "user"
-          },
-          "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "User"
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/schema/types.ts",
-            "block": true
-          }
-        }
-      ]
     }
   ]
 } as DocumentNode;

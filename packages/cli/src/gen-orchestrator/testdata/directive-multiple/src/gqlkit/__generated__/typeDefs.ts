@@ -6,98 +6,43 @@ export const typeDefs: DocumentNode = {
   "kind": "Document",
   "definitions": [
     {
-      "kind": "DirectiveDefinition",
+      "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "auth"
+        "value": "AuthDirective"
       },
-      "repeatable": false,
-      "locations": [
-        {
-          "kind": "Name",
-          "value": "FIELD_DEFINITION"
-        }
-      ],
-      "arguments": [
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "role"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "ListType",
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "Role"
-                  }
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "kind": "DirectiveDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "cache"
-      },
-      "repeatable": false,
-      "locations": [
-        {
-          "kind": "Name",
-          "value": "FIELD_DEFINITION"
-        }
-      ],
-      "arguments": [
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "maxAge"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "Float"
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "kind": "DirectiveDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "log"
-      },
-      "repeatable": false,
-      "locations": [
-        {
-          "kind": "Name",
-          "value": "FIELD_DEFINITION"
-        }
-      ]
+      "fields": [],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
     },
     {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "Query"
+        "value": "CacheDirective"
       },
-      "fields": []
+      "fields": [],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "LogDirective"
+      },
+      "fields": [],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
     },
     {
       "kind": "EnumTypeDefinition",
@@ -166,61 +111,7 @@ export const typeDefs: DocumentNode = {
                 "value": "String"
               }
             }
-          },
-          "directives": [
-            {
-              "kind": "Directive",
-              "name": {
-                "kind": "Name",
-                "value": "auth"
-              },
-              "arguments": [
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "role"
-                  },
-                  "value": {
-                    "kind": "ListValue",
-                    "values": [
-                      {
-                        "kind": "EnumValue",
-                        "value": "ADMIN"
-                      }
-                    ]
-                  }
-                }
-              ]
-            },
-            {
-              "kind": "Directive",
-              "name": {
-                "kind": "Name",
-                "value": "cache"
-              },
-              "arguments": [
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "maxAge"
-                  },
-                  "value": {
-                    "kind": "IntValue",
-                    "value": "60"
-                  }
-                }
-              ]
-            },
-            {
-              "kind": "Directive",
-              "name": {
-                "kind": "Name",
-                "value": "log"
-              }
-            }
-          ]
+          }
         }
       ],
       "description": {
@@ -228,34 +119,6 @@ export const typeDefs: DocumentNode = {
         "value": "Defined in: src/gqlkit/schema/types.ts",
         "block": true
       }
-    },
-    {
-      "kind": "ObjectTypeExtension",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "user"
-          },
-          "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "User"
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/schema/types.ts",
-            "block": true
-          }
-        }
-      ]
     }
   ]
 } as DocumentNode;

@@ -37,19 +37,33 @@ export interface TypeMetadata {
   readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
+export type TSTypeReferenceKind =
+  | "primitive"
+  | "reference"
+  | "array"
+  | "union"
+  | "literal"
+  | "scalar"
+  | "inlineObject";
+
 export interface TSTypeReference {
-  readonly kind:
-    | "primitive"
-    | "reference"
-    | "array"
-    | "union"
-    | "literal"
-    | "scalar";
+  readonly kind: TSTypeReferenceKind;
   readonly name: string | null;
   readonly elementType: TSTypeReference | null;
   readonly members: ReadonlyArray<TSTypeReference> | null;
   readonly nullable: boolean;
   readonly scalarInfo: ScalarTypeInfo | null;
+  readonly inlineObjectProperties: ReadonlyArray<InlineObjectPropertyDef> | null;
+}
+
+export interface InlineObjectPropertyDef {
+  readonly name: string;
+  readonly tsType: TSTypeReference;
+  readonly optional: boolean;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
+  readonly defaultValue: DirectiveArgumentValue | null;
 }
 
 export interface FieldDefinition {
