@@ -2,6 +2,7 @@
  * ScalarCollector collects scalar definitions from types and config,
  * validates input/output type constraints, and builds type parameters.
  */
+import { isBuiltInScalar } from "../../shared/constants.js";
 
 /**
  * Information about a detected scalar type from metadata detection.
@@ -89,11 +90,6 @@ export interface ScalarCollectorDiagnostic {
 export type CollectScalarsResult =
   | { success: true; data: ReadonlyArray<CollectedScalarType> }
   | { success: false; errors: ReadonlyArray<ScalarCollectorDiagnostic> };
-
-/**
- * Built-in GraphQL scalar names that should be excluded from custom scalar collection.
- */
-const BUILT_IN_SCALARS = new Set(["ID", "Int", "Float", "String", "Boolean"]);
 
 interface ScalarGroup {
   inputTypes: ScalarTypeRef[];
@@ -186,7 +182,7 @@ export function collectScalars(
   const scalarGroups = new Map<string, ScalarGroup>();
 
   const processInfo = (info: ScalarMetadataInfo, fromConfig: boolean): void => {
-    if (BUILT_IN_SCALARS.has(info.scalarName)) {
+    if (isBuiltInScalar(info.scalarName)) {
       return;
     }
 

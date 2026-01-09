@@ -1,3 +1,4 @@
+import { BUILT_IN_SCALARS } from "../../shared/constants.js";
 import type { Diagnostic, GraphQLTypeInfo } from "../types/index.js";
 
 export interface ValidationResult {
@@ -9,8 +10,6 @@ export interface ValidateTypesOptions {
   readonly types: ReadonlyArray<GraphQLTypeInfo>;
   readonly customScalarNames: ReadonlyArray<string> | null;
 }
-
-const BUILT_IN_SCALARS = new Set(["String", "Int", "Float", "Boolean", "ID"]);
 const PLACEHOLDER_TYPES = new Set(["__INLINE_OBJECT__"]);
 
 function isOptionsObject(

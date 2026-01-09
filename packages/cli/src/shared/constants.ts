@@ -52,3 +52,76 @@ export function isInternalTypeSymbol(symbolName: string): boolean {
     symbolName === TS_ARRAY_TYPE_SYMBOL
   );
 }
+
+// ============================================================
+// gqlkit Metadata Property Names
+// ============================================================
+
+/**
+ * Property names used internally by gqlkit types for metadata.
+ * These start with " $" (space + dollar sign) to avoid conflicts.
+ */
+export const METADATA_PROPERTIES = {
+  /** Field metadata (GqlFieldDef) */
+  FIELD_META: " $gqlkitFieldMeta",
+  /** Type metadata (GqlTypeDef) */
+  TYPE_META: " $gqlkitTypeMeta",
+  /** Directive name */
+  DIRECTIVE_NAME: " $directiveName",
+  /** Directive arguments */
+  DIRECTIVE_ARGS: " $directiveArgs",
+  /** Directive location */
+  DIRECTIVE_LOCATION: " $directiveLocation",
+  /** Original unwrapped type */
+  ORIGINAL_TYPE: " $gqlkitOriginalType",
+  /** Scalar metadata */
+  SCALAR: " $gqlkitScalar",
+  /** Resolver metadata */
+  RESOLVER: " $gqlkitResolver",
+  /** Interface metadata */
+  INTERFACE_META: " $gqlkitInterfaceMeta",
+} as const;
+
+// ============================================================
+// GraphQL Built-in Types
+// ============================================================
+
+/**
+ * GraphQL built-in scalar type names.
+ */
+export const BUILT_IN_SCALARS = new Set([
+  "ID",
+  "Int",
+  "Float",
+  "String",
+  "Boolean",
+] as const);
+
+/**
+ * Checks if a type name is a GraphQL built-in scalar.
+ */
+export function isBuiltInScalar(typeName: string): boolean {
+  return BUILT_IN_SCALARS.has(
+    typeName as (typeof BUILT_IN_SCALARS extends Set<infer T> ? T : never),
+  );
+}
+
+// ============================================================
+// TypeScript to GraphQL Type Mapping
+// ============================================================
+
+/**
+ * Maps TypeScript primitive type names to GraphQL scalar names.
+ */
+export const PRIMITIVE_TYPE_MAP: Record<string, string> = {
+  string: "String",
+  number: "Float",
+  boolean: "Boolean",
+} as const;
+
+/**
+ * Gets the GraphQL type name for a TypeScript primitive.
+ */
+export function getGraphQLPrimitiveType(tsTypeName: string): string | null {
+  return PRIMITIVE_TYPE_MAP[tsTypeName] ?? null;
+}

@@ -3,6 +3,21 @@ export type {
   DefaultValueDetectionErrorCode,
   DefaultValueDetectionResult,
 } from "./default-value-detector.js";
+export {
+  extractNullability,
+  getNonNullableTypes,
+  isNullableUnion,
+  isNullOrUndefined,
+} from "./typescript-utils.js";
+export {
+  type SourceLocation,
+  getSourceLocationFromNode,
+  getSourceLocationFromSymbol,
+} from "./source-location.js";
+export {
+  type TypeConverter,
+  extractInlineObjectProperties,
+} from "./inline-object-extractor.js";
 export { collectDiagnostics, deduplicateDiagnostics } from "./diagnostics.js";
 export {
   type DirectiveArgumentDefinition,

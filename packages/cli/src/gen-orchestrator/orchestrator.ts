@@ -75,9 +75,9 @@ interface TypesResult {
 }
 
 interface ResolversResult {
-  queryFields: { fields: ReadonlyArray<unknown> };
-  mutationFields: { fields: ReadonlyArray<unknown> };
-  typeExtensions: ReadonlyArray<unknown>;
+  queryFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
+  mutationFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
+  typeExtensions: ReadonlyArray<TypeExtension>;
   diagnostics: Diagnostics;
 }
 
@@ -269,13 +269,11 @@ function extractResolversCore(
   );
   allDiagnostics.push(...defineApiExtractionResult.diagnostics);
 
-  const result = convertDefineApiToFields(
-    defineApiExtractionResult.resolvers as unknown as DefineApiResolverInfo[],
-  );
+  const result = convertDefineApiToFields(defineApiExtractionResult.resolvers);
   return {
-    queryFields: result.queryFields as ResolversResult["queryFields"],
-    mutationFields: result.mutationFields as ResolversResult["mutationFields"],
-    typeExtensions: result.typeExtensions as ResolversResult["typeExtensions"],
+    queryFields: result.queryFields,
+    mutationFields: result.mutationFields,
+    typeExtensions: result.typeExtensions,
     diagnostics: collectDiagnostics(allDiagnostics),
   };
 }
@@ -428,13 +426,9 @@ export async function executeGeneration(
   ];
 
   const schemaResult = generateSchema({
-    typesResult: typesResult as Parameters<
-      typeof generateSchema
-    >[0]["typesResult"],
+    typesResult,
     extractedTypes: typesResult.extractedTypes,
-    resolversResult: resolversResult as Parameters<
-      typeof generateSchema
-    >[0]["resolversResult"],
+    resolversResult,
     outputDir: resolve(config.cwd, getOutputDir(config.output)),
     customScalarNames: allCustomScalarNames,
     customScalars: typesResult.collectedScalars,

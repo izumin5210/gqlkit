@@ -1,10 +1,18 @@
 import ts from "typescript";
-import { isInternalTypeSymbol } from "../../shared/constants.js";
+import {
+  METADATA_PROPERTIES,
+  isInternalTypeSymbol,
+} from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
+import { extractInlineObjectProperties } from "../../shared/inline-object-extractor.js";
+import { getSourceLocationFromNode } from "../../shared/source-location.js";
+import {
+  getNonNullableTypes,
+  isNullableUnion,
+} from "../../shared/typescript-utils.js";
 import {
   type DirectiveArgumentValue,
   type DirectiveInfo,
-  detectDirectiveMetadata,
   extractDirectivesFromType,
   hasDirectiveMetadata,
   unwrapDirectiveType,
@@ -21,7 +29,6 @@ import {
 } from "../../shared/tsdoc-parser.js";
 import type {
   Diagnostic,
-  InlineObjectPropertyDef,
   TSTypeReference,
 } from "../../type-extractor/types/index.js";
 
@@ -61,7 +68,7 @@ export interface ExtractDefineApiResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
-const RESOLVER_METADATA_PROPERTY = " $gqlkitResolver";
+const RESOLVER_METADATA_PROPERTY = METADATA_PROPERTIES.RESOLVER;
 
 /**
  * Detects resolver type from metadata embedded in the type.
@@ -103,106 +110,6 @@ function detectResolverFromMetadataType(
 function isExported(node: ts.Node): boolean {
   const modifiers = ts.getCombinedModifierFlags(node as ts.Declaration);
   return (modifiers & ts.ModifierFlags.Export) !== 0;
-}
-
-function extractInlineObjectProperties(
-  type: ts.Type,
-  checker: ts.TypeChecker,
-): InlineObjectPropertyDef[] {
-  const properties: InlineObjectPropertyDef[] = [];
-  const typeProperties = type.getProperties();
-
-  for (const prop of typeProperties) {
-    const propName = prop.getName();
-    if (propName.startsWith(" $")) {
-      continue;
-    }
-
-    const propType = checker.getTypeOfSymbol(prop);
-    const declarations = prop.getDeclarations();
-    const declaration = declarations?.[0];
-
-    let optional = false;
-    if (declaration && ts.isPropertySignature(declaration)) {
-      optional = declaration.questionToken !== undefined;
-    }
-
-    const tsdocInfo = extractTSDocFromSymbol(prop, checker);
-
-    let actualPropType = propType;
-    let directives: ReadonlyArray<DirectiveInfo> | null = null;
-    let directiveNullable = false;
-    let defaultValue: DirectiveArgumentValue | null = null;
-
-    if (hasDirectiveMetadata(propType)) {
-      const directiveResult = detectDirectiveMetadata(propType, checker);
-      if (directiveResult.directives.length > 0) {
-        directives = directiveResult.directives;
-      }
-
-      const defaultValueResult = detectDefaultValueMetadata(propType, checker);
-      if (defaultValueResult.defaultValue) {
-        defaultValue = defaultValueResult.defaultValue;
-      }
-
-      if (propType.isUnion()) {
-        const hasNull = propType.types.some((t) => t.flags & ts.TypeFlags.Null);
-        const hasUndefined = propType.types.some(
-          (t) => t.flags & ts.TypeFlags.Undefined,
-        );
-        if (hasNull || hasUndefined) {
-          directiveNullable = true;
-        }
-      }
-      actualPropType = unwrapDirectiveType(propType, checker);
-
-      if (!directiveNullable && actualPropType.isUnion()) {
-        const hasNull = actualPropType.types.some(
-          (t) => t.flags & ts.TypeFlags.Null,
-        );
-        const hasUndefined = actualPropType.types.some(
-          (t) => t.flags & ts.TypeFlags.Undefined,
-        );
-        if (hasNull || hasUndefined) {
-          directiveNullable = true;
-        }
-      }
-    }
-
-    const tsType = convertTypeToTSTypeReference(actualPropType, checker);
-    const finalTsType =
-      directiveNullable && !tsType.nullable
-        ? { ...tsType, nullable: true }
-        : tsType;
-
-    const propSourceLocation = declaration
-      ? (() => {
-          const declarationSourceFile = declaration.getSourceFile();
-          const { line, character } =
-            declarationSourceFile.getLineAndCharacterOfPosition(
-              declaration.getStart(declarationSourceFile),
-            );
-          return {
-            file: declarationSourceFile.fileName,
-            line: line + 1,
-            column: character + 1,
-          };
-        })()
-      : null;
-
-    properties.push({
-      name: propName,
-      tsType: finalTsType,
-      optional,
-      description: tsdocInfo.description ?? null,
-      deprecated: tsdocInfo.deprecated ?? null,
-      directives,
-      defaultValue,
-      sourceLocation: propSourceLocation,
-    });
-  }
-
-  return properties;
 }
 
 function convertTypeToTSTypeReference(
@@ -251,18 +158,8 @@ function convertTypeToTSTypeReference(
       };
     }
 
-    const types = type.types;
-    const hasNull = types.some((t) => (t.flags & ts.TypeFlags.Null) !== 0);
-    const hasUndefined = types.some(
-      (t) => (t.flags & ts.TypeFlags.Undefined) !== 0,
-    );
-    const nullable = hasNull || hasUndefined;
-
-    const nonNullTypes = types.filter(
-      (t) =>
-        (t.flags & ts.TypeFlags.Null) === 0 &&
-        (t.flags & ts.TypeFlags.Undefined) === 0,
-    );
+    const nullable = isNullableUnion(type);
+    const nonNullTypes = getNonNullableTypes(type);
 
     if (nonNullTypes.length === 1 && nonNullTypes[0]) {
       const innerType = convertTypeToTSTypeReference(nonNullTypes[0], checker);
@@ -317,7 +214,11 @@ function convertTypeToTSTypeReference(
   }
 
   if (isInlineObjectType(type)) {
-    const inlineProperties = extractInlineObjectProperties(type, checker);
+    const inlineProperties = extractInlineObjectProperties(
+      type,
+      checker,
+      convertTypeToTSTypeReference,
+    );
     return {
       kind: "inlineObject",
       name: null,
@@ -687,19 +588,11 @@ export function extractDefineApiResolvers(
               .getText(sourceFile)
               .match(/define(Query|Mutation|Field)/);
             if (hasDefineCall) {
-              const { line, character } =
-                sourceFile.getLineAndCharacterOfPosition(
-                  declaration.name.getStart(sourceFile),
-                );
               diagnostics.push({
                 code: "INVALID_DEFINE_CALL",
                 message: `Complex expressions with define* functions are not supported. Use a simple 'export const ${fieldName} = defineXxx(...)' pattern.`,
                 severity: "error",
-                location: {
-                  file: filePath,
-                  line: line + 1,
-                  column: character + 1,
-                },
+                location: getSourceLocationFromNode(declaration.name),
               });
             }
           }
@@ -726,18 +619,11 @@ export function extractDefineApiResolvers(
         );
 
         if (!typeInfo) {
-          const { line, character } = sourceFile.getLineAndCharacterOfPosition(
-            declaration.name.getStart(sourceFile),
-          );
           diagnostics.push({
             code: "INVALID_DEFINE_CALL",
             message: `Failed to extract type arguments from ${funcName ?? "define*"} call for '${fieldName}'`,
             severity: "error",
-            location: {
-              file: filePath,
-              line: line + 1,
-              column: character + 1,
-            },
+            location: getSourceLocationFromNode(declaration.name),
           });
           continue;
         }
