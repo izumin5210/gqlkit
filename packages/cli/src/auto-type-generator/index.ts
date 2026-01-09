@@ -12,11 +12,9 @@ export {
   type UserDefinedTypeInfo,
   validateNameCollisions,
 } from "./name-collision-validator.js";
-export {
-  type AutoTypeNameContext,
-  generateAutoTypeName,
-  type InputFieldContext,
-  type ObjectFieldContext,
-  type ResolverArgContext,
-  toPascalCase,
+export type {
+  AutoTypeNameContext,
+  InputFieldContext,
+  ObjectFieldContext,
+  ResolverArgContext,
 } from "./naming-convention.js";

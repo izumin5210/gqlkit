@@ -20,7 +20,8 @@ export interface NameCollisionValidatorResult {
 }
 
 function formatLocation(loc: SourceLocation): string {
-  return `${loc.file}:${loc.line}`;
+  const normalizedPath = loc.file.replaceAll("\\", "/");
+  return `${normalizedPath}:${loc.line}`;
 }
 
 function detectUserDefinedCollisions(

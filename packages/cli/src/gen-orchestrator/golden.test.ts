@@ -56,7 +56,13 @@ function serializeDiagnostics(
     location: { file: string; line: number; column: number } | null;
   }>,
 ): string {
-  return `${JSON.stringify(diagnostics, null, 2)}\n`;
+  const normalized = diagnostics.map((d) => ({
+    ...d,
+    location: d.location
+      ? { ...d.location, file: d.location.file.replaceAll("\\", "/") }
+      : null,
+  }));
+  return `${JSON.stringify(normalized, null, 2)}\n`;
 }
 
 function findFile(

@@ -44,7 +44,7 @@ export interface ResolverArgContext {
  * Convert a string to PascalCase.
  * Handles camelCase, snake_case, and kebab-case inputs.
  */
-export function toPascalCase(str: string): string {
+function toPascalCase(str: string): string {
   if (str.length === 0) return str;
 
   return str
