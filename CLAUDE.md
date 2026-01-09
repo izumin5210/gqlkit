@@ -94,6 +94,7 @@ examples/    - Example projects demonstrating usage
 - `config-loader/` - Configuration file loading and validation
 - `type-extractor/` - Scans and analyzes TypeScript types from `src/gqlkit/schema/`
 - `resolver-extractor/` - Scans and analyzes resolver definitions from `src/gqlkit/schema/`
+- `auto-type-generator/` - Converts inline object types to named GraphQL types
 - `schema-generator/` - Builds GraphQL AST and resolver maps
 - `gen-orchestrator/` - Coordinates pipeline stages (reporter, writer)
 - `shared/` - Cross-cutting utilities (e.g., TSDoc parsing)
