@@ -118,10 +118,3 @@ export const PRIMITIVE_TYPE_MAP: Record<string, string> = {
   number: "Float",
   boolean: "Boolean",
 } as const;
-
-/**
- * Gets the GraphQL type name for a TypeScript primitive.
- */
-export function getGraphQLPrimitiveType(tsTypeName: string): string | null {
-  return PRIMITIVE_TYPE_MAP[tsTypeName] ?? null;
-}

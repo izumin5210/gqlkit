@@ -25,20 +25,3 @@ export function getNonNullableTypes(type: ts.Type): ts.Type[] {
   if (!type.isUnion()) return [type];
   return type.types.filter((t) => !isNullOrUndefined(t));
 }
-
-/**
- * Extracts nullability information from a type.
- */
-export function extractNullability(type: ts.Type): {
-  nullable: boolean;
-  nonNullableTypes: ts.Type[];
-} {
-  if (!type.isUnion()) {
-    return { nullable: false, nonNullableTypes: [type] };
-  }
-
-  const nonNullableTypes = getNonNullableTypes(type);
-  const nullable = nonNullableTypes.length < type.types.length;
-
-  return { nullable, nonNullableTypes };
-}

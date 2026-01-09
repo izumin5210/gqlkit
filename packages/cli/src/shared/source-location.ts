@@ -25,14 +25,3 @@ export function getSourceLocationFromNode(
     column: character + 1,
   };
 }
-
-/**
- * Extracts source location from a TypeScript symbol's declaration.
- */
-export function getSourceLocationFromSymbol(
-  symbol: ts.Symbol,
-): SourceLocation | null {
-  const declarations = symbol.getDeclarations();
-  const declaration = declarations?.[0];
-  return getSourceLocationFromNode(declaration);
-}

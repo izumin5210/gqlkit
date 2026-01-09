@@ -27,21 +27,16 @@ export {
   scanDirectory,
 } from "./file-scanner.js";
 export {
-  extractInlineObjectProperties,
+  
   type TypeConverter,
 } from "./inline-object-extractor.js";
 export {
-  getSourceLocationFromNode,
-  getSourceLocationFromSymbol,
+  
+  
   type SourceLocation,
 } from "./source-location.js";
 export { convertTsTypeToGraphQLType } from "./type-converter.js";
-export {
-  extractNullability,
-  getNonNullableTypes,
-  isNullableUnion,
-  isNullOrUndefined,
-} from "./typescript-utils.js";
+;
 
 export function toPosixPath(filePath: string): string {
   return filePath.replace(/\\/g, "/");
