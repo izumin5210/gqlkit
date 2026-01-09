@@ -108,7 +108,7 @@ type Post implements Node & Timestamped {
   """
   Publication status
   """
-  status: String!
+  status: PostStatus!
   """
   Tags associated with this post (may contain null for deleted tags)
   """
@@ -200,11 +200,11 @@ type User implements Node & Timestamped {
   """
   User's role
   """
-  role: String!
+  role: Role!
   """
   Current account status
   """
-  status: String!
+  status: UserStatus!
   """
   User's legacy username
   """
