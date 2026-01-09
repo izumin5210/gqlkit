@@ -6,30 +6,128 @@ export const typeDefs: DocumentNode = {
   "kind": "Document",
   "definitions": [
     {
-      "kind": "ObjectTypeDefinition",
+      "kind": "DirectiveDefinition",
       "name": {
         "kind": "Name",
-        "value": "LengthDirective"
+        "value": "length"
       },
-      "fields": [],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/types.ts",
-        "block": true
-      }
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "ARGUMENT_DEFINITION"
+        },
+        {
+          "kind": "Name",
+          "value": "INPUT_FIELD_DEFINITION"
+        }
+      ],
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "max"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "min"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "DirectiveDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "range"
+      },
+      "repeatable": false,
+      "locations": [
+        {
+          "kind": "Name",
+          "value": "ARGUMENT_DEFINITION"
+        },
+        {
+          "kind": "Name",
+          "value": "INPUT_FIELD_DEFINITION"
+        }
+      ],
+      "arguments": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "max"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "min"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        }
+      ]
     },
     {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "RangeDirective"
+        "value": "Mutation"
       },
-      "fields": [],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/types.ts",
-        "block": true
-      }
+      "fields": []
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
+      },
+      "fields": []
     },
     {
       "kind": "ObjectTypeDefinition",
@@ -132,7 +230,44 @@ export const typeDefs: DocumentNode = {
                 "value": "Int"
               }
             }
-          }
+          },
+          "defaultValue": {
+            "kind": "IntValue",
+            "value": "18"
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "range"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "min"
+                  },
+                  "value": {
+                    "kind": "IntValue",
+                    "value": "0"
+                  }
+                },
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "max"
+                  },
+                  "value": {
+                    "kind": "IntValue",
+                    "value": "150"
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "kind": "InputValueDefinition",
@@ -146,7 +281,43 @@ export const typeDefs: DocumentNode = {
               "kind": "Name",
               "value": "String"
             }
-          }
+          },
+          "defaultValue": {
+            "kind": "NullValue"
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "length"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "min"
+                  },
+                  "value": {
+                    "kind": "IntValue",
+                    "value": "5"
+                  }
+                },
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "max"
+                  },
+                  "value": {
+                    "kind": "IntValue",
+                    "value": "255"
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "kind": "InputValueDefinition",
@@ -163,7 +334,44 @@ export const typeDefs: DocumentNode = {
                 "value": "String"
               }
             }
-          }
+          },
+          "defaultValue": {
+            "kind": "StringValue",
+            "value": "Anonymous"
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "length"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "min"
+                  },
+                  "value": {
+                    "kind": "IntValue",
+                    "value": "1"
+                  }
+                },
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "max"
+                  },
+                  "value": {
+                    "kind": "IntValue",
+                    "value": "100"
+                  }
+                }
+              ]
+            }
+          ]
         }
       ],
       "description": {
@@ -171,6 +379,126 @@ export const typeDefs: DocumentNode = {
         "value": "Defined in: src/gqlkit/schema/types.ts",
         "block": true
       }
+    },
+    {
+      "kind": "ObjectTypeExtension",
+      "name": {
+        "kind": "Name",
+        "value": "Mutation"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "createUser"
+          },
+          "arguments": [
+            {
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "name"
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
+                }
+              },
+              "defaultValue": {
+                "kind": "StringValue",
+                "value": "Anonymous"
+              }
+            },
+            {
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "age"
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Int"
+                  }
+                }
+              },
+              "defaultValue": {
+                "kind": "IntValue",
+                "value": "18"
+              }
+            },
+            {
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "email"
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "String"
+                }
+              },
+              "defaultValue": {
+                "kind": "NullValue"
+              }
+            }
+          ],
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "User"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Defined in: src/gqlkit/schema/types.ts",
+            "block": true
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeExtension",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "user"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "User"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Defined in: src/gqlkit/schema/types.ts",
+            "block": true
+          }
+        }
+      ]
     }
   ]
 } as DocumentNode;

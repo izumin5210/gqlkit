@@ -6,12 +6,110 @@ export const typeDefs: DocumentNode = {
   "kind": "Document",
   "definitions": [
     {
+      "kind": "ScalarTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "DateTime"
+      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Custom DateTime scalar.",
+        "block": true
+      }
+    },
+    {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
         "value": "Article"
       },
-      "fields": [],
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "body"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "createdAt"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "DateTime"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ID"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "updatedAt"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "DateTime"
+              }
+            }
+          }
+        }
+      ],
       "description": {
         "kind": "StringValue",
         "value": "An article implementing the Entity interface.\n\nDefined in: src/gqlkit/schema/article.ts",
@@ -28,25 +126,64 @@ export const typeDefs: DocumentNode = {
       ]
     },
     {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "DateTime"
-      },
-      "fields": [],
-      "description": {
-        "kind": "StringValue",
-        "value": "Custom DateTime scalar.\n\nDefined in: src/gqlkit/schema/interfaces.ts",
-        "block": true
-      }
-    },
-    {
       "kind": "InterfaceTypeDefinition",
       "name": {
         "kind": "Name",
         "value": "Entity"
       },
-      "fields": [],
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "createdAt"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "DateTime"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ID"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "updatedAt"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "DateTime"
+              }
+            }
+          }
+        }
+      ],
       "description": {
         "kind": "StringValue",
         "value": "Entity interface combining Node and Timestamped.\nThis demonstrates interface inheritance.\n\nDefined in: src/gqlkit/schema/interfaces.ts",
@@ -75,7 +212,25 @@ export const typeDefs: DocumentNode = {
         "kind": "Name",
         "value": "Node"
       },
-      "fields": [],
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ID"
+              }
+            }
+          }
+        }
+      ],
       "description": {
         "kind": "StringValue",
         "value": "Node interface for global identification.\n\nDefined in: src/gqlkit/schema/interfaces.ts",
@@ -83,17 +238,97 @@ export const typeDefs: DocumentNode = {
       }
     },
     {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
+      },
+      "fields": []
+    },
+    {
       "kind": "InterfaceTypeDefinition",
       "name": {
         "kind": "Name",
         "value": "Timestamped"
       },
-      "fields": [],
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "createdAt"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "DateTime"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "updatedAt"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "DateTime"
+              }
+            }
+          }
+        }
+      ],
       "description": {
         "kind": "StringValue",
         "value": "Timestamped interface for entities with timestamps.\n\nDefined in: src/gqlkit/schema/interfaces.ts",
         "block": true
       }
+    },
+    {
+      "kind": "ObjectTypeExtension",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "articles"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Article"
+                  }
+                }
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Defined in: src/gqlkit/schema/query.ts",
+            "block": true
+          }
+        }
+      ]
     }
   ]
 } as DocumentNode;

@@ -6,6 +6,8 @@ type NestedConfig {
   value: Int!
 }
 
+type Query
+
 """Defined in: src/gqlkit/schema/types.ts"""
 type Settings {
   config: NestedConfig!
@@ -19,11 +21,18 @@ type Tag {
 
 """Defined in: src/gqlkit/schema/types.ts"""
 input AdvancedInput {
-  tags: [Tag!]!
+  tags: [Tag!]! = [{name: "default"}]
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 input SettingsInput {
-  config: NestedConfig!
-  limits: [Int!]!
+  config: NestedConfig! = {enabled: true, value: 100}
+  limits: [Int!]! = [10, 20, 30]
+}
+
+extend type Query {
+  """Defined in: src/gqlkit/schema/types.ts"""
+  advanced(tags: [Tag!]! = [{name: "default"}]): String!
+  """Defined in: src/gqlkit/schema/types.ts"""
+  settings(config: NestedConfig! = {enabled: true, value: 100}, limits: [Int!]! = [10, 20, 30]): Settings!
 }

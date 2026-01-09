@@ -11,7 +11,25 @@ export const typeDefs: DocumentNode = {
         "kind": "Name",
         "value": "Node"
       },
-      "fields": [],
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ID"
+              }
+            }
+          }
+        }
+      ],
       "description": {
         "kind": "StringValue",
         "value": "Node interface - represents any entity with a unique identifier.\n\nDefined in: src/gqlkit/schema/types.ts",
@@ -24,7 +42,42 @@ export const typeDefs: DocumentNode = {
         "kind": "Name",
         "value": "Post"
       },
-      "fields": [],
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ID"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ],
       "description": {
         "kind": "StringValue",
         "value": "Post type that implements Node.\n\nDefined in: src/gqlkit/schema/types.ts",
@@ -41,12 +94,27 @@ export const typeDefs: DocumentNode = {
       ]
     },
     {
-      "kind": "ObjectTypeDefinition",
+      "kind": "UnionTypeDefinition",
       "name": {
         "kind": "Name",
         "value": "SearchResult"
       },
-      "fields": [],
+      "types": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Post"
+          }
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "User"
+          }
+        }
+      ],
       "description": {
         "kind": "StringValue",
         "value": "Union type of User and Post (both implementing Node via GqlTypeDef).\n\nDefined in: src/gqlkit/schema/types.ts",
@@ -59,7 +127,42 @@ export const typeDefs: DocumentNode = {
         "kind": "Name",
         "value": "User"
       },
-      "fields": [],
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ID"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "name"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ],
       "description": {
         "kind": "StringValue",
         "value": "User type that implements Node.\n\nDefined in: src/gqlkit/schema/types.ts",

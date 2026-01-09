@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "code": "INTERFACE_MISSING_FIELD",
+    "message": "Type 'User' implements interface 'Node' but is missing field 'id'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/user.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

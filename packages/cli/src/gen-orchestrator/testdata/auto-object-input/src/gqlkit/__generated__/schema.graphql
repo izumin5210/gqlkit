@@ -9,13 +9,13 @@ input CreateUserInput {
   email: String!
   name: String!
   """Profile information"""
-  profile: __INLINE_OBJECT__!
+  profile: CreateUserProfileInput!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 input CreateUserProfileInput {
   """User's age with default value"""
-  age: any!
+  age: Int = 18
   """User biography"""
   bio: String
 }

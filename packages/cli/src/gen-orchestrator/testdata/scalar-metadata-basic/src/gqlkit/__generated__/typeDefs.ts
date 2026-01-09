@@ -6,114 +6,14 @@ export const typeDefs: DocumentNode = {
   "kind": "Document",
   "definitions": [
     {
-      "kind": "DirectiveDefinition",
+      "kind": "ScalarTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "auth"
+        "value": "DateTime"
       },
-      "repeatable": false,
-      "locations": [
-        {
-          "kind": "Name",
-          "value": "FIELD_DEFINITION"
-        }
-      ],
-      "arguments": [
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "role"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "ListType",
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "Role"
-                  }
-                }
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "kind": "DirectiveDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "cache"
-      },
-      "repeatable": false,
-      "locations": [
-        {
-          "kind": "Name",
-          "value": "FIELD_DEFINITION"
-        },
-        {
-          "kind": "Name",
-          "value": "OBJECT"
-        }
-      ],
-      "arguments": [
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "maxAge"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "Float"
-              }
-            }
-          }
-        }
-      ]
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
-      },
-      "fields": []
-    },
-    {
-      "kind": "EnumTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "Role"
-      },
-      "values": [
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "USER"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "ADMIN"
-          }
-        }
-      ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/directives.ts",
+        "value": "ISO 8601 format date-time string",
         "block": true
       }
     },
@@ -121,9 +21,26 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "User"
+        "value": "Event"
       },
       "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "createdAt"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "DateTime"
+              }
+            }
+          }
+        },
         {
           "kind": "FieldDefinition",
           "name": {
@@ -161,9 +78,17 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/query.ts",
+        "value": "Defined in: src/gqlkit/schema/event.ts",
         "block": true
       }
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
+      },
+      "fields": []
     },
     {
       "kind": "ObjectTypeExtension",
@@ -176,7 +101,7 @@ export const typeDefs: DocumentNode = {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "users"
+            "value": "events"
           },
           "type": {
             "kind": "NonNullType",
@@ -188,7 +113,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "User"
+                    "value": "Event"
                   }
                 }
               }

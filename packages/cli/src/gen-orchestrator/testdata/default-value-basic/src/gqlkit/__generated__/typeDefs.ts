@@ -9,6 +9,14 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
+        "value": "Query"
+      },
+      "fields": []
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
         "value": "User"
       },
       "fields": [
@@ -75,6 +83,10 @@ export const typeDefs: DocumentNode = {
                 "value": "Float"
               }
             }
+          },
+          "defaultValue": {
+            "kind": "FloatValue",
+            "value": "3.14"
           }
         }
       ],
@@ -106,6 +118,10 @@ export const typeDefs: DocumentNode = {
                 "value": "String"
               }
             }
+          },
+          "defaultValue": {
+            "kind": "StringValue",
+            "value": "World"
           }
         },
         {
@@ -123,6 +139,10 @@ export const typeDefs: DocumentNode = {
                 "value": "String"
               }
             }
+          },
+          "defaultValue": {
+            "kind": "StringValue",
+            "value": "Hello"
           }
         }
       ],
@@ -154,6 +174,10 @@ export const typeDefs: DocumentNode = {
                 "value": "Boolean"
               }
             }
+          },
+          "defaultValue": {
+            "kind": "BooleanValue",
+            "value": false
           }
         },
         {
@@ -171,6 +195,10 @@ export const typeDefs: DocumentNode = {
                 "value": "Int"
               }
             }
+          },
+          "defaultValue": {
+            "kind": "IntValue",
+            "value": "10"
           }
         },
         {
@@ -188,6 +216,10 @@ export const typeDefs: DocumentNode = {
                 "value": "Int"
               }
             }
+          },
+          "defaultValue": {
+            "kind": "IntValue",
+            "value": "0"
           }
         }
       ],
@@ -219,6 +251,10 @@ export const typeDefs: DocumentNode = {
                 "value": "Boolean"
               }
             }
+          },
+          "defaultValue": {
+            "kind": "BooleanValue",
+            "value": true
           }
         },
         {
@@ -228,14 +264,14 @@ export const typeDefs: DocumentNode = {
             "value": "maxResults"
           },
           "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "any"
-              }
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int"
             }
+          },
+          "defaultValue": {
+            "kind": "NullValue"
           }
         },
         {
@@ -261,6 +297,259 @@ export const typeDefs: DocumentNode = {
         "value": "Defined in: src/gqlkit/schema/types.ts",
         "block": true
       }
+    },
+    {
+      "kind": "ObjectTypeExtension",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "greet"
+          },
+          "arguments": [
+            {
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "name"
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
+                }
+              },
+              "defaultValue": {
+                "kind": "StringValue",
+                "value": "World"
+              }
+            },
+            {
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "prefix"
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
+                }
+              },
+              "defaultValue": {
+                "kind": "StringValue",
+                "value": "Hello"
+              }
+            }
+          ],
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Defined in: src/gqlkit/schema/types.ts",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "search"
+          },
+          "arguments": [
+            {
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "query"
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
+                }
+              }
+            },
+            {
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "caseSensitive"
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Boolean"
+                  }
+                }
+              },
+              "defaultValue": {
+                "kind": "BooleanValue",
+                "value": true
+              }
+            },
+            {
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "maxResults"
+              },
+              "type": {
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Int"
+                }
+              },
+              "defaultValue": {
+                "kind": "NullValue"
+              }
+            }
+          ],
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "User"
+                  }
+                }
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Defined in: src/gqlkit/schema/types.ts",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "users"
+          },
+          "arguments": [
+            {
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "limit"
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Int"
+                  }
+                }
+              },
+              "defaultValue": {
+                "kind": "IntValue",
+                "value": "10"
+              }
+            },
+            {
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "offset"
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Int"
+                  }
+                }
+              },
+              "defaultValue": {
+                "kind": "IntValue",
+                "value": "0"
+              }
+            },
+            {
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "includeArchived"
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Boolean"
+                  }
+                }
+              },
+              "defaultValue": {
+                "kind": "BooleanValue",
+                "value": false
+              }
+            }
+          ],
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "User"
+                  }
+                }
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Defined in: src/gqlkit/schema/types.ts",
+            "block": true
+          }
+        }
+      ]
     }
   ]
 } as DocumentNode;

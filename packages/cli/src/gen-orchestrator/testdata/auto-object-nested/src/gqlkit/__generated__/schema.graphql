@@ -8,7 +8,7 @@ Defined in: src/gqlkit/schema/types.ts
 type User {
   id: String!
   """User's profile with nested address"""
-  profile: __INLINE_OBJECT__!
+  profile: UserProfile!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
@@ -40,7 +40,7 @@ Defined in: src/gqlkit/schema/types.ts
 input UserInput {
   name: String!
   """Profile input with nested address"""
-  profile: __INLINE_OBJECT__!
+  profile: UserProfileInput!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""

@@ -8,3 +8,10 @@ type Event {
   id: String!
   name: String!
 }
+
+type Query
+
+extend type Query {
+  """Defined in: src/gqlkit/schema/query.ts"""
+  events: [Event!]!
+}

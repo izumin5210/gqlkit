@@ -9,7 +9,7 @@ type User {
   id: String!
   name: String!
   """User's profile information"""
-  profile: __INLINE_OBJECT__!
+  profile: UserProfile!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""

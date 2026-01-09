@@ -1,1 +1,12 @@
-[]
+[
+  {
+    "code": "INVALID_DIRECTIVE_LOCATION",
+    "message": "Field 'User.id': Directive '@objectOnly' cannot be used on FIELD_DEFINITION (allowed: OBJECT)",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

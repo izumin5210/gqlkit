@@ -5,6 +5,7 @@ import {
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import type { DirectiveDefinitionInfo } from "../shared/directive-definition-extractor.js";
 import type { CollectedScalarType } from "../type-extractor/collector/scalar-collector.js";
+import { convertToGraphQL } from "../type-extractor/converter/graphql-converter.js";
 import type { ExtractTypesResult } from "../type-extractor/index.js";
 import type {
   Diagnostic,
@@ -79,8 +80,31 @@ export function generateSchema(
     };
   }
 
+  // Re-convert to GraphQL types using updated extracted types
+  // This resolves __INLINE_OBJECT__ references to auto-generated type names
+  const updatedConversionResult = convertToGraphQL(
+    autoTypeResult.updatedExtractedTypes,
+  );
+  const updatedTypesResult: ExtractTypesResult = {
+    types: updatedConversionResult.types,
+    diagnostics: {
+      errors: [
+        ...typesResult.diagnostics.errors,
+        ...updatedConversionResult.diagnostics.filter(
+          (d) => d.severity === "error",
+        ),
+      ],
+      warnings: [
+        ...typesResult.diagnostics.warnings,
+        ...updatedConversionResult.diagnostics.filter(
+          (d) => d.severity === "warning",
+        ),
+      ],
+    },
+  };
+
   const integratedResult = integrate(
-    typesResult,
+    updatedTypesResult,
     autoTypeResult.updatedResolversResult,
     customScalarNames,
     customScalars,

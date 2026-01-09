@@ -1,12 +1,8 @@
 [
   {
-    "code": "UNRESOLVED_REFERENCE",
-    "message": "Field 'createdAt' references unresolved type 'DefineScalar<\"DateTime\", Date, \"input\">'",
+    "code": "MULTIPLE_INPUT_TYPES",
+    "message": "Custom scalar 'DateTime' has multiple input types: 'DateTimeInput1' at src/gqlkit/schema/scalars.ts:4, 'DateTimeInput2' at src/gqlkit/schema/scalars.ts:5. Only one input type is allowed per scalar.",
     "severity": "error",
-    "location": {
-      "file": "src/gqlkit/schema/event.ts",
-      "line": 1,
-      "column": 1
-    }
+    "location": null
   }
 ]

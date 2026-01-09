@@ -282,6 +282,7 @@ function convertTsTypeToReferenceWithBrandInfo(
           members: null,
           nullable,
           scalarInfo: null,
+          inlineObjectProperties: null,
         },
       };
     }

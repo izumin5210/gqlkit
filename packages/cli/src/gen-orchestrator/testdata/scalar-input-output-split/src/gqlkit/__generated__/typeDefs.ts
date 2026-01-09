@@ -6,31 +6,38 @@ export const typeDefs: DocumentNode = {
   "kind": "Document",
   "definitions": [
     {
-      "kind": "ObjectTypeDefinition",
+      "kind": "ScalarTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "Mutation"
+        "value": "DateTime"
       },
-      "fields": []
+      "description": {
+        "kind": "StringValue",
+        "value": "Date input in ISO 8601 format\n\nDate output as Date object\n\nDate output as string for JSON serialization",
+        "block": true
+      }
     },
     {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "User"
+        "value": "Event"
       },
       "fields": [
         {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "email"
+            "value": "createdAt"
           },
           "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "String"
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "DateTime"
+              }
             }
           }
         },
@@ -71,31 +78,33 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/user.ts",
+        "value": "Defined in: src/gqlkit/schema/event.ts",
         "block": true
       }
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Mutation"
+      },
+      "fields": []
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
+      },
+      "fields": []
     },
     {
       "kind": "InputObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "CreateUserInput"
+        "value": "CreateEventInput"
       },
       "fields": [
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "email"
-          },
-          "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "String"
-            }
-          }
-        },
         {
           "kind": "InputValueDefinition",
           "name": {
@@ -116,7 +125,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/user.ts",
+        "value": "Defined in: src/gqlkit/schema/event.ts",
         "block": true
       }
     },
@@ -131,7 +140,7 @@ export const typeDefs: DocumentNode = {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "createUser"
+            "value": "createEvent"
           },
           "arguments": [
             {
@@ -146,7 +155,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "CreateUserInput"
+                    "value": "CreateEventInput"
                   }
                 }
               }
@@ -158,13 +167,50 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "User"
+                "value": "Event"
               }
             }
           },
           "description": {
             "kind": "StringValue",
             "value": "Defined in: src/gqlkit/schema/mutation.ts",
+            "block": true
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeExtension",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "events"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Event"
+                  }
+                }
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Defined in: src/gqlkit/schema/query.ts",
             "block": true
           }
         }

@@ -1,7 +1,6 @@
 import type {
   ExtractResolversResult,
   GraphQLFieldDefinition,
-  GraphQLInputValue,
 } from "../resolver-extractor/index.js";
 import type {
   DirectiveArgumentValue,
@@ -73,9 +72,6 @@ interface InlineObjectWithContext {
   readonly nullable: boolean;
 }
 
-interface ExtendedGraphQLInputValue extends GraphQLInputValue {
-  readonly inlineObjectProperties?: ReadonlyArray<InlineObjectPropertyDef>;
-}
 
 function isInputTypeName(name: string): boolean {
   return name.endsWith("Input");
@@ -250,7 +246,7 @@ function collectInlineObjectsFromResolverArgs(
   if (!field.args) return;
 
   for (const arg of field.args) {
-    const extendedArg = arg as ExtendedGraphQLInputValue;
+    const extendedArg = arg;
     if (!extendedArg.inlineObjectProperties) continue;
 
     const context: AutoTypeNameContext = {
@@ -485,7 +481,7 @@ function updateResolverField(
   if (!field.args) return field;
 
   const updatedArgs = field.args.map((arg) => {
-    const extendedArg = arg as ExtendedGraphQLInputValue;
+    const extendedArg = arg;
     if (!extendedArg.inlineObjectProperties) return arg;
 
     const propsKey = getPropertiesKey(extendedArg.inlineObjectProperties);

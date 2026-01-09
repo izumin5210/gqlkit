@@ -173,6 +173,7 @@ function convertArgsToInputValues(
     description: arg.description,
     deprecated: arg.deprecated,
     defaultValue: arg.defaultValue,
+    inlineObjectProperties: arg.tsType.inlineObjectProperties ?? null,
   }));
 }
 

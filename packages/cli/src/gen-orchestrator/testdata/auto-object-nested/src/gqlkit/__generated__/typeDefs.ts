@@ -41,7 +41,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "__INLINE_OBJECT__"
+                "value": "UserProfile"
               }
             }
           },
@@ -265,7 +265,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "__INLINE_OBJECT__"
+                "value": "UserProfileInput"
               }
             }
           },

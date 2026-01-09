@@ -58,7 +58,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "__INLINE_OBJECT__"
+                "value": "CreateUserProfileInput"
               }
             }
           },
@@ -89,19 +89,20 @@ export const typeDefs: DocumentNode = {
             "value": "age"
           },
           "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "any"
-              }
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Int"
             }
           },
           "description": {
             "kind": "StringValue",
             "value": "User's age with default value",
             "block": true
+          },
+          "defaultValue": {
+            "kind": "IntValue",
+            "value": "18"
           }
         },
         {
