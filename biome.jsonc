@@ -6,16 +6,15 @@
     "useIgnoreFile": true
   },
   "files": {
+    "includes": ["**", "!**/testdata/**/__generated__"],
     "ignoreUnknown": false
   },
   "formatter": {
     "enabled": true,
-    "indentStyle": "space",
-    "includes": ["**", "!**/testdata/**/__generated__/**"]
+    "indentStyle": "space"
   },
   "linter": {
     "enabled": true,
-    "includes": ["**", "!**/testdata/**"],
     "rules": {
       "recommended": true,
       "complexity": {

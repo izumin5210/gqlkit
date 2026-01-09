@@ -1,4 +1,4 @@
-import { DefineScalar } from "@gqlkit-ts/runtime";
+import type { DefineScalar } from "@gqlkit-ts/runtime";
 
 // Error: Multiple input types for the same scalar
 export type DateTimeInput1 = DefineScalar<"DateTime", Date, "input">;
