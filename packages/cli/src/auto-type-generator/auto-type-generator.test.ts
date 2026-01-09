@@ -58,6 +58,7 @@ function createProperty(
     deprecated: null,
     directives: null,
     defaultValue: null,
+    sourceLocation: null,
   };
 }
 
@@ -75,6 +76,7 @@ function createField(
     deprecated: null,
     directives: null,
     defaultValue: null,
+    sourceLocation: null,
   };
 }
 
@@ -88,6 +90,7 @@ function createExtractedType(
       name,
       kind,
       sourceFile: "src/gqlkit/schema/types.ts",
+      sourceLocation: { file: "src/gqlkit/schema/types.ts", line: 1, column: 1 },
       exportKind: "named",
       description: null,
       deprecated: null,
@@ -298,6 +301,7 @@ describe("generateAutoTypes", () => {
           deprecated: null,
           directives: null,
           defaultValue: { kind: "number", value: 18 },
+          sourceLocation: null,
         },
       ];
 

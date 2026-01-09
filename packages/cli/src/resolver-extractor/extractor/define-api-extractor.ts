@@ -192,6 +192,21 @@ function extractInlineObjectProperties(
         ? { ...tsType, nullable: true }
         : tsType;
 
+    const propSourceLocation = declaration
+      ? (() => {
+          const declarationSourceFile = declaration.getSourceFile();
+          const { line, character } =
+            declarationSourceFile.getLineAndCharacterOfPosition(
+              declaration.getStart(declarationSourceFile),
+            );
+          return {
+            file: declarationSourceFile.fileName,
+            line: line + 1,
+            column: character + 1,
+          };
+        })()
+      : null;
+
     properties.push({
       name: propName,
       tsType: finalTsType,
@@ -200,6 +215,7 @@ function extractInlineObjectProperties(
       deprecated: tsdocInfo.deprecated ?? null,
       directives,
       defaultValue,
+      sourceLocation: propSourceLocation,
     });
   }
 

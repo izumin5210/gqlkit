@@ -1,12 +1,12 @@
 [
   {
     "code": "AUTO_TYPE_NAME_COLLISION_AUTO",
-    "message": "Auto-generated type name 'UserProfileDetails' is generated from multiple sources: src/gqlkit/schema/types.ts:1, src/gqlkit/schema/types.ts:1. Use explicit type definitions to resolve the conflict.",
+    "message": "Auto-generated type name 'UserProfileDetails' is generated from multiple sources: src/gqlkit/schema/types.ts:7, src/gqlkit/schema/types.ts:19. Use explicit type definitions to resolve the conflict.",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 1,
-      "column": 1
+      "line": 7,
+      "column": 3
     }
   }
 ]

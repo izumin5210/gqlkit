@@ -128,7 +128,7 @@ function collectInlineObjectsFromField(
   results.push({
     properties: tsType.inlineObjectProperties,
     context,
-    sourceLocation: { file: sourceFile, line: 1, column: 1 },
+    sourceLocation: field.sourceLocation ?? { file: sourceFile, line: 1, column: 1 },
     nullable: tsType.nullable,
   });
 
@@ -157,6 +157,7 @@ function collectInlineObjectsFromField(
         parentTypeName,
         isInput,
         sourceFile,
+        prop.sourceLocation,
         results,
       );
     }
@@ -170,12 +171,13 @@ function collectNestedInlineObjects(
   parentTypeName: string,
   isInput: boolean,
   sourceFile: string,
+  parentSourceLocation: SourceLocation | null,
   results: InlineObjectWithContext[],
 ): void {
   results.push({
     properties,
     context,
-    sourceLocation: { file: sourceFile, line: 1, column: 1 },
+    sourceLocation: parentSourceLocation ?? { file: sourceFile, line: 1, column: 1 },
     nullable: false,
   });
 
@@ -204,6 +206,7 @@ function collectNestedInlineObjects(
         parentTypeName,
         isInput,
         sourceFile,
+        prop.sourceLocation,
         results,
       );
     }

@@ -61,7 +61,7 @@ export function generateSchema(
 
   const userDefinedTypes = extractedTypes.map((t) => ({
     name: t.metadata.name,
-    sourceLocation: { file: t.metadata.sourceFile, line: 1, column: 1 },
+    sourceLocation: t.metadata.sourceLocation,
   }));
 
   const collisionResult = validateNameCollisions({

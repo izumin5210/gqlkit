@@ -32,6 +32,7 @@ describe("TSTypeReference", () => {
             deprecated: null,
             directives: null,
             defaultValue: null,
+            sourceLocation: null,
           },
         ],
       };
@@ -76,6 +77,7 @@ describe("TSTypeReference", () => {
                   deprecated: null,
                   directives: null,
                   defaultValue: null,
+                  sourceLocation: null,
                 },
               ],
             },
@@ -84,6 +86,7 @@ describe("TSTypeReference", () => {
             deprecated: null,
             directives: null,
             defaultValue: null,
+            sourceLocation: null,
           },
         ],
       };
@@ -140,6 +143,7 @@ describe("InlineObjectPropertyDef", () => {
         },
       ],
       defaultValue: { kind: "string", value: "default" },
+      sourceLocation: null,
     };
 
     expect(property.name).toBe("profile");
@@ -174,6 +178,7 @@ describe("InlineObjectPropertyDef", () => {
       deprecated: null,
       directives: null,
       defaultValue: null,
+      sourceLocation: null,
     };
 
     expect(minimalProperty.description).toBeNull();
@@ -211,6 +216,7 @@ describe("FieldDefinition with inline object type", () => {
             deprecated: null,
             directives: null,
             defaultValue: null,
+            sourceLocation: null,
           },
         ],
       },
@@ -219,6 +225,7 @@ describe("FieldDefinition with inline object type", () => {
       deprecated: null,
       directives: null,
       defaultValue: null,
+      sourceLocation: null,
     };
 
     expect(field.tsType.kind).toBe("inlineObject");

@@ -191,6 +191,21 @@ function extractInlineObjectProperties(
         ? { ...typeResult.tsType, nullable: true }
         : typeResult.tsType;
 
+    const propSourceLocation = declaration
+      ? (() => {
+          const declarationSourceFile = declaration.getSourceFile();
+          const { line, character } =
+            declarationSourceFile.getLineAndCharacterOfPosition(
+              declaration.getStart(declarationSourceFile),
+            );
+          return {
+            file: declarationSourceFile.fileName,
+            line: line + 1,
+            column: character + 1,
+          };
+        })()
+      : null;
+
     properties.push({
       name: propName,
       tsType,
@@ -199,6 +214,7 @@ function extractInlineObjectProperties(
       deprecated: tsdocInfo.deprecated ?? null,
       directives,
       defaultValue,
+      sourceLocation: propSourceLocation,
     });
   }
 
@@ -649,6 +665,21 @@ function extractFieldsFromType(
         ? { ...typeResult.tsType, nullable: true }
         : typeResult.tsType;
 
+    const fieldSourceLocation =
+      declaration && sourceFile && filePath
+        ? (() => {
+            const { line, character } =
+              sourceFile.getLineAndCharacterOfPosition(
+                declaration.getStart(sourceFile),
+              );
+            return {
+              file: filePath,
+              line: line + 1,
+              column: character + 1,
+            };
+          })()
+        : null;
+
     fields.push({
       name: propName,
       tsType,
@@ -657,6 +688,7 @@ function extractFieldsFromType(
       deprecated: tsdocInfo.deprecated ?? null,
       directives,
       defaultValue,
+      sourceLocation: fieldSourceLocation,
     });
   }
 
@@ -1013,6 +1045,7 @@ export function extractTypesFromProgram(
           name,
           kind: "enum",
           sourceFile: filePath,
+          sourceLocation: location,
           exportKind: hasDefaultExport ? "default" : "named",
           description: tsdocInfo.description,
           deprecated: tsdocInfo.deprecated,
@@ -1039,6 +1072,13 @@ export function extractTypesFromProgram(
         }
 
         const name = node.name.getText(sourceFile);
+        const { line: typeLine, character: typeColumn } =
+          sourceFile.getLineAndCharacterOfPosition(node.getStart(sourceFile));
+        const typeSourceLocation = {
+          file: filePath,
+          line: typeLine + 1,
+          column: typeColumn + 1,
+        };
 
         if (node.typeParameters && node.typeParameters.length > 0) {
           const { line, character } = sourceFile.getLineAndCharacterOfPosition(
@@ -1142,6 +1182,7 @@ export function extractTypesFromProgram(
           name,
           kind,
           sourceFile: filePath,
+          sourceLocation: typeSourceLocation,
           exportKind: hasDefaultExport ? "default" : "named",
           description: tsdocInfo.description,
           deprecated: tsdocInfo.deprecated,
