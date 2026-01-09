@@ -8,6 +8,7 @@ import {
   hasDirectiveMetadata,
   unwrapDirectiveType,
 } from "../../shared/directive-detector.js";
+import { isInlineObjectType } from "../../shared/inline-object-utils.js";
 import {
   extractImplementsFromDefineInterface,
   extractImplementsFromGqlTypeDef,
@@ -95,24 +96,6 @@ function isBooleanUnion(type: ts.Type): boolean {
 
 interface TypeReferenceResult {
   readonly tsType: TSTypeReference;
-}
-
-function isInlineObjectType(type: ts.Type): boolean {
-  if (type.aliasSymbol) {
-    return false;
-  }
-  if (!type.symbol) {
-    return false;
-  }
-  const symbolName = type.symbol.getName();
-  if (symbolName !== "__type") {
-    return false;
-  }
-  if (!(type.flags & ts.TypeFlags.Object)) {
-    return false;
-  }
-  const objectType = type as ts.ObjectType;
-  return (objectType.objectFlags & ts.ObjectFlags.Anonymous) !== 0;
 }
 
 function extractInlineObjectProperties(

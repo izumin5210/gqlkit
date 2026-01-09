@@ -9,6 +9,7 @@ import {
   hasDirectiveMetadata,
   unwrapDirectiveType,
 } from "../../shared/directive-detector.js";
+import { isInlineObjectType } from "../../shared/inline-object-utils.js";
 import {
   detectScalarMetadata,
   getActualMetadataType,
@@ -102,24 +103,6 @@ function detectResolverFromMetadataType(
 function isExported(node: ts.Node): boolean {
   const modifiers = ts.getCombinedModifierFlags(node as ts.Declaration);
   return (modifiers & ts.ModifierFlags.Export) !== 0;
-}
-
-function isInlineObjectType(type: ts.Type): boolean {
-  if (type.aliasSymbol) {
-    return false;
-  }
-  if (!type.symbol) {
-    return false;
-  }
-  const symbolName = type.symbol.getName();
-  if (symbolName !== "__type") {
-    return false;
-  }
-  if (!(type.flags & ts.TypeFlags.Object)) {
-    return false;
-  }
-  const objectType = type as ts.ObjectType;
-  return (objectType.objectFlags & ts.ObjectFlags.Anonymous) !== 0;
 }
 
 function extractInlineObjectProperties(

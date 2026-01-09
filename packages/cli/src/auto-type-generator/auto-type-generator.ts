@@ -256,8 +256,7 @@ function collectInlineObjectsFromResolverArgs(
   if (!field.args) return;
 
   for (const arg of field.args) {
-    const extendedArg = arg;
-    if (!extendedArg.inlineObjectProperties) continue;
+    if (!arg.inlineObjectProperties) continue;
 
     const context: AutoTypeNameContext = {
       kind: "resolverArg",
@@ -269,14 +268,14 @@ function collectInlineObjectsFromResolverArgs(
     };
 
     results.push({
-      properties: extendedArg.inlineObjectProperties,
+      properties: arg.inlineObjectProperties,
       context,
       sourceLocation: field.sourceLocation,
       nullable: arg.type.nullable,
     });
 
     collectNestedInlineObjectsFromArg(
-      extendedArg.inlineObjectProperties,
+      arg.inlineObjectProperties,
       resolverType,
       field.name,
       arg.name,
@@ -356,10 +355,7 @@ function generateAutoType(
   });
 
   const generatedFrom: GeneratedFromInfo = {
-    parentTypeName:
-      inlineObj.context.kind === "resolverArg"
-        ? inlineObj.context.parentTypeName
-        : inlineObj.context.parentTypeName,
+    parentTypeName: inlineObj.context.parentTypeName,
     fieldPath:
       inlineObj.context.kind === "resolverArg" &&
       inlineObj.context.fieldPath.length === 0
@@ -491,10 +487,9 @@ function updateResolverField(
   if (!field.args) return field;
 
   const updatedArgs = field.args.map((arg) => {
-    const extendedArg = arg;
-    if (!extendedArg.inlineObjectProperties) return arg;
+    if (!arg.inlineObjectProperties) return arg;
 
-    const propsKey = getPropertiesKey(extendedArg.inlineObjectProperties);
+    const propsKey = getPropertiesKey(arg.inlineObjectProperties);
     const resolvedTypeName = generatedTypeNames.get(propsKey);
 
     if (resolvedTypeName) {
