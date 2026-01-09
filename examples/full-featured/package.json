@@ -15,7 +15,6 @@
     "graphql-yoga": "^5.0.0"
   },
   "devDependencies": {
-    "@gqlkit-ts/cli": "workspace:*",
-    "typescript": "^5.9.0"
+    "@gqlkit-ts/cli": "workspace:*"
   }
 }
