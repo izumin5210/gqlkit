@@ -1,4 +1,9 @@
-import { createGqlkitApis, type NoArgs, type GqlFieldDef, type Int } from "@gqlkit-ts/runtime";
+import {
+  createGqlkitApis,
+  type GqlFieldDef,
+  type Int,
+  type NoArgs,
+} from "@gqlkit-ts/runtime";
 
 // Bug 1: Type reference (NestedConfig) should resolve to actual type name, not __type
 export type NestedConfig = {
@@ -9,7 +14,10 @@ export type NestedConfig = {
 // Bug 2: Array type (Int[]) should preserve list wrapper, not flatten to scalar
 export type SettingsInput = {
   // Bug 1: config should be NestedConfig!, but resolves to __type!
-  config: GqlFieldDef<NestedConfig, { defaultValue: { enabled: true; value: 100 } }>;
+  config: GqlFieldDef<
+    NestedConfig,
+    { defaultValue: { enabled: true; value: 100 } }
+  >;
   // Bug 2: limits should be [Int!]!, but resolves to Int!
   limits: GqlFieldDef<Int[], { defaultValue: [10, 20, 30] }>;
 };
@@ -31,10 +39,9 @@ export type Settings = {
 
 const { defineQuery } = createGqlkitApis();
 
-export const settings = defineQuery<SettingsInput, Settings>(
-  () => ({ name: "test", config: { enabled: true, value: 0 } })
-);
+export const settings = defineQuery<SettingsInput, Settings>(() => ({
+  name: "test",
+  config: { enabled: true, value: 0 },
+}));
 
-export const advanced = defineQuery<AdvancedInput, string>(
-  () => "result"
-);
+export const advanced = defineQuery<AdvancedInput, string>(() => "result");

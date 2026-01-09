@@ -1,6 +1,14 @@
-import { createGqlkitApis, type NoArgs, type Directive } from "@gqlkit-ts/runtime";
+import {
+  createGqlkitApis,
+  type Directive,
+  type NoArgs,
+} from "@gqlkit-ts/runtime";
 
-export type ScalarDirective = Directive<"scalarOnly", Record<string, never>, "SCALAR">;
+export type ScalarDirective = Directive<
+  "scalarOnly",
+  Record<string, never>,
+  "SCALAR"
+>;
 
 export type User = {
   id: string;

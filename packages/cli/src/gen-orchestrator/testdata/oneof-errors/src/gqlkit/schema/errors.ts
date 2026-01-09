@@ -7,17 +7,11 @@ export type MultiplePropertiesInput =
   | { id: string; name: string }
   | { code: string };
 
-export type EmptyObjectInput =
-  | {}
-  | { id: string };
+export type EmptyObjectInput = {} | { id: string };
 
-export type DuplicatePropertyInput =
-  | { id: string }
-  | { id: number };
+export type DuplicatePropertyInput = { id: string } | { id: number };
 
-export type InvalidTypeInput =
-  | { product: Product }
-  | { id: string };
+export type InvalidTypeInput = { product: Product } | { id: string };
 
 export interface ByIdInput {
   id: string;
@@ -29,6 +23,4 @@ export interface ByNameInput {
 
 export type NamedTypeUnionInput = ByIdInput | ByNameInput;
 
-export type MixedMembersInput =
-  | { id: string }
-  | ByNameInput;
+export type MixedMembersInput = { id: string } | ByNameInput;

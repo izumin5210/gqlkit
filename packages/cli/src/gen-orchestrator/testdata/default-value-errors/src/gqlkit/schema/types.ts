@@ -1,4 +1,9 @@
-import { createGqlkitApis, type NoArgs, type GqlFieldDef, type Int } from "@gqlkit-ts/runtime";
+import {
+  createGqlkitApis,
+  type GqlFieldDef,
+  type Int,
+  type NoArgs,
+} from "@gqlkit-ts/runtime";
 
 export type BadInput = {
   nonLiteralString: GqlFieldDef<string, { defaultValue: string }>;
