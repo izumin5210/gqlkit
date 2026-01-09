@@ -411,6 +411,46 @@ type Query {
 }
 ```
 
+### Object types
+
+Plain TypeScript type exports become GraphQL Object types. See the examples in "Define types and resolvers together" section above.
+
+#### Inline objects in Object types
+
+Object type fields can use inline object literals for nested structures. gqlkit automatically generates Object types with the naming convention `{ParentTypeName}{PascalCaseFieldName}`:
+
+```ts
+export type User = {
+  id: string;
+  name: string;
+  /** User's profile information */
+  profile: {
+    /** User's biography */
+    bio: string;
+    age: number;
+  };
+};
+```
+
+Generates:
+
+```graphql
+type User {
+  id: String!
+  name: String!
+  """User's profile information"""
+  profile: UserProfile!
+}
+
+type UserProfile {
+  """User's biography"""
+  bio: String!
+  age: Float!
+}
+```
+
+Nested inline objects generate types with concatenated names (e.g., `User.profile.address` → `UserProfileAddress`).
+
 ### Enum types
 
 String literal unions are converted to GraphQL enum types:
@@ -607,6 +647,42 @@ input CreateUserInput {
   email: String
 }
 ```
+
+#### Inline objects in Input types
+
+Input types can use inline object literals for nested structures. gqlkit automatically generates Input Object types with the naming convention `{ParentTypeNameWithoutInputSuffix}{PascalCaseFieldName}Input`:
+
+```ts
+import type { GqlFieldDef, Int } from "@gqlkit-ts/runtime";
+
+export type CreateUserInput = {
+  name: string;
+  /** Profile information */
+  profile: {
+    bio: string | null;
+    /** User's age with default value */
+    age: GqlFieldDef<Int | null, { defaultValue: 18 }>;
+  };
+};
+```
+
+Generates:
+
+```graphql
+input CreateUserInput {
+  name: String!
+  """Profile information"""
+  profile: CreateUserProfileInput!
+}
+
+input CreateUserProfileInput {
+  """User's age with default value"""
+  age: Int = 18
+  bio: String
+}
+```
+
+Nested inline objects generate types with concatenated names (e.g., `UserProfileInput.address` → `UserProfileAddressInput`).
 
 ### @oneOf input objects
 
@@ -853,6 +929,66 @@ export const posts = defineField<User, NoArgs, Post[]>(
 export const postCount = defineField<User, NoArgs, number>(
   (parent) => countPostsByAuthor(parent.id)
 );
+```
+
+#### Inline objects in resolver arguments
+
+Resolver arguments can use inline object literals. gqlkit automatically generates Input Object types:
+
+- **Query/Mutation arguments**: `{PascalCaseFieldName}{PascalCaseArgName}Input`
+- **Field resolver arguments**: `{ParentTypeName}{PascalCaseFieldName}{PascalCaseArgName}Input`
+
+```ts
+import { createGqlkitApis, type GqlFieldDef } from "@gqlkit-ts/runtime";
+
+const { defineQuery, defineField } = createGqlkitApis<Context>();
+
+export const searchUsers = defineQuery<
+  {
+    /** Search filter */
+    filter: {
+      namePattern: string | null;
+    };
+  },
+  User[]
+>((_root, args) => []);
+
+export const posts = defineField<
+  User,
+  {
+    /** Filter options */
+    filter: {
+      titlePattern: string | null;
+    } | null;
+  },
+  Post[]
+>((parent, args) => []);
+```
+
+Generates:
+
+```graphql
+type Query {
+  searchUsers(
+    """Search filter"""
+    filter: SearchUsersFilterInput!
+  ): [User!]!
+}
+
+type User {
+  posts(
+    """Filter options"""
+    filter: UserPostsFilterInput
+  ): [Post!]!
+}
+
+input SearchUsersFilterInput {
+  namePattern: String
+}
+
+input UserPostsFilterInput {
+  titlePattern: String
+}
 ```
 
 ## Conventions
