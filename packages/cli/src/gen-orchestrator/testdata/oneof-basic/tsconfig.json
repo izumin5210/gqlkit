@@ -1,11 +1,1 @@
-{
-  "compilerOptions": {
-    "target": "es2022",
-    "module": "nodenext",
-    "moduleResolution": "node16",
-    "strict": true,
-    "esModuleInterop": true,
-    "skipLibCheck": true
-  },
-  "include": ["src/**/*.ts"]
-}
+{"extends": "../tsconfig.base.json"}
