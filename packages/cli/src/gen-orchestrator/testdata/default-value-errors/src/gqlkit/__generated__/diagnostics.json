@@ -5,7 +5,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 4,
+      "line": 9,
       "column": 3
     }
   },
@@ -15,7 +15,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 5,
+      "line": 10,
       "column": 3
     }
   },
@@ -25,7 +25,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 6,
+      "line": 11,
       "column": 3
     }
   },
@@ -35,7 +35,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 4,
+      "line": 9,
       "column": 3
     }
   },
@@ -45,7 +45,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 5,
+      "line": 10,
       "column": 3
     }
   },
@@ -55,7 +55,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 6,
+      "line": 11,
       "column": 3
     }
   }
