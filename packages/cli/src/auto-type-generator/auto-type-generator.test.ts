@@ -90,7 +90,11 @@ function createExtractedType(
       name,
       kind,
       sourceFile: "src/gqlkit/schema/types.ts",
-      sourceLocation: { file: "src/gqlkit/schema/types.ts", line: 1, column: 1 },
+      sourceLocation: {
+        file: "src/gqlkit/schema/types.ts",
+        line: 1,
+        column: 1,
+      },
       exportKind: "named",
       description: null,
       deprecated: null,

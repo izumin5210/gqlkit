@@ -72,7 +72,6 @@ interface InlineObjectWithContext {
   readonly nullable: boolean;
 }
 
-
 function isInputTypeName(name: string): boolean {
   return name.endsWith("Input");
 }
@@ -128,7 +127,11 @@ function collectInlineObjectsFromField(
   results.push({
     properties: tsType.inlineObjectProperties,
     context,
-    sourceLocation: field.sourceLocation ?? { file: sourceFile, line: 1, column: 1 },
+    sourceLocation: field.sourceLocation ?? {
+      file: sourceFile,
+      line: 1,
+      column: 1,
+    },
     nullable: tsType.nullable,
   });
 
@@ -177,7 +180,11 @@ function collectNestedInlineObjects(
   results.push({
     properties,
     context,
-    sourceLocation: parentSourceLocation ?? { file: sourceFile, line: 1, column: 1 },
+    sourceLocation: parentSourceLocation ?? {
+      file: sourceFile,
+      line: 1,
+      column: 1,
+    },
     nullable: false,
   });
 
