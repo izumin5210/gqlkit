@@ -460,7 +460,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "String",
+                value: "PostStatus",
               },
             },
           },
@@ -843,7 +843,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "String",
+                value: "Role",
               },
             },
           },
@@ -865,7 +865,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "String",
+                value: "UserStatus",
               },
             },
           },

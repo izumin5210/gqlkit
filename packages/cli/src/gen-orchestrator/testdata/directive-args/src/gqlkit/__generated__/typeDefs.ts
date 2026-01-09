@@ -204,7 +204,7 @@ export const typeDefs: DocumentNode = {
                     "value": "level"
                   },
                   "value": {
-                    "kind": "EnumValue",
+                    "kind": "StringValue",
                     "value": "DEBUG"
                   }
                 }

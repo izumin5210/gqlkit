@@ -153,15 +153,32 @@ function convertTsTypeToReferenceWithBrandInfo(
   }
 
   if (type.isUnion()) {
-    const nonNullTypes = type.types.filter(
-      (t) =>
-        !(t.flags & ts.TypeFlags.Null) && !(t.flags & ts.TypeFlags.Undefined),
-    );
     const hasNull = type.types.some((t) => t.flags & ts.TypeFlags.Null);
     const hasUndefined = type.types.some(
       (t) => t.flags & ts.TypeFlags.Undefined,
     );
     const nullable = hasNull || hasUndefined;
+
+    // Preserve type alias name for enum types (string literal unions)
+    const aliasSymbol = type.aliasSymbol;
+    if (aliasSymbol) {
+      const name = aliasSymbol.getName();
+      return {
+        tsType: {
+          kind: "reference",
+          name,
+          elementType: null,
+          members: null,
+          nullable,
+          scalarInfo: null,
+        },
+      };
+    }
+
+    const nonNullTypes = type.types.filter(
+      (t) =>
+        !(t.flags & ts.TypeFlags.Null) && !(t.flags & ts.TypeFlags.Undefined),
+    );
 
     if (nonNullTypes.length === 1) {
       const innerResult = convertTsTypeToReferenceWithBrandInfo(

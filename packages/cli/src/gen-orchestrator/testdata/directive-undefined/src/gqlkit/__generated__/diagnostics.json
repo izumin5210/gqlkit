@@ -2,7 +2,7 @@
   {
     "code": "UNDEFINED_DIRECTIVE",
     "message": "Field 'User.id': Directive '@auth' is not defined",
-    "severity": "warning",
+    "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
       "line": 1,

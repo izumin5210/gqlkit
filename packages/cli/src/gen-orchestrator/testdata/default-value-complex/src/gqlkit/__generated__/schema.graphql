@@ -25,19 +25,19 @@ enum Status {
 """Defined in: src/gqlkit/schema/types.ts"""
 type Task {
   id: String!
-  status: String!
+  status: Status!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 input AdvancedInput {
-  enumList: [String!]! = [ACTIVE, PENDING]
+  enumList: [Status!]! = [ACTIVE, PENDING]
   nestedArray: [String!]! = [["a", "b"], ["c", "d"]]
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 input FilterInput {
-  priorities: [String!]! = [MEDIUM, HIGH]
-  status: String! = ACTIVE
+  priorities: [Priority!]! = [MEDIUM, HIGH]
+  status: Status! = ACTIVE
   tags: [String!]! = ["default"]
 }
 

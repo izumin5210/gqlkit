@@ -155,7 +155,7 @@ function validateDirectiveUsage(
     diagnostics.push({
       code: "UNDEFINED_DIRECTIVE",
       message: `${targetName}: Directive '@${directiveName}' is not defined`,
-      severity: "warning",
+      severity: "error",
       location: { file: sourceFile, line, column: 1 },
     });
     return;

@@ -167,7 +167,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "String"
+                "value": "Status"
               }
             }
           }
@@ -202,7 +202,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "String"
+                    "value": "Status"
                   }
                 }
               }
@@ -306,7 +306,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "String"
+                    "value": "Priority"
                   }
                 }
               }
@@ -338,7 +338,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "String"
+                "value": "Status"
               }
             }
           },
