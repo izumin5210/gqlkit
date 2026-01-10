@@ -6,7 +6,7 @@
  */
 
 import ts from "typescript";
-import { METADATA_PROPERTIES } from "./constants.js";
+import { METADATA_PROPERTIES, RUNTIME_TYPE_NAMES } from "./constants.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 
 const FIELD_META_PROPERTY = METADATA_PROPERTIES.FIELD_META;
@@ -449,7 +449,10 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
   // Check for GqlField/GqlObject type alias by examining the alias symbol
   if (type.aliasSymbol) {
     const aliasName = type.aliasSymbol.getName();
-    if (aliasName === "GqlField" || aliasName === "GqlObject") {
+    if (
+      aliasName === RUNTIME_TYPE_NAMES.GQL_FIELD ||
+      aliasName === RUNTIME_TYPE_NAMES.GQL_OBJECT
+    ) {
       return true;
     }
   }
@@ -476,7 +479,10 @@ export function unwrapDirectiveType(
   //    This works when the type alias hasn't been expanded by TypeScript
   if (type.aliasTypeArguments && type.aliasTypeArguments.length > 0) {
     const aliasSymbolName = type.aliasSymbol?.getName() ?? "";
-    if (aliasSymbolName === "GqlField" || aliasSymbolName === "GqlObject") {
+    if (
+      aliasSymbolName === RUNTIME_TYPE_NAMES.GQL_FIELD ||
+      aliasSymbolName === RUNTIME_TYPE_NAMES.GQL_OBJECT
+    ) {
       return type.aliasTypeArguments[0]!;
     }
   }
@@ -489,8 +495,8 @@ export function unwrapDirectiveType(
       if (member.aliasTypeArguments && member.aliasTypeArguments.length > 0) {
         const memberAliasSymbolName = member.aliasSymbol?.getName() ?? "";
         if (
-          memberAliasSymbolName === "GqlField" ||
-          memberAliasSymbolName === "GqlObject"
+          memberAliasSymbolName === RUNTIME_TYPE_NAMES.GQL_FIELD ||
+          memberAliasSymbolName === RUNTIME_TYPE_NAMES.GQL_OBJECT
         ) {
           return member.aliasTypeArguments[0]!;
         }

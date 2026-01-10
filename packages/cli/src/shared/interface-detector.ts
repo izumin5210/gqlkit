@@ -7,6 +7,7 @@
  */
 
 import ts from "typescript";
+import { RUNTIME_TYPE_NAMES } from "./constants.js";
 
 /**
  * Checks if a type alias declaration uses GqlInterface.
@@ -19,7 +20,7 @@ export function isDefineInterfaceTypeAlias(
   const typeNode = node.type;
   if (ts.isTypeReferenceNode(typeNode)) {
     const typeName = typeNode.typeName.getText(sourceFile);
-    return typeName === "GqlInterface";
+    return typeName === RUNTIME_TYPE_NAMES.GQL_INTERFACE;
   }
   return false;
 }
@@ -64,7 +65,7 @@ export function extractImplementsFromGqlTypeDef(
   }
 
   const typeName = typeNode.typeName.getText(sourceFile);
-  if (typeName !== "GqlObject") {
+  if (typeName !== RUNTIME_TYPE_NAMES.GQL_OBJECT) {
     return [];
   }
 

@@ -83,6 +83,27 @@ export const METADATA_PROPERTIES = {
 } as const;
 
 // ============================================================
+// @gqlkit-ts/runtime Utility Type Names
+// ============================================================
+
+/**
+ * Type names exported from @gqlkit-ts/runtime.
+ * These are used for type detection in the CLI.
+ */
+export const RUNTIME_TYPE_NAMES = {
+  /** GraphQL interface type definition */
+  GQL_INTERFACE: "GqlInterface",
+  /** Custom scalar type definition */
+  GQL_SCALAR: "GqlScalar",
+  /** Custom directive definition */
+  GQL_DIRECTIVE: "GqlDirective",
+  /** Type-level metadata (implements, directives) */
+  GQL_OBJECT: "GqlObject",
+  /** Field-level metadata (defaultValue, directives) */
+  GQL_FIELD: "GqlField",
+} as const;
+
+// ============================================================
 // GraphQL Built-in Types
 // ============================================================
 

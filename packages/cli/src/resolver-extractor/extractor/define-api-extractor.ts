@@ -2,6 +2,7 @@ import ts from "typescript";
 import {
   isInternalTypeSymbol,
   METADATA_PROPERTIES,
+  RUNTIME_TYPE_NAMES,
 } from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
@@ -363,7 +364,10 @@ function shouldUnwrapAsGqlField(
   // Fallback: check if the type string contains GqlField
   // This handles cases where TypeScript represents the type differently
   const typeString = checker.typeToString(type);
-  if (typeString.startsWith("GqlField<") || typeString === "GqlField") {
+  if (
+    typeString.startsWith(`${RUNTIME_TYPE_NAMES.GQL_FIELD}<`) ||
+    typeString === RUNTIME_TYPE_NAMES.GQL_FIELD
+  ) {
     return true;
   }
 
