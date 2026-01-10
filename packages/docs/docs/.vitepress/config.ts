@@ -9,7 +9,7 @@ export default defineConfig({
   markdown: {
     theme: {
       light: "catppuccin-latte",
-      dark: "catppuccin-frappe",
+      dark: "catppuccin-mocha",
     },
   },
 
