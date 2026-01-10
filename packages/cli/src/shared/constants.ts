@@ -18,7 +18,7 @@
  *    (e.g., extracting from optional properties, intersection types)
  * 3. The original type name is lost during TypeScript's internal type resolution
  *
- * In the context of GqlFieldDef<T, Meta>, when we extract T from the
+ * In the context of GqlField<T, Meta>, when we extract T from the
  * `$gqlkitOriginalType` property, TypeScript may return the type with
  * `__type` as its symbol name instead of the original type name (e.g., "NestedConfig").
  * This happens because:
@@ -62,9 +62,9 @@ export function isInternalTypeSymbol(symbolName: string): boolean {
  * These start with " $" (space + dollar sign) to avoid conflicts.
  */
 export const METADATA_PROPERTIES = {
-  /** Field metadata (GqlFieldDef) */
+  /** Field metadata (GqlField) */
   FIELD_META: " $gqlkitFieldMeta",
-  /** Type metadata (GqlTypeDef) */
+  /** Type metadata (GqlObject) */
   TYPE_META: " $gqlkitTypeMeta",
   /** Directive name */
   DIRECTIVE_NAME: " $directiveName",
@@ -80,6 +80,27 @@ export const METADATA_PROPERTIES = {
   RESOLVER: " $gqlkitResolver",
   /** Interface metadata */
   INTERFACE_META: " $gqlkitInterfaceMeta",
+} as const;
+
+// ============================================================
+// @gqlkit-ts/runtime Utility Type Names
+// ============================================================
+
+/**
+ * Type names exported from @gqlkit-ts/runtime.
+ * These are used for type detection in the CLI.
+ */
+export const RUNTIME_TYPE_NAMES = {
+  /** GraphQL interface type definition */
+  GQL_INTERFACE: "GqlInterface",
+  /** Custom scalar type definition */
+  GQL_SCALAR: "GqlScalar",
+  /** Custom directive definition */
+  GQL_DIRECTIVE: "GqlDirective",
+  /** Type-level metadata (implements, directives) */
+  GQL_OBJECT: "GqlObject",
+  /** Field-level metadata (defaultValue, directives) */
+  GQL_FIELD: "GqlField",
 } as const;
 
 // ============================================================

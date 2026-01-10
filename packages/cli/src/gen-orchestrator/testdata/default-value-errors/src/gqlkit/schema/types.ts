@@ -1,14 +1,14 @@
 import {
   createGqlkitApis,
-  type GqlFieldDef,
+  type GqlField,
   type Int,
   type NoArgs,
 } from "@gqlkit-ts/runtime";
 
 export type BadInput = {
-  nonLiteralString: GqlFieldDef<string, { defaultValue: string }>;
-  nonLiteralNumber: GqlFieldDef<Int, { defaultValue: number }>;
-  nonLiteralBoolean: GqlFieldDef<boolean, { defaultValue: boolean }>;
+  nonLiteralString: GqlField<string, { defaultValue: string }>;
+  nonLiteralNumber: GqlField<Int, { defaultValue: number }>;
+  nonLiteralBoolean: GqlField<boolean, { defaultValue: boolean }>;
 };
 
 export type Result = {

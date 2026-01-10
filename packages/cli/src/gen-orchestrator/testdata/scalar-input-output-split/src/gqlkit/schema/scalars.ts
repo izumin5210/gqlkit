@@ -1,16 +1,16 @@
-import type { DefineScalar } from "@gqlkit-ts/runtime";
+import type { GqlScalar } from "@gqlkit-ts/runtime";
 
 /**
  * Date input in ISO 8601 format
  */
-export type DateTimeInput = DefineScalar<"DateTime", Date, "input">;
+export type DateTimeInput = GqlScalar<"DateTime", Date, "input">;
 
 /**
  * Date output as Date object
  */
-export type DateTimeOutput = DefineScalar<"DateTime", Date, "output">;
+export type DateTimeOutput = GqlScalar<"DateTime", Date, "output">;
 
 /**
  * Date output as string for JSON serialization
  */
-export type DateTimeStringOutput = DefineScalar<"DateTime", string, "output">;
+export type DateTimeStringOutput = GqlScalar<"DateTime", string, "output">;

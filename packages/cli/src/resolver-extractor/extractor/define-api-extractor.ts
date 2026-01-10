@@ -2,6 +2,7 @@ import ts from "typescript";
 import {
   isInternalTypeSymbol,
   METADATA_PROPERTIES,
+  RUNTIME_TYPE_NAMES,
 } from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
@@ -347,11 +348,11 @@ function extractTSDocFromPropertyWithPriority(
 }
 
 /**
- * Checks if a type should be unwrapped as a GqlFieldDef type.
+ * Checks if a type should be unwrapped as a GqlField type.
  * This handles cases where TypeScript represents the type differently
  * when accessed through type references vs. direct declarations.
  */
-function shouldUnwrapAsGqlFieldDef(
+function shouldUnwrapAsGqlField(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): boolean {
@@ -360,10 +361,13 @@ function shouldUnwrapAsGqlFieldDef(
     return true;
   }
 
-  // Fallback: check if the type string contains GqlFieldDef
+  // Fallback: check if the type string contains GqlField
   // This handles cases where TypeScript represents the type differently
   const typeString = checker.typeToString(type);
-  if (typeString.startsWith("GqlFieldDef<") || typeString === "GqlFieldDef") {
+  if (
+    typeString.startsWith(`${RUNTIME_TYPE_NAMES.GQL_FIELD}<`) ||
+    typeString === RUNTIME_TYPE_NAMES.GQL_FIELD
+  ) {
     return true;
   }
 
@@ -392,7 +396,7 @@ function extractArgsFromType(
     let defaultValue: DirectiveArgumentValue | null = null;
     let actualPropType = propType;
 
-    if (shouldUnwrapAsGqlFieldDef(propType, checker)) {
+    if (shouldUnwrapAsGqlField(propType, checker)) {
       const defaultValueResult = detectDefaultValueMetadata(propType, checker);
       if (defaultValueResult.defaultValue) {
         defaultValue = defaultValueResult.defaultValue;

@@ -64,16 +64,16 @@ Static code generation tool that analyzes TypeScript source files and produces G
 7. **TSDoc to GraphQL descriptions**: TSDoc comments are automatically extracted and converted to GraphQL schema descriptions, supporting `@deprecated` directives
 8. **Input Object convention**: Types with `*Input` suffix are recognized as GraphQL Input Object types for resolver arguments
 9. **Branded scalar types**: `@gqlkit-ts/runtime` provides `IDString`, `IDNumber`, `Int`, `Float` for explicit GraphQL scalar mapping. Plain `number` defaults to `Float`; use `Int` branded type for integer fields
-10. **DefineScalar utility type**: `DefineScalar<Name, Base, Only?>` from `@gqlkit-ts/runtime` for defining custom scalar types with embedded metadata. Supports input/output-only constraints
+10. **GqlScalar utility type**: `GqlScalar<Name, Base, Only?>` from `@gqlkit-ts/runtime` for defining custom scalar types with embedded metadata. Supports input/output-only constraints
 11. **TypeScript type conversion patterns**:
     - String enums become GraphQL enum types (enum value strings become GraphQL enum values)
     - Union types of object types become GraphQL union types
     - Types with `*Input` suffix become GraphQL input object types
     - Union types with `*Input` suffix become `@oneOf` input objects
-    - `DefineInterface<T>` becomes GraphQL interface types
+    - `GqlInterface<T>` becomes GraphQL interface types
     - Inline object types become auto-generated named types with predictable naming conventions
-12. **Interface types**: `DefineInterface<T, { implements?: [...] }>` for GraphQL interfaces. `GqlTypeDef<T, { implements: [...] }>` for object types implementing interfaces. Supports interface inheritance
-13. **Default values**: `GqlFieldDef<T, { defaultValue: literal }>` for input field defaults. Supports primitives, arrays, objects, and enum values. Requires TypeScript literal types (not `number` but `10`)
+12. **Interface types**: `GqlInterface<T, { implements?: [...] }>` for GraphQL interfaces. `GqlObject<T, { implements: [...] }>` for object types implementing interfaces. Supports interface inheritance
+13. **Default values**: `GqlField<T, { defaultValue: literal }>` for input field defaults. Supports primitives, arrays, objects, and enum values. Requires TypeScript literal types (not `number` but `10`)
 14. **Configuration file**: Optional `gqlkit.config.ts` with `defineConfig()` for custom scalar mappings, output paths, and lifecycle hooks (e.g., `afterAllFileWrite`)
 15. **Auto-type generation naming conventions**: Predictable naming for inline object types:
     - Object field: `{ParentTypeName}{PascalCaseFieldName}`

@@ -1,10 +1,10 @@
-import type { GqlTypeDef, IDString } from "@gqlkit-ts/runtime";
+import type { GqlObject, IDString } from "@gqlkit-ts/runtime";
 import type { DateTime, Node, Timestamped } from "./interfaces.js";
 
 /**
  * A blog post with multiple interface implementations.
  */
-export type Post = GqlTypeDef<
+export type Post = GqlObject<
   {
     id: IDString;
     title: string;

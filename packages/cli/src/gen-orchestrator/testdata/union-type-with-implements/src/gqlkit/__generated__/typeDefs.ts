@@ -117,7 +117,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Union type of User and Post (both implementing Node via GqlTypeDef).\n\nDefined in: src/gqlkit/schema/types.ts",
+        "value": "Union type of User and Post (both implementing Node via GqlObject).\n\nDefined in: src/gqlkit/schema/types.ts",
         "block": true
       }
     },

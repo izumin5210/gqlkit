@@ -1,6 +1,6 @@
 import {
   createGqlkitApis,
-  type GqlFieldDef,
+  type GqlField,
   type Int,
   type NoArgs,
 } from "@gqlkit-ts/runtime";
@@ -14,12 +14,12 @@ export type NestedConfig = {
 // Bug 2: Array type (Int[]) should preserve list wrapper, not flatten to scalar
 export type SettingsInput = {
   // Bug 1: config should be NestedConfig!, but resolves to __type!
-  config: GqlFieldDef<
+  config: GqlField<
     NestedConfig,
     { defaultValue: { enabled: true; value: 100 } }
   >;
   // Bug 2: limits should be [Int!]!, but resolves to Int!
-  limits: GqlFieldDef<Int[], { defaultValue: [10, 20, 30] }>;
+  limits: GqlField<Int[], { defaultValue: [10, 20, 30] }>;
 };
 
 // Additional test case: array of type references
@@ -29,7 +29,7 @@ export type Tag = {
 
 export type AdvancedInput = {
   // Bug 1 + Bug 2 combined: should be [Tag!]!
-  tags: GqlFieldDef<Tag[], { defaultValue: [{ name: "default" }] }>;
+  tags: GqlField<Tag[], { defaultValue: [{ name: "default" }] }>;
 };
 
 export type Settings = {

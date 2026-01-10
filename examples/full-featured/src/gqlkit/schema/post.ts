@@ -1,4 +1,4 @@
-import type { GqlTypeDef, IDString } from "@gqlkit-ts/runtime";
+import type { GqlObject, IDString } from "@gqlkit-ts/runtime";
 import type { Comment } from "./comment.js";
 import {
   defineField,
@@ -15,7 +15,7 @@ import type { User } from "./user.js";
  * A blog post.
  * Implements Node (identifiable) and Timestamped (has createdAt).
  */
-export type Post = GqlTypeDef<
+export type Post = GqlObject<
   {
     /** Unique identifier for the post */
     id: IDString;

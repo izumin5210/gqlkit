@@ -1,25 +1,21 @@
-import type {
-  DefineInterface,
-  DefineScalar,
-  IDString,
-} from "@gqlkit-ts/runtime";
+import type { GqlInterface, GqlScalar, IDString } from "@gqlkit-ts/runtime";
 
 /**
  * Custom DateTime scalar.
  */
-export type DateTime = DefineScalar<"DateTime", Date>;
+export type DateTime = GqlScalar<"DateTime", Date>;
 
 /**
  * Node interface for global identification.
  */
-export type Node = DefineInterface<{
+export type Node = GqlInterface<{
   id: IDString;
 }>;
 
 /**
  * Timestamped interface for entities with timestamps.
  */
-export type Timestamped = DefineInterface<{
+export type Timestamped = GqlInterface<{
   createdAt: DateTime;
   updatedAt: DateTime;
 }>;

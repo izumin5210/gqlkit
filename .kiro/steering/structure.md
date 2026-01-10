@@ -40,11 +40,11 @@ Minimal runtime utilities for user codebases:
 - `createGqlkitApis<TContext>()` factory function
 - Type definitions for resolvers (`QueryResolver`, `MutationResolver`, `FieldResolver`)
 - Branded scalar types (`IDString`, `IDNumber`, `Int`, `Float`) for explicit GraphQL scalar mapping
-- `DefineScalar<Name, Base, Only?>` utility type for custom scalar definitions
-- `DefineInterface<T, Meta?>` utility type for GraphQL interface definitions
-- `GqlTypeDef<T, Meta>` for type-level metadata (directives, implements)
-- `GqlFieldDef<T, Meta>` for field-level metadata (directives, defaultValue)
-- `Directive<Name, Args, Location>` utility type for custom directive definitions
+- `GqlScalar<Name, Base, Only?>` utility type for custom scalar definitions
+- `GqlInterface<T, Meta?>` utility type for GraphQL interface definitions
+- `GqlObject<T, Meta>` for type-level metadata (directives, implements)
+- `GqlField<T, Meta>` for field-level metadata (directives, defaultValue)
+- `GqlDirective<Name, Args, Location>` utility type for custom directive definitions
 - `NoArgs` helper type
 
 ### User Convention Directories (gqlkit-managed)

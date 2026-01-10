@@ -1,6 +1,6 @@
 import {
   createGqlkitApis,
-  type GqlFieldDef,
+  type GqlField,
   type NoArgs,
 } from "@gqlkit-ts/runtime";
 
@@ -59,9 +59,9 @@ export const searchUsers = defineQuery<
     /** Pagination options */
     pagination: {
       /** Page number */
-      page: GqlFieldDef<number, { defaultValue: 1 }>;
+      page: GqlField<number, { defaultValue: 1 }>;
       /** Items per page */
-      limit: GqlFieldDef<number, { defaultValue: 10 }>;
+      limit: GqlField<number, { defaultValue: 10 }>;
     };
   },
   User[]

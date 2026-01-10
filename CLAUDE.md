@@ -51,10 +51,11 @@ gqlkit relies on strict conventions to enable deterministic schema generation wi
    - All exports from `src/gqlkit/schema/` are considered
    - TSDoc/JSDoc comments become GraphQL descriptions (`@deprecated` supported)
    - Utility types for advanced features:
-     - `DefineInterface<T, Meta?>` - GraphQL interface types
-     - `GqlTypeDef<T, Meta>` - Type-level metadata (implements, directives)
-     - `GqlFieldDef<T, Meta>` - Field-level metadata (defaultValue, directives)
-     - `Directive<Name, Args, Location>` - Custom directive definitions
+     - `GqlInterface<T, Meta?>` - GraphQL interface types
+     - `GqlObject<T, Meta>` - Type-level metadata (implements, directives)
+     - `GqlField<T, Meta>` - Field-level metadata (defaultValue, directives)
+     - `GqlDirective<Name, Args, Location>` - Custom directive definitions
+     - `GqlScalar<Name, Base, Only?>` - Custom scalar type definition
 
 3. **Define API for resolvers** (using `@gqlkit-ts/runtime`):
    - `createGqlkitApis<TContext>()` factory returns typed resolver definition functions
@@ -81,11 +82,11 @@ examples/    - Example projects demonstrating usage
 **Runtime package exports** (`@gqlkit-ts/runtime`):
 - `createGqlkitApis<TContext>()` - Factory for resolver definition functions
 - Branded scalar types: `IDString`, `IDNumber`, `Int`, `Float`
-- `DefineScalar<Name, Base, Only?>` - Custom scalar type definition
-- `DefineInterface<T, Meta?>` - GraphQL interface type definition
-- `GqlTypeDef<T, Meta>` - Type metadata (implements, directives)
-- `GqlFieldDef<T, Meta>` - Field metadata (defaultValue, directives)
-- `Directive<Name, Args, Location>` - Custom directive definition
+- `GqlScalar<Name, Base, Only?>` - Custom scalar type definition
+- `GqlInterface<T, Meta?>` - GraphQL interface type definition
+- `GqlObject<T, Meta>` - Type metadata (implements, directives)
+- `GqlField<T, Meta>` - Field metadata (defaultValue, directives)
+- `GqlDirective<Name, Args, Location>` - Custom directive definition
 - `NoArgs` - Helper type for fields without arguments
 
 **CLI Pipeline** (`packages/cli/src/`):
@@ -135,8 +136,8 @@ examples/    - Example projects demonstrating usage
 | Union of object types | Union type |
 | `*Input` suffix types | Input Object type |
 | Union with `*Input` suffix | `@oneOf` input object |
-| `DefineInterface<T>` | Interface type |
-| `DefineScalar<Name, Base>` | Custom scalar |
+| `GqlInterface<T>` | Interface type |
+| `GqlScalar<Name, Base>` | Custom scalar |
 
 ## Development Workflow
 

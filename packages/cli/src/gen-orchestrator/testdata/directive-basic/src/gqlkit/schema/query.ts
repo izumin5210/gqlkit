@@ -1,12 +1,12 @@
 import {
   createGqlkitApis,
-  type Directive,
-  type GqlFieldDef,
+  type GqlDirective,
+  type GqlField,
   type NoArgs,
 } from "@gqlkit-ts/runtime";
 
 export type Role = "USER" | "ADMIN";
-export type AuthDirective<TArgs extends { role: Role[] }> = Directive<
+export type AuthDirective<TArgs extends { role: Role[] }> = GqlDirective<
   "auth",
   TArgs,
   "FIELD_DEFINITION"
@@ -14,11 +14,8 @@ export type AuthDirective<TArgs extends { role: Role[] }> = Directive<
 
 export type User = {
   id: string;
-  email: GqlFieldDef<
-    string,
-    { directives: [AuthDirective<{ role: ["ADMIN"] }>] }
-  >;
-  nickname: GqlFieldDef<
+  email: GqlField<string, { directives: [AuthDirective<{ role: ["ADMIN"] }>] }>;
+  nickname: GqlField<
     string | null,
     { directives: [AuthDirective<{ role: ["USER"] }>] }
   >;

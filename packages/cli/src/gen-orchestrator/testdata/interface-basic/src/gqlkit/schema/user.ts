@@ -1,10 +1,10 @@
-import type { GqlTypeDef, IDString } from "@gqlkit-ts/runtime";
+import type { GqlObject, IDString } from "@gqlkit-ts/runtime";
 import type { Node } from "./node.js";
 
 /**
  * A user in the system.
  */
-export type User = GqlTypeDef<
+export type User = GqlObject<
   {
     id: IDString;
     name: string;

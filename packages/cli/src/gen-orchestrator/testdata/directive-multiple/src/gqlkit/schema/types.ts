@@ -1,23 +1,23 @@
 import {
   createGqlkitApis,
-  type Directive,
-  type GqlFieldDef,
+  type GqlDirective,
+  type GqlField,
   type NoArgs,
 } from "@gqlkit-ts/runtime";
 
 export type Role = "USER" | "ADMIN";
 
-export type AuthDirective<TArgs extends { role: Role[] }> = Directive<
+export type AuthDirective<TArgs extends { role: Role[] }> = GqlDirective<
   "auth",
   TArgs,
   "FIELD_DEFINITION"
 >;
-export type CacheDirective<TArgs extends { maxAge: number }> = Directive<
+export type CacheDirective<TArgs extends { maxAge: number }> = GqlDirective<
   "cache",
   TArgs,
   "FIELD_DEFINITION"
 >;
-export type LogDirective = Directive<
+export type LogDirective = GqlDirective<
   "log",
   Record<string, never>,
   "FIELD_DEFINITION"
@@ -25,7 +25,7 @@ export type LogDirective = Directive<
 
 export type User = {
   id: string;
-  secret: GqlFieldDef<
+  secret: GqlField<
     string,
     {
       directives: [
