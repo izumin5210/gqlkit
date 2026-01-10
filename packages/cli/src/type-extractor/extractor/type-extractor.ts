@@ -16,7 +16,10 @@ import {
   isDefineInterfaceTypeAlias,
 } from "../../shared/interface-detector.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
-import { getSourceLocationFromNode } from "../../shared/source-location.js";
+import {
+  getSourceLocationFromNode,
+  type SourceLocation,
+} from "../../shared/source-location.js";
 import {
   extractTsDocFromSymbol,
   extractTsDocInfo,
@@ -708,6 +711,177 @@ function determineTypeKindFromType(
   return "object";
 }
 
+function isDeclarationInScannedFiles(
+  declaration: ts.Declaration,
+  scannedSourceFiles: ReadonlySet<string>,
+): boolean {
+  const declSourceFileName = declaration.getSourceFile().fileName;
+  return Array.from(scannedSourceFiles).some(
+    (sf) =>
+      sf === declSourceFileName ||
+      declSourceFileName.endsWith(sf) ||
+      sf.endsWith(declSourceFileName),
+  );
+}
+
+function createGenericTypeDiagnostic(
+  declaration: ts.Declaration,
+  exportedName: string,
+  location: SourceLocation,
+): Diagnostic | null {
+  if (
+    (ts.isTypeAliasDeclaration(declaration) ||
+      ts.isInterfaceDeclaration(declaration)) &&
+    declaration.typeParameters &&
+    declaration.typeParameters.length > 0
+  ) {
+    return {
+      code: "UNSUPPORTED_SYNTAX",
+      message: `Generic type '${exportedName}' is not supported. Consider using a concrete type instead.`,
+      severity: "warning",
+      location,
+    };
+  }
+  return null;
+}
+
+interface ProcessReexportedSymbolParams {
+  readonly exportedName: string;
+  readonly resolvedSymbol: ts.Symbol;
+  readonly type: ts.Type;
+  readonly location: SourceLocation;
+  readonly filePath: string;
+  readonly checker: ts.TypeChecker;
+  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly scannedSourceFiles: ReadonlySet<string>;
+}
+
+interface ProcessReexportedSymbolResult {
+  readonly typeInfo: ExtractedTypeInfo | null;
+  readonly diagnostics: Diagnostic[];
+  readonly scalarName: string | null;
+  readonly scalarMetadata: ScalarMetadataInfo | null;
+  readonly skip: boolean;
+}
+
+function processReexportedSymbol(
+  params: ProcessReexportedSymbolParams,
+): ProcessReexportedSymbolResult {
+  const {
+    exportedName,
+    resolvedSymbol,
+    type,
+    location,
+    filePath,
+    checker,
+    globalTypeMappings,
+    scannedSourceFiles,
+  } = params;
+
+  const diagnostics: Diagnostic[] = [];
+
+  const scalarMetadataResult = detectScalarMetadata(type, checker);
+  if (scalarMetadataResult.scalarName && !scalarMetadataResult.isPrimitive) {
+    const tsdocInfo = extractTsDocFromSymbol(resolvedSymbol, checker);
+    return {
+      typeInfo: null,
+      diagnostics: [],
+      scalarName: scalarMetadataResult.scalarName,
+      scalarMetadata: {
+        scalarName: scalarMetadataResult.scalarName,
+        typeName: exportedName,
+        only: scalarMetadataResult.only,
+        sourceFile: filePath,
+        line: location.line,
+        description: tsdocInfo.description ?? null,
+      },
+      skip: false,
+    };
+  }
+
+  const declarations = resolvedSymbol.getDeclarations();
+  const declaration = declarations?.[0];
+  if (declaration) {
+    if (
+      isDeclarationInScannedFiles(declaration, scannedSourceFiles) &&
+      (ts.isTypeAliasDeclaration(declaration) ||
+        ts.isInterfaceDeclaration(declaration) ||
+        ts.isEnumDeclaration(declaration))
+    ) {
+      return {
+        typeInfo: null,
+        diagnostics: [],
+        scalarName: null,
+        scalarMetadata: null,
+        skip: true,
+      };
+    }
+
+    const genericDiagnostic = createGenericTypeDiagnostic(
+      declaration,
+      exportedName,
+      location,
+    );
+    if (genericDiagnostic) {
+      diagnostics.push(genericDiagnostic);
+    }
+  }
+
+  const kind = determineTypeKindFromType(type, resolvedSymbol);
+  const tsdocInfo = extractTsDocFromSymbol(resolvedSymbol, checker);
+
+  const metadata: TypeMetadata = {
+    name: exportedName,
+    kind,
+    sourceFile: filePath,
+    sourceLocation: location,
+    exportKind: "named",
+    description: tsdocInfo.description ?? null,
+    deprecated: tsdocInfo.deprecated ?? null,
+    directives: null,
+  };
+
+  if (kind === "enum") {
+    const enumMembers = extractStringLiteralUnionMembers(type, checker);
+    return {
+      typeInfo: {
+        metadata,
+        fields: [],
+        unionMembers: null,
+        inlineObjectMembers: null,
+        enumMembers,
+        implementedInterfaces: null,
+      },
+      diagnostics,
+      scalarName: null,
+      scalarMetadata: null,
+      skip: false,
+    };
+  }
+
+  const unionMembers = extractUnionMembers(type);
+  const fieldResult =
+    kind === "union"
+      ? { fields: [], diagnostics: [] }
+      : extractFieldsFromType(type, checker, globalTypeMappings);
+  diagnostics.push(...fieldResult.diagnostics);
+
+  return {
+    typeInfo: {
+      metadata,
+      fields: fieldResult.fields,
+      unionMembers: unionMembers ?? null,
+      inlineObjectMembers: null,
+      enumMembers: null,
+      implementedInterfaces: null,
+    },
+    diagnostics,
+    scalarName: null,
+    scalarMetadata: null,
+    skip: false,
+  };
+}
+
 interface ProcessExportDeclarationResult {
   readonly types: ExtractedTypeInfo[];
   readonly diagnostics: Diagnostic[];
@@ -734,116 +908,30 @@ function processExportDeclaration(
 
   const exportClause = node.exportClause;
 
+  const symbolsToProcess: Array<{
+    exportedName: string;
+    resolvedSymbol: ts.Symbol;
+    type: ts.Type;
+  }> = [];
+
   if (exportClause && ts.isNamedExports(exportClause)) {
     for (const specifier of exportClause.elements) {
       const exportedName = specifier.name.text;
       const localTargetSymbol =
         checker.getExportSpecifierLocalTargetSymbol(specifier);
-      if (!localTargetSymbol) {
-        continue;
-      }
+      if (!localTargetSymbol) continue;
 
       const originalSymbol =
         localTargetSymbol.flags & ts.SymbolFlags.Alias
           ? checker.getAliasedSymbol(localTargetSymbol)
           : localTargetSymbol;
-      if (!originalSymbol) {
-        continue;
-      }
+      if (!originalSymbol) continue;
 
       const type = checker.getDeclaredTypeOfSymbol(originalSymbol);
-      const location = getSourceLocationFromNode(node)!;
-
-      const scalarMetadata = detectScalarMetadata(type, checker);
-      if (scalarMetadata.scalarName && !scalarMetadata.isPrimitive) {
-        detectedScalarNames.push(scalarMetadata.scalarName);
-        const tsdocInfo = extractTsDocFromSymbol(originalSymbol, checker);
-        detectedScalars.push({
-          scalarName: scalarMetadata.scalarName,
-          typeName: exportedName,
-          only: scalarMetadata.only,
-          sourceFile: filePath,
-          line: location.line,
-          description: tsdocInfo.description ?? null,
-        });
-        continue;
-      }
-
-      const declarations = originalSymbol.getDeclarations();
-      const declaration = declarations?.[0];
-      if (declaration) {
-        const declSourceFileName = declaration.getSourceFile().fileName;
-        const isInScannedFiles = Array.from(scannedSourceFiles).some(
-          (sf) =>
-            sf === declSourceFileName ||
-            declSourceFileName.endsWith(sf) ||
-            sf.endsWith(declSourceFileName),
-        );
-        if (
-          isInScannedFiles &&
-          (ts.isTypeAliasDeclaration(declaration) ||
-            ts.isInterfaceDeclaration(declaration) ||
-            ts.isEnumDeclaration(declaration))
-        ) {
-          continue;
-        }
-
-        if (
-          (ts.isTypeAliasDeclaration(declaration) ||
-            ts.isInterfaceDeclaration(declaration)) &&
-          declaration.typeParameters &&
-          declaration.typeParameters.length > 0
-        ) {
-          diagnostics.push({
-            code: "UNSUPPORTED_SYNTAX",
-            message: `Generic type '${exportedName}' is not supported. Consider using a concrete type instead.`,
-            severity: "warning",
-            location,
-          });
-        }
-      }
-
-      const kind = determineTypeKindFromType(type, originalSymbol);
-      const tsdocInfo = extractTsDocFromSymbol(originalSymbol, checker);
-
-      const metadata: TypeMetadata = {
-        name: exportedName,
-        kind,
-        sourceFile: filePath,
-        sourceLocation: location,
-        exportKind: "named",
-        description: tsdocInfo.description ?? null,
-        deprecated: tsdocInfo.deprecated ?? null,
-        directives: null,
-      };
-
-      if (kind === "enum") {
-        const enumMembers = extractStringLiteralUnionMembers(type, checker);
-        types.push({
-          metadata,
-          fields: [],
-          unionMembers: null,
-          inlineObjectMembers: null,
-          enumMembers,
-          implementedInterfaces: null,
-        });
-        continue;
-      }
-
-      const unionMembers = extractUnionMembers(type);
-      const fieldResult =
-        kind === "union"
-          ? { fields: [], diagnostics: [] }
-          : extractFieldsFromType(type, checker, globalTypeMappings);
-      diagnostics.push(...fieldResult.diagnostics);
-
-      types.push({
-        metadata,
-        fields: fieldResult.fields,
-        unionMembers: unionMembers ?? null,
-        inlineObjectMembers: null,
-        enumMembers: null,
-        implementedInterfaces: null,
+      symbolsToProcess.push({
+        exportedName,
+        resolvedSymbol: originalSymbol,
+        type,
       });
     }
   } else if (!exportClause && node.moduleSpecifier) {
@@ -861,7 +949,6 @@ function processExportDeclaration(
 
     const exports = checker.getExportsOfModule(moduleSymbol);
     for (const exportedSymbol of exports) {
-      const exportedName = exportedSymbol.getName();
       const resolvedSymbol =
         exportedSymbol.flags & ts.SymbolFlags.Alias
           ? checker.getAliasedSymbol(exportedSymbol)
@@ -876,100 +963,39 @@ function processExportDeclaration(
         continue;
       }
 
-      const declarations = resolvedSymbol.getDeclarations();
-      const declaration = declarations?.[0];
       const type = checker.getDeclaredTypeOfSymbol(resolvedSymbol);
-      const location = getSourceLocationFromNode(node)!;
-
-      if (declaration) {
-        const declSourceFileName = declaration.getSourceFile().fileName;
-        const isInScannedFiles = Array.from(scannedSourceFiles).some(
-          (sf) =>
-            sf === declSourceFileName ||
-            declSourceFileName.endsWith(sf) ||
-            sf.endsWith(declSourceFileName),
-        );
-        if (
-          isInScannedFiles &&
-          (ts.isTypeAliasDeclaration(declaration) ||
-            ts.isInterfaceDeclaration(declaration) ||
-            ts.isEnumDeclaration(declaration))
-        ) {
-          continue;
-        }
-
-        if (
-          (ts.isTypeAliasDeclaration(declaration) ||
-            ts.isInterfaceDeclaration(declaration)) &&
-          declaration.typeParameters &&
-          declaration.typeParameters.length > 0
-        ) {
-          diagnostics.push({
-            code: "UNSUPPORTED_SYNTAX",
-            message: `Generic type '${exportedName}' is not supported. Consider using a concrete type instead.`,
-            severity: "warning",
-            location,
-          });
-        }
-      }
-
-      const scalarMetadata = detectScalarMetadata(type, checker);
-      if (scalarMetadata.scalarName && !scalarMetadata.isPrimitive) {
-        detectedScalarNames.push(scalarMetadata.scalarName);
-        const tsdocInfo = extractTsDocFromSymbol(resolvedSymbol, checker);
-        detectedScalars.push({
-          scalarName: scalarMetadata.scalarName,
-          typeName: exportedName,
-          only: scalarMetadata.only,
-          sourceFile: filePath,
-          line: location.line,
-          description: tsdocInfo.description ?? null,
-        });
-        continue;
-      }
-
-      const kind = determineTypeKindFromType(type, resolvedSymbol);
-      const tsdocInfo = extractTsDocFromSymbol(resolvedSymbol, checker);
-
-      const metadata: TypeMetadata = {
-        name: exportedName,
-        kind,
-        sourceFile: filePath,
-        sourceLocation: location,
-        exportKind: "named",
-        description: tsdocInfo.description ?? null,
-        deprecated: tsdocInfo.deprecated ?? null,
-        directives: null,
-      };
-
-      if (kind === "enum") {
-        const enumMembers = extractStringLiteralUnionMembers(type, checker);
-        types.push({
-          metadata,
-          fields: [],
-          unionMembers: null,
-          inlineObjectMembers: null,
-          enumMembers,
-          implementedInterfaces: null,
-        });
-        continue;
-      }
-
-      const unionMembers = extractUnionMembers(type);
-      const fieldResult =
-        kind === "union"
-          ? { fields: [], diagnostics: [] }
-          : extractFieldsFromType(type, checker, globalTypeMappings);
-      diagnostics.push(...fieldResult.diagnostics);
-
-      types.push({
-        metadata,
-        fields: fieldResult.fields,
-        unionMembers: unionMembers ?? null,
-        inlineObjectMembers: null,
-        enumMembers: null,
-        implementedInterfaces: null,
+      symbolsToProcess.push({
+        exportedName: exportedSymbol.getName(),
+        resolvedSymbol,
+        type,
       });
+    }
+  }
+
+  const location = getSourceLocationFromNode(node)!;
+  for (const { exportedName, resolvedSymbol, type } of symbolsToProcess) {
+    const result = processReexportedSymbol({
+      exportedName,
+      resolvedSymbol,
+      type,
+      location,
+      filePath,
+      checker,
+      globalTypeMappings,
+      scannedSourceFiles,
+    });
+
+    if (result.skip) continue;
+
+    if (result.scalarName && result.scalarMetadata) {
+      detectedScalarNames.push(result.scalarName);
+      detectedScalars.push(result.scalarMetadata);
+      continue;
+    }
+
+    diagnostics.push(...result.diagnostics);
+    if (result.typeInfo) {
+      types.push(result.typeInfo);
     }
   }
 
