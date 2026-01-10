@@ -6,6 +6,12 @@ export default defineConfig({
     "Convention-driven code generator for GraphQL servers in TypeScript",
   base: "/",
 
+  sitemap: {
+    hostname: "https://gqlkit.izumin.dev",
+  },
+
+  lastUpdated: true,
+
   markdown: {
     theme: {
       light: "catppuccin-latte",
@@ -95,5 +101,19 @@ export default defineConfig({
     socialLinks: [
       { icon: "github", link: "https://github.com/izumin5210/gqlkit" },
     ],
+
+    editLink: {
+      pattern:
+        "https://github.com/izumin5210/gqlkit/edit/main/packages/docs/docs/:path",
+      text: "Edit this page on GitHub",
+    },
+
+    footer: {
+      message:
+        'Released under the <a href="https://github.com/izumin5210/gqlkit/blob/main/LICENSE">MIT License</a>.',
+      copyright: "Copyright © 2025-present izumin5210",
+    },
+
+    externalLinkIcon: true,
   },
 });
