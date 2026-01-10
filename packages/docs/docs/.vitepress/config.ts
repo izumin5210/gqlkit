@@ -6,10 +6,7 @@ export default defineConfig({
     "Convention-driven code generator for GraphQL servers in TypeScript",
 
   themeConfig: {
-    nav: [
-      { text: "Guide", link: "/guide/getting-started" },
-      { text: "Reference", link: "/reference/types" },
-    ],
+    nav: [{ text: "Guide", link: "/guide/getting-started" }],
 
     sidebar: {
       "/guide/": [
@@ -52,16 +49,6 @@ export default defineConfig({
                 { text: "Directives", link: "/guide/schema/directives" },
               ],
             },
-          ],
-        },
-      ],
-      "/reference/": [
-        {
-          text: "Reference",
-          items: [
-            { text: "Type Mapping", link: "/reference/types" },
-            { text: "Utility Types", link: "/reference/utility-types" },
-            { text: "CLI Commands", link: "/reference/cli" },
           ],
         },
       ],
