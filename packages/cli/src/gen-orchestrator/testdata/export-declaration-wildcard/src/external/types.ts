@@ -14,3 +14,9 @@ export interface OrderItem {
 }
 
 export type OrderStatus = "PENDING" | "CONFIRMED" | "SHIPPED" | "DELIVERED";
+
+export enum PaymentMethod {
+  CASH = "CASH",
+  CREDIT_CARD = "CREDIT_CARD",
+  DEBIT_CARD = "DEBIT_CARD",
+}

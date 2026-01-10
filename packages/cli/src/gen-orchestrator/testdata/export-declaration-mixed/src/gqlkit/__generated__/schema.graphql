@@ -38,7 +38,7 @@ extend type Query {
   """Defined in: src/gqlkit/schema/query.ts"""
   addresses: [Address!]!
   """Defined in: src/gqlkit/schema/query.ts"""
-  clients: [Customer!]!
+  clients: [Client!]!
   """Defined in: src/gqlkit/schema/query.ts"""
   invoices: [Invoice!]!
   """Defined in: src/gqlkit/schema/query.ts"""

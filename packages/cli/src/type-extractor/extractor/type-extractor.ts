@@ -1,3 +1,4 @@
+import { resolve } from "node:path";
 import ts from "typescript";
 import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
@@ -656,27 +657,38 @@ function determineTypeKind(
       return "graphqlInterface";
     }
 
-    if (type.isUnion()) {
-      const nonNullTypes = getNonNullableTypes(type);
-
-      if (isStringLiteralUnion(type)) {
-        return "enum";
-      }
-
-      const allObjectTypes = nonNullTypes.every(
-        (t) =>
-          (t.flags & ts.TypeFlags.Object) !== 0 ||
-          (t.flags & ts.TypeFlags.Intersection) !== 0 ||
-          t.symbol !== undefined,
-      );
-      if (nonNullTypes.length > 1 && allObjectTypes) {
-        return "union";
-      }
+    const unionKind = determineTypeKindFromUnion(type);
+    if (unionKind) {
+      return unionKind;
     }
     return "object";
   }
 
   return "object";
+}
+
+function determineTypeKindFromUnion(type: ts.Type): TypeKind | null {
+  if (!type.isUnion()) {
+    return null;
+  }
+
+  const nonNullTypes = getNonNullableTypes(type);
+
+  if (isStringLiteralUnion(type)) {
+    return "enum";
+  }
+
+  const allObjectTypes = nonNullTypes.every(
+    (t) =>
+      (t.flags & ts.TypeFlags.Object) !== 0 ||
+      (t.flags & ts.TypeFlags.Intersection) !== 0 ||
+      t.symbol !== undefined,
+  );
+  if (nonNullTypes.length > 1 && allObjectTypes) {
+    return "union";
+  }
+
+  return null;
 }
 
 function determineTypeKindFromType(
@@ -690,22 +702,13 @@ function determineTypeKindFromType(
     return "interface";
   }
 
-  if (type.isUnion()) {
-    const nonNullTypes = getNonNullableTypes(type);
+  if (declaration && ts.isEnumDeclaration(declaration)) {
+    return "enum";
+  }
 
-    if (isStringLiteralUnion(type)) {
-      return "enum";
-    }
-
-    const allObjectTypes = nonNullTypes.every(
-      (t) =>
-        (t.flags & ts.TypeFlags.Object) !== 0 ||
-        (t.flags & ts.TypeFlags.Intersection) !== 0 ||
-        t.symbol !== undefined,
-    );
-    if (nonNullTypes.length > 1 && allObjectTypes) {
-      return "union";
-    }
+  const unionKind = determineTypeKindFromUnion(type);
+  if (unionKind) {
+    return unionKind;
   }
 
   return "object";
@@ -715,12 +718,9 @@ function isDeclarationInScannedFiles(
   declaration: ts.Declaration,
   scannedSourceFiles: ReadonlySet<string>,
 ): boolean {
-  const declSourceFileName = declaration.getSourceFile().fileName;
+  const declSourceFileName = resolve(declaration.getSourceFile().fileName);
   return Array.from(scannedSourceFiles).some(
-    (sf) =>
-      sf === declSourceFileName ||
-      declSourceFileName.endsWith(sf) ||
-      sf.endsWith(declSourceFileName),
+    (sf) => resolve(sf) === declSourceFileName,
   );
 }
 
@@ -842,7 +842,14 @@ function processReexportedSymbol(
   };
 
   if (kind === "enum") {
-    const enumMembers = extractStringLiteralUnionMembers(type, checker);
+    const declarations = resolvedSymbol.getDeclarations();
+    const declaration = declarations?.[0];
+    let enumMembers: ReadonlyArray<EnumMemberInfo>;
+    if (declaration && ts.isEnumDeclaration(declaration)) {
+      enumMembers = extractEnumMembers(declaration, checker);
+    } else {
+      enumMembers = extractStringLiteralUnionMembers(type, checker);
+    }
     return {
       typeInfo: {
         metadata,
@@ -938,9 +945,12 @@ function processExportDeclaration(
     const moduleSymbol = checker.getSymbolAtLocation(node.moduleSpecifier);
     if (!moduleSymbol) {
       const location = getSourceLocationFromNode(node)!;
+      const modulePath = ts.isStringLiteral(node.moduleSpecifier)
+        ? node.moduleSpecifier.text
+        : node.moduleSpecifier.getText(sourceFile);
       diagnostics.push({
         code: "MODULE_RESOLUTION_ERROR",
-        message: `Could not resolve module '${node.moduleSpecifier.getText(sourceFile)}'`,
+        message: `Could not resolve module '${modulePath}'`,
         severity: "error",
         location,
       });
@@ -957,7 +967,8 @@ function processExportDeclaration(
       if (
         !(
           resolvedSymbol.flags & ts.SymbolFlags.TypeAlias ||
-          resolvedSymbol.flags & ts.SymbolFlags.Interface
+          resolvedSymbol.flags & ts.SymbolFlags.Interface ||
+          resolvedSymbol.flags & ts.SymbolFlags.Enum
         )
       ) {
         continue;

@@ -26,6 +26,13 @@ enum OrderStatus {
   DELIVERED
 }
 
+"""Defined in: src/gqlkit/schema/types.ts"""
+enum PaymentMethod {
+  CASH
+  CREDIT_CARD
+  DEBIT_CARD
+}
+
 type Query
 
 extend type Query {
@@ -37,4 +44,6 @@ extend type Query {
   orders: [Order!]!
   """Defined in: src/gqlkit/schema/query.ts"""
   orderStatus(orderId: String!): OrderStatus!
+  """Defined in: src/gqlkit/schema/query.ts"""
+  paymentMethod(orderId: String!): PaymentMethod!
 }

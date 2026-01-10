@@ -1,5 +1,5 @@
 import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
-import type { Order, OrderItem, OrderStatus } from "./types.js";
+import type { Order, OrderItem, OrderStatus, PaymentMethod } from "./types.js";
 
 type Context = unknown;
 
@@ -21,4 +21,8 @@ export const orderItems = defineQuery<{ orderId: string }, OrderItem[]>(
 
 export const orderStatus = defineQuery<{ orderId: string }, OrderStatus>(
   (_root, _args) => "PENDING",
+);
+
+export const paymentMethod = defineQuery<{ orderId: string }, PaymentMethod>(
+  (_root, _args) => "CASH" as PaymentMethod,
 );
