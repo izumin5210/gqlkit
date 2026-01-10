@@ -14,6 +14,20 @@ export default defineConfig({
   },
 
   themeConfig: {
+    search:
+      process.env.ALGOLIA_APP_ID &&
+      process.env.ALGOLIA_API_KEY &&
+      process.env.ALGOLIA_INDEX_NAME
+        ? {
+            provider: "algolia",
+            options: {
+              appId: process.env.ALGOLIA_APP_ID,
+              apiKey: process.env.ALGOLIA_API_KEY,
+              indexName: process.env.ALGOLIA_INDEX_NAME,
+            },
+          }
+        : undefined,
+
     nav: [{ text: "Guide", link: "/guide/getting-started" }],
 
     sidebar: {
