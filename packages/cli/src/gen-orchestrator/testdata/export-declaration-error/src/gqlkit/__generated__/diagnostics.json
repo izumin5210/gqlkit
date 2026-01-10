@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MODULE_RESOLUTION_ERROR",
+    "message": "Could not resolve module '\"../../external/non-existent-module.js\"'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]
