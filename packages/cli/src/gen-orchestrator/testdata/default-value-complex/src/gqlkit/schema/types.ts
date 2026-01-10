@@ -1,6 +1,6 @@
 import {
   createGqlkitApis,
-  type GqlFieldDef,
+  type GqlField,
   type Int,
   type NoArgs,
 } from "@gqlkit-ts/runtime";
@@ -15,25 +15,22 @@ export type NestedConfig = {
 };
 
 export type FilterInput = {
-  status: GqlFieldDef<Status, { defaultValue: "ACTIVE" }>;
-  priorities: GqlFieldDef<Priority[], { defaultValue: ["MEDIUM", "HIGH"] }>;
-  tags: GqlFieldDef<string[], { defaultValue: ["default"] }>;
+  status: GqlField<Status, { defaultValue: "ACTIVE" }>;
+  priorities: GqlField<Priority[], { defaultValue: ["MEDIUM", "HIGH"] }>;
+  tags: GqlField<string[], { defaultValue: ["default"] }>;
 };
 
 export type SettingsInput = {
-  config: GqlFieldDef<
+  config: GqlField<
     NestedConfig,
     { defaultValue: { enabled: true; value: 100 } }
   >;
-  limits: GqlFieldDef<Int[], { defaultValue: [10, 20, 30] }>;
+  limits: GqlField<Int[], { defaultValue: [10, 20, 30] }>;
 };
 
 export type AdvancedInput = {
-  nestedArray: GqlFieldDef<
-    string[][],
-    { defaultValue: [["a", "b"], ["c", "d"]] }
-  >;
-  enumList: GqlFieldDef<Status[], { defaultValue: ["ACTIVE", "PENDING"] }>;
+  nestedArray: GqlField<string[][], { defaultValue: [["a", "b"], ["c", "d"]] }>;
+  enumList: GqlField<Status[], { defaultValue: ["ACTIVE", "PENDING"] }>;
 };
 
 export type Task = {

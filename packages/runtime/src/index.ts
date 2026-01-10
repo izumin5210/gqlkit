@@ -27,11 +27,11 @@ export type DirectiveLocation =
  *
  * @example
  * ```typescript
- * type AuthDirective<R extends string[]> = Directive<"auth", { roles: R }, "FIELD_DEFINITION">;
- * type CacheDirective = Directive<"cache", { maxAge: number }, "FIELD_DEFINITION" | "OBJECT">;
+ * type AuthDirective<R extends string[]> = GqlDirective<"auth", { roles: R }, "FIELD_DEFINITION">;
+ * type CacheDirective = GqlDirective<"cache", { maxAge: number }, "FIELD_DEFINITION" | "OBJECT">;
  * ```
  */
-export type Directive<
+export type GqlDirective<
   Name extends string,
   Args extends Record<string, unknown> = Record<string, never>,
   Location extends DirectiveLocation | DirectiveLocation[] = DirectiveLocation,
@@ -50,7 +50,7 @@ export type Directive<
 export interface GqlFieldMetaShape<
   Meta extends {
     directives?: ReadonlyArray<
-      Directive<
+      GqlDirective<
         string,
         Record<string, unknown>,
         DirectiveLocation | DirectiveLocation[]
@@ -84,27 +84,27 @@ export interface GqlFieldMetaShape<
  * ```typescript
  * // With directives
  * type User = {
- *   id: GqlFieldDef<IDString, { directives: [AuthDirective<{ role: ["USER"] }>] }>;
- *   bio: GqlFieldDef<string | null, { directives: [AuthDirective<{ role: ["ADMIN"] }>] }>;
+ *   id: GqlField<IDString, { directives: [AuthDirective<{ role: ["USER"] }>] }>;
+ *   bio: GqlField<string | null, { directives: [AuthDirective<{ role: ["ADMIN"] }>] }>;
  * };
  *
  * // With default value
  * type PaginationInput = {
- *   limit: GqlFieldDef<Int, { defaultValue: 10 }>;
- *   offset: GqlFieldDef<Int, { defaultValue: 0 }>;
+ *   limit: GqlField<Int, { defaultValue: 10 }>;
+ *   offset: GqlField<Int, { defaultValue: 0 }>;
  * };
  *
  * // With both directives and default value
  * type SearchInput = {
- *   query: GqlFieldDef<string, { defaultValue: ""; directives: [SomeDirective] }>;
+ *   query: GqlField<string, { defaultValue: ""; directives: [SomeDirective] }>;
  * };
  * ```
  */
-export type GqlFieldDef<
+export type GqlField<
   T,
   Meta extends {
     directives?: ReadonlyArray<
-      Directive<
+      GqlDirective<
         string,
         Record<string, unknown>,
         DirectiveLocation | DirectiveLocation[]
@@ -118,9 +118,9 @@ export type GqlFieldDef<
 };
 
 /**
- * Marker type for DefineInterface - used internally for type discrimination.
+ * Marker type for GqlInterface - used internally for type discrimination.
  */
-export type DefineInterfaceMarker = Record<string, unknown>;
+export type GqlInterfaceMarker = Record<string, unknown>;
 
 /**
  * Interface metadata structure embedded in intersection types.
@@ -130,7 +130,7 @@ export type DefineInterfaceMarker = Record<string, unknown>;
  */
 export interface GqlInterfaceMetaShape<
   Meta extends {
-    implements?: ReadonlyArray<DefineInterfaceMarker>;
+    implements?: ReadonlyArray<GqlInterfaceMarker>;
   } = object,
 > {
   readonly " $gqlkitInterface": true;
@@ -147,17 +147,17 @@ export interface GqlInterfaceMetaShape<
  * @example
  * ```typescript
  * // Basic interface definition
- * export type Node = DefineInterface<{
+ * export type Node = GqlInterface<{
  *   id: IDString;
  * }>;
  *
- * export type Timestamped = DefineInterface<{
+ * export type Timestamped = GqlInterface<{
  *   createdAt: DateTime;
  *   updatedAt: DateTime;
  * }>;
  *
  * // Interface inheriting other interfaces
- * export type Entity = DefineInterface<
+ * export type Entity = GqlInterface<
  *   {
  *     id: IDString;
  *     createdAt: DateTime;
@@ -167,10 +167,10 @@ export interface GqlInterfaceMetaShape<
  * >;
  * ```
  */
-export type DefineInterface<
+export type GqlInterface<
   T extends Record<string, unknown>,
   Meta extends {
-    implements?: ReadonlyArray<DefineInterfaceMarker>;
+    implements?: ReadonlyArray<GqlInterfaceMarker>;
   } = object,
 > = T & {
   readonly " $gqlkitInterfaceMeta"?: GqlInterfaceMetaShape<Meta>;
@@ -185,13 +185,13 @@ export type DefineInterface<
 export interface GqlTypeMetaShape<
   Meta extends {
     directives?: ReadonlyArray<
-      Directive<
+      GqlDirective<
         string,
         Record<string, unknown>,
         DirectiveLocation | DirectiveLocation[]
       >
     >;
-    implements?: ReadonlyArray<DefineInterfaceMarker>;
+    implements?: ReadonlyArray<GqlInterfaceMarker>;
   },
 > {
   readonly directives?: Meta["directives"];
@@ -213,7 +213,7 @@ export interface GqlTypeMetaShape<
  * @example
  * ```typescript
  * // Type with directives only
- * type User = GqlTypeDef<
+ * type User = GqlObject<
  *   {
  *     id: string;
  *     name: string;
@@ -222,7 +222,7 @@ export interface GqlTypeMetaShape<
  * >;
  *
  * // Type implementing an interface
- * type User = GqlTypeDef<
+ * type User = GqlObject<
  *   {
  *     id: IDString;
  *     name: string;
@@ -231,7 +231,7 @@ export interface GqlTypeMetaShape<
  * >;
  *
  * // Type with both directives and implements
- * type Post = GqlTypeDef<
+ * type Post = GqlObject<
  *   {
  *     id: IDString;
  *     title: string;
@@ -244,17 +244,17 @@ export interface GqlTypeMetaShape<
  * >;
  * ```
  */
-export type GqlTypeDef<
+export type GqlObject<
   T,
   Meta extends {
     directives?: ReadonlyArray<
-      Directive<
+      GqlDirective<
         string,
         Record<string, unknown>,
         DirectiveLocation | DirectiveLocation[]
       >
     >;
-    implements?: ReadonlyArray<DefineInterfaceMarker>;
+    implements?: ReadonlyArray<GqlInterfaceMarker>;
   } = { directives: [] },
 > = T & {
   readonly " $gqlkitTypeMeta"?: GqlTypeMetaShape<Meta>;
@@ -288,16 +288,16 @@ export interface ScalarMetadataShape {
  * @example
  * ```typescript
  * // Basic custom scalar
- * type DateTime = DefineScalar<"DateTime", Date>;
+ * type DateTime = GqlScalar<"DateTime", Date>;
  *
  * // Input-only scalar
- * type DateTimeInput = DefineScalar<"DateTime", Date, "input">;
+ * type DateTimeInput = GqlScalar<"DateTime", Date, "input">;
  *
  * // Output-only scalar (can accept multiple base types)
- * type DateTimeOutput = DefineScalar<"DateTime", Date | string, "output">;
+ * type DateTimeOutput = GqlScalar<"DateTime", Date | string, "output">;
  * ```
  */
-export type DefineScalar<
+export type GqlScalar<
   Name extends string,
   Base,
   Only extends "input" | "output" | undefined = undefined,
@@ -313,7 +313,7 @@ export type DefineScalar<
  * Use this to explicitly mark a field as an integer.
  * Includes metadata for CLI detection.
  */
-export type Int = DefineScalar<"Int", number>;
+export type Int = GqlScalar<"Int", number>;
 
 /**
  * GraphQL Float scalar type.
@@ -321,21 +321,21 @@ export type Int = DefineScalar<"Int", number>;
  * Note: Plain `number` type will also map to Float by default.
  * Includes metadata for CLI detection.
  */
-export type Float = DefineScalar<"Float", number>;
+export type Float = GqlScalar<"Float", number>;
 
 /**
  * GraphQL ID scalar type (string-based).
  * Use this when the ID is represented as a string in your system.
  * Includes metadata for CLI detection.
  */
-export type IDString = DefineScalar<"ID", string>;
+export type IDString = GqlScalar<"ID", string>;
 
 /**
  * GraphQL ID scalar type (number-based).
  * Use this when the ID is represented as a number in your system.
  * Includes metadata for CLI detection.
  */
-export type IDNumber = DefineScalar<"ID", number>;
+export type IDNumber = GqlScalar<"ID", number>;
 
 /**
  * Type alias representing no arguments for a resolver.
@@ -413,7 +413,7 @@ export type QueryResolver<
   TResult,
   TContext = unknown,
   TDirectives extends ReadonlyArray<
-    Directive<
+    GqlDirective<
       string,
       Record<string, unknown>,
       DirectiveLocation | DirectiveLocation[]
@@ -442,7 +442,7 @@ export type MutationResolver<
   TResult,
   TContext = unknown,
   TDirectives extends ReadonlyArray<
-    Directive<
+    GqlDirective<
       string,
       Record<string, unknown>,
       DirectiveLocation | DirectiveLocation[]
@@ -473,7 +473,7 @@ export type FieldResolver<
   TResult,
   TContext = unknown,
   TDirectives extends ReadonlyArray<
-    Directive<
+    GqlDirective<
       string,
       Record<string, unknown>,
       DirectiveLocation | DirectiveLocation[]
@@ -518,7 +518,7 @@ export interface GqlkitApis<TContext> {
     TArgs,
     TResult,
     TDirectives extends ReadonlyArray<
-      Directive<
+      GqlDirective<
         string,
         Record<string, unknown>,
         DirectiveLocation | DirectiveLocation[]
@@ -551,7 +551,7 @@ export interface GqlkitApis<TContext> {
     TArgs,
     TResult,
     TDirectives extends ReadonlyArray<
-      Directive<
+      GqlDirective<
         string,
         Record<string, unknown>,
         DirectiveLocation | DirectiveLocation[]
@@ -586,7 +586,7 @@ export interface GqlkitApis<TContext> {
     TArgs,
     TResult,
     TDirectives extends ReadonlyArray<
-      Directive<
+      GqlDirective<
         string,
         Record<string, unknown>,
         DirectiveLocation | DirectiveLocation[]

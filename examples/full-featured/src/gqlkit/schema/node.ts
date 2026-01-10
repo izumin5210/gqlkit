@@ -1,4 +1,4 @@
-import type { DefineInterface, IDString } from "@gqlkit-ts/runtime";
+import type { GqlInterface, IDString } from "@gqlkit-ts/runtime";
 import { defineField, defineQuery, type NoArgs } from "./gqlkit.js";
 import type { DateTime } from "./scalars.js";
 
@@ -7,7 +7,7 @@ import type { DateTime } from "./scalars.js";
  * This is a common pattern in GraphQL APIs (e.g., Relay specification).
  * Types implementing this interface can be fetched by their ID.
  */
-export type Node = DefineInterface<{
+export type Node = GqlInterface<{
   /** Global unique identifier for the entity */
   id: IDString;
 }>;
@@ -16,7 +16,7 @@ export type Node = DefineInterface<{
  * Timestamped interface - represents entities that track creation time.
  * Types implementing this interface have a createdAt field.
  */
-export type Timestamped = DefineInterface<{
+export type Timestamped = GqlInterface<{
   /** When the entity was created */
   createdAt: DateTime;
 }>;
@@ -25,7 +25,7 @@ export type Timestamped = DefineInterface<{
  * Entity interface - combines Node and Timestamped for a common base.
  * This interface inherits from both Node and Timestamped.
  */
-export type Entity = DefineInterface<
+export type Entity = GqlInterface<
   {
     /** Global unique identifier */
     id: IDString;

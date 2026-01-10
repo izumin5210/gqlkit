@@ -1,16 +1,16 @@
-import type { DefineInterface, GqlTypeDef, IDString } from "@gqlkit-ts/runtime";
+import type { GqlInterface, GqlObject, IDString } from "@gqlkit-ts/runtime";
 
 /**
  * Node interface - represents any entity with a unique identifier.
  */
-export type Node = DefineInterface<{
+export type Node = GqlInterface<{
   id: IDString;
 }>;
 
 /**
  * User type that implements Node.
  */
-export type User = GqlTypeDef<
+export type User = GqlObject<
   {
     id: IDString;
     name: string;
@@ -21,7 +21,7 @@ export type User = GqlTypeDef<
 /**
  * Post type that implements Node.
  */
-export type Post = GqlTypeDef<
+export type Post = GqlObject<
   {
     id: IDString;
     title: string;
@@ -30,6 +30,6 @@ export type Post = GqlTypeDef<
 >;
 
 /**
- * Union type of User and Post (both implementing Node via GqlTypeDef).
+ * Union type of User and Post (both implementing Node via GqlObject).
  */
 export type SearchResult = User | Post;

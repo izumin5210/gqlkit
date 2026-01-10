@@ -204,24 +204,24 @@ gqlkit provides scalar types to explicitly specify GraphQL scalar mappings:
 | `number`        | `Float!`     |
 | `boolean`       | `Boolean!`   |
 
-### Custom scalars with DefineScalar
+### Custom scalars with GqlScalar
 
-Define custom scalar types using the `DefineScalar` utility type:
+Define custom scalar types using the `GqlScalar` utility type:
 
 ```ts
 // src/gqlkit/schema/scalars.ts
-import { DefineScalar } from "@gqlkit-ts/runtime";
+import { type GqlScalar } from "@gqlkit-ts/runtime";
 
 /**
  * ISO 8601 format date-time string
  */
-export type DateTime = DefineScalar<"DateTime", Date>;
+export type DateTime = GqlScalar<"DateTime", Date>;
 
 // Input-only scalar (for input positions only)
-export type DateTimeInput = DefineScalar<"DateTime", Date, "input">;
+export type DateTimeInput = GqlScalar<"DateTime", Date, "input">;
 
 // Output-only scalar (for output positions only)
-export type DateTimeOutput = DefineScalar<"DateTime", Date | string, "output">;
+export type DateTimeOutput = GqlScalar<"DateTime", Date | string, "output">;
 ```
 
 ### TSDoc/JSDoc documentation
@@ -297,25 +297,25 @@ enum UserStatus {
 
 ### Custom directives
 
-Define custom directives using the `Directive` utility type and attach them using `GqlFieldDef` or `GqlTypeDef`:
+Define custom directives using the `GqlDirective` utility type and attach them using `GqlField` or `GqlObject`:
 
 #### Defining directives
 
 ```ts
 // src/gqlkit/schema/directives.ts
-import { type Directive } from "@gqlkit-ts/runtime";
+import { type GqlDirective } from "@gqlkit-ts/runtime";
 
 export type Role = "USER" | "ADMIN";
 
 // Directive with typed arguments
-export type AuthDirective<TArgs extends { role: Role[] }> = Directive<
+export type AuthDirective<TArgs extends { role: Role[] }> = GqlDirective<
   "auth",
   TArgs,
   "FIELD_DEFINITION"
 >;
 
 // Directive with multiple locations
-export type CacheDirective<TArgs extends { maxAge: number }> = Directive<
+export type CacheDirective<TArgs extends { maxAge: number }> = GqlDirective<
   "cache",
   TArgs,
   ["FIELD_DEFINITION", "OBJECT"]
@@ -331,19 +331,19 @@ directive @cache(maxAge: Float!) on FIELD_DEFINITION | OBJECT
 
 #### Attaching directives to fields
 
-Use `GqlFieldDef` to attach directives to object type fields:
+Use `GqlField` to attach directives to object type fields:
 
 ```ts
-import { type GqlFieldDef, type IDString } from "@gqlkit-ts/runtime";
+import { type GqlField, type IDString } from "@gqlkit-ts/runtime";
 import { type AuthDirective, type Role } from "./directives.js";
 
 export type User = {
   id: IDString;
   name: string;
   // Field with directive
-  email: GqlFieldDef<string, { directives: [AuthDirective<{ role: ["ADMIN"] }>] }>;
+  email: GqlField<string, { directives: [AuthDirective<{ role: ["ADMIN"] }>] }>;
   // Nullable field with directive
-  phone: GqlFieldDef<string | null, { directives: [AuthDirective<{ role: ["USER"] }>] }>;
+  phone: GqlField<string | null, { directives: [AuthDirective<{ role: ["USER"] }>] }>;
 };
 ```
 
@@ -360,13 +360,13 @@ type User {
 
 #### Attaching directives to types
 
-Use `GqlTypeDef` to attach directives to type definitions:
+Use `GqlObject` to attach directives to type definitions:
 
 ```ts
-import { type GqlTypeDef, type IDString } from "@gqlkit-ts/runtime";
+import { type GqlObject, type IDString } from "@gqlkit-ts/runtime";
 import { type CacheDirective } from "./directives.js";
 
-export type Post = GqlTypeDef<
+export type Post = GqlObject<
   {
     id: IDString;
     title: string;
@@ -494,17 +494,17 @@ union SearchResult = Comment | Post
 
 ### Interface types
 
-Define GraphQL interface types using the `DefineInterface` utility type:
+Define GraphQL interface types using the `GqlInterface` utility type:
 
 ```ts
 // src/gqlkit/schema/node.ts
-import { type DefineInterface, type IDString } from "@gqlkit-ts/runtime";
+import { type GqlInterface, type IDString } from "@gqlkit-ts/runtime";
 import type { DateTime } from "./scalars.js";
 
 /**
  * Node interface - represents any entity with a unique identifier.
  */
-export type Node = DefineInterface<{
+export type Node = GqlInterface<{
   /** Global unique identifier */
   id: IDString;
 }>;
@@ -512,7 +512,7 @@ export type Node = DefineInterface<{
 /**
  * Timestamped interface - entities that track creation time.
  */
-export type Timestamped = DefineInterface<{
+export type Timestamped = GqlInterface<{
   createdAt: DateTime;
 }>;
 ```
@@ -540,7 +540,7 @@ Interfaces can inherit from other interfaces:
 /**
  * Entity interface - combines Node and Timestamped.
  */
-export type Entity = DefineInterface<
+export type Entity = GqlInterface<
   {
     id: IDString;
     createdAt: DateTime;
@@ -561,17 +561,17 @@ interface Entity implements Node & Timestamped {
 
 #### Implementing interfaces
 
-Use `GqlTypeDef` with the `implements` option to declare that a type implements interfaces:
+Use `GqlObject` with the `implements` option to declare that a type implements interfaces:
 
 ```ts
-import { type GqlTypeDef, type IDString } from "@gqlkit-ts/runtime";
+import { type GqlObject, type IDString } from "@gqlkit-ts/runtime";
 import type { Node, Timestamped } from "./node.js";
 import type { DateTime } from "./scalars.js";
 
 /**
  * A user in the system.
  */
-export type User = GqlTypeDef<
+export type User = GqlObject<
   {
     id: IDString;
     name: string;
@@ -597,7 +597,7 @@ type User implements Node & Timestamped {
 You can combine `implements` with `directives`:
 
 ```ts
-export type Post = GqlTypeDef<
+export type Post = GqlObject<
   {
     id: IDString;
     title: string;
@@ -653,7 +653,7 @@ input CreateUserInput {
 Input types can use inline object literals for nested structures. gqlkit automatically generates Input Object types with the naming convention `{ParentTypeNameWithoutInputSuffix}{PascalCaseFieldName}Input`:
 
 ```ts
-import type { GqlFieldDef, Int } from "@gqlkit-ts/runtime";
+import type { GqlField, Int } from "@gqlkit-ts/runtime";
 
 export type CreateUserInput = {
   name: string;
@@ -661,7 +661,7 @@ export type CreateUserInput = {
   profile: {
     bio: string | null;
     /** User's age with default value */
-    age: GqlFieldDef<Int | null, { defaultValue: 18 }>;
+    age: GqlField<Int | null, { defaultValue: 18 }>;
   };
 };
 ```
@@ -717,28 +717,28 @@ Each property becomes a nullable field in the generated input type. The `@oneOf`
 
 ### Default values for input fields and arguments
 
-Specify default values for Input Object fields and resolver arguments using `GqlFieldDef` with the `defaultValue` option:
+Specify default values for Input Object fields and resolver arguments using `GqlField` with the `defaultValue` option:
 
 #### Basic default values
 
 ```ts
-import { type GqlFieldDef, type Int } from "@gqlkit-ts/runtime";
+import { type GqlField, type Int } from "@gqlkit-ts/runtime";
 
 export type PaginationInput = {
-  limit: GqlFieldDef<Int, { defaultValue: 10 }>;
-  offset: GqlFieldDef<Int, { defaultValue: 0 }>;
-  includeArchived: GqlFieldDef<boolean, { defaultValue: false }>;
+  limit: GqlField<Int, { defaultValue: 10 }>;
+  offset: GqlField<Int, { defaultValue: 0 }>;
+  includeArchived: GqlField<boolean, { defaultValue: false }>;
 };
 
 export type SearchInput = {
   query: string;
-  caseSensitive: GqlFieldDef<boolean, { defaultValue: true }>;
-  maxResults: GqlFieldDef<Int | null, { defaultValue: null }>;
+  caseSensitive: GqlField<boolean, { defaultValue: true }>;
+  maxResults: GqlField<Int | null, { defaultValue: null }>;
 };
 
 export type GreetingInput = {
-  name: GqlFieldDef<string, { defaultValue: "World" }>;
-  prefix: GqlFieldDef<string, { defaultValue: "Hello" }>;
+  name: GqlField<string, { defaultValue: "World" }>;
+  prefix: GqlField<string, { defaultValue: "Hello" }>;
 };
 ```
 
@@ -778,14 +778,14 @@ export type NestedConfig = {
 };
 
 export type FilterInput = {
-  status: GqlFieldDef<Status, { defaultValue: "ACTIVE" }>;
-  priorities: GqlFieldDef<Priority[], { defaultValue: ["MEDIUM", "HIGH"] }>;
-  tags: GqlFieldDef<string[], { defaultValue: ["default"] }>;
+  status: GqlField<Status, { defaultValue: "ACTIVE" }>;
+  priorities: GqlField<Priority[], { defaultValue: ["MEDIUM", "HIGH"] }>;
+  tags: GqlField<string[], { defaultValue: ["default"] }>;
 };
 
 export type SettingsInput = {
-  config: GqlFieldDef<NestedConfig, { defaultValue: { enabled: true; value: 100 } }>;
-  limits: GqlFieldDef<Int[], { defaultValue: [10, 20, 30] }>;
+  config: GqlField<NestedConfig, { defaultValue: { enabled: true; value: 100 } }>;
+  limits: GqlField<Int[], { defaultValue: [10, 20, 30] }>;
 };
 ```
 
@@ -809,24 +809,24 @@ input SettingsInput {
 You can combine `defaultValue` with `directives`:
 
 ```ts
-import { type GqlFieldDef, type Directive, type Int } from "@gqlkit-ts/runtime";
+import { type GqlField, type GqlDirective, type Int } from "@gqlkit-ts/runtime";
 
 export type LengthDirective<TArgs extends { min: number; max: number }> =
-  Directive<"length", TArgs, "INPUT_FIELD_DEFINITION" | "ARGUMENT_DEFINITION">;
+  GqlDirective<"length", TArgs, "INPUT_FIELD_DEFINITION" | "ARGUMENT_DEFINITION">;
 
 export type RangeDirective<TArgs extends { min: number; max: number }> =
-  Directive<"range", TArgs, "INPUT_FIELD_DEFINITION" | "ARGUMENT_DEFINITION">;
+  GqlDirective<"range", TArgs, "INPUT_FIELD_DEFINITION" | "ARGUMENT_DEFINITION">;
 
 export type CreateUserInput = {
-  name: GqlFieldDef<string, {
+  name: GqlField<string, {
     defaultValue: "Anonymous";
     directives: [LengthDirective<{ min: 1; max: 100 }>];
   }>;
-  age: GqlFieldDef<Int, {
+  age: GqlField<Int, {
     defaultValue: 18;
     directives: [RangeDirective<{ min: 0; max: 150 }>];
   }>;
-  email: GqlFieldDef<string | null, {
+  email: GqlField<string | null, {
     defaultValue: null;
     directives: [LengthDirective<{ min: 5; max: 255 }>];
   }>;
@@ -848,13 +848,13 @@ input CreateUserInput {
 Default values in Input Objects are also applied to resolver arguments:
 
 ```ts
-import { createGqlkitApis, type GqlFieldDef, type Int } from "@gqlkit-ts/runtime";
+import { createGqlkitApis, type GqlField, type Int } from "@gqlkit-ts/runtime";
 
 const { defineQuery } = createGqlkitApis();
 
 export type PaginationInput = {
-  limit: GqlFieldDef<Int, { defaultValue: 10 }>;
-  offset: GqlFieldDef<Int, { defaultValue: 0 }>;
+  limit: GqlField<Int, { defaultValue: 10 }>;
+  offset: GqlField<Int, { defaultValue: 0 }>;
 };
 
 export type User = {
@@ -893,14 +893,14 @@ Default values must be specified as TypeScript literal types. Non-literal types 
 ```ts
 // ✅ OK: Literal types
 export type GoodInput = {
-  limit: GqlFieldDef<Int, { defaultValue: 10 }>;
-  name: GqlFieldDef<string, { defaultValue: "default" }>;
+  limit: GqlField<Int, { defaultValue: 10 }>;
+  name: GqlField<string, { defaultValue: "default" }>;
 };
 
 // ❌ Error: Non-literal types
 export type BadInput = {
-  limit: GqlFieldDef<Int, { defaultValue: number }>;     // Warning: must be literal
-  name: GqlFieldDef<string, { defaultValue: string }>;   // Warning: must be literal
+  limit: GqlField<Int, { defaultValue: number }>;     // Warning: must be literal
+  name: GqlField<string, { defaultValue: string }>;   // Warning: must be literal
 };
 ```
 
@@ -939,7 +939,7 @@ Resolver arguments can use inline object literals. gqlkit automatically generate
 - **Field resolver arguments**: `{ParentTypeName}{PascalCaseFieldName}{PascalCaseArgName}Input`
 
 ```ts
-import { createGqlkitApis, type GqlFieldDef } from "@gqlkit-ts/runtime";
+import { createGqlkitApis, type GqlField } from "@gqlkit-ts/runtime";
 
 const { defineQuery, defineField } = createGqlkitApis<Context>();
 

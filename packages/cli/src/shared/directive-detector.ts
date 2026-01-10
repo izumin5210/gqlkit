@@ -408,7 +408,7 @@ export function extractDirectivesFromType(
 }
 
 /**
- * Checks if a type is wrapped with GqlFieldDef or GqlTypeDef.
+ * Checks if a type is wrapped with GqlField or GqlObject.
  */
 export function hasDirectiveMetadata(type: ts.Type): boolean {
   const metaProp = getMetaProperty(type);
@@ -416,7 +416,7 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
     return true;
   }
 
-  // Also check for the original type property (GqlFieldDef marker)
+  // Also check for the original type property (GqlField marker)
   const originalTypeProp = type.getProperty(ORIGINAL_TYPE_PROPERTY);
   if (originalTypeProp) {
     return true;
@@ -446,10 +446,10 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
     }
   }
 
-  // Check for GqlFieldDef type alias by examining the alias symbol
+  // Check for GqlField/GqlObject type alias by examining the alias symbol
   if (type.aliasSymbol) {
     const aliasName = type.aliasSymbol.getName();
-    if (aliasName === "GqlFieldDef" || aliasName === "GqlTypeDef") {
+    if (aliasName === "GqlField" || aliasName === "GqlObject") {
       return true;
     }
   }
@@ -458,25 +458,25 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
 }
 
 /**
- * Unwraps a GqlFieldDef or GqlTypeDef type and returns the base type.
- * For GqlFieldDef<T, Meta> which is T & { " $gqlkitFieldMeta"?: ...; " $gqlkitOriginalType"?: T },
+ * Unwraps a GqlField or GqlObject type and returns the base type.
+ * For GqlField<T, Meta> which is T & { " $gqlkitFieldMeta"?: ...; " $gqlkitOriginalType"?: T },
  * this extracts and returns T from the $gqlkitOriginalType property.
  *
  * The $gqlkitOriginalType property preserves nullability information that would otherwise
  * be lost due to TypeScript's union type normalization.
  *
- * If the type is not wrapped with GqlFieldDef or GqlTypeDef, returns the original type.
+ * If the type is not wrapped with GqlField or GqlObject, returns the original type.
  */
 export function unwrapDirectiveType(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): ts.Type {
   // 1. Check aliasTypeArguments first (most reliable)
-  //    Get T directly from GqlFieldDef<T, Meta> or GqlTypeDef<T, Meta>
+  //    Get T directly from GqlField<T, Meta> or GqlObject<T, Meta>
   //    This works when the type alias hasn't been expanded by TypeScript
   if (type.aliasTypeArguments && type.aliasTypeArguments.length > 0) {
     const aliasSymbolName = type.aliasSymbol?.getName() ?? "";
-    if (aliasSymbolName === "GqlFieldDef" || aliasSymbolName === "GqlTypeDef") {
+    if (aliasSymbolName === "GqlField" || aliasSymbolName === "GqlObject") {
       return type.aliasTypeArguments[0]!;
     }
   }
@@ -489,8 +489,8 @@ export function unwrapDirectiveType(
       if (member.aliasTypeArguments && member.aliasTypeArguments.length > 0) {
         const memberAliasSymbolName = member.aliasSymbol?.getName() ?? "";
         if (
-          memberAliasSymbolName === "GqlFieldDef" ||
-          memberAliasSymbolName === "GqlTypeDef"
+          memberAliasSymbolName === "GqlField" ||
+          memberAliasSymbolName === "GqlObject"
         ) {
           return member.aliasTypeArguments[0]!;
         }

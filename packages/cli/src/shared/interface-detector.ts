@@ -9,7 +9,7 @@
 import ts from "typescript";
 
 /**
- * Checks if a type alias declaration uses DefineInterface.
+ * Checks if a type alias declaration uses GqlInterface.
  * Inspects the typeNode directly since TypeScript resolves the alias.
  */
 export function isDefineInterfaceTypeAlias(
@@ -19,13 +19,13 @@ export function isDefineInterfaceTypeAlias(
   const typeNode = node.type;
   if (ts.isTypeReferenceNode(typeNode)) {
     const typeName = typeNode.typeName.getText(sourceFile);
-    return typeName === "DefineInterface";
+    return typeName === "GqlInterface";
   }
   return false;
 }
 
 /**
- * Extracts implements from DefineInterface type alias.
+ * Extracts implements from GqlInterface type alias.
  */
 export function extractImplementsFromDefineInterface(
   node: ts.TypeAliasDeclaration,
@@ -51,7 +51,7 @@ export function extractImplementsFromDefineInterface(
 }
 
 /**
- * Extracts implements from GqlTypeDef type alias.
+ * Extracts implements from GqlObject type alias.
  */
 export function extractImplementsFromGqlTypeDef(
   node: ts.TypeAliasDeclaration,
@@ -64,7 +64,7 @@ export function extractImplementsFromGqlTypeDef(
   }
 
   const typeName = typeNode.typeName.getText(sourceFile);
-  if (typeName !== "GqlTypeDef") {
+  if (typeName !== "GqlObject") {
     return [];
   }
 

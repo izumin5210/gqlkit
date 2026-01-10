@@ -1,24 +1,24 @@
 import {
   createGqlkitApis,
-  type Directive,
-  type GqlFieldDef,
+  type GqlDirective,
+  type GqlField,
   type NoArgs,
 } from "@gqlkit-ts/runtime";
 
 export type Scope = "PUBLIC" | "PRIVATE";
 
 export type CacheDirective<TArgs extends { maxAge: number; scope: Scope }> =
-  Directive<"cache", TArgs, "FIELD_DEFINITION">;
+  GqlDirective<"cache", TArgs, "FIELD_DEFINITION">;
 
 export type LogDirective<TArgs extends { enabled: boolean; level: string }> =
-  Directive<"log", TArgs, "FIELD_DEFINITION">;
+  GqlDirective<"log", TArgs, "FIELD_DEFINITION">;
 
 export type Data = {
-  cached: GqlFieldDef<
+  cached: GqlField<
     string,
     { directives: [CacheDirective<{ maxAge: 3600; scope: "PUBLIC" }>] }
   >;
-  logged: GqlFieldDef<
+  logged: GqlField<
     string,
     { directives: [LogDirective<{ enabled: true; level: "DEBUG" }>] }
   >;

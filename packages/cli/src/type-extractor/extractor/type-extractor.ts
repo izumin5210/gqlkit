@@ -677,7 +677,7 @@ function determineTypeKind(
 }
 
 function isAnonymousObjectType(memberType: ts.Type): boolean {
-  // For type aliases (including GqlTypeDef which creates intersection types),
+  // For type aliases (including GqlObject which creates intersection types),
   // use aliasSymbol to get the original type name
   if (memberType.aliasSymbol) {
     return false;
@@ -688,7 +688,7 @@ function isAnonymousObjectType(memberType: ts.Type): boolean {
 }
 
 function getNamedTypeName(memberType: ts.Type): string {
-  // For type aliases (e.g., GqlTypeDef<...>), use aliasSymbol
+  // For type aliases (e.g., GqlObject<...>), use aliasSymbol
   if (memberType.aliasSymbol) {
     return memberType.aliasSymbol.getName();
   }

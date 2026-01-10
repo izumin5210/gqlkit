@@ -20,7 +20,7 @@ type Post implements Node {
 }
 
 """
-Union type of User and Post (both implementing Node via GqlTypeDef).
+Union type of User and Post (both implementing Node via GqlObject).
 
 Defined in: src/gqlkit/schema/types.ts
 """

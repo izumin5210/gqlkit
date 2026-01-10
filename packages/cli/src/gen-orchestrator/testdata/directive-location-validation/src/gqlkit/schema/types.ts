@@ -1,18 +1,18 @@
 import {
   createGqlkitApis,
-  type Directive,
-  type GqlFieldDef,
+  type GqlDirective,
+  type GqlField,
   type NoArgs,
 } from "@gqlkit-ts/runtime";
 
-export type ObjectOnlyDirective = Directive<
+export type ObjectOnlyDirective = GqlDirective<
   "objectOnly",
   Record<string, never>,
   "OBJECT"
 >;
 
 export type User = {
-  id: GqlFieldDef<string, { directives: [ObjectOnlyDirective] }>;
+  id: GqlField<string, { directives: [ObjectOnlyDirective] }>;
 };
 
 const { defineQuery } = createGqlkitApis();

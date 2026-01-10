@@ -18,7 +18,7 @@
  *    (e.g., extracting from optional properties, intersection types)
  * 3. The original type name is lost during TypeScript's internal type resolution
  *
- * In the context of GqlFieldDef<T, Meta>, when we extract T from the
+ * In the context of GqlField<T, Meta>, when we extract T from the
  * `$gqlkitOriginalType` property, TypeScript may return the type with
  * `__type` as its symbol name instead of the original type name (e.g., "NestedConfig").
  * This happens because:
@@ -62,9 +62,9 @@ export function isInternalTypeSymbol(symbolName: string): boolean {
  * These start with " $" (space + dollar sign) to avoid conflicts.
  */
 export const METADATA_PROPERTIES = {
-  /** Field metadata (GqlFieldDef) */
+  /** Field metadata (GqlField) */
   FIELD_META: " $gqlkitFieldMeta",
-  /** Type metadata (GqlTypeDef) */
+  /** Type metadata (GqlObject) */
   TYPE_META: " $gqlkitTypeMeta",
   /** Directive name */
   DIRECTIVE_NAME: " $directiveName",

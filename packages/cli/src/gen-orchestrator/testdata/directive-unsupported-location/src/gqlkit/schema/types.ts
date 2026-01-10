@@ -1,10 +1,10 @@
 import {
   createGqlkitApis,
-  type Directive,
+  type GqlDirective,
   type NoArgs,
 } from "@gqlkit-ts/runtime";
 
-export type ScalarDirective = Directive<
+export type ScalarDirective = GqlDirective<
   "scalarOnly",
   Record<string, never>,
   "SCALAR"

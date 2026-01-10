@@ -1,4 +1,4 @@
-import type { GqlTypeDef, IDString, Int } from "@gqlkit-ts/runtime";
+import type { GqlObject, IDString, Int } from "@gqlkit-ts/runtime";
 import {
   defineField,
   defineMutation,
@@ -15,7 +15,7 @@ import type { UserStatus } from "./status.js";
  * A user in the system.
  * Implements Node (identifiable) and Timestamped (has createdAt).
  */
-export type User = GqlTypeDef<
+export type User = GqlObject<
   {
     /** Unique identifier for the user */
     id: IDString;

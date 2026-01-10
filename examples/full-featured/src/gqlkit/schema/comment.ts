@@ -1,4 +1,4 @@
-import type { GqlTypeDef, IDString } from "@gqlkit-ts/runtime";
+import type { GqlObject, IDString } from "@gqlkit-ts/runtime";
 import type { Node, Timestamped } from "./node.js";
 import type { DateTime } from "./scalars.js";
 
@@ -6,7 +6,7 @@ import type { DateTime } from "./scalars.js";
  * A comment on a post.
  * Implements Node (identifiable) and Timestamped (has createdAt).
  */
-export type Comment = GqlTypeDef<
+export type Comment = GqlObject<
   {
     /** Unique identifier for the comment */
     id: IDString;

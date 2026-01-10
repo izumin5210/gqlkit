@@ -1,10 +1,10 @@
-import type { DefineInterface, IDString } from "@gqlkit-ts/runtime";
+import type { GqlInterface, IDString } from "@gqlkit-ts/runtime";
 
 /**
  * Interface A - implements B (creating circular dependency: A -> B -> C -> A)
  * All interfaces share the same fields to avoid INTERFACE_MISSING_FIELD errors.
  */
-export type InterfaceA = DefineInterface<
+export type InterfaceA = GqlInterface<
   {
     id: IDString;
   },
@@ -14,7 +14,7 @@ export type InterfaceA = DefineInterface<
 /**
  * Interface B - implements C
  */
-export type InterfaceB = DefineInterface<
+export type InterfaceB = GqlInterface<
   {
     id: IDString;
   },
@@ -24,7 +24,7 @@ export type InterfaceB = DefineInterface<
 /**
  * Interface C - implements A (completing the cycle)
  */
-export type InterfaceC = DefineInterface<
+export type InterfaceC = GqlInterface<
   {
     id: IDString;
   },

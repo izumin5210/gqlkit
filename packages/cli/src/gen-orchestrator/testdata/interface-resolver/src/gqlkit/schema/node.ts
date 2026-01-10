@@ -1,4 +1,4 @@
-import type { DefineInterface, IDString, NoArgs } from "@gqlkit-ts/runtime";
+import type { GqlInterface, IDString, NoArgs } from "@gqlkit-ts/runtime";
 import { createGqlkitApis } from "@gqlkit-ts/runtime";
 
 const { defineField } = createGqlkitApis();
@@ -6,7 +6,7 @@ const { defineField } = createGqlkitApis();
 /**
  * The Node interface for Relay-style pagination.
  */
-export type Node = DefineInterface<{
+export type Node = GqlInterface<{
   id: IDString;
 }>;
 

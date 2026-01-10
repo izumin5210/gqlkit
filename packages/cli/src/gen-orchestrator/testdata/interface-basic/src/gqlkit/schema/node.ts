@@ -1,8 +1,8 @@
-import type { DefineInterface, IDString } from "@gqlkit-ts/runtime";
+import type { GqlInterface, IDString } from "@gqlkit-ts/runtime";
 
 /**
  * The Node interface for Relay-style pagination.
  */
-export type Node = DefineInterface<{
+export type Node = GqlInterface<{
   id: IDString;
 }>;
