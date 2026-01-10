@@ -1,5 +1,5 @@
-import type { GqlInterface, IDString } from "@gqlkit-ts/runtime";
-import { defineField, defineQuery, type NoArgs } from "./gqlkit.js";
+import type { GqlInterface, IDString, NoArgs } from "@gqlkit-ts/runtime";
+import { defineField, defineQuery } from "../gqlkit.js";
 import type { DateTime } from "./scalars.js";
 
 /**
