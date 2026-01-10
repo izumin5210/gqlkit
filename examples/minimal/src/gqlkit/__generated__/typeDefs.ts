@@ -9,19 +9,6 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "Context",
-      },
-      fields: [],
-      description: {
-        kind: "StringValue",
-        value: "Defined in: src/gqlkit/schema/gqlkit.ts",
-        block: true,
-      },
-    },
-    {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
         value: "Query",
       },
       fields: [],

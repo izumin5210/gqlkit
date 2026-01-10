@@ -69,7 +69,8 @@ export type DiagnosticCode =
   | "INTERFACE_CIRCULAR_REFERENCE"
   | "UNRESOLVABLE_DEFAULT_VALUE"
   | "AUTO_TYPE_NAME_COLLISION_USER"
-  | "AUTO_TYPE_NAME_COLLISION_AUTO";
+  | "AUTO_TYPE_NAME_COLLISION_AUTO"
+  | "MODULE_RESOLUTION_ERROR";
 
 export interface Diagnostic {
   readonly code: DiagnosticCode;

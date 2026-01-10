@@ -187,34 +187,6 @@ export const typeDefs: DocumentNode = {
       ],
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "Context",
-      },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "currentUserId",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value: "Defined in: src/gqlkit/schema/gqlkit.ts",
-        block: true,
-      },
-    },
-    {
       kind: "InterfaceTypeDefinition",
       name: {
         kind: "Name",

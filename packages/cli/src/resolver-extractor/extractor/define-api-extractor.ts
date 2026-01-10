@@ -116,6 +116,7 @@ function isExported(node: ts.Node): boolean {
 function convertTsTypeToReference(
   type: ts.Type,
   checker: ts.TypeChecker,
+  typeNode?: ts.TypeNode,
 ): TSTypeReference {
   const metadataResult = detectScalarMetadata(type, checker);
   // Skip scalar detection if it's an array of scalars (e.g., Int[])
@@ -200,10 +201,18 @@ function convertTsTypeToReference(
     const typeArgs = checker.getTypeArguments(type as ts.TypeReference);
     const elementType = typeArgs[0];
     if (elementType) {
+      let elementTypeNode: ts.TypeNode | undefined;
+      if (typeNode && ts.isArrayTypeNode(typeNode)) {
+        elementTypeNode = typeNode.elementType;
+      }
       return {
         kind: "array",
         name: null,
-        elementType: convertTsTypeToReference(elementType, checker),
+        elementType: convertTsTypeToReference(
+          elementType,
+          checker,
+          elementTypeNode,
+        ),
         members: null,
         nullable: false,
         scalarInfo: null,
@@ -231,8 +240,17 @@ function convertTsTypeToReference(
 
   const symbol = type.getSymbol();
   if (symbol) {
-    const name = symbol.getName();
-    if (!isInternalTypeSymbol(name)) {
+    const symbolName = symbol.getName();
+    if (!isInternalTypeSymbol(symbolName)) {
+      let name = symbolName;
+      if (typeNode && ts.isTypeReferenceNode(typeNode)) {
+        const typeName = typeNode.typeName;
+        if (ts.isIdentifier(typeName)) {
+          name = typeName.text;
+        } else if (ts.isQualifiedName(typeName)) {
+          name = typeName.right.text;
+        }
+      }
       return {
         kind: "reference",
         name,
@@ -484,7 +502,7 @@ function extractTypeArgumentsFromCall(
       parentTypeName: parentTypeName ?? null,
       argsType: isNoArgs ? null : argsTypeRef,
       args: args && args.length > 0 ? args : null,
-      returnType: convertTsTypeToReference(returnType, checker),
+      returnType: convertTsTypeToReference(returnType, checker, returnTypeNode),
       directives,
     };
   }
@@ -516,7 +534,7 @@ function extractTypeArgumentsFromCall(
     parentTypeName: null,
     argsType: isNoArgs ? null : argsTypeRef,
     args: args && args.length > 0 ? args : null,
-    returnType: convertTsTypeToReference(returnType, checker),
+    returnType: convertTsTypeToReference(returnType, checker, returnTypeNode),
     directives,
   };
 }

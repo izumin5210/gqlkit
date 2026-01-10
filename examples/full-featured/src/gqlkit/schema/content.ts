@@ -1,5 +1,5 @@
+import { defineQuery } from "../gqlkit.js";
 import type { Comment } from "./comment.js";
-import { defineQuery } from "./gqlkit.js";
 import type { Post } from "./post.js";
 
 /**

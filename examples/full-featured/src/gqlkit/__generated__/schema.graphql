@@ -39,13 +39,6 @@ type Comment implements Node & Timestamped {
 }
 
 """
-Defined in: src/gqlkit/schema/gqlkit.ts
-"""
-type Context {
-  currentUserId: String
-}
-
-"""
 Entity interface - combines Node and Timestamped for a common base.
 This interface inherits from both Node and Timestamped.
 

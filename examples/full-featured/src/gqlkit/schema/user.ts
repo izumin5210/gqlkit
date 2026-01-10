@@ -1,10 +1,5 @@
-import type { GqlObject, IDString, Int } from "@gqlkit-ts/runtime";
-import {
-  defineField,
-  defineMutation,
-  defineQuery,
-  type NoArgs,
-} from "./gqlkit.js";
+import type { GqlObject, IDString, Int, NoArgs } from "@gqlkit-ts/runtime";
+import { defineField, defineMutation, defineQuery } from "../gqlkit.js";
 import type { Node, Timestamped } from "./node.js";
 import type { Post } from "./post.js";
 import type { Role } from "./role.js";
