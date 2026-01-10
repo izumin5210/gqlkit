@@ -21,13 +21,6 @@ export default defineConfig({
           ],
         },
         {
-          text: "Basics",
-          items: [
-            { text: "Defining Types", link: "/guide/defining-types" },
-            { text: "Defining Resolvers", link: "/guide/defining-resolvers" },
-          ],
-        },
-        {
           text: "Schema",
           link: "/guide/schema/",
           items: [
