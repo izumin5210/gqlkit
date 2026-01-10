@@ -5,6 +5,13 @@ export default defineConfig({
   description:
     "Convention-driven code generator for GraphQL servers in TypeScript",
 
+  markdown: {
+    theme: {
+      light: "catppuccin-latte",
+      dark: "catppuccin-frappe",
+    },
+  },
+
   themeConfig: {
     nav: [{ text: "Guide", link: "/guide/getting-started" }],
 
