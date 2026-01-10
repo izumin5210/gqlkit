@@ -9,8 +9,8 @@
     "preview": "vitepress preview docs"
   },
   "devDependencies": {
-    "vitepress": "^1.6.3",
-    "vue": "^3.5.14"
+    "vitepress": "1.6.4",
+    "vue": "3.5.26"
   },
   "dependencies": {
     "@catppuccin/vitepress": "^0.1.2"
