@@ -58,6 +58,18 @@ export default defineConfig({
             },
           ],
         },
+        {
+          text: "Integration",
+          items: [
+            {
+              text: "HTTP Servers",
+              items: [
+                { text: "graphql-yoga", link: "/guide/integration/yoga" },
+                { text: "Apollo Server", link: "/guide/integration/apollo" },
+              ],
+            },
+          ],
+        },
       ],
     },
 

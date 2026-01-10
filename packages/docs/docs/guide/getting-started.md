@@ -5,15 +5,18 @@
 ::: code-group
 
 ```sh [npm]
-npm install @gqlkit-ts/cli @gqlkit-ts/runtime
+npm install @gqlkit-ts/runtime @graphql-tools/schema graphql
+npm install -D @gqlkit-ts/cli
 ```
 
 ```sh [pnpm]
-pnpm add @gqlkit-ts/cli @gqlkit-ts/runtime
+pnpm add @gqlkit-ts/runtime @graphql-tools/schema graphql
+pnpm add -D @gqlkit-ts/cli
 ```
 
 ```sh [yarn]
-yarn add @gqlkit-ts/cli @gqlkit-ts/runtime
+yarn add @gqlkit-ts/runtime @graphql-tools/schema graphql
+yarn add -D @gqlkit-ts/cli
 ```
 
 :::
@@ -43,14 +46,63 @@ export type User = {
 };
 ```
 
+## Define a Query
+
+Create a query resolver in `src/gqlkit/schema/query.ts`:
+
+```typescript
+import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import type { User } from "./user";
+
+type Context = {
+  currentUser: User | null;
+};
+
+const { defineQuery } = createGqlkitApis<Context>();
+
+export const me = defineQuery<NoArgs, User | null>(
+  (_root, _args, ctx) => ctx.currentUser
+);
+```
+
 ## Generate Schema
 
 Run the generator:
 
-```sh
-npx gqlkit gen
+::: code-group
+
+```sh [npm]
+npm exec gqlkit gen
 ```
+
+```sh [pnpm]
+pnpm gqlkit gen
+```
+
+```sh [yarn]
+yarn gqlkit gen
+```
+
+:::
 
 This will create files in `src/gqlkit/__generated__/`:
 - `schema.ts` - GraphQL schema AST (DocumentNode)
 - `resolvers.ts` - Resolver map
+
+## Create GraphQL Schema
+
+Use `@graphql-tools/schema` to combine the generated outputs into an executable schema:
+
+```typescript
+import { makeExecutableSchema } from "@graphql-tools/schema";
+import { typeDefs } from "./gqlkit/__generated__/schema";
+import { resolvers } from "./gqlkit/__generated__/resolvers";
+
+export const schema = makeExecutableSchema({ typeDefs, resolvers });
+```
+
+## Next Steps
+
+- [HTTP Server Integration](./integration/yoga) - Connect your schema to graphql-yoga, Apollo Server, or other HTTP servers
+- [Object Types](./schema/objects) - Learn more about defining types
+- [Queries & Mutations](./schema/queries-mutations) - Advanced resolver patterns
