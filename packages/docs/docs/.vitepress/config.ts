@@ -27,6 +27,40 @@ export default defineConfig({
             { text: "Defining Resolvers", link: "/guide/defining-resolvers" },
           ],
         },
+        {
+          text: "Schema",
+          link: "/guide/schema/",
+          items: [
+            {
+              text: "Core",
+              items: [
+                { text: "Object Types", link: "/guide/schema/objects" },
+                { text: "Input Types", link: "/guide/schema/inputs" },
+                {
+                  text: "Queries & Mutations",
+                  link: "/guide/schema/queries-mutations",
+                },
+                { text: "Field Resolvers", link: "/guide/schema/fields" },
+              ],
+            },
+            {
+              text: "More Types",
+              items: [
+                { text: "Scalars", link: "/guide/schema/scalars" },
+                { text: "Enums", link: "/guide/schema/enums" },
+                { text: "Unions", link: "/guide/schema/unions" },
+                { text: "Interfaces", link: "/guide/schema/interfaces" },
+              ],
+            },
+            {
+              text: "Features",
+              items: [
+                { text: "Documentation", link: "/guide/schema/documentation" },
+                { text: "Directives", link: "/guide/schema/directives" },
+              ],
+            },
+          ],
+        },
       ],
       "/reference/": [
         {
