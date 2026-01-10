@@ -11,6 +11,6 @@
       "ignoreDependencies": ["@gqlkit-ts/runtime"]
     }
   },
-  "ignoreWorkspaces": ["examples/*"],
+  "ignoreWorkspaces": ["examples/*", "packages/docs"],
   "ignoreDependencies": ["graphql", "tsx"]
 }
