@@ -4,6 +4,7 @@ export default defineConfig({
   title: "gqlkit",
   description:
     "Convention-driven code generator for GraphQL servers in TypeScript",
+  base: "/gqlkit/",
 
   markdown: {
     theme: {
