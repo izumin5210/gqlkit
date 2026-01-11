@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@docsearch/react": "^3.9.0",
     "next": "^15.3.5",
     "nextra": "^4.4.0",
     "nextra-theme-docs": "^4.4.0",

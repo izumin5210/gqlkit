@@ -4,6 +4,7 @@ import { getPageMap } from "nextra/page-map";
 import "nextra-theme-docs/style.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
+import { Search } from "../components/search";
 
 export const metadata: Metadata = {
   title: {
@@ -43,6 +44,7 @@ export default async function RootLayout({
           footer={footer}
           editLink="Edit this page on GitHub"
           sidebar={{ autoCollapse: false, defaultMenuCollapseLevel: 1 }}
+          search={<Search />}
         >
           {children}
         </Layout>
