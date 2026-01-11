@@ -1,6 +1,6 @@
-import { Footer, Layout, Navbar } from "nextra-theme-docs";
 import { Head } from "nextra/components";
 import { getPageMap } from "nextra/page-map";
+import { Footer, Layout, Navbar } from "nextra-theme-docs";
 import "nextra-theme-docs/style.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
@@ -24,20 +24,6 @@ const navbar = (
   </Navbar>
 );
 
-const footer = (
-  <Footer>
-    Released under the{" "}
-    <a
-      href="https://github.com/izumin5210/gqlkit/blob/main/LICENSE"
-      target="_blank"
-      rel="noopener noreferrer"
-    >
-      MIT License
-    </a>
-    . Copyright © 2025-present izumin5210
-  </Footer>
-);
-
 export default async function RootLayout({
   children,
 }: {
@@ -51,7 +37,6 @@ export default async function RootLayout({
           navbar={navbar}
           pageMap={await getPageMap()}
           docsRepositoryBase="https://github.com/izumin5210/gqlkit/tree/main/packages/docs/src/content"
-          footer={footer}
           editLink="Edit this page on GitHub"
           sidebar={{ autoCollapse: false, defaultMenuCollapseLevel: 1 }}
           search={<Search />}
