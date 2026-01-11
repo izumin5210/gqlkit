@@ -32,7 +32,6 @@ export default async function RootLayout({
 }: {
   children: ReactNode;
 }) {
-  console.log(JSON.stringify({ primaryDark, primaryLight }, null, 2));
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <Head
