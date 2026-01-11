@@ -12,11 +12,5 @@ export function Search() {
     return null;
   }
 
-  return (
-    <DocSearch
-      appId={appId}
-      apiKey={apiKey}
-      indexName={indexName}
-    />
-  );
+  return <DocSearch appId={appId} apiKey={apiKey} indexName={indexName} />;
 }
