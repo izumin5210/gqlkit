@@ -79,6 +79,7 @@ export default defineConfig({
 | `only` | `"input"` \| `"output"` (optional) | Restrict scalar to input or output positions |
 
 > [!TIP]
+>
 > You can also define custom scalars using the `GqlScalar` utility type directly in your schema files. See [Scalars](/schema/scalars) for more details.
 
 ## Output Paths
