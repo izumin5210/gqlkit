@@ -78,9 +78,8 @@ export default defineConfig({
 | `description` | `string` (optional) | Description for the GraphQL schema |
 | `only` | `"input"` \| `"output"` (optional) | Restrict scalar to input or output positions |
 
-::: tip
-You can also define custom scalars using the `GqlScalar` utility type directly in your schema files. See [Scalars](/guide/schema/scalars) for more details.
-:::
+> [!TIP]
+> You can also define custom scalars using the `GqlScalar` utility type directly in your schema files. See [Scalars](/schema/scalars) for more details.
 
 ## Output Paths
 

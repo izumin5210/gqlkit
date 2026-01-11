@@ -4,21 +4,17 @@
 
 ## Installation
 
-::: code-group
-
-```sh [npm]
+```sh filename="npm"
 npm install graphql-yoga
 ```
 
-```sh [pnpm]
+```sh filename="pnpm"
 pnpm add graphql-yoga
 ```
 
-```sh [yarn]
+```sh filename="yarn"
 yarn add graphql-yoga
 ```
-
-:::
 
 ## Creating the Schema
 
