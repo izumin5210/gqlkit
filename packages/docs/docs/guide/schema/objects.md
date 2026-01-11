@@ -157,3 +157,33 @@ export type Post = GqlObject<
 ```
 
 See [Interfaces](./interfaces.md) for more details on defining interface types.
+
+## Invalid Field Names
+
+Field names that are not valid GraphQL identifiers are automatically skipped with a warning. Valid GraphQL names must:
+
+- Match the pattern `/^[_A-Za-z][_0-9A-Za-z]*$/`
+- Not start with `__` (reserved for GraphQL introspection)
+
+```typescript
+export type User = {
+  id: string;              // ✅ Valid
+  userName: string;        // ✅ Valid
+  _internal: string;       // ✅ Valid (single underscore is OK)
+  "0invalid": string;      // ⚠️ Skipped: starts with a number
+  __reserved: string;      // ⚠️ Skipped: starts with __
+  "field-name": string;    // ⚠️ Skipped: contains hyphen
+};
+```
+
+Generates (invalid fields are skipped):
+
+```graphql
+type User {
+  id: String!
+  userName: String!
+  _internal: String!
+}
+```
+
+When fields are skipped, gqlkit outputs a warning with the field name and location.

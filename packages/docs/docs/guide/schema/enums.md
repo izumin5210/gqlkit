@@ -110,3 +110,53 @@ input UpdateUserInput {
   status: UserStatus
 }
 ```
+
+## Invalid Enum Values
+
+Enum values that are not valid GraphQL identifiers are automatically skipped with a warning. gqlkit converts enum values to `SCREAMING_SNAKE_CASE`, and the converted name must:
+
+- Match the pattern `/^[_A-Za-z][_0-9A-Za-z]*$/`
+- Not start with `__` (reserved for GraphQL introspection)
+
+### String Literal Unions
+
+```typescript
+export type Status =
+  | "active"      // ✅ Converts to ACTIVE
+  | "inProgress"  // ✅ Converts to IN_PROGRESS
+  | "0pending"    // ⚠️ Skipped: converts to 0PENDING (starts with number)
+  | "__internal"; // ⚠️ Skipped: converts to __INTERNAL (starts with __)
+```
+
+Generates:
+
+```graphql
+enum Status {
+  ACTIVE
+  IN_PROGRESS
+}
+```
+
+### TypeScript Enums
+
+```typescript
+export enum Priority {
+  HIGH = "HIGH",           // ✅ Valid
+  MEDIUM = "MEDIUM",       // ✅ Valid
+  LOW = "LOW",             // ✅ Valid
+  "0INVALID" = "0INVALID", // ⚠️ Skipped: starts with number
+  __RESERVED = "__RESERVED", // ⚠️ Skipped: starts with __
+}
+```
+
+Generates:
+
+```graphql
+enum Priority {
+  HIGH
+  MEDIUM
+  LOW
+}
+```
+
+When enum values are skipped, gqlkit outputs a warning with the original name, converted name, and location.
