@@ -2,24 +2,20 @@
 
 ## Installation
 
-::: code-group
-
-```sh [npm]
+```sh filename="npm"
 npm install @gqlkit-ts/runtime @graphql-tools/schema graphql
 npm install -D @gqlkit-ts/cli
 ```
 
-```sh [pnpm]
+```sh filename="pnpm"
 pnpm add @gqlkit-ts/runtime @graphql-tools/schema graphql
 pnpm add -D @gqlkit-ts/cli
 ```
 
-```sh [yarn]
+```sh filename="yarn"
 yarn add @gqlkit-ts/runtime @graphql-tools/schema graphql
 yarn add -D @gqlkit-ts/cli
 ```
-
-:::
 
 ## Project Structure
 
@@ -69,21 +65,17 @@ export const me = defineQuery<NoArgs, User | null>(
 
 Run the generator:
 
-::: code-group
-
-```sh [npm]
+```sh filename="npm"
 npm exec gqlkit gen
 ```
 
-```sh [pnpm]
+```sh filename="pnpm"
 pnpm gqlkit gen
 ```
 
-```sh [yarn]
+```sh filename="yarn"
 yarn gqlkit gen
 ```
-
-:::
 
 This will create files in `src/gqlkit/__generated__/`:
 - `schema.ts` - GraphQL schema AST (DocumentNode)
