@@ -9,6 +9,7 @@
     "start": "next start"
   },
   "dependencies": {
+    "@catppuccin/palette": "2.0.0-beta.1",
     "@docsearch/react": "^3.9.0",
     "next": "^15.3.5",
     "nextra": "^4.4.0",

@@ -101,6 +101,9 @@ importers:
 
   packages/docs:
     dependencies:
+      '@catppuccin/palette':
+        specifier: 2.0.0-beta.1
+        version: 2.0.0-beta.1
       '@docsearch/react':
         specifier: ^3.9.0
         version: 3.9.0(@algolia/client-search@5.46.2)(@types/react@19.2.8)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(search-insights@2.17.3)
@@ -292,6 +295,9 @@ packages:
 
   '@braintree/sanitize-url@7.1.1':
     resolution: {integrity: sha512-i1L7noDNxtFyL5DmZafWy1wRVhGehQmzZaz1HiN5e7iylJMSZR7ekOV7NsIqa5qBldlLrsKv4HbgFUVlQrz8Mw==}
+
+  '@catppuccin/palette@2.0.0-beta.1':
+    resolution: {integrity: sha512-FhTfw1xtM/rOW+COq20J66Ik+YHiRg240A38e2bYOwh8MDh2yZ/8I3S0+dU1brvytEN4tWtZwe340WrsJb9I8g==}
 
   '@chevrotain/cst-dts-gen@11.0.3':
     resolution: {integrity: sha512-BvIKpRLeS/8UbfxXxgC33xOumsacaeCKAjAeLyOn7Pcp95HiRbrpl14S+9vaZLolnbssPIUuiUd8IvgkRyt6NQ==}
@@ -3155,6 +3161,8 @@ snapshots:
     optional: true
 
   '@braintree/sanitize-url@7.1.1': {}
+
+  '@catppuccin/palette@2.0.0-beta.1': {}
 
   '@chevrotain/cst-dts-gen@11.0.3':
     dependencies:

@@ -1,7 +1,9 @@
+import { flavors } from "@catppuccin/palette";
 import { Head } from "nextra/components";
 import { getPageMap } from "nextra/page-map";
 import { Footer, Layout, Navbar } from "nextra-theme-docs";
 import "nextra-theme-docs/style.css";
+import "../styles/catppuccin-theme.css";
 import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Search } from "../components/search";
@@ -22,22 +24,36 @@ const navbar = (
   />
 );
 
+const primaryDark = flavors.mocha.colors.red;
+const primaryLight = flavors.latte.colors.red;
+
 export default async function RootLayout({
   children,
 }: {
   children: ReactNode;
 }) {
+  console.log(JSON.stringify({ primaryDark, primaryLight }, null, 2));
   return (
     <html lang="en" dir="ltr" suppressHydrationWarning>
       <Head
-        // dark: catppuccin mocha red
-        // light: catppuccin latte red
         color={{
-          hue: { dark: 343, light: 347 },
-          saturation: { dark: 81, light: 87 },
-          lightness: { dark: 75, light: 44 },
+          hue: {
+            dark: Math.round(primaryDark.hsl.h),
+            light: Math.round(primaryLight.hsl.h),
+          },
+          saturation: {
+            dark: Math.round(primaryDark.hsl.s * 100),
+            light: Math.round(primaryLight.hsl.s * 100),
+          },
+          lightness: {
+            dark: Math.round(primaryDark.hsl.l * 100),
+            light: Math.round(primaryLight.hsl.l * 100),
+          },
         }}
-        backgroundColor={{ dark: "#1e1e2e", light: "#eff1f5" }}
+        backgroundColor={{
+          dark: flavors.mocha.colors.base.hex,
+          light: flavors.latte.colors.base.hex,
+        }}
       />
 
       <body>
