@@ -323,6 +323,31 @@ function convertTsTypeToReference(
     };
   }
 
+  // Handle intersection types that should be treated as inline objects
+  // This includes intersections with anonymous members OR intersections of
+  // named object types (interfaces) that are not exported as GraphQL types
+  if (type.isIntersection()) {
+    const shouldTreatAsInline = shouldTreatIntersectionAsInline(type);
+    if (shouldTreatAsInline) {
+      const inlineProperties = extractInlineObjectProperties(
+        type,
+        checker,
+        globalTypeMappings,
+      );
+      return {
+        tsType: {
+          kind: "inlineObject",
+          name: null,
+          elementType: null,
+          members: null,
+          nullable: false,
+          scalarInfo: null,
+          inlineObjectProperties: inlineProperties,
+        },
+      };
+    }
+  }
+
   if (isInlineObjectType(type)) {
     const inlineProperties = extractInlineObjectProperties(
       type,
@@ -340,6 +365,34 @@ function convertTsTypeToReference(
         inlineObjectProperties: inlineProperties,
       },
     };
+  }
+
+  // Check for utility types (Omit, Pick, Partial, Required, etc.)
+  // These create mapped types that should be treated as inline objects
+  // Note: Utility types have aliasSymbol (e.g., "Omit") but should still be
+  // treated as inline objects since they create new anonymous object types
+  if (type.flags & ts.TypeFlags.Object) {
+    const objectType = type as ts.ObjectType;
+    // Mapped types (created by utility types like Omit, Pick, etc.)
+    // should be treated as inline objects
+    if (objectType.objectFlags & ts.ObjectFlags.Mapped) {
+      const inlineProperties = extractInlineObjectProperties(
+        type,
+        checker,
+        globalTypeMappings,
+      );
+      return {
+        tsType: {
+          kind: "inlineObject",
+          name: null,
+          elementType: null,
+          members: null,
+          nullable: false,
+          scalarInfo: null,
+          inlineObjectProperties: inlineProperties,
+        },
+      };
+    }
   }
 
   if (type.symbol) {
@@ -1031,6 +1084,38 @@ function isAnonymousObjectType(memberType: ts.Type): boolean {
   if (!memberType.symbol) return true;
   const symbolName = memberType.symbol.getName();
   return symbolName === "__type" || symbolName === "";
+}
+
+function isObjectLikeType(type: ts.Type): boolean {
+  if (!(type.flags & ts.TypeFlags.Object)) {
+    return false;
+  }
+  const objectType = type as ts.ObjectType;
+  return (
+    (objectType.objectFlags & ts.ObjectFlags.Interface) !== 0 ||
+    (objectType.objectFlags & ts.ObjectFlags.Anonymous) !== 0 ||
+    (objectType.objectFlags & ts.ObjectFlags.Mapped) !== 0
+  );
+}
+
+function shouldTreatIntersectionAsInline(type: ts.IntersectionType): boolean {
+  // Case 1: Has at least one anonymous member (e.g., { field: string })
+  const hasAnonymousMember = type.types.some(
+    (t) => isInlineObjectType(t) || isAnonymousObjectType(t),
+  );
+  if (hasAnonymousMember) {
+    return true;
+  }
+
+  // Case 2: All members are object-like types (interfaces, mapped types, etc.)
+  // that should be merged into an inline object
+  // This handles cases like ContactInfo & AddressInfo where both are interfaces
+  const allObjectLike = type.types.every((t) => isObjectLikeType(t));
+  if (allObjectLike) {
+    return true;
+  }
+
+  return false;
 }
 
 function getNamedTypeName(memberType: ts.Type): string {

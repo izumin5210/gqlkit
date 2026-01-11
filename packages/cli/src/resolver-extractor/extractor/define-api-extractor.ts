@@ -113,6 +113,91 @@ function isExported(node: ts.Node): boolean {
   return (modifiers & ts.ModifierFlags.Export) !== 0;
 }
 
+/**
+ * Checks if a type is an anonymous object type (like inline type literals).
+ * Named types and type aliases are not considered anonymous.
+ * This is used to determine if an intersection member should trigger
+ * treating the whole intersection as an inline object.
+ */
+function isAnonymousObjectTypeForArgs(type: ts.Type): boolean {
+  if (type.aliasSymbol) {
+    return false;
+  }
+  if (!type.symbol) {
+    return true;
+  }
+  const symbolName = type.symbol.getName();
+  return symbolName === "__type" || symbolName === "";
+}
+
+/**
+ * List of TypeScript built-in utility types that should be resolved
+ * to their actual properties when used in args.
+ */
+const BUILTIN_UTILITY_TYPES = [
+  "Omit",
+  "Pick",
+  "Partial",
+  "Required",
+  "Readonly",
+  "Record",
+];
+
+/**
+ * Checks if a type is a built-in utility type like Omit, Pick, etc.
+ */
+function isBuiltinUtilityType(type: ts.Type): boolean {
+  if (!type.aliasSymbol) {
+    return false;
+  }
+  return BUILTIN_UTILITY_TYPES.includes(type.aliasSymbol.getName());
+}
+
+/**
+ * Checks if a type is an object-like type (interface, anonymous object, or mapped type).
+ * Used to determine if an intersection of object types should be treated as inline.
+ */
+function isObjectLikeType(type: ts.Type): boolean {
+  if (!(type.flags & ts.TypeFlags.Object)) {
+    return false;
+  }
+  const objectType = type as ts.ObjectType;
+  return (
+    (objectType.objectFlags & ts.ObjectFlags.Interface) !== 0 ||
+    (objectType.objectFlags & ts.ObjectFlags.Anonymous) !== 0 ||
+    (objectType.objectFlags & ts.ObjectFlags.Mapped) !== 0
+  );
+}
+
+/**
+ * Determines if an intersection type should be treated as an inline object.
+ * Returns true when the intersection has anonymous/utility members OR
+ * when all members are object-like types that should be merged.
+ */
+function shouldTreatIntersectionAsInlineForArgs(
+  type: ts.IntersectionType,
+): boolean {
+  // Case 1: Has at least one anonymous/inline/utility type member
+  const hasResolvableMember = type.types.some(
+    (t) =>
+      isInlineObjectType(t) ||
+      isAnonymousObjectTypeForArgs(t) ||
+      isBuiltinUtilityType(t),
+  );
+  if (hasResolvableMember) {
+    return true;
+  }
+
+  // Case 2: All members are object-like types (e.g., ContactInfo & AddressInfo)
+  // These should be merged into an inline object
+  const allObjectLike = type.types.every((t) => isObjectLikeType(t));
+  if (allObjectLike) {
+    return true;
+  }
+
+  return false;
+}
+
 function convertTsTypeToReference(
   type: ts.Type,
   checker: ts.TypeChecker,
@@ -222,6 +307,48 @@ function convertTsTypeToReference(
   }
 
   if (isInlineObjectType(type)) {
+    const inlineProperties = extractInlineObjectProperties(
+      type,
+      checker,
+      convertTsTypeToReference,
+    );
+    return {
+      kind: "inlineObject",
+      name: null,
+      elementType: null,
+      members: null,
+      nullable: false,
+      scalarInfo: null,
+      inlineObjectProperties: inlineProperties,
+    };
+  }
+
+  // Handle intersection types that should be treated as inline objects
+  // This includes intersections with anonymous/utility members OR intersections of
+  // named object types (interfaces) that need to be merged
+  // BUT only if the type itself is not a named type alias (like User = GqlObject<...>)
+  if (type.isIntersection() && !type.aliasSymbol) {
+    if (shouldTreatIntersectionAsInlineForArgs(type)) {
+      const inlineProperties = extractInlineObjectProperties(
+        type,
+        checker,
+        convertTsTypeToReference,
+      );
+      return {
+        kind: "inlineObject",
+        name: null,
+        elementType: null,
+        members: null,
+        nullable: false,
+        scalarInfo: null,
+        inlineObjectProperties: inlineProperties,
+      };
+    }
+  }
+
+  // Check if this is a utility type like Omit, Pick, etc.
+  // Utility types have aliasSymbol but their apparent type has resolved properties
+  if (type.flags & ts.TypeFlags.Object && isBuiltinUtilityType(type)) {
     const inlineProperties = extractInlineObjectProperties(
       type,
       checker,
@@ -392,12 +519,115 @@ function shouldUnwrapAsGqlField(
   return false;
 }
 
+/**
+ * Checks if a type is the NoArgs type (Record<string, never>).
+ * This is a special type that represents "no arguments".
+ */
+function isNoArgsType(type: ts.Type, checker: ts.TypeChecker): boolean {
+  if (type.aliasSymbol?.getName() === "NoArgs") {
+    return true;
+  }
+  if (type.aliasSymbol?.getName() === "Record") {
+    return true;
+  }
+  const typeStr = checker.typeToString(type);
+  if (typeStr === "Record<string, never>") {
+    return true;
+  }
+  return false;
+}
+
+/**
+ * Checks if a type has only index signatures with no named properties.
+ * Types like `{ [key: string]: number }` return true.
+ * Does NOT return true for NoArgs type.
+ */
+function hasOnlyIndexSignatures(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+): boolean {
+  if (isNoArgsType(type, checker)) {
+    return false;
+  }
+
+  const targetType = checker.getApparentType(type);
+
+  const indexInfos = checker.getIndexInfosOfType(targetType);
+  const hasIndexSignatures = indexInfos.length > 0;
+
+  if (!hasIndexSignatures) {
+    return false;
+  }
+
+  const properties = targetType
+    .getProperties()
+    .filter((p) => !p.getName().startsWith(" $"));
+  if (properties.length > 0) {
+    return false;
+  }
+
+  return true;
+}
+
+/**
+ * Gets the type name for error messages.
+ */
+function getTypeNameForDiagnostic(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+): string {
+  if (type.aliasSymbol) {
+    return type.aliasSymbol.getName();
+  }
+  if (type.symbol) {
+    return type.symbol.getName();
+  }
+  return checker.typeToString(type);
+}
+
+/**
+ * Extracts property symbols from an args type, handling intersection types
+ * and falling back to getApparentType when getProperties() returns empty.
+ *
+ * This follows the same pattern as extractPropertiesFromType in type-extractor.ts.
+ */
+function extractArgsPropertySymbols(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+): ts.Symbol[] {
+  if (type.isIntersection()) {
+    const allProps = new Map<string, ts.Symbol>();
+    for (const member of type.types) {
+      const memberProps = member.getProperties();
+      for (const prop of memberProps) {
+        const propName = prop.getName();
+        if (!allProps.has(propName)) {
+          allProps.set(propName, prop);
+        }
+      }
+    }
+    return [...allProps.values()];
+  }
+
+  const properties = type.getProperties();
+  if (properties.length > 0) {
+    return [...properties];
+  }
+
+  const apparentType = checker.getApparentType(type);
+  if (apparentType !== type) {
+    return [...apparentType.getProperties()];
+  }
+
+  return [];
+}
+
 function extractArgsFromType(
   argsType: ts.Type,
   checker: ts.TypeChecker,
 ): ArgumentDefinition[] {
   const args: ArgumentDefinition[] = [];
-  const properties = argsType.getProperties();
+  const properties = extractArgsPropertySymbols(argsType, checker);
 
   for (const prop of properties) {
     const propType = checker.getTypeOfSymbol(prop);
@@ -453,17 +683,74 @@ function extractDirectivesFromTypeNode(
   return null;
 }
 
-function extractTypeArgumentsFromCall(
-  node: ts.CallExpression,
-  checker: ts.TypeChecker,
-  resolverType: DefineApiResolverType,
-): {
+interface TypeArgumentsResult {
   parentTypeName: string | null;
   argsType: TSTypeReference | null;
   args: ArgumentDefinition[] | null;
   returnType: TSTypeReference;
   directives: ReadonlyArray<DirectiveInfo> | null;
-} | null {
+  diagnostics: Diagnostic[];
+}
+
+/**
+ * Validates an args type and returns diagnostics for problematic types.
+ */
+function validateArgsType(
+  argsType: ts.Type,
+  argsTypeNode: ts.TypeNode,
+  checker: ts.TypeChecker,
+): Diagnostic[] {
+  const diagnostics: Diagnostic[] = [];
+
+  if (hasOnlyIndexSignatures(argsType, checker)) {
+    const typeName = getTypeNameForDiagnostic(argsType, checker);
+    diagnostics.push({
+      code: "INDEX_SIGNATURE_ONLY",
+      message: `Type '${typeName}' contains only index signatures and cannot be represented as a GraphQL type. Use a concrete object type instead.`,
+      severity: "error",
+      location: getSourceLocationFromNode(argsTypeNode),
+    });
+  }
+
+  return diagnostics;
+}
+
+/**
+ * Checks if the extracted args are empty and the original type was not NoArgs.
+ * This indicates the type resolved to an empty object.
+ * Does not emit warnings for types that only have index signatures (they get INDEX_SIGNATURE_ONLY error instead).
+ */
+function checkEmptyArgsType(
+  argsType: ts.Type,
+  argsTypeNode: ts.TypeNode,
+  args: ArgumentDefinition[] | null,
+  checker: ts.TypeChecker,
+): Diagnostic | null {
+  if (isNoArgsType(argsType, checker)) {
+    return null;
+  }
+
+  if (hasOnlyIndexSignatures(argsType, checker)) {
+    return null;
+  }
+
+  if (args !== null && args.length === 0) {
+    const typeName = getTypeNameForDiagnostic(argsType, checker);
+    return {
+      code: "EMPTY_TYPE_PROPERTIES",
+      message: `Type '${typeName}' has no properties. Consider adding properties or using a different type.`,
+      severity: "warning",
+      location: getSourceLocationFromNode(argsTypeNode),
+    };
+  }
+  return null;
+}
+
+function extractTypeArgumentsFromCall(
+  node: ts.CallExpression,
+  checker: ts.TypeChecker,
+  resolverType: DefineApiResolverType,
+): TypeArgumentsResult | null {
   const typeArgs = node.typeArguments;
   if (!typeArgs) {
     return null;
@@ -491,7 +778,25 @@ function extractTypeArgumentsFromCall(
     const isNoArgs =
       argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
+    const diagnostics: Diagnostic[] = [];
+
+    if (!isNoArgs) {
+      diagnostics.push(...validateArgsType(argsType, argsTypeNode, checker));
+    }
+
     const args = isNoArgs ? null : extractArgsFromType(argsType, checker);
+
+    if (!isNoArgs) {
+      const emptyDiagnostic = checkEmptyArgsType(
+        argsType,
+        argsTypeNode,
+        args,
+        checker,
+      );
+      if (emptyDiagnostic) {
+        diagnostics.push(emptyDiagnostic);
+      }
+    }
 
     const directives = extractDirectivesFromTypeNode(
       directiveTypeNode,
@@ -504,6 +809,7 @@ function extractTypeArgumentsFromCall(
       args: args && args.length > 0 ? args : null,
       returnType: convertTsTypeToReference(returnType, checker, returnTypeNode),
       directives,
+      diagnostics,
     };
   }
 
@@ -526,7 +832,25 @@ function extractTypeArgumentsFromCall(
   const isNoArgs =
     argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
+  const diagnostics: Diagnostic[] = [];
+
+  if (!isNoArgs) {
+    diagnostics.push(...validateArgsType(argsType, argsTypeNode, checker));
+  }
+
   const args = isNoArgs ? null : extractArgsFromType(argsType, checker);
+
+  if (!isNoArgs) {
+    const emptyDiagnostic = checkEmptyArgsType(
+      argsType,
+      argsTypeNode,
+      args,
+      checker,
+    );
+    if (emptyDiagnostic) {
+      diagnostics.push(emptyDiagnostic);
+    }
+  }
 
   const directives = extractDirectivesFromTypeNode(directiveTypeNode, checker);
 
@@ -536,6 +860,7 @@ function extractTypeArgumentsFromCall(
     args: args && args.length > 0 ? args : null,
     returnType: convertTsTypeToReference(returnType, checker, returnTypeNode),
     directives,
+    diagnostics,
   };
 }
 
@@ -647,6 +972,8 @@ export function extractDefineApiResolvers(
           });
           continue;
         }
+
+        diagnostics.push(...typeInfo.diagnostics);
 
         const tsdocInfo = extractTsDocInfo(node, checker);
 
