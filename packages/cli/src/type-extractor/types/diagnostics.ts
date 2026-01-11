@@ -70,7 +70,9 @@ export type DiagnosticCode =
   | "UNRESOLVABLE_DEFAULT_VALUE"
   | "AUTO_TYPE_NAME_COLLISION_USER"
   | "AUTO_TYPE_NAME_COLLISION_AUTO"
-  | "MODULE_RESOLUTION_ERROR";
+  | "MODULE_RESOLUTION_ERROR"
+  | "SKIPPED_FIELD"
+  | "SKIPPED_ENUM_VALUE";
 
 export interface Diagnostic {
   readonly code: DiagnosticCode;

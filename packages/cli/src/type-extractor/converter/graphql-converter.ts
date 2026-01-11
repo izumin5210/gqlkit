@@ -15,6 +15,11 @@ import type {
   InlineObjectProperty,
   SourceLocation,
 } from "../types/index.js";
+import {
+  isEligibleAsEnumValue,
+  isEligibleAsInputObjectField,
+  isEligibleAsObjectField,
+} from "./field-eligibility.js";
 
 export interface ConversionResult {
   readonly types: ReadonlyArray<GraphQLTypeInfo>;
@@ -28,8 +33,6 @@ const RESERVED_TYPE_NAMES = new Set([
   "Subscription",
 ]);
 
-const GRAPHQL_ENUM_VALUE_PATTERN = /^[_A-Za-z][_0-9A-Za-z]*$/;
-
 function isInputTypeName(name: string): boolean {
   return name.endsWith("Input");
 }
@@ -40,11 +43,6 @@ function toScreamingSnakeCase(value: string): string {
     .replace(/([a-z])([A-Z])/g, "$1_$2")
     .replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
     .toUpperCase();
-}
-
-function isValidGraphQLEnumValue(value: string): boolean {
-  if (value.length === 0) return false;
-  return GRAPHQL_ENUM_VALUE_PATTERN.test(value);
 }
 
 function convertEnumMembers(
@@ -60,12 +58,17 @@ function convertEnumMembers(
   for (const member of members) {
     const convertedName = toScreamingSnakeCase(member.name);
 
-    if (!isValidGraphQLEnumValue(convertedName)) {
+    const eligibility = isEligibleAsEnumValue(convertedName, member.name);
+    if (!eligibility.eligible) {
       diagnostics.push({
-        code: "INVALID_ENUM_MEMBER",
-        message: `Enum member '${member.name}' converts to '${convertedName}' which is not a valid GraphQL identifier`,
-        severity: "error",
-        location: { file: sourceFile, line: 1, column: 1 },
+        code: "SKIPPED_ENUM_VALUE",
+        message: eligibility.skipReason!.message,
+        severity: "warning",
+        location: member.sourceLocation ?? {
+          file: sourceFile,
+          line: 1,
+          column: 1,
+        },
       });
       continue;
     }
@@ -81,15 +84,48 @@ function convertEnumMembers(
   return { values, diagnostics };
 }
 
-function convertFields(extracted: ExtractedTypeInfo): FieldInfo[] {
-  return extracted.fields.map((field) => ({
-    name: field.name,
-    type: convertTsTypeToGraphQLType(field.tsType, field.optional),
-    description: field.description,
-    deprecated: field.deprecated,
-    directives: field.directives,
-    defaultValue: field.defaultValue,
-  }));
+interface ConvertFieldsResult {
+  readonly fields: FieldInfo[];
+  readonly diagnostics: Diagnostic[];
+}
+
+function convertFields(
+  extracted: ExtractedTypeInfo,
+  isInput: boolean,
+): ConvertFieldsResult {
+  const fields: FieldInfo[] = [];
+  const diagnostics: Diagnostic[] = [];
+
+  for (const field of extracted.fields) {
+    const eligibility = isInput
+      ? isEligibleAsInputObjectField(field.name)
+      : isEligibleAsObjectField(field.name);
+
+    if (!eligibility.eligible) {
+      diagnostics.push({
+        code: "SKIPPED_FIELD",
+        message: eligibility.skipReason!.message,
+        severity: "warning",
+        location: field.sourceLocation ?? {
+          file: extracted.metadata.sourceFile,
+          line: 1,
+          column: 1,
+        },
+      });
+      continue;
+    }
+
+    fields.push({
+      name: field.name,
+      type: convertTsTypeToGraphQLType(field.tsType, field.optional),
+      description: field.description,
+      deprecated: field.deprecated,
+      directives: field.directives,
+      defaultValue: field.defaultValue,
+    });
+  }
+
+  return { fields, diagnostics };
 }
 
 function isValidOneOfFieldType(
@@ -255,7 +291,11 @@ export function convertToGraphQL(
         directives: metadata.directives,
       });
     } else if (metadata.kind === "graphqlInterface") {
-      const fields = convertFields(extracted);
+      const { fields, diagnostics: fieldDiagnostics } = convertFields(
+        extracted,
+        false,
+      );
+      diagnostics.push(...fieldDiagnostics);
 
       types.push({
         name: metadata.name,
@@ -320,8 +360,12 @@ export function convertToGraphQL(
         });
       }
     } else {
-      const fields = convertFields(extracted);
       const isInput = isInputTypeName(metadata.name);
+      const { fields, diagnostics: fieldDiagnostics } = convertFields(
+        extracted,
+        isInput,
+      );
+      diagnostics.push(...fieldDiagnostics);
 
       types.push({
         name: metadata.name,

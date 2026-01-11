@@ -1,0 +1,122 @@
+[
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field '0invalid' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 6,
+      "column": 3
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field '__reserved' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 7,
+      "column": 3
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field 'field-with-dash' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 8,
+      "column": 3
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field 'field.with.dot' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 9,
+      "column": 3
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field 'field with space' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 10,
+      "column": 3
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field '123abc' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 17,
+      "column": 3
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field '__private' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 18,
+      "column": 3
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field 'hyphen-field' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 19,
+      "column": 3
+    }
+  },
+  {
+    "code": "SKIPPED_ENUM_VALUE",
+    "message": "Enum member '0pending' converts to '0PENDING' which is not a valid GraphQL identifier",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "SKIPPED_ENUM_VALUE",
+    "message": "Enum member '__internal' converts to '__INTERNAL' which starts with '__' (reserved for GraphQL introspection)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "SKIPPED_ENUM_VALUE",
+    "message": "Enum member '0INVALID' converts to '0INVALID' which is not a valid GraphQL identifier",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 28,
+      "column": 3
+    }
+  },
+  {
+    "code": "SKIPPED_ENUM_VALUE",
+    "message": "Enum member '__RESERVED' converts to '__RESERVED' which starts with '__' (reserved for GraphQL introspection)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 29,
+      "column": 3
+    }
+  }
+]

@@ -19,6 +19,7 @@ import {
   collectDiagnostics,
   convertTsTypeToGraphQLType,
   type DirectiveDefinitionInfo,
+  deduplicateDiagnostics,
   extractDirectiveDefinitions,
   scanDirectory,
   toPosixPath,
@@ -248,7 +249,7 @@ function normalizeDiagnosticPaths(
   diagnostics: ReadonlyArray<Diagnostic>,
   sourceRoot: string,
 ): Diagnostic[] {
-  return diagnostics.map((d) => {
+  const normalized = diagnostics.map((d) => {
     const normalizedMessage = normalizePathInMessage(d.message, sourceRoot);
 
     if (d.location === null) {
@@ -266,6 +267,7 @@ function normalizeDiagnosticPaths(
       },
     };
   });
+  return deduplicateDiagnostics(normalized);
 }
 
 function extractResolversCore(

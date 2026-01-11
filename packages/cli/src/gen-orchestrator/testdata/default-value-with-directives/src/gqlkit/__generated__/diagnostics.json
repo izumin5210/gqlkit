@@ -18,25 +18,5 @@
       "line": 16,
       "column": 1
     }
-  },
-  {
-    "code": "UNSUPPORTED_SYNTAX",
-    "message": "Generic type 'LengthDirective' is not supported. Consider using a concrete type instead.",
-    "severity": "warning",
-    "location": {
-      "file": "src/gqlkit/schema/types.ts",
-      "line": 9,
-      "column": 1
-    }
-  },
-  {
-    "code": "UNSUPPORTED_SYNTAX",
-    "message": "Generic type 'RangeDirective' is not supported. Consider using a concrete type instead.",
-    "severity": "warning",
-    "location": {
-      "file": "src/gqlkit/schema/types.ts",
-      "line": 16,
-      "column": 1
-    }
   }
 ]

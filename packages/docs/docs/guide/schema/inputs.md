@@ -247,3 +247,31 @@ export type BadInput = {
   name: GqlField<string, { defaultValue: string }>;   // Warning: must be literal
 };
 ```
+
+## Invalid Field Names
+
+Input field names that are not valid GraphQL identifiers are automatically skipped with a warning. Valid GraphQL names must:
+
+- Match the pattern `/^[_A-Za-z][_0-9A-Za-z]*$/`
+- Not start with `__` (reserved for GraphQL introspection)
+
+```typescript
+export type CreateUserInput = {
+  name: string;            // ✅ Valid
+  _metadata: string;       // ✅ Valid (single underscore is OK)
+  "123abc": string;        // ⚠️ Skipped: starts with a number
+  __private: string;       // ⚠️ Skipped: starts with __
+  "hyphen-field": string;  // ⚠️ Skipped: contains hyphen
+};
+```
+
+Generates (invalid fields are skipped):
+
+```graphql
+input CreateUserInput {
+  name: String!
+  _metadata: String!
+}
+```
+
+When fields are skipped, gqlkit outputs a warning with the field name and location.

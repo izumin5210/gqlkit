@@ -590,6 +590,13 @@ function isStringLiteralUnion(type: ts.Type): boolean {
   return nonNullTypes.every((t) => t.flags & ts.TypeFlags.StringLiteral);
 }
 
+function getEnumMemberName(memberName: ts.PropertyName): string {
+  if (ts.isIdentifier(memberName) || ts.isStringLiteral(memberName)) {
+    return memberName.text;
+  }
+  return memberName.getText();
+}
+
 function extractEnumMembers(
   node: ts.EnumDeclaration,
   checker: ts.TypeChecker,
@@ -597,7 +604,7 @@ function extractEnumMembers(
   const members: EnumMemberInfo[] = [];
 
   for (const member of node.members) {
-    const name = member.name.getText();
+    const name = getEnumMemberName(member.name);
     const initializer = member.initializer;
     if (initializer && ts.isStringLiteral(initializer)) {
       const symbol = checker.getSymbolAtLocation(member.name);
@@ -610,6 +617,7 @@ function extractEnumMembers(
         value: initializer.text,
         description: tsdocInfo.description ?? null,
         deprecated: tsdocInfo.deprecated ?? null,
+        sourceLocation: getSourceLocationFromNode(member),
       });
     }
   }
@@ -636,6 +644,7 @@ function extractStringLiteralUnionMembers(
         value: value,
         description: null,
         deprecated: null,
+        sourceLocation: null,
       });
     }
   }

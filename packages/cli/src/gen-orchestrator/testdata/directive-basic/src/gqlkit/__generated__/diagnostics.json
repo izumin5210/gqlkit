@@ -8,15 +8,5 @@
       "line": 9,
       "column": 1
     }
-  },
-  {
-    "code": "UNSUPPORTED_SYNTAX",
-    "message": "Generic type 'AuthDirective' is not supported. Consider using a concrete type instead.",
-    "severity": "warning",
-    "location": {
-      "file": "src/gqlkit/schema/query.ts",
-      "line": 9,
-      "column": 1
-    }
   }
 ]

@@ -85,6 +85,7 @@ export interface EnumMemberInfo {
   readonly value: string;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly sourceLocation: SourceLocation | null;
 }
 
 export interface InlineObjectProperty {
