@@ -4,21 +4,17 @@
 
 ## Installation
 
-::: code-group
-
-```sh [npm]
+```sh filename="npm"
 npm install @apollo/server
 ```
 
-```sh [pnpm]
+```sh filename="pnpm"
 pnpm add @apollo/server
 ```
 
-```sh [yarn]
+```sh filename="yarn"
 yarn add @apollo/server
 ```
-
-:::
 
 ## Creating the Schema
 
