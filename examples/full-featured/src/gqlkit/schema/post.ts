@@ -47,7 +47,7 @@ const users: User[] = [
     age: 30 as User["age"],
     status: "ACTIVE" as unknown as User["status"],
     role: "ADMIN" as unknown as User["role"],
-    createdAt: "2024-01-01T00:00:00Z" as User["createdAt"],
+    createdAt: new Date("2024-01-01T00:00:00Z"),
     username: null,
   },
 ];
@@ -60,8 +60,8 @@ const posts: Post[] = [
     status: "PUBLISHED" as unknown as Post["status"],
     authorId: "1" as Post["authorId"],
     tags: ["intro", "hello"],
-    publishedAt: "2024-01-15T10:00:00Z" as Post["publishedAt"],
-    createdAt: "2024-01-15T09:00:00Z" as Post["createdAt"],
+    publishedAt: new Date("2024-01-15T10:00:00Z"),
+    createdAt: new Date("2024-01-15T09:00:00Z"),
   },
   {
     id: "2" as Post["id"],
@@ -71,7 +71,7 @@ const posts: Post[] = [
     authorId: "1" as Post["authorId"],
     tags: ["draft", null],
     publishedAt: null,
-    createdAt: "2024-02-01T08:00:00Z" as Post["createdAt"],
+    createdAt: new Date("2024-02-01T08:00:00Z"),
   },
 ];
 
@@ -82,14 +82,14 @@ const commentsByPost: Record<string, Comment[]> = {
       body: "Great post!",
       postId: "1" as Comment["postId"],
       authorId: "2" as Comment["authorId"],
-      createdAt: "2024-01-16T10:00:00Z" as Comment["createdAt"],
+      createdAt: new Date("2024-01-16T10:00:00Z"),
       replies: [
         {
           id: "c2" as Comment["id"],
           body: "Thanks!",
           postId: "1" as Comment["postId"],
           authorId: "1" as Comment["authorId"],
-          createdAt: "2024-01-16T11:00:00Z" as Comment["createdAt"],
+          createdAt: new Date("2024-01-16T11:00:00Z"),
           replies: [],
         },
       ],
@@ -119,7 +119,7 @@ export const createPost = defineMutation<{ input: CreatePostInput }, Post>(
     authorId: (ctx.currentUserId ?? "anonymous") as Post["authorId"],
     tags: args.input.tags ?? [],
     publishedAt: null,
-    createdAt: new Date().toISOString() as Post["createdAt"],
+    createdAt: new Date(),
   }),
 );
 
