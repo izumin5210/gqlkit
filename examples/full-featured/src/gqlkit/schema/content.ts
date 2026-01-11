@@ -20,8 +20,8 @@ const posts: Post[] = [
     status: "PUBLISHED" as unknown as Post["status"],
     authorId: "1" as Post["authorId"],
     tags: ["intro", "hello"],
-    publishedAt: "2024-01-15T10:00:00Z" as Post["publishedAt"],
-    createdAt: "2024-01-15T09:00:00Z" as Post["createdAt"],
+    publishedAt: new Date("2024-01-15T10:00:00Z"),
+    createdAt: new Date("2024-01-15T09:00:00Z"),
   },
 ];
 
