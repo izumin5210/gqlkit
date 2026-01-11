@@ -19,12 +19,22 @@ const navbar = (
   <Navbar
     logo={<b>gqlkit</b>}
     projectLink="https://github.com/izumin5210/gqlkit"
-  />
+  >
+    <a href="/getting-started">Guide</a>
+  </Navbar>
 );
 
 const footer = (
   <Footer>
-    MIT {new Date().getFullYear()} © izumin5210
+    Released under the{" "}
+    <a
+      href="https://github.com/izumin5210/gqlkit/blob/main/LICENSE"
+      target="_blank"
+      rel="noopener noreferrer"
+    >
+      MIT License
+    </a>
+    . Copyright © 2025-present izumin5210
   </Footer>
 );
 
@@ -40,7 +50,7 @@ export default async function RootLayout({
         <Layout
           navbar={navbar}
           pageMap={await getPageMap()}
-          docsRepositoryBase="https://github.com/izumin5210/gqlkit/tree/main/packages/docs"
+          docsRepositoryBase="https://github.com/izumin5210/gqlkit/tree/main/packages/docs/src/content"
           footer={footer}
           editLink="Edit this page on GitHub"
           sidebar={{ autoCollapse: false, defaultMenuCollapseLevel: 1 }}
