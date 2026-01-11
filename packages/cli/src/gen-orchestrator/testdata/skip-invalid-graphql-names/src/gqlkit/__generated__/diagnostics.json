@@ -5,8 +5,8 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 1,
-      "column": 1
+      "line": 6,
+      "column": 3
     }
   },
   {
@@ -15,8 +15,8 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 1,
-      "column": 1
+      "line": 7,
+      "column": 3
     }
   },
   {
@@ -25,8 +25,8 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 1,
-      "column": 1
+      "line": 8,
+      "column": 3
     }
   },
   {
@@ -35,8 +35,8 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 1,
-      "column": 1
+      "line": 9,
+      "column": 3
     }
   },
   {
@@ -45,8 +45,8 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 1,
-      "column": 1
+      "line": 10,
+      "column": 3
     }
   },
   {
@@ -55,8 +55,8 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 1,
-      "column": 1
+      "line": 17,
+      "column": 3
     }
   },
   {
@@ -65,8 +65,8 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 1,
-      "column": 1
+      "line": 18,
+      "column": 3
     }
   },
   {
@@ -75,8 +75,8 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 1,
-      "column": 1
+      "line": 19,
+      "column": 3
     }
   },
   {
@@ -101,22 +101,22 @@
   },
   {
     "code": "SKIPPED_ENUM_VALUE",
-    "message": "Enum member '\"0INVALID\"' converts to '\"0INVALID\"' which is not a valid GraphQL identifier",
+    "message": "Enum member '0INVALID' converts to '0INVALID' which is not a valid GraphQL identifier",
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 1,
-      "column": 1
+      "line": 28,
+      "column": 3
     }
   },
   {
     "code": "SKIPPED_ENUM_VALUE",
-    "message": "Enum member '\"__RESERVED\"' converts to '\"__RESERVED\"' which is not a valid GraphQL identifier",
+    "message": "Enum member '__RESERVED' converts to '__RESERVED' which starts with '__' (reserved for GraphQL introspection)",
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 1,
-      "column": 1
+      "line": 29,
+      "column": 3
     }
   }
 ]

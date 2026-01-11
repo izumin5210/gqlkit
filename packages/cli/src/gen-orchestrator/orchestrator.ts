@@ -19,6 +19,7 @@ import {
   collectDiagnostics,
   convertTsTypeToGraphQLType,
   type DirectiveDefinitionInfo,
+  deduplicateDiagnostics,
   extractDirectiveDefinitions,
   scanDirectory,
   toPosixPath,
@@ -242,21 +243,6 @@ function normalizePathInMessage(message: string, sourceRoot: string): string {
   const escapedSourceRoot = sourceRoot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
   const pattern = new RegExp(`${escapedSourceRoot}/`, "g");
   return message.replace(pattern, "");
-}
-
-function deduplicateDiagnostics(
-  diagnostics: ReadonlyArray<Diagnostic>,
-): Diagnostic[] {
-  const seen = new Set<string>();
-  const result: Diagnostic[] = [];
-  for (const d of diagnostics) {
-    const key = `${d.code}:${d.message}:${d.location?.file ?? ""}:${d.location?.line ?? ""}`;
-    if (!seen.has(key)) {
-      seen.add(key);
-      result.push(d);
-    }
-  }
-  return result;
 }
 
 function normalizeDiagnosticPaths(

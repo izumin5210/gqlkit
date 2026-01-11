@@ -64,7 +64,11 @@ function convertEnumMembers(
         code: "SKIPPED_ENUM_VALUE",
         message: eligibility.skipReason!.message,
         severity: "warning",
-        location: { file: sourceFile, line: 1, column: 1 },
+        location: member.sourceLocation ?? {
+          file: sourceFile,
+          line: 1,
+          column: 1,
+        },
       });
       continue;
     }
@@ -102,7 +106,11 @@ function convertFields(
         code: "SKIPPED_FIELD",
         message: eligibility.skipReason!.message,
         severity: "warning",
-        location: { file: extracted.metadata.sourceFile, line: 1, column: 1 },
+        location: field.sourceLocation ?? {
+          file: extracted.metadata.sourceFile,
+          line: 1,
+          column: 1,
+        },
       });
       continue;
     }
