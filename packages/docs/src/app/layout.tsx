@@ -52,7 +52,8 @@ export default async function RootLayout({
         }}
         backgroundColor={{
           dark: flavors.mocha.colors.base.hex,
-          light: flavors.latte.colors.base.hex,
+          // light: flavors.latte.colors.base.hex,
+          light: "#f9fafb",
         }}
       />
 
