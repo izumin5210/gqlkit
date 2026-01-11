@@ -19,9 +19,7 @@ const navbar = (
   <Navbar
     logo={<b>gqlkit</b>}
     projectLink="https://github.com/izumin5210/gqlkit"
-  >
-    <a href="/getting-started">Guide</a>
-  </Navbar>
+  />
 );
 
 export default async function RootLayout({
