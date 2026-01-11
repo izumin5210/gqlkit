@@ -1,34 +1,33 @@
 import type { MetadataRoute } from "next";
+import { getPageMap } from "nextra/page-map";
 
 export const dynamic = "force-static";
 
 const BASE_URL = "https://gqlkit.izumin.dev";
 
-const pages = [
-  "",
-  "/what-is-gqlkit",
-  "/getting-started",
-  "/schema",
-  "/schema/objects",
-  "/schema/inputs",
-  "/schema/queries-mutations",
-  "/schema/fields",
-  "/schema/scalars",
-  "/schema/enums",
-  "/schema/unions",
-  "/schema/interfaces",
-  "/schema/documentation",
-  "/schema/directives",
-  "/integration/yoga",
-  "/integration/apollo",
-  "/configuration",
-];
+function extractRoutes(pageMap: unknown[]): string[] {
+  const routes: string[] = [];
+  for (const item of pageMap) {
+    if (item && typeof item === "object") {
+      if ("route" in item && typeof item.route === "string") {
+        routes.push(item.route);
+      }
+      if ("children" in item && Array.isArray(item.children)) {
+        routes.push(...extractRoutes(item.children));
+      }
+    }
+  }
+  return routes;
+}
 
-export default function sitemap(): MetadataRoute.Sitemap {
-  return pages.map((page) => ({
-    url: `${BASE_URL}${page}`,
+export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
+  const pageMap = await getPageMap();
+  const routes = [...new Set(extractRoutes(pageMap))];
+
+  return routes.map((route) => ({
+    url: `${BASE_URL}${route}`,
     lastModified: new Date(),
     changeFrequency: "weekly",
-    priority: page === "" ? 1 : 0.8,
+    priority: route === "/" ? 1 : 0.8,
   }));
 }
