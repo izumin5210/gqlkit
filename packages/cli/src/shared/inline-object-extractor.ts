@@ -21,6 +21,43 @@ export type TypeConverter = (
 ) => TSTypeReference;
 
 /**
+ * Extracts property symbols from a type, handling intersection types
+ * and falling back to getApparentType when getProperties() returns empty.
+ *
+ * This follows the same pattern as extractPropertiesFromType in type-extractor.ts.
+ */
+function extractPropertySymbols(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+): ts.Symbol[] {
+  if (type.isIntersection()) {
+    const allProps = new Map<string, ts.Symbol>();
+    for (const member of type.types) {
+      const memberProps = member.getProperties();
+      for (const prop of memberProps) {
+        const propName = prop.getName();
+        if (!allProps.has(propName)) {
+          allProps.set(propName, prop);
+        }
+      }
+    }
+    return [...allProps.values()];
+  }
+
+  const properties = type.getProperties();
+  if (properties.length > 0) {
+    return [...properties];
+  }
+
+  const apparentType = checker.getApparentType(type);
+  if (apparentType !== type) {
+    return [...apparentType.getProperties()];
+  }
+
+  return [];
+}
+
+/**
  * Extracts inline object properties from a TypeScript type.
  *
  * @param type - The TypeScript type to extract properties from
@@ -34,7 +71,7 @@ export function extractInlineObjectProperties(
   convertType: TypeConverter,
 ): InlineObjectPropertyDef[] {
   const properties: InlineObjectPropertyDef[] = [];
-  const typeProperties = type.getProperties();
+  const typeProperties = extractPropertySymbols(type, checker);
 
   for (const prop of typeProperties) {
     const propName = prop.getName();

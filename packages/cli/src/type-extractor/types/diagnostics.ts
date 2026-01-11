@@ -72,7 +72,9 @@ export type DiagnosticCode =
   | "AUTO_TYPE_NAME_COLLISION_AUTO"
   | "MODULE_RESOLUTION_ERROR"
   | "SKIPPED_FIELD"
-  | "SKIPPED_ENUM_VALUE";
+  | "SKIPPED_ENUM_VALUE"
+  | "EMPTY_TYPE_PROPERTIES"
+  | "INDEX_SIGNATURE_ONLY";
 
 export interface Diagnostic {
   readonly code: DiagnosticCode;
