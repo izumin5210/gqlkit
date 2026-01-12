@@ -45,7 +45,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 43,
+      "line": 40,
       "column": 7
     }
   },
@@ -55,7 +55,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 44,
+      "line": 41,
       "column": 7
     }
   },
@@ -65,7 +65,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 49,
+      "line": 46,
       "column": 7
     }
   },
@@ -105,7 +105,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 28,
+      "line": 25,
       "column": 7
     }
   },
@@ -115,7 +115,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 29,
+      "line": 26,
       "column": 7
     }
   },
@@ -125,7 +125,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 30,
+      "line": 27,
       "column": 7
     }
   },
@@ -135,7 +135,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 60,
+      "line": 57,
       "column": 7
     }
   },
@@ -145,7 +145,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 61,
+      "line": 58,
       "column": 7
     }
   }
