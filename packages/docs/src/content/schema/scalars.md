@@ -131,3 +131,64 @@ export type CreateUserInput = {
   birthDate: DateTime;
 };
 ```
+
+## Registering Scalar Resolvers
+
+Custom scalars require resolver implementations to handle serialization and parsing at runtime. Pass scalar resolvers to `createResolvers`:
+
+```typescript
+import { createResolvers } from "./gqlkit/__generated__/resolvers.js";
+
+const resolvers = createResolvers({
+  scalars: {
+    DateTime: myDateTimeScalar,
+  },
+});
+```
+
+### Using graphql-scalars (Recommended)
+
+The easiest way to implement custom scalars is to use [graphql-scalars](https://the-guild.dev/graphql/scalars), which provides ready-to-use implementations for common scalar types:
+
+```typescript
+import { GraphQLDateTime } from "graphql-scalars";
+
+const resolvers = createResolvers({
+  scalars: {
+    DateTime: GraphQLDateTime,
+  },
+});
+```
+
+This approach requires no manual serialize/parse implementation.
+
+### Custom Implementation
+
+For custom behavior, create your own `GraphQLScalarType`:
+
+```typescript
+import { GraphQLScalarType, Kind } from "graphql";
+
+const DateTimeScalar = new GraphQLScalarType({
+  name: "DateTime",
+  description: "ISO 8601 date-time string",
+  serialize(value) {
+    return value instanceof Date ? value.toISOString() : value;
+  },
+  parseValue(value) {
+    return new Date(value as string);
+  },
+  parseLiteral(ast) {
+    if (ast.kind === Kind.STRING) {
+      return new Date(ast.value);
+    }
+    return null;
+  },
+});
+
+const resolvers = createResolvers({
+  scalars: {
+    DateTime: DateTimeScalar,
+  },
+});
+```
