@@ -33,7 +33,7 @@ import {
   isExported,
   isNullableUnion,
   isNullOrUndefined,
-  isObjectLikeType,
+  shouldTreatIntersectionAsInline,
 } from "../../shared/typescript-utils.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 import type {
@@ -43,7 +43,6 @@ import type {
   FieldDefinition,
   InlineObjectMember,
   InlineObjectProperty,
-  InlineObjectPropertyDef,
   TSTypeReference,
   TypeKind,
   TypeMetadata,
@@ -106,18 +105,48 @@ interface TypeReferenceResult {
   readonly tsType: TSTypeReference;
 }
 
-function extractInlineObjectProperties(
+/**
+ * Attempts to extract a type as an inline object, with cycle detection.
+ * Returns a reference type if a cycle is detected, otherwise returns an inline object.
+ */
+function tryExtractAsInlineObject(
   type: ts.Type,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping>,
-  visitedTypes: WeakSet<ts.Type> = new WeakSet(),
-): InlineObjectPropertyDef[] {
-  return extractInlineObjectPropertiesShared(
+  visitedTypes: WeakSet<ts.Type>,
+): TypeReferenceResult {
+  if (visitedTypes.has(type)) {
+    const typeName = type.symbol?.getName() ?? "Object";
+    return {
+      tsType: {
+        kind: "reference",
+        name: typeName === "__type" ? "Object" : typeName,
+        elementType: null,
+        members: null,
+        nullable: false,
+        scalarInfo: null,
+        inlineObjectProperties: null,
+      },
+    };
+  }
+  visitedTypes.add(type);
+  const inlineProperties = extractInlineObjectPropertiesShared(
     type,
     checker,
     (t, c) =>
       convertTsTypeToReference(t, c, globalTypeMappings, visitedTypes).tsType,
   );
+  return {
+    tsType: {
+      kind: "inlineObject",
+      name: null,
+      elementType: null,
+      members: null,
+      nullable: false,
+      scalarInfo: null,
+      inlineObjectProperties: inlineProperties,
+    },
+  };
 }
 
 function findGlobalTypeMapping(
@@ -355,120 +384,35 @@ function convertTsTypeToReference(
 
     const shouldTreatAsInline = shouldTreatIntersectionAsInline(type);
     if (shouldTreatAsInline) {
-      // Detect cycles before expanding inline object
-      if (visitedTypes.has(type)) {
-        const typeName = type.symbol?.getName() ?? "Object";
-        return {
-          tsType: {
-            kind: "reference",
-            name: typeName === "__type" ? "Object" : typeName,
-            elementType: null,
-            members: null,
-            nullable: false,
-            scalarInfo: null,
-            inlineObjectProperties: null,
-          },
-        };
-      }
-      visitedTypes.add(type);
-      const inlineProperties = extractInlineObjectProperties(
+      return tryExtractAsInlineObject(
         type,
         checker,
         globalTypeMappings,
         visitedTypes,
       );
-      return {
-        tsType: {
-          kind: "inlineObject",
-          name: null,
-          elementType: null,
-          members: null,
-          nullable: false,
-          scalarInfo: null,
-          inlineObjectProperties: inlineProperties,
-        },
-      };
     }
   }
 
   if (isInlineObjectType(type)) {
-    // Detect cycles before expanding inline object
-    if (visitedTypes.has(type)) {
-      const typeName = type.symbol?.getName() ?? "Object";
-      return {
-        tsType: {
-          kind: "reference",
-          name: typeName === "__type" ? "Object" : typeName,
-          elementType: null,
-          members: null,
-          nullable: false,
-          scalarInfo: null,
-          inlineObjectProperties: null,
-        },
-      };
-    }
-    visitedTypes.add(type);
-    const inlineProperties = extractInlineObjectProperties(
+    return tryExtractAsInlineObject(
       type,
       checker,
       globalTypeMappings,
       visitedTypes,
     );
-    return {
-      tsType: {
-        kind: "inlineObject",
-        name: null,
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: inlineProperties,
-      },
-    };
   }
 
   // Check for utility types (Omit, Pick, Partial, Required, etc.)
   // These create mapped types that should be treated as inline objects
-  // Note: Utility types have aliasSymbol (e.g., "Omit") but should still be
-  // treated as inline objects since they create new anonymous object types
   if (type.flags & ts.TypeFlags.Object) {
     const objectType = type as ts.ObjectType;
-    // Mapped types (created by utility types like Omit, Pick, etc.)
-    // should be treated as inline objects
     if (objectType.objectFlags & ts.ObjectFlags.Mapped) {
-      // Detect cycles before expanding inline object
-      if (visitedTypes.has(type)) {
-        const typeName = type.symbol?.getName() ?? "Object";
-        return {
-          tsType: {
-            kind: "reference",
-            name: typeName === "__type" ? "Object" : typeName,
-            elementType: null,
-            members: null,
-            nullable: false,
-            scalarInfo: null,
-            inlineObjectProperties: null,
-          },
-        };
-      }
-      visitedTypes.add(type);
-      const inlineProperties = extractInlineObjectProperties(
+      return tryExtractAsInlineObject(
         type,
         checker,
         globalTypeMappings,
         visitedTypes,
       );
-      return {
-        tsType: {
-          kind: "inlineObject",
-          name: null,
-          elementType: null,
-          members: null,
-          nullable: false,
-          scalarInfo: null,
-          inlineObjectProperties: inlineProperties,
-        },
-      };
     }
   }
 
@@ -1114,26 +1058,6 @@ function processExportDeclaration(
   }
 
   return { types, diagnostics, detectedScalarNames, detectedScalars };
-}
-
-function shouldTreatIntersectionAsInline(type: ts.IntersectionType): boolean {
-  // Case 1: Has at least one anonymous member (e.g., { field: string })
-  const hasAnonymousMember = type.types.some(
-    (t) => isInlineObjectType(t) || isAnonymousObjectType(t),
-  );
-  if (hasAnonymousMember) {
-    return true;
-  }
-
-  // Case 2: All members are object-like types (interfaces, mapped types, etc.)
-  // that should be merged into an inline object
-  // This handles cases like ContactInfo & AddressInfo where both are interfaces
-  const allObjectLike = type.types.every((t) => isObjectLikeType(t));
-  if (allObjectLike) {
-    return true;
-  }
-
-  return false;
 }
 
 function getNamedTypeName(memberType: ts.Type): string {

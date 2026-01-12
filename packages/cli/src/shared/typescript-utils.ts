@@ -1,4 +1,28 @@
 import ts from "typescript";
+import { isInlineObjectType } from "./inline-object-utils.js";
+
+/**
+ * List of TypeScript built-in utility types that should be resolved
+ * to their actual properties when used in args.
+ */
+const BUILTIN_UTILITY_TYPES = [
+  "Omit",
+  "Pick",
+  "Partial",
+  "Required",
+  "Readonly",
+  "Record",
+];
+
+/**
+ * Checks if a type is a built-in utility type like Omit, Pick, etc.
+ */
+export function isBuiltinUtilityType(type: ts.Type): boolean {
+  if (!type.aliasSymbol) {
+    return false;
+  }
+  return BUILTIN_UTILITY_TYPES.includes(type.aliasSymbol.getName());
+}
 
 /**
  * Checks if a type represents null or undefined.
@@ -118,4 +142,38 @@ export function extractPropertySymbols(
   }
 
   return [];
+}
+
+export interface ShouldTreatIntersectionAsInlineOptions {
+  readonly checkBuiltinUtilityTypes?: boolean;
+}
+
+/**
+ * Determines if an intersection type should be treated as an inline object.
+ * Returns true when:
+ * - Case 1: Has at least one anonymous/inline member (and optionally utility type member)
+ * - Case 2: All members are object-like types that should be merged
+ */
+export function shouldTreatIntersectionAsInline(
+  type: ts.IntersectionType,
+  options: ShouldTreatIntersectionAsInlineOptions = {},
+): boolean {
+  const { checkBuiltinUtilityTypes = false } = options;
+
+  const hasResolvableMember = type.types.some(
+    (t) =>
+      isInlineObjectType(t) ||
+      isAnonymousObjectType(t) ||
+      (checkBuiltinUtilityTypes && isBuiltinUtilityType(t)),
+  );
+  if (hasResolvableMember) {
+    return true;
+  }
+
+  const allObjectLike = type.types.every((t) => isObjectLikeType(t));
+  if (allObjectLike) {
+    return true;
+  }
+
+  return false;
 }

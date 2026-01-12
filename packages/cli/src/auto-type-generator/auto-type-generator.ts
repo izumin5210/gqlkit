@@ -14,7 +14,6 @@ import type {
   GraphQLFieldType,
   InlineObjectPropertyDef,
   SourceLocation,
-  TSTypeReference,
 } from "../type-extractor/types/index.js";
 import {
   type AutoTypeNameContext,
@@ -421,25 +420,6 @@ function resolveFieldType(
   }
 
   return convertTsTypeToGraphQLType(prop.tsType, prop.optional);
-}
-
-function getPropertiesKey(
-  properties: ReadonlyArray<InlineObjectPropertyDef>,
-): string {
-  return properties
-    .map((p) => {
-      const optionalMarker = p.optional ? "?" : "!";
-      return `${p.name}${optionalMarker}:${getTypeKey(p.tsType)}`;
-    })
-    .join("|");
-}
-
-function getTypeKey(tsType: TSTypeReference): string {
-  const nullableMarker = tsType.nullable ? "?" : "!";
-  if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
-    return `inline${nullableMarker}(${getPropertiesKey(tsType.inlineObjectProperties)})`;
-  }
-  return `${tsType.kind}${nullableMarker}:${tsType.name ?? ""}`;
 }
 
 function updateExtractedTypes(
