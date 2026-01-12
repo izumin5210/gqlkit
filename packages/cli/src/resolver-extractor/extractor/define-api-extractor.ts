@@ -243,7 +243,9 @@ function convertTsTypeToReference(
   // named object types (interfaces) that need to be merged
   // BUT only if the type itself is not a named type alias (like User = GqlObject<...>)
   if (type.isIntersection() && !type.aliasSymbol) {
-    if (shouldTreatIntersectionAsInline(type, { checkBuiltinUtilityTypes: true })) {
+    if (
+      shouldTreatIntersectionAsInline(type, { checkBuiltinUtilityTypes: true })
+    ) {
       const inlineProperties = extractInlineObjectProperties(
         type,
         checker,

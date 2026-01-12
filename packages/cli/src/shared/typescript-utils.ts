@@ -97,7 +97,7 @@ export function isAnonymousObjectType(type: ts.Type): boolean {
  * Checks if a type is an object-like type (interface, anonymous object, or mapped type).
  * Used to determine if an intersection of object types should be treated as inline.
  */
-export function isObjectLikeType(type: ts.Type): boolean {
+function isObjectLikeType(type: ts.Type): boolean {
   if (!(type.flags & ts.TypeFlags.Object)) {
     return false;
   }
