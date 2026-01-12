@@ -1,0 +1,152 @@
+[
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field '0invalid' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/type-field-inline.ts",
+      "line": 7,
+      "column": 5
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field '__internal' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/type-field-inline.ts",
+      "line": 8,
+      "column": 5
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field '123abc' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/type-field-inline.ts",
+      "line": 16,
+      "column": 5
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field '__private' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/type-field-inline.ts",
+      "line": 17,
+      "column": 5
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field '123abc' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 40,
+      "column": 7
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field '__private' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 41,
+      "column": 7
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field 'invalid.field' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 46,
+      "column": 7
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field '0invalid' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/nested.ts",
+      "line": 17,
+      "column": 9
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field '__reserved' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/nested.ts",
+      "line": 18,
+      "column": 9
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field 'hyphen-field' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/nested.ts",
+      "line": 22,
+      "column": 9
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field '0invalid' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 25,
+      "column": 7
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field '__reserved' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 26,
+      "column": 7
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field 'field-with-dash' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 27,
+      "column": 7
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field '0startWithNumber' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 57,
+      "column": 7
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field '__hidden' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 58,
+      "column": 7
+    }
+  }
+]

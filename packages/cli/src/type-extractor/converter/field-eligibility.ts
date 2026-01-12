@@ -11,10 +11,9 @@ export type SkipReason =
   | { readonly code: "INVALID_NAME"; readonly message: string }
   | { readonly code: "RESERVED_NAME"; readonly message: string };
 
-export interface EligibilityResult {
-  readonly eligible: boolean;
-  readonly skipReason: SkipReason | null;
-}
+export type EligibilityResult =
+  | { readonly eligible: true; readonly skipReason: null }
+  | { readonly eligible: false; readonly skipReason: SkipReason };
 
 function isValidGraphQLName(name: string): boolean {
   if (name.length === 0) return false;
