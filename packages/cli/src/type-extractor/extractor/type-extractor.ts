@@ -27,6 +27,7 @@ import {
 } from "../../shared/tsdoc-parser.js";
 import {
   getNonNullableTypes,
+  hasUndefinedInType,
   isNullableUnion,
   isNullOrUndefined,
 } from "../../shared/typescript-utils.js";
@@ -509,7 +510,7 @@ function extractFieldsFromType(
     const declarations = prop.getDeclarations();
     const declaration = declarations?.[0];
 
-    const optional = (prop.flags & ts.SymbolFlags.Optional) !== 0;
+    const optional = hasUndefinedInType(propType);
 
     const tsdocInfo = extractTsDocFromSymbol(prop, checker);
 

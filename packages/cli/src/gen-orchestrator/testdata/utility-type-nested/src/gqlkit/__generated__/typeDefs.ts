@@ -746,7 +746,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "CreateComplexUserProfileInput"
+                    "value": "UpdateProfileWithOptionalExceptInputInput"
                   }
                 }
               },

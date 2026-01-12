@@ -26,6 +26,7 @@ import {
 } from "../../shared/tsdoc-parser.js";
 import {
   getNonNullableTypes,
+  hasUndefinedInType,
   isNullableUnion,
 } from "../../shared/typescript-utils.js";
 import type {
@@ -631,7 +632,7 @@ function extractArgsFromType(
 
   for (const prop of properties) {
     const propType = checker.getTypeOfSymbol(prop);
-    const optional = (prop.flags & ts.SymbolFlags.Optional) !== 0;
+    const optional = hasUndefinedInType(propType);
 
     const tsdocInfo = extractTSDocFromPropertyWithPriority(prop, checker);
 

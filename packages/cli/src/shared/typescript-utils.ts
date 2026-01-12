@@ -25,3 +25,21 @@ export function getNonNullableTypes(type: ts.Type): ts.Type[] {
   if (!type.isUnion()) return [type];
   return type.types.filter((t) => !isNullOrUndefined(t));
 }
+
+/**
+ * Checks if a type contains undefined.
+ * This is used to determine property optionality from resolved types,
+ * which correctly handles utility types like Required<T> and Partial<T>.
+ *
+ * In TypeScript:
+ * - Optional properties (?) add undefined to the type
+ * - Partial<T> adds undefined to all property types
+ * - Required<T> removes undefined from all property types
+ */
+export function hasUndefinedInType(type: ts.Type): boolean {
+  if ((type.flags & ts.TypeFlags.Undefined) !== 0) return true;
+  if (type.isUnion()) {
+    return type.types.some((t) => (t.flags & ts.TypeFlags.Undefined) !== 0);
+  }
+  return false;
+}

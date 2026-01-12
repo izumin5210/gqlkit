@@ -324,7 +324,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "CommentCommenter"
+                "value": "PostAuthor"
               }
             }
           },

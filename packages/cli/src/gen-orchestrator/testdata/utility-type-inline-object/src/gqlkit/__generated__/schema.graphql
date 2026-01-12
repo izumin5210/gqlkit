@@ -63,7 +63,7 @@ type Post {
   Author info with some fields omitted.
   Uses Omit to exclude phone and age from BaseProfile.
   """
-  author: CommentCommenter!
+  author: PostAuthor!
   id: String!
   title: String!
 }

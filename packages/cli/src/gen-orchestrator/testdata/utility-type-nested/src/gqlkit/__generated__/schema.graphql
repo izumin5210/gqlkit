@@ -117,7 +117,7 @@ extend type Mutation {
   """
   updateProfileWithOptionalExcept(
     """Profile data using OptionalExcept generic"""
-    input: CreateComplexUserProfileInput!
+    input: UpdateProfileWithOptionalExceptInputInput!
   ): User!
   """
   Test nested utility types directly as args: Partial<Omit<T, K>>
