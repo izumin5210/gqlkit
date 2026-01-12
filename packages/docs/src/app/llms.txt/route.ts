@@ -1,12 +1,8 @@
-import { generateLlmsTxt } from "../../lib/llms-txt";
+import { createTextResponse, generateLlmsTxt } from "../../lib/llms-txt";
 
 export const dynamic = "force-static";
 
-export async function GET() {
+export async function GET(): Promise<Response> {
   const content = await generateLlmsTxt();
-  return new Response(content, {
-    headers: {
-      "Content-Type": "text/plain; charset=utf-8",
-    },
-  });
+  return createTextResponse(content);
 }

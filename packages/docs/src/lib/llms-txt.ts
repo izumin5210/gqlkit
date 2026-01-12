@@ -5,6 +5,13 @@ import vm from "node:vm";
 const BASE_URL = "https://gqlkit.izumin.dev";
 const CONTENT_DIR = path.join(process.cwd(), "src/content");
 
+const HEADER_LINES = [
+  "# gqlkit",
+  "",
+  "> gqlkit is a convention-driven code generator for GraphQL servers in TypeScript. Define GraphQL types and resolver signatures in TypeScript, then `gqlkit gen` generates GraphQL schema AST and a resolver map from your codebase.",
+  "",
+];
+
 type PageInfo = {
   slug: string;
   title: string;
@@ -24,9 +31,9 @@ type MetaValue =
 
 type Meta = Record<string, MetaValue>;
 
-const SECTION_CONFIG: Record<string, { title: string; optional?: boolean }> = {
-  schema: { title: "Schema Definition" },
-  integration: { title: "Integration", optional: true },
+const SECTION_TITLES: Record<string, string> = {
+  schema: "Schema Definition",
+  integration: "Integration",
 };
 
 const DESCRIPTION_OVERRIDES: Record<string, string> = {
@@ -71,13 +78,14 @@ async function extractPageInfo(
 
     if (titleFound && !description) {
       const trimmed = line.trim();
-      if (
+      const isContentLine =
         trimmed &&
         !trimmed.startsWith("#") &&
         !trimmed.startsWith("-") &&
         !trimmed.startsWith("|") &&
-        !trimmed.startsWith("!")
-      ) {
+        !trimmed.startsWith("!");
+
+      if (isContentLine) {
         description = trimmed;
         break;
       }
@@ -91,21 +99,15 @@ async function extractPageInfo(
   return { slug, title, description, content };
 }
 
-function isDirectory(key: string): boolean {
-  return key in SECTION_CONFIG;
+function isSeparator(
+  value: MetaValue,
+): value is { type: "separator"; title: string } {
+  return (
+    typeof value === "object" && "type" in value && value.type === "separator"
+  );
 }
 
-function isSeparator(value: MetaValue): value is { type: "separator"; title: string } {
-  return typeof value === "object" && "type" in value && value.type === "separator";
-}
-
-function isSkippedPage(key: string): boolean {
-  return key === "index";
-}
-
-async function loadSubdirectoryPages(
-  subdir: string,
-): Promise<PageInfo[]> {
+async function loadSubdirectoryPages(subdir: string): Promise<PageInfo[]> {
   const dir = path.join(CONTENT_DIR, subdir);
   const meta = await loadMeta(dir);
   const pages: PageInfo[] = [];
@@ -144,14 +146,13 @@ async function buildSections(): Promise<Section[]> {
       continue;
     }
 
-    if (isSkippedPage(key)) continue;
+    if (key === "index") continue;
 
-    if (isDirectory(key)) {
-      const config = SECTION_CONFIG[key];
+    if (key in SECTION_TITLES) {
       const subdirPages = await loadSubdirectoryPages(key);
       if (subdirPages.length > 0) {
         sections.push({
-          title: config.optional ? "Optional" : config.title,
+          title: SECTION_TITLES[key],
           pages: subdirPages,
         });
       }
@@ -180,12 +181,7 @@ function formatLink(page: PageInfo): string {
 export async function generateLlmsTxt(): Promise<string> {
   const sections = await buildSections();
 
-  const lines: string[] = [
-    "# gqlkit",
-    "",
-    "> gqlkit is a convention-driven code generator for GraphQL servers in TypeScript. Define GraphQL types and resolver signatures in TypeScript, then `gqlkit gen` generates GraphQL schema AST and a resolver map from your codebase.",
-    "",
-  ];
+  const lines: string[] = [...HEADER_LINES];
 
   for (const section of sections) {
     lines.push(`## ${section.title}`);
@@ -202,14 +198,7 @@ export async function generateLlmsTxt(): Promise<string> {
 export async function generateLlmsFullTxt(): Promise<string> {
   const sections = await buildSections();
 
-  const lines: string[] = [
-    "# gqlkit",
-    "",
-    "> gqlkit is a convention-driven code generator for GraphQL servers in TypeScript. Define GraphQL types and resolver signatures in TypeScript, then `gqlkit gen` generates GraphQL schema AST and a resolver map from your codebase.",
-    "",
-    "---",
-    "",
-  ];
+  const lines: string[] = [...HEADER_LINES, "---", ""];
 
   for (const section of sections) {
     for (const page of section.pages) {
@@ -221,4 +210,12 @@ export async function generateLlmsFullTxt(): Promise<string> {
   }
 
   return lines.join("\n");
+}
+
+export function createTextResponse(content: string): Response {
+  return new Response(content, {
+    headers: {
+      "Content-Type": "text/plain; charset=utf-8",
+    },
+  });
 }
