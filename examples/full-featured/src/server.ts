@@ -1,7 +1,7 @@
 import { createServer } from "node:http";
 import { makeExecutableSchema } from "@graphql-tools/schema";
-import { createYoga } from "graphql-yoga";
 import { GraphQLDateTime } from "graphql-scalars";
+import { createYoga } from "graphql-yoga";
 import { createResolvers } from "./gqlkit/__generated__/resolvers.js";
 import { typeDefs } from "./gqlkit/__generated__/typeDefs.js";
 
