@@ -404,10 +404,10 @@ function resolveFieldType(
     prop.tsType.inlineObjectProperties
   ) {
     const nestedPath = [...parentContext.fieldPath, prop.name];
-    const nestedContext: AutoTypeNameContext =
-      parentContext.kind === "resolverArg"
-        ? { ...parentContext, fieldPath: nestedPath }
-        : { ...parentContext, fieldPath: nestedPath };
+    const nestedContext: AutoTypeNameContext = {
+      ...parentContext,
+      fieldPath: nestedPath,
+    };
     const contextKey = getContextKey(nestedContext);
     const resolvedTypeName = generatedTypeNames.get(contextKey);
     if (resolvedTypeName) {
