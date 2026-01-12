@@ -755,7 +755,7 @@ export const typeDefs: DocumentNode = {
       "kind": "InputObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "CreateWithWrappedIntersectionInputInput"
+        "value": "CreateWithWrappedIntersectionInput"
       },
       "fields": [
         {
@@ -1258,7 +1258,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "CreateWithWrappedIntersectionInputInput"
+                    "value": "CreateWithWrappedIntersectionInput"
                   }
                 }
               },

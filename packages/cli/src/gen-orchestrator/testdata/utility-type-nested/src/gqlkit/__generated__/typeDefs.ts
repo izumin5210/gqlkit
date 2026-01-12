@@ -236,7 +236,7 @@ export const typeDefs: DocumentNode = {
       "kind": "InputObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "CreateUserWithDeeplyNestedInputInput"
+        "value": "CreateUserWithDeeplyNestedInput"
       },
       "fields": [
         {
@@ -368,7 +368,7 @@ export const typeDefs: DocumentNode = {
       "kind": "InputObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "UpdateProfileWithOptionalExceptInputInput"
+        "value": "UpdateProfileWithOptionalExceptInput"
       },
       "fields": [
         {
@@ -439,7 +439,7 @@ export const typeDefs: DocumentNode = {
       "kind": "InputObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "UpdateUserWithNestedUtilityInputInput"
+        "value": "UpdateUserWithNestedUtilityInput"
       },
       "fields": [
         {
@@ -619,7 +619,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "CreateUserWithDeeplyNestedInputInput"
+                    "value": "CreateUserWithDeeplyNestedInput"
                   }
                 }
               },
@@ -746,7 +746,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "UpdateProfileWithOptionalExceptInputInput"
+                    "value": "UpdateProfileWithOptionalExceptInput"
                   }
                 }
               },
@@ -952,7 +952,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "UpdateUserWithNestedUtilityInputInput"
+                    "value": "UpdateUserWithNestedUtilityInput"
                   }
                 }
               },

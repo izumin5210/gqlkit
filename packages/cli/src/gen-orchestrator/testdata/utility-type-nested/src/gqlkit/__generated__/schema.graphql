@@ -35,7 +35,7 @@ input CreateComplexUserProfileInput {
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-input CreateUserWithDeeplyNestedInputInput {
+input CreateUserWithDeeplyNestedInput {
   """User's age"""
   age: Float!
   """User's email address"""
@@ -53,7 +53,7 @@ input SearchUsersWithPartialPickCriteriaInput {
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-input UpdateProfileWithOptionalExceptInputInput {
+input UpdateProfileWithOptionalExceptInput {
   """Avatar URL"""
   avatarUrl: String
   """Location"""
@@ -63,7 +63,7 @@ input UpdateProfileWithOptionalExceptInputInput {
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-input UpdateUserWithNestedUtilityInputInput {
+input UpdateUserWithNestedUtilityInput {
   """User's age"""
   age: Float
   """User's bio"""
@@ -94,7 +94,7 @@ extend type Mutation {
   """
   createUserWithDeeplyNested(
     """User data with deeply nested utility types"""
-    input: CreateUserWithDeeplyNestedInputInput!
+    input: CreateUserWithDeeplyNestedInput!
   ): User!
   """
   Test user-defined generic type directly as args.
@@ -117,7 +117,7 @@ extend type Mutation {
   """
   updateProfileWithOptionalExcept(
     """Profile data using OptionalExcept generic"""
-    input: UpdateProfileWithOptionalExceptInputInput!
+    input: UpdateProfileWithOptionalExceptInput!
   ): User!
   """
   Test nested utility types directly as args: Partial<Omit<T, K>>
@@ -154,7 +154,7 @@ extend type Mutation {
   """
   updateUserWithNestedUtility(
     """User data with id omitted and all remaining fields optional"""
-    input: UpdateUserWithNestedUtilityInputInput!
+    input: UpdateUserWithNestedUtilityInput!
   ): User!
 }
 

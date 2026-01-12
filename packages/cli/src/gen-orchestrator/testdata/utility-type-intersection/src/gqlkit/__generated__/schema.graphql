@@ -122,7 +122,7 @@ type Result {
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-input CreateWithWrappedIntersectionInputInput {
+input CreateWithWrappedIntersectionInput {
   """City name"""
   city: String!
   """Email address for contact"""
@@ -200,7 +200,7 @@ extend type Mutation {
   """
   createWithWrappedIntersection(
     """Selected contact and address fields"""
-    input: CreateWithWrappedIntersectionInputInput!
+    input: CreateWithWrappedIntersectionInput!
   ): Result!
   """
   Test metadata inheritance with intersection in resolver args.

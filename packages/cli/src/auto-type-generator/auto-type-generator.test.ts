@@ -711,7 +711,8 @@ describe("generateAutoTypes", () => {
 
       const queryField = result.updatedResolversResult.queryFields.fields[0]!;
       const inputArg = queryField.args![0]!;
-      expect(inputArg.type.typeName).toBe("CreateUserInputInput");
+      // "input" argName should not result in "InputInput" duplication
+      expect(inputArg.type.typeName).toBe("CreateUserInput");
     });
   });
 

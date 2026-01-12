@@ -107,7 +107,7 @@ export const typeDefs: DocumentNode = {
       "kind": "InputObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "CreateProfileWithRequiredInputInput"
+        "value": "CreateProfileWithRequiredInput"
       },
       "fields": [
         {
@@ -209,7 +209,7 @@ export const typeDefs: DocumentNode = {
       "kind": "InputObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "CreateUserWithIntersectionInputInput"
+        "value": "CreateUserWithIntersectionInput"
       },
       "fields": [
         {
@@ -286,7 +286,7 @@ export const typeDefs: DocumentNode = {
       "kind": "InputObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "CreateUserWithOmitInputInput"
+        "value": "CreateUserWithOmitInput"
       },
       "fields": [
         {
@@ -363,7 +363,7 @@ export const typeDefs: DocumentNode = {
       "kind": "InputObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "CreateUserWithPickInputInput"
+        "value": "CreateUserWithPickInput"
       },
       "fields": [
         {
@@ -657,7 +657,7 @@ export const typeDefs: DocumentNode = {
       "kind": "InputObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "UpdateProfileWithPartialInputInput"
+        "value": "UpdateProfileWithPartialInput"
       },
       "fields": [
         {
@@ -747,7 +747,7 @@ export const typeDefs: DocumentNode = {
       "kind": "InputObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "UpdateSettingsWithDeprecatedInputInput"
+        "value": "UpdateSettingsWithDeprecatedInput"
       },
       "fields": [
         {
@@ -999,7 +999,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "CreateProfileWithRequiredInputInput"
+                    "value": "CreateProfileWithRequiredInput"
                   }
                 }
               },
@@ -1335,7 +1335,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "CreateUserWithIntersectionInputInput"
+                    "value": "CreateUserWithIntersectionInput"
                   }
                 }
               },
@@ -1381,7 +1381,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "CreateUserWithOmitInputInput"
+                    "value": "CreateUserWithOmitInput"
                   }
                 }
               },
@@ -1427,7 +1427,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "CreateUserWithPickInputInput"
+                    "value": "CreateUserWithPickInput"
                   }
                 }
               },
@@ -1573,7 +1573,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "UpdateProfileWithPartialInputInput"
+                    "value": "UpdateProfileWithPartialInput"
                   }
                 }
               },
@@ -1728,7 +1728,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "UpdateSettingsWithDeprecatedInputInput"
+                    "value": "UpdateSettingsWithDeprecatedInput"
                   }
                 }
               },
