@@ -405,14 +405,20 @@ function resolveFieldType(
 function getPropertiesKey(
   properties: ReadonlyArray<InlineObjectPropertyDef>,
 ): string {
-  return properties.map((p) => `${p.name}:${getTypeKey(p.tsType)}`).join("|");
+  return properties
+    .map((p) => {
+      const optionalMarker = p.optional ? "?" : "!";
+      return `${p.name}${optionalMarker}:${getTypeKey(p.tsType)}`;
+    })
+    .join("|");
 }
 
 function getTypeKey(tsType: TSTypeReference): string {
+  const nullableMarker = tsType.nullable ? "?" : "!";
   if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
-    return `inline(${getPropertiesKey(tsType.inlineObjectProperties)})`;
+    return `inline${nullableMarker}(${getPropertiesKey(tsType.inlineObjectProperties)})`;
   }
-  return `${tsType.kind}:${tsType.name ?? ""}`;
+  return `${tsType.kind}${nullableMarker}:${tsType.name ?? ""}`;
 }
 
 function updateExtractedTypes(

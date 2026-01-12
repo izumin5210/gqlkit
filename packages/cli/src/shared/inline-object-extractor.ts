@@ -83,10 +83,7 @@ export function extractInlineObjectProperties(
     const declarations = prop.getDeclarations();
     const declaration = declarations?.[0];
 
-    let optional = false;
-    if (declaration && ts.isPropertySignature(declaration)) {
-      optional = declaration.questionToken !== undefined;
-    }
+    const optional = (prop.flags & ts.SymbolFlags.Optional) !== 0;
 
     const tsdocInfo = extractTsDocFromSymbol(prop, checker);
 

@@ -631,13 +631,7 @@ function extractArgsFromType(
 
   for (const prop of properties) {
     const propType = checker.getTypeOfSymbol(prop);
-    const declarations = prop.getDeclarations();
-    const declaration = declarations?.[0];
-
-    let optional = false;
-    if (declaration && ts.isPropertySignature(declaration)) {
-      optional = declaration.questionToken !== undefined;
-    }
+    const optional = (prop.flags & ts.SymbolFlags.Optional) !== 0;
 
     const tsdocInfo = extractTSDocFromPropertyWithPriority(prop, checker);
 

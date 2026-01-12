@@ -23,9 +23,9 @@ input CreateProfileWithRequiredInputInput {
   """Display name (required)"""
   displayName: String!
   """Location (optional)"""
-  location: String
+  location: String!
   """Website URL (optional)"""
-  website: String
+  website: String!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
@@ -120,9 +120,9 @@ extend type Mutation {
     """Avatar URL (required)"""
     avatarUrl: String!
     """Website URL (optional)"""
-    website: String
+    website: String!
     """Location (optional)"""
-    location: String
+    location: String!
   ): User!
   """
   Create profile using Required to make all fields required.
@@ -230,7 +230,7 @@ extend type Mutation {
   """
   updateProfileWithPartial(
     """Profile data with all fields optional"""
-    input: CreateProfileWithRequiredInputInput!
+    input: UpdateProfileWithPartialInputInput!
   ): User!
   """
   Update settings with deprecated fields directly as args.

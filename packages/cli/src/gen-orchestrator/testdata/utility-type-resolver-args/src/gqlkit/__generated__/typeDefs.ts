@@ -161,10 +161,13 @@ export const typeDefs: DocumentNode = {
             "value": "location"
           },
           "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "String"
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
             }
           },
           "description": {
@@ -180,10 +183,13 @@ export const typeDefs: DocumentNode = {
             "value": "website"
           },
           "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "String"
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
             }
           },
           "description": {
@@ -920,10 +926,13 @@ export const typeDefs: DocumentNode = {
                 "value": "website"
               },
               "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "String"
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
                 }
               },
               "description": {
@@ -939,10 +948,13 @@ export const typeDefs: DocumentNode = {
                 "value": "location"
               },
               "type": {
-                "kind": "NamedType",
-                "name": {
-                  "kind": "Name",
-                  "value": "String"
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
                 }
               },
               "description": {
@@ -1561,7 +1573,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "CreateProfileWithRequiredInputInput"
+                    "value": "UpdateProfileWithPartialInputInput"
                   }
                 }
               },

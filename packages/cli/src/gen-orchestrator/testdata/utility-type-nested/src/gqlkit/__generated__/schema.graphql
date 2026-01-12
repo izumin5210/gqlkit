@@ -185,6 +185,6 @@ extend type Query {
   """
   searchUsersWithPartialPick(
     """Search criteria using PartialPick"""
-    criteria: CreateComplexUserBasicInput!
+    criteria: SearchUsersWithPartialPickCriteriaInput!
   ): [User!]!
 }
