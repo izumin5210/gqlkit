@@ -1,0 +1,32 @@
+[
+  {
+    "code": "INDEX_SIGNATURE_ONLY",
+    "message": "Type 'StringDictInput' contains only index signatures and cannot be represented as a GraphQL type. Use a concrete object type instead.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 20,
+      "column": 38
+    }
+  },
+  {
+    "code": "INDEX_SIGNATURE_ONLY",
+    "message": "Type 'NumberDictInput' contains only index signatures and cannot be represented as a GraphQL type. Use a concrete object type instead.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 37,
+      "column": 41
+    }
+  },
+  {
+    "code": "EMPTY_TYPE_PROPERTIES",
+    "message": "Type 'EmptyFromOmit' has no properties. Consider adding properties or using a different type.",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 28,
+      "column": 39
+    }
+  }
+]

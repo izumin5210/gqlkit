@@ -26,9 +26,14 @@ import {
   extractTsDocInfo,
 } from "../../shared/tsdoc-parser.js";
 import {
+  extractPropertySymbols,
   getNonNullableTypes,
+  hasUndefinedInType,
+  isAnonymousObjectType,
+  isExported,
   isNullableUnion,
   isNullOrUndefined,
+  shouldTreatIntersectionAsInline,
 } from "../../shared/typescript-utils.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 import type {
@@ -38,7 +43,6 @@ import type {
   FieldDefinition,
   InlineObjectMember,
   InlineObjectProperty,
-  InlineObjectPropertyDef,
   TSTypeReference,
   TypeKind,
   TypeMetadata,
@@ -67,11 +71,6 @@ export interface ExtractionResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
   readonly detectedScalarNames: ReadonlyArray<string>;
   readonly detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
-}
-
-function isExported(node: ts.Node): boolean {
-  const modifiers = ts.getCombinedModifierFlags(node as ts.Declaration);
-  return (modifiers & ts.ModifierFlags.Export) !== 0;
 }
 
 function isDefaultExport(node: ts.Node, sourceFile: ts.SourceFile): boolean {
@@ -106,16 +105,48 @@ interface TypeReferenceResult {
   readonly tsType: TSTypeReference;
 }
 
-function extractInlineObjectProperties(
+/**
+ * Attempts to extract a type as an inline object, with cycle detection.
+ * Returns a reference type if a cycle is detected, otherwise returns an inline object.
+ */
+function tryExtractAsInlineObject(
   type: ts.Type,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping>,
-): InlineObjectPropertyDef[] {
-  return extractInlineObjectPropertiesShared(
+  visitedTypes: WeakSet<ts.Type>,
+): TypeReferenceResult {
+  if (visitedTypes.has(type)) {
+    const typeName = type.symbol?.getName() ?? "Object";
+    return {
+      tsType: {
+        kind: "reference",
+        name: typeName === "__type" ? "Object" : typeName,
+        elementType: null,
+        members: null,
+        nullable: false,
+        scalarInfo: null,
+        inlineObjectProperties: null,
+      },
+    };
+  }
+  visitedTypes.add(type);
+  const inlineProperties = extractInlineObjectPropertiesShared(
     type,
     checker,
-    (t, c) => convertTsTypeToReference(t, c, globalTypeMappings).tsType,
+    (t, c) =>
+      convertTsTypeToReference(t, c, globalTypeMappings, visitedTypes).tsType,
   );
+  return {
+    tsType: {
+      kind: "inlineObject",
+      name: null,
+      elementType: null,
+      members: null,
+      nullable: false,
+      scalarInfo: null,
+      inlineObjectProperties: inlineProperties,
+    },
+  };
 }
 
 function findGlobalTypeMapping(
@@ -129,6 +160,7 @@ function convertTsTypeToReference(
   type: ts.Type,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
+  visitedTypes: WeakSet<ts.Type> = new WeakSet(),
 ): TypeReferenceResult {
   const metadataResult = detectScalarMetadata(type, checker);
   // Skip scalar detection if it's an array of scalars (e.g., Int[])
@@ -199,6 +231,7 @@ function convertTsTypeToReference(
         nonNullTypes[0]!,
         checker,
         globalTypeMappings,
+        visitedTypes,
       );
       return {
         tsType: { ...innerResult.tsType, nullable },
@@ -206,7 +239,7 @@ function convertTsTypeToReference(
     }
 
     const memberResults = nonNullTypes.map((t) =>
-      convertTsTypeToReference(t, checker, globalTypeMappings),
+      convertTsTypeToReference(t, checker, globalTypeMappings, visitedTypes),
     );
 
     return {
@@ -226,7 +259,12 @@ function convertTsTypeToReference(
     const typeArgs = (type as ts.TypeReference).typeArguments;
     const elementType = typeArgs?.[0];
     const elementResult = elementType
-      ? convertTsTypeToReference(elementType, checker, globalTypeMappings)
+      ? convertTsTypeToReference(
+          elementType,
+          checker,
+          globalTypeMappings,
+          visitedTypes,
+        )
       : {
           tsType: {
             kind: "primitive" as const,
@@ -323,23 +361,59 @@ function convertTsTypeToReference(
     };
   }
 
+  // Handle intersection types that should be treated as inline objects
+  // This includes intersections with anonymous members OR intersections of
+  // named object types (interfaces) that are not exported as GraphQL types
+  if (type.isIntersection()) {
+    // If the intersection type has an alias symbol (e.g., Comment = GqlObject<...>),
+    // treat it as a named reference to avoid infinite recursion with self-referential types
+    if (type.aliasSymbol) {
+      const aliasName = type.aliasSymbol.getName();
+      return {
+        tsType: {
+          kind: "reference",
+          name: aliasName,
+          elementType: null,
+          members: null,
+          nullable: false,
+          scalarInfo: null,
+          inlineObjectProperties: null,
+        },
+      };
+    }
+
+    const shouldTreatAsInline = shouldTreatIntersectionAsInline(type);
+    if (shouldTreatAsInline) {
+      return tryExtractAsInlineObject(
+        type,
+        checker,
+        globalTypeMappings,
+        visitedTypes,
+      );
+    }
+  }
+
   if (isInlineObjectType(type)) {
-    const inlineProperties = extractInlineObjectProperties(
+    return tryExtractAsInlineObject(
       type,
       checker,
       globalTypeMappings,
+      visitedTypes,
     );
-    return {
-      tsType: {
-        kind: "inlineObject",
-        name: null,
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: inlineProperties,
-      },
-    };
+  }
+
+  // Check for utility types (Omit, Pick, Partial, Required, etc.)
+  // These create mapped types that should be treated as inline objects
+  if (type.flags & ts.TypeFlags.Object) {
+    const objectType = type as ts.ObjectType;
+    if (objectType.objectFlags & ts.ObjectFlags.Mapped) {
+      return tryExtractAsInlineObject(
+        type,
+        checker,
+        globalTypeMappings,
+        visitedTypes,
+      );
+    }
   }
 
   if (type.symbol) {
@@ -398,39 +472,6 @@ function convertTsTypeToReference(
   };
 }
 
-function extractPropertiesFromType(
-  type: ts.Type,
-  checker: ts.TypeChecker,
-): ts.Symbol[] {
-  if (type.isIntersection()) {
-    const allProps = new Map<string, ts.Symbol>();
-    for (const member of type.types) {
-      // getProperties() works for both named and anonymous types
-      // Avoid getDeclaredTypeOfSymbol as it may return empty for anonymous types
-      const memberProps = member.getProperties();
-      for (const prop of memberProps) {
-        const propName = prop.getName();
-        if (!allProps.has(propName)) {
-          allProps.set(propName, prop);
-        }
-      }
-    }
-    return [...allProps.values()];
-  }
-
-  const properties = type.getProperties();
-  if (properties.length > 0) {
-    return [...properties];
-  }
-
-  const apparentType = checker.getApparentType(type);
-  if (apparentType !== type) {
-    return [...apparentType.getProperties()];
-  }
-
-  return [];
-}
-
 interface FieldExtractionResult {
   fields: FieldDefinition[];
   diagnostics: Diagnostic[];
@@ -443,7 +484,7 @@ function extractFieldsFromType(
 ): FieldExtractionResult {
   const fields: FieldDefinition[] = [];
   const diagnostics: Diagnostic[] = [];
-  const properties = extractPropertiesFromType(type, checker);
+  const properties = extractPropertySymbols(type, checker);
 
   for (const prop of properties) {
     const propName = prop.getName();
@@ -456,10 +497,7 @@ function extractFieldsFromType(
     const declarations = prop.getDeclarations();
     const declaration = declarations?.[0];
 
-    let optional = false;
-    if (declaration && ts.isPropertySignature(declaration)) {
-      optional = declaration.questionToken !== undefined;
-    }
+    const optional = hasUndefinedInType(propType);
 
     const tsdocInfo = extractTsDocFromSymbol(prop, checker);
 
@@ -1020,17 +1058,6 @@ function processExportDeclaration(
   }
 
   return { types, diagnostics, detectedScalarNames, detectedScalars };
-}
-
-function isAnonymousObjectType(memberType: ts.Type): boolean {
-  // For type aliases (including GqlObject which creates intersection types),
-  // use aliasSymbol to get the original type name
-  if (memberType.aliasSymbol) {
-    return false;
-  }
-  if (!memberType.symbol) return true;
-  const symbolName = memberType.symbol.getName();
-  return symbolName === "__type" || symbolName === "";
 }
 
 function getNamedTypeName(memberType: ts.Type): string {

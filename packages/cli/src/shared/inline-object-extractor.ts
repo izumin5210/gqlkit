@@ -1,4 +1,4 @@
-import ts from "typescript";
+import type ts from "typescript";
 import type {
   InlineObjectPropertyDef,
   TSTypeReference,
@@ -13,7 +13,11 @@ import {
 } from "./directive-detector.js";
 import { getSourceLocationFromNode } from "./source-location.js";
 import { extractTsDocFromSymbol } from "./tsdoc-parser.js";
-import { isNullableUnion } from "./typescript-utils.js";
+import {
+  extractPropertySymbols,
+  hasUndefinedInType,
+  isNullableUnion,
+} from "./typescript-utils.js";
 
 export type TypeConverter = (
   type: ts.Type,
@@ -34,7 +38,7 @@ export function extractInlineObjectProperties(
   convertType: TypeConverter,
 ): InlineObjectPropertyDef[] {
   const properties: InlineObjectPropertyDef[] = [];
-  const typeProperties = type.getProperties();
+  const typeProperties = extractPropertySymbols(type, checker);
 
   for (const prop of typeProperties) {
     const propName = prop.getName();
@@ -46,10 +50,7 @@ export function extractInlineObjectProperties(
     const declarations = prop.getDeclarations();
     const declaration = declarations?.[0];
 
-    let optional = false;
-    if (declaration && ts.isPropertySignature(declaration)) {
-      optional = declaration.questionToken !== undefined;
-    }
+    const optional = hasUndefinedInType(propType);
 
     const tsdocInfo = extractTsDocFromSymbol(prop, checker);
 

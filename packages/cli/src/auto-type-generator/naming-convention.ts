@@ -98,7 +98,11 @@ function generateInputFieldTypeName(context: InputFieldContext): string {
 
 function generateResolverArgTypeName(context: ResolverArgContext): string {
   const fieldNamePascal = toPascalCase(context.fieldName);
-  const argNamePascal = toPascalCase(context.argName);
+  // Avoid "InputInput" duplication when argName is "input"
+  const argNamePascal =
+    context.argName.toLowerCase() === "input"
+      ? ""
+      : toPascalCase(context.argName);
   const pathParts = context.fieldPath.map(toPascalCase).join("");
 
   if (context.resolverType === "field" && context.parentTypeName) {

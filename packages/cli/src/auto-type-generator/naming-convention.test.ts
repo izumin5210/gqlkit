@@ -84,7 +84,7 @@ describe("generateAutoTypeName", () => {
   });
 
   describe("Query/Mutation resolver argument naming", () => {
-    it("generates {PascalCaseFieldName}{PascalCaseArgName}Input for query args", () => {
+    it("generates {PascalCaseFieldName}Input for args named 'input' (avoids InputInput duplication)", () => {
       const context: AutoTypeNameContext = {
         kind: "resolverArg",
         resolverType: "query",
@@ -93,7 +93,7 @@ describe("generateAutoTypeName", () => {
         parentTypeName: null,
         fieldPath: [],
       };
-      expect(generateAutoTypeName(context)).toBe("CreateUserInputInput");
+      expect(generateAutoTypeName(context)).toBe("CreateUserInput");
     });
 
     it("generates {PascalCaseFieldName}{PascalCaseArgName}Input for mutation args", () => {
