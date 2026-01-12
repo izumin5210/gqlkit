@@ -94,12 +94,14 @@ export function generateSchema(
         ...updatedConversionResult.diagnostics.filter(
           (d) => d.severity === "error",
         ),
+        ...autoTypeResult.diagnostics.filter((d) => d.severity === "error"),
       ],
       warnings: [
         ...typesResult.diagnostics.warnings,
         ...updatedConversionResult.diagnostics.filter(
           (d) => d.severity === "warning",
         ),
+        ...autoTypeResult.diagnostics.filter((d) => d.severity === "warning"),
       ],
     },
   };
