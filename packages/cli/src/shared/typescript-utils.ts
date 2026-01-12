@@ -43,3 +43,79 @@ export function hasUndefinedInType(type: ts.Type): boolean {
   }
   return false;
 }
+
+/**
+ * Checks if a node has the export modifier.
+ */
+export function isExported(node: ts.Node): boolean {
+  const modifiers = ts.getCombinedModifierFlags(node as ts.Declaration);
+  return (modifiers & ts.ModifierFlags.Export) !== 0;
+}
+
+/**
+ * Checks if a type is an anonymous object type (like inline type literals).
+ * Named types and type aliases are not considered anonymous.
+ * This is used to determine if an intersection member should trigger
+ * treating the whole intersection as an inline object.
+ */
+export function isAnonymousObjectType(type: ts.Type): boolean {
+  if (type.aliasSymbol) {
+    return false;
+  }
+  if (!type.symbol) {
+    return true;
+  }
+  const symbolName = type.symbol.getName();
+  return symbolName === "__type" || symbolName === "";
+}
+
+/**
+ * Checks if a type is an object-like type (interface, anonymous object, or mapped type).
+ * Used to determine if an intersection of object types should be treated as inline.
+ */
+export function isObjectLikeType(type: ts.Type): boolean {
+  if (!(type.flags & ts.TypeFlags.Object)) {
+    return false;
+  }
+  const objectType = type as ts.ObjectType;
+  return (
+    (objectType.objectFlags & ts.ObjectFlags.Interface) !== 0 ||
+    (objectType.objectFlags & ts.ObjectFlags.Anonymous) !== 0 ||
+    (objectType.objectFlags & ts.ObjectFlags.Mapped) !== 0
+  );
+}
+
+/**
+ * Extracts property symbols from a type, handling intersection types
+ * and falling back to getApparentType when getProperties() returns empty.
+ */
+export function extractPropertySymbols(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+): ts.Symbol[] {
+  if (type.isIntersection()) {
+    const allProps = new Map<string, ts.Symbol>();
+    for (const member of type.types) {
+      const memberProps = member.getProperties();
+      for (const prop of memberProps) {
+        const propName = prop.getName();
+        if (!allProps.has(propName)) {
+          allProps.set(propName, prop);
+        }
+      }
+    }
+    return [...allProps.values()];
+  }
+
+  const properties = type.getProperties();
+  if (properties.length > 0) {
+    return [...properties];
+  }
+
+  const apparentType = checker.getApparentType(type);
+  if (apparentType !== type) {
+    return [...apparentType.getProperties()];
+  }
+
+  return [];
+}

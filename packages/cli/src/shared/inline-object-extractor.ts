@@ -13,49 +13,16 @@ import {
 } from "./directive-detector.js";
 import { getSourceLocationFromNode } from "./source-location.js";
 import { extractTsDocFromSymbol } from "./tsdoc-parser.js";
-import { hasUndefinedInType, isNullableUnion } from "./typescript-utils.js";
+import {
+  extractPropertySymbols,
+  hasUndefinedInType,
+  isNullableUnion,
+} from "./typescript-utils.js";
 
 export type TypeConverter = (
   type: ts.Type,
   checker: ts.TypeChecker,
 ) => TSTypeReference;
-
-/**
- * Extracts property symbols from a type, handling intersection types
- * and falling back to getApparentType when getProperties() returns empty.
- *
- * This follows the same pattern as extractPropertiesFromType in type-extractor.ts.
- */
-function extractPropertySymbols(
-  type: ts.Type,
-  checker: ts.TypeChecker,
-): ts.Symbol[] {
-  if (type.isIntersection()) {
-    const allProps = new Map<string, ts.Symbol>();
-    for (const member of type.types) {
-      const memberProps = member.getProperties();
-      for (const prop of memberProps) {
-        const propName = prop.getName();
-        if (!allProps.has(propName)) {
-          allProps.set(propName, prop);
-        }
-      }
-    }
-    return [...allProps.values()];
-  }
-
-  const properties = type.getProperties();
-  if (properties.length > 0) {
-    return [...properties];
-  }
-
-  const apparentType = checker.getApparentType(type);
-  if (apparentType !== type) {
-    return [...apparentType.getProperties()];
-  }
-
-  return [];
-}
 
 /**
  * Extracts inline object properties from a TypeScript type.
