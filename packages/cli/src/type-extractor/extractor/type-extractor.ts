@@ -110,11 +110,13 @@ function extractInlineObjectProperties(
   type: ts.Type,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping>,
+  visitedTypes: WeakSet<ts.Type> = new WeakSet(),
 ): InlineObjectPropertyDef[] {
   return extractInlineObjectPropertiesShared(
     type,
     checker,
-    (t, c) => convertTsTypeToReference(t, c, globalTypeMappings).tsType,
+    (t, c) =>
+      convertTsTypeToReference(t, c, globalTypeMappings, visitedTypes).tsType,
   );
 }
 
@@ -129,6 +131,7 @@ function convertTsTypeToReference(
   type: ts.Type,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
+  visitedTypes: WeakSet<ts.Type> = new WeakSet(),
 ): TypeReferenceResult {
   const metadataResult = detectScalarMetadata(type, checker);
   // Skip scalar detection if it's an array of scalars (e.g., Int[])
@@ -199,6 +202,7 @@ function convertTsTypeToReference(
         nonNullTypes[0]!,
         checker,
         globalTypeMappings,
+        visitedTypes,
       );
       return {
         tsType: { ...innerResult.tsType, nullable },
@@ -206,7 +210,7 @@ function convertTsTypeToReference(
     }
 
     const memberResults = nonNullTypes.map((t) =>
-      convertTsTypeToReference(t, checker, globalTypeMappings),
+      convertTsTypeToReference(t, checker, globalTypeMappings, visitedTypes),
     );
 
     return {
@@ -226,7 +230,12 @@ function convertTsTypeToReference(
     const typeArgs = (type as ts.TypeReference).typeArguments;
     const elementType = typeArgs?.[0];
     const elementResult = elementType
-      ? convertTsTypeToReference(elementType, checker, globalTypeMappings)
+      ? convertTsTypeToReference(
+          elementType,
+          checker,
+          globalTypeMappings,
+          visitedTypes,
+        )
       : {
           tsType: {
             kind: "primitive" as const,
@@ -327,12 +336,46 @@ function convertTsTypeToReference(
   // This includes intersections with anonymous members OR intersections of
   // named object types (interfaces) that are not exported as GraphQL types
   if (type.isIntersection()) {
+    // If the intersection type has an alias symbol (e.g., Comment = GqlObject<...>),
+    // treat it as a named reference to avoid infinite recursion with self-referential types
+    if (type.aliasSymbol) {
+      const aliasName = type.aliasSymbol.getName();
+      return {
+        tsType: {
+          kind: "reference",
+          name: aliasName,
+          elementType: null,
+          members: null,
+          nullable: false,
+          scalarInfo: null,
+          inlineObjectProperties: null,
+        },
+      };
+    }
+
     const shouldTreatAsInline = shouldTreatIntersectionAsInline(type);
     if (shouldTreatAsInline) {
+      // Detect cycles before expanding inline object
+      if (visitedTypes.has(type)) {
+        const typeName = type.symbol?.getName() ?? "Object";
+        return {
+          tsType: {
+            kind: "reference",
+            name: typeName === "__type" ? "Object" : typeName,
+            elementType: null,
+            members: null,
+            nullable: false,
+            scalarInfo: null,
+            inlineObjectProperties: null,
+          },
+        };
+      }
+      visitedTypes.add(type);
       const inlineProperties = extractInlineObjectProperties(
         type,
         checker,
         globalTypeMappings,
+        visitedTypes,
       );
       return {
         tsType: {
@@ -349,10 +392,27 @@ function convertTsTypeToReference(
   }
 
   if (isInlineObjectType(type)) {
+    // Detect cycles before expanding inline object
+    if (visitedTypes.has(type)) {
+      const typeName = type.symbol?.getName() ?? "Object";
+      return {
+        tsType: {
+          kind: "reference",
+          name: typeName === "__type" ? "Object" : typeName,
+          elementType: null,
+          members: null,
+          nullable: false,
+          scalarInfo: null,
+          inlineObjectProperties: null,
+        },
+      };
+    }
+    visitedTypes.add(type);
     const inlineProperties = extractInlineObjectProperties(
       type,
       checker,
       globalTypeMappings,
+      visitedTypes,
     );
     return {
       tsType: {
@@ -376,10 +436,27 @@ function convertTsTypeToReference(
     // Mapped types (created by utility types like Omit, Pick, etc.)
     // should be treated as inline objects
     if (objectType.objectFlags & ts.ObjectFlags.Mapped) {
+      // Detect cycles before expanding inline object
+      if (visitedTypes.has(type)) {
+        const typeName = type.symbol?.getName() ?? "Object";
+        return {
+          tsType: {
+            kind: "reference",
+            name: typeName === "__type" ? "Object" : typeName,
+            elementType: null,
+            members: null,
+            nullable: false,
+            scalarInfo: null,
+            inlineObjectProperties: null,
+          },
+        };
+      }
+      visitedTypes.add(type);
       const inlineProperties = extractInlineObjectProperties(
         type,
         checker,
         globalTypeMappings,
+        visitedTypes,
       );
       return {
         tsType: {
