@@ -1,0 +1,77 @@
+@import "@catppuccin/palette/css/catppuccin.css";
+
+:root {
+  /* Red (using red) */
+  --x-color-red-100: var(--ctp-latte-red-tint5);
+  --x-color-red-500: var(--ctp-latte-red-tint1);
+  --x-color-red-600: var(--ctp-latte-red);
+  --x-color-red-700: var(--ctp-latte-red-shade1);
+  --x-color-red-900: var(--ctp-latte-red-shade4);
+
+  /* Yellow (using yellow) */
+  --x-color-yellow-50: var(--ctp-latte-yellow-tint5);
+  --x-color-yellow-500: var(--ctp-latte-yellow);
+  --x-color-yellow-700: var(--ctp-latte-yellow-shade2);
+
+  /* Green (using green) */
+  --x-color-green-100: var(--ctp-latte-green-tint5);
+  --x-color-green-500: var(--ctp-latte-green);
+  --x-color-green-700: var(--ctp-latte-green-shade1);
+  --x-color-green-800: var(--ctp-latte-green-shade2);
+  --x-color-green-900: var(--ctp-latte-green-shade3);
+
+  /* Blue (using blue) */
+  --x-color-blue-100: var(--ctp-latte-blue-tint5);
+  --x-color-blue-400: var(--ctp-latte-blue-tint1);
+  --x-color-blue-600: var(--ctp-latte-blue);
+  --x-color-blue-700: var(--ctp-latte-blue-shade1);
+  --x-color-blue-900: var(--ctp-latte-blue-shade3);
+
+  /* Purple (using mauve) */
+  --x-color-purple-100: var(--ctp-latte-mauve-tint5);
+  --x-color-purple-400: var(--ctp-latte-mauve-tint1);
+  --x-color-purple-600: var(--ctp-latte-mauve);
+  --x-color-purple-900: var(--ctp-latte-mauve-shade3);
+
+  /* Base colors */
+  --x-color-black: var(--ctp-latte-text);
+  --x-color-white: var(--ctp-latte-base);
+}
+
+.dark {
+  /* Red (using red) */
+  --x-color-red-100: var(--ctp-mocha-red-tint3);
+  --x-color-red-500: var(--ctp-mocha-red);
+  --x-color-red-600: var(--ctp-mocha-red-shade1);
+  --x-color-red-700: var(--ctp-mocha-red-shade2);
+  --x-color-red-900: var(--ctp-mocha-red-shade4);
+
+  /* Yellow (using yellow) */
+  --x-color-yellow-50: var(--ctp-mocha-yellow-tint4);
+  --x-color-yellow-500: var(--ctp-mocha-yellow);
+  --x-color-yellow-700: var(--ctp-mocha-yellow-shade1);
+
+  /* Green (using green) */
+  --x-color-green-100: var(--ctp-mocha-green-tint3);
+  --x-color-green-500: var(--ctp-mocha-green);
+  --x-color-green-700: var(--ctp-mocha-green-shade1);
+  --x-color-green-800: var(--ctp-mocha-green-shade2);
+  --x-color-green-900: var(--ctp-mocha-green-shade3);
+
+  /* Blue (using blue) */
+  --x-color-blue-100: var(--ctp-mocha-blue-tint3);
+  --x-color-blue-400: var(--ctp-mocha-blue);
+  --x-color-blue-600: var(--ctp-mocha-blue-shade1);
+  --x-color-blue-700: var(--ctp-mocha-blue-shade2);
+  --x-color-blue-900: var(--ctp-mocha-blue-shade4);
+
+  /* Purple (using mauve) */
+  --x-color-purple-100: var(--ctp-mocha-mauve-tint3);
+  --x-color-purple-400: var(--ctp-mocha-mauve);
+  --x-color-purple-600: var(--ctp-mocha-mauve-shade1);
+  --x-color-purple-900: var(--ctp-mocha-mauve-shade3);
+
+  /* Base colors */
+  --x-color-black: var(--ctp-mocha-crust);
+  --x-color-white: var(--ctp-mocha-text);
+}

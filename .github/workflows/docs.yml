@@ -31,13 +31,13 @@ jobs:
       - name: Build docs
         run: pnpm --filter @gqlkit-ts/docs build
         env:
-          ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
-          ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
-          ALGOLIA_INDEX_NAME: ${{ secrets.ALGOLIA_INDEX_NAME }}
+          NEXT_PUBLIC_ALGOLIA_APP_ID: ${{ secrets.ALGOLIA_APP_ID }}
+          NEXT_PUBLIC_ALGOLIA_API_KEY: ${{ secrets.ALGOLIA_API_KEY }}
+          NEXT_PUBLIC_ALGOLIA_INDEX_NAME: ${{ secrets.ALGOLIA_INDEX_NAME }}
       - name: Upload artifact
         uses: actions/upload-pages-artifact@7b1f4a764d45c48632c6b24a0339c27f5614fb0b # v4
         with:
-          path: packages/docs/docs/.vitepress/dist
+          path: packages/docs/out
 
   deploy:
     environment:
