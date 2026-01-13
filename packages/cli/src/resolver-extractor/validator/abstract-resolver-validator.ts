@@ -7,7 +7,10 @@
  */
 
 import type { BaseType } from "../../schema-generator/integrator/result-integrator.js";
-import type { Diagnostic } from "../../type-extractor/types/index.js";
+import type {
+  Diagnostic,
+  DiagnosticCode,
+} from "../../type-extractor/types/index.js";
 import type { AbstractResolverInfo } from "../extractor/define-api-extractor.js";
 
 export interface ValidateAbstractResolversOptions {
@@ -37,6 +40,28 @@ function formatResolverLocations(
     .join("\n");
 }
 
+function reportDuplicates(
+  resolverMap: Map<string, AbstractResolverInfo[]>,
+  code: DiagnosticCode,
+  kind: string,
+): Diagnostic[] {
+  const diagnostics: Diagnostic[] = [];
+  for (const [typeName, duplicates] of resolverMap) {
+    if (duplicates.length > 1) {
+      const firstResolver = duplicates[0];
+      if (firstResolver) {
+        diagnostics.push({
+          code,
+          message: `Multiple ${kind} definitions found for type '${typeName}':\n${formatResolverLocations(duplicates)}`,
+          severity: "error",
+          location: firstResolver.sourceLocation,
+        });
+      }
+    }
+  }
+  return diagnostics;
+}
+
 /**
  * Detects duplicate abstract type resolver definitions.
  * Groups resolvers by kind and target type, then reports all duplicates.
@@ -49,8 +74,6 @@ function detectDuplicateResolvers(
   resolvers: ReadonlyArray<AbstractResolverInfo>,
   typeMap: Map<string, BaseType>,
 ): Diagnostic[] {
-  const diagnostics: Diagnostic[] = [];
-
   const resolveTypeMap = new Map<string, AbstractResolverInfo[]>();
   const isTypeOfMap = new Map<string, AbstractResolverInfo[]>();
 
@@ -59,46 +82,31 @@ function detectDuplicateResolvers(
       continue;
     }
 
-    if (resolver.kind === "resolveType") {
-      const existing = resolveTypeMap.get(resolver.targetTypeName) ?? [];
-      existing.push(resolver);
-      resolveTypeMap.set(resolver.targetTypeName, existing);
-    } else if (resolver.kind === "isTypeOf") {
-      const existing = isTypeOfMap.get(resolver.targetTypeName) ?? [];
-      existing.push(resolver);
-      isTypeOfMap.set(resolver.targetTypeName, existing);
-    }
+    const targetMap =
+      resolver.kind === "resolveType" ? resolveTypeMap : isTypeOfMap;
+    const existing = targetMap.get(resolver.targetTypeName) ?? [];
+    existing.push(resolver);
+    targetMap.set(resolver.targetTypeName, existing);
   }
 
-  for (const [typeName, duplicates] of resolveTypeMap) {
-    if (duplicates.length > 1) {
-      const firstResolver = duplicates[0];
-      if (firstResolver) {
-        diagnostics.push({
-          code: "DUPLICATE_RESOLVE_TYPE",
-          message: `Multiple resolveType definitions found for type '${typeName}':\n${formatResolverLocations(duplicates)}`,
-          severity: "error",
-          location: firstResolver.sourceLocation,
-        });
-      }
-    }
-  }
+  return [
+    ...reportDuplicates(resolveTypeMap, "DUPLICATE_RESOLVE_TYPE", "resolveType"),
+    ...reportDuplicates(isTypeOfMap, "DUPLICATE_IS_TYPE_OF", "isTypeOf"),
+  ];
+}
 
-  for (const [typeName, duplicates] of isTypeOfMap) {
-    if (duplicates.length > 1) {
-      const firstResolver = duplicates[0];
-      if (firstResolver) {
-        diagnostics.push({
-          code: "DUPLICATE_IS_TYPE_OF",
-          message: `Multiple isTypeOf definitions found for type '${typeName}':\n${formatResolverLocations(duplicates)}`,
-          severity: "error",
-          location: firstResolver.sourceLocation,
-        });
-      }
-    }
-  }
-
-  return diagnostics;
+function createMissingResolverDiagnostic(
+  typeName: string,
+  typeKind: "Union" | "Interface",
+  sourceFile: string | null,
+): Diagnostic {
+  const memberLabel = typeKind === "Union" ? "member" : "implementing";
+  return {
+    code: "MISSING_ABSTRACT_TYPE_RESOLVER",
+    message: `${typeKind} type '${typeName}' has no resolveType defined, and not all ${memberLabel} types have isTypeOf defined. To prevent runtime errors, either define a resolveType for '${typeName}' or define isTypeOf for each ${memberLabel} type.`,
+    severity: "warning",
+    location: sourceFile ? { file: sourceFile, line: 1, column: 1 } : null,
+  };
 }
 
 /**
@@ -142,52 +150,31 @@ function detectMissingAbstractTypeResolvers(
   }
 
   for (const [typeName, baseType] of typeMap) {
-    if (baseType.kind === "Union") {
-      if (resolveTypeSet.has(typeName)) {
-        continue;
-      }
+    if (baseType.kind !== "Union" && baseType.kind !== "Interface") {
+      continue;
+    }
+    if (resolveTypeSet.has(typeName)) {
+      continue;
+    }
 
-      const memberTypes = baseType.unionMembers ?? [];
-      if (memberTypes.length === 0) {
-        continue;
-      }
+    const members =
+      baseType.kind === "Union"
+        ? (baseType.unionMembers ?? [])
+        : (implementingTypesMap.get(typeName) ?? []);
 
-      const allMembersHaveIsTypeOf = memberTypes.every((member) =>
-        isTypeOfSet.has(member),
+    if (members.length === 0) {
+      continue;
+    }
+
+    const allMembersHaveIsTypeOf = members.every((m) => isTypeOfSet.has(m));
+    if (!allMembersHaveIsTypeOf) {
+      diagnostics.push(
+        createMissingResolverDiagnostic(
+          typeName,
+          baseType.kind,
+          baseType.sourceFile ?? null,
+        ),
       );
-      if (!allMembersHaveIsTypeOf) {
-        diagnostics.push({
-          code: "MISSING_ABSTRACT_TYPE_RESOLVER",
-          message: `Union type '${typeName}' has no resolveType defined, and not all member types have isTypeOf defined. To prevent runtime errors, either define a resolveType for '${typeName}' or define isTypeOf for each member type.`,
-          severity: "warning",
-          location: baseType.sourceFile
-            ? { file: baseType.sourceFile, line: 1, column: 1 }
-            : null,
-        });
-      }
-    } else if (baseType.kind === "Interface") {
-      if (resolveTypeSet.has(typeName)) {
-        continue;
-      }
-
-      const implementingTypes = implementingTypesMap.get(typeName) ?? [];
-      if (implementingTypes.length === 0) {
-        continue;
-      }
-
-      const allImplementorsHaveIsTypeOf = implementingTypes.every((impl) =>
-        isTypeOfSet.has(impl),
-      );
-      if (!allImplementorsHaveIsTypeOf) {
-        diagnostics.push({
-          code: "MISSING_ABSTRACT_TYPE_RESOLVER",
-          message: `Interface type '${typeName}' has no resolveType defined, and not all implementing types have isTypeOf defined. To prevent runtime errors, either define a resolveType for '${typeName}' or define isTypeOf for each implementing type.`,
-          severity: "warning",
-          location: baseType.sourceFile
-            ? { file: baseType.sourceFile, line: 1, column: 1 }
-            : null,
-        });
-      }
     }
   }
 
