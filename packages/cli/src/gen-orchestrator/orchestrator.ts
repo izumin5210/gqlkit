@@ -61,7 +61,7 @@ export interface GeneratedFile {
   readonly content: string;
 }
 
-export interface NumericEnumInfo {
+export interface NumericEnumSummary {
   readonly enumName: string;
   readonly memberCount: number;
 }
@@ -70,7 +70,7 @@ export interface GenerationResult {
   readonly success: boolean;
   readonly files: ReadonlyArray<GeneratedFile>;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
-  readonly numericEnums: ReadonlyArray<NumericEnumInfo>;
+  readonly numericEnums: ReadonlyArray<NumericEnumSummary>;
 }
 
 interface TypesResult {

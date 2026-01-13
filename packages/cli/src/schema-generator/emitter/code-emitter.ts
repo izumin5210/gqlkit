@@ -305,13 +305,12 @@ export function emitResolversCode(
     ? `export function createResolvers({ scalars }: ${buildScalarsArgumentType(customScalars)})`
     : "export function createResolvers()";
 
-  const importSection = imports.join("\n");
+  const importSection =
+    imports.length > 0 ? `${imports.join("\n")}\n\n` : "";
 
   return `${GENERATED_FILE_HEADER}
 
-${importSection}
-
-${functionSignature} {
+${importSection}${functionSignature} {
   return {
 ${allEntries.join("\n")}
   };
