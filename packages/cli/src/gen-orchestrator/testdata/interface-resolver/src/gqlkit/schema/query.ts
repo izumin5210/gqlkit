@@ -1,8 +1,7 @@
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import type { NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit.js";
 import type { Node } from "./node.js";
 import type { User } from "./user.js";
-
-const { defineQuery } = createGqlkitApis();
 
 export const users = defineQuery<NoArgs, User[]>(() => []);
 

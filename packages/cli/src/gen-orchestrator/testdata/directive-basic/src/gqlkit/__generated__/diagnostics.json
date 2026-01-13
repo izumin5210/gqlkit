@@ -5,7 +5,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/query.ts",
-      "line": 9,
+      "line": 5,
       "column": 1
     }
   }

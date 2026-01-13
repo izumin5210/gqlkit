@@ -1,7 +1,5 @@
 import type { GqlInterface, IDString, NoArgs } from "@gqlkit-ts/runtime";
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
-
-const { defineField, defineResolveType } = createGqlkitApis();
+import { defineField, defineResolveType } from "../gqlkit.js";
 
 /**
  * The Node interface for Relay-style pagination.

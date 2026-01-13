@@ -1,8 +1,5 @@
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
-
-type Context = unknown;
-
-const { defineQuery, defineMutation } = createGqlkitApis<Context>();
+import type { NoArgs } from "@gqlkit-ts/runtime";
+import { defineMutation, defineQuery } from "../gqlkit.js";
 
 /**
  * Base contact info type

@@ -45,7 +45,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 40,
+      "line": 36,
       "column": 7
     }
   },
@@ -55,7 +55,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 41,
+      "line": 37,
       "column": 7
     }
   },
@@ -65,7 +65,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 46,
+      "line": 42,
       "column": 7
     }
   },
@@ -75,7 +75,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/nested.ts",
-      "line": 17,
+      "line": 13,
       "column": 9
     }
   },
@@ -85,7 +85,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/nested.ts",
-      "line": 18,
+      "line": 14,
       "column": 9
     }
   },
@@ -95,7 +95,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/nested.ts",
-      "line": 22,
+      "line": 18,
       "column": 9
     }
   },
@@ -105,7 +105,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 25,
+      "line": 21,
       "column": 7
     }
   },
@@ -115,7 +115,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 26,
+      "line": 22,
       "column": 7
     }
   },
@@ -125,7 +125,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 27,
+      "line": 23,
       "column": 7
     }
   },
@@ -135,7 +135,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 57,
+      "line": 53,
       "column": 7
     }
   },
@@ -145,7 +145,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 58,
+      "line": 54,
       "column": 7
     }
   }

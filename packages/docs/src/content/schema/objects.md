@@ -8,11 +8,8 @@ Export a TypeScript type or interface:
 
 ```typescript
 // src/gqlkit/schema/user.ts
-import { createGqlkitApis, type IDString, type Int, type NoArgs } from "@gqlkit-ts/runtime";
-
-type Context = { currentUserId: string };
-
-const { defineQuery, defineField } = createGqlkitApis<Context>();
+import { defineQuery, defineField } from "../gqlkit";
+import type { IDString, Int, NoArgs } from "@gqlkit-ts/runtime";
 
 /**
  * A user in the system

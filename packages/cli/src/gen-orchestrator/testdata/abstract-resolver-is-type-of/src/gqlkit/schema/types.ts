@@ -1,6 +1,4 @@
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
-
-type Context = unknown;
+import { defineIsTypeOf } from "../gqlkit.js";
 
 export interface Dog {
   kind: string;
@@ -15,8 +13,6 @@ export interface Cat {
 }
 
 export type Animal = Dog | Cat;
-
-const { defineIsTypeOf } = createGqlkitApis<Context>();
 
 export const dogIsTypeOf = defineIsTypeOf<Dog>((value) => {
   return (

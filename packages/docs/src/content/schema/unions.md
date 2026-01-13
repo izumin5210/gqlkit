@@ -24,10 +24,8 @@ union SearchResult = Comment | Post
 ## Using Unions in Resolvers
 
 ```typescript
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit";
 import type { SearchResult } from "./types";
-
-const { defineQuery } = createGqlkitApis<Context>();
 
 export const search = defineQuery<{ query: string }, SearchResult[]>(
   (_root, args, ctx) => {
@@ -79,7 +77,7 @@ See [Interfaces](./interfaces.md) for more details on interface types.
 When GraphQL executes a query that returns a union type, it needs to determine the concrete type at runtime. Use `defineResolveType` to handle this:
 
 ```typescript
-const { defineResolveType } = createGqlkitApis<Context>();
+import { defineResolveType } from "../gqlkit";
 
 export const searchResultResolveType = defineResolveType<SearchResult>(
   (value) => {

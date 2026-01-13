@@ -50,16 +50,23 @@ server.listen(4000, () => {
 If your resolvers use a context type, provide a context factory:
 
 ```typescript
-// src/gqlkit/schema/query.ts
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
-import type { User } from "./user";
+// src/gqlkit/gqlkit.ts
+import { createGqlkitApis } from "@gqlkit-ts/runtime";
 
 export type Context = {
   currentUser: User | null;
   db: Database;
 };
 
-const { defineQuery } = createGqlkitApis<Context>();
+export const { defineQuery, defineMutation, defineField } =
+  createGqlkitApis<Context>();
+```
+
+```typescript
+// src/gqlkit/schema/query.ts
+import { defineQuery } from "../gqlkit";
+import type { NoArgs } from "@gqlkit-ts/runtime";
+import type { User } from "./user";
 
 export const me = defineQuery<NoArgs, User | null>(
   (_root, _args, ctx) => ctx.currentUser
@@ -71,7 +78,7 @@ export const me = defineQuery<NoArgs, User | null>(
 import { createServer } from "node:http";
 import { createYoga } from "graphql-yoga";
 import { schema } from "./schema";
-import type { Context } from "./gqlkit/schema/query";
+import type { Context } from "./gqlkit/gqlkit";
 
 const yoga = createYoga<{}, Context>({
   schema,

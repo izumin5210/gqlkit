@@ -1,6 +1,4 @@
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
-
-type Context = unknown;
+import { defineIsTypeOf, defineResolveType } from "../gqlkit.js";
 
 export interface User {
   id: string;
@@ -13,8 +11,6 @@ export interface Post {
 }
 
 export type SearchResult = User | Post;
-
-const { defineResolveType, defineIsTypeOf } = createGqlkitApis<Context>();
 
 export const userResolveType = defineResolveType<User>(() => "User");
 

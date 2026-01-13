@@ -1,6 +1,5 @@
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
+import { defineMutation } from "../gqlkit.js";
 
-type Context = unknown;
 interface User {
   id: string;
   name: string;
@@ -10,8 +9,6 @@ interface CreateUserInput {
   name: string;
   email?: string;
 }
-
-const { defineMutation } = createGqlkitApis<Context>();
 
 export const createUser = defineMutation<{ input: CreateUserInput }, User>(
   (_root, args) => ({

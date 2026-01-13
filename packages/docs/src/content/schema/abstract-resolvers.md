@@ -18,7 +18,7 @@ Define a `resolveType` resolver on a union or interface type to determine the co
 ### Union Example
 
 ```typescript
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
+import { defineResolveType } from "../gqlkit";
 
 export interface User {
   id: string;
@@ -31,8 +31,6 @@ export interface Post {
 }
 
 export type SearchResult = User | Post;
-
-const { defineResolveType } = createGqlkitApis<Context>();
 
 export const searchResultResolveType = defineResolveType<SearchResult>(
   (value) => {
@@ -47,17 +45,12 @@ export const searchResultResolveType = defineResolveType<SearchResult>(
 ### Interface Example
 
 ```typescript
-import {
-  createGqlkitApis,
-  type GqlInterface,
-  type IDString,
-} from "@gqlkit-ts/runtime";
+import { defineResolveType } from "../gqlkit";
+import { type GqlInterface, type IDString } from "@gqlkit-ts/runtime";
 
 export type Node = GqlInterface<{
   id: IDString;
 }>;
-
-const { defineResolveType } = createGqlkitApis<Context>();
 
 export const nodeResolveType = defineResolveType<Node>((value) => {
   if ("name" in value) {
@@ -97,7 +90,7 @@ Define an `isTypeOf` resolver on an object type to check if a value is of that t
 ### Basic Usage
 
 ```typescript
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
+import { defineIsTypeOf } from "../gqlkit";
 
 export interface Dog {
   kind: string;
@@ -112,8 +105,6 @@ export interface Cat {
 }
 
 export type Animal = Dog | Cat;
-
-const { defineIsTypeOf } = createGqlkitApis<Context>();
 
 export const dogIsTypeOf = defineIsTypeOf<Dog>((value) => {
   return (

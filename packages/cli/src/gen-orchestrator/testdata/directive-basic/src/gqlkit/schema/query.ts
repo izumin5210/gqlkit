@@ -1,9 +1,5 @@
-import {
-  createGqlkitApis,
-  type GqlDirective,
-  type GqlField,
-  type NoArgs,
-} from "@gqlkit-ts/runtime";
+import type { GqlDirective, GqlField, NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit.js";
 
 export type Role = "USER" | "ADMIN";
 export type AuthDirective<TArgs extends { role: Role[] }> = GqlDirective<
@@ -20,8 +16,6 @@ export type User = {
     { directives: [AuthDirective<{ role: ["USER"] }>] }
   >;
 };
-
-const { defineQuery } = createGqlkitApis();
 
 export const users = defineQuery<NoArgs, User[]>(() => []);
 

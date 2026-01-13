@@ -6,10 +6,9 @@ Add computed fields to object types using `defineField`. Define them alongside t
 
 ```typescript
 // src/gqlkit/schema/user.ts
-import { createGqlkitApis, type IDString, type NoArgs } from "@gqlkit-ts/runtime";
+import { defineField } from "../gqlkit";
+import type { IDString, NoArgs } from "@gqlkit-ts/runtime";
 import type { Post } from "./post.js";
-
-const { defineField } = createGqlkitApis<Context>();
 
 export type User = {
   id: IDString;
@@ -52,7 +51,7 @@ Field resolvers receive four arguments:
 |----------|-------------|
 | `parent` | The parent object (typed via the first type parameter) |
 | `args` | The arguments passed to the field |
-| `ctx` | The context object (typed via `createGqlkitApis<Context>()`) |
+| `ctx` | The context object (typed via `gqlkit.ts`) |
 | `info` | GraphQL resolve info |
 
 ## Type Parameters
@@ -90,9 +89,7 @@ type User {
 Field resolver arguments can use inline object literals. gqlkit automatically generates Input Object types with the naming convention `{ParentTypeName}{PascalCaseFieldName}{PascalCaseArgName}Input`:
 
 ```typescript
-import { createGqlkitApis, type GqlField } from "@gqlkit-ts/runtime";
-
-const { defineQuery, defineField } = createGqlkitApis<Context>();
+import { defineField } from "../gqlkit";
 
 export const posts = defineField<
   User,
@@ -128,9 +125,8 @@ input UserPostsFilterInput {
 Default values in Input Objects are applied to resolver arguments:
 
 ```typescript
-import { createGqlkitApis, type GqlField, type Int } from "@gqlkit-ts/runtime";
-
-const { defineQuery } = createGqlkitApis();
+import { defineQuery } from "../gqlkit";
+import type { GqlField, Int } from "@gqlkit-ts/runtime";
 
 export type PaginationInput = {
   limit: GqlField<Int, { defaultValue: 10 }>;
@@ -158,10 +154,9 @@ type Query {
 Add computed fields to interface types using `defineField`:
 
 ```typescript
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import { defineField } from "../gqlkit";
+import type { NoArgs } from "@gqlkit-ts/runtime";
 import type { Node } from "./node.js";
-
-const { defineField } = createGqlkitApis<Context>();
 
 /** Get the typename of a Node */
 export const __typename = defineField<Node, NoArgs, string>(
@@ -174,10 +169,9 @@ export const __typename = defineField<Node, NoArgs, string>(
 Add a fourth type parameter to attach directives to field resolvers:
 
 ```typescript
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import { defineField } from "../gqlkit";
+import type { NoArgs } from "@gqlkit-ts/runtime";
 import { type AuthDirective } from "./directives.js";
-
-const { defineField } = createGqlkitApis<Context>();
 
 export const email = defineField<
   User,

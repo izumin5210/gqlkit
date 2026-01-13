@@ -4,28 +4,30 @@ Define Query and Mutation fields using the `@gqlkit-ts/runtime` API.
 
 ## Setup
 
-Create your API factory with your context type:
+Create `src/gqlkit/gqlkit.ts` with your context type and export resolver factories:
 
 ```typescript
 import { createGqlkitApis } from "@gqlkit-ts/runtime";
 
-type Context = {
+export type Context = {
   userId: string;
   db: Database;
 };
 
-const { defineQuery, defineMutation, defineField } = createGqlkitApis<Context>();
+export const { defineQuery, defineMutation, defineField } =
+  createGqlkitApis<Context>();
 ```
+
+Then import the factories in your schema files.
 
 ## Query Resolvers
 
 Use `defineQuery` to define Query fields. The export name becomes the GraphQL field name:
 
 ```typescript
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit";
+import type { NoArgs } from "@gqlkit-ts/runtime";
 import type { User } from "./user";
-
-const { defineQuery } = createGqlkitApis<Context>();
 
 // Query.me
 export const me = defineQuery<NoArgs, User | null>(
@@ -64,10 +66,8 @@ type Query {
 Use `defineMutation` to define Mutation fields:
 
 ```typescript
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
+import { defineMutation } from "../gqlkit";
 import type { User, CreateUserInput } from "./user";
-
-const { defineMutation } = createGqlkitApis<Context>();
 
 // Mutation.createUser(input: CreateUserInput!)
 export const createUser = defineMutation<{ input: CreateUserInput }, User>(
@@ -177,11 +177,10 @@ See [Field Resolvers](./fields.md) for more details on inline object arguments.
 Add a third type parameter to attach directives to Query/Mutation fields:
 
 ```typescript
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit";
+import type { NoArgs } from "@gqlkit-ts/runtime";
 import { type AuthDirective } from "./directives.js";
 import type { User } from "./user.js";
-
-const { defineQuery } = createGqlkitApis<Context>();
 
 export const me = defineQuery<
   NoArgs,

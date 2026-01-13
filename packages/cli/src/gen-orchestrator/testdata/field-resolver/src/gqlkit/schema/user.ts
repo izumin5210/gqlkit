@@ -1,6 +1,5 @@
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
-
-type Context = unknown;
+import type { NoArgs } from "@gqlkit-ts/runtime";
+import { defineField } from "../gqlkit.js";
 
 export interface User {
   id: string;
@@ -12,7 +11,5 @@ export interface Post {
   title: string;
   authorId: string;
 }
-
-const { defineField } = createGqlkitApis<Context>();
 
 export const posts = defineField<User, NoArgs, Post[]>((parent) => []);

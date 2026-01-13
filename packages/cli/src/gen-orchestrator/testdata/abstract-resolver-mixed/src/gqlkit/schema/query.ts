@@ -1,15 +1,8 @@
-import {
-  createGqlkitApis,
-  type IDString,
-  type NoArgs,
-} from "@gqlkit-ts/runtime";
+import type { IDString, NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit.js";
 import type { Node } from "./node.js";
 import type { SearchResult } from "./search.js";
 import type { User } from "./user.js";
-
-type Context = unknown;
-
-const { defineQuery } = createGqlkitApis<Context>();
 
 export const search = defineQuery<{ query: string }, SearchResult[]>(
   (_root, _args) => [],

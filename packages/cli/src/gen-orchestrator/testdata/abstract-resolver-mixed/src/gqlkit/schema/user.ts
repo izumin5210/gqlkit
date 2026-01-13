@@ -1,11 +1,6 @@
-import {
-  createGqlkitApis,
-  type GqlObject,
-  type IDString,
-} from "@gqlkit-ts/runtime";
+import type { GqlObject, IDString } from "@gqlkit-ts/runtime";
+import { defineIsTypeOf } from "../gqlkit.js";
 import type { Node } from "./node.js";
-
-type Context = unknown;
 
 export type User = GqlObject<
   {
@@ -15,8 +10,6 @@ export type User = GqlObject<
   },
   { implements: [Node] }
 >;
-
-const { defineIsTypeOf } = createGqlkitApis<Context>();
 
 export const userIsTypeOf = defineIsTypeOf<User>((value) => {
   return typeof value === "object" && value !== null && "email" in value;

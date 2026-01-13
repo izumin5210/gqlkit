@@ -1,13 +1,10 @@
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
-
-type Context = unknown;
+import type { NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit.js";
 
 interface User {
   id: string;
   name: string;
 }
-
-const { defineQuery } = createGqlkitApis<Context>();
 
 /**
  * Test case for index signature only type (6.2).

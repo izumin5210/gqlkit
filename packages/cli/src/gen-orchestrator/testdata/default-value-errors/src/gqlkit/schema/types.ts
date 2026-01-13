@@ -1,9 +1,5 @@
-import {
-  createGqlkitApis,
-  type GqlField,
-  type Int,
-  type NoArgs,
-} from "@gqlkit-ts/runtime";
+import type { GqlField, Int, NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit.js";
 
 export type BadInput = {
   nonLiteralString: GqlField<string, { defaultValue: string }>;
@@ -14,7 +10,5 @@ export type BadInput = {
 export type Result = {
   value: string;
 };
-
-const { defineQuery } = createGqlkitApis();
 
 export const bad = defineQuery<BadInput, Result>(() => ({ value: "" }));

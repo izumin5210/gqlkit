@@ -1,14 +1,12 @@
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import type { NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit.js";
 
-type Context = unknown;
 interface User {
   id: string;
   name: string;
   emailAddress: string | null;
   email: string | null;
 }
-
-const { defineQuery } = createGqlkitApis<Context>();
 
 export const user = defineQuery<NoArgs, User | null>(() => null);
 

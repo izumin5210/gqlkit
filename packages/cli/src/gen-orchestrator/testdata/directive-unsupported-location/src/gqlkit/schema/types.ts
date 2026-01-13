@@ -1,8 +1,5 @@
-import {
-  createGqlkitApis,
-  type GqlDirective,
-  type NoArgs,
-} from "@gqlkit-ts/runtime";
+import type { GqlDirective, NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit.js";
 
 export type ScalarDirective = GqlDirective<
   "scalarOnly",
@@ -14,5 +11,4 @@ export type User = {
   id: string;
 };
 
-const { defineQuery } = createGqlkitApis();
 export const user = defineQuery<NoArgs, User | null>(() => null);
