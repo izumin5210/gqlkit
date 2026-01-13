@@ -449,9 +449,10 @@ export type ResolveTypeResolver<
  * @typeParam TObject - The object type to check
  * @typeParam TContext - The context type (defaults to unknown)
  */
-export type IsTypeOfResolver<TObject, TContext = unknown> = IsTypeOfResolverFn<
-  TContext
-> & {
+export type IsTypeOfResolver<
+  TObject,
+  TContext = unknown,
+> = IsTypeOfResolverFn<TContext> & {
   " $gqlkitAbstractResolver"?: {
     kind: "isTypeOf";
     targetType: TObject;
