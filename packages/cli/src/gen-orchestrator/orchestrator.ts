@@ -5,6 +5,7 @@ import type {
   ResolvedScalarMapping,
 } from "../config-loader/index.js";
 import {
+  type AbstractResolverInfo,
   type ArgumentDefinition,
   type DefineApiResolverInfo,
   extractDefineApiResolvers,
@@ -79,6 +80,7 @@ interface ResolversResult {
   queryFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
   mutationFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
   typeExtensions: ReadonlyArray<TypeExtension>;
+  abstractTypeResolvers: ReadonlyArray<AbstractResolverInfo>;
   diagnostics: Diagnostics;
 }
 
@@ -287,6 +289,7 @@ function extractResolversCore(
     queryFields: result.queryFields,
     mutationFields: result.mutationFields,
     typeExtensions: result.typeExtensions,
+    abstractTypeResolvers: defineApiExtractionResult.abstractTypeResolvers,
     diagnostics: collectDiagnostics(allDiagnostics),
   };
 }

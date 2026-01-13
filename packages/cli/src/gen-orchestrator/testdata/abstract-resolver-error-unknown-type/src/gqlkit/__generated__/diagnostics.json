@@ -1,0 +1,22 @@
+[
+  {
+    "code": "UNKNOWN_ABSTRACT_TYPE",
+    "message": "Type 'NonExistentUnion' does not exist in the schema. The resolveType resolver 'nonExistentResolveType' references a type that has not been defined.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/resolvers.ts",
+      "line": 15,
+      "column": 14
+    }
+  },
+  {
+    "code": "UNKNOWN_ABSTRACT_TYPE",
+    "message": "Type 'NonExistentObject' does not exist in the schema. The isTypeOf resolver 'nonExistentIsTypeOf' references a type that has not been defined.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/resolvers.ts",
+      "line": 19,
+      "column": 14
+    }
+  }
+]

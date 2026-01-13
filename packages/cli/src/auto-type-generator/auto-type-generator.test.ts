@@ -113,6 +113,7 @@ function createEmptyResolversResult(): ExtractResolversResult {
     queryFields: { fields: [] },
     mutationFields: { fields: [] },
     typeExtensions: [],
+    abstractTypeResolvers: [],
     diagnostics: { errors: [], warnings: [] },
   };
 }
@@ -385,6 +386,7 @@ describe("generateAutoTypes", () => {
         },
         mutationFields: { fields: [] },
         typeExtensions: [],
+        abstractTypeResolvers: [],
         diagnostics: { errors: [], warnings: [] },
       };
 
@@ -456,6 +458,7 @@ describe("generateAutoTypes", () => {
           ],
         },
         typeExtensions: [],
+        abstractTypeResolvers: [],
         diagnostics: { errors: [], warnings: [] },
       };
 
@@ -524,6 +527,7 @@ describe("generateAutoTypes", () => {
             ],
           },
         ],
+        abstractTypeResolvers: [],
         diagnostics: { errors: [], warnings: [] },
       };
 
@@ -601,6 +605,7 @@ describe("generateAutoTypes", () => {
           ],
         },
         typeExtensions: [],
+        abstractTypeResolvers: [],
         diagnostics: { errors: [], warnings: [] },
       };
 
@@ -699,6 +704,7 @@ describe("generateAutoTypes", () => {
         },
         mutationFields: { fields: [] },
         typeExtensions: [],
+        abstractTypeResolvers: [],
         diagnostics: { errors: [], warnings: [] },
       };
 

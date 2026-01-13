@@ -9,6 +9,7 @@ import type {
   InlineObjectPropertyDef,
   SourceLocation,
 } from "../type-extractor/types/index.js";
+import type { AbstractResolverInfo } from "./extractor/define-api-extractor.js";
 
 export interface GraphQLInputValue {
   readonly name: string;
@@ -47,5 +48,6 @@ export interface ExtractResolversResult {
   readonly queryFields: QueryFieldDefinitions;
   readonly mutationFields: MutationFieldDefinitions;
   readonly typeExtensions: ReadonlyArray<TypeExtension>;
+  readonly abstractTypeResolvers: ReadonlyArray<AbstractResolverInfo>;
   readonly diagnostics: Diagnostics;
 }

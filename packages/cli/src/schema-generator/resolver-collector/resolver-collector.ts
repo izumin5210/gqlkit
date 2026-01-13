@@ -1,3 +1,4 @@
+import type { AbstractResolverInfo } from "../../resolver-extractor/extractor/define-api-extractor.js";
 import type {
   ExtensionField,
   IntegratedResult,
@@ -16,9 +17,17 @@ export interface TypeResolvers {
   readonly fields: ReadonlyArray<FieldResolver>;
 }
 
+export interface AbstractTypeResolverInfo {
+  readonly typeName: string;
+  readonly resolverKey: "__resolveType" | "__isTypeOf";
+  readonly sourceFile: string;
+  readonly exportName: string;
+}
+
 export interface ResolverInfo {
   readonly types: ReadonlyArray<TypeResolvers>;
   readonly sourceFiles: ReadonlyArray<string>;
+  readonly abstractTypeResolvers: ReadonlyArray<AbstractTypeResolverInfo>;
 }
 
 function getResolverValueName(typeName: string): string {
@@ -50,6 +59,26 @@ function collectFieldResolvers(ext: TypeExtension): FieldResolver[] {
   );
 }
 
+function convertToAbstractTypeResolverInfo(
+  resolver: AbstractResolverInfo,
+): AbstractTypeResolverInfo {
+  return {
+    typeName: resolver.targetTypeName,
+    resolverKey:
+      resolver.kind === "resolveType" ? "__resolveType" : "__isTypeOf",
+    sourceFile: resolver.sourceFile,
+    exportName: resolver.exportName,
+  };
+}
+
+function collectAbstractTypeResolvers(
+  abstractResolvers: ReadonlyArray<AbstractResolverInfo>,
+): AbstractTypeResolverInfo[] {
+  return abstractResolvers
+    .map(convertToAbstractTypeResolverInfo)
+    .sort((a, b) => a.typeName.localeCompare(b.typeName));
+}
+
 export function collectResolverInfo(
   integratedResult: IntegratedResult,
 ): ResolverInfo {
@@ -67,6 +96,14 @@ export function collectResolverInfo(
     typeMap.set(ext.targetTypeName, [...existing, ...fieldResolvers]);
   }
 
+  const abstractTypeResolvers = collectAbstractTypeResolvers(
+    integratedResult.abstractTypeResolvers,
+  );
+
+  for (const resolver of abstractTypeResolvers) {
+    sourceFilesSet.add(resolver.sourceFile);
+  }
+
   const types: TypeResolvers[] = [...typeMap.entries()]
     .map(([typeName, fields]) => ({
       typeName,
@@ -81,5 +118,6 @@ export function collectResolverInfo(
   return {
     types,
     sourceFiles,
+    abstractTypeResolvers,
   };
 }

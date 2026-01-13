@@ -389,6 +389,81 @@ export type FieldResolverFn<TParent, TArgs, TResult, TContext = unknown> = (
 export type ResolverKind = "query" | "mutation" | "field";
 
 /**
+ * The kind of abstract type resolver.
+ */
+export type AbstractResolverKind = "resolveType" | "isTypeOf";
+
+/**
+ * Type for resolveType resolver functions.
+ * Used to resolve the concrete type of a union or interface type at runtime.
+ * @typeParam TAbstract - The abstract type (union or interface) to resolve
+ * @typeParam TContext - The context type (defaults to unknown)
+ */
+export type ResolveTypeResolverFn<TAbstract, TContext = unknown> = (
+  value: TAbstract,
+  context: TContext,
+  info: GraphQLResolveInfo,
+) => string | Promise<string>;
+
+/**
+ * Type for isTypeOf resolver functions.
+ * Used to check if a value belongs to a specific object type.
+ * @typeParam TObject - The object type to check (used for type documentation, value is always unknown at runtime)
+ * @typeParam TContext - The context type (defaults to unknown)
+ */
+export type IsTypeOfResolverFn<TObject, TContext = unknown> = ((
+  value: unknown,
+  context: TContext,
+  info: GraphQLResolveInfo,
+) => boolean | Promise<boolean>) & {
+  /** @internal Phantom type parameter - used for metadata only, not at runtime */
+  readonly " $phantomTargetType"?: TObject;
+};
+
+/**
+ * Abstract type resolver metadata structure embedded in intersection types.
+ * Used by CLI to detect and identify abstract type resolvers through type analysis.
+ */
+export interface AbstractResolverMetadataShape {
+  readonly kind: AbstractResolverKind;
+  readonly targetType: unknown;
+}
+
+/**
+ * resolveType resolver type with metadata.
+ * The metadata is embedded as an optional property with space-prefixed key
+ * to avoid collision with user-defined properties.
+ * @typeParam TAbstract - The abstract type (union or interface) to resolve
+ * @typeParam TContext - The context type (defaults to unknown)
+ */
+export type ResolveTypeResolver<
+  TAbstract,
+  TContext = unknown,
+> = ResolveTypeResolverFn<TAbstract, TContext> & {
+  " $gqlkitAbstractResolver"?: {
+    kind: "resolveType";
+    targetType: TAbstract;
+  };
+};
+
+/**
+ * isTypeOf resolver type with metadata.
+ * The metadata is embedded as an optional property with space-prefixed key
+ * to avoid collision with user-defined properties.
+ * @typeParam TObject - The object type to check
+ * @typeParam TContext - The context type (defaults to unknown)
+ */
+export type IsTypeOfResolver<TObject, TContext = unknown> = IsTypeOfResolverFn<
+  TObject,
+  TContext
+> & {
+  " $gqlkitAbstractResolver"?: {
+    kind: "isTypeOf";
+    targetType: TObject;
+  };
+};
+
+/**
  * Resolver metadata structure embedded in intersection types.
  * Used by CLI to detect and identify resolver types through type analysis.
  */
@@ -595,6 +670,44 @@ export interface GqlkitApis<TContext> {
   >(
     resolver: FieldResolverFn<TParent, TArgs, TResult, TContext>,
   ) => FieldResolver<TParent, TArgs, TResult, TContext, TDirectives>;
+
+  /**
+   * Defines a resolveType resolver for union or interface types.
+   * Used to determine the concrete type of an abstract type at runtime.
+   * @typeParam TAbstract - The abstract type (union or interface) to resolve
+   * @param resolver - The resolver function that returns the concrete type name
+   * @returns The resolver with metadata for CLI detection
+   *
+   * @example
+   * ```typescript
+   * type Animal = Dog | Cat;
+   *
+   * export const animalResolveType = defineResolveType<Animal>((value) => {
+   *   return value.kind === "dog" ? "Dog" : "Cat";
+   * });
+   * ```
+   */
+  defineResolveType: <TAbstract>(
+    resolver: ResolveTypeResolverFn<TAbstract, TContext>,
+  ) => ResolveTypeResolver<TAbstract, TContext>;
+
+  /**
+   * Defines an isTypeOf resolver for object types.
+   * Used to check if a value belongs to a specific object type.
+   * @typeParam TObject - The object type to check
+   * @param resolver - The resolver function that returns true if the value is of this type
+   * @returns The resolver with metadata for CLI detection
+   *
+   * @example
+   * ```typescript
+   * export const dogIsTypeOf = defineIsTypeOf<Dog>((value) => {
+   *   return typeof value === "object" && value !== null && "kind" in value && value.kind === "dog";
+   * });
+   * ```
+   */
+  defineIsTypeOf: <TObject>(
+    resolver: IsTypeOfResolverFn<TObject, TContext>,
+  ) => IsTypeOfResolver<TObject, TContext>;
 }
 
 /**
@@ -639,6 +752,16 @@ export function createGqlkitApis<TContext = unknown>(): GqlkitApis<TContext> {
     },
     defineField: <TParent, TArgs, TResult>(
       resolver: FieldResolverFn<TParent, TArgs, TResult, TContext>,
+    ) => {
+      return resolver;
+    },
+    defineResolveType: <TAbstract>(
+      resolver: ResolveTypeResolverFn<TAbstract, TContext>,
+    ) => {
+      return resolver;
+    },
+    defineIsTypeOf: <TObject>(
+      resolver: IsTypeOfResolverFn<TObject, TContext>,
     ) => {
       return resolver;
     },
