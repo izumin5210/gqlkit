@@ -73,6 +73,34 @@ export interface ExtractionResult {
   readonly detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
 }
 
+/**
+ * Internal TypeScript symbol with parent reference.
+ * Used to access the parent enum symbol from enum member types.
+ */
+type SymbolWithParent = ts.Symbol & { parent?: ts.Symbol };
+
+/**
+ * Finds the parent enum symbol if all types belong to the same enum.
+ * Returns null if types are empty, don't have a common parent enum, or belong to different enums.
+ */
+function findEnumParentSymbol(types: readonly ts.Type[]): ts.Symbol | null {
+  if (types.length === 0) return null;
+
+  const firstSymbol = types[0]!.symbol as SymbolWithParent | undefined;
+  const parentSymbol = firstSymbol?.parent;
+
+  if (!parentSymbol || !(parentSymbol.flags & ts.SymbolFlags.Enum)) {
+    return null;
+  }
+
+  const allBelongToSameEnum = types.every((t) => {
+    const sym = t.symbol as SymbolWithParent | undefined;
+    return sym?.parent === parentSymbol;
+  });
+
+  return allBelongToSameEnum ? parentSymbol : null;
+}
+
 function isDefaultExport(node: ts.Node, sourceFile: ts.SourceFile): boolean {
   let hasDefaultExport = false;
   const nodeName = (node as ts.DeclarationStatement).name?.getText(sourceFile);
@@ -227,34 +255,19 @@ function convertTsTypeToReference(
     const nonNullTypes = getNonNullableTypes(type);
 
     // Check if all non-null types belong to the same enum (for numeric enums)
-    // Use internal TypeScript API to access symbol.parent
-    type SymbolWithParent = ts.Symbol & { parent?: ts.Symbol };
-    if (nonNullTypes.length > 0) {
-      const firstType = nonNullTypes[0]!;
-      const firstSymbol = firstType.symbol as SymbolWithParent | undefined;
-      if (firstSymbol) {
-        const parentSymbol = firstSymbol.parent;
-        if (parentSymbol && parentSymbol.flags & ts.SymbolFlags.Enum) {
-          const allSameEnum = nonNullTypes.every((t) => {
-            const sym = t.symbol as SymbolWithParent | undefined;
-            return sym?.parent === parentSymbol;
-          });
-          if (allSameEnum) {
-            const enumName = parentSymbol.getName();
-            return {
-              tsType: {
-                kind: "reference",
-                name: enumName,
-                elementType: null,
-                members: null,
-                nullable,
-                scalarInfo: null,
-                inlineObjectProperties: null,
-              },
-            };
-          }
-        }
-      }
+    const enumParentSymbol = findEnumParentSymbol(nonNullTypes);
+    if (enumParentSymbol) {
+      return {
+        tsType: {
+          kind: "reference",
+          name: enumParentSymbol.getName(),
+          elementType: null,
+          members: null,
+          nullable,
+          scalarInfo: null,
+          inlineObjectProperties: null,
+        },
+      };
     }
 
     if (nonNullTypes.length === 1) {
