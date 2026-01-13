@@ -141,6 +141,7 @@ export function generateSchema(
     resolverInfo,
     outputDir,
     customScalars ?? [],
+    integratedResult.numericEnums,
   );
 
   return {

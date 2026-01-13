@@ -21,6 +21,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasMutation: false,
       hasErrors: false,
       abstractTypeResolvers: [],
+      numericEnums: [],
       diagnostics: [],
     });
 
@@ -56,6 +57,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasMutation: false,
       hasErrors: false,
       abstractTypeResolvers: [],
+      numericEnums: [],
       diagnostics: [],
     });
 
@@ -90,6 +92,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasMutation: false,
       hasErrors: false,
       abstractTypeResolvers: [],
+      numericEnums: [],
       diagnostics: [],
     });
 
@@ -130,6 +133,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasMutation: false,
       hasErrors: false,
       abstractTypeResolvers: [],
+      numericEnums: [],
       diagnostics: [],
     });
 
@@ -174,6 +178,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasMutation: false,
       hasErrors: false,
       abstractTypeResolvers: [],
+      numericEnums: [],
       diagnostics: [],
     });
 
@@ -209,6 +214,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasMutation: false,
       hasErrors: false,
       abstractTypeResolvers: [],
+      numericEnums: [],
       diagnostics: [],
     });
 
@@ -235,6 +241,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasMutation: false,
       hasErrors: false,
       abstractTypeResolvers: [],
+      numericEnums: [],
       diagnostics: [],
     });
 
@@ -257,6 +264,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasMutation: false,
       hasErrors: false,
       abstractTypeResolvers: [],
+      numericEnums: [],
       diagnostics: [],
     });
 
@@ -280,6 +288,7 @@ describe("buildDeprecatedDirective", () => {
           deprecated: null,
           unionMembers: null,
           enumValues: null,
+          isNumericEnum: false,
           implementedInterfaces: null,
           directives: null,
           fields: [
@@ -311,6 +320,7 @@ describe("buildDeprecatedDirective", () => {
       hasMutation: false,
       hasErrors: false,
       abstractTypeResolvers: [],
+      numericEnums: [],
       diagnostics: [],
     });
 
@@ -349,6 +359,7 @@ describe("buildDeprecatedDirective", () => {
           deprecated: null,
           unionMembers: null,
           enumValues: null,
+          isNumericEnum: false,
           implementedInterfaces: null,
           directives: null,
           fields: [
@@ -380,6 +391,7 @@ describe("buildDeprecatedDirective", () => {
       hasMutation: false,
       hasErrors: false,
       abstractTypeResolvers: [],
+      numericEnums: [],
       diagnostics: [],
     });
 
@@ -418,18 +430,18 @@ describe("buildDeprecatedDirective", () => {
           deprecated: null,
           fields: null,
           unionMembers: null,
-          implementedInterfaces: null,
-          directives: null,
           enumValues: [
             {
               name: "ACTIVE",
               originalValue: "ACTIVE",
+              numericValue: null,
               description: null,
               deprecated: null,
             },
             {
               name: "LEGACY",
               originalValue: "LEGACY",
+              numericValue: null,
               description: null,
               deprecated: {
                 isDeprecated: true,
@@ -437,6 +449,9 @@ describe("buildDeprecatedDirective", () => {
               } satisfies DeprecationInfo,
             },
           ],
+          isNumericEnum: false,
+          implementedInterfaces: null,
+          directives: null,
         },
       ],
       inputTypes: [],
@@ -448,6 +463,7 @@ describe("buildDeprecatedDirective", () => {
       hasMutation: false,
       hasErrors: false,
       abstractTypeResolvers: [],
+      numericEnums: [],
       diagnostics: [],
     });
 
@@ -487,18 +503,18 @@ describe("buildDeprecatedDirective", () => {
           deprecated: null,
           fields: null,
           unionMembers: null,
-          implementedInterfaces: null,
-          directives: null,
           enumValues: [
             {
               name: "ACTIVE",
               originalValue: "ACTIVE",
+              numericValue: null,
               description: null,
               deprecated: null,
             },
             {
               name: "OLD",
               originalValue: "OLD",
+              numericValue: null,
               description: null,
               deprecated: {
                 isDeprecated: true,
@@ -506,6 +522,9 @@ describe("buildDeprecatedDirective", () => {
               } satisfies DeprecationInfo,
             },
           ],
+          isNumericEnum: false,
+          implementedInterfaces: null,
+          directives: null,
         },
       ],
       inputTypes: [],
@@ -517,6 +536,7 @@ describe("buildDeprecatedDirective", () => {
       hasMutation: false,
       hasErrors: false,
       abstractTypeResolvers: [],
+      numericEnums: [],
       diagnostics: [],
     });
 

@@ -44,6 +44,8 @@ export interface BaseType {
   readonly fields: ReadonlyArray<BaseField> | null;
   readonly unionMembers: ReadonlyArray<string> | null;
   readonly enumValues: ReadonlyArray<EnumValueInfo> | null;
+  /** True if this enum uses numeric values */
+  readonly isNumericEnum: boolean;
   readonly implementedInterfaces: ReadonlyArray<string> | null;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
@@ -83,6 +85,22 @@ export interface CustomScalarInfo {
   readonly description: string | null;
 }
 
+/**
+ * Numeric enum member value mapping.
+ */
+export interface NumericEnumMember {
+  readonly name: string;
+  readonly numericValue: number;
+}
+
+/**
+ * Numeric enum information for resolver generation.
+ */
+export interface NumericEnumInfo {
+  readonly enumName: string;
+  readonly members: ReadonlyArray<NumericEnumMember>;
+}
+
 export interface IntegratedResult {
   readonly baseTypes: ReadonlyArray<BaseType>;
   readonly inputTypes: ReadonlyArray<InputType>;
@@ -95,6 +113,8 @@ export interface IntegratedResult {
   readonly directiveDefinitions: ReadonlyArray<DirectiveDefinitionInfo> | null;
   /** Abstract type resolvers (resolveType and isTypeOf) */
   readonly abstractTypeResolvers: ReadonlyArray<AbstractResolverInfo>;
+  /** Numeric enum information for resolver generation */
+  readonly numericEnums: ReadonlyArray<NumericEnumInfo>;
   readonly hasQuery: boolean;
   readonly hasMutation: boolean;
   readonly hasErrors: boolean;
@@ -255,6 +275,7 @@ export function integrate(
         })),
         unionMembers: null,
         enumValues: null,
+        isNumericEnum: false,
         implementedInterfaces: null,
         description: autoType.description,
         deprecated: null,
@@ -307,6 +328,7 @@ export function integrate(
         fields: null,
         unionMembers: null,
         enumValues: type.enumValues,
+        isNumericEnum: type.isNumericEnum,
         implementedInterfaces: null,
         description: type.description,
         deprecated: type.deprecated,
@@ -328,6 +350,7 @@ export function integrate(
           })) ?? null,
         unionMembers: null,
         enumValues: null,
+        isNumericEnum: false,
         implementedInterfaces: type.implementedInterfaces ?? null,
         description: type.description,
         deprecated: type.deprecated,
@@ -349,6 +372,7 @@ export function integrate(
           })) ?? null,
         unionMembers: null,
         enumValues: null,
+        isNumericEnum: false,
         implementedInterfaces: type.implementedInterfaces ?? null,
         description: type.description,
         deprecated: type.deprecated,
@@ -362,6 +386,7 @@ export function integrate(
         fields: null,
         unionMembers: type.unionMembers,
         enumValues: null,
+        isNumericEnum: false,
         implementedInterfaces: null,
         description: type.description,
         deprecated: null,
@@ -381,6 +406,7 @@ export function integrate(
       fields: [],
       unionMembers: null,
       enumValues: null,
+      isNumericEnum: false,
       implementedInterfaces: null,
       description: null,
       deprecated: null,
@@ -395,6 +421,7 @@ export function integrate(
       fields: [],
       unionMembers: null,
       enumValues: null,
+      isNumericEnum: false,
       implementedInterfaces: null,
       description: null,
       deprecated: null,
@@ -545,6 +572,29 @@ export function integrate(
         }))
       : null;
 
+  const numericEnums: NumericEnumInfo[] = baseTypes
+    .filter(
+      (
+        type,
+      ): type is BaseType & {
+        enumValues: NonNullable<BaseType["enumValues"]>;
+      } =>
+        type.kind === "Enum" && type.isNumericEnum && type.enumValues !== null,
+    )
+    .map((type) => ({
+      enumName: type.name,
+      members: type.enumValues
+        .filter(
+          (value): value is typeof value & { numericValue: number } =>
+            value.numericValue !== null,
+        )
+        .map((value) => ({
+          name: value.name,
+          numericValue: value.numericValue,
+        })),
+    }))
+    .filter((info) => info.members.length > 0);
+
   return {
     baseTypes,
     inputTypes,
@@ -559,6 +609,7 @@ export function integrate(
         ? directiveDefinitions
         : null,
     abstractTypeResolvers: resolversResult.abstractTypeResolvers,
+    numericEnums,
     hasQuery,
     hasMutation,
     hasErrors,

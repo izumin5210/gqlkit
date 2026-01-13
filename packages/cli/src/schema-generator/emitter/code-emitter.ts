@@ -5,7 +5,10 @@ import {
   type BuildDocumentOptions,
   buildDocumentNode,
 } from "../builder/ast-builder.js";
-import type { IntegratedResult } from "../integrator/result-integrator.js";
+import type {
+  IntegratedResult,
+  NumericEnumInfo,
+} from "../integrator/result-integrator.js";
 import type {
   AbstractTypeResolverInfo,
   ResolverInfo,
@@ -184,6 +187,25 @@ function buildResolverImports(
   return imports;
 }
 
+function buildAbstractOnlyTypeEntry(
+  abstractResolver: AbstractTypeResolverInfo,
+): string {
+  return `    ${abstractResolver.typeName}: {\n      ${abstractResolver.resolverKey}: ${abstractResolver.exportName},\n    },`;
+}
+
+function buildNumericEnumResolver(enumInfo: NumericEnumInfo): string {
+  const entries = enumInfo.members
+    .map((member) => `      ${member.name}: ${member.numericValue},`)
+    .join("\n");
+  return `    ${enumInfo.enumName}: {\n${entries}\n    },`;
+}
+
+function buildNumericEnumResolvers(
+  numericEnums: ReadonlyArray<NumericEnumInfo>,
+): string[] {
+  return numericEnums.map(buildNumericEnumResolver);
+}
+
 function buildTypeResolverEntry(
   type: TypeResolvers,
   abstractResolverForType: AbstractTypeResolverInfo | null,
@@ -207,12 +229,6 @@ function buildTypeResolverEntry(
   }
 
   return `    ${type.typeName}: {\n${entries.join("\n")}\n    },`;
-}
-
-function buildAbstractOnlyTypeEntry(
-  abstractResolver: AbstractTypeResolverInfo,
-): string {
-  return `    ${abstractResolver.typeName}: {\n      ${abstractResolver.resolverKey}: ${abstractResolver.exportName},\n    },`;
 }
 
 function buildTypeEntries(
@@ -262,6 +278,7 @@ export function emitResolversCode(
   resolverInfo: ResolverInfo,
   outputDir: string,
   customScalars: ReadonlyArray<CollectedScalarType> = [],
+  numericEnums: ReadonlyArray<NumericEnumInfo> = [],
 ): string {
   const hasCustomScalars = customScalars.length > 0;
   const imports: string[] = [];
@@ -279,19 +296,22 @@ export function emitResolversCode(
     imports.push(...scalarImports);
   }
 
+  const enumResolverEntries = buildNumericEnumResolvers(numericEnums);
   const typeEntries = buildTypeEntries(resolverInfo, customScalars);
+
+  const allEntries = [...enumResolverEntries, ...typeEntries];
 
   const functionSignature = hasCustomScalars
     ? `export function createResolvers({ scalars }: ${buildScalarsArgumentType(customScalars)})`
     : "export function createResolvers()";
 
+  const importSection = imports.length > 0 ? `${imports.join("\n")}\n\n` : "";
+
   return `${GENERATED_FILE_HEADER}
 
-${imports.join("\n")}
-
-${functionSignature} {
+${importSection}${functionSignature} {
   return {
-${typeEntries.join("\n")}
+${allEntries.join("\n")}
   };
 }
 `;

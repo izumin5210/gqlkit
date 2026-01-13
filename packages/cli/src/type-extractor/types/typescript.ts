@@ -83,6 +83,8 @@ export interface FieldDefinition {
 export interface EnumMemberInfo {
   readonly name: string;
   readonly value: string;
+  /** Numeric value for numeric enums, null for string enums */
+  readonly numericValue: number | null;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
   readonly sourceLocation: SourceLocation | null;

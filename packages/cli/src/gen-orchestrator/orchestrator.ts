@@ -16,6 +16,7 @@ import type {
   TypeExtension,
 } from "../resolver-extractor/index.js";
 import { generateSchema } from "../schema-generator/index.js";
+
 import {
   collectDiagnostics,
   convertTsTypeToGraphQLType,

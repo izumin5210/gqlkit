@@ -1,0 +1,22 @@
+[
+  {
+    "code": "DUPLICATE_ENUM_VALUE",
+    "message": "Enum 'Status' has duplicate numeric value 0 (used by ACTIVE and PENDING)",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 5,
+      "column": 1
+    }
+  },
+  {
+    "code": "UNRESOLVED_REFERENCE",
+    "message": "Field 'status' references unresolved type 'Status'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]
