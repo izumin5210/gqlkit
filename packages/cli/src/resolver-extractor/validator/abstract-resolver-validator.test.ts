@@ -247,13 +247,15 @@ describe("AbstractResolverValidator", () => {
         baseTypes,
       });
 
-      const errors = result.diagnostics.filter((d) => d.severity === "error");
-      expect(errors).toHaveLength(1);
-      expect(errors[0]).toMatchObject({
+      const invalidKindErrors = result.diagnostics.filter(
+        (d) => d.code === "INVALID_OBJECT_TYPE_KIND",
+      );
+      expect(invalidKindErrors).toHaveLength(1);
+      expect(invalidKindErrors[0]).toMatchObject({
         code: "INVALID_OBJECT_TYPE_KIND",
         severity: "error",
       });
-      expect(errors[0]?.message).toContain("SearchResult");
+      expect(invalidKindErrors[0]?.message).toContain("SearchResult");
     });
 
     it("should error when isTypeOf references an interface type", () => {
@@ -416,7 +418,7 @@ describe("AbstractResolverValidator", () => {
       });
 
       const errors = result.diagnostics.filter((d) => d.severity === "error");
-      expect(errors).toHaveLength(3);
+      expect(errors).toHaveLength(4);
       expect(
         errors.filter((d) => d.code === "UNKNOWN_ABSTRACT_TYPE"),
       ).toHaveLength(1);
@@ -425,6 +427,9 @@ describe("AbstractResolverValidator", () => {
       ).toHaveLength(1);
       expect(
         errors.filter((d) => d.code === "INVALID_OBJECT_TYPE_KIND"),
+      ).toHaveLength(1);
+      expect(
+        errors.filter((d) => d.code === "MISSING_ABSTRACT_TYPE_RESOLVER"),
       ).toHaveLength(1);
     });
   });
@@ -782,7 +787,7 @@ describe("AbstractResolverValidator", () => {
       expect(result.diagnostics).toHaveLength(1);
       expect(result.diagnostics[0]).toMatchObject({
         code: "MISSING_ABSTRACT_TYPE_RESOLVER",
-        severity: "warning",
+        severity: "error",
       });
       expect(result.diagnostics[0]?.message).toContain("SearchResult");
     });
@@ -879,7 +884,7 @@ describe("AbstractResolverValidator", () => {
       expect(result.diagnostics).toHaveLength(1);
       expect(result.diagnostics[0]).toMatchObject({
         code: "MISSING_ABSTRACT_TYPE_RESOLVER",
-        severity: "warning",
+        severity: "error",
       });
     });
   });
@@ -923,7 +928,7 @@ describe("AbstractResolverValidator", () => {
       expect(result.diagnostics).toHaveLength(1);
       expect(result.diagnostics[0]).toMatchObject({
         code: "MISSING_ABSTRACT_TYPE_RESOLVER",
-        severity: "warning",
+        severity: "error",
       });
       expect(result.diagnostics[0]?.message).toContain("Node");
     });
@@ -1037,7 +1042,7 @@ describe("AbstractResolverValidator", () => {
       expect(result.diagnostics).toHaveLength(1);
       expect(result.diagnostics[0]).toMatchObject({
         code: "MISSING_ABSTRACT_TYPE_RESOLVER",
-        severity: "warning",
+        severity: "error",
       });
     });
 
@@ -1110,8 +1115,8 @@ describe("AbstractResolverValidator", () => {
     });
   });
 
-  describe("9.4 Warning does not block code generation", () => {
-    it("should have severity 'warning' not 'error'", () => {
+  describe("9.4 Missing resolver blocks code generation", () => {
+    it("should have severity 'error'", () => {
       const abstractResolvers: AbstractResolverInfo[] = [];
       const baseTypes: BaseType[] = [
         {
@@ -1136,12 +1141,12 @@ describe("AbstractResolverValidator", () => {
       });
 
       expect(result.diagnostics).toHaveLength(1);
-      expect(result.diagnostics[0]?.severity).toBe("warning");
+      expect(result.diagnostics[0]?.severity).toBe("error");
     });
   });
 
   describe("Multiple abstract types missing resolvers", () => {
-    it("should warn for each abstract type missing resolvers", () => {
+    it("should error for each abstract type missing resolvers", () => {
       const abstractResolvers: AbstractResolverInfo[] = [];
       const baseTypes: BaseType[] = [
         {
@@ -1194,7 +1199,7 @@ describe("AbstractResolverValidator", () => {
           (d) => d.code === "MISSING_ABSTRACT_TYPE_RESOLVER",
         ),
       ).toBe(true);
-      expect(result.diagnostics.every((d) => d.severity === "warning")).toBe(
+      expect(result.diagnostics.every((d) => d.severity === "error")).toBe(
         true,
       );
     });

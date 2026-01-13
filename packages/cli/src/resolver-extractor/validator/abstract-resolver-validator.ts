@@ -108,7 +108,7 @@ function createMissingResolverDiagnostic(
   return {
     code: "MISSING_ABSTRACT_TYPE_RESOLVER",
     message: `${typeKind} type '${typeName}' has no resolveType defined, and not all ${memberLabel} types have isTypeOf defined. To prevent runtime errors, either define a resolveType for '${typeName}' or define isTypeOf for each ${memberLabel} type.`,
-    severity: "warning",
+    severity: "error",
     location: sourceFile ? { file: sourceFile, line: 1, column: 1 } : null,
   };
 }

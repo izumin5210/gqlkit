@@ -1,12 +1,1 @@
-[
-  {
-    "code": "MISSING_ABSTRACT_TYPE_RESOLVER",
-    "message": "Interface type 'Entity' has no resolveType defined, and not all implementing types have isTypeOf defined. To prevent runtime errors, either define a resolveType for 'Entity' or define isTypeOf for each implementing type.",
-    "severity": "warning",
-    "location": {
-      "file": "src/gqlkit/schema/interfaces.ts",
-      "line": 1,
-      "column": 1
-    }
-  }
-]
+[]
