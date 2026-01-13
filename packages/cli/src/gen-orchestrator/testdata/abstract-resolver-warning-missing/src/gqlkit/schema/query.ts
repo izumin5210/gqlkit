@@ -1,8 +1,4 @@
-import {
-  createGqlkitApis,
-  type IDString,
-  type NoArgs,
-} from "@gqlkit-ts/runtime";
+import { createGqlkitApis, type IDString } from "@gqlkit-ts/runtime";
 import type { Node, SearchResult } from "./types.js";
 
 type Context = unknown;
