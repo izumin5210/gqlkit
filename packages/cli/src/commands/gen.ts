@@ -12,6 +12,7 @@ import { createProgressReporter } from "../gen-orchestrator/reporter/progress-re
 
 export interface RunGenCommandOptions {
   readonly cwd: string;
+  readonly verbose?: boolean;
 }
 
 export interface RunGenCommandResult {
@@ -83,6 +84,15 @@ export async function runGenCommand(
   }
   progressReporter.complete();
 
+  if (options.verbose && result.numericEnums.length > 0) {
+    writer.stdout("\nNumeric enums detected:");
+    for (const enumInfo of result.numericEnums) {
+      writer.stdout(
+        `  - ${enumInfo.enumName} (${enumInfo.memberCount} members)`,
+      );
+    }
+  }
+
   const { hooks } = configResult.config;
   let hookFailed = false;
 
@@ -130,10 +140,15 @@ export const genCommand = define({
       type: "string",
       description: "Working directory for code generation",
     },
+    verbose: {
+      type: "boolean",
+      description: "Enable verbose output",
+    },
   },
   run: async (ctx) => {
     const cwd = ctx.values.cwd ?? process.cwd();
-    const result = await runGenCommand({ cwd });
+    const verbose = ctx.values.verbose ?? false;
+    const result = await runGenCommand({ cwd, verbose });
     if (result.exitCode !== 0) {
       process.exitCode = result.exitCode;
     }

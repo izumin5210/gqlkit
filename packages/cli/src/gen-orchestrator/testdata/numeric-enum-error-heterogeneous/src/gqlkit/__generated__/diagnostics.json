@@ -1,0 +1,22 @@
+[
+  {
+    "code": "UNSUPPORTED_ENUM_TYPE",
+    "message": "Heterogeneous enum 'MixedStatus' is not supported. Use a string enum instead.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 5,
+      "column": 1
+    }
+  },
+  {
+    "code": "UNRESOLVED_REFERENCE",
+    "message": "Field 'status' references unresolved type 'MixedStatus'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

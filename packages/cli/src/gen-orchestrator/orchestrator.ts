@@ -61,10 +61,16 @@ export interface GeneratedFile {
   readonly content: string;
 }
 
+export interface NumericEnumInfo {
+  readonly enumName: string;
+  readonly memberCount: number;
+}
+
 export interface GenerationResult {
   readonly success: boolean;
   readonly files: ReadonlyArray<GeneratedFile>;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
+  readonly numericEnums: ReadonlyArray<NumericEnumInfo>;
 }
 
 interface TypesResult {
@@ -589,6 +595,7 @@ export async function executeGeneration(
       success: false,
       files: [],
       diagnostics: normalizeDiagnosticPaths(ctx.diagnostics, config.cwd),
+      numericEnums: [],
     };
   }
 
@@ -600,6 +607,7 @@ export async function executeGeneration(
       success: false,
       files: [],
       diagnostics: normalizeDiagnosticPaths(ctx.diagnostics, config.cwd),
+      numericEnums: [],
     };
   }
 
@@ -609,6 +617,7 @@ export async function executeGeneration(
     success: true,
     files,
     diagnostics: normalizeDiagnosticPaths(ctx.diagnostics, config.cwd),
+    numericEnums: schemaResult.numericEnums,
   };
 }
 
