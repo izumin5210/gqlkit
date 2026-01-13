@@ -7,11 +7,15 @@
   "bin": {
     "gqlkit": "./dist/cli.js"
   },
+  "files": [
+    "dist",
+    "docs"
+  ],
   "keywords": [],
   "author": "izumin5210 <m@izum.in>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc --build && tsx scripts/bundle-docs.ts",
     "test": "pnpm -w vitest run --project=cli --typecheck",
     "typecheck": "tsc --noEmit"
   },
