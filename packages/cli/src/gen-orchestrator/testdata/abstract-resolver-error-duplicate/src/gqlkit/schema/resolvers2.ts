@@ -1,9 +1,5 @@
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
+import { defineIsTypeOf, defineResolveType } from "../gqlkit.js";
 import type { SearchResult, User } from "./types.js";
-
-type Context = unknown;
-
-const { defineResolveType, defineIsTypeOf } = createGqlkitApis<Context>();
 
 export const searchResultResolveType2 = defineResolveType<SearchResult>(
   (value) => {

@@ -1,9 +1,5 @@
-import {
-  createGqlkitApis,
-  type GqlField,
-  type Int,
-  type NoArgs,
-} from "@gqlkit-ts/runtime";
+import type { GqlField, Int, NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit.js";
 
 // Bug 1: Type reference (NestedConfig) should resolve to actual type name, not __type
 export type NestedConfig = {
@@ -36,8 +32,6 @@ export type Settings = {
   name: string;
   config: NestedConfig;
 };
-
-const { defineQuery } = createGqlkitApis();
 
 export const settings = defineQuery<SettingsInput, Settings>(() => ({
   name: "test",

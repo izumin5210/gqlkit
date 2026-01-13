@@ -1,9 +1,5 @@
-import {
-  createGqlkitApis,
-  type GqlDirective,
-  type GqlField,
-  type NoArgs,
-} from "@gqlkit-ts/runtime";
+import type { GqlDirective, GqlField, NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit.js";
 
 type InternalAuthDirective<TArgs extends { role: string[] }> = GqlDirective<
   "auth",
@@ -18,5 +14,4 @@ export type User = {
   >;
 };
 
-const { defineQuery } = createGqlkitApis();
 export const user = defineQuery<NoArgs, User | null>(() => null);

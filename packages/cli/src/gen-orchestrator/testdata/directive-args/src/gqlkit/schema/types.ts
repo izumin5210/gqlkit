@@ -1,9 +1,5 @@
-import {
-  createGqlkitApis,
-  type GqlDirective,
-  type GqlField,
-  type NoArgs,
-} from "@gqlkit-ts/runtime";
+import type { GqlDirective, GqlField, NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit.js";
 
 export type Scope = "PUBLIC" | "PRIVATE";
 
@@ -24,7 +20,6 @@ export type Data = {
   >;
 };
 
-const { defineQuery } = createGqlkitApis();
 export const data = defineQuery<NoArgs, Data>(() => ({
   cached: "",
   logged: "",

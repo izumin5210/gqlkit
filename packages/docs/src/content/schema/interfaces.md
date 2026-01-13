@@ -149,10 +149,9 @@ type Post @cache(maxAge: 60) implements Node & Timestamped {
 Add computed fields to interface types using `defineField`:
 
 ```typescript
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import { defineField } from "../gqlkit";
+import type { NoArgs } from "@gqlkit-ts/runtime";
 import type { Node } from "./node.js";
-
-const { defineField } = createGqlkitApis<Context>();
 
 /** Get the typename of a Node */
 export const __typename = defineField<Node, NoArgs, string>(
@@ -167,7 +166,7 @@ See [Object Types](./objects.md) for more details on implementing interfaces.
 When GraphQL executes a query that returns an interface type, it needs to determine the concrete type at runtime. You can use either `defineResolveType` on the interface or `defineIsTypeOf` on each implementing type.
 
 ```typescript
-const { defineResolveType } = createGqlkitApis<Context>();
+import { defineResolveType } from "../gqlkit";
 
 export const nodeResolveType = defineResolveType<Node>((value) => {
   if ("name" in value) return "User";

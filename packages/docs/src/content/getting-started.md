@@ -24,10 +24,32 @@ gqlkit expects your types and resolvers to be in `src/gqlkit/schema/`:
 ```
 src/
 └── gqlkit/
+    ├── context.ts       # Context type definition
+    ├── gqlkit.ts        # Resolver factories
     └── schema/
         ├── user.ts      # User type and resolvers
         ├── post.ts      # Post type and resolvers
         └── query.ts     # Query resolvers
+```
+
+## Set Up Context and Resolver Factories
+
+Create `src/gqlkit/context.ts` to define your context type:
+
+```typescript
+export type Context = {
+  currentUser: { id: string; name: string; email: string | null } | null;
+};
+```
+
+Create `src/gqlkit/gqlkit.ts` to export resolver factories:
+
+```typescript
+import { createGqlkitApis } from "@gqlkit-ts/runtime";
+import type { Context } from "./context";
+
+export const { defineQuery, defineMutation, defineField } =
+  createGqlkitApis<Context>();
 ```
 
 ## Define Your First Type
@@ -47,14 +69,9 @@ export type User = {
 Create a query resolver in `src/gqlkit/schema/query.ts`:
 
 ```typescript
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit";
+import type { NoArgs } from "@gqlkit-ts/runtime";
 import type { User } from "./user";
-
-type Context = {
-  currentUser: User | null;
-};
-
-const { defineQuery } = createGqlkitApis<Context>();
 
 export const me = defineQuery<NoArgs, User | null>(
   (_root, _args, ctx) => ctx.currentUser

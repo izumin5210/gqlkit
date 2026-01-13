@@ -5,7 +5,7 @@
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 20,
+      "line": 17,
       "column": 38
     }
   },
@@ -15,7 +15,7 @@
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 37,
+      "line": 34,
       "column": 41
     }
   },
@@ -25,7 +25,7 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 28,
+      "line": 25,
       "column": 39
     }
   }

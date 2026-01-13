@@ -115,11 +115,10 @@ type Post @cache(maxAge: 60) {
 Add a third type parameter to `defineQuery`, `defineMutation`, or `defineField`:
 
 ```typescript
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit";
+import type { NoArgs } from "@gqlkit-ts/runtime";
 import { type AuthDirective } from "./directives.js";
 import type { User } from "./user.js";
-
-const { defineQuery } = createGqlkitApis<Context>();
 
 // Query field with directive
 export const me = defineQuery<
@@ -140,10 +139,9 @@ type Query {
 ## Attaching Directives to Field Resolvers
 
 ```typescript
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import { defineField } from "../gqlkit";
+import type { NoArgs } from "@gqlkit-ts/runtime";
 import { type AuthDirective } from "./directives.js";
-
-const { defineField } = createGqlkitApis<Context>();
 
 export const email = defineField<
   User,

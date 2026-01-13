@@ -1,8 +1,4 @@
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
-
-type Context = unknown;
-
-const { defineMutation } = createGqlkitApis<Context>();
+import { defineMutation } from "../gqlkit.js";
 
 export type Result = {
   success: boolean;

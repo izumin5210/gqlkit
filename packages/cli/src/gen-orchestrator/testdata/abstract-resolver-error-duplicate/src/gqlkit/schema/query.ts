@@ -1,8 +1,4 @@
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit.js";
 import type { SearchResult } from "./types.js";
-
-type Context = unknown;
-
-const { defineQuery } = createGqlkitApis<Context>();
 
 export const search = defineQuery<{ query: string }, SearchResult[]>(() => []);

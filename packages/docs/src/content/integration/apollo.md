@@ -53,16 +53,27 @@ console.log(`Server is running on ${url}`);
 If your resolvers use a context type, provide a context factory:
 
 ```typescript
-// src/gqlkit/schema/query.ts
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
-import type { User } from "./user";
-
+// src/gqlkit/context.ts
 export type Context = {
   currentUser: User | null;
   db: Database;
 };
+```
 
-const { defineQuery } = createGqlkitApis<Context>();
+```typescript
+// src/gqlkit/gqlkit.ts
+import { createGqlkitApis } from "@gqlkit-ts/runtime";
+import type { Context } from "./context";
+
+export const { defineQuery, defineMutation, defineField } =
+  createGqlkitApis<Context>();
+```
+
+```typescript
+// src/gqlkit/schema/query.ts
+import { defineQuery } from "../gqlkit";
+import type { NoArgs } from "@gqlkit-ts/runtime";
+import type { User } from "./user";
 
 export const me = defineQuery<NoArgs, User | null>(
   (_root, _args, ctx) => ctx.currentUser
@@ -74,7 +85,7 @@ export const me = defineQuery<NoArgs, User | null>(
 import { ApolloServer } from "@apollo/server";
 import { startStandaloneServer } from "@apollo/server/standalone";
 import { schema } from "./schema";
-import type { Context } from "./gqlkit/schema/query";
+import type { Context } from "./gqlkit/context";
 
 const server = new ApolloServer<Context>({ schema });
 

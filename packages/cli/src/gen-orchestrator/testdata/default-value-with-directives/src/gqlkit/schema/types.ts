@@ -1,10 +1,5 @@
-import {
-  createGqlkitApis,
-  type GqlDirective,
-  type GqlField,
-  type Int,
-  type NoArgs,
-} from "@gqlkit-ts/runtime";
+import type { GqlDirective, GqlField, Int, NoArgs } from "@gqlkit-ts/runtime";
+import { defineMutation, defineQuery } from "../gqlkit.js";
 
 export type LengthDirective<TArgs extends { min: number; max: number }> =
   GqlDirective<
@@ -50,8 +45,6 @@ export type User = {
   age: Int;
   email: string | null;
 };
-
-const { defineQuery, defineMutation } = createGqlkitApis();
 
 export const user = defineQuery<NoArgs, User | null>(() => null);
 

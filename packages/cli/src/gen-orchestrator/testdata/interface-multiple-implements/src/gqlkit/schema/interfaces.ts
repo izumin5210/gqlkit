@@ -1,9 +1,5 @@
-import {
-  createGqlkitApis,
-  type GqlInterface,
-  type GqlScalar,
-  type IDString,
-} from "@gqlkit-ts/runtime";
+import type { GqlInterface, GqlScalar, IDString } from "@gqlkit-ts/runtime";
+import { defineResolveType } from "../gqlkit.js";
 
 /**
  * Custom DateTime scalar.
@@ -24,9 +20,6 @@ export type Timestamped = GqlInterface<{
   createdAt: DateTime;
   updatedAt: DateTime;
 }>;
-
-type Context = unknown;
-const { defineResolveType } = createGqlkitApis<Context>();
 
 export const nodeResolveType = defineResolveType<Node>(() => "Post");
 export const timestampedResolveType = defineResolveType<Timestamped>(

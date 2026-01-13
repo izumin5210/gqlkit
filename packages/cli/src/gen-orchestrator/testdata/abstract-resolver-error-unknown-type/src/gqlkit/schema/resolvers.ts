@@ -1,6 +1,4 @@
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
-
-type Context = unknown;
+import { defineIsTypeOf, defineResolveType } from "../gqlkit.js";
 
 interface NonExistentUnion {
   id: string;
@@ -9,8 +7,6 @@ interface NonExistentUnion {
 interface NonExistentObject {
   id: string;
 }
-
-const { defineResolveType, defineIsTypeOf } = createGqlkitApis<Context>();
 
 export const nonExistentResolveType = defineResolveType<NonExistentUnion>(
   () => "SomeType",

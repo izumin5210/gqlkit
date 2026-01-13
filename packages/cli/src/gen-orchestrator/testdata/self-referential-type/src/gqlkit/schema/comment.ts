@@ -1,13 +1,5 @@
-import {
-  createGqlkitApis,
-  type GqlObject,
-  type IDString,
-  type NoArgs,
-} from "@gqlkit-ts/runtime";
-
-type Context = unknown;
-
-const { defineQuery, defineField } = createGqlkitApis<Context>();
+import type { GqlObject, IDString, NoArgs } from "@gqlkit-ts/runtime";
+import { defineField, defineQuery } from "../gqlkit.js";
 
 /**
  * A comment that can have nested replies (self-referential type).

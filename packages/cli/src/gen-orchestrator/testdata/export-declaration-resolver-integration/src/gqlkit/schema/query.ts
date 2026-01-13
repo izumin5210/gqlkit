@@ -1,15 +1,11 @@
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import type { NoArgs } from "@gqlkit-ts/runtime";
+import { defineField, defineMutation, defineQuery } from "../gqlkit.js";
 import type {
   Comment,
   CreatePostInput,
   Post,
   UpdatePostInput,
 } from "./types.js";
-
-type Context = unknown;
-
-const { defineField, defineMutation, defineQuery } =
-  createGqlkitApis<Context>();
 
 export const posts = defineQuery<NoArgs, Post[]>(() => []);
 
