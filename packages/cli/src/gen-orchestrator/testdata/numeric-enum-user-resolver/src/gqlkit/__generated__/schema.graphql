@@ -2,8 +2,6 @@
 
 """Defined in: src/gqlkit/schema/types.ts"""
 type User {
-  """Status with user-defined resolver"""
-  customStatus: UserStatus!
   id: String!
   name: String!
   """Status with auto resolver"""

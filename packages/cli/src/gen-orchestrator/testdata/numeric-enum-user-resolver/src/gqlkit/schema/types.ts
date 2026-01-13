@@ -16,8 +16,6 @@ export interface User {
   name: string;
   /** Status with auto resolver */
   status: UserStatus;
-  /** Status with user-defined resolver */
-  customStatus: UserStatus;
 }
 
 export const customStatus = defineField<User, NoArgs, UserStatus>(

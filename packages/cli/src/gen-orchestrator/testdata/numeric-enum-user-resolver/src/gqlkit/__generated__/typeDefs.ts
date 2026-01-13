@@ -16,28 +16,6 @@ export const typeDefs: DocumentNode = {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "customStatus"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "UserStatus"
-              }
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Status with user-defined resolver",
-            "block": true
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
             "value": "id"
           },
           "type": {
