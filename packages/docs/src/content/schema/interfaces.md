@@ -161,3 +161,19 @@ export const __typename = defineField<Node, NoArgs, string>(
 ```
 
 See [Object Types](./objects.md) for more details on implementing interfaces.
+
+## Runtime Type Resolution
+
+When GraphQL executes a query that returns an interface type, it needs to determine the concrete type at runtime. You can use either `defineResolveType` on the interface or `defineIsTypeOf` on each implementing type.
+
+```typescript
+const { defineResolveType } = createGqlkitApis<Context>();
+
+export const nodeResolveType = defineResolveType<Node>((value) => {
+  if ("name" in value) return "User";
+  if ("title" in value) return "Post";
+  throw new Error("Unknown Node type");
+});
+```
+
+See [Abstract Type Resolution](./abstract-resolvers.md) for complete documentation.
