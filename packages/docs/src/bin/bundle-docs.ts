@@ -4,11 +4,11 @@ import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import {
+  buildSections,
   HEADER_LINES,
   type PageInfo,
   type Section,
-  buildSections,
-} from "../lib/docs-parser.js";
+} from "../lib/docs-parser";
 
 const __dirname = path.dirname(fileURLToPath(import.meta.url));
 const CONTENT_DIR = path.resolve(__dirname, "../../src/content");

@@ -1,10 +1,10 @@
 import path from "node:path";
 import {
+  buildSections,
   HEADER_LINES,
   type PageInfo,
   type Section,
-  buildSections,
-} from "./docs-parser.js";
+} from "./docs-parser";
 
 const BASE_URL = "https://gqlkit.izumin.dev";
 const CONTENT_DIR = path.join(process.cwd(), "src/content");
