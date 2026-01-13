@@ -15,7 +15,7 @@
   "author": "izumin5210 <m@izum.in>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --build && tsx scripts/bundle-docs.ts",
+    "build": "tsc --build && bundle-docs --target ./docs",
     "test": "pnpm -w vitest run --project=cli --typecheck",
     "typecheck": "tsc --noEmit"
   },
@@ -38,6 +38,7 @@
     }
   },
   "devDependencies": {
+    "@gqlkit-ts/docs": "workspace:*",
     "@gqlkit-ts/runtime": "workspace:*",
     "@types/shell-quote": "1.7.5"
   }

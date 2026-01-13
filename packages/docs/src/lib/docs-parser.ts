@@ -2,15 +2,11 @@ import fs from "node:fs/promises";
 import path from "node:path";
 import vm from "node:vm";
 
-export interface BundlerConfig {
-  sourceDir: string;
-  targetDir: string;
-}
-
 export interface PageInfo {
   slug: string;
   title: string;
   description: string;
+  content: string;
 }
 
 export interface Section {
@@ -18,78 +14,40 @@ export interface Section {
   pages: PageInfo[];
 }
 
-type MetaValue =
+export type MetaValue =
   | string
   | { type: "separator"; title: string }
   | { title: string; theme?: unknown };
 
-type Meta = Record<string, MetaValue>;
+export type Meta = Record<string, MetaValue>;
 
-const SECTION_TITLES: Record<string, string> = {
-  schema: "Schema Definition",
-  integration: "Integration",
-};
-
-const HEADER_LINES = [
+export const HEADER_LINES = [
   "# gqlkit",
   "",
   "> gqlkit is a convention-driven code generator for GraphQL servers in TypeScript. Define GraphQL types and resolver signatures in TypeScript, then `gqlkit gen` generates GraphQL schema AST and a resolver map from your codebase.",
   "",
 ];
 
-export async function validateSourceDir(sourceDir: string): Promise<void> {
-  try {
-    const stat = await fs.stat(sourceDir);
-    if (!stat.isDirectory()) {
-      throw new Error(`Source directory not found: ${sourceDir}`);
-    }
-  } catch (err) {
-    if ((err as NodeJS.ErrnoException).code === "ENOENT") {
-      throw new Error(`Source directory not found: ${sourceDir}`);
-    }
-    throw err;
-  }
+export const SECTION_TITLES: Record<string, string> = {
+  schema: "Schema Definition",
+  integration: "Integration",
+};
+
+export async function loadMeta(dir: string): Promise<Meta> {
+  const metaPath = path.join(dir, "_meta.js");
+  const content = await fs.readFile(metaPath, "utf-8");
+  const code = content.replace("export default", "module.exports =");
+  const context = { module: { exports: {} } };
+  vm.runInNewContext(code, context);
+  return context.module.exports as Meta;
 }
 
-export async function clearDocsDir(targetDir: string): Promise<void> {
-  try {
-    await fs.rm(targetDir, { recursive: true, force: true });
-  } catch {
-    // Directory might not exist, that's fine
-  }
-  await fs.mkdir(targetDir, { recursive: true });
-}
-
-async function findMarkdownFiles(
-  dir: string,
-  baseDir: string,
-): Promise<string[]> {
-  const files: string[] = [];
-  const entries = await fs.readdir(dir, { withFileTypes: true });
-
-  for (const entry of entries) {
-    const fullPath = path.join(dir, entry.name);
-    if (entry.isDirectory()) {
-      const subFiles = await findMarkdownFiles(fullPath, baseDir);
-      files.push(...subFiles);
-    } else if (entry.isFile() && entry.name.endsWith(".md")) {
-      files.push(path.relative(baseDir, fullPath));
-    }
-  }
-
-  return files;
-}
-
-export async function copyMarkdownFiles(config: BundlerConfig): Promise<void> {
-  const mdFiles = await findMarkdownFiles(config.sourceDir, config.sourceDir);
-
-  for (const relPath of mdFiles) {
-    const sourcePath = path.join(config.sourceDir, relPath);
-    const targetPath = path.join(config.targetDir, relPath);
-
-    await fs.mkdir(path.dirname(targetPath), { recursive: true });
-    await fs.copyFile(sourcePath, targetPath);
-  }
+export function isSeparator(
+  value: MetaValue,
+): value is { type: "separator"; title: string } {
+  return (
+    typeof value === "object" && "type" in value && value.type === "separator"
+  );
 }
 
 export async function extractPageInfo(
@@ -134,24 +92,7 @@ export async function extractPageInfo(
     }
   }
 
-  return { slug, title, description };
-}
-
-function isSeparator(
-  value: MetaValue,
-): value is { type: "separator"; title: string } {
-  return (
-    typeof value === "object" && "type" in value && value.type === "separator"
-  );
-}
-
-async function loadMeta(dir: string): Promise<Meta> {
-  const metaPath = path.join(dir, "_meta.js");
-  const content = await fs.readFile(metaPath, "utf-8");
-  const code = content.replace("export default", "module.exports =");
-  const context = { module: { exports: {} } };
-  vm.runInNewContext(code, context);
-  return context.module.exports as Meta;
+  return { slug, title, description, content };
 }
 
 async function loadSubdirectoryPages(
@@ -223,36 +164,4 @@ export async function buildSections(sourceDir: string): Promise<Section[]> {
   }
 
   return sections;
-}
-
-export function formatLink(page: PageInfo): string {
-  const filePath = page.slug.includes("/")
-    ? `./${page.slug}.md`
-    : `./${page.slug}.md`;
-  return `- [${page.title}](${filePath}): ${page.description}`;
-}
-
-export function generateIndex(sections: Section[]): string {
-  const lines: string[] = [...HEADER_LINES];
-
-  for (const section of sections) {
-    lines.push(`## ${section.title}`);
-    lines.push("");
-    for (const page of section.pages) {
-      lines.push(formatLink(page));
-    }
-    lines.push("");
-  }
-
-  return lines.join("\n");
-}
-
-export async function run(config: BundlerConfig): Promise<void> {
-  await validateSourceDir(config.sourceDir);
-  await clearDocsDir(config.targetDir);
-  await copyMarkdownFiles(config);
-
-  const sections = await buildSections(config.sourceDir);
-  const indexContent = generateIndex(sections);
-  await fs.writeFile(path.join(config.targetDir, "index.md"), indexContent);
 }
