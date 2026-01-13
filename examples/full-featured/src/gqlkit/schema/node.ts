@@ -1,5 +1,5 @@
 import type { GqlInterface, IDString, NoArgs } from "@gqlkit-ts/runtime";
-import { defineField, defineQuery } from "../gqlkit.js";
+import { defineField, defineQuery, defineResolveType } from "../gqlkit.js";
 import type { DateTime } from "./scalars.js";
 
 /**
@@ -50,3 +50,23 @@ export const node = defineQuery<{ id: string }, Node | null>((_root, args) => {
  * In a real implementation, this would resolve the actual type.
  */
 export const __typename = defineField<Node, NoArgs, string>(() => "Node");
+
+export const nodeResolveType = defineResolveType<Node>((value) => {
+  if ("title" in value) {
+    return "Post";
+  }
+  if ("postId" in value) {
+    return "Comment";
+  }
+  return "User";
+});
+
+export const timestampedResolveType = defineResolveType<Timestamped>((value) => {
+  if ("title" in value) {
+    return "Post";
+  }
+  if ("postId" in value) {
+    return "Comment";
+  }
+  return "User";
+});
