@@ -1,0 +1,32 @@
+[
+  {
+    "code": "INVALID_ABSTRACT_TYPE_KIND",
+    "message": "Type 'User' is object type, but resolveType can only be used with union or interface types. The resolver 'userResolveType' must reference an abstract type.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 19,
+      "column": 14
+    }
+  },
+  {
+    "code": "INVALID_OBJECT_TYPE_KIND",
+    "message": "Type 'SearchResult' is union type, but isTypeOf can only be used with object types. The resolver 'searchResultIsTypeOf' must reference an object type.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 21,
+      "column": 14
+    }
+  },
+  {
+    "code": "MISSING_ABSTRACT_TYPE_RESOLVER",
+    "message": "Union type 'SearchResult' has no resolveType defined, and not all member types have isTypeOf defined. To prevent runtime errors, either define a resolveType for 'SearchResult' or define isTypeOf for each member type.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

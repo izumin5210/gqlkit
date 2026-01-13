@@ -1,4 +1,9 @@
-import type { GqlInterface, GqlScalar, IDString } from "@gqlkit-ts/runtime";
+import {
+  createGqlkitApis,
+  type GqlInterface,
+  type GqlScalar,
+  type IDString,
+} from "@gqlkit-ts/runtime";
 
 /**
  * Custom DateTime scalar.
@@ -32,3 +37,8 @@ export type Entity = GqlInterface<
   },
   { implements: [Node, Timestamped] }
 >;
+
+type Context = unknown;
+const { defineResolveType } = createGqlkitApis<Context>();
+
+export const entityResolveType = defineResolveType<Entity>(() => "Article");

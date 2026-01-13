@@ -40,6 +40,8 @@ import type {
 
 export type DefineApiResolverType = "query" | "mutation" | "field";
 
+export type AbstractResolverKind = "resolveType" | "isTypeOf";
+
 export interface ExportedInputType {
   readonly name: string;
   readonly tsType: TSTypeReference;
@@ -69,12 +71,116 @@ export interface DefineApiResolverInfo {
   readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
+export interface AbstractResolverInfo {
+  readonly kind: AbstractResolverKind;
+  readonly targetTypeName: string;
+  readonly exportName: string;
+  readonly sourceFile: string;
+  readonly sourceLocation: {
+    readonly file: string;
+    readonly line: number;
+    readonly column: number;
+  };
+}
+
 export interface ExtractDefineApiResult {
   readonly resolvers: ReadonlyArray<DefineApiResolverInfo>;
+  readonly abstractTypeResolvers: ReadonlyArray<AbstractResolverInfo>;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
 const RESOLVER_METADATA_PROPERTY = METADATA_PROPERTIES.RESOLVER;
+const ABSTRACT_RESOLVER_METADATA_PROPERTY =
+  METADATA_PROPERTIES.ABSTRACT_RESOLVER;
+
+/**
+ * Detects abstract resolver kind and target type from metadata embedded in the type.
+ * Returns null if no abstract resolver metadata is found.
+ */
+function detectAbstractResolverFromMetadataType(
+  callExpr: ts.CallExpression,
+  checker: ts.TypeChecker,
+): { kind: AbstractResolverKind; targetTypeName: string } | null {
+  const returnType = checker.getTypeAtLocation(callExpr);
+
+  const metadataProp = returnType.getProperty(
+    ABSTRACT_RESOLVER_METADATA_PROPERTY,
+  );
+  if (!metadataProp) {
+    return null;
+  }
+
+  const metadataType = checker.getTypeOfSymbol(metadataProp);
+  const actualType = getActualMetadataType(metadataType);
+  if (!actualType) {
+    return null;
+  }
+
+  const kindProp = actualType.getProperty("kind");
+  if (!kindProp) {
+    return null;
+  }
+
+  const kindType = checker.getTypeOfSymbol(kindProp);
+  if (!kindType.isStringLiteral()) {
+    return null;
+  }
+
+  const kind = kindType.value;
+  if (kind !== "resolveType" && kind !== "isTypeOf") {
+    return null;
+  }
+
+  const targetTypeProp = actualType.getProperty("targetType");
+  if (!targetTypeProp) {
+    return null;
+  }
+
+  const targetType = checker.getTypeOfSymbol(targetTypeProp);
+  const targetTypeName = extractTypeNameFromType(targetType, checker);
+
+  if (!targetTypeName) {
+    return null;
+  }
+
+  return { kind, targetTypeName };
+}
+
+/**
+ * Extracts a type name from a TypeScript type.
+ * Handles internal type symbols (like __type) by falling back to typeToString.
+ * Returns null for unresolvable types (any, unknown).
+ */
+function extractTypeNameFromType(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+): string | null {
+  if (type.flags & ts.TypeFlags.Any) {
+    return null;
+  }
+
+  if (type.aliasSymbol) {
+    const aliasName = type.aliasSymbol.getName();
+    if (!isInternalTypeSymbol(aliasName)) {
+      return aliasName;
+    }
+  }
+
+  const symbol = type.getSymbol();
+  if (symbol) {
+    const symbolName = symbol.getName();
+    if (!isInternalTypeSymbol(symbolName)) {
+      return symbolName;
+    }
+  }
+
+  const typeString = checker.typeToString(type);
+  if (typeString && typeString !== "unknown" && typeString !== "any") {
+    return typeString;
+  }
+
+  return null;
+}
 
 /**
  * Detects resolver type from metadata embedded in the type.
@@ -767,6 +873,7 @@ export function extractDefineApiResolvers(
 ): ExtractDefineApiResult {
   const checker = program.getTypeChecker();
   const resolvers: DefineApiResolverInfo[] = [];
+  const abstractTypeResolvers: AbstractResolverInfo[] = [];
   const diagnostics: Diagnostic[] = [];
 
   for (const filePath of files) {
@@ -814,6 +921,25 @@ export function extractDefineApiResolvers(
                 location: getSourceLocationFromNode(declaration.name),
               });
             }
+          }
+          continue;
+        }
+
+        const abstractResolverInfo = detectAbstractResolverFromMetadataType(
+          initializer,
+          checker,
+        );
+
+        if (abstractResolverInfo) {
+          const sourceLocation = getSourceLocationFromNode(declaration.name);
+          if (sourceLocation) {
+            abstractTypeResolvers.push({
+              kind: abstractResolverInfo.kind,
+              targetTypeName: abstractResolverInfo.targetTypeName,
+              exportName: fieldName,
+              sourceFile: filePath,
+              sourceLocation,
+            });
           }
           continue;
         }
@@ -868,5 +994,5 @@ export function extractDefineApiResolvers(
     });
   }
 
-  return { resolvers, diagnostics };
+  return { resolvers, abstractTypeResolvers, diagnostics };
 }

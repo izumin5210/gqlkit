@@ -5,6 +5,7 @@ import type {
   ResolvedScalarMapping,
 } from "../config-loader/index.js";
 import {
+  type AbstractResolverInfo,
   type ArgumentDefinition,
   type DefineApiResolverInfo,
   extractDefineApiResolvers,
@@ -79,6 +80,7 @@ interface ResolversResult {
   queryFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
   mutationFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
   typeExtensions: ReadonlyArray<TypeExtension>;
+  abstractTypeResolvers: ReadonlyArray<AbstractResolverInfo>;
   diagnostics: Diagnostics;
 }
 
@@ -240,9 +242,14 @@ function convertDefineApiToFields(
 }
 
 function normalizePathInMessage(message: string, sourceRoot: string): string {
-  const escapedSourceRoot = sourceRoot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const normalizedSourceRoot = toPosixPath(sourceRoot);
+  const normalizedMessage = message.replaceAll("\\", "/");
+  const escapedSourceRoot = normalizedSourceRoot.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&",
+  );
   const pattern = new RegExp(`${escapedSourceRoot}/`, "g");
-  return message.replace(pattern, "");
+  return normalizedMessage.replace(pattern, "");
 }
 
 function normalizeDiagnosticPaths(
@@ -287,6 +294,7 @@ function extractResolversCore(
     queryFields: result.queryFields,
     mutationFields: result.mutationFields,
     typeExtensions: result.typeExtensions,
+    abstractTypeResolvers: defineApiExtractionResult.abstractTypeResolvers,
     diagnostics: collectDiagnostics(allDiagnostics),
   };
 }

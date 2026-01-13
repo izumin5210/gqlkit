@@ -4,5 +4,5 @@ export type Context = {
   currentUserId: string | null;
 };
 
-export const { defineQuery, defineMutation, defineField } =
+export const { defineQuery, defineMutation, defineField, defineResolveType } =
   createGqlkitApis<Context>();

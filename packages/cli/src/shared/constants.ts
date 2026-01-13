@@ -78,6 +78,8 @@ export const METADATA_PROPERTIES = {
   SCALAR: " $gqlkitScalar",
   /** Resolver metadata */
   RESOLVER: " $gqlkitResolver",
+  /** Abstract resolver metadata (resolveType, isTypeOf) */
+  ABSTRACT_RESOLVER: " $gqlkitAbstractResolver",
   /** Interface metadata */
   INTERFACE_META: " $gqlkitInterfaceMeta",
 } as const;

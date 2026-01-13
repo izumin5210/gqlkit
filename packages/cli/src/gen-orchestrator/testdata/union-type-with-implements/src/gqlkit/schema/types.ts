@@ -1,4 +1,9 @@
-import type { GqlInterface, GqlObject, IDString } from "@gqlkit-ts/runtime";
+import {
+  createGqlkitApis,
+  type GqlInterface,
+  type GqlObject,
+  type IDString,
+} from "@gqlkit-ts/runtime";
 
 /**
  * Node interface - represents any entity with a unique identifier.
@@ -33,3 +38,18 @@ export type Post = GqlObject<
  * Union type of User and Post (both implementing Node via GqlObject).
  */
 export type SearchResult = User | Post;
+
+type Context = unknown;
+const { defineResolveType } = createGqlkitApis<Context>();
+
+export const nodeResolveType = defineResolveType<Node>((value) => {
+  if ("name" in value) return "User";
+  return "Post";
+});
+
+export const searchResultResolveType = defineResolveType<SearchResult>(
+  (value) => {
+    if ("name" in value) return "User";
+    return "Post";
+  },
+);

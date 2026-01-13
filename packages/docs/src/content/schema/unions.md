@@ -73,3 +73,20 @@ export type Node = GqlInterface<{
 ```
 
 See [Interfaces](./interfaces.md) for more details on interface types.
+
+## Runtime Type Resolution
+
+When GraphQL executes a query that returns a union type, it needs to determine the concrete type at runtime. Use `defineResolveType` to handle this:
+
+```typescript
+const { defineResolveType } = createGqlkitApis<Context>();
+
+export const searchResultResolveType = defineResolveType<SearchResult>(
+  (value) => {
+    if ("name" in value) return "User";
+    return "Post";
+  }
+);
+```
+
+See [Abstract Type Resolution](./abstract-resolvers.md) for complete documentation.

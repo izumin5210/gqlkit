@@ -20,6 +20,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,
+      abstractTypeResolvers: [],
       diagnostics: [],
     });
 
@@ -54,6 +55,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,
+      abstractTypeResolvers: [],
       diagnostics: [],
     });
 
@@ -87,6 +89,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,
+      abstractTypeResolvers: [],
       diagnostics: [],
     });
 
@@ -126,6 +129,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,
+      abstractTypeResolvers: [],
       diagnostics: [],
     });
 
@@ -169,6 +173,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,
+      abstractTypeResolvers: [],
       diagnostics: [],
     });
 
@@ -203,6 +208,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,
+      abstractTypeResolvers: [],
       diagnostics: [],
     });
 
@@ -228,6 +234,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,
+      abstractTypeResolvers: [],
       diagnostics: [],
     });
 
@@ -249,6 +256,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,
+      abstractTypeResolvers: [],
       diagnostics: [],
     });
 
@@ -302,6 +310,7 @@ describe("buildDeprecatedDirective", () => {
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,
+      abstractTypeResolvers: [],
       diagnostics: [],
     });
 
@@ -370,6 +379,7 @@ describe("buildDeprecatedDirective", () => {
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,
+      abstractTypeResolvers: [],
       diagnostics: [],
     });
 
@@ -437,6 +447,7 @@ describe("buildDeprecatedDirective", () => {
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,
+      abstractTypeResolvers: [],
       diagnostics: [],
     });
 
@@ -505,6 +516,7 @@ describe("buildDeprecatedDirective", () => {
       hasQuery: false,
       hasMutation: false,
       hasErrors: false,
+      abstractTypeResolvers: [],
       diagnostics: [],
     });
 

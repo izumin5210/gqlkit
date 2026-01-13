@@ -16,6 +16,7 @@ export default {
   enums: "Enums",
   unions: "Unions",
   interfaces: "Interfaces",
+  "abstract-resolvers": "Abstract Type Resolution",
   "-- Features": {
     type: "separator",
     title: "Features",

@@ -8,6 +8,10 @@ export type {
   TypeExtension,
 } from "./extract-resolvers.js";
 export type {
+  AbstractResolverInfo,
+  AbstractResolverKind,
+} from "./extractor/define-api-extractor.js";
+export type {
   OnlyConstraintViolation,
   OnlyConstraintViolationCode,
   ValidateOnlyConstraintsOptions,

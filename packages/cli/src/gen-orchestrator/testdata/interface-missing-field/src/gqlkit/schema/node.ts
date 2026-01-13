@@ -1,4 +1,8 @@
-import type { GqlInterface, IDString } from "@gqlkit-ts/runtime";
+import {
+  createGqlkitApis,
+  type GqlInterface,
+  type IDString,
+} from "@gqlkit-ts/runtime";
 
 /**
  * Node interface for global identification.
@@ -6,3 +10,8 @@ import type { GqlInterface, IDString } from "@gqlkit-ts/runtime";
 export type Node = GqlInterface<{
   id: IDString;
 }>;
+
+type Context = unknown;
+const { defineResolveType } = createGqlkitApis<Context>();
+
+export const nodeResolveType = defineResolveType<Node>(() => "User");

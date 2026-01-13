@@ -1,0 +1,22 @@
+[
+  {
+    "code": "DUPLICATE_RESOLVE_TYPE",
+    "message": "Multiple resolveType definitions found for type 'SearchResult':\n  - searchResultResolveType1 at src/gqlkit/schema/resolvers1.ts:8:14\n  - searchResultResolveType2 at src/gqlkit/schema/resolvers2.ts:8:14",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/resolvers1.ts",
+      "line": 8,
+      "column": 14
+    }
+  },
+  {
+    "code": "DUPLICATE_IS_TYPE_OF",
+    "message": "Multiple isTypeOf definitions found for type 'User':\n  - userIsTypeOf1 at src/gqlkit/schema/resolvers1.ts:17:14\n  - userIsTypeOf2 at src/gqlkit/schema/resolvers2.ts:17:14",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/resolvers1.ts",
+      "line": 17,
+      "column": 14
+    }
+  }
+]

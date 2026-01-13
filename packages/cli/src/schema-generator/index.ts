@@ -12,6 +12,7 @@ export type {
   TypeExtension,
 } from "./integrator/result-integrator.js";
 export type {
+  AbstractTypeResolverInfo,
   FieldResolver,
   ResolverInfo,
   TypeResolvers,

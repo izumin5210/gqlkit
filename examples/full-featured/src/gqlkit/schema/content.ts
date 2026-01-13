@@ -1,4 +1,4 @@
-import { defineQuery } from "../gqlkit.js";
+import { defineQuery, defineResolveType } from "../gqlkit.js";
 import type { Comment } from "./comment.js";
 import type { Post } from "./post.js";
 
@@ -35,5 +35,23 @@ export const search = defineQuery<{ query: string }, SearchResult[]>(
       (p) =>
         p.title.toLowerCase().includes(q) || p.body.toLowerCase().includes(q),
     );
+  },
+);
+
+export const searchResultResolveType = defineResolveType<SearchResult>(
+  (value) => {
+    if ("title" in value) {
+      return "Post";
+    }
+    return "Comment";
+  },
+);
+
+export const timelineItemResolveType = defineResolveType<TimelineItem>(
+  (value) => {
+    if ("title" in value) {
+      return "Post";
+    }
+    return "Comment";
   },
 );
