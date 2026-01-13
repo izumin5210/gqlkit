@@ -15,12 +15,7 @@ import type {
   GraphQLInputValue,
   TypeExtension,
 } from "../resolver-extractor/index.js";
-import {
-  generateSchema,
-  type NumericEnumSummary,
-} from "../schema-generator/index.js";
-
-export type { NumericEnumSummary } from "../schema-generator/index.js";
+import { generateSchema } from "../schema-generator/index.js";
 
 import {
   collectDiagnostics,
@@ -71,7 +66,6 @@ export interface GenerationResult {
   readonly success: boolean;
   readonly files: ReadonlyArray<GeneratedFile>;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
-  readonly numericEnums: ReadonlyArray<NumericEnumSummary>;
 }
 
 interface TypesResult {
@@ -596,7 +590,6 @@ export async function executeGeneration(
       success: false,
       files: [],
       diagnostics: normalizeDiagnosticPaths(ctx.diagnostics, config.cwd),
-      numericEnums: [],
     };
   }
 
@@ -608,7 +601,6 @@ export async function executeGeneration(
       success: false,
       files: [],
       diagnostics: normalizeDiagnosticPaths(ctx.diagnostics, config.cwd),
-      numericEnums: [],
     };
   }
 
@@ -618,7 +610,6 @@ export async function executeGeneration(
     success: true,
     files,
     diagnostics: normalizeDiagnosticPaths(ctx.diagnostics, config.cwd),
-    numericEnums: schemaResult.numericEnums,
   };
 }
 
