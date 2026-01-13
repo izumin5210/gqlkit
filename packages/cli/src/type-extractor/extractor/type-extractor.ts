@@ -570,21 +570,6 @@ function extractFieldsFromType(
   return { fields, diagnostics };
 }
 
-function isNumericEnum(node: ts.Node): boolean {
-  if (!ts.isEnumDeclaration(node)) return false;
-  const members = node.members;
-  if (members.length === 0) return true;
-
-  return members.every((member) => {
-    const initializer = member.initializer;
-    if (initializer === undefined) return true;
-    return (
-      ts.isNumericLiteral(initializer) ||
-      ts.isPrefixUnaryExpression(initializer)
-    );
-  });
-}
-
 function isHeterogeneousEnum(node: ts.Node): boolean {
   if (!ts.isEnumDeclaration(node)) return false;
   const members = node.members;
@@ -644,19 +629,33 @@ function extractEnumMembers(
   for (const member of node.members) {
     const name = getEnumMemberName(member.name);
     const initializer = member.initializer;
-    if (initializer && ts.isStringLiteral(initializer)) {
-      const symbol = checker.getSymbolAtLocation(member.name);
-      const tsdocInfo = symbol
-        ? extractTsDocFromSymbol(symbol, checker)
-        : { description: undefined, deprecated: undefined };
 
+    const symbol = checker.getSymbolAtLocation(member.name);
+    const tsdocInfo = symbol
+      ? extractTsDocFromSymbol(symbol, checker)
+      : { description: undefined, deprecated: undefined };
+
+    if (initializer && ts.isStringLiteral(initializer)) {
       members.push({
         name,
         value: initializer.text,
+        numericValue: null,
         description: tsdocInfo.description ?? null,
         deprecated: tsdocInfo.deprecated ?? null,
         sourceLocation: getSourceLocationFromNode(member),
       });
+    } else {
+      const constantValue = checker.getConstantValue(member);
+      if (typeof constantValue === "number") {
+        members.push({
+          name,
+          value: name,
+          numericValue: constantValue,
+          description: tsdocInfo.description ?? null,
+          deprecated: tsdocInfo.deprecated ?? null,
+          sourceLocation: getSourceLocationFromNode(member),
+        });
+      }
     }
   }
 
@@ -680,6 +679,7 @@ function extractStringLiteralUnionMembers(
       members.push({
         name: value,
         value: value,
+        numericValue: null,
         description: null,
         deprecated: null,
         sourceLocation: null,
@@ -1211,16 +1211,6 @@ export function extractTypesFromProgram(
           diagnostics.push({
             code: "UNSUPPORTED_ENUM_TYPE",
             message: `Heterogeneous enum '${name}' is not supported. Use a string enum instead.`,
-            severity: "error",
-            location,
-          });
-          return;
-        }
-
-        if (isNumericEnum(node)) {
-          diagnostics.push({
-            code: "UNSUPPORTED_ENUM_TYPE",
-            message: `Numeric enum '${name}' is not supported. Use a string enum instead.`,
             severity: "error",
             location,
           });

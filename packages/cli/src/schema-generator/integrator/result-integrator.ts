@@ -44,6 +44,8 @@ export interface BaseType {
   readonly fields: ReadonlyArray<BaseField> | null;
   readonly unionMembers: ReadonlyArray<string> | null;
   readonly enumValues: ReadonlyArray<EnumValueInfo> | null;
+  /** True if this enum uses numeric values */
+  readonly isNumericEnum: boolean;
   readonly implementedInterfaces: ReadonlyArray<string> | null;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
@@ -83,6 +85,33 @@ export interface CustomScalarInfo {
   readonly description: string | null;
 }
 
+/**
+ * Numeric enum member value mapping.
+ */
+export interface NumericEnumMember {
+  readonly name: string;
+  readonly numericValue: number;
+}
+
+/**
+ * Numeric enum information for resolver generation.
+ */
+export interface NumericEnumInfo {
+  readonly enumName: string;
+  readonly members: ReadonlyArray<NumericEnumMember>;
+}
+
+/**
+ * Information about a field that needs auto-generated resolver for numeric enum conversion.
+ */
+export interface AutoEnumFieldResolver {
+  readonly typeName: string;
+  readonly fieldName: string;
+  readonly enumName: string;
+  readonly nullable: boolean;
+  readonly list: boolean;
+}
+
 export interface IntegratedResult {
   readonly baseTypes: ReadonlyArray<BaseType>;
   readonly inputTypes: ReadonlyArray<InputType>;
@@ -95,6 +124,10 @@ export interface IntegratedResult {
   readonly directiveDefinitions: ReadonlyArray<DirectiveDefinitionInfo> | null;
   /** Abstract type resolvers (resolveType and isTypeOf) */
   readonly abstractTypeResolvers: ReadonlyArray<AbstractResolverInfo>;
+  /** Numeric enum information for resolver generation */
+  readonly numericEnums: ReadonlyArray<NumericEnumInfo>;
+  /** Fields that need auto-generated resolvers for numeric enum conversion */
+  readonly autoEnumFieldResolvers: ReadonlyArray<AutoEnumFieldResolver>;
   readonly hasQuery: boolean;
   readonly hasMutation: boolean;
   readonly hasErrors: boolean;
@@ -208,6 +241,20 @@ function getCompatibleLocations(
   }
 }
 
+function collectResolverFieldNames(
+  resolversResult: ExtractResolversResult,
+): Set<string> {
+  const fieldNames = new Set<string>();
+
+  for (const ext of resolversResult.typeExtensions) {
+    for (const field of ext.fields) {
+      fieldNames.add(`${ext.targetTypeName}.${field.name}`);
+    }
+  }
+
+  return fieldNames;
+}
+
 export function integrate(
   typesResult: ExtractTypesResult,
   resolversResult: ExtractResolversResult,
@@ -255,6 +302,7 @@ export function integrate(
         })),
         unionMembers: null,
         enumValues: null,
+        isNumericEnum: false,
         implementedInterfaces: null,
         description: autoType.description,
         deprecated: null,
@@ -307,6 +355,7 @@ export function integrate(
         fields: null,
         unionMembers: null,
         enumValues: type.enumValues,
+        isNumericEnum: type.isNumericEnum,
         implementedInterfaces: null,
         description: type.description,
         deprecated: type.deprecated,
@@ -328,6 +377,7 @@ export function integrate(
           })) ?? null,
         unionMembers: null,
         enumValues: null,
+        isNumericEnum: false,
         implementedInterfaces: type.implementedInterfaces ?? null,
         description: type.description,
         deprecated: type.deprecated,
@@ -349,6 +399,7 @@ export function integrate(
           })) ?? null,
         unionMembers: null,
         enumValues: null,
+        isNumericEnum: false,
         implementedInterfaces: type.implementedInterfaces ?? null,
         description: type.description,
         deprecated: type.deprecated,
@@ -362,6 +413,7 @@ export function integrate(
         fields: null,
         unionMembers: type.unionMembers,
         enumValues: null,
+        isNumericEnum: false,
         implementedInterfaces: null,
         description: type.description,
         deprecated: null,
@@ -381,6 +433,7 @@ export function integrate(
       fields: [],
       unionMembers: null,
       enumValues: null,
+      isNumericEnum: false,
       implementedInterfaces: null,
       description: null,
       deprecated: null,
@@ -395,6 +448,7 @@ export function integrate(
       fields: [],
       unionMembers: null,
       enumValues: null,
+      isNumericEnum: false,
       implementedInterfaces: null,
       description: null,
       deprecated: null,
@@ -545,6 +599,54 @@ export function integrate(
         }))
       : null;
 
+  const numericEnums: NumericEnumInfo[] = [];
+  const numericEnumNames = new Set<string>();
+
+  for (const type of baseTypes) {
+    if (type.kind === "Enum" && type.isNumericEnum && type.enumValues) {
+      const members: NumericEnumMember[] = [];
+      for (const value of type.enumValues) {
+        if (value.numericValue !== null) {
+          members.push({
+            name: value.name,
+            numericValue: value.numericValue,
+          });
+        }
+      }
+      if (members.length > 0) {
+        numericEnums.push({
+          enumName: type.name,
+          members,
+        });
+        numericEnumNames.add(type.name);
+      }
+    }
+  }
+
+  const resolverFieldNames = collectResolverFieldNames(resolversResult);
+
+  const autoEnumFieldResolvers: AutoEnumFieldResolver[] = [];
+
+  for (const type of baseTypes) {
+    if (type.kind === "Object" || type.kind === "Interface") {
+      for (const field of type.fields ?? []) {
+        const fieldTypeName = field.type.typeName;
+        if (numericEnumNames.has(fieldTypeName)) {
+          const fieldKey = `${type.name}.${field.name}`;
+          if (!resolverFieldNames.has(fieldKey)) {
+            autoEnumFieldResolvers.push({
+              typeName: type.name,
+              fieldName: field.name,
+              enumName: fieldTypeName,
+              nullable: field.type.nullable,
+              list: field.type.list,
+            });
+          }
+        }
+      }
+    }
+  }
+
   return {
     baseTypes,
     inputTypes,
@@ -559,6 +661,8 @@ export function integrate(
         ? directiveDefinitions
         : null,
     abstractTypeResolvers: resolversResult.abstractTypeResolvers,
+    numericEnums,
+    autoEnumFieldResolvers,
     hasQuery,
     hasMutation,
     hasErrors,

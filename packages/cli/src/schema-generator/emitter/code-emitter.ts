@@ -5,7 +5,11 @@ import {
   type BuildDocumentOptions,
   buildDocumentNode,
 } from "../builder/ast-builder.js";
-import type { IntegratedResult } from "../integrator/result-integrator.js";
+import type {
+  AutoEnumFieldResolver,
+  IntegratedResult,
+  NumericEnumInfo,
+} from "../integrator/result-integrator.js";
 import type {
   AbstractTypeResolverInfo,
   ResolverInfo,
@@ -184,9 +188,80 @@ function buildResolverImports(
   return imports;
 }
 
-function buildTypeResolverEntry(
+function buildAbstractOnlyTypeEntry(
+  abstractResolver: AbstractTypeResolverInfo,
+): string {
+  return `    ${abstractResolver.typeName}: {\n      ${abstractResolver.resolverKey}: ${abstractResolver.exportName},\n    },`;
+}
+
+function buildNumericEnumConverterName(enumName: string): string {
+  return `__convert${enumName}`;
+}
+
+function buildNumericEnumConverter(enumInfo: NumericEnumInfo): string {
+  const converterName = buildNumericEnumConverterName(enumInfo.enumName);
+  const cases = enumInfo.members
+    .map(
+      (member) =>
+        `    case ${member.numericValue}:\n      return "${member.name}";`,
+    )
+    .join("\n");
+
+  return `function ${converterName}(value: number): string {
+  switch (value) {
+${cases}
+    default:
+      throw new Error(\`Invalid ${enumInfo.enumName} value: \${value}\`);
+  }
+}`;
+}
+
+function buildNumericEnumConverters(
+  numericEnums: ReadonlyArray<NumericEnumInfo>,
+): string {
+  if (numericEnums.length === 0) {
+    return "";
+  }
+
+  const converters = numericEnums.map(buildNumericEnumConverter);
+  return converters.join("\n\n");
+}
+
+function buildAutoEnumFieldResolver(resolver: AutoEnumFieldResolver): string {
+  const converterName = buildNumericEnumConverterName(resolver.enumName);
+
+  if (resolver.list) {
+    if (resolver.nullable) {
+      return `      ${resolver.fieldName}: (parent) => parent.${resolver.fieldName} == null ? null : parent.${resolver.fieldName}.map(${converterName}),`;
+    }
+    return `      ${resolver.fieldName}: (parent) => parent.${resolver.fieldName}.map(${converterName}),`;
+  }
+
+  if (resolver.nullable) {
+    return `      ${resolver.fieldName}: (parent) => parent.${resolver.fieldName} == null ? null : ${converterName}(parent.${resolver.fieldName}),`;
+  }
+
+  return `      ${resolver.fieldName}: (parent) => ${converterName}(parent.${resolver.fieldName}),`;
+}
+
+function groupAutoEnumFieldResolversByType(
+  resolvers: ReadonlyArray<AutoEnumFieldResolver>,
+): Map<string, AutoEnumFieldResolver[]> {
+  const grouped = new Map<string, AutoEnumFieldResolver[]>();
+
+  for (const resolver of resolvers) {
+    const existing = grouped.get(resolver.typeName) ?? [];
+    existing.push(resolver);
+    grouped.set(resolver.typeName, existing);
+  }
+
+  return grouped;
+}
+
+function buildTypeResolverEntryWithAutoResolvers(
   type: TypeResolvers,
   abstractResolverForType: AbstractTypeResolverInfo | null,
+  autoResolvers: AutoEnumFieldResolver[],
 ): string {
   const entries: string[] = [];
 
@@ -200,6 +275,10 @@ function buildTypeResolverEntry(
     }
   }
 
+  for (const autoResolver of autoResolvers) {
+    entries.push(buildAutoEnumFieldResolver(autoResolver));
+  }
+
   if (abstractResolverForType !== null) {
     entries.push(
       `      ${abstractResolverForType.resolverKey}: ${abstractResolverForType.exportName},`,
@@ -209,15 +288,18 @@ function buildTypeResolverEntry(
   return `    ${type.typeName}: {\n${entries.join("\n")}\n    },`;
 }
 
-function buildAbstractOnlyTypeEntry(
-  abstractResolver: AbstractTypeResolverInfo,
+function buildAutoOnlyTypeEntry(
+  typeName: string,
+  autoResolvers: AutoEnumFieldResolver[],
 ): string {
-  return `    ${abstractResolver.typeName}: {\n      ${abstractResolver.resolverKey}: ${abstractResolver.exportName},\n    },`;
+  const entries = autoResolvers.map(buildAutoEnumFieldResolver);
+  return `    ${typeName}: {\n${entries.join("\n")}\n    },`;
 }
 
-function buildTypeEntries(
+function buildTypeEntriesWithAutoResolvers(
   resolverInfo: ResolverInfo,
   customScalars: ReadonlyArray<CollectedScalarType>,
+  autoEnumFieldResolvers: ReadonlyArray<AutoEnumFieldResolver>,
 ): string[] {
   const typeEntries: string[] = [];
   const hasCustomScalars = customScalars.length > 0;
@@ -236,22 +318,34 @@ function buildTypeEntries(
     abstractResolversByType.set(abstractResolver.typeName, abstractResolver);
   }
 
+  const autoResolversByType = groupAutoEnumFieldResolversByType(
+    autoEnumFieldResolvers,
+  );
+
   const allTypeNames = new Set<string>([
     ...typesWithFields.keys(),
     ...abstractResolversByType.keys(),
+    ...autoResolversByType.keys(),
   ]);
   const sortedTypeNames = [...allTypeNames].sort();
 
   for (const typeName of sortedTypeNames) {
     const typeWithFields = typesWithFields.get(typeName);
     const abstractResolver = abstractResolversByType.get(typeName) ?? null;
+    const autoResolvers = autoResolversByType.get(typeName) ?? [];
 
     if (typeWithFields !== undefined) {
       typeEntries.push(
-        buildTypeResolverEntry(typeWithFields, abstractResolver),
+        buildTypeResolverEntryWithAutoResolvers(
+          typeWithFields,
+          abstractResolver,
+          autoResolvers,
+        ),
       );
     } else if (abstractResolver !== null) {
       typeEntries.push(buildAbstractOnlyTypeEntry(abstractResolver));
+    } else if (autoResolvers.length > 0) {
+      typeEntries.push(buildAutoOnlyTypeEntry(typeName, autoResolvers));
     }
   }
 
@@ -262,8 +356,11 @@ export function emitResolversCode(
   resolverInfo: ResolverInfo,
   outputDir: string,
   customScalars: ReadonlyArray<CollectedScalarType> = [],
+  numericEnums: ReadonlyArray<NumericEnumInfo> = [],
+  autoEnumFieldResolvers: ReadonlyArray<AutoEnumFieldResolver> = [],
 ): string {
   const hasCustomScalars = customScalars.length > 0;
+  const hasNumericEnums = numericEnums.length > 0;
   const imports: string[] = [];
 
   if (hasCustomScalars) {
@@ -279,17 +376,28 @@ export function emitResolversCode(
     imports.push(...scalarImports);
   }
 
-  const typeEntries = buildTypeEntries(resolverInfo, customScalars);
+  const numericEnumConverters = hasNumericEnums
+    ? buildNumericEnumConverters(numericEnums)
+    : "";
+
+  const typeEntries = buildTypeEntriesWithAutoResolvers(
+    resolverInfo,
+    customScalars,
+    autoEnumFieldResolvers,
+  );
 
   const functionSignature = hasCustomScalars
     ? `export function createResolvers({ scalars }: ${buildScalarsArgumentType(customScalars)})`
     : "export function createResolvers()";
 
+  const importSection = imports.join("\n");
+  const converterSection = numericEnumConverters;
+
   return `${GENERATED_FILE_HEADER}
 
-${imports.join("\n")}
+${importSection}
 
-${functionSignature} {
+${converterSection}${converterSection.length > 0 ? "\n" : ""}${functionSignature} {
   return {
 ${typeEntries.join("\n")}
   };
