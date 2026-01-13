@@ -101,17 +101,6 @@ export interface NumericEnumInfo {
   readonly members: ReadonlyArray<NumericEnumMember>;
 }
 
-/**
- * Information about a field that needs auto-generated resolver for numeric enum conversion.
- */
-export interface AutoEnumFieldResolver {
-  readonly typeName: string;
-  readonly fieldName: string;
-  readonly enumName: string;
-  readonly nullable: boolean;
-  readonly list: boolean;
-}
-
 export interface IntegratedResult {
   readonly baseTypes: ReadonlyArray<BaseType>;
   readonly inputTypes: ReadonlyArray<InputType>;
@@ -126,8 +115,6 @@ export interface IntegratedResult {
   readonly abstractTypeResolvers: ReadonlyArray<AbstractResolverInfo>;
   /** Numeric enum information for resolver generation */
   readonly numericEnums: ReadonlyArray<NumericEnumInfo>;
-  /** Fields that need auto-generated resolvers for numeric enum conversion */
-  readonly autoEnumFieldResolvers: ReadonlyArray<AutoEnumFieldResolver>;
   readonly hasQuery: boolean;
   readonly hasMutation: boolean;
   readonly hasErrors: boolean;
@@ -239,20 +226,6 @@ function getCompatibleLocations(
     case "INPUT_FIELD_DEFINITION":
       return ["INPUT_FIELD_DEFINITION"];
   }
-}
-
-function collectResolverFieldNames(
-  resolversResult: ExtractResolversResult,
-): Set<string> {
-  const fieldNames = new Set<string>();
-
-  for (const ext of resolversResult.typeExtensions) {
-    for (const field of ext.fields) {
-      fieldNames.add(`${ext.targetTypeName}.${field.name}`);
-    }
-  }
-
-  return fieldNames;
 }
 
 export function integrate(
@@ -600,7 +573,6 @@ export function integrate(
       : null;
 
   const numericEnums: NumericEnumInfo[] = [];
-  const numericEnumNames = new Set<string>();
 
   for (const type of baseTypes) {
     if (type.kind === "Enum" && type.isNumericEnum && type.enumValues) {
@@ -618,31 +590,6 @@ export function integrate(
           enumName: type.name,
           members,
         });
-        numericEnumNames.add(type.name);
-      }
-    }
-  }
-
-  const resolverFieldNames = collectResolverFieldNames(resolversResult);
-
-  const autoEnumFieldResolvers: AutoEnumFieldResolver[] = [];
-
-  for (const type of baseTypes) {
-    if (type.kind === "Object" || type.kind === "Interface") {
-      for (const field of type.fields ?? []) {
-        const fieldTypeName = field.type.typeName;
-        if (numericEnumNames.has(fieldTypeName)) {
-          const fieldKey = `${type.name}.${field.name}`;
-          if (!resolverFieldNames.has(fieldKey)) {
-            autoEnumFieldResolvers.push({
-              typeName: type.name,
-              fieldName: field.name,
-              enumName: fieldTypeName,
-              nullable: field.type.nullable,
-              list: field.type.list,
-            });
-          }
-        }
       }
     }
   }
@@ -662,7 +609,6 @@ export function integrate(
         : null,
     abstractTypeResolvers: resolversResult.abstractTypeResolvers,
     numericEnums,
-    autoEnumFieldResolvers,
     hasQuery,
     hasMutation,
     hasErrors,

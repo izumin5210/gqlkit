@@ -2,25 +2,15 @@
 
 import { resolveNodeType } from "../schema/types.js";
 
-function __convertUserStatus(value: number): string {
-  switch (value) {
-    case 0:
-      return "ACTIVE";
-    case 1:
-      return "INACTIVE";
-    case 2:
-      return "PENDING";
-    default:
-      throw new Error(`Invalid UserStatus value: ${value}`);
-  }
-}
 export function createResolvers() {
   return {
+    UserStatus: {
+      ACTIVE: 0,
+      INACTIVE: 1,
+      PENDING: 2,
+    },
     Node: {
       __resolveType: resolveNodeType,
-    },
-    User: {
-      status: (parent) => __convertUserStatus(parent.status),
     },
   };
 }

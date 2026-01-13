@@ -2,22 +2,12 @@
 
 
 
-function __convertUserStatus(value: number): string {
-  switch (value) {
-    case 0:
-      return "ACTIVE";
-    case 1:
-      return "INACTIVE";
-    case 2:
-      return "PENDING";
-    default:
-      throw new Error(`Invalid UserStatus value: ${value}`);
-  }
-}
 export function createResolvers() {
   return {
-    User: {
-      status: (parent) => parent.status == null ? null : __convertUserStatus(parent.status),
+    UserStatus: {
+      ACTIVE: 0,
+      INACTIVE: 1,
+      PENDING: 2,
     },
   };
 }

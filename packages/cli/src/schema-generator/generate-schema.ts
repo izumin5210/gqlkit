@@ -149,7 +149,6 @@ export function generateSchema(
     outputDir,
     customScalars ?? [],
     integratedResult.numericEnums,
-    integratedResult.autoEnumFieldResolvers,
   );
 
   const numericEnums: NumericEnumSummary[] = integratedResult.numericEnums.map(

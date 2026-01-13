@@ -22,7 +22,6 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
-      autoEnumFieldResolvers: [],
       diagnostics: [],
     });
 
@@ -59,7 +58,6 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
-      autoEnumFieldResolvers: [],
       diagnostics: [],
     });
 
@@ -95,7 +93,6 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
-      autoEnumFieldResolvers: [],
       diagnostics: [],
     });
 
@@ -137,7 +134,6 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
-      autoEnumFieldResolvers: [],
       diagnostics: [],
     });
 
@@ -183,7 +179,6 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
-      autoEnumFieldResolvers: [],
       diagnostics: [],
     });
 
@@ -220,7 +215,6 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
-      autoEnumFieldResolvers: [],
       diagnostics: [],
     });
 
@@ -248,7 +242,6 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
-      autoEnumFieldResolvers: [],
       diagnostics: [],
     });
 
@@ -272,7 +265,6 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
-      autoEnumFieldResolvers: [],
       diagnostics: [],
     });
 
@@ -329,7 +321,6 @@ describe("buildDeprecatedDirective", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
-      autoEnumFieldResolvers: [],
       diagnostics: [],
     });
 
@@ -401,7 +392,6 @@ describe("buildDeprecatedDirective", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
-      autoEnumFieldResolvers: [],
       diagnostics: [],
     });
 
@@ -474,7 +464,6 @@ describe("buildDeprecatedDirective", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
-      autoEnumFieldResolvers: [],
       diagnostics: [],
     });
 
@@ -548,7 +537,6 @@ describe("buildDeprecatedDirective", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
-      autoEnumFieldResolvers: [],
       diagnostics: [],
     });
 
