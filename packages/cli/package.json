@@ -7,9 +7,30 @@
   "bin": {
     "gqlkit": "./dist/cli.js"
   },
-  "keywords": [],
+  "files": [
+    "dist",
+    "docs"
+  ],
+  "keywords": [
+    "graphql",
+    "typescript",
+    "codegen",
+    "schema"
+  ],
   "author": "izumin5210 <m@izum.in>",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/izumin5210/gqlkit.git",
+    "directory": "packages/cli"
+  },
+  "bugs": {
+    "url": "https://github.com/izumin5210/gqlkit/issues"
+  },
+  "homepage": "https://github.com/izumin5210/gqlkit/tree/main/packages/cli#readme",
+  "publishConfig": {
+    "access": "public"
+  },
   "scripts": {
     "build": "tsc --build",
     "test": "pnpm -w vitest run --project=cli --typecheck",
