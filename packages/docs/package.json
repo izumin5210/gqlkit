@@ -3,6 +3,9 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
+  "bin": {
+    "bundle-docs": "./src/bin/bundle-docs.ts"
+  },
   "scripts": {
     "dev": "next dev",
     "build": "next build",

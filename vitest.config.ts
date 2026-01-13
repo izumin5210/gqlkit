@@ -57,6 +57,13 @@ export default defineConfig({
           include: ["src/**/*.test.ts"],
         },
       },
+      {
+        test: {
+          name: "docs",
+          root: "./packages/docs",
+          include: ["src/**/*.test.ts"],
+        },
+      },
     ],
   },
 });

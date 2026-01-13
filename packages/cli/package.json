@@ -7,11 +7,15 @@
   "bin": {
     "gqlkit": "./dist/cli.js"
   },
+  "files": [
+    "dist",
+    "docs"
+  ],
   "keywords": [],
   "author": "izumin5210 <m@izum.in>",
   "license": "MIT",
   "scripts": {
-    "build": "tsc --build",
+    "build": "tsc --build && bundle-docs --target ./docs",
     "test": "pnpm -w vitest run --project=cli --typecheck",
     "typecheck": "tsc --noEmit"
   },
@@ -34,6 +38,7 @@
     }
   },
   "devDependencies": {
+    "@gqlkit-ts/docs": "workspace:*",
     "@gqlkit-ts/runtime": "workspace:*",
     "@types/shell-quote": "1.7.5"
   }
