@@ -408,17 +408,13 @@ export type ResolveTypeResolverFn<TAbstract, TContext = unknown> = (
 /**
  * Type for isTypeOf resolver functions.
  * Used to check if a value belongs to a specific object type.
- * @typeParam TObject - The object type to check (used for type documentation, value is always unknown at runtime)
  * @typeParam TContext - The context type (defaults to unknown)
  */
-export type IsTypeOfResolverFn<TObject, TContext = unknown> = ((
+export type IsTypeOfResolverFn<TContext = unknown> = (
   value: unknown,
   context: TContext,
   info: GraphQLResolveInfo,
-) => boolean | Promise<boolean>) & {
-  /** @internal Phantom type parameter - used for metadata only, not at runtime */
-  readonly " $phantomTargetType"?: TObject;
-};
+) => boolean | Promise<boolean>;
 
 /**
  * Abstract type resolver metadata structure embedded in intersection types.
@@ -454,7 +450,6 @@ export type ResolveTypeResolver<
  * @typeParam TContext - The context type (defaults to unknown)
  */
 export type IsTypeOfResolver<TObject, TContext = unknown> = IsTypeOfResolverFn<
-  TObject,
   TContext
 > & {
   " $gqlkitAbstractResolver"?: {
@@ -706,7 +701,7 @@ export interface GqlkitApis<TContext> {
    * ```
    */
   defineIsTypeOf: <TObject>(
-    resolver: IsTypeOfResolverFn<TObject, TContext>,
+    resolver: IsTypeOfResolverFn<TContext>,
   ) => IsTypeOfResolver<TObject, TContext>;
 }
 
@@ -760,9 +755,7 @@ export function createGqlkitApis<TContext = unknown>(): GqlkitApis<TContext> {
     ) => {
       return resolver;
     },
-    defineIsTypeOf: <TObject>(
-      resolver: IsTypeOfResolverFn<TObject, TContext>,
-    ) => {
+    defineIsTypeOf: (resolver: IsTypeOfResolverFn<TContext>) => {
       return resolver;
     },
   };
