@@ -30,11 +30,6 @@ export interface GenerateSchemaInput {
   readonly sourceRoot: string | null;
 }
 
-export interface NumericEnumSummary {
-  readonly enumName: string;
-  readonly memberCount: number;
-}
-
 export interface GenerateSchemaResult {
   readonly typeDefsCode: string;
   readonly sdlContent: string;
@@ -42,7 +37,6 @@ export interface GenerateSchemaResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
   readonly hasErrors: boolean;
   readonly prunedTypes: ReadonlyArray<string> | null;
-  readonly numericEnums: ReadonlyArray<NumericEnumSummary>;
 }
 
 export function generateSchema(
@@ -84,7 +78,6 @@ export function generateSchema(
       diagnostics: collisionResult.diagnostics,
       hasErrors: true,
       prunedTypes: null,
-      numericEnums: [],
     };
   }
 
@@ -151,13 +144,6 @@ export function generateSchema(
     integratedResult.numericEnums,
   );
 
-  const numericEnums: NumericEnumSummary[] = integratedResult.numericEnums.map(
-    (e) => ({
-      enumName: e.enumName,
-      memberCount: e.members.length,
-    }),
-  );
-
   return {
     typeDefsCode,
     sdlContent,
@@ -165,6 +151,5 @@ export function generateSchema(
     diagnostics: integratedResult.diagnostics,
     hasErrors: integratedResult.hasErrors,
     prunedTypes,
-    numericEnums,
   };
 }

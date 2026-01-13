@@ -2,7 +2,6 @@ export {
   type GenerateSchemaInput,
   type GenerateSchemaResult,
   generateSchema,
-  type NumericEnumSummary,
 } from "./generate-schema.js";
 export type {
   BaseField,
