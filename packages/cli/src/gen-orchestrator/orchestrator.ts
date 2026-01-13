@@ -242,9 +242,14 @@ function convertDefineApiToFields(
 }
 
 function normalizePathInMessage(message: string, sourceRoot: string): string {
-  const escapedSourceRoot = sourceRoot.replace(/[.*+?^${}()|[\]\\]/g, "\\$&");
+  const normalizedSourceRoot = toPosixPath(sourceRoot);
+  const normalizedMessage = message.replaceAll("\\", "/");
+  const escapedSourceRoot = normalizedSourceRoot.replace(
+    /[.*+?^${}()|[\]\\]/g,
+    "\\$&",
+  );
   const pattern = new RegExp(`${escapedSourceRoot}/`, "g");
-  return message.replace(pattern, "");
+  return normalizedMessage.replace(pattern, "");
 }
 
 function normalizeDiagnosticPaths(

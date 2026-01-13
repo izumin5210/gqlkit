@@ -90,7 +90,11 @@ function detectDuplicateResolvers(
   }
 
   return [
-    ...reportDuplicates(resolveTypeMap, "DUPLICATE_RESOLVE_TYPE", "resolveType"),
+    ...reportDuplicates(
+      resolveTypeMap,
+      "DUPLICATE_RESOLVE_TYPE",
+      "resolveType",
+    ),
     ...reportDuplicates(isTypeOfMap, "DUPLICATE_IS_TYPE_OF", "isTypeOf"),
   ];
 }
