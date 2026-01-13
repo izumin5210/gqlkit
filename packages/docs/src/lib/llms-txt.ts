@@ -47,8 +47,7 @@ export async function generateLlmsTxt(): Promise<string> {
 }
 
 export async function generateLlmsFullTxt(): Promise<string> {
-  const rawSections = await buildSections(CONTENT_DIR);
-  const sections = applyDescriptionOverrides(rawSections);
+  const sections = await buildSections(CONTENT_DIR);
 
   const lines: string[] = [...HEADER_LINES, "---", ""];
 
