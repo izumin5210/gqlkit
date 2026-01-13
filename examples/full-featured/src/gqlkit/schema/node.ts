@@ -61,12 +61,14 @@ export const nodeResolveType = defineResolveType<Node>((value) => {
   return "User";
 });
 
-export const timestampedResolveType = defineResolveType<Timestamped>((value) => {
-  if ("title" in value) {
-    return "Post";
-  }
-  if ("postId" in value) {
-    return "Comment";
-  }
-  return "User";
-});
+export const timestampedResolveType = defineResolveType<Timestamped>(
+  (value) => {
+    if ("title" in value) {
+      return "Post";
+    }
+    if ("postId" in value) {
+      return "Comment";
+    }
+    return "User";
+  },
+);
