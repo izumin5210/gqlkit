@@ -258,7 +258,7 @@ input CreateUserInput {
   age: Int!
   email: String
   name: String!
-  role: String
+  role: Role
 }
 
 """
