@@ -572,27 +572,23 @@ export function integrate(
         }))
       : null;
 
-  const numericEnums: NumericEnumInfo[] = [];
-
-  for (const type of baseTypes) {
-    if (type.kind === "Enum" && type.isNumericEnum && type.enumValues) {
-      const members: NumericEnumMember[] = [];
-      for (const value of type.enumValues) {
-        if (value.numericValue !== null) {
-          members.push({
-            name: value.name,
-            numericValue: value.numericValue,
-          });
-        }
-      }
-      if (members.length > 0) {
-        numericEnums.push({
-          enumName: type.name,
-          members,
-        });
-      }
-    }
-  }
+  const numericEnums: NumericEnumInfo[] = baseTypes
+    .filter(
+      (type): type is BaseType & { enumValues: NonNullable<BaseType["enumValues"]> } =>
+        type.kind === "Enum" && type.isNumericEnum && type.enumValues !== null,
+    )
+    .map((type) => ({
+      enumName: type.name,
+      members: type.enumValues
+        .filter((value): value is typeof value & { numericValue: number } =>
+          value.numericValue !== null,
+        )
+        .map((value) => ({
+          name: value.name,
+          numericValue: value.numericValue,
+        })),
+    }))
+    .filter((info) => info.members.length > 0);
 
   return {
     baseTypes,

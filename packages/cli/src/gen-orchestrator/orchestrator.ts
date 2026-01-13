@@ -15,7 +15,11 @@ import type {
   GraphQLInputValue,
   TypeExtension,
 } from "../resolver-extractor/index.js";
-import { generateSchema } from "../schema-generator/index.js";
+import {
+  generateSchema,
+  type NumericEnumSummary,
+} from "../schema-generator/index.js";
+export type { NumericEnumSummary } from "../schema-generator/index.js";
 import {
   collectDiagnostics,
   convertTsTypeToGraphQLType,
@@ -59,11 +63,6 @@ export interface GenerationConfig {
 export interface GeneratedFile {
   readonly filePath: string;
   readonly content: string;
-}
-
-export interface NumericEnumSummary {
-  readonly enumName: string;
-  readonly memberCount: number;
 }
 
 export interface GenerationResult {

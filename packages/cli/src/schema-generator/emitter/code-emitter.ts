@@ -305,8 +305,7 @@ export function emitResolversCode(
     ? `export function createResolvers({ scalars }: ${buildScalarsArgumentType(customScalars)})`
     : "export function createResolvers()";
 
-  const importSection =
-    imports.length > 0 ? `${imports.join("\n")}\n\n` : "";
+  const importSection = imports.length > 0 ? `${imports.join("\n")}\n\n` : "";
 
   return `${GENERATED_FILE_HEADER}
 
