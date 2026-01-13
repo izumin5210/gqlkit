@@ -574,14 +574,19 @@ export function integrate(
 
   const numericEnums: NumericEnumInfo[] = baseTypes
     .filter(
-      (type): type is BaseType & { enumValues: NonNullable<BaseType["enumValues"]> } =>
+      (
+        type,
+      ): type is BaseType & {
+        enumValues: NonNullable<BaseType["enumValues"]>;
+      } =>
         type.kind === "Enum" && type.isNumericEnum && type.enumValues !== null,
     )
     .map((type) => ({
       enumName: type.name,
       members: type.enumValues
-        .filter((value): value is typeof value & { numericValue: number } =>
-          value.numericValue !== null,
+        .filter(
+          (value): value is typeof value & { numericValue: number } =>
+            value.numericValue !== null,
         )
         .map((value) => ({
           name: value.name,

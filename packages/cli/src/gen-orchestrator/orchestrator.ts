@@ -19,7 +19,9 @@ import {
   generateSchema,
   type NumericEnumSummary,
 } from "../schema-generator/index.js";
+
 export type { NumericEnumSummary } from "../schema-generator/index.js";
+
 import {
   collectDiagnostics,
   convertTsTypeToGraphQLType,
