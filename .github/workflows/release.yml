@@ -27,10 +27,8 @@ jobs:
         id: changesets
         uses: changesets/action@c8bada60c408975afd1a20b3db81d6eee6789308 # v1
         with:
-          version: |
-            pnpm changeset version
-          publish: |
-            pnpm build && pnpm changeset publish
+          version: pnpm changeset:version
+          publish: pnpm changeset:release
         env:
           GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
