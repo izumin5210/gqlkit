@@ -1,6 +1,9 @@
 {
   "$schema": "https://unpkg.com/@changesets/config@3.1.2/schema.json",
-  "changelog": ["@changesets/changelog-github", { "repo": "izumin5210/gqlkit" }],
+  "changelog": [
+    "@changesets/changelog-github",
+    { "repo": "izumin5210/gqlkit" }
+  ],
   "commit": false,
   "fixed": [],
   "linked": [],
