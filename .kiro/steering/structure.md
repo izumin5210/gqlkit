@@ -10,6 +10,7 @@ Monorepo with feature-by-purpose organization. Each package has a clear responsi
 packages/
   cli/       - @gqlkit-ts/cli - Code generation CLI
   runtime/   - @gqlkit-ts/runtime - Define API and type utilities
+  docs/      - @gqlkit-ts/docs - Documentation site (Next.js + Nextra)
 examples/    - Example projects demonstrating usage
 ```
 
@@ -39,6 +40,7 @@ Pipeline-based architecture for code generation:
 Minimal runtime utilities for user codebases:
 - `createGqlkitApis<TContext>()` factory function
 - Type definitions for resolvers (`QueryResolver`, `MutationResolver`, `FieldResolver`)
+- Abstract type resolvers (`ResolveTypeResolver`, `IsTypeOfResolver`) for union/interface resolution
 - Branded scalar types (`IDString`, `IDNumber`, `Int`, `Float`) for explicit GraphQL scalar mapping
 - `GqlScalar<Name, Base, Only?>` utility type for custom scalar definitions
 - `GqlInterface<T, Meta?>` utility type for GraphQL interface definitions
@@ -46,6 +48,13 @@ Minimal runtime utilities for user codebases:
 - `GqlField<T, Meta>` for field-level metadata (directives, defaultValue)
 - `GqlDirective<Name, Args, Location>` utility type for custom directive definitions
 - `NoArgs` helper type
+
+### @gqlkit-ts/docs (`packages/docs/`)
+
+Documentation site built with Next.js and Nextra:
+- Internal package (not published)
+- Provides `bundle-docs` CLI for CLI package documentation bundling
+- Runs independently from main TypeScript project references
 
 ### User Convention Directories (gqlkit-managed)
 **Schema**: `src/gqlkit/schema/` - Types and resolvers co-located in the same files
@@ -81,4 +90,4 @@ import { extractTypes } from "../type-extractor/index.js";
 
 ---
 _Document patterns, not file trees. New files following patterns shouldn't require updates_
-_Updated: 2026-01-09 - Added auto-type-generator pipeline stage_
+_Updated: 2026-01-14 - Added docs package and abstract type resolvers_

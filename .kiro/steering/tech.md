@@ -60,7 +60,7 @@ Static code generation tool that analyzes TypeScript source files and produces G
 3. **gunshi for CLI**: Provides type-safe command definitions with built-in help generation
 4. **No decorators**: Design decision to keep schema generation based purely on type analysis
 5. **graphql-tools compatible output**: Generated resolvers work directly with `makeExecutableSchema`
-6. **Define API**: Factory-based resolver definition via `createGqlkitApis<TContext>()` from `@gqlkit-ts/runtime`, returning typed `defineQuery`, `defineMutation`, `defineField` functions with custom context support
+6. **Define API**: Factory-based resolver definition via `createGqlkitApis<TContext>()` from `@gqlkit-ts/runtime`, returning typed `defineQuery`, `defineMutation`, `defineField`, `defineResolveType`, and `defineIsTypeOf` functions with custom context support
 7. **TSDoc to GraphQL descriptions**: TSDoc comments are automatically extracted and converted to GraphQL schema descriptions, supporting `@deprecated` directives
 8. **Input Object convention**: Types with `*Input` suffix are recognized as GraphQL Input Object types for resolver arguments
 9. **Branded scalar types**: `@gqlkit-ts/runtime` provides `IDString`, `IDNumber`, `Int`, `Float` for explicit GraphQL scalar mapping. Plain `number` defaults to `Float`; use `Int` branded type for integer fields
@@ -73,9 +73,10 @@ Static code generation tool that analyzes TypeScript source files and produces G
     - `GqlInterface<T>` becomes GraphQL interface types
     - Inline object types become auto-generated named types with predictable naming conventions
 12. **Interface types**: `GqlInterface<T, { implements?: [...] }>` for GraphQL interfaces. `GqlObject<T, { implements: [...] }>` for object types implementing interfaces. Supports interface inheritance
-13. **Default values**: `GqlField<T, { defaultValue: literal }>` for input field defaults. Supports primitives, arrays, objects, and enum values. Requires TypeScript literal types (not `number` but `10`)
-14. **Configuration file**: Optional `gqlkit.config.ts` with `defineConfig()` for custom scalar mappings, output paths, and lifecycle hooks (e.g., `afterAllFileWrite`)
-15. **Auto-type generation naming conventions**: Predictable naming for inline object types:
+13. **Abstract type resolution**: `defineResolveType<TAbstract>` for union/interface `__resolveType`, `defineIsTypeOf<TObject>` for object `__isTypeOf`. Both integrate with resolver map generation
+14. **Default values**: `GqlField<T, { defaultValue: literal }>` for input field defaults. Supports primitives, arrays, objects, and enum values. Requires TypeScript literal types (not `number` but `10`)
+15. **Configuration file**: Optional `gqlkit.config.ts` with `defineConfig()` for custom scalar mappings, output paths, and lifecycle hooks (e.g., `afterAllFileWrite`)
+16. **Auto-type generation naming conventions**: Predictable naming for inline object types:
     - Object field: `{ParentTypeName}{PascalCaseFieldName}`
     - Input field: `{ParentTypeNameWithoutInputSuffix}{PascalCaseFieldName}Input`
     - Query/Mutation arg: `{PascalCaseFieldName}{PascalCaseArgName}Input`
@@ -83,4 +84,4 @@ Static code generation tool that analyzes TypeScript source files and produces G
 
 ---
 _Document standards and patterns, not every dependency_
-_Updated: 2026-01-09 - Added auto-type generation from inline object types_
+_Updated: 2026-01-14 - Added abstract type resolution (defineResolveType, defineIsTypeOf)_
