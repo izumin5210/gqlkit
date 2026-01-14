@@ -10,10 +10,7 @@
     "knip": "knip",
     "docs:dev": "pnpm --filter @gqlkit-ts/docs dev",
     "docs:build": "pnpm --filter @gqlkit-ts/docs build",
-    "docs:preview": "pnpm --filter @gqlkit-ts/docs preview",
-    "changeset": "changeset",
-    "version": "changeset version",
-    "release": "pnpm build && changeset publish"
+    "docs:preview": "pnpm --filter @gqlkit-ts/docs preview"
   },
   "devDependencies": {
     "@biomejs/biome": "2.3.11",
