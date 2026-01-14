@@ -80,7 +80,9 @@ export type DiagnosticCode =
   | "INVALID_OBJECT_TYPE_KIND"
   | "DUPLICATE_RESOLVE_TYPE"
   | "DUPLICATE_IS_TYPE_OF"
-  | "MISSING_ABSTRACT_TYPE_RESOLVER";
+  | "MISSING_ABSTRACT_TYPE_RESOLVER"
+  | "DUPLICATE_ENUM_VALUE"
+  | "INVALID_ENUM_MEMBER_NAME";
 
 export interface Diagnostic {
   readonly code: DiagnosticCode;

@@ -31,6 +31,8 @@ export interface FieldInfo {
 export interface EnumValueInfo {
   readonly name: string;
   readonly originalValue: string;
+  /** Numeric value for numeric enums, null for string enums */
+  readonly numericValue: number | null;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
 }
@@ -41,6 +43,8 @@ export interface GraphQLTypeInfo {
   readonly fields: ReadonlyArray<FieldInfo> | null;
   readonly unionMembers: ReadonlyArray<string> | null;
   readonly enumValues: ReadonlyArray<EnumValueInfo> | null;
+  /** True if this enum uses numeric values */
+  readonly isNumericEnum: boolean;
   readonly implementedInterfaces: ReadonlyArray<string> | null;
   readonly sourceFile: string;
   readonly description: string | null;

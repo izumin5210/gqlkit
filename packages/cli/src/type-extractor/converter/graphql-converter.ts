@@ -51,9 +51,11 @@ function convertEnumMembers(
 ): {
   values: ReadonlyArray<EnumValueInfo>;
   diagnostics: ReadonlyArray<Diagnostic>;
+  isNumeric: boolean;
 } {
   const values: EnumValueInfo[] = [];
   const diagnostics: Diagnostic[] = [];
+  let isNumeric = false;
 
   for (const member of members) {
     const convertedName = toScreamingSnakeCase(member.name);
@@ -73,15 +75,20 @@ function convertEnumMembers(
       continue;
     }
 
+    if (member.numericValue !== null) {
+      isNumeric = true;
+    }
+
     values.push({
       name: convertedName,
       originalValue: member.value,
+      numericValue: member.numericValue,
       description: member.description,
       deprecated: member.deprecated,
     });
   }
 
-  return { values, diagnostics };
+  return { values, diagnostics, isNumeric };
 }
 
 interface ConvertFieldsResult {
@@ -274,8 +281,11 @@ export function convertToGraphQL(
         });
       }
 
-      const { values: enumValues, diagnostics: enumDiagnostics } =
-        convertEnumMembers(extracted.enumMembers ?? [], metadata.sourceFile);
+      const {
+        values: enumValues,
+        diagnostics: enumDiagnostics,
+        isNumeric,
+      } = convertEnumMembers(extracted.enumMembers ?? [], metadata.sourceFile);
       diagnostics.push(...enumDiagnostics);
 
       types.push({
@@ -284,6 +294,7 @@ export function convertToGraphQL(
         fields: null,
         unionMembers: null,
         enumValues,
+        isNumericEnum: isNumeric,
         implementedInterfaces: null,
         sourceFile: metadata.sourceFile,
         description: metadata.description,
@@ -303,6 +314,7 @@ export function convertToGraphQL(
         fields,
         unionMembers: null,
         enumValues: null,
+        isNumericEnum: false,
         implementedInterfaces: extracted.implementedInterfaces
           ? [...extracted.implementedInterfaces]
           : null,
@@ -333,6 +345,7 @@ export function convertToGraphQL(
               fields: validationResult.fields,
               unionMembers: null,
               enumValues: null,
+              isNumericEnum: false,
               implementedInterfaces: null,
               sourceFile: metadata.sourceFile,
               description: metadata.description,
@@ -352,6 +365,7 @@ export function convertToGraphQL(
           fields: null,
           unionMembers,
           enumValues: null,
+          isNumericEnum: false,
           implementedInterfaces: null,
           sourceFile: metadata.sourceFile,
           description: metadata.description,
@@ -373,6 +387,7 @@ export function convertToGraphQL(
         fields,
         unionMembers: null,
         enumValues: null,
+        isNumericEnum: false,
         implementedInterfaces: extracted.implementedInterfaces
           ? [...extracted.implementedInterfaces]
           : null,

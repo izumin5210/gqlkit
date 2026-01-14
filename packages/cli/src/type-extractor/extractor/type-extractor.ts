@@ -73,6 +73,34 @@ export interface ExtractionResult {
   readonly detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
 }
 
+/**
+ * Internal TypeScript symbol with parent reference.
+ * Used to access the parent enum symbol from enum member types.
+ */
+type SymbolWithParent = ts.Symbol & { parent?: ts.Symbol };
+
+/**
+ * Finds the parent enum symbol if all types belong to the same enum.
+ * Returns null if types are empty, don't have a common parent enum, or belong to different enums.
+ */
+function findEnumParentSymbol(types: readonly ts.Type[]): ts.Symbol | null {
+  if (types.length === 0) return null;
+
+  const firstSymbol = types[0]!.symbol as SymbolWithParent | undefined;
+  const parentSymbol = firstSymbol?.parent;
+
+  if (!parentSymbol || !(parentSymbol.flags & ts.SymbolFlags.Enum)) {
+    return null;
+  }
+
+  const allBelongToSameEnum = types.every((t) => {
+    const sym = t.symbol as SymbolWithParent | undefined;
+    return sym?.parent === parentSymbol;
+  });
+
+  return allBelongToSameEnum ? parentSymbol : null;
+}
+
 function isDefaultExport(node: ts.Node, sourceFile: ts.SourceFile): boolean {
   let hasDefaultExport = false;
   const nodeName = (node as ts.DeclarationStatement).name?.getText(sourceFile);
@@ -225,6 +253,22 @@ function convertTsTypeToReference(
     }
 
     const nonNullTypes = getNonNullableTypes(type);
+
+    // Check if all non-null types belong to the same enum (for numeric enums)
+    const enumParentSymbol = findEnumParentSymbol(nonNullTypes);
+    if (enumParentSymbol) {
+      return {
+        tsType: {
+          kind: "reference",
+          name: enumParentSymbol.getName(),
+          elementType: null,
+          members: null,
+          nullable,
+          scalarInfo: null,
+          inlineObjectProperties: null,
+        },
+      };
+    }
 
     if (nonNullTypes.length === 1) {
       const innerResult = convertTsTypeToReference(
@@ -570,21 +614,6 @@ function extractFieldsFromType(
   return { fields, diagnostics };
 }
 
-function isNumericEnum(node: ts.Node): boolean {
-  if (!ts.isEnumDeclaration(node)) return false;
-  const members = node.members;
-  if (members.length === 0) return true;
-
-  return members.every((member) => {
-    const initializer = member.initializer;
-    if (initializer === undefined) return true;
-    return (
-      ts.isNumericLiteral(initializer) ||
-      ts.isPrefixUnaryExpression(initializer)
-    );
-  });
-}
-
 function isHeterogeneousEnum(node: ts.Node): boolean {
   if (!ts.isEnumDeclaration(node)) return false;
   const members = node.members;
@@ -644,23 +673,88 @@ function extractEnumMembers(
   for (const member of node.members) {
     const name = getEnumMemberName(member.name);
     const initializer = member.initializer;
-    if (initializer && ts.isStringLiteral(initializer)) {
-      const symbol = checker.getSymbolAtLocation(member.name);
-      const tsdocInfo = symbol
-        ? extractTsDocFromSymbol(symbol, checker)
-        : { description: undefined, deprecated: undefined };
 
+    const symbol = checker.getSymbolAtLocation(member.name);
+    const tsdocInfo = symbol
+      ? extractTsDocFromSymbol(symbol, checker)
+      : { description: undefined, deprecated: undefined };
+
+    if (initializer && ts.isStringLiteral(initializer)) {
       members.push({
         name,
         value: initializer.text,
+        numericValue: null,
         description: tsdocInfo.description ?? null,
         deprecated: tsdocInfo.deprecated ?? null,
         sourceLocation: getSourceLocationFromNode(member),
       });
+    } else {
+      const constantValue = checker.getConstantValue(member);
+      if (typeof constantValue === "number") {
+        members.push({
+          name,
+          value: name,
+          numericValue: constantValue,
+          description: tsdocInfo.description ?? null,
+          deprecated: tsdocInfo.deprecated ?? null,
+          sourceLocation: getSourceLocationFromNode(member),
+        });
+      }
     }
   }
 
   return members;
+}
+
+const GRAPHQL_NAME_REGEX = /^[_A-Za-z][_0-9A-Za-z]*$/;
+
+function isValidGraphQLName(name: string): boolean {
+  return GRAPHQL_NAME_REGEX.test(name);
+}
+
+function validateNumericEnumMembers(
+  members: ReadonlyArray<EnumMemberInfo>,
+  enumName: string,
+  enumLocation: SourceLocation,
+): Diagnostic[] {
+  const diagnostics: Diagnostic[] = [];
+
+  const numericMembers = members.filter((m) => m.numericValue !== null);
+  if (numericMembers.length === 0) {
+    return diagnostics;
+  }
+
+  const valueToMembers = new Map<number, string[]>();
+  for (const member of numericMembers) {
+    const value = member.numericValue!;
+    const existing = valueToMembers.get(value) ?? [];
+    existing.push(member.name);
+    valueToMembers.set(value, existing);
+  }
+
+  for (const [value, memberNames] of valueToMembers) {
+    if (memberNames.length > 1) {
+      diagnostics.push({
+        code: "DUPLICATE_ENUM_VALUE",
+        message: `Enum '${enumName}' has duplicate numeric value ${value} (used by ${memberNames.join(" and ")})`,
+        severity: "error",
+        location: enumLocation,
+      });
+    }
+  }
+
+  for (const member of members) {
+    if (!isValidGraphQLName(member.name)) {
+      diagnostics.push({
+        code: "INVALID_ENUM_MEMBER_NAME",
+        message: `Enum member '${enumName}.${member.name}' is not a valid GraphQL identifier`,
+        severity: "error",
+        location: member.sourceLocation ?? enumLocation,
+      });
+    }
+  }
+
+  return diagnostics;
 }
 
 function extractStringLiteralUnionMembers(
@@ -680,6 +774,7 @@ function extractStringLiteralUnionMembers(
       members.push({
         name: value,
         value: value,
+        numericValue: null,
         description: null,
         deprecated: null,
         sourceLocation: null,
@@ -1217,17 +1312,18 @@ export function extractTypesFromProgram(
           return;
         }
 
-        if (isNumericEnum(node)) {
-          diagnostics.push({
-            code: "UNSUPPORTED_ENUM_TYPE",
-            message: `Numeric enum '${name}' is not supported. Use a string enum instead.`,
-            severity: "error",
-            location,
-          });
+        const enumMembers = extractEnumMembers(node, checker);
+
+        const validationDiagnostics = validateNumericEnumMembers(
+          enumMembers,
+          name,
+          location,
+        );
+        if (validationDiagnostics.length > 0) {
+          diagnostics.push(...validationDiagnostics);
           return;
         }
 
-        const enumMembers = extractEnumMembers(node, checker);
         const tsdocInfo = extractTsDocInfo(node, checker);
         const metadata: TypeMetadata = {
           name,
