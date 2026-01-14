@@ -27,7 +27,7 @@
   "bugs": {
     "url": "https://github.com/izumin5210/gqlkit/issues"
   },
-  "homepage": "https://github.com/izumin5210/gqlkit/tree/main/packages/cli#readme",
+  "homepage": "https://gqlkit.izumin.dev",
   "publishConfig": {
     "access": "public"
   },
