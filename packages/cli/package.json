@@ -9,7 +9,9 @@
   },
   "files": [
     "dist",
-    "docs"
+    "docs",
+    "src",
+    "!**/testdata/**"
   ],
   "keywords": [
     "graphql",

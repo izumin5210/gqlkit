@@ -12,7 +12,8 @@
     }
   },
   "files": [
-    "dist"
+    "dist",
+    "src"
   ],
   "keywords": [
     "graphql",
