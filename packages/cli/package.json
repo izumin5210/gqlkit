@@ -9,7 +9,14 @@
   },
   "files": [
     "dist",
-    "docs"
+    "docs",
+    "src",
+    "!**/testdata/**",
+    "!**/*.test.ts",
+    "!**/*.test.js",
+    "!**/*.test.d.ts",
+    "!**/*.test.js.map",
+    "!**/*.test.d.ts.map"
   ],
   "keywords": [
     "graphql",
