@@ -11,7 +11,12 @@
     "dist",
     "docs",
     "src",
-    "!**/testdata/**"
+    "!**/testdata/**",
+    "!**/*.test.ts",
+    "!**/*.test.js",
+    "!**/*.test.d.ts",
+    "!**/*.test.js.map",
+    "!**/*.test.d.ts.map"
   ],
   "keywords": [
     "graphql",
