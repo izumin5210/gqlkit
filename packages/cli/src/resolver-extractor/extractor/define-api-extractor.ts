@@ -270,7 +270,21 @@ function convertTsTypeToReference(
     const nonNullTypes = getNonNullableTypes(type);
 
     if (nonNullTypes.length === 1 && nonNullTypes[0]) {
-      const innerType = convertTsTypeToReference(nonNullTypes[0], checker);
+      let nonNullTypeNode: ts.TypeNode | undefined;
+      if (typeNode && ts.isUnionTypeNode(typeNode)) {
+        nonNullTypeNode = typeNode.types.find(
+          (t) =>
+            !(
+              ts.isLiteralTypeNode(t) &&
+              t.literal.kind === ts.SyntaxKind.NullKeyword
+            ) && t.kind !== ts.SyntaxKind.UndefinedKeyword,
+        );
+      }
+      const innerType = convertTsTypeToReference(
+        nonNullTypes[0],
+        checker,
+        nonNullTypeNode,
+      );
       return { ...innerType, nullable };
     }
 
@@ -388,12 +402,13 @@ function convertTsTypeToReference(
     };
   }
 
-  const symbol = type.getSymbol();
+  const aliasSymbol = type.aliasSymbol;
+  const symbol = aliasSymbol ?? type.getSymbol();
   if (symbol) {
     const symbolName = symbol.getName();
     if (!isInternalTypeSymbol(symbolName)) {
       let name = symbolName;
-      if (typeNode && ts.isTypeReferenceNode(typeNode)) {
+      if (!aliasSymbol && typeNode && ts.isTypeReferenceNode(typeNode)) {
         const typeName = typeNode.typeName;
         if (ts.isIdentifier(typeName)) {
           name = typeName.text;
@@ -611,9 +626,22 @@ function getTypeNameForDiagnostic(
 function extractArgsFromType(
   argsType: ts.Type,
   checker: ts.TypeChecker,
+  argsTypeNode?: ts.TypeNode,
 ): ArgumentDefinition[] {
   const args: ArgumentDefinition[] = [];
   const properties = extractPropertySymbols(argsType, checker);
+
+  const memberTypeNodes = new Map<string, ts.TypeNode>();
+  if (argsTypeNode && ts.isTypeLiteralNode(argsTypeNode)) {
+    for (const member of argsTypeNode.members) {
+      if (ts.isPropertySignature(member) && member.name && member.type) {
+        const name = ts.isIdentifier(member.name)
+          ? member.name.text
+          : member.name.getText();
+        memberTypeNodes.set(name, member.type);
+      }
+    }
+  }
 
   for (const prop of properties) {
     const propType = checker.getTypeOfSymbol(prop);
@@ -632,9 +660,10 @@ function extractArgsFromType(
       actualPropType = unwrapDirectiveType(propType, checker);
     }
 
+    const propTypeNode = memberTypeNodes.get(prop.getName());
     args.push({
       name: prop.getName(),
-      tsType: convertTsTypeToReference(actualPropType, checker),
+      tsType: convertTsTypeToReference(actualPropType, checker, propTypeNode),
       optional,
       description: tsdocInfo.description,
       deprecated: tsdocInfo.deprecated,
@@ -764,7 +793,9 @@ function extractTypeArgumentsFromCall(
       diagnostics.push(...validateArgsType(argsType, argsTypeNode, checker));
     }
 
-    const args = isNoArgs ? null : extractArgsFromType(argsType, checker);
+    const args = isNoArgs
+      ? null
+      : extractArgsFromType(argsType, checker, argsTypeNode);
 
     if (!isNoArgs) {
       const emptyDiagnostic = checkEmptyArgsType(
@@ -818,7 +849,9 @@ function extractTypeArgumentsFromCall(
     diagnostics.push(...validateArgsType(argsType, argsTypeNode, checker));
   }
 
-  const args = isNoArgs ? null : extractArgsFromType(argsType, checker);
+  const args = isNoArgs
+    ? null
+    : extractArgsFromType(argsType, checker, argsTypeNode);
 
   if (!isNoArgs) {
     const emptyDiagnostic = checkEmptyArgsType(
