@@ -31,11 +31,13 @@ import {
 import {
   extractPropertySymbols,
   filterNonNullTypeNodes,
+  findEnumParentSymbol,
   findNonNullTypeNode,
   getNonNullableTypes,
   getTypeNameFromNode,
   hasUndefinedInType,
   isAnonymousObjectType,
+  isBooleanUnion,
   isBuiltinUtilityTypeName,
   isExported,
   isNullableUnion,
@@ -90,34 +92,6 @@ export interface ExtractionResult {
   readonly detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
 }
 
-/**
- * Internal TypeScript symbol with parent reference.
- * Used to access the parent enum symbol from enum member types.
- */
-type SymbolWithParent = ts.Symbol & { parent?: ts.Symbol };
-
-/**
- * Finds the parent enum symbol if all types belong to the same enum.
- * Returns null if types are empty, don't have a common parent enum, or belong to different enums.
- */
-function findEnumParentSymbol(types: readonly ts.Type[]): ts.Symbol | null {
-  if (types.length === 0) return null;
-
-  const firstSymbol = types[0]!.symbol as SymbolWithParent | undefined;
-  const parentSymbol = firstSymbol?.parent;
-
-  if (!parentSymbol || !(parentSymbol.flags & ts.SymbolFlags.Enum)) {
-    return null;
-  }
-
-  const allBelongToSameEnum = types.every((t) => {
-    const sym = t.symbol as SymbolWithParent | undefined;
-    return sym?.parent === parentSymbol;
-  });
-
-  return allBelongToSameEnum ? parentSymbol : null;
-}
-
 function isDefaultExport(node: ts.Node, sourceFile: ts.SourceFile): boolean {
   let hasDefaultExport = false;
   const nodeName = (node as ts.DeclarationStatement).name?.getText(sourceFile);
@@ -135,15 +109,6 @@ function isDefaultExport(node: ts.Node, sourceFile: ts.SourceFile): boolean {
   });
 
   return hasDefaultExport;
-}
-
-function isBooleanUnion(type: ts.Type): boolean {
-  if (!type.isUnion()) return false;
-  const nonNullTypes = getNonNullableTypes(type);
-  return (
-    nonNullTypes.length === 2 &&
-    nonNullTypes.every((t) => t.flags & ts.TypeFlags.BooleanLiteral)
-  );
 }
 
 interface TypeReferenceResult {

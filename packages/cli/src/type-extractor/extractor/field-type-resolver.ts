@@ -7,8 +7,11 @@ import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } 
 import { isInlineObjectType } from "../../shared/inline-object-utils.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
 import {
+  findEnumParentSymbol,
+  findNonNullTypeNode,
   getNonNullableTypes,
   getTypeNameFromNode,
+  isBooleanUnion,
   isNullableUnion,
 } from "../../shared/typescript-utils.js";
 import {
@@ -279,58 +282,4 @@ function tryExtractAsInlineObject(
   );
 
   return createInlineObjectType(inlineProperties);
-}
-
-function isBooleanUnion(type: ts.Type): boolean {
-  if (!type.isUnion()) return false;
-
-  const nonNullTypes = type.types.filter(
-    (t) =>
-      !(
-        (t.flags & ts.TypeFlags.Null) !== 0 ||
-        (t.flags & ts.TypeFlags.Undefined) !== 0
-      ),
-  );
-
-  return (
-    nonNullTypes.length === 2 &&
-    nonNullTypes.every((t) => (t.flags & ts.TypeFlags.BooleanLiteral) !== 0)
-  );
-}
-
-/**
- * Internal TypeScript symbol with parent reference.
- * Used to access the parent enum symbol from enum member types.
- */
-type SymbolWithParent = ts.Symbol & { parent?: ts.Symbol };
-
-function findEnumParentSymbol(types: ts.Type[]): ts.Symbol | undefined {
-  if (types.length === 0) return undefined;
-
-  const firstSymbol = types[0]!.symbol as SymbolWithParent | undefined;
-  const parentSymbol = firstSymbol?.parent;
-
-  if (!parentSymbol || !(parentSymbol.flags & ts.SymbolFlags.Enum)) {
-    return undefined;
-  }
-
-  const allBelongToSameEnum = types.every((t) => {
-    const sym = t.symbol as SymbolWithParent | undefined;
-    return sym?.parent === parentSymbol;
-  });
-
-  return allBelongToSameEnum ? parentSymbol : undefined;
-}
-
-function findNonNullTypeNode(
-  typeNode: ts.UnionTypeNode,
-): ts.TypeNode | undefined {
-  return typeNode.types.find(
-    (t) =>
-      !(
-        (ts.isLiteralTypeNode(t) &&
-          t.literal.kind === ts.SyntaxKind.NullKeyword) ||
-        t.kind === ts.SyntaxKind.UndefinedKeyword
-      ),
-  );
 }
