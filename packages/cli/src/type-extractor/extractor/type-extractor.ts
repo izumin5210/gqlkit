@@ -667,14 +667,14 @@ function extractStringLiteralUnionMembers(
 function determineTypeKind(
   node: ts.Node,
   type: ts.Type,
-  sourceFile: ts.SourceFile,
+  checker: ts.TypeChecker,
 ): TypeKind {
   if (ts.isInterfaceDeclaration(node)) {
     return "interface";
   }
 
   if (ts.isTypeAliasDeclaration(node)) {
-    if (isDefineInterfaceTypeAlias(node, sourceFile)) {
+    if (isDefineInterfaceTypeAlias(node, checker)) {
       return "graphqlInterface";
     }
 
@@ -1338,7 +1338,7 @@ export function extractTypesFromProgram(
           actualType = type;
         }
 
-        const kind = determineTypeKind(node, actualType, sourceFile);
+        const kind = determineTypeKind(node, actualType, checker);
         // Get typeNode for union member extraction (only for type aliases)
         const typeAliasTypeNode = ts.isTypeAliasDeclaration(node)
           ? node.type
