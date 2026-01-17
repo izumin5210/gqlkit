@@ -26,7 +26,10 @@ import type { GlobalTypeMapping } from "./type-extractor.js";
 export interface FieldTypeResolverContext {
   readonly checker: ts.TypeChecker;
   readonly knownTypeNames: ReadonlySet<string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly sourceFiles: ReadonlySet<string>;
 }
 
 /**
@@ -63,7 +66,7 @@ function resolveFieldTypeInternal(
   typeNode: ts.TypeNode | undefined,
   ctx: InternalFieldTypeContext,
 ): TSTypeReference {
-  const { checker, knownTypeNames, globalTypeMappings } = ctx;
+  const { checker, knownTypeNames, knownTypeSymbols, globalTypeMappings } = ctx;
 
   // Scalar detection
   const metadataResult = detectScalarMetadata(type, checker);
@@ -99,7 +102,15 @@ function resolveFieldTypeInternal(
     const aliasSymbol = type.aliasSymbol;
     if (aliasSymbol) {
       const name = aliasSymbol.getName();
-      if (knownTypeNames.has(name)) {
+      if (
+        isKnownSchemaType(
+          name,
+          aliasSymbol,
+          knownTypeNames,
+          knownTypeSymbols,
+          checker,
+        )
+      ) {
         return createReferenceType(name, nullable);
       }
     }
@@ -107,7 +118,17 @@ function resolveFieldTypeInternal(
     // Fallback: Extract name from typeNode when aliasSymbol is not available (e.g., re-exported types)
     if (typeNode && ts.isTypeReferenceNode(typeNode)) {
       const typeName = getTypeNameFromNode(typeNode);
-      if (typeName && knownTypeNames.has(typeName)) {
+      const nodeSymbol = checker.getSymbolAtLocation(typeNode.typeName);
+      if (
+        typeName &&
+        isKnownSchemaType(
+          typeName,
+          nodeSymbol ?? undefined,
+          knownTypeNames,
+          knownTypeSymbols,
+          checker,
+        )
+      ) {
         return createReferenceType(typeName, nullable);
       }
     }
@@ -186,7 +207,15 @@ function resolveFieldTypeInternal(
     // If the intersection has an alias that's in knownTypeNames, use it
     if (type.aliasSymbol) {
       const aliasName = type.aliasSymbol.getName();
-      if (knownTypeNames.has(aliasName)) {
+      if (
+        isKnownSchemaType(
+          aliasName,
+          type.aliasSymbol,
+          knownTypeNames,
+          knownTypeSymbols,
+          checker,
+        )
+      ) {
         return createReferenceType(aliasName);
       }
     }
@@ -200,7 +229,17 @@ function resolveFieldTypeInternal(
     // Check if typeNode references a known type
     if (typeNode && ts.isTypeReferenceNode(typeNode)) {
       const typeName = getTypeNameFromNode(typeNode);
-      if (typeName && knownTypeNames.has(typeName)) {
+      const nodeSymbol = checker.getSymbolAtLocation(typeNode.typeName);
+      if (
+        typeName &&
+        isKnownSchemaType(
+          typeName,
+          nodeSymbol ?? undefined,
+          knownTypeNames,
+          knownTypeSymbols,
+          checker,
+        )
+      ) {
         return createReferenceType(typeName);
       }
     }
@@ -215,7 +254,17 @@ function resolveFieldTypeInternal(
       // Check if typeNode references a known type (schema-defined type)
       if (typeNode && ts.isTypeReferenceNode(typeNode)) {
         const typeName = getTypeNameFromNode(typeNode);
-        if (typeName && knownTypeNames.has(typeName)) {
+        const nodeSymbol = checker.getSymbolAtLocation(typeNode.typeName);
+        if (
+          typeName &&
+          isKnownSchemaType(
+            typeName,
+            nodeSymbol ?? undefined,
+            knownTypeNames,
+            knownTypeSymbols,
+            checker,
+          )
+        ) {
           return createReferenceType(typeName);
         }
       }
@@ -230,7 +279,17 @@ function resolveFieldTypeInternal(
   // - `Simplify<T>` where the typeNode is the declared alias name but type.symbol is the expanded type
   if (typeNode && ts.isTypeReferenceNode(typeNode)) {
     const typeName = getTypeNameFromNode(typeNode);
-    if (typeName && knownTypeNames.has(typeName)) {
+    const nodeSymbol = checker.getSymbolAtLocation(typeNode.typeName);
+    if (
+      typeName &&
+      isKnownSchemaType(
+        typeName,
+        nodeSymbol ?? undefined,
+        knownTypeNames,
+        knownTypeSymbols,
+        checker,
+      )
+    ) {
       return createReferenceType(typeName);
     }
   }
@@ -254,9 +313,37 @@ function resolveFieldTypeInternal(
         });
       }
 
-      // Check if it's a known type
-      if (knownTypeNames.has(symbolName)) {
+      // Check if it's a known type by symbol comparison
+      if (
+        isKnownSchemaType(
+          symbolName,
+          type.symbol,
+          knownTypeNames,
+          knownTypeSymbols,
+          checker,
+        )
+      ) {
         return createReferenceType(symbolName);
+      }
+
+      // Check if the symbol is the underlying type of a schema type alias
+      // For `type User = ExternalUser;`, this allows `ExternalUser` to be recognized as `User`
+      const resolvedSymbol = resolveOriginalSymbol(type.symbol, checker);
+      const schemaTypeName = ctx.underlyingSymbolToTypeName.get(resolvedSymbol);
+      if (schemaTypeName) {
+        return createReferenceType(schemaTypeName);
+      }
+
+      // If the name exists in schema but symbol doesn't match,
+      // it's a different type with the same name
+      if (knownTypeNames.has(symbolName)) {
+        // Check if the type is declared within schema files (local shadowing)
+        if (isTypeFromSchemaFiles(type.symbol, ctx.sourceFiles)) {
+          // Local shadowing - use name matching for backwards compatibility
+          return createReferenceType(symbolName);
+        }
+        // Type from outside schema files - expand as inline object
+        return tryExtractAsInlineObject(type, ctx);
       }
 
       // Unknown type - still return reference but it will likely cause validation error later
@@ -287,4 +374,63 @@ function tryExtractAsInlineObject(
   );
 
   return createInlineObjectType(inlineProperties);
+}
+
+/**
+ * Resolves a symbol to its original symbol by following alias chains.
+ */
+function resolveOriginalSymbol(
+  symbol: ts.Symbol,
+  checker: ts.TypeChecker,
+): ts.Symbol {
+  if (symbol.flags & ts.SymbolFlags.Alias) {
+    return checker.getAliasedSymbol(symbol);
+  }
+  return symbol;
+}
+
+/**
+ * Checks if a type's symbol matches the known schema type symbol.
+ * Returns true if both name matches AND symbol matches (or if symbol comparison is not possible).
+ */
+function isKnownSchemaType(
+  name: string,
+  typeSymbol: ts.Symbol | undefined,
+  knownTypeNames: ReadonlySet<string>,
+  knownTypeSymbols: ReadonlyMap<string, ts.Symbol>,
+  checker: ts.TypeChecker,
+): boolean {
+  if (!knownTypeNames.has(name)) {
+    return false;
+  }
+
+  const schemaSymbol = knownTypeSymbols.get(name);
+  if (!schemaSymbol || !typeSymbol) {
+    return false;
+  }
+
+  const resolvedTypeSymbol = resolveOriginalSymbol(typeSymbol, checker);
+  return resolvedTypeSymbol === schemaSymbol;
+}
+
+/**
+ * Checks if a type's symbol is declared within the schema source files.
+ * Returns true if the type is a local definition (shadowing), false if from external files.
+ */
+function isTypeFromSchemaFiles(
+  symbol: ts.Symbol,
+  sourceFiles: ReadonlySet<string>,
+): boolean {
+  const declarations = symbol.getDeclarations();
+  if (!declarations || declarations.length === 0) {
+    return false;
+  }
+
+  const declaration = declarations[0];
+  if (!declaration) {
+    return false;
+  }
+
+  const sourceFile = declaration.getSourceFile();
+  return sourceFiles.has(sourceFile.fileName);
 }

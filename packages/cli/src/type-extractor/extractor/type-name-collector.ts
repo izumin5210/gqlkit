@@ -3,6 +3,13 @@ import { isExported } from "../../shared/typescript-utils.js";
 
 export interface TypeNameCollectionResult {
   readonly typeNames: ReadonlySet<string>;
+  readonly typeSymbols: ReadonlyMap<string, ts.Symbol>;
+  /**
+   * Maps underlying type symbols to their schema type names.
+   * For `type User = ExternalUser;`, maps ExternalUser's symbol to "User".
+   * This allows recognizing `ExternalUser` as `User` in field types.
+   */
+  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
 }
 
 /**
@@ -21,6 +28,8 @@ export function collectDeclaredTypeNames(
   sourceFiles: ReadonlyArray<string>,
 ): TypeNameCollectionResult {
   const typeNames = new Set<string>();
+  const typeSymbols = new Map<string, ts.Symbol>();
+  const underlyingSymbolToTypeName = new Map<ts.Symbol, string>();
   const checker = program.getTypeChecker();
 
   for (const filePath of sourceFiles) {
@@ -30,13 +39,39 @@ export function collectDeclaredTypeNames(
     ts.forEachChild(sourceFile, (node) => {
       // Direct type declarations
       if (ts.isTypeAliasDeclaration(node) && isExported(node)) {
-        typeNames.add(node.name.getText(sourceFile));
+        const name = node.name.getText(sourceFile);
+        typeNames.add(name);
+        const symbol = checker.getSymbolAtLocation(node.name);
+        if (symbol) {
+          typeSymbols.set(name, resolveOriginalSymbol(symbol, checker));
+
+          // For type aliases like `type User = ExternalUser;`,
+          // also track the underlying type's symbol
+          const type = checker.getTypeAtLocation(node.type);
+          if (type.symbol) {
+            const underlyingSymbol = resolveOriginalSymbol(
+              type.symbol,
+              checker,
+            );
+            underlyingSymbolToTypeName.set(underlyingSymbol, name);
+          }
+        }
       }
       if (ts.isInterfaceDeclaration(node) && isExported(node)) {
-        typeNames.add(node.name.getText(sourceFile));
+        const name = node.name.getText(sourceFile);
+        typeNames.add(name);
+        const symbol = checker.getSymbolAtLocation(node.name);
+        if (symbol) {
+          typeSymbols.set(name, resolveOriginalSymbol(symbol, checker));
+        }
       }
       if (ts.isEnumDeclaration(node) && isExported(node)) {
-        typeNames.add(node.name.getText(sourceFile));
+        const name = node.name.getText(sourceFile);
+        typeNames.add(name);
+        const symbol = checker.getSymbolAtLocation(node.name);
+        if (symbol) {
+          typeSymbols.set(name, resolveOriginalSymbol(symbol, checker));
+        }
       }
 
       // Re-exports: `export type { ... } from "..."` or `export type * from "..."`
@@ -46,7 +81,12 @@ export function collectDeclaredTypeNames(
           if (ts.isNamedExports(node.exportClause)) {
             for (const element of node.exportClause.elements) {
               // Use the exported name (element.name), not the property name
-              typeNames.add(element.name.getText(sourceFile));
+              const name = element.name.getText(sourceFile);
+              typeNames.add(name);
+              const symbol = checker.getSymbolAtLocation(element.name);
+              if (symbol) {
+                typeSymbols.set(name, resolveOriginalSymbol(symbol, checker));
+              }
             }
           }
         } else if (node.moduleSpecifier) {
@@ -61,6 +101,7 @@ export function collectDeclaredTypeNames(
               // Check if the export is a type (not a value)
               if (isTypeExport(exp)) {
                 typeNames.add(name);
+                typeSymbols.set(name, resolveOriginalSymbol(exp, checker));
               }
             }
           }
@@ -69,7 +110,21 @@ export function collectDeclaredTypeNames(
     });
   }
 
-  return { typeNames };
+  return { typeNames, typeSymbols, underlyingSymbolToTypeName };
+}
+
+/**
+ * Resolves a symbol to its original symbol by following alias chains.
+ * This is necessary for re-exports where the symbol is an alias.
+ */
+function resolveOriginalSymbol(
+  symbol: ts.Symbol,
+  checker: ts.TypeChecker,
+): ts.Symbol {
+  if (symbol.flags & ts.SymbolFlags.Alias) {
+    return checker.getAliasedSymbol(symbol);
+  }
+  return symbol;
 }
 
 /**

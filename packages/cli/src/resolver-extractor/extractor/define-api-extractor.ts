@@ -87,7 +87,10 @@ export interface ExtractDefineApiResult {
 
 export interface ExtractDefineApiOptions {
   readonly knownTypeNames: ReadonlySet<string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly sourceFiles: ReadonlySet<string>;
 }
 
 const RESOLVER_METADATA_PROPERTY = METADATA_PROPERTIES.RESOLVER;
@@ -652,11 +655,20 @@ export function extractDefineApiResolvers(
   const abstractTypeResolvers: AbstractResolverInfo[] = [];
   const diagnostics: Diagnostic[] = [];
 
-  const { knownTypeNames, globalTypeMappings } = options;
+  const {
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
+    globalTypeMappings,
+    sourceFiles,
+  } = options;
   const fieldTypeResolverContext: FieldTypeResolverContext = {
     checker,
     knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
     globalTypeMappings,
+    sourceFiles,
   };
 
   for (const filePath of files) {

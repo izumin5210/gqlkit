@@ -482,7 +482,9 @@ export function unwrapDirectiveType(
     for (const member of type.types) {
       if (member.aliasTypeArguments && member.aliasTypeArguments.length > 0) {
         const memberMetaProp = getMetaProperty(member);
-        const memberOriginalTypeProp = member.getProperty(ORIGINAL_TYPE_PROPERTY);
+        const memberOriginalTypeProp = member.getProperty(
+          ORIGINAL_TYPE_PROPERTY,
+        );
         if (memberMetaProp || memberOriginalTypeProp) {
           return member.aliasTypeArguments[0]!;
         }

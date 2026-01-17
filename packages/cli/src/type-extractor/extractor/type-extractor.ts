@@ -79,6 +79,10 @@ export interface ExtractionOptions {
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   /** Set of type names declared in the schema (from Phase 1 collection) */
   readonly knownTypeNames: ReadonlySet<string>;
+  /** Map of type names to their symbols (from Phase 1 collection) */
+  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
+  /** Map of underlying symbols to schema type names (for type alias resolution) */
+  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
 }
 
 export interface ExtractionResult {
@@ -389,12 +393,23 @@ interface ExtractFieldsParams {
   readonly checker: ts.TypeChecker;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
+  readonly sourceFiles: ReadonlySet<string>;
 }
 
 function extractFieldsFromType(
   params: ExtractFieldsParams,
 ): FieldExtractionResult {
-  const { type, checker, globalTypeMappings, knownTypeNames } = params;
+  const {
+    type,
+    checker,
+    globalTypeMappings,
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
+    sourceFiles,
+  } = params;
   const fields: FieldDefinition[] = [];
   const diagnostics: Diagnostic[] = [];
   const properties = extractPropertySymbols(type, checker);
@@ -469,7 +484,10 @@ function extractFieldsFromType(
     const resolvedType = resolveFieldType(actualPropType, propTypeNode, {
       checker,
       knownTypeNames,
+      knownTypeSymbols,
+      underlyingSymbolToTypeName,
       globalTypeMappings,
+      sourceFiles,
     });
 
     // Preserve nullability from original WithDirectives type
@@ -775,6 +793,8 @@ interface ProcessReexportedSymbolParams {
   readonly checker: ts.TypeChecker;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
   readonly scannedSourceFiles: ReadonlySet<string>;
 }
 
@@ -798,6 +818,8 @@ function processReexportedSymbol(
     checker,
     globalTypeMappings,
     knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
     scannedSourceFiles,
   } = params;
 
@@ -905,6 +927,9 @@ function processReexportedSymbol(
           checker,
           globalTypeMappings,
           knownTypeNames,
+          knownTypeSymbols,
+          underlyingSymbolToTypeName,
+          sourceFiles: scannedSourceFiles,
         });
   diagnostics.push(...fieldResult.diagnostics);
 
@@ -938,6 +963,8 @@ function processExportDeclaration(
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping>,
   knownTypeNames: ReadonlySet<string>,
+  knownTypeSymbols: ReadonlyMap<string, ts.Symbol>,
+  underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>,
   scannedSourceFiles: ReadonlySet<string>,
 ): ProcessExportDeclarationResult {
   const types: ExtractedTypeInfo[] = [];
@@ -1030,6 +1057,8 @@ function processExportDeclaration(
       checker,
       globalTypeMappings,
       knownTypeNames,
+      knownTypeSymbols,
+      underlyingSymbolToTypeName,
       scannedSourceFiles,
     });
 
@@ -1193,7 +1222,12 @@ export function extractTypesFromProgram(
   const diagnostics: Diagnostic[] = [];
   const detectedScalarNames = new Set<string>();
   const detectedScalars: ScalarMetadataInfo[] = [];
-  const { globalTypeMappings, knownTypeNames } = options;
+  const {
+    globalTypeMappings,
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
+  } = options;
   const scannedSourceFilesSet = new Set(sourceFiles);
 
   for (const filePath of sourceFiles) {
@@ -1410,6 +1444,9 @@ export function extractTypesFromProgram(
                 checker,
                 globalTypeMappings,
                 knownTypeNames,
+                knownTypeSymbols,
+                underlyingSymbolToTypeName,
+                sourceFiles: scannedSourceFilesSet,
               });
         const fields = fieldResult.fields;
         diagnostics.push(...fieldResult.diagnostics);
@@ -1470,6 +1507,8 @@ export function extractTypesFromProgram(
           checker,
           globalTypeMappings,
           knownTypeNames,
+          knownTypeSymbols,
+          underlyingSymbolToTypeName,
           scannedSourceFilesSet,
         );
         types.push(...result.types);

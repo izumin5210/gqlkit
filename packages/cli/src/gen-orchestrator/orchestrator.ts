@@ -91,6 +91,8 @@ interface PipelineContext {
   readonly sourceFiles: ReadonlyArray<string>;
   readonly program: ts.Program | null;
   readonly knownTypeNames: ReadonlySet<string> | null;
+  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol> | null;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string> | null;
   readonly typesResult: TypesResult | null;
   readonly resolversResult: ResolversResult | null;
   readonly directiveDefinitions: DirectiveDefinitionInfo[] | null;
@@ -128,6 +130,8 @@ interface ExtractTypesCoreParams {
   readonly configScalars: ReadonlyArray<ConfigScalarMapping>;
   readonly sourceRoot: string | null;
   readonly knownTypeNames: ReadonlySet<string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
 }
 
 function extractTypesCore(params: ExtractTypesCoreParams): TypesResult {
@@ -139,12 +143,16 @@ function extractTypesCore(params: ExtractTypesCoreParams): TypesResult {
     configScalars,
     sourceRoot,
     knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
   } = params;
   const allDiagnostics: Diagnostic[] = [];
 
   const extractionResult = extractTypesFromProgram(program, sourceFiles, {
     globalTypeMappings,
     knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
   });
   allDiagnostics.push(...extractionResult.diagnostics);
 
@@ -297,21 +305,34 @@ interface ExtractResolversCoreParams {
   readonly program: ts.Program;
   readonly sourceFiles: ReadonlyArray<string>;
   readonly knownTypeNames: ReadonlySet<string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
 }
 
 function extractResolversCore(
   params: ExtractResolversCoreParams,
 ): ResolversResult {
-  const { program, sourceFiles, knownTypeNames, globalTypeMappings } = params;
+  const {
+    program,
+    sourceFiles,
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
+    globalTypeMappings,
+  } = params;
   const allDiagnostics: Diagnostic[] = [];
 
+  const sourceFilesSet = new Set(sourceFiles);
   const defineApiExtractionResult = extractDefineApiResolvers(
     program,
     sourceFiles,
     {
       knownTypeNames,
+      knownTypeSymbols,
+      underlyingSymbolToTypeName,
       globalTypeMappings,
+      sourceFiles: sourceFilesSet,
     },
   );
   allDiagnostics.push(...defineApiExtractionResult.diagnostics);
@@ -357,6 +378,8 @@ function createInitialContext(config: GenerationConfig): PipelineContext {
     sourceFiles: [],
     program: null,
     knownTypeNames: null,
+    knownTypeSymbols: null,
+    underlyingSymbolToTypeName: null,
     typesResult: null,
     resolversResult: null,
     directiveDefinitions: null,
@@ -417,7 +440,12 @@ function collectTypeNamesStep(ctx: PipelineContext): PipelineContext {
 
   const result = collectDeclaredTypeNames(ctx.program, ctx.sourceFiles);
 
-  return { ...ctx, knownTypeNames: result.typeNames };
+  return {
+    ...ctx,
+    knownTypeNames: result.typeNames,
+    knownTypeSymbols: result.typeSymbols,
+    underlyingSymbolToTypeName: result.underlyingSymbolToTypeName,
+  };
 }
 
 function prepareScalarConfig(config: GenerationConfig): {
@@ -463,7 +491,14 @@ function prepareScalarConfig(config: GenerationConfig): {
 }
 
 function extractTypesStep(ctx: PipelineContext): PipelineContext {
-  if (ctx.aborted || !ctx.program || !ctx.knownTypeNames) return ctx;
+  if (
+    ctx.aborted ||
+    !ctx.program ||
+    !ctx.knownTypeNames ||
+    !ctx.knownTypeSymbols ||
+    !ctx.underlyingSymbolToTypeName
+  )
+    return ctx;
 
   const { customScalarNames, globalTypeMappings, configScalars } =
     prepareScalarConfig(ctx.config);
@@ -476,13 +511,22 @@ function extractTypesStep(ctx: PipelineContext): PipelineContext {
     configScalars,
     sourceRoot: ctx.config.cwd,
     knownTypeNames: ctx.knownTypeNames,
+    knownTypeSymbols: ctx.knownTypeSymbols,
+    underlyingSymbolToTypeName: ctx.underlyingSymbolToTypeName,
   });
 
   return { ...ctx, typesResult };
 }
 
 function extractResolversStep(ctx: PipelineContext): PipelineContext {
-  if (ctx.aborted || !ctx.program || !ctx.knownTypeNames) return ctx;
+  if (
+    ctx.aborted ||
+    !ctx.program ||
+    !ctx.knownTypeNames ||
+    !ctx.knownTypeSymbols ||
+    !ctx.underlyingSymbolToTypeName
+  )
+    return ctx;
 
   const { globalTypeMappings } = prepareScalarConfig(ctx.config);
 
@@ -490,6 +534,8 @@ function extractResolversStep(ctx: PipelineContext): PipelineContext {
     program: ctx.program,
     sourceFiles: ctx.sourceFiles,
     knownTypeNames: ctx.knownTypeNames,
+    knownTypeSymbols: ctx.knownTypeSymbols,
+    underlyingSymbolToTypeName: ctx.underlyingSymbolToTypeName,
     globalTypeMappings,
   });
 
