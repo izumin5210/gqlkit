@@ -81,7 +81,11 @@ Static code generation tool that analyzes TypeScript source files and produces G
     - Input field: `{ParentTypeNameWithoutInputSuffix}{PascalCaseFieldName}Input`
     - Query/Mutation arg: `{PascalCaseFieldName}{PascalCaseArgName}Input`
     - Field resolver arg: `{ParentTypeName}{PascalCaseFieldName}{PascalCaseArgName}Input`
+17. **2-phase type extraction**: Separates type declaration context from field type context:
+    - Phase 1: Collect all exported type names (`knownTypeNames`)
+    - Phase 2: Resolve field types using `knownTypeNames` to determine if references should be preserved or expanded
+    - Key principle: In field context, only types in `knownTypeNames` are preserved as references; utility types (Omit, Pick, Simplify, etc.) are expanded to inline objects
 
 ---
 _Document standards and patterns, not every dependency_
-_Updated: 2026-01-14 - Added abstract type resolution (defineResolveType, defineIsTypeOf)_
+_Updated: 2026-01-18 - Added 2-phase type extraction pattern_
