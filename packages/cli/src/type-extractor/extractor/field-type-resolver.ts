@@ -33,6 +33,13 @@ export interface FieldTypeResolverContext {
 }
 
 /**
+ * Internal context including cycle detection state.
+ */
+interface InternalFieldTypeContext extends FieldTypeResolverContext {
+  readonly visitedTypes: WeakSet<ts.Type>;
+}
+
+/**
  * Resolves a TypeScript type to a TSTypeReference for use in field context.
  *
  * This function is specifically for field type resolution (not type declarations).
@@ -46,7 +53,18 @@ export function resolveFieldType(
   type: ts.Type,
   typeNode: ts.TypeNode | undefined,
   ctx: FieldTypeResolverContext,
-  visitedTypes: WeakSet<ts.Type> = new WeakSet(),
+): TSTypeReference {
+  const internalCtx: InternalFieldTypeContext = {
+    ...ctx,
+    visitedTypes: new WeakSet(),
+  };
+  return resolveFieldTypeInternal(type, typeNode, internalCtx);
+}
+
+function resolveFieldTypeInternal(
+  type: ts.Type,
+  typeNode: ts.TypeNode | undefined,
+  ctx: InternalFieldTypeContext,
 ): TSTypeReference {
   const { checker, knownTypeNames, globalTypeMappings } = ctx;
 
@@ -111,17 +129,16 @@ export function resolveFieldType(
           ? findNonNullTypeNode(typeNode)
           : undefined;
 
-      const innerResult = resolveFieldType(
+      const innerResult = resolveFieldTypeInternal(
         nonNullTypes[0]!,
         nonNullTypeNode,
         ctx,
-        visitedTypes,
       );
       return { ...innerResult, nullable };
     }
 
     const memberResults = nonNullTypes.map((t) =>
-      resolveFieldType(t, undefined, ctx, visitedTypes),
+      resolveFieldTypeInternal(t, undefined, ctx),
     );
 
     return createUnionType(memberResults, nullable);
@@ -138,7 +155,7 @@ export function resolveFieldType(
     }
 
     const elementResult = elementType
-      ? resolveFieldType(elementType, elementTypeNode, ctx, visitedTypes)
+      ? resolveFieldTypeInternal(elementType, elementTypeNode, ctx)
       : createPrimitiveType("unknown");
 
     return createArrayType(elementResult);
@@ -178,7 +195,7 @@ export function resolveFieldType(
     }
 
     // Otherwise, treat as inline object
-    return tryExtractAsInlineObject(type, ctx, visitedTypes);
+    return tryExtractAsInlineObject(type, ctx);
   }
 
   // Inline object type handling
@@ -191,7 +208,7 @@ export function resolveFieldType(
       }
     }
 
-    return tryExtractAsInlineObject(type, ctx, visitedTypes);
+    return tryExtractAsInlineObject(type, ctx);
   }
 
   // Mapped types (utility types like Omit, Pick, user-defined utilities)
@@ -215,7 +232,7 @@ export function resolveFieldType(
         }
       }
       // Not a known type - treat as inline object
-      return tryExtractAsInlineObject(type, ctx, visitedTypes);
+      return tryExtractAsInlineObject(type, ctx);
     }
   }
 
@@ -264,9 +281,9 @@ export function resolveFieldType(
 
 function tryExtractAsInlineObject(
   type: ts.Type,
-  ctx: FieldTypeResolverContext,
-  visitedTypes: WeakSet<ts.Type>,
+  ctx: InternalFieldTypeContext,
 ): TSTypeReference {
+  const { visitedTypes } = ctx;
   if (visitedTypes.has(type)) {
     // Cycle detected, return a placeholder reference
     const typeName = type.symbol?.getName() ?? "Unknown";
@@ -278,7 +295,7 @@ function tryExtractAsInlineObject(
   const inlineProperties = extractInlineObjectPropertiesShared(
     type,
     ctx.checker,
-    (propType) => resolveFieldType(propType, undefined, ctx, visitedTypes),
+    (propType) => resolveFieldTypeInternal(propType, undefined, ctx),
   );
 
   return createInlineObjectType(inlineProperties);

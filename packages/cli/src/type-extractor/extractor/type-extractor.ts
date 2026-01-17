@@ -80,9 +80,9 @@ export interface GlobalTypeMapping {
 
 export interface ExtractionOptions {
   /** Global type mappings from config (scalars with tsType.from omitted) */
-  readonly globalTypeMappings?: ReadonlyArray<GlobalTypeMapping>;
+  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   /** Set of type names declared in the schema (from Phase 1 collection) */
-  readonly knownTypeNames?: ReadonlySet<string>;
+  readonly knownTypeNames: ReadonlySet<string>;
 }
 
 export interface ExtractionResult {
@@ -116,15 +116,24 @@ interface TypeReferenceResult {
 }
 
 /**
+ * Context for type declaration resolution.
+ * Used when processing type declarations (not field types).
+ */
+interface TypeDeclarationContext {
+  readonly checker: ts.TypeChecker;
+  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly visitedTypes: WeakSet<ts.Type>;
+}
+
+/**
  * Attempts to extract a type as an inline object, with cycle detection.
  * Returns a reference type if a cycle is detected, otherwise returns an inline object.
  */
 function tryExtractAsInlineObject(
   type: ts.Type,
-  checker: ts.TypeChecker,
-  globalTypeMappings: ReadonlyArray<GlobalTypeMapping>,
-  visitedTypes: WeakSet<ts.Type>,
+  ctx: TypeDeclarationContext,
 ): TypeReferenceResult {
+  const { checker, visitedTypes } = ctx;
   if (visitedTypes.has(type)) {
     const typeName = type.symbol?.getName() ?? "Object";
     return {
@@ -135,8 +144,7 @@ function tryExtractAsInlineObject(
   const inlineProperties = extractInlineObjectPropertiesShared(
     type,
     checker,
-    (t, c) =>
-      convertTsTypeToReference(t, c, globalTypeMappings, visitedTypes).tsType,
+    (t) => convertTsTypeToReference(t, ctx).tsType,
   );
   return {
     tsType: createInlineObjectType(inlineProperties),
@@ -152,11 +160,10 @@ function findGlobalTypeMapping(
 
 function convertTsTypeToReference(
   type: ts.Type,
-  checker: ts.TypeChecker,
-  globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
-  visitedTypes: WeakSet<ts.Type> = new WeakSet(),
+  ctx: TypeDeclarationContext,
   typeNode?: ts.TypeNode,
 ): TypeReferenceResult {
+  const { checker, globalTypeMappings } = ctx;
   const metadataResult = detectScalarMetadata(type, checker);
   // Skip scalar detection if it's an array of scalars (e.g., Int[])
   // Array types should be handled by the array handling logic below
@@ -218,9 +225,7 @@ function convertTsTypeToReference(
 
       const innerResult = convertTsTypeToReference(
         nonNullTypes[0]!,
-        checker,
-        globalTypeMappings,
-        visitedTypes,
+        ctx,
         nonNullTypeNode,
       );
       return {
@@ -229,7 +234,7 @@ function convertTsTypeToReference(
     }
 
     const memberResults = nonNullTypes.map((t) =>
-      convertTsTypeToReference(t, checker, globalTypeMappings, visitedTypes),
+      convertTsTypeToReference(t, ctx),
     );
 
     return {
@@ -251,13 +256,7 @@ function convertTsTypeToReference(
     }
 
     const elementResult = elementType
-      ? convertTsTypeToReference(
-          elementType,
-          checker,
-          globalTypeMappings,
-          visitedTypes,
-          elementTypeNode,
-        )
+      ? convertTsTypeToReference(elementType, ctx, elementTypeNode)
       : {
           tsType: createPrimitiveType("unknown"),
         };
@@ -313,12 +312,7 @@ function convertTsTypeToReference(
 
     const shouldTreatAsInline = shouldTreatIntersectionAsInline(type);
     if (shouldTreatAsInline) {
-      return tryExtractAsInlineObject(
-        type,
-        checker,
-        globalTypeMappings,
-        visitedTypes,
-      );
+      return tryExtractAsInlineObject(type, ctx);
     }
   }
 
@@ -343,12 +337,7 @@ function convertTsTypeToReference(
       }
     }
 
-    return tryExtractAsInlineObject(
-      type,
-      checker,
-      globalTypeMappings,
-      visitedTypes,
-    );
+    return tryExtractAsInlineObject(type, ctx);
   }
 
   // Check for utility types (Omit, Pick, Partial, Required, etc.)
@@ -375,12 +364,7 @@ function convertTsTypeToReference(
           };
         }
       }
-      return tryExtractAsInlineObject(
-        type,
-        checker,
-        globalTypeMappings,
-        visitedTypes,
-      );
+      return tryExtractAsInlineObject(type, ctx);
     }
   }
 
@@ -421,12 +405,17 @@ interface FieldExtractionResult {
   diagnostics: Diagnostic[];
 }
 
+interface ExtractFieldsParams {
+  readonly type: ts.Type;
+  readonly checker: ts.TypeChecker;
+  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly knownTypeNames: ReadonlySet<string>;
+}
+
 function extractFieldsFromType(
-  type: ts.Type,
-  checker: ts.TypeChecker,
-  globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
-  knownTypeNames: ReadonlySet<string> = new Set(),
+  params: ExtractFieldsParams,
 ): FieldExtractionResult {
+  const { type, checker, globalTypeMappings, knownTypeNames } = params;
   const fields: FieldDefinition[] = [];
   const diagnostics: Diagnostic[] = [];
   const properties = extractPropertySymbols(type, checker);
@@ -932,12 +921,12 @@ function processReexportedSymbol(
   const fieldResult =
     kind === "union"
       ? { fields: [], diagnostics: [] }
-      : extractFieldsFromType(
+      : extractFieldsFromType({
           type,
           checker,
           globalTypeMappings,
           knownTypeNames,
-        );
+        });
   diagnostics.push(...fieldResult.diagnostics);
 
   return {
@@ -1097,11 +1086,16 @@ interface InlineObjectExtractionResult {
   readonly hasNamedTypes: boolean;
 }
 
+interface ExtractInlineObjectMembersParams {
+  readonly type: ts.Type;
+  readonly checker: ts.TypeChecker;
+  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+}
+
 function extractInlineObjectMembers(
-  type: ts.Type,
-  checker: ts.TypeChecker,
-  globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
+  params: ExtractInlineObjectMembersParams,
 ): InlineObjectExtractionResult | null {
+  const { type, checker, globalTypeMappings } = params;
   if (!type.isUnion()) {
     return null;
   }
@@ -1122,6 +1116,12 @@ function extractInlineObjectMembers(
   let hasNamedTypes = false;
   const members: InlineObjectMember[] = [];
 
+  const ctx: TypeDeclarationContext = {
+    checker,
+    globalTypeMappings,
+    visitedTypes: new WeakSet(),
+  };
+
   for (const memberType of nonNullTypes) {
     if (isAnonymousObjectType(memberType)) {
       hasInlineObjects = true;
@@ -1131,11 +1131,7 @@ function extractInlineObjectMembers(
       for (const prop of properties) {
         const propType = checker.getTypeOfSymbol(prop);
         const tsdocInfo = extractTsDocFromSymbol(prop, checker);
-        const typeResult = convertTsTypeToReference(
-          propType,
-          checker,
-          globalTypeMappings,
-        );
+        const typeResult = convertTsTypeToReference(propType, ctx);
 
         memberProperties.push({
           propertyName: prop.getName(),
@@ -1209,15 +1205,14 @@ function extractUnionMembers(
 export function extractTypesFromProgram(
   program: ts.Program,
   sourceFiles: ReadonlyArray<string>,
-  options: ExtractionOptions = {},
+  options: ExtractionOptions,
 ): ExtractionResult {
   const checker = program.getTypeChecker();
   const types: ExtractedTypeInfo[] = [];
   const diagnostics: Diagnostic[] = [];
   const detectedScalarNames = new Set<string>();
   const detectedScalars: ScalarMetadataInfo[] = [];
-  const globalTypeMappings = options.globalTypeMappings ?? [];
-  const knownTypeNames = options.knownTypeNames ?? new Set<string>();
+  const { globalTypeMappings, knownTypeNames } = options;
   const scannedSourceFilesSet = new Set(sourceFiles);
 
   for (const filePath of sourceFiles) {
@@ -1368,11 +1363,11 @@ export function extractTypesFromProgram(
           ? node.type
           : undefined;
         const unionMembers = extractUnionMembers(actualType, typeAliasTypeNode);
-        const inlineObjectResult = extractInlineObjectMembers(
-          actualType,
+        const inlineObjectResult = extractInlineObjectMembers({
+          type: actualType,
           checker,
           globalTypeMappings,
-        );
+        });
         const tsdocInfo = extractTsDocInfo(node, checker);
 
         let implementedInterfaces: ReadonlyArray<string> | null = null;
@@ -1428,12 +1423,12 @@ export function extractTypesFromProgram(
         const fieldResult =
           kind === "union"
             ? { fields: [], diagnostics: [] }
-            : extractFieldsFromType(
-                actualType,
+            : extractFieldsFromType({
+                type: actualType,
                 checker,
                 globalTypeMappings,
                 knownTypeNames,
-              );
+              });
         const fields = fieldResult.fields;
         diagnostics.push(...fieldResult.diagnostics);
 

@@ -120,15 +120,26 @@ function hasErrors(
   );
 }
 
-function extractTypesCore(
-  program: ts.Program,
-  sourceFiles: ReadonlyArray<string>,
-  customScalarNames: ReadonlyArray<string>,
-  globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
-  configScalars: ReadonlyArray<ConfigScalarMapping> = [],
-  sourceRoot: string | null = null,
-  knownTypeNames: ReadonlySet<string> = new Set(),
-): TypesResult {
+interface ExtractTypesCoreParams {
+  readonly program: ts.Program;
+  readonly sourceFiles: ReadonlyArray<string>;
+  readonly customScalarNames: ReadonlyArray<string>;
+  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly configScalars: ReadonlyArray<ConfigScalarMapping>;
+  readonly sourceRoot: string | null;
+  readonly knownTypeNames: ReadonlySet<string>;
+}
+
+function extractTypesCore(params: ExtractTypesCoreParams): TypesResult {
+  const {
+    program,
+    sourceFiles,
+    customScalarNames,
+    globalTypeMappings,
+    configScalars,
+    sourceRoot,
+    knownTypeNames,
+  } = params;
   const allDiagnostics: Diagnostic[] = [];
 
   const extractionResult = extractTypesFromProgram(program, sourceFiles, {
@@ -282,18 +293,26 @@ function normalizeDiagnosticPaths(
   return deduplicateDiagnostics(normalized);
 }
 
+interface ExtractResolversCoreParams {
+  readonly program: ts.Program;
+  readonly sourceFiles: ReadonlyArray<string>;
+  readonly knownTypeNames: ReadonlySet<string>;
+  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+}
+
 function extractResolversCore(
-  program: ts.Program,
-  sourceFiles: ReadonlyArray<string>,
-  knownTypeNames: ReadonlySet<string> = new Set(),
-  globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
+  params: ExtractResolversCoreParams,
 ): ResolversResult {
+  const { program, sourceFiles, knownTypeNames, globalTypeMappings } = params;
   const allDiagnostics: Diagnostic[] = [];
 
   const defineApiExtractionResult = extractDefineApiResolvers(
     program,
     sourceFiles,
-    { knownTypeNames, globalTypeMappings },
+    {
+      knownTypeNames,
+      globalTypeMappings,
+    },
   );
   allDiagnostics.push(...defineApiExtractionResult.diagnostics);
 
@@ -444,35 +463,35 @@ function prepareScalarConfig(config: GenerationConfig): {
 }
 
 function extractTypesStep(ctx: PipelineContext): PipelineContext {
-  if (ctx.aborted || !ctx.program) return ctx;
+  if (ctx.aborted || !ctx.program || !ctx.knownTypeNames) return ctx;
 
   const { customScalarNames, globalTypeMappings, configScalars } =
     prepareScalarConfig(ctx.config);
 
-  const typesResult = extractTypesCore(
-    ctx.program,
-    ctx.sourceFiles,
+  const typesResult = extractTypesCore({
+    program: ctx.program,
+    sourceFiles: ctx.sourceFiles,
     customScalarNames,
     globalTypeMappings,
     configScalars,
-    ctx.config.cwd,
-    ctx.knownTypeNames ?? new Set(),
-  );
+    sourceRoot: ctx.config.cwd,
+    knownTypeNames: ctx.knownTypeNames,
+  });
 
   return { ...ctx, typesResult };
 }
 
 function extractResolversStep(ctx: PipelineContext): PipelineContext {
-  if (ctx.aborted || !ctx.program) return ctx;
+  if (ctx.aborted || !ctx.program || !ctx.knownTypeNames) return ctx;
 
   const { globalTypeMappings } = prepareScalarConfig(ctx.config);
 
-  const resolversResult = extractResolversCore(
-    ctx.program,
-    ctx.sourceFiles,
-    ctx.knownTypeNames ?? new Set(),
+  const resolversResult = extractResolversCore({
+    program: ctx.program,
+    sourceFiles: ctx.sourceFiles,
+    knownTypeNames: ctx.knownTypeNames,
     globalTypeMappings,
-  );
+  });
 
   return { ...ctx, resolversResult };
 }
