@@ -27,8 +27,8 @@ importers:
         specifier: 16.12.0
         version: 16.12.0
       knip:
-        specifier: 5.80.2
-        version: 5.80.2(@types/node@24.10.8)(typescript@5.9.3)
+        specifier: 5.81.0
+        version: 5.81.0(@types/node@24.10.8)(typescript@5.9.3)
       tsx:
         specifier: 4.21.0
         version: 4.21.0
@@ -2326,8 +2326,8 @@ packages:
   khroma@2.1.0:
     resolution: {integrity: sha512-Ls993zuzfayK269Svk9hzpeGUKob/sIgZzyHYdjQoAdQetRKpOLj+k/QQQ/6Qi0Yz65mlROrfd+Ev+1+7dz9Kw==}
 
-  knip@5.80.2:
-    resolution: {integrity: sha512-Yt7iF8Uzl7pp3mGA6yvum6PZBcbGhjasZYuqIwcIAX1jsIhGRUAK0icP0qrB6FSPBI3BpIeMHl7n9meCLO6ovg==}
+  knip@5.81.0:
+    resolution: {integrity: sha512-EM9YdNg6zU2DWMJuc9zD8kPUpj0wvPspa63Qe9DPGygzL956uYThfoUQk5aNpPmMr9hs/k+Xm7FLuWFKERFkrQ==}
     engines: {node: '>=18.18.0'}
     hasBin: true
     peerDependencies:
@@ -5652,7 +5652,7 @@ snapshots:
 
   khroma@2.1.0: {}
 
-  knip@5.80.2(@types/node@24.10.8)(typescript@5.9.3):
+  knip@5.81.0(@types/node@24.10.8)(typescript@5.9.3):
     dependencies:
       '@nodelib/fs.walk': 1.2.8
       '@types/node': 24.10.8
