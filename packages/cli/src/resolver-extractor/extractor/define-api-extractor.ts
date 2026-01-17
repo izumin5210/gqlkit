@@ -428,6 +428,29 @@ function convertTsTypeToReference(
     }
   }
 
+  // Fallback: Extract name from typeNode when symbol is internal (e.g., __type).
+  // This handles cases like Simplify<T> = { [K in keyof T]: T[K] } & {}
+  // where the type evaluates to an anonymous object but typeNode preserves the alias name.
+  if (typeNode && ts.isTypeReferenceNode(typeNode)) {
+    const typeName = getTypeNameFromNode(typeNode);
+    const runtimeTypeNames = Object.values(RUNTIME_TYPE_NAMES);
+    if (
+      typeName &&
+      !isInternalTypeSymbol(typeName) &&
+      !runtimeTypeNames.includes(typeName as (typeof runtimeTypeNames)[number])
+    ) {
+      return {
+        kind: "reference",
+        name: typeName,
+        elementType: null,
+        members: null,
+        nullable: false,
+        scalarInfo: null,
+        inlineObjectProperties: null,
+      };
+    }
+  }
+
   if (type.flags & ts.TypeFlags.String) {
     return {
       kind: "primitive",
