@@ -285,21 +285,32 @@ function shouldUnwrapAsGqlField(type: ts.Type): boolean {
 }
 
 /**
- * Checks if a type is the NoArgs type (Record<string, never>).
+ * Checks if a type is structurally equivalent to Record<string, never>.
  * This is a special type that represents "no arguments".
+ * Detection is based on type structure, not type names.
  */
 function isNoArgsType(type: ts.Type, checker: ts.TypeChecker): boolean {
-  if (type.aliasSymbol?.getName() === "NoArgs") {
-    return true;
+  const apparentType = checker.getApparentType(type);
+
+  // Check for string index signature with 'never' value type
+  const indexInfos = checker.getIndexInfosOfType(apparentType);
+  const hasNeverStringIndex = indexInfos.some((info) => {
+    return (
+      (info.keyType.flags & ts.TypeFlags.String) !== 0 &&
+      (info.type.flags & ts.TypeFlags.Never) !== 0
+    );
+  });
+
+  if (!hasNeverStringIndex) {
+    return false;
   }
-  if (type.aliasSymbol?.getName() === "Record") {
-    return true;
-  }
-  const typeStr = checker.typeToString(type);
-  if (typeStr === "Record<string, never>") {
-    return true;
-  }
-  return false;
+
+  // Check that there are no named properties (excluding metadata properties)
+  const properties = apparentType
+    .getProperties()
+    .filter((p) => !p.getName().startsWith("$"));
+
+  return properties.length === 0;
 }
 
 /**
