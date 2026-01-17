@@ -1,6 +1,9 @@
 import { resolve } from "node:path";
 import ts from "typescript";
-import { isInternalTypeSymbol } from "../../shared/constants.js";
+import {
+  isInternalTypeSymbol,
+  RUNTIME_TYPE_NAMES,
+} from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   type DirectiveArgumentValue,
@@ -184,11 +187,24 @@ function findGlobalTypeMapping(
   return globalTypeMappings.find((m) => m.typeName === typeName);
 }
 
+function getTypeNameFromNode(typeNode: ts.TypeNode): string | null {
+  if (ts.isTypeReferenceNode(typeNode)) {
+    if (ts.isIdentifier(typeNode.typeName)) {
+      return typeNode.typeName.text;
+    }
+    if (ts.isQualifiedName(typeNode.typeName)) {
+      return typeNode.typeName.right.text;
+    }
+  }
+  return null;
+}
+
 function convertTsTypeToReference(
   type: ts.Type,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
   visitedTypes: WeakSet<ts.Type> = new WeakSet(),
+  typeNode?: ts.TypeNode,
 ): TypeReferenceResult {
   const metadataResult = detectScalarMetadata(type, checker);
   // Skip scalar detection if it's an array of scalars (e.g., Int[])
@@ -271,11 +287,22 @@ function convertTsTypeToReference(
     }
 
     if (nonNullTypes.length === 1) {
+      // For nullable types like User | null, extract the non-null type node
+      let nonNullTypeNode: ts.TypeNode | undefined;
+      if (typeNode && ts.isUnionTypeNode(typeNode)) {
+        nonNullTypeNode = typeNode.types.find(
+          (t) =>
+            !ts.isLiteralTypeNode(t) ||
+            t.literal.kind !== ts.SyntaxKind.NullKeyword,
+        );
+      }
+
       const innerResult = convertTsTypeToReference(
         nonNullTypes[0]!,
         checker,
         globalTypeMappings,
         visitedTypes,
+        nonNullTypeNode,
       );
       return {
         tsType: { ...innerResult.tsType, nullable },
@@ -302,12 +329,20 @@ function convertTsTypeToReference(
   if (checker.isArrayType(type)) {
     const typeArgs = (type as ts.TypeReference).typeArguments;
     const elementType = typeArgs?.[0];
+
+    // Extract element type node from array type node (e.g., User[] -> User)
+    let elementTypeNode: ts.TypeNode | undefined;
+    if (typeNode && ts.isArrayTypeNode(typeNode)) {
+      elementTypeNode = typeNode.elementType;
+    }
+
     const elementResult = elementType
       ? convertTsTypeToReference(
           elementType,
           checker,
           globalTypeMappings,
           visitedTypes,
+          elementTypeNode,
         )
       : {
           tsType: {
@@ -438,6 +473,34 @@ function convertTsTypeToReference(
   }
 
   if (isInlineObjectType(type)) {
+    // Early check: If typeNode is a type reference to a user-defined type,
+    // prefer using the typeNode name over treating as inline object.
+    // This handles cases like Simplify<T> = { [K in keyof T]: T[K] } & {}
+    // where the type evaluates to an anonymous object but typeNode preserves the alias name.
+    if (typeNode && ts.isTypeReferenceNode(typeNode)) {
+      const typeName = getTypeNameFromNode(typeNode);
+      const runtimeTypeNames = Object.values(RUNTIME_TYPE_NAMES);
+      if (
+        typeName &&
+        !isInternalTypeSymbol(typeName) &&
+        !runtimeTypeNames.includes(
+          typeName as (typeof runtimeTypeNames)[number],
+        )
+      ) {
+        return {
+          tsType: {
+            kind: "reference",
+            name: typeName,
+            elementType: null,
+            members: null,
+            nullable: false,
+            scalarInfo: null,
+            inlineObjectProperties: null,
+          },
+        };
+      }
+    }
+
     return tryExtractAsInlineObject(
       type,
       checker,
@@ -451,6 +514,48 @@ function convertTsTypeToReference(
   if (type.flags & ts.TypeFlags.Object) {
     const objectType = type as ts.ObjectType;
     if (objectType.objectFlags & ts.ObjectFlags.Mapped) {
+      // Check if typeNode is a reference to a user-defined type (not a utility type).
+      // This handles Simplify<T> = { [K in keyof T]: T[K] } & {} pattern.
+      if (typeNode && ts.isTypeReferenceNode(typeNode)) {
+        const typeName = getTypeNameFromNode(typeNode);
+        const runtimeTypeNames = Object.values(RUNTIME_TYPE_NAMES);
+        // Only use typeNode name if it's not a built-in utility type
+        const builtinUtilityTypes = [
+          "Omit",
+          "Pick",
+          "Partial",
+          "Required",
+          "Readonly",
+          "Record",
+          "Exclude",
+          "Extract",
+          "NonNullable",
+          "Parameters",
+          "ReturnType",
+          "InstanceType",
+          "Awaited",
+        ];
+        if (
+          typeName &&
+          !isInternalTypeSymbol(typeName) &&
+          !runtimeTypeNames.includes(
+            typeName as (typeof runtimeTypeNames)[number],
+          ) &&
+          !builtinUtilityTypes.includes(typeName)
+        ) {
+          return {
+            tsType: {
+              kind: "reference",
+              name: typeName,
+              elementType: null,
+              members: null,
+              nullable: false,
+              scalarInfo: null,
+              inlineObjectProperties: null,
+            },
+          };
+        }
+      }
       return tryExtractAsInlineObject(
         type,
         checker,
@@ -587,10 +692,22 @@ function extractFieldsFromType(
       }
     }
 
+    // Get typeNode from property declaration to preserve type alias names
+    let propTypeNode: ts.TypeNode | undefined;
+    if (
+      declaration &&
+      (ts.isPropertySignature(declaration) ||
+        ts.isPropertyDeclaration(declaration))
+    ) {
+      propTypeNode = declaration.type;
+    }
+
     const typeResult = convertTsTypeToReference(
       actualPropType,
       checker,
       globalTypeMappings,
+      new WeakSet(),
+      propTypeNode,
     );
 
     // Preserve nullability from original WithDirectives type
@@ -1008,7 +1125,14 @@ function processReexportedSymbol(
     };
   }
 
-  const unionMembers = extractUnionMembers(type);
+  // Get typeNode for union member extraction from declaration
+  const reexportDeclarations = resolvedSymbol.getDeclarations();
+  const reexportDeclaration = reexportDeclarations?.[0];
+  const reexportTypeNode =
+    reexportDeclaration && ts.isTypeAliasDeclaration(reexportDeclaration)
+      ? reexportDeclaration.type
+      : undefined;
+  const unionMembers = extractUnionMembers(type, reexportTypeNode);
   const fieldResult =
     kind === "union"
       ? { fields: [], diagnostics: [] }
@@ -1227,7 +1351,10 @@ function extractInlineObjectMembers(
   return { members, hasInlineObjects, hasNamedTypes };
 }
 
-function extractUnionMembers(type: ts.Type): string[] | undefined {
+function extractUnionMembers(
+  type: ts.Type,
+  typeNode?: ts.TypeNode,
+): string[] | undefined {
   if (!type.isUnion()) {
     return undefined;
   }
@@ -1242,9 +1369,34 @@ function extractUnionMembers(type: ts.Type): string[] | undefined {
   );
 
   if (nonNullTypes.length > 1 && allObjectTypes) {
+    // Extract member type nodes from union type node if available
+    let memberTypeNodes: ts.TypeNode[] = [];
+    if (typeNode && ts.isUnionTypeNode(typeNode)) {
+      memberTypeNodes = typeNode.types.filter(
+        (t) =>
+          !ts.isLiteralTypeNode(t) ||
+          t.literal.kind !== ts.SyntaxKind.NullKeyword,
+      );
+    }
+
     const namedMembers = nonNullTypes
-      .filter((t) => !isAnonymousObjectType(t))
-      .map((t) => getNamedTypeName(t))
+      .map((t, index) => {
+        // First try to get name from type
+        if (!isAnonymousObjectType(t)) {
+          const name = getNamedTypeName(t);
+          if (name !== "" && name !== "__type") {
+            return name;
+          }
+        }
+        // Fallback to typeNode name for Simplify<T> pattern
+        if (memberTypeNodes[index]) {
+          const memberNode = memberTypeNodes[index];
+          if (ts.isTypeReferenceNode(memberNode)) {
+            return getTypeNameFromNode(memberNode) ?? "";
+          }
+        }
+        return "";
+      })
       .filter((name) => name !== "" && name !== "__type");
 
     if (namedMembers.length > 0) {
@@ -1411,7 +1563,11 @@ export function extractTypesFromProgram(
         }
 
         const kind = determineTypeKind(node, actualType, sourceFile);
-        const unionMembers = extractUnionMembers(actualType);
+        // Get typeNode for union member extraction (only for type aliases)
+        const typeAliasTypeNode = ts.isTypeAliasDeclaration(node)
+          ? node.type
+          : undefined;
+        const unionMembers = extractUnionMembers(actualType, typeAliasTypeNode);
         const inlineObjectResult = extractInlineObjectMembers(
           actualType,
           checker,
