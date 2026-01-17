@@ -1,8 +1,5 @@
 import ts from "typescript";
-import {
-  isInternalTypeSymbol,
-  RUNTIME_TYPE_NAMES,
-} from "../../shared/constants.js";
+import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } from "../../shared/inline-object-extractor.js";
 import { isInlineObjectType } from "../../shared/inline-object-utils.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
@@ -215,19 +212,10 @@ function resolveFieldTypeInternal(
   if (type.flags & ts.TypeFlags.Object) {
     const objectType = type as ts.ObjectType;
     if (objectType.objectFlags & ts.ObjectFlags.Mapped) {
-      // Check if typeNode references a known type
+      // Check if typeNode references a known type (schema-defined type)
       if (typeNode && ts.isTypeReferenceNode(typeNode)) {
         const typeName = getTypeNameFromNode(typeNode);
-        const runtimeTypeNames = Object.values(RUNTIME_TYPE_NAMES);
-        // Only use typeNode name if it's in knownTypeNames (schema-defined type)
-        if (
-          typeName &&
-          !isInternalTypeSymbol(typeName) &&
-          !runtimeTypeNames.includes(
-            typeName as (typeof runtimeTypeNames)[number],
-          ) &&
-          knownTypeNames.has(typeName)
-        ) {
+        if (typeName && knownTypeNames.has(typeName)) {
           return createReferenceType(typeName);
         }
       }

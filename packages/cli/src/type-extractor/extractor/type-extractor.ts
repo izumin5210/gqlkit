@@ -1,9 +1,6 @@
 import { resolve } from "node:path";
 import ts from "typescript";
-import {
-  isInternalTypeSymbol,
-  RUNTIME_TYPE_NAMES,
-} from "../../shared/constants.js";
+import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   type DirectiveArgumentValue,
@@ -38,7 +35,6 @@ import {
   hasUndefinedInType,
   isAnonymousObjectType,
   isBooleanUnion,
-  isBuiltinUtilityTypeName,
   isExported,
   isNullableUnion,
   isNullOrUndefined,
@@ -122,6 +118,7 @@ interface TypeReferenceResult {
 interface TypeDeclarationContext {
   readonly checker: ts.TypeChecker;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly knownTypeNames: ReadonlySet<string>;
   readonly visitedTypes: WeakSet<ts.Type>;
 }
 
@@ -163,7 +160,7 @@ function convertTsTypeToReference(
   ctx: TypeDeclarationContext,
   typeNode?: ts.TypeNode,
 ): TypeReferenceResult {
-  const { checker, globalTypeMappings } = ctx;
+  const { checker, globalTypeMappings, knownTypeNames } = ctx;
   const metadataResult = detectScalarMetadata(type, checker);
   // Skip scalar detection if it's an array of scalars (e.g., Int[])
   // Array types should be handled by the array handling logic below
@@ -317,20 +314,10 @@ function convertTsTypeToReference(
   }
 
   if (isInlineObjectType(type)) {
-    // Early check: If typeNode is a type reference to a user-defined type,
-    // prefer using the typeNode name over treating as inline object.
-    // This handles cases like Simplify<T> = { [K in keyof T]: T[K] } & {}
-    // where the type evaluates to an anonymous object but typeNode preserves the alias name.
+    // Check if typeNode references a known type (schema-defined type)
     if (typeNode && ts.isTypeReferenceNode(typeNode)) {
       const typeName = getTypeNameFromNode(typeNode);
-      const runtimeTypeNames = Object.values(RUNTIME_TYPE_NAMES);
-      if (
-        typeName &&
-        !isInternalTypeSymbol(typeName) &&
-        !runtimeTypeNames.includes(
-          typeName as (typeof runtimeTypeNames)[number],
-        )
-      ) {
+      if (typeName && knownTypeNames.has(typeName)) {
         return {
           tsType: createReferenceType(typeName),
         };
@@ -345,20 +332,12 @@ function convertTsTypeToReference(
   if (type.flags & ts.TypeFlags.Object) {
     const objectType = type as ts.ObjectType;
     if (objectType.objectFlags & ts.ObjectFlags.Mapped) {
-      // Check if typeNode is a reference to a user-defined type (not a utility type).
+      // Check if typeNode references a known type (schema-defined type).
       // This handles Simplify<T> = { [K in keyof T]: T[K] } & {} pattern.
       if (typeNode && ts.isTypeReferenceNode(typeNode)) {
         const typeName = getTypeNameFromNode(typeNode);
-        const runtimeTypeNames = Object.values(RUNTIME_TYPE_NAMES);
-        // Only use typeNode name if it's not a built-in utility type
-        if (
-          typeName &&
-          !isInternalTypeSymbol(typeName) &&
-          !runtimeTypeNames.includes(
-            typeName as (typeof runtimeTypeNames)[number],
-          ) &&
-          !isBuiltinUtilityTypeName(typeName)
-        ) {
+        // Only use typeNode name if it's in knownTypeNames (schema-defined type)
+        if (typeName && knownTypeNames.has(typeName)) {
           return {
             tsType: createReferenceType(typeName),
           };
@@ -1090,12 +1069,13 @@ interface ExtractInlineObjectMembersParams {
   readonly type: ts.Type;
   readonly checker: ts.TypeChecker;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly knownTypeNames: ReadonlySet<string>;
 }
 
 function extractInlineObjectMembers(
   params: ExtractInlineObjectMembersParams,
 ): InlineObjectExtractionResult | null {
-  const { type, checker, globalTypeMappings } = params;
+  const { type, checker, globalTypeMappings, knownTypeNames } = params;
   if (!type.isUnion()) {
     return null;
   }
@@ -1119,6 +1099,7 @@ function extractInlineObjectMembers(
   const ctx: TypeDeclarationContext = {
     checker,
     globalTypeMappings,
+    knownTypeNames,
     visitedTypes: new WeakSet(),
   };
 
@@ -1367,6 +1348,7 @@ export function extractTypesFromProgram(
           type: actualType,
           checker,
           globalTypeMappings,
+          knownTypeNames,
         });
         const tsdocInfo = extractTsDocInfo(node, checker);
 

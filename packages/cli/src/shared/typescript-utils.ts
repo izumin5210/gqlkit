@@ -18,33 +18,6 @@ export function getTypeNameFromNode(typeNode: ts.TypeNode): string | null {
 }
 
 /**
- * List of TypeScript built-in utility types that should be resolved
- * to their actual properties when used in args.
- */
-const BUILTIN_UTILITY_TYPES = [
-  "Omit",
-  "Pick",
-  "Partial",
-  "Required",
-  "Readonly",
-  "Record",
-  "Exclude",
-  "Extract",
-  "NonNullable",
-  "Parameters",
-  "ReturnType",
-  "InstanceType",
-  "Awaited",
-] as const;
-
-/**
- * Checks if a type name is a built-in utility type like Omit, Pick, etc.
- */
-export function isBuiltinUtilityTypeName(name: string): boolean {
-  return (BUILTIN_UTILITY_TYPES as readonly string[]).includes(name);
-}
-
-/**
  * Checks if a type represents null or undefined.
  */
 export function isNullOrUndefined(type: ts.Type): boolean {
