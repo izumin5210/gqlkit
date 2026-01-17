@@ -26,16 +26,24 @@ import {
 } from "../../shared/tsdoc-parser.js";
 import {
   extractPropertySymbols,
+  findNonNullTypeNode,
   getNonNullableTypes,
+  getTypeNameFromNode,
   hasUndefinedInType,
   isBuiltinUtilityType,
   isExported,
   isNullableUnion,
   shouldTreatIntersectionAsInline,
 } from "../../shared/typescript-utils.js";
-import type {
-  Diagnostic,
-  TSTypeReference,
+import {
+  createArrayType,
+  createInlineObjectType,
+  createPrimitiveType,
+  createReferenceType,
+  createScalarType,
+  createUnionType,
+  type Diagnostic,
+  type TSTypeReference,
 } from "../../type-extractor/types/index.js";
 
 export type DefineApiResolverType = "query" | "mutation" | "field";
@@ -232,21 +240,17 @@ function convertTsTypeToReference(
     !metadataResult.isPrimitive &&
     !metadataResult.isList
   ) {
-    return {
-      kind: "scalar",
-      name: metadataResult.scalarName,
-      elementType: null,
-      members: null,
-      nullable: metadataResult.nullable,
-      scalarInfo: {
+    return createScalarType(
+      metadataResult.scalarName,
+      {
         scalarName: metadataResult.scalarName,
         typeName: metadataResult.scalarName,
         baseType: undefined,
         isCustom: true,
         only: metadataResult.only,
       },
-      inlineObjectProperties: null,
-    };
+      metadataResult.nullable,
+    );
   }
 
   const typeString = checker.typeToString(type);
@@ -255,31 +259,17 @@ function convertTsTypeToReference(
     const aliasSymbol = type.aliasSymbol;
     if (aliasSymbol) {
       const name = aliasSymbol.getName();
-      return {
-        kind: "reference",
-        name,
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      };
+      return createReferenceType(name);
     }
 
     const nullable = isNullableUnion(type);
     const nonNullTypes = getNonNullableTypes(type);
 
     if (nonNullTypes.length === 1 && nonNullTypes[0]) {
-      let nonNullTypeNode: ts.TypeNode | undefined;
-      if (typeNode && ts.isUnionTypeNode(typeNode)) {
-        nonNullTypeNode = typeNode.types.find(
-          (t) =>
-            !(
-              ts.isLiteralTypeNode(t) &&
-              t.literal.kind === ts.SyntaxKind.NullKeyword
-            ) && t.kind !== ts.SyntaxKind.UndefinedKeyword,
-        );
-      }
+      const nonNullTypeNode =
+        typeNode && ts.isUnionTypeNode(typeNode)
+          ? findNonNullTypeNode(typeNode, { includeUndefined: true })
+          : undefined;
       const innerType = convertTsTypeToReference(
         nonNullTypes[0],
         checker,
@@ -294,26 +284,13 @@ function convertTsTypeToReference(
         (t) => t.flags & ts.TypeFlags.BooleanLiteral,
       );
       if (isBooleanLiteralUnion) {
-        return {
-          kind: "primitive",
-          name: "boolean",
-          elementType: null,
-          members: null,
-          nullable,
-          scalarInfo: null,
-          inlineObjectProperties: null,
-        };
+        return createPrimitiveType("boolean", nullable);
       }
 
-      return {
-        kind: "union",
-        name: null,
-        elementType: null,
-        members: nonNullTypes.map((t) => convertTsTypeToReference(t, checker)),
+      return createUnionType(
+        nonNullTypes.map((t) => convertTsTypeToReference(t, checker)),
         nullable,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      };
+      );
     }
   }
 
@@ -325,19 +302,9 @@ function convertTsTypeToReference(
       if (typeNode && ts.isArrayTypeNode(typeNode)) {
         elementTypeNode = typeNode.elementType;
       }
-      return {
-        kind: "array",
-        name: null,
-        elementType: convertTsTypeToReference(
-          elementType,
-          checker,
-          elementTypeNode,
-        ),
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      };
+      return createArrayType(
+        convertTsTypeToReference(elementType, checker, elementTypeNode),
+      );
     }
   }
 
@@ -347,15 +314,7 @@ function convertTsTypeToReference(
       checker,
       convertTsTypeToReference,
     );
-    return {
-      kind: "inlineObject",
-      name: null,
-      elementType: null,
-      members: null,
-      nullable: false,
-      scalarInfo: null,
-      inlineObjectProperties: inlineProperties,
-    };
+    return createInlineObjectType(inlineProperties);
   }
 
   // Handle intersection types that should be treated as inline objects
@@ -371,15 +330,7 @@ function convertTsTypeToReference(
         checker,
         convertTsTypeToReference,
       );
-      return {
-        kind: "inlineObject",
-        name: null,
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: inlineProperties,
-      };
+      return createInlineObjectType(inlineProperties);
     }
   }
 
@@ -391,15 +342,7 @@ function convertTsTypeToReference(
       checker,
       convertTsTypeToReference,
     );
-    return {
-      kind: "inlineObject",
-      name: null,
-      elementType: null,
-      members: null,
-      nullable: false,
-      scalarInfo: null,
-      inlineObjectProperties: inlineProperties,
-    };
+    return createInlineObjectType(inlineProperties);
   }
 
   const aliasSymbol = type.aliasSymbol;
@@ -416,15 +359,7 @@ function convertTsTypeToReference(
           name = typeName.right.text;
         }
       }
-      return {
-        kind: "reference",
-        name,
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      };
+      return createReferenceType(name);
     }
   }
 
@@ -439,74 +374,21 @@ function convertTsTypeToReference(
       !isInternalTypeSymbol(typeName) &&
       !runtimeTypeNames.includes(typeName as (typeof runtimeTypeNames)[number])
     ) {
-      return {
-        kind: "reference",
-        name: typeName,
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      };
+      return createReferenceType(typeName);
     }
   }
 
   if (type.flags & ts.TypeFlags.String) {
-    return {
-      kind: "primitive",
-      name: "string",
-      elementType: null,
-      members: null,
-      nullable: false,
-      scalarInfo: null,
-      inlineObjectProperties: null,
-    };
+    return createPrimitiveType("string");
   }
   if (type.flags & ts.TypeFlags.Number) {
-    return {
-      kind: "primitive",
-      name: "number",
-      elementType: null,
-      members: null,
-      nullable: false,
-      scalarInfo: null,
-      inlineObjectProperties: null,
-    };
+    return createPrimitiveType("number");
   }
   if (type.flags & ts.TypeFlags.Boolean) {
-    return {
-      kind: "primitive",
-      name: "boolean",
-      elementType: null,
-      members: null,
-      nullable: false,
-      scalarInfo: null,
-      inlineObjectProperties: null,
-    };
+    return createPrimitiveType("boolean");
   }
 
-  return {
-    kind: "reference",
-    name: typeString,
-    elementType: null,
-    members: null,
-    nullable: false,
-    scalarInfo: null,
-    inlineObjectProperties: null,
-  };
-}
-
-function getTypeNameFromNode(typeNode: ts.TypeNode): string | undefined {
-  if (ts.isTypeReferenceNode(typeNode)) {
-    const typeName = typeNode.typeName;
-    if (ts.isIdentifier(typeName)) {
-      return typeName.text;
-    }
-    if (ts.isQualifiedName(typeName)) {
-      return typeName.right.text;
-    }
-  }
-  return undefined;
+  return createReferenceType(typeString);
 }
 
 function isInlineTypeLiteralDeclaration(declaration: ts.Declaration): boolean {

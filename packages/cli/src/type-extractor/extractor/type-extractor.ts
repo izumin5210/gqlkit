@@ -30,25 +30,36 @@ import {
 } from "../../shared/tsdoc-parser.js";
 import {
   extractPropertySymbols,
+  filterNonNullTypeNodes,
+  findNonNullTypeNode,
   getNonNullableTypes,
+  getTypeNameFromNode,
   hasUndefinedInType,
   isAnonymousObjectType,
+  isBuiltinUtilityTypeName,
   isExported,
   isNullableUnion,
   isNullOrUndefined,
   shouldTreatIntersectionAsInline,
 } from "../../shared/typescript-utils.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
-import type {
-  Diagnostic,
-  EnumMemberInfo,
-  ExtractedTypeInfo,
-  FieldDefinition,
-  InlineObjectMember,
-  InlineObjectProperty,
-  TSTypeReference,
-  TypeKind,
-  TypeMetadata,
+import {
+  createArrayType,
+  createInlineObjectType,
+  createLiteralType,
+  createPrimitiveType,
+  createReferenceType,
+  createScalarType,
+  createUnionType,
+  type Diagnostic,
+  type EnumMemberInfo,
+  type ExtractedTypeInfo,
+  type FieldDefinition,
+  type InlineObjectMember,
+  type InlineObjectProperty,
+  type TSTypeReference,
+  type TypeKind,
+  type TypeMetadata,
 } from "../types/index.js";
 
 /**
@@ -149,15 +160,7 @@ function tryExtractAsInlineObject(
   if (visitedTypes.has(type)) {
     const typeName = type.symbol?.getName() ?? "Object";
     return {
-      tsType: {
-        kind: "reference",
-        name: typeName === "__type" ? "Object" : typeName,
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      tsType: createReferenceType(typeName === "__type" ? "Object" : typeName),
     };
   }
   visitedTypes.add(type);
@@ -168,15 +171,7 @@ function tryExtractAsInlineObject(
       convertTsTypeToReference(t, c, globalTypeMappings, visitedTypes).tsType,
   );
   return {
-    tsType: {
-      kind: "inlineObject",
-      name: null,
-      elementType: null,
-      members: null,
-      nullable: false,
-      scalarInfo: null,
-      inlineObjectProperties: inlineProperties,
-    },
+    tsType: createInlineObjectType(inlineProperties),
   };
 }
 
@@ -185,18 +180,6 @@ function findGlobalTypeMapping(
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping>,
 ): GlobalTypeMapping | undefined {
   return globalTypeMappings.find((m) => m.typeName === typeName);
-}
-
-function getTypeNameFromNode(typeNode: ts.TypeNode): string | null {
-  if (ts.isTypeReferenceNode(typeNode)) {
-    if (ts.isIdentifier(typeNode.typeName)) {
-      return typeNode.typeName.text;
-    }
-    if (ts.isQualifiedName(typeNode.typeName)) {
-      return typeNode.typeName.right.text;
-    }
-  }
-  return null;
 }
 
 function convertTsTypeToReference(
@@ -215,36 +198,24 @@ function convertTsTypeToReference(
     !metadataResult.isList
   ) {
     return {
-      tsType: {
-        kind: "scalar",
-        name: metadataResult.scalarName,
-        elementType: null,
-        members: null,
-        nullable: metadataResult.nullable,
-        scalarInfo: {
+      tsType: createScalarType(
+        metadataResult.scalarName,
+        {
           scalarName: metadataResult.scalarName,
           typeName: metadataResult.scalarName,
           baseType: undefined,
           isCustom: true,
           only: metadataResult.only,
         },
-        inlineObjectProperties: null,
-      },
+        metadataResult.nullable,
+      ),
     };
   }
 
   if (isBooleanUnion(type)) {
     const nullable = isNullableUnion(type);
     return {
-      tsType: {
-        kind: "primitive",
-        name: "boolean",
-        elementType: null,
-        members: null,
-        nullable,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      tsType: createPrimitiveType("boolean", nullable),
     };
   }
 
@@ -256,15 +227,7 @@ function convertTsTypeToReference(
     if (aliasSymbol) {
       const name = aliasSymbol.getName();
       return {
-        tsType: {
-          kind: "reference",
-          name,
-          elementType: null,
-          members: null,
-          nullable,
-          scalarInfo: null,
-          inlineObjectProperties: null,
-        },
+        tsType: createReferenceType(name, nullable),
       };
     }
 
@@ -274,28 +237,16 @@ function convertTsTypeToReference(
     const enumParentSymbol = findEnumParentSymbol(nonNullTypes);
     if (enumParentSymbol) {
       return {
-        tsType: {
-          kind: "reference",
-          name: enumParentSymbol.getName(),
-          elementType: null,
-          members: null,
-          nullable,
-          scalarInfo: null,
-          inlineObjectProperties: null,
-        },
+        tsType: createReferenceType(enumParentSymbol.getName(), nullable),
       };
     }
 
     if (nonNullTypes.length === 1) {
       // For nullable types like User | null, extract the non-null type node
-      let nonNullTypeNode: ts.TypeNode | undefined;
-      if (typeNode && ts.isUnionTypeNode(typeNode)) {
-        nonNullTypeNode = typeNode.types.find(
-          (t) =>
-            !ts.isLiteralTypeNode(t) ||
-            t.literal.kind !== ts.SyntaxKind.NullKeyword,
-        );
-      }
+      const nonNullTypeNode =
+        typeNode && ts.isUnionTypeNode(typeNode)
+          ? findNonNullTypeNode(typeNode)
+          : undefined;
 
       const innerResult = convertTsTypeToReference(
         nonNullTypes[0]!,
@@ -314,15 +265,10 @@ function convertTsTypeToReference(
     );
 
     return {
-      tsType: {
-        kind: "union",
-        name: null,
-        elementType: null,
-        members: memberResults.map((r) => r.tsType),
+      tsType: createUnionType(
+        memberResults.map((r) => r.tsType),
         nullable,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      ),
     };
   }
 
@@ -345,27 +291,11 @@ function convertTsTypeToReference(
           elementTypeNode,
         )
       : {
-          tsType: {
-            kind: "primitive" as const,
-            name: "unknown",
-            elementType: null,
-            members: null,
-            nullable: false,
-            scalarInfo: null,
-            inlineObjectProperties: null,
-          },
+          tsType: createPrimitiveType("unknown"),
         };
 
     return {
-      tsType: {
-        kind: "array",
-        name: null,
-        elementType: elementResult.tsType,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      tsType: createArrayType(elementResult.tsType),
     };
   }
 
@@ -373,28 +303,12 @@ function convertTsTypeToReference(
 
   if (type.flags & ts.TypeFlags.String) {
     return {
-      tsType: {
-        kind: "primitive",
-        name: "string",
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      tsType: createPrimitiveType("string"),
     };
   }
   if (type.flags & ts.TypeFlags.Number) {
     return {
-      tsType: {
-        kind: "primitive",
-        name: "number",
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      tsType: createPrimitiveType("number"),
     };
   }
   if (
@@ -402,41 +316,17 @@ function convertTsTypeToReference(
     type.flags & ts.TypeFlags.BooleanLiteral
   ) {
     return {
-      tsType: {
-        kind: "primitive",
-        name: "boolean",
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      tsType: createPrimitiveType("boolean"),
     };
   }
   if (type.flags & ts.TypeFlags.StringLiteral) {
     return {
-      tsType: {
-        kind: "literal",
-        name: typeString.replace(/"/g, ""),
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      tsType: createLiteralType(typeString.replace(/"/g, "")),
     };
   }
   if (type.flags & ts.TypeFlags.NumberLiteral) {
     return {
-      tsType: {
-        kind: "literal",
-        name: typeString,
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      tsType: createLiteralType(typeString),
     };
   }
 
@@ -449,15 +339,7 @@ function convertTsTypeToReference(
     if (type.aliasSymbol) {
       const aliasName = type.aliasSymbol.getName();
       return {
-        tsType: {
-          kind: "reference",
-          name: aliasName,
-          elementType: null,
-          members: null,
-          nullable: false,
-          scalarInfo: null,
-          inlineObjectProperties: null,
-        },
+        tsType: createReferenceType(aliasName),
       };
     }
 
@@ -488,15 +370,7 @@ function convertTsTypeToReference(
         )
       ) {
         return {
-          tsType: {
-            kind: "reference",
-            name: typeName,
-            elementType: null,
-            members: null,
-            nullable: false,
-            scalarInfo: null,
-            inlineObjectProperties: null,
-          },
+          tsType: createReferenceType(typeName),
         };
       }
     }
@@ -520,39 +394,16 @@ function convertTsTypeToReference(
         const typeName = getTypeNameFromNode(typeNode);
         const runtimeTypeNames = Object.values(RUNTIME_TYPE_NAMES);
         // Only use typeNode name if it's not a built-in utility type
-        const builtinUtilityTypes = [
-          "Omit",
-          "Pick",
-          "Partial",
-          "Required",
-          "Readonly",
-          "Record",
-          "Exclude",
-          "Extract",
-          "NonNullable",
-          "Parameters",
-          "ReturnType",
-          "InstanceType",
-          "Awaited",
-        ];
         if (
           typeName &&
           !isInternalTypeSymbol(typeName) &&
           !runtimeTypeNames.includes(
             typeName as (typeof runtimeTypeNames)[number],
           ) &&
-          !builtinUtilityTypes.includes(typeName)
+          !isBuiltinUtilityTypeName(typeName)
         ) {
           return {
-            tsType: {
-              kind: "reference",
-              name: typeName,
-              elementType: null,
-              members: null,
-              nullable: false,
-              scalarInfo: null,
-              inlineObjectProperties: null,
-            },
+            tsType: createReferenceType(typeName),
           };
         }
       }
@@ -576,48 +427,24 @@ function convertTsTypeToReference(
       );
       if (globalMapping) {
         return {
-          tsType: {
-            kind: "scalar",
-            name: globalMapping.scalarName,
-            elementType: null,
-            members: null,
-            nullable: false,
-            scalarInfo: {
-              scalarName: globalMapping.scalarName,
-              typeName: globalMapping.typeName,
-              baseType: undefined,
-              isCustom: true,
-              only: globalMapping.only,
-            },
-            inlineObjectProperties: null,
-          },
+          tsType: createScalarType(globalMapping.scalarName, {
+            scalarName: globalMapping.scalarName,
+            typeName: globalMapping.typeName,
+            baseType: undefined,
+            isCustom: true,
+            only: globalMapping.only,
+          }),
         };
       }
 
       return {
-        tsType: {
-          kind: "reference",
-          name: symbolName,
-          elementType: null,
-          members: null,
-          nullable: false,
-          scalarInfo: null,
-          inlineObjectProperties: null,
-        },
+        tsType: createReferenceType(symbolName),
       };
     }
   }
 
   return {
-    tsType: {
-      kind: "reference",
-      name: typeString,
-      elementType: null,
-      members: null,
-      nullable: false,
-      scalarInfo: null,
-      inlineObjectProperties: null,
-    },
+    tsType: createReferenceType(typeString),
   };
 }
 
@@ -1370,14 +1197,10 @@ function extractUnionMembers(
 
   if (nonNullTypes.length > 1 && allObjectTypes) {
     // Extract member type nodes from union type node if available
-    let memberTypeNodes: ts.TypeNode[] = [];
-    if (typeNode && ts.isUnionTypeNode(typeNode)) {
-      memberTypeNodes = typeNode.types.filter(
-        (t) =>
-          !ts.isLiteralTypeNode(t) ||
-          t.literal.kind !== ts.SyntaxKind.NullKeyword,
-      );
-    }
+    const memberTypeNodes =
+      typeNode && ts.isUnionTypeNode(typeNode)
+        ? filterNonNullTypeNodes(typeNode)
+        : [];
 
     const namedMembers = nonNullTypes
       .map((t, index) => {

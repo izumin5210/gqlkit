@@ -2,17 +2,47 @@ import ts from "typescript";
 import { isInlineObjectType } from "./inline-object-utils.js";
 
 /**
+ * Extracts type name from a TypeNode.
+ * Handles both simple identifiers and qualified names.
+ */
+export function getTypeNameFromNode(typeNode: ts.TypeNode): string | null {
+  if (ts.isTypeReferenceNode(typeNode)) {
+    if (ts.isIdentifier(typeNode.typeName)) {
+      return typeNode.typeName.text;
+    }
+    if (ts.isQualifiedName(typeNode.typeName)) {
+      return typeNode.typeName.right.text;
+    }
+  }
+  return null;
+}
+
+/**
  * List of TypeScript built-in utility types that should be resolved
  * to their actual properties when used in args.
  */
-const BUILTIN_UTILITY_TYPES = [
+export const BUILTIN_UTILITY_TYPES = [
   "Omit",
   "Pick",
   "Partial",
   "Required",
   "Readonly",
   "Record",
-];
+  "Exclude",
+  "Extract",
+  "NonNullable",
+  "Parameters",
+  "ReturnType",
+  "InstanceType",
+  "Awaited",
+] as const;
+
+/**
+ * Checks if a type name is a built-in utility type like Omit, Pick, etc.
+ */
+export function isBuiltinUtilityTypeName(name: string): boolean {
+  return (BUILTIN_UTILITY_TYPES as readonly string[]).includes(name);
+}
 
 /**
  * Checks if a type is a built-in utility type like Omit, Pick, etc.
@@ -21,7 +51,7 @@ export function isBuiltinUtilityType(type: ts.Type): boolean {
   if (!type.aliasSymbol) {
     return false;
   }
-  return BUILTIN_UTILITY_TYPES.includes(type.aliasSymbol.getName());
+  return isBuiltinUtilityTypeName(type.aliasSymbol.getName());
 }
 
 /**
@@ -32,6 +62,54 @@ export function isNullOrUndefined(type: ts.Type): boolean {
     (type.flags & ts.TypeFlags.Null) !== 0 ||
     (type.flags & ts.TypeFlags.Undefined) !== 0
   );
+}
+
+/**
+ * Checks if a TypeNode represents null (literal null type).
+ */
+function isNullTypeNode(typeNode: ts.TypeNode): boolean {
+  return (
+    ts.isLiteralTypeNode(typeNode) &&
+    typeNode.literal.kind === ts.SyntaxKind.NullKeyword
+  );
+}
+
+/**
+ * Checks if a TypeNode represents undefined.
+ */
+function isUndefinedTypeNode(typeNode: ts.TypeNode): boolean {
+  return typeNode.kind === ts.SyntaxKind.UndefinedKeyword;
+}
+
+export interface FilterNonNullTypeNodesOptions {
+  readonly includeUndefined?: boolean;
+}
+
+/**
+ * Filters non-null (and optionally non-undefined) type nodes from a union type node.
+ * By default, only filters out null. Set includeUndefined to also filter out undefined.
+ */
+export function filterNonNullTypeNodes(
+  typeNode: ts.UnionTypeNode,
+  options?: FilterNonNullTypeNodesOptions,
+): ts.TypeNode[] {
+  const { includeUndefined = false } = options ?? {};
+  return typeNode.types.filter((t) => {
+    if (isNullTypeNode(t)) return false;
+    if (includeUndefined && isUndefinedTypeNode(t)) return false;
+    return true;
+  });
+}
+
+/**
+ * Finds the first non-null (and optionally non-undefined) type node from a union type node.
+ * By default, only filters out null. Set includeUndefined to also filter out undefined.
+ */
+export function findNonNullTypeNode(
+  typeNode: ts.UnionTypeNode,
+  options?: FilterNonNullTypeNodesOptions,
+): ts.TypeNode | undefined {
+  return filterNonNullTypeNodes(typeNode, options)[0];
 }
 
 /**
