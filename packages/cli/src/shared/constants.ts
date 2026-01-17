@@ -92,7 +92,7 @@ export const METADATA_PROPERTIES = {
  * Type names exported from @gqlkit-ts/runtime.
  * These are used for type detection in the CLI.
  */
-export const RUNTIME_TYPE_NAMES = {
+const RUNTIME_TYPE_NAMES = {
   /** GraphQL interface type definition */
   GQL_INTERFACE: "GqlInterface",
   /** Custom scalar type definition */
