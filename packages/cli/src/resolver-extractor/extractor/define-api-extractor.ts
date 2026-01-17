@@ -12,12 +12,7 @@ import {
   hasDirectiveMetadata,
   unwrapDirectiveType,
 } from "../../shared/directive-detector.js";
-import { extractInlineObjectProperties } from "../../shared/inline-object-extractor.js";
-import { isInlineObjectType } from "../../shared/inline-object-utils.js";
-import {
-  detectScalarMetadata,
-  getActualMetadataType,
-} from "../../shared/metadata-detector.js";
+import { getActualMetadataType } from "../../shared/metadata-detector.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
   type DeprecationInfo,
@@ -26,24 +21,18 @@ import {
 } from "../../shared/tsdoc-parser.js";
 import {
   extractPropertySymbols,
-  findNonNullTypeNode,
-  getNonNullableTypes,
   getTypeNameFromNode,
   hasUndefinedInType,
-  isBuiltinUtilityType,
   isExported,
-  isNullableUnion,
-  shouldTreatIntersectionAsInline,
 } from "../../shared/typescript-utils.js";
 import {
-  createArrayType,
-  createInlineObjectType,
-  createPrimitiveType,
-  createReferenceType,
-  createScalarType,
-  createUnionType,
-  type Diagnostic,
-  type TSTypeReference,
+  type FieldTypeResolverContext,
+  resolveFieldType,
+} from "../../type-extractor/extractor/field-type-resolver.js";
+import type { GlobalTypeMapping } from "../../type-extractor/extractor/type-extractor.js";
+import type {
+  Diagnostic,
+  TSTypeReference,
 } from "../../type-extractor/types/index.js";
 
 export type DefineApiResolverType = "query" | "mutation" | "field";
@@ -95,6 +84,11 @@ export interface ExtractDefineApiResult {
   readonly resolvers: ReadonlyArray<DefineApiResolverInfo>;
   readonly abstractTypeResolvers: ReadonlyArray<AbstractResolverInfo>;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
+}
+
+export interface ExtractDefineApiOptions {
+  readonly knownTypeNames?: ReadonlySet<string>;
+  readonly globalTypeMappings?: ReadonlyArray<GlobalTypeMapping>;
 }
 
 const RESOLVER_METADATA_PROPERTY = METADATA_PROPERTIES.RESOLVER;
@@ -227,168 +221,16 @@ function detectResolverFromMetadataType(
   return undefined;
 }
 
+/**
+ * Wrapper function that delegates to resolveFieldType.
+ * This maintains the existing call signature while using the new implementation.
+ */
 function convertTsTypeToReference(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  ctx: FieldTypeResolverContext,
   typeNode?: ts.TypeNode,
 ): TSTypeReference {
-  const metadataResult = detectScalarMetadata(type, checker);
-  // Skip scalar detection if it's an array of scalars (e.g., Int[])
-  // Array types should be handled by the array handling logic below
-  if (
-    metadataResult.scalarName &&
-    !metadataResult.isPrimitive &&
-    !metadataResult.isList
-  ) {
-    return createScalarType(
-      metadataResult.scalarName,
-      {
-        scalarName: metadataResult.scalarName,
-        typeName: metadataResult.scalarName,
-        baseType: undefined,
-        isCustom: true,
-        only: metadataResult.only,
-      },
-      metadataResult.nullable,
-    );
-  }
-
-  const typeString = checker.typeToString(type);
-
-  if (type.isUnion()) {
-    const aliasSymbol = type.aliasSymbol;
-    if (aliasSymbol) {
-      const name = aliasSymbol.getName();
-      return createReferenceType(name);
-    }
-
-    const nullable = isNullableUnion(type);
-    const nonNullTypes = getNonNullableTypes(type);
-
-    if (nonNullTypes.length === 1 && nonNullTypes[0]) {
-      const nonNullTypeNode =
-        typeNode && ts.isUnionTypeNode(typeNode)
-          ? findNonNullTypeNode(typeNode, { includeUndefined: true })
-          : undefined;
-      const innerType = convertTsTypeToReference(
-        nonNullTypes[0],
-        checker,
-        nonNullTypeNode,
-      );
-      return { ...innerType, nullable };
-    }
-
-    if (nonNullTypes.length > 1) {
-      // Check if this is a boolean literal union (true | false)
-      const isBooleanLiteralUnion = nonNullTypes.every(
-        (t) => t.flags & ts.TypeFlags.BooleanLiteral,
-      );
-      if (isBooleanLiteralUnion) {
-        return createPrimitiveType("boolean", nullable);
-      }
-
-      return createUnionType(
-        nonNullTypes.map((t) => convertTsTypeToReference(t, checker)),
-        nullable,
-      );
-    }
-  }
-
-  if (checker.isArrayType(type)) {
-    const typeArgs = checker.getTypeArguments(type as ts.TypeReference);
-    const elementType = typeArgs[0];
-    if (elementType) {
-      let elementTypeNode: ts.TypeNode | undefined;
-      if (typeNode && ts.isArrayTypeNode(typeNode)) {
-        elementTypeNode = typeNode.elementType;
-      }
-      return createArrayType(
-        convertTsTypeToReference(elementType, checker, elementTypeNode),
-      );
-    }
-  }
-
-  if (isInlineObjectType(type)) {
-    const inlineProperties = extractInlineObjectProperties(
-      type,
-      checker,
-      convertTsTypeToReference,
-    );
-    return createInlineObjectType(inlineProperties);
-  }
-
-  // Handle intersection types that should be treated as inline objects
-  // This includes intersections with anonymous/utility members OR intersections of
-  // named object types (interfaces) that need to be merged
-  // BUT only if the type itself is not a named type alias (like User = GqlObject<...>)
-  if (type.isIntersection() && !type.aliasSymbol) {
-    if (
-      shouldTreatIntersectionAsInline(type, { checkBuiltinUtilityTypes: true })
-    ) {
-      const inlineProperties = extractInlineObjectProperties(
-        type,
-        checker,
-        convertTsTypeToReference,
-      );
-      return createInlineObjectType(inlineProperties);
-    }
-  }
-
-  // Check if this is a utility type like Omit, Pick, etc.
-  // Utility types have aliasSymbol but their apparent type has resolved properties
-  if (type.flags & ts.TypeFlags.Object && isBuiltinUtilityType(type)) {
-    const inlineProperties = extractInlineObjectProperties(
-      type,
-      checker,
-      convertTsTypeToReference,
-    );
-    return createInlineObjectType(inlineProperties);
-  }
-
-  const aliasSymbol = type.aliasSymbol;
-  const symbol = aliasSymbol ?? type.getSymbol();
-  if (symbol) {
-    const symbolName = symbol.getName();
-    if (!isInternalTypeSymbol(symbolName)) {
-      let name = symbolName;
-      if (!aliasSymbol && typeNode && ts.isTypeReferenceNode(typeNode)) {
-        const typeName = typeNode.typeName;
-        if (ts.isIdentifier(typeName)) {
-          name = typeName.text;
-        } else if (ts.isQualifiedName(typeName)) {
-          name = typeName.right.text;
-        }
-      }
-      return createReferenceType(name);
-    }
-  }
-
-  // Fallback: Extract name from typeNode when symbol is internal (e.g., __type).
-  // This handles cases like Simplify<T> = { [K in keyof T]: T[K] } & {}
-  // where the type evaluates to an anonymous object but typeNode preserves the alias name.
-  if (typeNode && ts.isTypeReferenceNode(typeNode)) {
-    const typeName = getTypeNameFromNode(typeNode);
-    const runtimeTypeNames = Object.values(RUNTIME_TYPE_NAMES);
-    if (
-      typeName &&
-      !isInternalTypeSymbol(typeName) &&
-      !runtimeTypeNames.includes(typeName as (typeof runtimeTypeNames)[number])
-    ) {
-      return createReferenceType(typeName);
-    }
-  }
-
-  if (type.flags & ts.TypeFlags.String) {
-    return createPrimitiveType("string");
-  }
-  if (type.flags & ts.TypeFlags.Number) {
-    return createPrimitiveType("number");
-  }
-  if (type.flags & ts.TypeFlags.Boolean) {
-    return createPrimitiveType("boolean");
-  }
-
-  return createReferenceType(typeString);
+  return resolveFieldType(type, typeNode, ctx);
 }
 
 function isInlineTypeLiteralDeclaration(declaration: ts.Declaration): boolean {
@@ -530,11 +372,11 @@ function getTypeNameForDiagnostic(
 
 function extractArgsFromType(
   argsType: ts.Type,
-  checker: ts.TypeChecker,
+  ctx: FieldTypeResolverContext,
   argsTypeNode?: ts.TypeNode,
 ): ArgumentDefinition[] {
   const args: ArgumentDefinition[] = [];
-  const properties = extractPropertySymbols(argsType, checker);
+  const properties = extractPropertySymbols(argsType, ctx.checker);
 
   const memberTypeNodes = new Map<string, ts.TypeNode>();
   if (argsTypeNode && ts.isTypeLiteralNode(argsTypeNode)) {
@@ -549,26 +391,29 @@ function extractArgsFromType(
   }
 
   for (const prop of properties) {
-    const propType = checker.getTypeOfSymbol(prop);
+    const propType = ctx.checker.getTypeOfSymbol(prop);
     const optional = hasUndefinedInType(propType);
 
-    const tsdocInfo = extractTSDocFromPropertyWithPriority(prop, checker);
+    const tsdocInfo = extractTSDocFromPropertyWithPriority(prop, ctx.checker);
 
     let defaultValue: DirectiveArgumentValue | null = null;
     let actualPropType = propType;
 
-    if (shouldUnwrapAsGqlField(propType, checker)) {
-      const defaultValueResult = detectDefaultValueMetadata(propType, checker);
+    if (shouldUnwrapAsGqlField(propType, ctx.checker)) {
+      const defaultValueResult = detectDefaultValueMetadata(
+        propType,
+        ctx.checker,
+      );
       if (defaultValueResult.defaultValue) {
         defaultValue = defaultValueResult.defaultValue;
       }
-      actualPropType = unwrapDirectiveType(propType, checker);
+      actualPropType = unwrapDirectiveType(propType, ctx.checker);
     }
 
     const propTypeNode = memberTypeNodes.get(prop.getName());
     args.push({
       name: prop.getName(),
-      tsType: convertTsTypeToReference(actualPropType, checker, propTypeNode),
+      tsType: convertTsTypeToReference(actualPropType, ctx, propTypeNode),
       optional,
       description: tsdocInfo.description,
       deprecated: tsdocInfo.deprecated,
@@ -662,9 +507,10 @@ function checkEmptyArgsType(
 
 function extractTypeArgumentsFromCall(
   node: ts.CallExpression,
-  checker: ts.TypeChecker,
+  ctx: FieldTypeResolverContext,
   resolverType: DefineApiResolverType,
 ): TypeArgumentsResult | null {
+  const { checker } = ctx;
   const typeArgs = node.typeArguments;
   if (!typeArgs) {
     return null;
@@ -688,7 +534,7 @@ function extractTypeArgumentsFromCall(
 
     const parentTypeName = getTypeNameFromNode(parentTypeNode);
 
-    const argsTypeRef = convertTsTypeToReference(argsType, checker);
+    const argsTypeRef = convertTsTypeToReference(argsType, ctx);
     const isNoArgs =
       argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
@@ -700,7 +546,7 @@ function extractTypeArgumentsFromCall(
 
     const args = isNoArgs
       ? null
-      : extractArgsFromType(argsType, checker, argsTypeNode);
+      : extractArgsFromType(argsType, ctx, argsTypeNode);
 
     if (!isNoArgs) {
       const emptyDiagnostic = checkEmptyArgsType(
@@ -723,7 +569,7 @@ function extractTypeArgumentsFromCall(
       parentTypeName: parentTypeName ?? null,
       argsType: isNoArgs ? null : argsTypeRef,
       args: args && args.length > 0 ? args : null,
-      returnType: convertTsTypeToReference(returnType, checker, returnTypeNode),
+      returnType: convertTsTypeToReference(returnType, ctx, returnTypeNode),
       directives,
       diagnostics,
     };
@@ -744,7 +590,7 @@ function extractTypeArgumentsFromCall(
   const argsType = checker.getTypeFromTypeNode(argsTypeNode);
   const returnType = checker.getTypeFromTypeNode(returnTypeNode);
 
-  const argsTypeRef = convertTsTypeToReference(argsType, checker);
+  const argsTypeRef = convertTsTypeToReference(argsType, ctx);
   const isNoArgs =
     argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
@@ -756,7 +602,7 @@ function extractTypeArgumentsFromCall(
 
   const args = isNoArgs
     ? null
-    : extractArgsFromType(argsType, checker, argsTypeNode);
+    : extractArgsFromType(argsType, ctx, argsTypeNode);
 
   if (!isNoArgs) {
     const emptyDiagnostic = checkEmptyArgsType(
@@ -776,7 +622,7 @@ function extractTypeArgumentsFromCall(
     parentTypeName: null,
     argsType: isNoArgs ? null : argsTypeRef,
     args: args && args.length > 0 ? args : null,
-    returnType: convertTsTypeToReference(returnType, checker, returnTypeNode),
+    returnType: convertTsTypeToReference(returnType, ctx, returnTypeNode),
     directives,
     diagnostics,
   };
@@ -784,15 +630,15 @@ function extractTypeArgumentsFromCall(
 
 function extractExportedInputTypes(
   sourceFile: ts.SourceFile,
-  checker: ts.TypeChecker,
+  ctx: FieldTypeResolverContext,
 ): ExportedInputType[] {
   const exportedTypes: ExportedInputType[] = [];
 
   ts.forEachChild(sourceFile, (node) => {
     if (ts.isTypeAliasDeclaration(node) && isExported(node)) {
       const name = node.name.getText(sourceFile);
-      const type = checker.getTypeAtLocation(node.name);
-      const tsType = convertTsTypeToReference(type, checker);
+      const type = ctx.checker.getTypeAtLocation(node.name);
+      const tsType = convertTsTypeToReference(type, ctx);
 
       exportedTypes.push({
         name,
@@ -808,11 +654,18 @@ function extractExportedInputTypes(
 export function extractDefineApiResolvers(
   program: ts.Program,
   files: ReadonlyArray<string>,
+  options: ExtractDefineApiOptions = {},
 ): ExtractDefineApiResult {
   const checker = program.getTypeChecker();
   const resolvers: DefineApiResolverInfo[] = [];
   const abstractTypeResolvers: AbstractResolverInfo[] = [];
   const diagnostics: Diagnostic[] = [];
+
+  const fieldTypeResolverContext: FieldTypeResolverContext = {
+    checker,
+    knownTypeNames: options.knownTypeNames ?? new Set(),
+    globalTypeMappings: options.globalTypeMappings ?? [],
+  };
 
   for (const filePath of files) {
     const sourceFile = program.getSourceFile(filePath);
@@ -820,7 +673,10 @@ export function extractDefineApiResolvers(
       continue;
     }
 
-    const exportedInputTypes = extractExportedInputTypes(sourceFile, checker);
+    const exportedInputTypes = extractExportedInputTypes(
+      sourceFile,
+      fieldTypeResolverContext,
+    );
 
     ts.forEachChild(sourceFile, (node) => {
       if (!ts.isVariableStatement(node)) {
@@ -897,7 +753,7 @@ export function extractDefineApiResolvers(
 
         const typeInfo = extractTypeArgumentsFromCall(
           initializer,
-          checker,
+          fieldTypeResolverContext,
           resolverType,
         );
 

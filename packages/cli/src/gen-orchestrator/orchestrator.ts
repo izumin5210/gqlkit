@@ -39,6 +39,7 @@ import {
   extractTypesFromProgram,
   type GlobalTypeMapping,
 } from "../type-extractor/extractor/type-extractor.js";
+import { collectDeclaredTypeNames } from "../type-extractor/extractor/type-name-collector.js";
 import type {
   Diagnostic,
   Diagnostics,
@@ -89,6 +90,7 @@ interface PipelineContext {
   readonly config: GenerationConfig;
   readonly sourceFiles: ReadonlyArray<string>;
   readonly program: ts.Program | null;
+  readonly knownTypeNames: ReadonlySet<string> | null;
   readonly typesResult: TypesResult | null;
   readonly resolversResult: ResolversResult | null;
   readonly directiveDefinitions: DirectiveDefinitionInfo[] | null;
@@ -125,11 +127,13 @@ function extractTypesCore(
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
   configScalars: ReadonlyArray<ConfigScalarMapping> = [],
   sourceRoot: string | null = null,
+  knownTypeNames: ReadonlySet<string> = new Set(),
 ): TypesResult {
   const allDiagnostics: Diagnostic[] = [];
 
   const extractionResult = extractTypesFromProgram(program, sourceFiles, {
     globalTypeMappings,
+    knownTypeNames,
   });
   allDiagnostics.push(...extractionResult.diagnostics);
 
@@ -281,12 +285,15 @@ function normalizeDiagnosticPaths(
 function extractResolversCore(
   program: ts.Program,
   sourceFiles: ReadonlyArray<string>,
+  knownTypeNames: ReadonlySet<string> = new Set(),
+  globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
 ): ResolversResult {
   const allDiagnostics: Diagnostic[] = [];
 
   const defineApiExtractionResult = extractDefineApiResolvers(
     program,
     sourceFiles,
+    { knownTypeNames, globalTypeMappings },
   );
   allDiagnostics.push(...defineApiExtractionResult.diagnostics);
 
@@ -330,6 +337,7 @@ function createInitialContext(config: GenerationConfig): PipelineContext {
     config,
     sourceFiles: [],
     program: null,
+    knownTypeNames: null,
     typesResult: null,
     resolversResult: null,
     directiveDefinitions: null,
@@ -383,6 +391,14 @@ function createProgramStep(ctx: PipelineContext): PipelineContext {
   }
 
   return { ...ctx, program: programResult.program };
+}
+
+function collectTypeNamesStep(ctx: PipelineContext): PipelineContext {
+  if (ctx.aborted || !ctx.program) return ctx;
+
+  const result = collectDeclaredTypeNames(ctx.program, ctx.sourceFiles);
+
+  return { ...ctx, knownTypeNames: result.typeNames };
 }
 
 function prepareScalarConfig(config: GenerationConfig): {
@@ -440,6 +456,7 @@ function extractTypesStep(ctx: PipelineContext): PipelineContext {
     globalTypeMappings,
     configScalars,
     ctx.config.cwd,
+    ctx.knownTypeNames ?? new Set(),
   );
 
   return { ...ctx, typesResult };
@@ -448,7 +465,14 @@ function extractTypesStep(ctx: PipelineContext): PipelineContext {
 function extractResolversStep(ctx: PipelineContext): PipelineContext {
   if (ctx.aborted || !ctx.program) return ctx;
 
-  const resolversResult = extractResolversCore(ctx.program, ctx.sourceFiles);
+  const { globalTypeMappings } = prepareScalarConfig(ctx.config);
+
+  const resolversResult = extractResolversCore(
+    ctx.program,
+    ctx.sourceFiles,
+    ctx.knownTypeNames ?? new Set(),
+    globalTypeMappings,
+  );
 
   return { ...ctx, resolversResult };
 }
@@ -580,6 +604,7 @@ export async function executeGeneration(
 
   ctx = await scanSourceFilesStep(ctx);
   ctx = createProgramStep(ctx);
+  ctx = collectTypeNamesStep(ctx);
   ctx = extractTypesStep(ctx);
   ctx = extractResolversStep(ctx);
   ctx = extractDirectivesStep(ctx);

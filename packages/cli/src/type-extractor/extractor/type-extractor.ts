@@ -61,6 +61,7 @@ import {
   type TypeKind,
   type TypeMetadata,
 } from "../types/index.js";
+import { resolveFieldType } from "./field-type-resolver.js";
 
 /**
  * Global type mapping configuration.
@@ -78,6 +79,8 @@ export interface GlobalTypeMapping {
 export interface ExtractionOptions {
   /** Global type mappings from config (scalars with tsType.from omitted) */
   readonly globalTypeMappings?: ReadonlyArray<GlobalTypeMapping>;
+  /** Set of type names declared in the schema (from Phase 1 collection) */
+  readonly knownTypeNames?: ReadonlySet<string>;
 }
 
 export interface ExtractionResult {
@@ -457,6 +460,7 @@ function extractFieldsFromType(
   type: ts.Type,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
+  knownTypeNames: ReadonlySet<string> = new Set(),
 ): FieldExtractionResult {
   const fields: FieldDefinition[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -529,19 +533,17 @@ function extractFieldsFromType(
       propTypeNode = declaration.type;
     }
 
-    const typeResult = convertTsTypeToReference(
-      actualPropType,
+    const resolvedType = resolveFieldType(actualPropType, propTypeNode, {
       checker,
+      knownTypeNames,
       globalTypeMappings,
-      new WeakSet(),
-      propTypeNode,
-    );
+    });
 
     // Preserve nullability from original WithDirectives type
     const tsType =
-      directiveNullable && !typeResult.tsType.nullable
-        ? { ...typeResult.tsType, nullable: true }
-        : typeResult.tsType;
+      directiveNullable && !resolvedType.nullable
+        ? { ...resolvedType, nullable: true }
+        : resolvedType;
 
     fields.push({
       name: propName,
@@ -839,6 +841,7 @@ interface ProcessReexportedSymbolParams {
   readonly filePath: string;
   readonly checker: ts.TypeChecker;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly knownTypeNames: ReadonlySet<string>;
   readonly scannedSourceFiles: ReadonlySet<string>;
 }
 
@@ -861,6 +864,7 @@ function processReexportedSymbol(
     filePath,
     checker,
     globalTypeMappings,
+    knownTypeNames,
     scannedSourceFiles,
   } = params;
 
@@ -963,7 +967,12 @@ function processReexportedSymbol(
   const fieldResult =
     kind === "union"
       ? { fields: [], diagnostics: [] }
-      : extractFieldsFromType(type, checker, globalTypeMappings);
+      : extractFieldsFromType(
+          type,
+          checker,
+          globalTypeMappings,
+          knownTypeNames,
+        );
   diagnostics.push(...fieldResult.diagnostics);
 
   return {
@@ -995,6 +1004,7 @@ function processExportDeclaration(
   filePath: string,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping>,
+  knownTypeNames: ReadonlySet<string>,
   scannedSourceFiles: ReadonlySet<string>,
 ): ProcessExportDeclarationResult {
   const types: ExtractedTypeInfo[] = [];
@@ -1086,6 +1096,7 @@ function processExportDeclaration(
       filePath,
       checker,
       globalTypeMappings,
+      knownTypeNames,
       scannedSourceFiles,
     });
 
@@ -1241,6 +1252,7 @@ export function extractTypesFromProgram(
   const detectedScalarNames = new Set<string>();
   const detectedScalars: ScalarMetadataInfo[] = [];
   const globalTypeMappings = options.globalTypeMappings ?? [];
+  const knownTypeNames = options.knownTypeNames ?? new Set<string>();
   const scannedSourceFilesSet = new Set(sourceFiles);
 
   for (const filePath of sourceFiles) {
@@ -1451,7 +1463,12 @@ export function extractTypesFromProgram(
         const fieldResult =
           kind === "union"
             ? { fields: [], diagnostics: [] }
-            : extractFieldsFromType(actualType, checker, globalTypeMappings);
+            : extractFieldsFromType(
+                actualType,
+                checker,
+                globalTypeMappings,
+                knownTypeNames,
+              );
         const fields = fieldResult.fields;
         diagnostics.push(...fieldResult.diagnostics);
 
@@ -1510,6 +1527,7 @@ export function extractTypesFromProgram(
           filePath,
           checker,
           globalTypeMappings,
+          knownTypeNames,
           scannedSourceFilesSet,
         );
         types.push(...result.types);
