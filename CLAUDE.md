@@ -186,6 +186,24 @@ Uses **golden file testing** for CLI validation:
 ## Coding Conventions
 
 - **Nullability for internal types**: Use `null` (not `undefined` or optional) to represent "unset" values in types not exported to users
+- **No optional parameters or default values**: All function parameters must be required. Do not use `?` optional parameters or `= defaultValue` default values
+- **Object arguments for multiple parameters**: When a function has multiple parameters (especially generic types like `Set<string>`), use object arguments (keyword arguments pattern) for better readability
+  ```typescript
+  // Good
+  interface ExtractParams {
+    readonly type: ts.Type;
+    readonly checker: ts.TypeChecker;
+    readonly knownTypeNames: ReadonlySet<string>;
+  }
+  function extract(params: ExtractParams): Result { ... }
+
+  // Bad
+  function extract(
+    type: ts.Type,
+    checker: ts.TypeChecker,
+    knownTypeNames: ReadonlySet<string> = new Set(),
+  ): Result { ... }
+  ```
 - **Test strategy**: Prefer golden file tests for code analysis and generation logic
 - **Language**: All code comments and documentation must be written in English
 
