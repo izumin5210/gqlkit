@@ -21,7 +21,7 @@ export function getTypeNameFromNode(typeNode: ts.TypeNode): string | null {
  * List of TypeScript built-in utility types that should be resolved
  * to their actual properties when used in args.
  */
-export const BUILTIN_UTILITY_TYPES = [
+const BUILTIN_UTILITY_TYPES = [
   "Omit",
   "Pick",
   "Partial",
