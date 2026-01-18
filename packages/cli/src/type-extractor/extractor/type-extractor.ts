@@ -41,6 +41,10 @@ import {
   shouldTreatIntersectionAsInline,
 } from "../../shared/typescript-utils.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
+import type {
+  ScalarBaseTypeMappingTable,
+  ScalarMappingContext,
+} from "../mapper/scalar-base-type-mapper.js";
 import {
   createArrayType,
   createInlineObjectType,
@@ -83,6 +87,8 @@ export interface ExtractionOptions {
   readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
   /** Map of underlying symbols to schema type names (for type alias resolution) */
   readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
+  /** Scalar base type mapping table for automatic base type -> scalar mapping */
+  readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
 }
 
 export interface ExtractionResult {
@@ -406,6 +412,8 @@ interface ExtractFieldsParams {
   readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
   readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
   readonly sourceFiles: ReadonlySet<string>;
+  readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
+  readonly scalarMappingContext: ScalarMappingContext;
 }
 
 function extractFieldsFromType(
@@ -419,6 +427,8 @@ function extractFieldsFromType(
     knownTypeSymbols,
     underlyingSymbolToTypeName,
     sourceFiles,
+    scalarMappingTable,
+    scalarMappingContext,
   } = params;
   const fields: FieldDefinition[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -498,6 +508,8 @@ function extractFieldsFromType(
       underlyingSymbolToTypeName,
       globalTypeMappings,
       sourceFiles,
+      scalarMappingTable,
+      scalarMappingContext,
     });
 
     // Preserve nullability from original WithDirectives type
@@ -806,6 +818,8 @@ interface ProcessReexportedSymbolParams {
   readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
   readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
   readonly scannedSourceFiles: ReadonlySet<string>;
+  readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
+  readonly scalarMappingContext: ScalarMappingContext;
 }
 
 interface ProcessReexportedSymbolResult {
@@ -831,6 +845,8 @@ function processReexportedSymbol(
     knownTypeSymbols,
     underlyingSymbolToTypeName,
     scannedSourceFiles,
+    scalarMappingTable,
+    scalarMappingContext,
   } = params;
 
   const diagnostics: Diagnostic[] = [];
@@ -940,6 +956,8 @@ function processReexportedSymbol(
           knownTypeSymbols,
           underlyingSymbolToTypeName,
           sourceFiles: scannedSourceFiles,
+          scalarMappingTable,
+          scalarMappingContext,
         });
   diagnostics.push(...fieldResult.diagnostics);
 
@@ -976,6 +994,7 @@ function processExportDeclaration(
   knownTypeSymbols: ReadonlyMap<string, ts.Symbol>,
   underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>,
   scannedSourceFiles: ReadonlySet<string>,
+  scalarMappingTable: ScalarBaseTypeMappingTable | null,
 ): ProcessExportDeclarationResult {
   const types: ExtractedTypeInfo[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -1070,6 +1089,8 @@ function processExportDeclaration(
       knownTypeSymbols,
       underlyingSymbolToTypeName,
       scannedSourceFiles,
+      scalarMappingTable,
+      scalarMappingContext: exportedName.endsWith("Input") ? "input" : "output",
     });
 
     if (result.skip) continue;
@@ -1237,6 +1258,7 @@ export function extractTypesFromProgram(
     knownTypeNames,
     knownTypeSymbols,
     underlyingSymbolToTypeName,
+    scalarMappingTable,
   } = options;
   const scannedSourceFilesSet = new Set(sourceFiles);
 
@@ -1457,6 +1479,10 @@ export function extractTypesFromProgram(
                 knownTypeSymbols,
                 underlyingSymbolToTypeName,
                 sourceFiles: scannedSourceFilesSet,
+                scalarMappingTable,
+                scalarMappingContext: name.endsWith("Input")
+                  ? "input"
+                  : "output",
               });
         const fields = fieldResult.fields;
         diagnostics.push(...fieldResult.diagnostics);
@@ -1520,6 +1546,7 @@ export function extractTypesFromProgram(
           knownTypeSymbols,
           underlyingSymbolToTypeName,
           scannedSourceFilesSet,
+          scalarMappingTable,
         );
         types.push(...result.types);
         diagnostics.push(...result.diagnostics);

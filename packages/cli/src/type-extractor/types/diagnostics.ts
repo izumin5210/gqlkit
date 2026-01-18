@@ -82,7 +82,8 @@ export type DiagnosticCode =
   | "DUPLICATE_IS_TYPE_OF"
   | "MISSING_ABSTRACT_TYPE_RESOLVER"
   | "DUPLICATE_ENUM_VALUE"
-  | "INVALID_ENUM_MEMBER_NAME";
+  | "INVALID_ENUM_MEMBER_NAME"
+  | "AMBIGUOUS_SCALAR_BASE_TYPE";
 
 export interface Diagnostic {
   readonly code: DiagnosticCode;
