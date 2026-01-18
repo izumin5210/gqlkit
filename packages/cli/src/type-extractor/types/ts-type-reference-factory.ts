@@ -4,63 +4,100 @@ import type {
   TSTypeReference,
 } from "./typescript.js";
 
+interface CreateTSTypeReferenceParams {
+  readonly kind: TSTypeReference["kind"];
+  readonly overrides: Partial<TSTypeReference>;
+}
+
 function createTSTypeReference(
-  kind: TSTypeReference["kind"],
-  overrides?: Partial<TSTypeReference>,
+  params: CreateTSTypeReferenceParams,
 ): TSTypeReference {
   return {
-    kind,
+    kind: params.kind,
     name: null,
     elementType: null,
     members: null,
     nullable: false,
     scalarInfo: null,
     inlineObjectProperties: null,
-    ...overrides,
+    ...params.overrides,
   };
 }
 
+interface CreateReferenceTypeParams {
+  readonly name: string;
+  readonly nullable: boolean;
+}
+
 export function createReferenceType(
-  name: string,
-  nullable = false,
+  params: CreateReferenceTypeParams,
 ): TSTypeReference {
-  return createTSTypeReference("reference", { name, nullable });
+  return createTSTypeReference({
+    kind: "reference",
+    overrides: { name: params.name, nullable: params.nullable },
+  });
+}
+
+interface CreatePrimitiveTypeParams {
+  readonly name: string;
+  readonly nullable: boolean;
 }
 
 export function createPrimitiveType(
-  name: string,
-  nullable = false,
+  params: CreatePrimitiveTypeParams,
 ): TSTypeReference {
-  return createTSTypeReference("primitive", { name, nullable });
+  return createTSTypeReference({
+    kind: "primitive",
+    overrides: { name: params.name, nullable: params.nullable },
+  });
 }
 
 export function createArrayType(elementType: TSTypeReference): TSTypeReference {
-  return createTSTypeReference("array", { elementType });
+  return createTSTypeReference({ kind: "array", overrides: { elementType } });
+}
+
+interface CreateUnionTypeParams {
+  readonly members: ReadonlyArray<TSTypeReference>;
+  readonly nullable: boolean;
 }
 
 export function createUnionType(
-  members: ReadonlyArray<TSTypeReference>,
-  nullable = false,
+  params: CreateUnionTypeParams,
 ): TSTypeReference {
-  return createTSTypeReference("union", { members, nullable });
+  return createTSTypeReference({
+    kind: "union",
+    overrides: { members: params.members, nullable: params.nullable },
+  });
 }
 
 export function createInlineObjectType(
   properties: ReadonlyArray<InlineObjectPropertyDef>,
 ): TSTypeReference {
-  return createTSTypeReference("inlineObject", {
-    inlineObjectProperties: properties,
+  return createTSTypeReference({
+    kind: "inlineObject",
+    overrides: { inlineObjectProperties: properties },
   });
 }
 
+interface CreateScalarTypeParams {
+  readonly name: string;
+  readonly scalarInfo: ScalarTypeInfo;
+  readonly nullable: boolean;
+}
+
 export function createScalarType(
-  name: string,
-  scalarInfo: ScalarTypeInfo,
-  nullable = false,
+  params: CreateScalarTypeParams,
 ): TSTypeReference {
-  return createTSTypeReference("scalar", { name, scalarInfo, nullable });
+  return createTSTypeReference({
+    kind: "scalar",
+    overrides: {
+      name: params.name,
+      scalarInfo: params.scalarInfo,
+      nullable: params.nullable,
+    },
+  });
 }
 
 export function createLiteralType(name: string): TSTypeReference {
-  return createTSTypeReference("literal", { name });
+  return createTSTypeReference({ kind: "literal", overrides: { name } });
 }

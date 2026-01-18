@@ -38,41 +38,21 @@ function isNullTypeNode(typeNode: ts.TypeNode): boolean {
 }
 
 /**
- * Checks if a TypeNode represents undefined.
- */
-function isUndefinedTypeNode(typeNode: ts.TypeNode): boolean {
-  return typeNode.kind === ts.SyntaxKind.UndefinedKeyword;
-}
-
-export interface FilterNonNullTypeNodesOptions {
-  readonly includeUndefined?: boolean;
-}
-
-/**
- * Filters non-null (and optionally non-undefined) type nodes from a union type node.
- * By default, only filters out null. Set includeUndefined to also filter out undefined.
+ * Filters non-null type nodes from a union type node.
  */
 export function filterNonNullTypeNodes(
   typeNode: ts.UnionTypeNode,
-  options?: FilterNonNullTypeNodesOptions,
 ): ts.TypeNode[] {
-  const { includeUndefined = false } = options ?? {};
-  return typeNode.types.filter((t) => {
-    if (isNullTypeNode(t)) return false;
-    if (includeUndefined && isUndefinedTypeNode(t)) return false;
-    return true;
-  });
+  return typeNode.types.filter((t) => !isNullTypeNode(t));
 }
 
 /**
- * Finds the first non-null (and optionally non-undefined) type node from a union type node.
- * By default, only filters out null. Set includeUndefined to also filter out undefined.
+ * Finds the first non-null type node from a union type node.
  */
 export function findNonNullTypeNode(
   typeNode: ts.UnionTypeNode,
-  options?: FilterNonNullTypeNodesOptions,
 ): ts.TypeNode | undefined {
-  return filterNonNullTypeNodes(typeNode, options)[0];
+  return filterNonNullTypeNodes(typeNode)[0];
 }
 
 /**

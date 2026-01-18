@@ -138,7 +138,10 @@ function tryExtractAsInlineObject(
   if (visitedTypes.has(type)) {
     const typeName = type.symbol?.getName() ?? "Object";
     return {
-      tsType: createReferenceType(typeName === "__type" ? "Object" : typeName),
+      tsType: createReferenceType({
+        name: typeName === "__type" ? "Object" : typeName,
+        nullable: false,
+      }),
     };
   }
   visitedTypes.add(type);
@@ -174,24 +177,24 @@ function convertTsTypeToReference(
     !metadataResult.isList
   ) {
     return {
-      tsType: createScalarType(
-        metadataResult.scalarName,
-        {
+      tsType: createScalarType({
+        name: metadataResult.scalarName,
+        scalarInfo: {
           scalarName: metadataResult.scalarName,
           typeName: metadataResult.scalarName,
           baseType: undefined,
           isCustom: true,
           only: metadataResult.only,
         },
-        metadataResult.nullable,
-      ),
+        nullable: metadataResult.nullable,
+      }),
     };
   }
 
   if (isBooleanUnion(type)) {
     const nullable = isNullableUnion(type);
     return {
-      tsType: createPrimitiveType("boolean", nullable),
+      tsType: createPrimitiveType({ name: "boolean", nullable }),
     };
   }
 
@@ -203,7 +206,7 @@ function convertTsTypeToReference(
     if (aliasSymbol) {
       const name = aliasSymbol.getName();
       return {
-        tsType: createReferenceType(name, nullable),
+        tsType: createReferenceType({ name, nullable }),
       };
     }
 
@@ -213,7 +216,10 @@ function convertTsTypeToReference(
     const enumParentSymbol = findEnumParentSymbol(nonNullTypes);
     if (enumParentSymbol) {
       return {
-        tsType: createReferenceType(enumParentSymbol.getName(), nullable),
+        tsType: createReferenceType({
+          name: enumParentSymbol.getName(),
+          nullable,
+        }),
       };
     }
 
@@ -239,10 +245,10 @@ function convertTsTypeToReference(
     );
 
     return {
-      tsType: createUnionType(
-        memberResults.map((r) => r.tsType),
+      tsType: createUnionType({
+        members: memberResults.map((r) => r.tsType),
         nullable,
-      ),
+      }),
     };
   }
 
@@ -259,7 +265,7 @@ function convertTsTypeToReference(
     const elementResult = elementType
       ? convertTsTypeToReference(elementType, ctx, elementTypeNode)
       : {
-          tsType: createPrimitiveType("unknown"),
+          tsType: createPrimitiveType({ name: "unknown", nullable: false }),
         };
 
     return {
@@ -271,12 +277,12 @@ function convertTsTypeToReference(
 
   if (type.flags & ts.TypeFlags.String) {
     return {
-      tsType: createPrimitiveType("string"),
+      tsType: createPrimitiveType({ name: "string", nullable: false }),
     };
   }
   if (type.flags & ts.TypeFlags.Number) {
     return {
-      tsType: createPrimitiveType("number"),
+      tsType: createPrimitiveType({ name: "number", nullable: false }),
     };
   }
   if (
@@ -284,7 +290,7 @@ function convertTsTypeToReference(
     type.flags & ts.TypeFlags.BooleanLiteral
   ) {
     return {
-      tsType: createPrimitiveType("boolean"),
+      tsType: createPrimitiveType({ name: "boolean", nullable: false }),
     };
   }
   if (type.flags & ts.TypeFlags.StringLiteral) {
@@ -307,7 +313,7 @@ function convertTsTypeToReference(
     if (type.aliasSymbol) {
       const aliasName = type.aliasSymbol.getName();
       return {
-        tsType: createReferenceType(aliasName),
+        tsType: createReferenceType({ name: aliasName, nullable: false }),
       };
     }
 
@@ -323,7 +329,7 @@ function convertTsTypeToReference(
       const typeName = getTypeNameFromNode(typeNode);
       if (typeName && knownTypeNames.has(typeName)) {
         return {
-          tsType: createReferenceType(typeName),
+          tsType: createReferenceType({ name: typeName, nullable: false }),
         };
       }
     }
@@ -343,7 +349,7 @@ function convertTsTypeToReference(
         // Only use typeNode name if it's in knownTypeNames (schema-defined type)
         if (typeName && knownTypeNames.has(typeName)) {
           return {
-            tsType: createReferenceType(typeName),
+            tsType: createReferenceType({ name: typeName, nullable: false }),
           };
         }
       }
@@ -362,24 +368,28 @@ function convertTsTypeToReference(
       );
       if (globalMapping) {
         return {
-          tsType: createScalarType(globalMapping.scalarName, {
-            scalarName: globalMapping.scalarName,
-            typeName: globalMapping.typeName,
-            baseType: undefined,
-            isCustom: true,
-            only: globalMapping.only,
+          tsType: createScalarType({
+            name: globalMapping.scalarName,
+            scalarInfo: {
+              scalarName: globalMapping.scalarName,
+              typeName: globalMapping.typeName,
+              baseType: undefined,
+              isCustom: true,
+              only: globalMapping.only,
+            },
+            nullable: false,
           }),
         };
       }
 
       return {
-        tsType: createReferenceType(symbolName),
+        tsType: createReferenceType({ name: symbolName, nullable: false }),
       };
     }
   }
 
   return {
-    tsType: createReferenceType(typeString),
+    tsType: createReferenceType({ name: typeString, nullable: false }),
   };
 }
 

@@ -76,23 +76,23 @@ function resolveFieldTypeInternal(
     !metadataResult.isPrimitive &&
     !metadataResult.isList
   ) {
-    return createScalarType(
-      metadataResult.scalarName,
-      {
+    return createScalarType({
+      name: metadataResult.scalarName,
+      scalarInfo: {
         scalarName: metadataResult.scalarName,
         typeName: metadataResult.scalarName,
         baseType: undefined,
         isCustom: true,
         only: metadataResult.only,
       },
-      metadataResult.nullable,
-    );
+      nullable: metadataResult.nullable,
+    });
   }
 
   // Boolean union handling
   if (isBooleanUnion(type)) {
     const nullable = isNullableUnion(type);
-    return createPrimitiveType("boolean", nullable);
+    return createPrimitiveType({ name: "boolean", nullable });
   }
 
   // Union type handling
@@ -104,7 +104,7 @@ function resolveFieldTypeInternal(
     if (aliasSymbol) {
       const name = aliasSymbol.getName();
       if (isKnownSchemaType(name, aliasSymbol, ctx)) {
-        return createReferenceType(name, nullable);
+        return createReferenceType({ name, nullable });
       }
     }
 
@@ -116,7 +116,7 @@ function resolveFieldTypeInternal(
         typeName &&
         isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx)
       ) {
-        return createReferenceType(typeName, nullable);
+        return createReferenceType({ name: typeName, nullable });
       }
     }
 
@@ -125,7 +125,10 @@ function resolveFieldTypeInternal(
     // Check if all non-null types belong to the same enum (for numeric enums)
     const enumParentSymbol = findEnumParentSymbol(nonNullTypes);
     if (enumParentSymbol) {
-      return createReferenceType(enumParentSymbol.getName(), nullable);
+      return createReferenceType({
+        name: enumParentSymbol.getName(),
+        nullable,
+      });
     }
 
     if (nonNullTypes.length === 1) {
@@ -146,7 +149,7 @@ function resolveFieldTypeInternal(
       resolveFieldTypeInternal(t, undefined, ctx),
     );
 
-    return createUnionType(memberResults, nullable);
+    return createUnionType({ members: memberResults, nullable });
   }
 
   // Array type handling
@@ -161,7 +164,7 @@ function resolveFieldTypeInternal(
 
     const elementResult = elementType
       ? resolveFieldTypeInternal(elementType, elementTypeNode, ctx)
-      : createPrimitiveType("unknown");
+      : createPrimitiveType({ name: "unknown", nullable: false });
 
     return createArrayType(elementResult);
   }
@@ -170,16 +173,16 @@ function resolveFieldTypeInternal(
   const typeString = checker.typeToString(type);
 
   if (type.flags & ts.TypeFlags.String) {
-    return createPrimitiveType("string");
+    return createPrimitiveType({ name: "string", nullable: false });
   }
   if (type.flags & ts.TypeFlags.Number) {
-    return createPrimitiveType("number");
+    return createPrimitiveType({ name: "number", nullable: false });
   }
   if (
     type.flags & ts.TypeFlags.Boolean ||
     type.flags & ts.TypeFlags.BooleanLiteral
   ) {
-    return createPrimitiveType("boolean");
+    return createPrimitiveType({ name: "boolean", nullable: false });
   }
   if (type.flags & ts.TypeFlags.StringLiteral) {
     return createLiteralType(typeString.replace(/"/g, ""));
@@ -195,7 +198,7 @@ function resolveFieldTypeInternal(
     if (type.aliasSymbol) {
       const aliasName = type.aliasSymbol.getName();
       if (isKnownSchemaType(aliasName, type.aliasSymbol, ctx)) {
-        return createReferenceType(aliasName);
+        return createReferenceType({ name: aliasName, nullable: false });
       }
     }
 
@@ -213,7 +216,7 @@ function resolveFieldTypeInternal(
         typeName &&
         isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx)
       ) {
-        return createReferenceType(typeName);
+        return createReferenceType({ name: typeName, nullable: false });
       }
     }
 
@@ -232,7 +235,7 @@ function resolveFieldTypeInternal(
           typeName &&
           isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx)
         ) {
-          return createReferenceType(typeName);
+          return createReferenceType({ name: typeName, nullable: false });
         }
       }
       // Not a known type - treat as inline object
@@ -248,7 +251,7 @@ function resolveFieldTypeInternal(
     const typeName = getTypeNameFromNode(typeNode);
     const nodeSymbol = checker.getSymbolAtLocation(typeNode.typeName);
     if (typeName && isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx)) {
-      return createReferenceType(typeName);
+      return createReferenceType({ name: typeName, nullable: false });
     }
   }
 
@@ -262,18 +265,22 @@ function resolveFieldTypeInternal(
         (m) => m.typeName === symbolName,
       );
       if (globalMapping) {
-        return createScalarType(globalMapping.scalarName, {
-          scalarName: globalMapping.scalarName,
-          typeName: globalMapping.typeName,
-          baseType: undefined,
-          isCustom: true,
-          only: globalMapping.only,
+        return createScalarType({
+          name: globalMapping.scalarName,
+          scalarInfo: {
+            scalarName: globalMapping.scalarName,
+            typeName: globalMapping.typeName,
+            baseType: undefined,
+            isCustom: true,
+            only: globalMapping.only,
+          },
+          nullable: false,
         });
       }
 
       // Check if it's a known type by symbol comparison
       if (isKnownSchemaType(symbolName, type.symbol, ctx)) {
-        return createReferenceType(symbolName);
+        return createReferenceType({ name: symbolName, nullable: false });
       }
 
       // Check if the symbol is the underlying type of a schema type alias
@@ -281,7 +288,7 @@ function resolveFieldTypeInternal(
       const resolvedSymbol = resolveOriginalSymbol(type.symbol, checker);
       const schemaTypeName = ctx.underlyingSymbolToTypeName.get(resolvedSymbol);
       if (schemaTypeName) {
-        return createReferenceType(schemaTypeName);
+        return createReferenceType({ name: schemaTypeName, nullable: false });
       }
 
       // If the name exists in schema but symbol doesn't match,
@@ -290,18 +297,18 @@ function resolveFieldTypeInternal(
         // Check if the type is declared within schema files (local shadowing)
         if (isTypeFromSchemaFiles(type.symbol, ctx.sourceFiles)) {
           // Local shadowing - use name matching for backwards compatibility
-          return createReferenceType(symbolName);
+          return createReferenceType({ name: symbolName, nullable: false });
         }
         // Type from outside schema files - expand as inline object
         return tryExtractAsInlineObject(type, ctx);
       }
 
       // Unknown type - still return reference but it will likely cause validation error later
-      return createReferenceType(symbolName);
+      return createReferenceType({ name: symbolName, nullable: false });
     }
   }
 
-  return createReferenceType(typeString);
+  return createReferenceType({ name: typeString, nullable: false });
 }
 
 function tryExtractAsInlineObject(
@@ -312,7 +319,7 @@ function tryExtractAsInlineObject(
   if (visitedTypes.has(type)) {
     // Cycle detected, return a placeholder reference
     const typeName = type.symbol?.getName() ?? "Unknown";
-    return createReferenceType(typeName);
+    return createReferenceType({ name: typeName, nullable: false });
   }
 
   visitedTypes.add(type);
