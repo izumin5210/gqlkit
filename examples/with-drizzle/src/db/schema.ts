@@ -5,6 +5,7 @@ import {
   serial,
   text,
   timestamp,
+  uuid,
 } from "drizzle-orm/pg-core";
 
 export const userStatusEnum = pgEnum("user_status", [
@@ -20,7 +21,7 @@ export const postStatusEnum = pgEnum("post_status", [
 ]);
 
 export const users = pgTable("users", {
-  id: serial().primaryKey(),
+  id: uuid().primaryKey(),
   name: text().notNull(),
   email: text().notNull().unique(),
   status: userStatusEnum().notNull().default("active"),
@@ -28,11 +29,11 @@ export const users = pgTable("users", {
 });
 
 export const posts = pgTable("posts", {
-  id: serial().primaryKey(),
+  id: uuid().primaryKey(),
   title: text().notNull(),
   content: text(),
   status: postStatusEnum().notNull().default("draft"),
-  authorId: integer()
+  authorId: uuid()
     .notNull()
     .references(() => users.id),
   createdAt: timestamp().notNull().defaultNow(),

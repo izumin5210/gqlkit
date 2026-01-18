@@ -25,23 +25,23 @@ Define your database tables with Drizzle:
 import {
   integer,
   pgTable,
-  serial,
   text,
   timestamp,
+ uuid,
 } from "drizzle-orm/pg-core";
 
 export const users = pgTable("users", {
-  id: serial().primaryKey(),
+  id: uuid().primaryKey(),
   name: text().notNull(),
   email: text().notNull().unique(),
   createdAt: timestamp().notNull().defaultNow(),
 });
 
 export const posts = pgTable("posts", {
-  id: serial().primaryKey(),
+  id: uuid().primaryKey(),
   title: text().notNull(),
   content: text(),
-  authorId: integer()
+  authorId: uuid()
     .notNull()
     .references(() => users.id),
   createdAt: timestamp().notNull().defaultNow(),
