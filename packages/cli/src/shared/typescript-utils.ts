@@ -250,3 +250,17 @@ export function isBooleanUnion(type: ts.Type): boolean {
     nonNullTypes.every((t) => t.flags & ts.TypeFlags.BooleanLiteral)
   );
 }
+
+/**
+ * Resolves a symbol to its original symbol by following alias chains.
+ * This is necessary for re-exports where the symbol is an alias.
+ */
+export function resolveOriginalSymbol(
+  symbol: ts.Symbol,
+  checker: ts.TypeChecker,
+): ts.Symbol {
+  if (symbol.flags & ts.SymbolFlags.Alias) {
+    return checker.getAliasedSymbol(symbol);
+  }
+  return symbol;
+}

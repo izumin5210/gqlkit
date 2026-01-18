@@ -223,18 +223,6 @@ function detectResolverFromMetadataType(
   return undefined;
 }
 
-/**
- * Wrapper function that delegates to resolveFieldType.
- * This maintains the existing call signature while using the new implementation.
- */
-function convertTsTypeToReference(
-  type: ts.Type,
-  ctx: FieldTypeResolverContext,
-  typeNode?: ts.TypeNode,
-): TSTypeReference {
-  return resolveFieldType(type, typeNode, ctx);
-}
-
 function isInlineTypeLiteralDeclaration(declaration: ts.Declaration): boolean {
   if (!ts.isPropertySignature(declaration)) {
     return false;
@@ -407,7 +395,7 @@ function extractArgsFromType(
     const propTypeNode = memberTypeNodes.get(prop.getName());
     args.push({
       name: prop.getName(),
-      tsType: convertTsTypeToReference(actualPropType, ctx, propTypeNode),
+      tsType: resolveFieldType(actualPropType, propTypeNode, ctx),
       optional,
       description: tsdocInfo.description,
       deprecated: tsdocInfo.deprecated,
@@ -528,7 +516,7 @@ function extractTypeArgumentsFromCall(
 
     const parentTypeName = getTypeNameFromNode(parentTypeNode);
 
-    const argsTypeRef = convertTsTypeToReference(argsType, ctx);
+    const argsTypeRef = resolveFieldType(argsType, undefined, ctx);
     const isNoArgs =
       argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
@@ -563,7 +551,7 @@ function extractTypeArgumentsFromCall(
       parentTypeName: parentTypeName ?? null,
       argsType: isNoArgs ? null : argsTypeRef,
       args: args && args.length > 0 ? args : null,
-      returnType: convertTsTypeToReference(returnType, ctx, returnTypeNode),
+      returnType: resolveFieldType(returnType, returnTypeNode, ctx),
       directives,
       diagnostics,
     };
@@ -584,7 +572,7 @@ function extractTypeArgumentsFromCall(
   const argsType = checker.getTypeFromTypeNode(argsTypeNode);
   const returnType = checker.getTypeFromTypeNode(returnTypeNode);
 
-  const argsTypeRef = convertTsTypeToReference(argsType, ctx);
+  const argsTypeRef = resolveFieldType(argsType, undefined, ctx);
   const isNoArgs =
     argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
@@ -616,7 +604,7 @@ function extractTypeArgumentsFromCall(
     parentTypeName: null,
     argsType: isNoArgs ? null : argsTypeRef,
     args: args && args.length > 0 ? args : null,
-    returnType: convertTsTypeToReference(returnType, ctx, returnTypeNode),
+    returnType: resolveFieldType(returnType, returnTypeNode, ctx),
     directives,
     diagnostics,
   };
@@ -632,7 +620,7 @@ function extractExportedInputTypes(
     if (ts.isTypeAliasDeclaration(node) && isExported(node)) {
       const name = node.name.getText(sourceFile);
       const type = ctx.checker.getTypeAtLocation(node.name);
-      const tsType = convertTsTypeToReference(type, ctx);
+      const tsType = resolveFieldType(type, undefined, ctx);
 
       exportedTypes.push({
         name,

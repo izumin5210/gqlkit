@@ -1,5 +1,8 @@
 import ts from "typescript";
-import { isExported } from "../../shared/typescript-utils.js";
+import {
+  isExported,
+  resolveOriginalSymbol,
+} from "../../shared/typescript-utils.js";
 
 export interface TypeNameCollectionResult {
   readonly typeNames: ReadonlySet<string>;
@@ -111,20 +114,6 @@ export function collectDeclaredTypeNames(
   }
 
   return { typeNames, typeSymbols, underlyingSymbolToTypeName };
-}
-
-/**
- * Resolves a symbol to its original symbol by following alias chains.
- * This is necessary for re-exports where the symbol is an alias.
- */
-function resolveOriginalSymbol(
-  symbol: ts.Symbol,
-  checker: ts.TypeChecker,
-): ts.Symbol {
-  if (symbol.flags & ts.SymbolFlags.Alias) {
-    return checker.getAliasedSymbol(symbol);
-  }
-  return symbol;
 }
 
 /**
