@@ -27,7 +27,7 @@ async function initializeDatabase() {
 
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS users (
-      id SERIAL PRIMARY KEY,
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       name TEXT NOT NULL,
       email TEXT NOT NULL UNIQUE,
       status user_status NOT NULL DEFAULT 'active',
@@ -37,11 +37,11 @@ async function initializeDatabase() {
 
   await db.execute(sql`
     CREATE TABLE IF NOT EXISTS posts (
-      id SERIAL PRIMARY KEY,
+      id UUID PRIMARY KEY DEFAULT gen_random_uuid(),
       title TEXT NOT NULL,
       content TEXT,
       status post_status NOT NULL DEFAULT 'draft',
-      author_id INTEGER NOT NULL REFERENCES users(id),
+      author_id UUID NOT NULL REFERENCES users(id),
       created_at TIMESTAMP NOT NULL DEFAULT NOW()
     )
   `);
