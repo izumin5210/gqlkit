@@ -103,9 +103,7 @@ function resolveFieldTypeInternal(
     const aliasSymbol = type.aliasSymbol;
     if (aliasSymbol) {
       const name = aliasSymbol.getName();
-      if (
-        isKnownSchemaType(name, aliasSymbol, ctx)
-      ) {
+      if (isKnownSchemaType(name, aliasSymbol, ctx)) {
         return createReferenceType(name, nullable);
       }
     }
@@ -196,9 +194,7 @@ function resolveFieldTypeInternal(
     // If the intersection has an alias that's in knownTypeNames, use it
     if (type.aliasSymbol) {
       const aliasName = type.aliasSymbol.getName();
-      if (
-        isKnownSchemaType(aliasName, type.aliasSymbol, ctx)
-      ) {
+      if (isKnownSchemaType(aliasName, type.aliasSymbol, ctx)) {
         return createReferenceType(aliasName);
       }
     }
@@ -251,10 +247,7 @@ function resolveFieldTypeInternal(
   if (typeNode && ts.isTypeReferenceNode(typeNode)) {
     const typeName = getTypeNameFromNode(typeNode);
     const nodeSymbol = checker.getSymbolAtLocation(typeNode.typeName);
-    if (
-      typeName &&
-      isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx)
-    ) {
+    if (typeName && isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx)) {
       return createReferenceType(typeName);
     }
   }
@@ -279,9 +272,7 @@ function resolveFieldTypeInternal(
       }
 
       // Check if it's a known type by symbol comparison
-      if (
-        isKnownSchemaType(symbolName, type.symbol, ctx)
-      ) {
+      if (isKnownSchemaType(symbolName, type.symbol, ctx)) {
         return createReferenceType(symbolName);
       }
 
