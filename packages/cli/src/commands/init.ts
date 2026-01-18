@@ -133,8 +133,7 @@ export async function runInitCommand(
       );
       writer.stdout("  Installing dependencies...");
 
-      const installArgs =
-        pmResult.packageManager === "npm" ? ["install"] : ["install"];
+      const installArgs = ["install"];
 
       const installResult = await runCommand({
         command: pmResult.packageManager,

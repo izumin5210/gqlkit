@@ -44,12 +44,18 @@ export function runCommand(
       });
     });
 
-    child.on("error", () => {
+    child.on("error", (error) => {
+      const errorMessage =
+        error instanceof Error ? error.message : String(error);
+      const enhancedStderr =
+        stderr.length > 0
+          ? `${stderr}\nProcess failed to spawn: ${errorMessage}`
+          : `Process failed to spawn: ${errorMessage}`;
       resolve({
         success: false,
         exitCode: 1,
         stdout,
-        stderr,
+        stderr: enhancedStderr,
       });
     });
   });

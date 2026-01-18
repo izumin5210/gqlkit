@@ -109,20 +109,13 @@ export async function resolveProjectDirectory(
 
   const configResult = await loadConfig({ cwd: projectDir });
 
-  let gqlkitDir: string;
-  let schemaDir: string;
+  const sourceDir =
+    configResult.configPath !== undefined
+      ? configResult.config.sourceDir
+      : "src/gqlkit/schema";
 
-  if (
-    configResult.configPath !== undefined &&
-    configResult.config.sourceDir !== "src/gqlkit/schema"
-  ) {
-    const sourceDir = configResult.config.sourceDir;
-    schemaDir = join(projectDir, sourceDir);
-    gqlkitDir = dirname(schemaDir);
-  } else {
-    gqlkitDir = join(projectDir, "src", "gqlkit");
-    schemaDir = join(gqlkitDir, "schema");
-  }
+  const schemaDir = join(projectDir, sourceDir);
+  const gqlkitDir = dirname(schemaDir);
 
   return {
     directories: {
