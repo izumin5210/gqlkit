@@ -100,11 +100,11 @@ extend type Query {
   """
   Defined in: src/gqlkit/schema/post.ts
   """
-  post(id: Float!): Post
+  post(id: String!): Post
   """
   Defined in: src/gqlkit/schema/user.ts
   """
-  user(id: Float!): User
+  user(id: String!): User
 }
 
 extend type User {

@@ -13,6 +13,16 @@ export function createResolvers({
   };
 }) {
   return {
+    UserStatus: {
+      ACTIVE: "active",
+      INACTIVE: "inactive",
+      SUSPENDED: "suspended",
+    },
+    PostStatus: {
+      DRAFT: "draft",
+      PUBLISHED: "published",
+      ARCHIVED: "archived",
+    },
     DateTime: scalars.DateTime,
     Mutation: {
       createPost: createPost,
