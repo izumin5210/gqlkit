@@ -39,6 +39,34 @@ importers:
         specifier: 4.0.17
         version: 4.0.17(@opentelemetry/api@1.9.0)(@types/node@24.10.8)(jiti@2.6.1)(tsx@4.21.0)(yaml@2.8.2)
 
+  examples/drizzle:
+    dependencies:
+      '@electric-sql/pglite':
+        specifier: ^0.3.0
+        version: 0.3.15
+      '@gqlkit-ts/runtime':
+        specifier: workspace:*
+        version: link:../../packages/runtime
+      '@graphql-tools/schema':
+        specifier: ^10.0.0
+        version: 10.0.30(graphql@16.12.0)
+      drizzle-orm:
+        specifier: ^0.44.0
+        version: 0.44.7(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)
+      graphql:
+        specifier: ^16.12.0
+        version: 16.12.0
+      graphql-scalars:
+        specifier: ^1.24.0
+        version: 1.25.0(graphql@16.12.0)
+      graphql-yoga:
+        specifier: ^5.0.0
+        version: 5.18.0(graphql@16.12.0)
+    devDependencies:
+      '@gqlkit-ts/cli':
+        specifier: workspace:*
+        version: link:../../packages/cli
+
   examples/full-featured:
     dependencies:
       '@gqlkit-ts/runtime':
@@ -444,6 +472,9 @@ packages:
         optional: true
       search-insights:
         optional: true
+
+  '@electric-sql/pglite@0.3.15':
+    resolution: {integrity: sha512-Cj++n1Mekf9ETfdc16TlDi+cDDQF0W7EcbyRHYOAeZdsAe8M/FJg18itDTSwyHfar2WIezawM9o0EKaRGVKygQ==}
 
   '@emnapi/core@1.7.1':
     resolution: {integrity: sha512-o1uhUASyo921r2XtHYOHy7gdkGLge8ghBEQHMWmyJFoXlpU58kIrhhN3w26lpQb6dspetweapMn2CSNwQ8I4wg==}
@@ -1963,6 +1994,98 @@ packages:
   dotenv@8.6.0:
     resolution: {integrity: sha512-IrPdXQsk2BbzvCBGBOTmmSH5SodmqZNt4ERAZDmW4CT+tL8VtvinqywuANaFu4bOMWki16nqf0e4oC0QIaDr/g==}
     engines: {node: '>=10'}
+
+  drizzle-orm@0.44.7:
+    resolution: {integrity: sha512-quIpnYznjU9lHshEOAYLoZ9s3jweleHlZIAWR/jX9gAWNg/JhQ1wj0KGRf7/Zm+obRrYd9GjPVJg790QY9N5AQ==}
+    peerDependencies:
+      '@aws-sdk/client-rds-data': '>=3'
+      '@cloudflare/workers-types': '>=4'
+      '@electric-sql/pglite': '>=0.2.0'
+      '@libsql/client': '>=0.10.0'
+      '@libsql/client-wasm': '>=0.10.0'
+      '@neondatabase/serverless': '>=0.10.0'
+      '@op-engineering/op-sqlite': '>=2'
+      '@opentelemetry/api': ^1.4.1
+      '@planetscale/database': '>=1.13'
+      '@prisma/client': '*'
+      '@tidbcloud/serverless': '*'
+      '@types/better-sqlite3': '*'
+      '@types/pg': '*'
+      '@types/sql.js': '*'
+      '@upstash/redis': '>=1.34.7'
+      '@vercel/postgres': '>=0.8.0'
+      '@xata.io/client': '*'
+      better-sqlite3: '>=7'
+      bun-types: '*'
+      expo-sqlite: '>=14.0.0'
+      gel: '>=2'
+      knex: '*'
+      kysely: '*'
+      mysql2: '>=2'
+      pg: '>=8'
+      postgres: '>=3'
+      prisma: '*'
+      sql.js: '>=1'
+      sqlite3: '>=5'
+    peerDependenciesMeta:
+      '@aws-sdk/client-rds-data':
+        optional: true
+      '@cloudflare/workers-types':
+        optional: true
+      '@electric-sql/pglite':
+        optional: true
+      '@libsql/client':
+        optional: true
+      '@libsql/client-wasm':
+        optional: true
+      '@neondatabase/serverless':
+        optional: true
+      '@op-engineering/op-sqlite':
+        optional: true
+      '@opentelemetry/api':
+        optional: true
+      '@planetscale/database':
+        optional: true
+      '@prisma/client':
+        optional: true
+      '@tidbcloud/serverless':
+        optional: true
+      '@types/better-sqlite3':
+        optional: true
+      '@types/pg':
+        optional: true
+      '@types/sql.js':
+        optional: true
+      '@upstash/redis':
+        optional: true
+      '@vercel/postgres':
+        optional: true
+      '@xata.io/client':
+        optional: true
+      better-sqlite3:
+        optional: true
+      bun-types:
+        optional: true
+      expo-sqlite:
+        optional: true
+      gel:
+        optional: true
+      knex:
+        optional: true
+      kysely:
+        optional: true
+      mysql2:
+        optional: true
+      pg:
+        optional: true
+      postgres:
+        optional: true
+      prisma:
+        optional: true
+      sql.js:
+        optional: true
+      sqlite3:
+        optional: true
 
   enquirer@2.4.1:
     resolution: {integrity: sha512-rRqJg/6gd538VHvR3PSrdRBb/1Vy2YfzHqzvbhGIQpDRKIa4FgV/54b5Q1xYSxOOwKvjXweS26E0Q+nAMwp2pQ==}
@@ -3765,6 +3888,8 @@ snapshots:
     transitivePeerDependencies:
       - '@algolia/client-search'
 
+  '@electric-sql/pglite@0.3.15': {}
+
   '@emnapi/core@1.7.1':
     dependencies:
       '@emnapi/wasi-threads': 1.1.0
@@ -5174,6 +5299,11 @@ snapshots:
       '@types/trusted-types': 2.0.7
 
   dotenv@8.6.0: {}
+
+  drizzle-orm@0.44.7(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0):
+    optionalDependencies:
+      '@electric-sql/pglite': 0.3.15
+      '@opentelemetry/api': 1.9.0
 
   enquirer@2.4.1:
     dependencies:
