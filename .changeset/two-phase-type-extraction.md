@@ -2,7 +2,9 @@
 "@gqlkit-ts/cli": minor
 ---
 
-feat: 2-phase type extraction with symbol-based comparison ([#95](https://github.com/izumin5210/gqlkit/pull/95))
+pr: #95
+
+feat: 2-phase type extraction with symbol-based comparison
 
 Introduces a robust 2-phase type extraction architecture to correctly handle type aliases and distinguish same-named types from different sources.
 
