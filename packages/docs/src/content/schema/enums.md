@@ -111,6 +111,52 @@ input UpdateUserInput {
 }
 ```
 
+## Automatic Case Conversion
+
+gqlkit automatically converts enum values to `SCREAMING_SNAKE_CASE` format, which is the GraphQL convention:
+
+```typescript
+export type UserStatus = "active" | "inProgress" | "pending_review" | "on-hold";
+```
+
+Generates:
+
+```graphql
+enum UserStatus {
+  ACTIVE
+  IN_PROGRESS
+  PENDING_REVIEW
+  ON_HOLD
+}
+```
+
+When conversion changes the original value, gqlkit generates resolver mappings to translate between GraphQL and TypeScript values:
+
+```typescript
+// Generated resolvers.ts
+export function createResolvers() {
+  return {
+    UserStatus: {
+      ACTIVE: "active",
+      IN_PROGRESS: "inProgress",
+      PENDING_REVIEW: "pending_review",
+      ON_HOLD: "on-hold",
+    },
+  };
+}
+```
+
+If values are already in `SCREAMING_SNAKE_CASE`, no resolver mapping is generated.
+
+### Duplicate Value Detection
+
+If multiple TypeScript values convert to the same GraphQL enum value, gqlkit reports a `DUPLICATE_ENUM_VALUE_AFTER_CONVERSION` error:
+
+```typescript
+// Error: 'activeUser' and 'active_user' both convert to ACTIVE_USER
+export type Status = "activeUser" | "active_user" | "pending";
+```
+
 ## Invalid Enum Values
 
 Enum values that are not valid GraphQL identifiers are automatically skipped with a warning. gqlkit converts enum values to `SCREAMING_SNAKE_CASE`, and the converted name must:

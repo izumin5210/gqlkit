@@ -45,6 +45,8 @@ export interface GraphQLTypeInfo {
   readonly enumValues: ReadonlyArray<EnumValueInfo> | null;
   /** True if this enum uses numeric values */
   readonly isNumericEnum: boolean;
+  /** True if this string enum needs value mapping (at least one value converted) */
+  readonly needsStringEnumMapping: boolean;
   readonly implementedInterfaces: ReadonlyArray<string> | null;
   readonly sourceFile: string;
   readonly description: string | null;

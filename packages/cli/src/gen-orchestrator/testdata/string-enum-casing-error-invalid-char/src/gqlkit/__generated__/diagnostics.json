@@ -1,0 +1,12 @@
+[
+  {
+    "code": "SKIPPED_ENUM_VALUE",
+    "message": "Enum member '@invalid' converts to '@INVALID' which is not a valid GraphQL identifier",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

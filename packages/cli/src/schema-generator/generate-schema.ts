@@ -137,12 +137,13 @@ export function generateSchema(
   const sdlContent = emitSdlContent(documentNode);
 
   const resolverInfo = collectResolverInfo(integratedResult);
-  const resolversCode = emitResolversCode(
+  const resolversCode = emitResolversCode({
     resolverInfo,
     outputDir,
-    customScalars ?? [],
-    integratedResult.numericEnums,
-  );
+    customScalars: customScalars ?? [],
+    numericEnums: integratedResult.numericEnums,
+    stringEnumMappings: integratedResult.stringEnumMappings,
+  });
 
   return {
     typeDefsCode,

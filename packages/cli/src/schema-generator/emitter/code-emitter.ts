@@ -8,6 +8,7 @@ import {
 import type {
   IntegratedResult,
   NumericEnumInfo,
+  StringEnumMappingInfo,
 } from "../integrator/result-integrator.js";
 import type {
   AbstractTypeResolverInfo,
@@ -207,6 +208,21 @@ function buildNumericEnumResolvers(
   return numericEnums.map(buildNumericEnumResolver);
 }
 
+function buildStringEnumResolver(enumInfo: StringEnumMappingInfo): string {
+  const entries = enumInfo.members
+    .map(
+      (member) => `      ${member.graphqlValue}: "${member.typescriptValue}",`,
+    )
+    .join("\n");
+  return `    ${enumInfo.enumName}: {\n${entries}\n    },`;
+}
+
+function buildStringEnumResolvers(
+  stringEnumMappings: ReadonlyArray<StringEnumMappingInfo>,
+): string[] {
+  return stringEnumMappings.map(buildStringEnumResolver);
+}
+
 function buildTypeResolverEntry(
   type: TypeResolvers,
   abstractResolverForType: AbstractTypeResolverInfo | null,
@@ -275,12 +291,22 @@ function buildTypeEntries(
   return typeEntries;
 }
 
-export function emitResolversCode(
-  resolverInfo: ResolverInfo,
-  outputDir: string,
-  customScalars: ReadonlyArray<CollectedScalarType> = [],
-  numericEnums: ReadonlyArray<NumericEnumInfo> = [],
-): string {
+interface EmitResolversCodeParams {
+  readonly resolverInfo: ResolverInfo;
+  readonly outputDir: string;
+  readonly customScalars: ReadonlyArray<CollectedScalarType>;
+  readonly numericEnums: ReadonlyArray<NumericEnumInfo>;
+  readonly stringEnumMappings: ReadonlyArray<StringEnumMappingInfo>;
+}
+
+export function emitResolversCode(params: EmitResolversCodeParams): string {
+  const {
+    resolverInfo,
+    outputDir,
+    customScalars,
+    numericEnums,
+    stringEnumMappings,
+  } = params;
   const hasCustomScalars = customScalars.length > 0;
   const imports: string[] = [];
 
@@ -297,10 +323,16 @@ export function emitResolversCode(
     imports.push(...scalarImports);
   }
 
-  const enumResolverEntries = buildNumericEnumResolvers(numericEnums);
+  const numericEnumResolverEntries = buildNumericEnumResolvers(numericEnums);
+  const stringEnumResolverEntries =
+    buildStringEnumResolvers(stringEnumMappings);
   const typeEntries = buildTypeEntries(resolverInfo, customScalars);
 
-  const allEntries = [...enumResolverEntries, ...typeEntries];
+  const allEntries = [
+    ...numericEnumResolverEntries,
+    ...stringEnumResolverEntries,
+    ...typeEntries,
+  ];
 
   const functionSignature = hasCustomScalars
     ? `export function createResolvers({ scalars }: ${buildScalarsArgumentType(customScalars)})`
