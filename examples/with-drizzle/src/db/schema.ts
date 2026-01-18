@@ -20,20 +20,20 @@ export const postStatusEnum = pgEnum("post_status", [
 ]);
 
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  status: userStatusEnum("status").notNull().default("active"),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  id: serial().primaryKey(),
+  name: text().notNull(),
+  email: text().notNull().unique(),
+  status: userStatusEnum().notNull().default("active"),
+  createdAt: timestamp().notNull().defaultNow(),
 });
 
 export const posts = pgTable("posts", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  content: text("content"),
-  status: postStatusEnum("status").notNull().default("draft"),
-  authorId: integer("author_id")
+  id: serial().primaryKey(),
+  title: text().notNull(),
+  content: text(),
+  status: postStatusEnum().notNull().default("draft"),
+  authorId: integer()
     .notNull()
     .references(() => users.id),
-  createdAt: timestamp("created_at").notNull().defaultNow(),
+  createdAt: timestamp().notNull().defaultNow(),
 });
