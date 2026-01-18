@@ -27,10 +27,7 @@ export const createPost = defineMutation<
   { input: Omit<InferInsertModel<typeof postsTable>, "id" | "createdAt"> },
   Post
 >(async (_root, args, ctx) => {
-  const result = await ctx.db
-    .insert(postsTable)
-    .values(args.input)
-    .returning();
+  const result = await ctx.db.insert(postsTable).values(args.input).returning();
   return result[0]!;
 });
 

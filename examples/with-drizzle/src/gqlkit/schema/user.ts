@@ -27,10 +27,7 @@ export const createUser = defineMutation<
   { input: Omit<InferInsertModel<typeof usersTable>, "id" | "createdAt"> },
   User
 >(async (_root, args, ctx) => {
-  const result = await ctx.db
-    .insert(usersTable)
-    .values(args.input)
-    .returning();
+  const result = await ctx.db.insert(usersTable).values(args.input).returning();
   return result[0]!;
 });
 
