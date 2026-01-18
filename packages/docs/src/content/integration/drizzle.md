@@ -5,15 +5,15 @@
 ## Installation
 
 ```sh filename="npm"
-npm install drizzle-orm
+npm install drizzle-orm postgres
 ```
 
 ```sh filename="pnpm"
-pnpm add drizzle-orm
+pnpm add drizzle-orm postgres
 ```
 
 ```sh filename="yarn"
-yarn add drizzle-orm
+yarn add drizzle-orm postgres
 ```
 
 ## Defining Tables with Custom Scalars
@@ -23,7 +23,7 @@ Define your database tables with Drizzle. You can use `GqlScalar` to create cust
 ```typescript
 // src/db/schema.ts
 import type { GqlScalar } from "@gqlkit-ts/runtime";
-import { customType, pgTable, serial, text } from "drizzle-orm/pg-core";
+import { customType, integer, pgTable, serial, text } from "drizzle-orm/pg-core";
 
 // Define a custom DateTime scalar
 export type DateTime = GqlScalar<"DateTime", Date>;
@@ -103,7 +103,7 @@ Define resolvers that use the derived types:
 import type { NoArgs } from "@gqlkit-ts/runtime";
 import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
 import { eq } from "drizzle-orm";
-import { users as usersTable } from "../../db/schema.js";
+import { posts as postsTable, users as usersTable } from "../../db/schema.js";
 import { defineField, defineMutation, defineQuery } from "../gqlkit.js";
 import type { Post } from "./post.js";
 
@@ -160,12 +160,22 @@ export const posts = defineField<User, NoArgs, Post[]>(
 Set up the context type to include your database instance:
 
 ```typescript
+// src/db/db.ts
+import { drizzle } from "drizzle-orm/postgres-js";
+import postgres from "postgres";
+import * as schema from "./schema.js";
+
+const client = postgres(process.env.DATABASE_URL!);
+export const db = drizzle(client, { schema });
+```
+
+```typescript
 // src/gqlkit/context.ts
-import type { PgliteDatabase } from "drizzle-orm/pglite";
+import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
 import type * as schema from "../db/schema.js";
 
 export type Context = {
-  db: PgliteDatabase<typeof schema>;
+  db: PostgresJsDatabase<typeof schema>;
 };
 ```
 
@@ -185,10 +195,8 @@ See the [examples/drizzle](https://github.com/gqlkit/gqlkit/tree/main/examples/d
 - PostgreSQL tables with custom DateTime scalar
 - User and Post types with relationships
 - Query, Mutation, and Field resolvers
-- PGlite for in-memory PostgreSQL (no external database required)
 
 ## Further Reading
 
 - [Drizzle ORM Documentation](https://orm.drizzle.team/docs/overview)
 - [Drizzle with PostgreSQL](https://orm.drizzle.team/docs/get-started/postgresql-new)
-- [PGlite](https://pglite.dev/) - In-memory PostgreSQL for development
