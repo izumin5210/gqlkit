@@ -5,9 +5,9 @@ export default {
   },
   yoga: "graphql-yoga",
   apollo: "Apollo Server",
-  "-- Data Sources": {
+  "-- External Models": {
     type: "separator",
-    title: "Data Sources",
+    title: "External Models",
   },
   drizzle: "Drizzle ORM",
 };
