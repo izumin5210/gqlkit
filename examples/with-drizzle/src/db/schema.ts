@@ -1,6 +1,4 @@
-import type { GqlScalar } from "@gqlkit-ts/runtime";
 import {
-  customType,
   integer,
   pgEnum,
   pgTable,
