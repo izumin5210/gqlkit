@@ -31,9 +31,9 @@ Pipeline-based architecture for code generation:
 - **Auto-Type Generation**: `src/auto-type-generator/` - Generates named types from inline object definitions
 - **Schema Generation**: `src/schema-generator/` - Builds GraphQL AST and resolver maps
 - **Orchestration**: `src/gen-orchestrator/` - Coordinates pipeline stages (reporter, writer)
-- **Shared Utilities**: `src/shared/` - Cross-cutting utilities used by multiple pipeline stages (e.g., TSDoc parsing, type conversion)
+- **Shared Utilities**: `src/shared/` - Cross-cutting utilities used by multiple pipeline stages (e.g., TSDoc parsing, type conversion, TypeScript AST helpers)
 
-**Pattern**: Each pipeline stage has internal modules (scanner, extractor, collector, validator, etc.)
+**Pattern**: Each pipeline stage has internal modules (scanner, extractor, collector, validator, etc.). Stages may use 2-phase processing where needed (e.g., type-extractor collects names first, then resolves types).
 
 ### @gqlkit-ts/runtime (`packages/runtime/`)
 
@@ -90,4 +90,4 @@ import { extractTypes } from "../type-extractor/index.js";
 
 ---
 _Document patterns, not file trees. New files following patterns shouldn't require updates_
-_Updated: 2026-01-14 - Added docs package and abstract type resolvers_
+_Updated: 2026-01-18 - Clarified 2-phase processing pattern and shared utilities_

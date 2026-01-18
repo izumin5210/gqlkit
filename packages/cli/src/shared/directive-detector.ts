@@ -6,7 +6,7 @@
  */
 
 import ts from "typescript";
-import { METADATA_PROPERTIES, RUNTIME_TYPE_NAMES } from "./constants.js";
+import { METADATA_PROPERTIES } from "./constants.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 
 const FIELD_META_PROPERTY = METADATA_PROPERTIES.FIELD_META;
@@ -446,17 +446,6 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
     }
   }
 
-  // Check for GqlField/GqlObject type alias by examining the alias symbol
-  if (type.aliasSymbol) {
-    const aliasName = type.aliasSymbol.getName();
-    if (
-      aliasName === RUNTIME_TYPE_NAMES.GQL_FIELD ||
-      aliasName === RUNTIME_TYPE_NAMES.GQL_OBJECT
-    ) {
-      return true;
-    }
-  }
-
   return false;
 }
 
@@ -477,12 +466,11 @@ export function unwrapDirectiveType(
   // 1. Check aliasTypeArguments first (most reliable)
   //    Get T directly from GqlField<T, Meta> or GqlObject<T, Meta>
   //    This works when the type alias hasn't been expanded by TypeScript
+  //    We detect GqlField/GqlObject by checking for metadata properties, not by type name.
   if (type.aliasTypeArguments && type.aliasTypeArguments.length > 0) {
-    const aliasSymbolName = type.aliasSymbol?.getName() ?? "";
-    if (
-      aliasSymbolName === RUNTIME_TYPE_NAMES.GQL_FIELD ||
-      aliasSymbolName === RUNTIME_TYPE_NAMES.GQL_OBJECT
-    ) {
+    const metaProp = getMetaProperty(type);
+    const originalTypeProp = type.getProperty(ORIGINAL_TYPE_PROPERTY);
+    if (metaProp || originalTypeProp) {
       return type.aliasTypeArguments[0]!;
     }
   }
@@ -493,11 +481,11 @@ export function unwrapDirectiveType(
   if (type.isIntersection()) {
     for (const member of type.types) {
       if (member.aliasTypeArguments && member.aliasTypeArguments.length > 0) {
-        const memberAliasSymbolName = member.aliasSymbol?.getName() ?? "";
-        if (
-          memberAliasSymbolName === RUNTIME_TYPE_NAMES.GQL_FIELD ||
-          memberAliasSymbolName === RUNTIME_TYPE_NAMES.GQL_OBJECT
-        ) {
+        const memberMetaProp = getMetaProperty(member);
+        const memberOriginalTypeProp = member.getProperty(
+          ORIGINAL_TYPE_PROPERTY,
+        );
+        if (memberMetaProp || memberOriginalTypeProp) {
           return member.aliasTypeArguments[0]!;
         }
       }

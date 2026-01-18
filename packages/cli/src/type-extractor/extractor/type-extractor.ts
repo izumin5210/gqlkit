@@ -27,26 +27,39 @@ import {
 } from "../../shared/tsdoc-parser.js";
 import {
   extractPropertySymbols,
+  filterNonNullTypeNodes,
+  findEnumParentSymbol,
+  findNonNullTypeNode,
   getNonNullableTypes,
+  getTypeNameFromNode,
   hasUndefinedInType,
   isAnonymousObjectType,
+  isBooleanUnion,
   isExported,
   isNullableUnion,
   isNullOrUndefined,
   shouldTreatIntersectionAsInline,
 } from "../../shared/typescript-utils.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
-import type {
-  Diagnostic,
-  EnumMemberInfo,
-  ExtractedTypeInfo,
-  FieldDefinition,
-  InlineObjectMember,
-  InlineObjectProperty,
-  TSTypeReference,
-  TypeKind,
-  TypeMetadata,
+import {
+  createArrayType,
+  createInlineObjectType,
+  createLiteralType,
+  createPrimitiveType,
+  createReferenceType,
+  createScalarType,
+  createUnionType,
+  type Diagnostic,
+  type EnumMemberInfo,
+  type ExtractedTypeInfo,
+  type FieldDefinition,
+  type InlineObjectMember,
+  type InlineObjectProperty,
+  type TSTypeReference,
+  type TypeKind,
+  type TypeMetadata,
 } from "../types/index.js";
+import { resolveFieldType } from "./field-type-resolver.js";
 
 /**
  * Global type mapping configuration.
@@ -63,7 +76,13 @@ export interface GlobalTypeMapping {
 
 export interface ExtractionOptions {
   /** Global type mappings from config (scalars with tsType.from omitted) */
-  readonly globalTypeMappings?: ReadonlyArray<GlobalTypeMapping>;
+  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  /** Set of type names declared in the schema (from Phase 1 collection) */
+  readonly knownTypeNames: ReadonlySet<string>;
+  /** Map of type names to their symbols (from Phase 1 collection) */
+  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
+  /** Map of underlying symbols to schema type names (for type alias resolution) */
+  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
 }
 
 export interface ExtractionResult {
@@ -71,34 +90,6 @@ export interface ExtractionResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
   readonly detectedScalarNames: ReadonlyArray<string>;
   readonly detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
-}
-
-/**
- * Internal TypeScript symbol with parent reference.
- * Used to access the parent enum symbol from enum member types.
- */
-type SymbolWithParent = ts.Symbol & { parent?: ts.Symbol };
-
-/**
- * Finds the parent enum symbol if all types belong to the same enum.
- * Returns null if types are empty, don't have a common parent enum, or belong to different enums.
- */
-function findEnumParentSymbol(types: readonly ts.Type[]): ts.Symbol | null {
-  if (types.length === 0) return null;
-
-  const firstSymbol = types[0]!.symbol as SymbolWithParent | undefined;
-  const parentSymbol = firstSymbol?.parent;
-
-  if (!parentSymbol || !(parentSymbol.flags & ts.SymbolFlags.Enum)) {
-    return null;
-  }
-
-  const allBelongToSameEnum = types.every((t) => {
-    const sym = t.symbol as SymbolWithParent | undefined;
-    return sym?.parent === parentSymbol;
-  });
-
-  return allBelongToSameEnum ? parentSymbol : null;
 }
 
 function isDefaultExport(node: ts.Node, sourceFile: ts.SourceFile): boolean {
@@ -120,17 +111,19 @@ function isDefaultExport(node: ts.Node, sourceFile: ts.SourceFile): boolean {
   return hasDefaultExport;
 }
 
-function isBooleanUnion(type: ts.Type): boolean {
-  if (!type.isUnion()) return false;
-  const nonNullTypes = getNonNullableTypes(type);
-  return (
-    nonNullTypes.length === 2 &&
-    nonNullTypes.every((t) => t.flags & ts.TypeFlags.BooleanLiteral)
-  );
-}
-
 interface TypeReferenceResult {
   readonly tsType: TSTypeReference;
+}
+
+/**
+ * Context for type declaration resolution.
+ * Used when processing type declarations (not field types).
+ */
+interface TypeDeclarationContext {
+  readonly checker: ts.TypeChecker;
+  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly knownTypeNames: ReadonlySet<string>;
+  readonly visitedTypes: WeakSet<ts.Type>;
 }
 
 /**
@@ -139,41 +132,26 @@ interface TypeReferenceResult {
  */
 function tryExtractAsInlineObject(
   type: ts.Type,
-  checker: ts.TypeChecker,
-  globalTypeMappings: ReadonlyArray<GlobalTypeMapping>,
-  visitedTypes: WeakSet<ts.Type>,
+  ctx: TypeDeclarationContext,
 ): TypeReferenceResult {
+  const { checker, visitedTypes } = ctx;
   if (visitedTypes.has(type)) {
     const typeName = type.symbol?.getName() ?? "Object";
     return {
-      tsType: {
-        kind: "reference",
+      tsType: createReferenceType({
         name: typeName === "__type" ? "Object" : typeName,
-        elementType: null,
-        members: null,
         nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      }),
     };
   }
   visitedTypes.add(type);
   const inlineProperties = extractInlineObjectPropertiesShared(
     type,
     checker,
-    (t, c) =>
-      convertTsTypeToReference(t, c, globalTypeMappings, visitedTypes).tsType,
+    (t) => convertTsTypeToReference(t, ctx).tsType,
   );
   return {
-    tsType: {
-      kind: "inlineObject",
-      name: null,
-      elementType: null,
-      members: null,
-      nullable: false,
-      scalarInfo: null,
-      inlineObjectProperties: inlineProperties,
-    },
+    tsType: createInlineObjectType(inlineProperties),
   };
 }
 
@@ -186,10 +164,10 @@ function findGlobalTypeMapping(
 
 function convertTsTypeToReference(
   type: ts.Type,
-  checker: ts.TypeChecker,
-  globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
-  visitedTypes: WeakSet<ts.Type> = new WeakSet(),
+  ctx: TypeDeclarationContext,
+  typeNode?: ts.TypeNode,
 ): TypeReferenceResult {
+  const { checker, globalTypeMappings, knownTypeNames } = ctx;
   const metadataResult = detectScalarMetadata(type, checker);
   // Skip scalar detection if it's an array of scalars (e.g., Int[])
   // Array types should be handled by the array handling logic below
@@ -199,12 +177,8 @@ function convertTsTypeToReference(
     !metadataResult.isList
   ) {
     return {
-      tsType: {
-        kind: "scalar",
+      tsType: createScalarType({
         name: metadataResult.scalarName,
-        elementType: null,
-        members: null,
-        nullable: metadataResult.nullable,
         scalarInfo: {
           scalarName: metadataResult.scalarName,
           typeName: metadataResult.scalarName,
@@ -212,23 +186,15 @@ function convertTsTypeToReference(
           isCustom: true,
           only: metadataResult.only,
         },
-        inlineObjectProperties: null,
-      },
+        nullable: metadataResult.nullable,
+      }),
     };
   }
 
   if (isBooleanUnion(type)) {
     const nullable = isNullableUnion(type);
     return {
-      tsType: {
-        kind: "primitive",
-        name: "boolean",
-        elementType: null,
-        members: null,
-        nullable,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      tsType: createPrimitiveType({ name: "boolean", nullable }),
     };
   }
 
@@ -240,15 +206,7 @@ function convertTsTypeToReference(
     if (aliasSymbol) {
       const name = aliasSymbol.getName();
       return {
-        tsType: {
-          kind: "reference",
-          name,
-          elementType: null,
-          members: null,
-          nullable,
-          scalarInfo: null,
-          inlineObjectProperties: null,
-        },
+        tsType: createReferenceType({ name, nullable }),
       };
     }
 
@@ -258,24 +216,24 @@ function convertTsTypeToReference(
     const enumParentSymbol = findEnumParentSymbol(nonNullTypes);
     if (enumParentSymbol) {
       return {
-        tsType: {
-          kind: "reference",
+        tsType: createReferenceType({
           name: enumParentSymbol.getName(),
-          elementType: null,
-          members: null,
           nullable,
-          scalarInfo: null,
-          inlineObjectProperties: null,
-        },
+        }),
       };
     }
 
     if (nonNullTypes.length === 1) {
+      // For nullable types like User | null, extract the non-null type node
+      const nonNullTypeNode =
+        typeNode && ts.isUnionTypeNode(typeNode)
+          ? findNonNullTypeNode(typeNode)
+          : undefined;
+
       const innerResult = convertTsTypeToReference(
         nonNullTypes[0]!,
-        checker,
-        globalTypeMappings,
-        visitedTypes,
+        ctx,
+        nonNullTypeNode,
       );
       return {
         tsType: { ...innerResult.tsType, nullable },
@@ -283,54 +241,35 @@ function convertTsTypeToReference(
     }
 
     const memberResults = nonNullTypes.map((t) =>
-      convertTsTypeToReference(t, checker, globalTypeMappings, visitedTypes),
+      convertTsTypeToReference(t, ctx),
     );
 
     return {
-      tsType: {
-        kind: "union",
-        name: null,
-        elementType: null,
+      tsType: createUnionType({
         members: memberResults.map((r) => r.tsType),
         nullable,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      }),
     };
   }
 
   if (checker.isArrayType(type)) {
     const typeArgs = (type as ts.TypeReference).typeArguments;
     const elementType = typeArgs?.[0];
+
+    // Extract element type node from array type node (e.g., User[] -> User)
+    let elementTypeNode: ts.TypeNode | undefined;
+    if (typeNode && ts.isArrayTypeNode(typeNode)) {
+      elementTypeNode = typeNode.elementType;
+    }
+
     const elementResult = elementType
-      ? convertTsTypeToReference(
-          elementType,
-          checker,
-          globalTypeMappings,
-          visitedTypes,
-        )
+      ? convertTsTypeToReference(elementType, ctx, elementTypeNode)
       : {
-          tsType: {
-            kind: "primitive" as const,
-            name: "unknown",
-            elementType: null,
-            members: null,
-            nullable: false,
-            scalarInfo: null,
-            inlineObjectProperties: null,
-          },
+          tsType: createPrimitiveType({ name: "unknown", nullable: false }),
         };
 
     return {
-      tsType: {
-        kind: "array",
-        name: null,
-        elementType: elementResult.tsType,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      tsType: createArrayType(elementResult.tsType),
     };
   }
 
@@ -338,28 +277,12 @@ function convertTsTypeToReference(
 
   if (type.flags & ts.TypeFlags.String) {
     return {
-      tsType: {
-        kind: "primitive",
-        name: "string",
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      tsType: createPrimitiveType({ name: "string", nullable: false }),
     };
   }
   if (type.flags & ts.TypeFlags.Number) {
     return {
-      tsType: {
-        kind: "primitive",
-        name: "number",
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      tsType: createPrimitiveType({ name: "number", nullable: false }),
     };
   }
   if (
@@ -367,41 +290,17 @@ function convertTsTypeToReference(
     type.flags & ts.TypeFlags.BooleanLiteral
   ) {
     return {
-      tsType: {
-        kind: "primitive",
-        name: "boolean",
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      tsType: createPrimitiveType({ name: "boolean", nullable: false }),
     };
   }
   if (type.flags & ts.TypeFlags.StringLiteral) {
     return {
-      tsType: {
-        kind: "literal",
-        name: typeString.replace(/"/g, ""),
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      tsType: createLiteralType(typeString.replace(/"/g, "")),
     };
   }
   if (type.flags & ts.TypeFlags.NumberLiteral) {
     return {
-      tsType: {
-        kind: "literal",
-        name: typeString,
-        elementType: null,
-        members: null,
-        nullable: false,
-        scalarInfo: null,
-        inlineObjectProperties: null,
-      },
+      tsType: createLiteralType(typeString),
     };
   }
 
@@ -414,36 +313,28 @@ function convertTsTypeToReference(
     if (type.aliasSymbol) {
       const aliasName = type.aliasSymbol.getName();
       return {
-        tsType: {
-          kind: "reference",
-          name: aliasName,
-          elementType: null,
-          members: null,
-          nullable: false,
-          scalarInfo: null,
-          inlineObjectProperties: null,
-        },
+        tsType: createReferenceType({ name: aliasName, nullable: false }),
       };
     }
 
     const shouldTreatAsInline = shouldTreatIntersectionAsInline(type);
     if (shouldTreatAsInline) {
-      return tryExtractAsInlineObject(
-        type,
-        checker,
-        globalTypeMappings,
-        visitedTypes,
-      );
+      return tryExtractAsInlineObject(type, ctx);
     }
   }
 
   if (isInlineObjectType(type)) {
-    return tryExtractAsInlineObject(
-      type,
-      checker,
-      globalTypeMappings,
-      visitedTypes,
-    );
+    // Check if typeNode references a known type (schema-defined type)
+    if (typeNode && ts.isTypeReferenceNode(typeNode)) {
+      const typeName = getTypeNameFromNode(typeNode);
+      if (typeName && knownTypeNames.has(typeName)) {
+        return {
+          tsType: createReferenceType({ name: typeName, nullable: false }),
+        };
+      }
+    }
+
+    return tryExtractAsInlineObject(type, ctx);
   }
 
   // Check for utility types (Omit, Pick, Partial, Required, etc.)
@@ -451,12 +342,18 @@ function convertTsTypeToReference(
   if (type.flags & ts.TypeFlags.Object) {
     const objectType = type as ts.ObjectType;
     if (objectType.objectFlags & ts.ObjectFlags.Mapped) {
-      return tryExtractAsInlineObject(
-        type,
-        checker,
-        globalTypeMappings,
-        visitedTypes,
-      );
+      // Check if typeNode references a known type (schema-defined type).
+      // This handles Simplify<T> = { [K in keyof T]: T[K] } & {} pattern.
+      if (typeNode && ts.isTypeReferenceNode(typeNode)) {
+        const typeName = getTypeNameFromNode(typeNode);
+        // Only use typeNode name if it's in knownTypeNames (schema-defined type)
+        if (typeName && knownTypeNames.has(typeName)) {
+          return {
+            tsType: createReferenceType({ name: typeName, nullable: false }),
+          };
+        }
+      }
+      return tryExtractAsInlineObject(type, ctx);
     }
   }
 
@@ -471,12 +368,8 @@ function convertTsTypeToReference(
       );
       if (globalMapping) {
         return {
-          tsType: {
-            kind: "scalar",
+          tsType: createScalarType({
             name: globalMapping.scalarName,
-            elementType: null,
-            members: null,
-            nullable: false,
             scalarInfo: {
               scalarName: globalMapping.scalarName,
               typeName: globalMapping.typeName,
@@ -484,35 +377,19 @@ function convertTsTypeToReference(
               isCustom: true,
               only: globalMapping.only,
             },
-            inlineObjectProperties: null,
-          },
+            nullable: false,
+          }),
         };
       }
 
       return {
-        tsType: {
-          kind: "reference",
-          name: symbolName,
-          elementType: null,
-          members: null,
-          nullable: false,
-          scalarInfo: null,
-          inlineObjectProperties: null,
-        },
+        tsType: createReferenceType({ name: symbolName, nullable: false }),
       };
     }
   }
 
   return {
-    tsType: {
-      kind: "reference",
-      name: typeString,
-      elementType: null,
-      members: null,
-      nullable: false,
-      scalarInfo: null,
-      inlineObjectProperties: null,
-    },
+    tsType: createReferenceType({ name: typeString, nullable: false }),
   };
 }
 
@@ -521,11 +398,28 @@ interface FieldExtractionResult {
   diagnostics: Diagnostic[];
 }
 
+interface ExtractFieldsParams {
+  readonly type: ts.Type;
+  readonly checker: ts.TypeChecker;
+  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly knownTypeNames: ReadonlySet<string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
+  readonly sourceFiles: ReadonlySet<string>;
+}
+
 function extractFieldsFromType(
-  type: ts.Type,
-  checker: ts.TypeChecker,
-  globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
+  params: ExtractFieldsParams,
 ): FieldExtractionResult {
+  const {
+    type,
+    checker,
+    globalTypeMappings,
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
+    sourceFiles,
+  } = params;
   const fields: FieldDefinition[] = [];
   const diagnostics: Diagnostic[] = [];
   const properties = extractPropertySymbols(type, checker);
@@ -587,17 +481,30 @@ function extractFieldsFromType(
       }
     }
 
-    const typeResult = convertTsTypeToReference(
-      actualPropType,
+    // Get typeNode from property declaration to preserve type alias names
+    let propTypeNode: ts.TypeNode | undefined;
+    if (
+      declaration &&
+      (ts.isPropertySignature(declaration) ||
+        ts.isPropertyDeclaration(declaration))
+    ) {
+      propTypeNode = declaration.type;
+    }
+
+    const resolvedType = resolveFieldType(actualPropType, propTypeNode, {
       checker,
+      knownTypeNames,
+      knownTypeSymbols,
+      underlyingSymbolToTypeName,
       globalTypeMappings,
-    );
+      sourceFiles,
+    });
 
     // Preserve nullability from original WithDirectives type
     const tsType =
-      directiveNullable && !typeResult.tsType.nullable
-        ? { ...typeResult.tsType, nullable: true }
-        : typeResult.tsType;
+      directiveNullable && !resolvedType.nullable
+        ? { ...resolvedType, nullable: true }
+        : resolvedType;
 
     fields.push({
       name: propName,
@@ -788,14 +695,14 @@ function extractStringLiteralUnionMembers(
 function determineTypeKind(
   node: ts.Node,
   type: ts.Type,
-  sourceFile: ts.SourceFile,
+  checker: ts.TypeChecker,
 ): TypeKind {
   if (ts.isInterfaceDeclaration(node)) {
     return "interface";
   }
 
   if (ts.isTypeAliasDeclaration(node)) {
-    if (isDefineInterfaceTypeAlias(node, sourceFile)) {
+    if (isDefineInterfaceTypeAlias(node, checker)) {
       return "graphqlInterface";
     }
 
@@ -895,6 +802,9 @@ interface ProcessReexportedSymbolParams {
   readonly filePath: string;
   readonly checker: ts.TypeChecker;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly knownTypeNames: ReadonlySet<string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
   readonly scannedSourceFiles: ReadonlySet<string>;
 }
 
@@ -917,6 +827,9 @@ function processReexportedSymbol(
     filePath,
     checker,
     globalTypeMappings,
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
     scannedSourceFiles,
   } = params;
 
@@ -1008,11 +921,26 @@ function processReexportedSymbol(
     };
   }
 
-  const unionMembers = extractUnionMembers(type);
+  // Get typeNode for union member extraction from declaration
+  const reexportDeclarations = resolvedSymbol.getDeclarations();
+  const reexportDeclaration = reexportDeclarations?.[0];
+  const reexportTypeNode =
+    reexportDeclaration && ts.isTypeAliasDeclaration(reexportDeclaration)
+      ? reexportDeclaration.type
+      : undefined;
+  const unionMembers = extractUnionMembers(type, reexportTypeNode);
   const fieldResult =
     kind === "union"
       ? { fields: [], diagnostics: [] }
-      : extractFieldsFromType(type, checker, globalTypeMappings);
+      : extractFieldsFromType({
+          type,
+          checker,
+          globalTypeMappings,
+          knownTypeNames,
+          knownTypeSymbols,
+          underlyingSymbolToTypeName,
+          sourceFiles: scannedSourceFiles,
+        });
   diagnostics.push(...fieldResult.diagnostics);
 
   return {
@@ -1044,6 +972,9 @@ function processExportDeclaration(
   filePath: string,
   checker: ts.TypeChecker,
   globalTypeMappings: ReadonlyArray<GlobalTypeMapping>,
+  knownTypeNames: ReadonlySet<string>,
+  knownTypeSymbols: ReadonlyMap<string, ts.Symbol>,
+  underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>,
   scannedSourceFiles: ReadonlySet<string>,
 ): ProcessExportDeclarationResult {
   const types: ExtractedTypeInfo[] = [];
@@ -1135,6 +1066,9 @@ function processExportDeclaration(
       filePath,
       checker,
       globalTypeMappings,
+      knownTypeNames,
+      knownTypeSymbols,
+      underlyingSymbolToTypeName,
       scannedSourceFiles,
     });
 
@@ -1170,11 +1104,17 @@ interface InlineObjectExtractionResult {
   readonly hasNamedTypes: boolean;
 }
 
+interface ExtractInlineObjectMembersParams {
+  readonly type: ts.Type;
+  readonly checker: ts.TypeChecker;
+  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly knownTypeNames: ReadonlySet<string>;
+}
+
 function extractInlineObjectMembers(
-  type: ts.Type,
-  checker: ts.TypeChecker,
-  globalTypeMappings: ReadonlyArray<GlobalTypeMapping> = [],
+  params: ExtractInlineObjectMembersParams,
 ): InlineObjectExtractionResult | null {
+  const { type, checker, globalTypeMappings, knownTypeNames } = params;
   if (!type.isUnion()) {
     return null;
   }
@@ -1195,6 +1135,13 @@ function extractInlineObjectMembers(
   let hasNamedTypes = false;
   const members: InlineObjectMember[] = [];
 
+  const ctx: TypeDeclarationContext = {
+    checker,
+    globalTypeMappings,
+    knownTypeNames,
+    visitedTypes: new WeakSet(),
+  };
+
   for (const memberType of nonNullTypes) {
     if (isAnonymousObjectType(memberType)) {
       hasInlineObjects = true;
@@ -1204,11 +1151,7 @@ function extractInlineObjectMembers(
       for (const prop of properties) {
         const propType = checker.getTypeOfSymbol(prop);
         const tsdocInfo = extractTsDocFromSymbol(prop, checker);
-        const typeResult = convertTsTypeToReference(
-          propType,
-          checker,
-          globalTypeMappings,
-        );
+        const typeResult = convertTsTypeToReference(propType, ctx);
 
         memberProperties.push({
           propertyName: prop.getName(),
@@ -1227,7 +1170,10 @@ function extractInlineObjectMembers(
   return { members, hasInlineObjects, hasNamedTypes };
 }
 
-function extractUnionMembers(type: ts.Type): string[] | undefined {
+function extractUnionMembers(
+  type: ts.Type,
+  typeNode?: ts.TypeNode,
+): string[] | undefined {
   if (!type.isUnion()) {
     return undefined;
   }
@@ -1242,9 +1188,30 @@ function extractUnionMembers(type: ts.Type): string[] | undefined {
   );
 
   if (nonNullTypes.length > 1 && allObjectTypes) {
+    // Extract member type nodes from union type node if available
+    const memberTypeNodes =
+      typeNode && ts.isUnionTypeNode(typeNode)
+        ? filterNonNullTypeNodes(typeNode)
+        : [];
+
     const namedMembers = nonNullTypes
-      .filter((t) => !isAnonymousObjectType(t))
-      .map((t) => getNamedTypeName(t))
+      .map((t, index) => {
+        // First try to get name from type
+        if (!isAnonymousObjectType(t)) {
+          const name = getNamedTypeName(t);
+          if (name !== "" && name !== "__type") {
+            return name;
+          }
+        }
+        // Fallback to typeNode name for Simplify<T> pattern
+        if (memberTypeNodes[index]) {
+          const memberNode = memberTypeNodes[index];
+          if (ts.isTypeReferenceNode(memberNode)) {
+            return getTypeNameFromNode(memberNode) ?? "";
+          }
+        }
+        return "";
+      })
       .filter((name) => name !== "" && name !== "__type");
 
     if (namedMembers.length > 0) {
@@ -1258,14 +1225,19 @@ function extractUnionMembers(type: ts.Type): string[] | undefined {
 export function extractTypesFromProgram(
   program: ts.Program,
   sourceFiles: ReadonlyArray<string>,
-  options: ExtractionOptions = {},
+  options: ExtractionOptions,
 ): ExtractionResult {
   const checker = program.getTypeChecker();
   const types: ExtractedTypeInfo[] = [];
   const diagnostics: Diagnostic[] = [];
   const detectedScalarNames = new Set<string>();
   const detectedScalars: ScalarMetadataInfo[] = [];
-  const globalTypeMappings = options.globalTypeMappings ?? [];
+  const {
+    globalTypeMappings,
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
+  } = options;
   const scannedSourceFilesSet = new Set(sourceFiles);
 
   for (const filePath of sourceFiles) {
@@ -1410,13 +1382,18 @@ export function extractTypesFromProgram(
           actualType = type;
         }
 
-        const kind = determineTypeKind(node, actualType, sourceFile);
-        const unionMembers = extractUnionMembers(actualType);
-        const inlineObjectResult = extractInlineObjectMembers(
-          actualType,
+        const kind = determineTypeKind(node, actualType, checker);
+        // Get typeNode for union member extraction (only for type aliases)
+        const typeAliasTypeNode = ts.isTypeAliasDeclaration(node)
+          ? node.type
+          : undefined;
+        const unionMembers = extractUnionMembers(actualType, typeAliasTypeNode);
+        const inlineObjectResult = extractInlineObjectMembers({
+          type: actualType,
           checker,
           globalTypeMappings,
-        );
+          knownTypeNames,
+        });
         const tsdocInfo = extractTsDocInfo(node, checker);
 
         let implementedInterfaces: ReadonlyArray<string> | null = null;
@@ -1472,7 +1449,15 @@ export function extractTypesFromProgram(
         const fieldResult =
           kind === "union"
             ? { fields: [], diagnostics: [] }
-            : extractFieldsFromType(actualType, checker, globalTypeMappings);
+            : extractFieldsFromType({
+                type: actualType,
+                checker,
+                globalTypeMappings,
+                knownTypeNames,
+                knownTypeSymbols,
+                underlyingSymbolToTypeName,
+                sourceFiles: scannedSourceFilesSet,
+              });
         const fields = fieldResult.fields;
         diagnostics.push(...fieldResult.diagnostics);
 
@@ -1531,6 +1516,9 @@ export function extractTypesFromProgram(
           filePath,
           checker,
           globalTypeMappings,
+          knownTypeNames,
+          knownTypeSymbols,
+          underlyingSymbolToTypeName,
           scannedSourceFilesSet,
         );
         types.push(...result.types);

@@ -3,6 +3,7 @@ import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { isTypeScriptSourceFile, scanDirectory } from "./file-scanner.js";
+import { toPosixPath } from "./path-utils.js";
 
 describe("FileScanner", () => {
   let tempDir: string;
@@ -61,10 +62,16 @@ describe("FileScanner", () => {
 
       expect(result.errors).toEqual([]);
       expect(result.files).toHaveLength(4);
-      expect(result.files).toContain(path.join(tempDir, "foo.ts"));
-      expect(result.files).toContain(path.join(tempDir, "bar.cts"));
-      expect(result.files).toContain(path.join(tempDir, "baz.mts"));
-      expect(result.files).toContain(path.join(tempDir, "subdir", "nested.ts"));
+      expect(result.files).toContain(toPosixPath(path.join(tempDir, "foo.ts")));
+      expect(result.files).toContain(
+        toPosixPath(path.join(tempDir, "bar.cts")),
+      );
+      expect(result.files).toContain(
+        toPosixPath(path.join(tempDir, "baz.mts")),
+      );
+      expect(result.files).toContain(
+        toPosixPath(path.join(tempDir, "subdir", "nested.ts")),
+      );
     });
 
     it("should exclude .d.ts, .d.cts, .d.mts files", async () => {
@@ -77,7 +84,9 @@ describe("FileScanner", () => {
 
       expect(result.errors).toEqual([]);
       expect(result.files).toHaveLength(1);
-      expect(result.files).toContain(path.join(tempDir, "source.ts"));
+      expect(result.files).toContain(
+        toPosixPath(path.join(tempDir, "source.ts")),
+      );
     });
 
     it("should return error for non-existent directory", async () => {
@@ -102,7 +111,9 @@ describe("FileScanner", () => {
 
         expect(result.errors).toEqual([]);
         expect(result.files).toHaveLength(1);
-        expect(result.files).toContain(path.join(tempDir, "source.ts"));
+        expect(result.files).toContain(
+          toPosixPath(path.join(tempDir, "source.ts")),
+        );
       });
 
       it("should handle empty excludeGlobs array", async () => {
@@ -130,7 +141,9 @@ describe("FileScanner", () => {
 
         expect(result.errors).toEqual([]);
         expect(result.files).toHaveLength(1);
-        expect(result.files).toContain(path.join(tempDir, "source.ts"));
+        expect(result.files).toContain(
+          toPosixPath(path.join(tempDir, "source.ts")),
+        );
       });
 
       it("should exclude multiple paths", async () => {
@@ -147,7 +160,9 @@ describe("FileScanner", () => {
 
         expect(result.errors).toEqual([]);
         expect(result.files).toHaveLength(1);
-        expect(result.files).toContain(path.join(tempDir, "source.ts"));
+        expect(result.files).toContain(
+          toPosixPath(path.join(tempDir, "source.ts")),
+        );
       });
     });
 
@@ -165,7 +180,9 @@ describe("FileScanner", () => {
 
       expect(result.errors).toEqual([]);
       expect(result.files).toHaveLength(1);
-      expect(result.files).toContain(path.join(tempDir, "source.ts"));
+      expect(result.files).toContain(
+        toPosixPath(path.join(tempDir, "source.ts")),
+      );
     });
   });
 });

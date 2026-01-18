@@ -12,6 +12,15 @@ export type {
   GraphQLTypeInfo,
   GraphQLTypeKind,
 } from "./graphql.js";
+export {
+  createArrayType,
+  createInlineObjectType,
+  createLiteralType,
+  createPrimitiveType,
+  createReferenceType,
+  createScalarType,
+  createUnionType,
+} from "./ts-type-reference-factory.js";
 export type {
   EnumMemberInfo,
   ExtractedTypeInfo,

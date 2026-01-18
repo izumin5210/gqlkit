@@ -94,6 +94,9 @@ examples/    - Example projects demonstrating usage
 - `config/` - Configuration type definitions and `defineConfig()` helper
 - `config-loader/` - Configuration file loading and validation
 - `type-extractor/` - Scans and analyzes TypeScript types from `src/gqlkit/schema/`
+  - `type-name-collector.ts` - Phase 1: Collects declared type names (including re-exports)
+  - `field-type-resolver.ts` - Phase 2: Resolves field types using knownTypeNames
+  - `type-extractor.ts` - Main type extraction logic
 - `resolver-extractor/` - Scans and analyzes resolver definitions from `src/gqlkit/schema/`
 - `auto-type-generator/` - Converts inline object types to named GraphQL types
 - `schema-generator/` - Builds GraphQL AST and resolver maps
@@ -110,6 +113,33 @@ examples/    - Example projects demonstrating usage
    - `typeDefs`: GraphQL schema AST (DocumentNode) representing type definitions
    - `resolvers`: Resolver map object aggregating all resolver implementations
 5. Outputs to `src/gqlkit/__generated__/` (schema.ts, resolvers.ts)
+
+### Type Extraction Architecture
+
+Type extraction uses a **2-phase process** to correctly distinguish between type declaration context and field type context:
+
+**Phase 1: Collect Type Names** (`type-name-collector.ts`)
+- Collects all exported type names from schema files
+- Handles direct declarations (type, interface, enum)
+- Handles re-exports: `export type { Foo } from "..."` and `export type * from "..."`
+- Result: `knownTypeNames: ReadonlySet<string>`
+
+**Phase 2: Extract Types and Resolvers**
+- Uses `knownTypeNames` to determine if a type reference should be preserved or expanded
+- `field-type-resolver.ts`: Resolves field types in field context
+- `type-extractor.ts`: Extracts type declarations
+- `define-api-extractor.ts`: Extracts resolver definitions
+
+**Context distinction is critical**:
+
+| Context | Example | Behavior |
+|---------|---------|----------|
+| Type declaration | `export type User = Simplify<DbUser>` | Uses declared name `User` |
+| Field type (known) | `author: User` where `User` is exported | Uses reference `User` |
+| Field type (unknown) | `author: Simplify<DbUser>` where `Simplify` is not exported | Expands to inline object |
+| Intersection in field | `merged: A & B` | Always inline object |
+
+**Key principle**: In field context, only types in `knownTypeNames` are preserved as references. Utility types (Omit, Pick, Simplify, etc.) are expanded to inline objects unless explicitly exported in the schema.
 
 ### Design Principles
 
@@ -186,6 +216,24 @@ Uses **golden file testing** for CLI validation:
 ## Coding Conventions
 
 - **Nullability for internal types**: Use `null` (not `undefined` or optional) to represent "unset" values in types not exported to users
+- **No optional parameters or default values**: All function parameters must be required. Do not use `?` optional parameters or `= defaultValue` default values
+- **Object arguments for multiple parameters**: When a function has multiple parameters (especially generic types like `Set<string>`), use object arguments (keyword arguments pattern) for better readability
+  ```typescript
+  // Good
+  interface ExtractParams {
+    readonly type: ts.Type;
+    readonly checker: ts.TypeChecker;
+    readonly knownTypeNames: ReadonlySet<string>;
+  }
+  function extract(params: ExtractParams): Result { ... }
+
+  // Bad
+  function extract(
+    type: ts.Type,
+    checker: ts.TypeChecker,
+    knownTypeNames: ReadonlySet<string> = new Set(),
+  ): Result { ... }
+  ```
 - **Test strategy**: Prefer golden file tests for code analysis and generation logic
 - **Language**: All code comments and documentation must be written in English
 

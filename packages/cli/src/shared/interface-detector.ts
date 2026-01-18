@@ -7,21 +7,67 @@
  */
 
 import ts from "typescript";
-import { RUNTIME_TYPE_NAMES } from "./constants.js";
+import { METADATA_PROPERTIES } from "./constants.js";
+
+const INTERFACE_META_PROPERTY = METADATA_PROPERTIES.INTERFACE_META;
+const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
 
 /**
  * Checks if a type alias declaration uses GqlInterface.
- * Inspects the typeNode directly since TypeScript resolves the alias.
+ * Detects by checking for the $gqlkitInterfaceMeta property in the resolved type.
  */
 export function isDefineInterfaceTypeAlias(
   node: ts.TypeAliasDeclaration,
-  sourceFile: ts.SourceFile,
+  checker: ts.TypeChecker,
 ): boolean {
-  const typeNode = node.type;
-  if (ts.isTypeReferenceNode(typeNode)) {
-    const typeName = typeNode.typeName.getText(sourceFile);
-    return typeName === RUNTIME_TYPE_NAMES.GQL_INTERFACE;
+  const symbol = checker.getSymbolAtLocation(node.name);
+  if (!symbol) {
+    return false;
   }
+
+  const type = checker.getDeclaredTypeOfSymbol(symbol);
+  return hasInterfaceMetadata(type);
+}
+
+/**
+ * Checks if a type has the $gqlkitInterfaceMeta property.
+ */
+function hasInterfaceMetadata(type: ts.Type): boolean {
+  const metaProp = type.getProperty(INTERFACE_META_PROPERTY);
+  if (metaProp) {
+    return true;
+  }
+
+  if (type.isIntersection()) {
+    for (const member of type.types) {
+      const prop = member.getProperty(INTERFACE_META_PROPERTY);
+      if (prop) {
+        return true;
+      }
+    }
+  }
+
+  return false;
+}
+
+/**
+ * Checks if a type has the $gqlkitTypeMeta property (GqlObject).
+ */
+function hasTypeMetadata(type: ts.Type): boolean {
+  const metaProp = type.getProperty(TYPE_META_PROPERTY);
+  if (metaProp) {
+    return true;
+  }
+
+  if (type.isIntersection()) {
+    for (const member of type.types) {
+      const prop = member.getProperty(TYPE_META_PROPERTY);
+      if (prop) {
+        return true;
+      }
+    }
+  }
+
   return false;
 }
 
@@ -53,19 +99,25 @@ export function extractImplementsFromDefineInterface(
 
 /**
  * Extracts implements from GqlObject type alias.
+ * Detects GqlObject by checking for the $gqlkitTypeMeta property in the resolved type.
  */
 export function extractImplementsFromGqlTypeDef(
   node: ts.TypeAliasDeclaration,
   sourceFile: ts.SourceFile,
   checker: ts.TypeChecker,
 ): ReadonlyArray<string> {
-  const typeNode = node.type;
-  if (!ts.isTypeReferenceNode(typeNode)) {
+  const symbol = checker.getSymbolAtLocation(node.name);
+  if (!symbol) {
     return [];
   }
 
-  const typeName = typeNode.typeName.getText(sourceFile);
-  if (typeName !== RUNTIME_TYPE_NAMES.GQL_OBJECT) {
+  const type = checker.getDeclaredTypeOfSymbol(symbol);
+  if (!hasTypeMetadata(type)) {
+    return [];
+  }
+
+  const typeNode = node.type;
+  if (!ts.isTypeReferenceNode(typeNode)) {
     return [];
   }
 

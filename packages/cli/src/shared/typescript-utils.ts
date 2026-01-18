@@ -2,26 +2,19 @@ import ts from "typescript";
 import { isInlineObjectType } from "./inline-object-utils.js";
 
 /**
- * List of TypeScript built-in utility types that should be resolved
- * to their actual properties when used in args.
+ * Extracts type name from a TypeNode.
+ * Handles both simple identifiers and qualified names.
  */
-const BUILTIN_UTILITY_TYPES = [
-  "Omit",
-  "Pick",
-  "Partial",
-  "Required",
-  "Readonly",
-  "Record",
-];
-
-/**
- * Checks if a type is a built-in utility type like Omit, Pick, etc.
- */
-export function isBuiltinUtilityType(type: ts.Type): boolean {
-  if (!type.aliasSymbol) {
-    return false;
+export function getTypeNameFromNode(typeNode: ts.TypeNode): string | null {
+  if (ts.isTypeReferenceNode(typeNode)) {
+    if (ts.isIdentifier(typeNode.typeName)) {
+      return typeNode.typeName.text;
+    }
+    if (ts.isQualifiedName(typeNode.typeName)) {
+      return typeNode.typeName.right.text;
+    }
   }
-  return BUILTIN_UTILITY_TYPES.includes(type.aliasSymbol.getName());
+  return null;
 }
 
 /**
@@ -32,6 +25,34 @@ export function isNullOrUndefined(type: ts.Type): boolean {
     (type.flags & ts.TypeFlags.Null) !== 0 ||
     (type.flags & ts.TypeFlags.Undefined) !== 0
   );
+}
+
+/**
+ * Checks if a TypeNode represents null (literal null type).
+ */
+function isNullTypeNode(typeNode: ts.TypeNode): boolean {
+  return (
+    ts.isLiteralTypeNode(typeNode) &&
+    typeNode.literal.kind === ts.SyntaxKind.NullKeyword
+  );
+}
+
+/**
+ * Filters non-null type nodes from a union type node.
+ */
+export function filterNonNullTypeNodes(
+  typeNode: ts.UnionTypeNode,
+): ts.TypeNode[] {
+  return typeNode.types.filter((t) => !isNullTypeNode(t));
+}
+
+/**
+ * Finds the first non-null type node from a union type node.
+ */
+export function findNonNullTypeNode(
+  typeNode: ts.UnionTypeNode,
+): ts.TypeNode | undefined {
+  return filterNonNullTypeNodes(typeNode)[0];
 }
 
 /**
@@ -144,27 +165,17 @@ export function extractPropertySymbols(
   return [];
 }
 
-export interface ShouldTreatIntersectionAsInlineOptions {
-  readonly checkBuiltinUtilityTypes?: boolean;
-}
-
 /**
  * Determines if an intersection type should be treated as an inline object.
  * Returns true when:
- * - Case 1: Has at least one anonymous/inline member (and optionally utility type member)
+ * - Case 1: Has at least one anonymous/inline member
  * - Case 2: All members are object-like types that should be merged
  */
 export function shouldTreatIntersectionAsInline(
   type: ts.IntersectionType,
-  options: ShouldTreatIntersectionAsInlineOptions = {},
 ): boolean {
-  const { checkBuiltinUtilityTypes = false } = options;
-
   const hasResolvableMember = type.types.some(
-    (t) =>
-      isInlineObjectType(t) ||
-      isAnonymousObjectType(t) ||
-      (checkBuiltinUtilityTypes && isBuiltinUtilityType(t)),
+    (t) => isInlineObjectType(t) || isAnonymousObjectType(t),
   );
   if (hasResolvableMember) {
     return true;
@@ -176,4 +187,60 @@ export function shouldTreatIntersectionAsInline(
   }
 
   return false;
+}
+
+/**
+ * Internal TypeScript symbol with parent reference.
+ * Used to access the parent enum symbol from enum member types.
+ */
+export type SymbolWithParent = ts.Symbol & { parent?: ts.Symbol };
+
+/**
+ * Finds the parent enum symbol if all types belong to the same enum.
+ * Returns null if types are empty, don't have a common parent enum, or belong to different enums.
+ */
+export function findEnumParentSymbol(
+  types: readonly ts.Type[],
+): ts.Symbol | null {
+  if (types.length === 0) return null;
+
+  const firstSymbol = types[0]!.symbol as SymbolWithParent | undefined;
+  const parentSymbol = firstSymbol?.parent;
+
+  if (!parentSymbol || !(parentSymbol.flags & ts.SymbolFlags.Enum)) {
+    return null;
+  }
+
+  const allBelongToSameEnum = types.every((t) => {
+    const sym = t.symbol as SymbolWithParent | undefined;
+    return sym?.parent === parentSymbol;
+  });
+
+  return allBelongToSameEnum ? parentSymbol : null;
+}
+
+/**
+ * Checks if a union type is a boolean union (true | false with optional null/undefined).
+ */
+export function isBooleanUnion(type: ts.Type): boolean {
+  if (!type.isUnion()) return false;
+  const nonNullTypes = getNonNullableTypes(type);
+  return (
+    nonNullTypes.length === 2 &&
+    nonNullTypes.every((t) => t.flags & ts.TypeFlags.BooleanLiteral)
+  );
+}
+
+/**
+ * Resolves a symbol to its original symbol by following alias chains.
+ * This is necessary for re-exports where the symbol is an alias.
+ */
+export function resolveOriginalSymbol(
+  symbol: ts.Symbol,
+  checker: ts.TypeChecker,
+): ts.Symbol {
+  if (symbol.flags & ts.SymbolFlags.Alias) {
+    return checker.getAliasedSymbol(symbol);
+  }
+  return symbol;
 }
