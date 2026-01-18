@@ -13,7 +13,7 @@ export const allPosts = defineQuery<NoArgs, Post[]>(
   },
 );
 
-export const post = defineQuery<{ id: number }, Post | null>(
+export const post = defineQuery<{ id: string }, Post | null>(
   async (_root, args, ctx) => {
     const result = await ctx.db
       .select()

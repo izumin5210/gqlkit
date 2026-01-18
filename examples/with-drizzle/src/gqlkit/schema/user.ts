@@ -13,7 +13,7 @@ export const allUsers = defineQuery<NoArgs, User[]>(
   },
 );
 
-export const user = defineQuery<{ id: number }, User | null>(
+export const user = defineQuery<{ id: string }, User | null>(
   async (_root, args, ctx) => {
     const result = await ctx.db
       .select()
