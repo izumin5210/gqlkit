@@ -18,6 +18,7 @@
     "graphql-yoga": "^5.0.0"
   },
   "devDependencies": {
-    "@gqlkit-ts/cli": "workspace:*"
+    "@gqlkit-ts/cli": "workspace:*",
+    "drizzle-kit": "^0.31.0"
   }
 }
