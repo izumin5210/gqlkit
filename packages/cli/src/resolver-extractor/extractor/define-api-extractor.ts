@@ -29,6 +29,7 @@ import {
   resolveFieldType,
 } from "../../type-extractor/extractor/field-type-resolver.js";
 import type { GlobalTypeMapping } from "../../type-extractor/extractor/type-extractor.js";
+import type { ScalarBaseTypeMappingTable } from "../../type-extractor/mapper/scalar-base-type-mapper.js";
 import type {
   Diagnostic,
   TSTypeReference,
@@ -91,6 +92,7 @@ export interface ExtractDefineApiOptions {
   readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly sourceFiles: ReadonlySet<string>;
+  readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
 }
 
 const RESOLVER_METADATA_PROPERTY = METADATA_PROPERTIES.RESOLVER;
@@ -487,12 +489,18 @@ function checkEmptyArgsType(
   return null;
 }
 
+interface ExtractTypeArgumentsFromCallParams {
+  readonly node: ts.CallExpression;
+  readonly inputContext: FieldTypeResolverContext;
+  readonly outputContext: FieldTypeResolverContext;
+  readonly resolverType: DefineApiResolverType;
+}
+
 function extractTypeArgumentsFromCall(
-  node: ts.CallExpression,
-  ctx: FieldTypeResolverContext,
-  resolverType: DefineApiResolverType,
+  params: ExtractTypeArgumentsFromCallParams,
 ): TypeArgumentsResult | null {
-  const { checker } = ctx;
+  const { node, inputContext, outputContext, resolverType } = params;
+  const { checker } = inputContext;
   const typeArgs = node.typeArguments;
   if (!typeArgs) {
     return null;
@@ -516,7 +524,7 @@ function extractTypeArgumentsFromCall(
 
     const parentTypeName = getTypeNameFromNode(parentTypeNode);
 
-    const argsTypeRef = resolveFieldType(argsType, undefined, ctx);
+    const argsTypeRef = resolveFieldType(argsType, undefined, inputContext);
     const isNoArgs =
       argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
@@ -528,7 +536,7 @@ function extractTypeArgumentsFromCall(
 
     const args = isNoArgs
       ? null
-      : extractArgsFromType(argsType, ctx, argsTypeNode);
+      : extractArgsFromType(argsType, inputContext, argsTypeNode);
 
     if (!isNoArgs) {
       const emptyDiagnostic = checkEmptyArgsType(
@@ -551,7 +559,7 @@ function extractTypeArgumentsFromCall(
       parentTypeName: parentTypeName ?? null,
       argsType: isNoArgs ? null : argsTypeRef,
       args: args && args.length > 0 ? args : null,
-      returnType: resolveFieldType(returnType, returnTypeNode, ctx),
+      returnType: resolveFieldType(returnType, returnTypeNode, outputContext),
       directives,
       diagnostics,
     };
@@ -572,7 +580,7 @@ function extractTypeArgumentsFromCall(
   const argsType = checker.getTypeFromTypeNode(argsTypeNode);
   const returnType = checker.getTypeFromTypeNode(returnTypeNode);
 
-  const argsTypeRef = resolveFieldType(argsType, undefined, ctx);
+  const argsTypeRef = resolveFieldType(argsType, undefined, inputContext);
   const isNoArgs =
     argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
@@ -584,7 +592,7 @@ function extractTypeArgumentsFromCall(
 
   const args = isNoArgs
     ? null
-    : extractArgsFromType(argsType, ctx, argsTypeNode);
+    : extractArgsFromType(argsType, inputContext, argsTypeNode);
 
   if (!isNoArgs) {
     const emptyDiagnostic = checkEmptyArgsType(
@@ -604,7 +612,7 @@ function extractTypeArgumentsFromCall(
     parentTypeName: null,
     argsType: isNoArgs ? null : argsTypeRef,
     args: args && args.length > 0 ? args : null,
-    returnType: resolveFieldType(returnType, returnTypeNode, ctx),
+    returnType: resolveFieldType(returnType, returnTypeNode, outputContext),
     directives,
     diagnostics,
   };
@@ -649,14 +657,27 @@ export function extractDefineApiResolvers(
     underlyingSymbolToTypeName,
     globalTypeMappings,
     sourceFiles,
+    scalarMappingTable,
   } = options;
-  const fieldTypeResolverContext: FieldTypeResolverContext = {
+  const inputContext: FieldTypeResolverContext = {
     checker,
     knownTypeNames,
     knownTypeSymbols,
     underlyingSymbolToTypeName,
     globalTypeMappings,
     sourceFiles,
+    scalarMappingTable,
+    scalarMappingContext: "input",
+  };
+  const outputContext: FieldTypeResolverContext = {
+    checker,
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
+    globalTypeMappings,
+    sourceFiles,
+    scalarMappingTable,
+    scalarMappingContext: "output",
   };
 
   for (const filePath of files) {
@@ -667,7 +688,7 @@ export function extractDefineApiResolvers(
 
     const exportedInputTypes = extractExportedInputTypes(
       sourceFile,
-      fieldTypeResolverContext,
+      inputContext,
     );
 
     ts.forEachChild(sourceFile, (node) => {
@@ -743,11 +764,12 @@ export function extractDefineApiResolvers(
           ? initializer.expression.text
           : undefined;
 
-        const typeInfo = extractTypeArgumentsFromCall(
-          initializer,
-          fieldTypeResolverContext,
+        const typeInfo = extractTypeArgumentsFromCall({
+          node: initializer,
+          inputContext,
+          outputContext,
           resolverType,
-        );
+        });
 
         if (!typeInfo) {
           diagnostics.push({

@@ -45,6 +45,10 @@ import type {
   Diagnostics,
   ExtractedTypeInfo,
 } from "../type-extractor/index.js";
+import {
+  buildScalarMappingTable,
+  type ScalarBaseTypeMappingTable,
+} from "../type-extractor/mapper/scalar-base-type-mapper.js";
 import { validateTypes } from "../type-extractor/validator/type-validator.js";
 import { writeFiles } from "./writer/file-writer.js";
 
@@ -76,6 +80,7 @@ interface TypesResult {
   detectedScalarNames: ReadonlyArray<string>;
   detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
   collectedScalars: ReadonlyArray<CollectedScalarType>;
+  scalarMappingTable: ScalarBaseTypeMappingTable | null;
 }
 
 interface ResolversResult {
@@ -148,12 +153,52 @@ function extractTypesCore(params: ExtractTypesCoreParams): TypesResult {
   } = params;
   const allDiagnostics: Diagnostic[] = [];
 
-  const extractionResult = extractTypesFromProgram(program, sourceFiles, {
+  // Pass 1: Extract types and detect scalars (without scalar mapping table)
+  const pass1Result = extractTypesFromProgram(program, sourceFiles, {
     globalTypeMappings,
     knownTypeNames,
     knownTypeSymbols,
     underlyingSymbolToTypeName,
+    scalarMappingTable: null,
   });
+
+  // Build scalar mapping table from detected scalars
+  const scalarMappingTable =
+    pass1Result.detectedScalars.length > 0
+      ? buildScalarMappingTable({
+          detectedScalars: pass1Result.detectedScalars,
+          checker: program.getTypeChecker(),
+          program,
+        })
+      : null;
+
+  // Report scalar mapping conflicts as diagnostics
+  if (scalarMappingTable) {
+    for (const [, conflict] of scalarMappingTable.conflicts) {
+      const baseTypeName = conflict.baseTypeSymbol.getName();
+      const scalarNames = conflict.conflictingScalars
+        .map((s) => s.scalarName)
+        .join(", ");
+      allDiagnostics.push({
+        code: conflict.code,
+        message: `Base type '${baseTypeName}' maps to multiple scalars: ${scalarNames}. Use explicit scalar type instead of the base type.`,
+        severity: "error",
+        location: null,
+      });
+    }
+  }
+
+  // Pass 2: Re-extract types with scalar mapping table (if we have detected scalars)
+  const extractionResult = scalarMappingTable
+    ? extractTypesFromProgram(program, sourceFiles, {
+        globalTypeMappings,
+        knownTypeNames,
+        knownTypeSymbols,
+        underlyingSymbolToTypeName,
+        scalarMappingTable,
+      })
+    : pass1Result;
+
   allDiagnostics.push(...extractionResult.diagnostics);
 
   const allCustomScalarNames = [
@@ -196,6 +241,7 @@ function extractTypesCore(params: ExtractTypesCoreParams): TypesResult {
     detectedScalarNames: extractionResult.detectedScalarNames,
     detectedScalars: extractionResult.detectedScalars,
     collectedScalars,
+    scalarMappingTable,
   };
 }
 
@@ -308,6 +354,7 @@ interface ExtractResolversCoreParams {
   readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
   readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
 }
 
 function extractResolversCore(
@@ -320,6 +367,7 @@ function extractResolversCore(
     knownTypeSymbols,
     underlyingSymbolToTypeName,
     globalTypeMappings,
+    scalarMappingTable,
   } = params;
   const allDiagnostics: Diagnostic[] = [];
 
@@ -333,6 +381,7 @@ function extractResolversCore(
       underlyingSymbolToTypeName,
       globalTypeMappings,
       sourceFiles: sourceFilesSet,
+      scalarMappingTable,
     },
   );
   allDiagnostics.push(...defineApiExtractionResult.diagnostics);
@@ -524,7 +573,8 @@ function extractResolversStep(ctx: PipelineContext): PipelineContext {
     !ctx.program ||
     !ctx.knownTypeNames ||
     !ctx.knownTypeSymbols ||
-    !ctx.underlyingSymbolToTypeName
+    !ctx.underlyingSymbolToTypeName ||
+    !ctx.typesResult
   )
     return ctx;
 
@@ -537,6 +587,7 @@ function extractResolversStep(ctx: PipelineContext): PipelineContext {
     knownTypeSymbols: ctx.knownTypeSymbols,
     underlyingSymbolToTypeName: ctx.underlyingSymbolToTypeName,
     globalTypeMappings,
+    scalarMappingTable: ctx.typesResult.scalarMappingTable,
   });
 
   return { ...ctx, resolversResult };

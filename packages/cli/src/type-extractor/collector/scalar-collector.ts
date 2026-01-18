@@ -230,21 +230,10 @@ export function collectScalars(
       continue;
     }
 
-    if (group.inputTypes.length === 0) {
-      diagnostics.push({
-        code: "MISSING_INPUT_TYPE",
-        message: `Custom scalar '${scalarName}' has no input type. Add a type without 'only' constraint or with 'only: "input"'.`,
-        severity: "error",
-      });
-      continue;
-    }
-
-    if (group.outputTypes.length === 0) {
-      diagnostics.push({
-        code: "MISSING_OUTPUT_TYPE",
-        message: `Custom scalar '${scalarName}' has no output type. Add a type without 'only' constraint or with 'only: "output"'.`,
-        severity: "error",
-      });
+    // Allow input-only scalars (no output type required) and output-only scalars (no input type required)
+    // These are valid for context-specific scalar usage patterns (Requirements 3.1, 3.2, 3.3)
+    if (group.inputTypes.length === 0 && group.outputTypes.length === 0) {
+      // Both missing - this shouldn't happen but guard against it
       continue;
     }
 
