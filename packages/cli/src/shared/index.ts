@@ -27,9 +27,6 @@ export {
   scanDirectory,
 } from "./file-scanner.js";
 export type { TypeConverter } from "./inline-object-extractor.js";
+export { toPosixPath } from "./path-utils.js";
 export type { SourceLocation } from "./source-location.js";
 export { convertTsTypeToGraphQLType } from "./type-converter.js";
-
-export function toPosixPath(filePath: string): string {
-  return filePath.replace(/\\/g, "/");
-}

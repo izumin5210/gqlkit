@@ -1,6 +1,7 @@
 import { readdir, stat } from "node:fs/promises";
 import { join, matchesGlob, relative, resolve } from "node:path";
 import type { Diagnostic } from "../type-extractor/types/index.js";
+import { toPosixPath } from "./path-utils.js";
 
 export interface ScanResult {
   readonly files: ReadonlyArray<string>;
@@ -59,7 +60,7 @@ function shouldExcludeByGlobs(
     return false;
   }
 
-  const relativePath = relative(rootDir, filePath);
+  const relativePath = toPosixPath(relative(rootDir, filePath));
   return excludeGlobs.some((pattern) => matchesGlob(relativePath, pattern));
 }
 
@@ -67,7 +68,10 @@ function shouldExcludeByPaths(
   filePath: string,
   excludePaths: ReadonlyArray<string>,
 ): boolean {
-  return excludePaths.some((excludePath) => filePath === excludePath);
+  const normalizedFilePath = toPosixPath(filePath);
+  return excludePaths.some(
+    (excludePath) => normalizedFilePath === toPosixPath(excludePath),
+  );
 }
 
 interface CollectFilesContext {
@@ -107,7 +111,7 @@ async function collectFiles(
       if (shouldExcludeByPaths(fullPath, context.excludePaths)) {
         continue;
       }
-      files.push(fullPath);
+      files.push(toPosixPath(fullPath));
     }
   }
 }
