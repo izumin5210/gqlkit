@@ -6,7 +6,7 @@ import type { DateTimeInput, DateTimeOutput } from "../schema/scalars.js";
 
 export function createResolvers({ scalars }: {
   scalars: {
-    DateTimeInput: GraphQLScalarType<DateTimeInput, >;
+    DateTimeInput: GraphQLScalarType<DateTimeInput, unknown>;
     DateTimeOutput: GraphQLScalarType<unknown, DateTimeOutput>;
   };
 }) {

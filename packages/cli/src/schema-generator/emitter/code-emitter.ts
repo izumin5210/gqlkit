@@ -117,7 +117,7 @@ function buildScalarTypeImports(
 function buildScalarTypeParameter(scalar: CollectedScalarType): string {
   const inputTypeName = scalar.inputType?.typeName ?? "unknown";
   const outputTypeNames = scalar.outputTypes.map((t) => t.typeName);
-  const outputTypeUnion = outputTypeNames.join(" | ");
+  const outputTypeUnion = outputTypeNames.length > 0 ? outputTypeNames.join(" | ") : "unknown";
   return `GraphQLScalarType<${inputTypeName}, ${outputTypeUnion}>`;
 }
 
