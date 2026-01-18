@@ -1,0 +1,18 @@
+[
+  {
+    "code": "AMBIGUOUS_SCALAR_BASE_TYPE",
+    "message": "Base type 'Date' maps to multiple scalars: DateTime, ISODate. Use explicit scalar type instead of the base type.",
+    "severity": "error",
+    "location": null
+  },
+  {
+    "code": "UNRESOLVED_REFERENCE",
+    "message": "Field 'createdAt' references unresolved type 'Date'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/event.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

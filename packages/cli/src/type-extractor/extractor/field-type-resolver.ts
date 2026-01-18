@@ -12,6 +12,11 @@ import {
   isNullableUnion,
   resolveOriginalSymbol,
 } from "../../shared/typescript-utils.js";
+import type {
+  ScalarBaseTypeMappingTable,
+  ScalarMappingContext,
+} from "../mapper/scalar-base-type-mapper.js";
+import { lookupScalarMapping } from "../mapper/scalar-base-type-mapper.js";
 import {
   createArrayType,
   createInlineObjectType,
@@ -31,6 +36,10 @@ export interface FieldTypeResolverContext {
   readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly sourceFiles: ReadonlySet<string>;
+  /** Scalar base type mapping table for automatic base type -> scalar mapping */
+  readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
+  /** Current resolution context for scalar mapping (input or output) */
+  readonly scalarMappingContext: ScalarMappingContext;
 }
 
 /**
@@ -301,6 +310,31 @@ function resolveFieldTypeInternal(
         }
         // Type from outside schema files - expand as inline object
         return tryExtractAsInlineObject(type, ctx);
+      }
+
+      // Check for scalar base type mapping
+      // This allows automatic mapping of base types (e.g., Date) to scalar types (e.g., DateTime)
+      if (ctx.scalarMappingTable) {
+        const scalarMappingResult = lookupScalarMapping({
+          baseTypeSymbol: resolvedSymbol,
+          context: ctx.scalarMappingContext,
+          table: ctx.scalarMappingTable,
+        });
+
+        if (scalarMappingResult.mapping) {
+          return createScalarType({
+            name: scalarMappingResult.mapping.scalarName,
+            scalarInfo: {
+              scalarName: scalarMappingResult.mapping.scalarName,
+              typeName: scalarMappingResult.mapping.sourceTypeName,
+              baseType: undefined,
+              isCustom: true,
+              only: scalarMappingResult.mapping.only,
+            },
+            nullable: false,
+          });
+        }
+        // Note: Conflicts are handled at the pipeline level, not here
       }
 
       // Unknown type - still return reference but it will likely cause validation error later
