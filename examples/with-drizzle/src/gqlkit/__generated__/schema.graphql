@@ -8,10 +8,10 @@ type Mutation
 Defined in: src/gqlkit/schema/post.ts
 """
 type Post {
-  authorId: Float!
+  authorId: String!
   content: String
   createdAt: DateTime!
-  id: Float!
+  id: String!
   status: String!
   title: String!
 }
@@ -35,7 +35,7 @@ Defined in: src/gqlkit/schema/user.ts
 type User {
   createdAt: DateTime!
   email: String!
-  id: Float!
+  id: String!
   name: String!
   status: String!
 }
@@ -55,7 +55,7 @@ enum UserStatus {
 Defined in: src/gqlkit/schema/post.ts
 """
 input CreatePostInput {
-  authorId: Float!
+  authorId: String!
   content: String
   status: String
   title: String!
