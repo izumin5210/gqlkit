@@ -16,47 +16,47 @@ pnpm add drizzle-orm postgres
 yarn add drizzle-orm postgres
 ```
 
-## Defining Tables with Custom Scalars
+## Defining Tables
 
-Define your database tables with Drizzle. You can use `GqlScalar` to create custom scalar types that map to GraphQL:
+Define your database tables with Drizzle:
 
 ```typescript
 // src/db/schema.ts
-import type { GqlScalar } from "@gqlkit-ts/runtime";
-import { customType, integer, pgTable, serial, text } from "drizzle-orm/pg-core";
+import {
+  integer,
+  pgTable,
+  serial,
+  text,
+  timestamp,
+} from "drizzle-orm/pg-core";
 
-// Define a custom DateTime scalar
-export type DateTime = GqlScalar<"DateTime", Date>;
-
-const dateTime = customType<{ data: DateTime; driverData: Date }>({
-  dataType() {
-    return "timestamp";
-  },
-  fromDriver(value: Date): DateTime {
-    return value as DateTime;
-  },
-  toDriver(value: DateTime): Date {
-    return value;
-  },
-});
-
-// Define your tables
 export const users = pgTable("users", {
-  id: serial("id").primaryKey(),
-  name: text("name").notNull(),
-  email: text("email").notNull().unique(),
-  createdAt: dateTime("created_at").notNull().default(new Date()),
+  id: serial().primaryKey(),
+  name: text().notNull(),
+  email: text().notNull().unique(),
+  createdAt: timestamp().notNull().defaultNow(),
 });
 
 export const posts = pgTable("posts", {
-  id: serial("id").primaryKey(),
-  title: text("title").notNull(),
-  content: text("content"),
-  authorId: integer("author_id")
+  id: serial().primaryKey(),
+  title: text().notNull(),
+  content: text(),
+  authorId: integer()
     .notNull()
     .references(() => users.id),
-  createdAt: dateTime("created_at").notNull().default(new Date()),
+  createdAt: timestamp().notNull().defaultNow(),
 });
+```
+
+## Defining Custom Scalars
+
+Define custom scalar types using `GqlScalar` for fields like timestamps:
+
+```typescript
+// src/gqlkit/schema/scalars.ts
+import type { GqlScalar } from "@gqlkit-ts/runtime";
+
+export type DateTime = GqlScalar<"DateTime", Date>;
 ```
 
 ## Exporting GraphQL Types
@@ -102,7 +102,7 @@ export type User = InferSelectModel<typeof usersTable>;
 export const allUsers = defineQuery<NoArgs, User[]>(
   async (_root, _args, ctx) => {
     return ctx.db.select().from(usersTable);
-  }
+  },
 );
 
 export const user = defineQuery<{ id: number }, User | null>(
@@ -112,7 +112,7 @@ export const user = defineQuery<{ id: number }, User | null>(
       .from(usersTable)
       .where(eq(usersTable.id, args.id));
     return result[0] ?? null;
-  }
+  },
 );
 
 // Mutation resolver with inline input type using InferInsertModel
@@ -121,10 +121,7 @@ export const createUser = defineMutation<
   { input: Omit<InferInsertModel<typeof usersTable>, "id" | "createdAt"> },
   User
 >(async (_root, args, ctx) => {
-  const result = await ctx.db
-    .insert(usersTable)
-    .values(args.input)
-    .returning();
+  const result = await ctx.db.insert(usersTable).values(args.input).returning();
   return result[0]!;
 });
 
@@ -135,7 +132,7 @@ export const posts = defineField<User, NoArgs, Post[]>(
       .select()
       .from(postsTable)
       .where(eq(postsTable.authorId, parent.id));
-  }
+  },
 );
 ```
 
@@ -150,16 +147,16 @@ import postgres from "postgres";
 import * as schema from "./schema.js";
 
 const client = postgres(process.env.DATABASE_URL!);
-export const db = drizzle(client, { schema });
+export const db = drizzle(client, { schema, casing: "snake_case" });
+export type Database = typeof db;
 ```
 
 ```typescript
 // src/gqlkit/context.ts
-import type { PostgresJsDatabase } from "drizzle-orm/postgres-js";
-import type * as schema from "../db/schema.js";
+import type { Database } from "../db/db.js";
 
 export type Context = {
-  db: PostgresJsDatabase<typeof schema>;
+  db: Database;
 };
 ```
 
@@ -176,7 +173,7 @@ export const { defineQuery, defineMutation, defineField } =
 
 See the [examples/with-drizzle](https://github.com/gqlkit/gqlkit/tree/main/examples/with-drizzle) directory for a complete working example with:
 
-- PostgreSQL tables with custom DateTime scalar
+- PostgreSQL tables with DateTime scalar
 - User and Post types with relationships
 - Query, Mutation, and Field resolvers
 
