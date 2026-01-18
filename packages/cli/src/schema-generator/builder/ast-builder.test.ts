@@ -22,6 +22,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
+      stringEnumMappings: [],
       diagnostics: [],
     });
 
@@ -58,6 +59,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
+      stringEnumMappings: [],
       diagnostics: [],
     });
 
@@ -93,6 +95,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
+      stringEnumMappings: [],
       diagnostics: [],
     });
 
@@ -134,6 +137,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
+      stringEnumMappings: [],
       diagnostics: [],
     });
 
@@ -179,6 +183,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
+      stringEnumMappings: [],
       diagnostics: [],
     });
 
@@ -215,6 +220,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
+      stringEnumMappings: [],
       diagnostics: [],
     });
 
@@ -242,6 +248,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
+      stringEnumMappings: [],
       diagnostics: [],
     });
 
@@ -265,6 +272,7 @@ describe("buildScalarTypeDefinitionNode", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
+      stringEnumMappings: [],
       diagnostics: [],
     });
 
@@ -289,6 +297,7 @@ describe("buildDeprecatedDirective", () => {
           unionMembers: null,
           enumValues: null,
           isNumericEnum: false,
+          needsStringEnumMapping: false,
           implementedInterfaces: null,
           directives: null,
           fields: [
@@ -321,6 +330,7 @@ describe("buildDeprecatedDirective", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
+      stringEnumMappings: [],
       diagnostics: [],
     });
 
@@ -360,6 +370,7 @@ describe("buildDeprecatedDirective", () => {
           unionMembers: null,
           enumValues: null,
           isNumericEnum: false,
+          needsStringEnumMapping: false,
           implementedInterfaces: null,
           directives: null,
           fields: [
@@ -392,6 +403,7 @@ describe("buildDeprecatedDirective", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
+      stringEnumMappings: [],
       diagnostics: [],
     });
 
@@ -450,6 +462,7 @@ describe("buildDeprecatedDirective", () => {
             },
           ],
           isNumericEnum: false,
+          needsStringEnumMapping: false,
           implementedInterfaces: null,
           directives: null,
         },
@@ -464,6 +477,7 @@ describe("buildDeprecatedDirective", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
+      stringEnumMappings: [],
       diagnostics: [],
     });
 
@@ -523,6 +537,7 @@ describe("buildDeprecatedDirective", () => {
             },
           ],
           isNumericEnum: false,
+          needsStringEnumMapping: false,
           implementedInterfaces: null,
           directives: null,
         },
@@ -537,6 +552,7 @@ describe("buildDeprecatedDirective", () => {
       hasErrors: false,
       abstractTypeResolvers: [],
       numericEnums: [],
+      stringEnumMappings: [],
       diagnostics: [],
     });
 

@@ -46,6 +46,8 @@ export interface BaseType {
   readonly enumValues: ReadonlyArray<EnumValueInfo> | null;
   /** True if this enum uses numeric values */
   readonly isNumericEnum: boolean;
+  /** True if this string enum needs value mapping (at least one value converted) */
+  readonly needsStringEnumMapping: boolean;
   readonly implementedInterfaces: ReadonlyArray<string> | null;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
@@ -101,6 +103,24 @@ export interface NumericEnumInfo {
   readonly members: ReadonlyArray<NumericEnumMember>;
 }
 
+/**
+ * String enum member value mapping.
+ */
+export interface StringEnumMember {
+  /** GraphQL enum value name (SCREAMING_SNAKE_CASE) */
+  readonly graphqlValue: string;
+  /** Original TypeScript enum value */
+  readonly typescriptValue: string;
+}
+
+/**
+ * String enum information for resolver generation.
+ */
+export interface StringEnumMappingInfo {
+  readonly enumName: string;
+  readonly members: ReadonlyArray<StringEnumMember>;
+}
+
 export interface IntegratedResult {
   readonly baseTypes: ReadonlyArray<BaseType>;
   readonly inputTypes: ReadonlyArray<InputType>;
@@ -115,6 +135,8 @@ export interface IntegratedResult {
   readonly abstractTypeResolvers: ReadonlyArray<AbstractResolverInfo>;
   /** Numeric enum information for resolver generation */
   readonly numericEnums: ReadonlyArray<NumericEnumInfo>;
+  /** String enum mappings for resolver generation */
+  readonly stringEnumMappings: ReadonlyArray<StringEnumMappingInfo>;
   readonly hasQuery: boolean;
   readonly hasMutation: boolean;
   readonly hasErrors: boolean;
@@ -276,6 +298,7 @@ export function integrate(
         unionMembers: null,
         enumValues: null,
         isNumericEnum: false,
+        needsStringEnumMapping: false,
         implementedInterfaces: null,
         description: autoType.description,
         deprecated: null,
@@ -329,6 +352,7 @@ export function integrate(
         unionMembers: null,
         enumValues: type.enumValues,
         isNumericEnum: type.isNumericEnum,
+        needsStringEnumMapping: type.needsStringEnumMapping,
         implementedInterfaces: null,
         description: type.description,
         deprecated: type.deprecated,
@@ -351,6 +375,7 @@ export function integrate(
         unionMembers: null,
         enumValues: null,
         isNumericEnum: false,
+        needsStringEnumMapping: false,
         implementedInterfaces: type.implementedInterfaces ?? null,
         description: type.description,
         deprecated: type.deprecated,
@@ -373,6 +398,7 @@ export function integrate(
         unionMembers: null,
         enumValues: null,
         isNumericEnum: false,
+        needsStringEnumMapping: false,
         implementedInterfaces: type.implementedInterfaces ?? null,
         description: type.description,
         deprecated: type.deprecated,
@@ -387,6 +413,7 @@ export function integrate(
         unionMembers: type.unionMembers,
         enumValues: null,
         isNumericEnum: false,
+        needsStringEnumMapping: false,
         implementedInterfaces: null,
         description: type.description,
         deprecated: null,
@@ -407,6 +434,7 @@ export function integrate(
       unionMembers: null,
       enumValues: null,
       isNumericEnum: false,
+      needsStringEnumMapping: false,
       implementedInterfaces: null,
       description: null,
       deprecated: null,
@@ -422,6 +450,7 @@ export function integrate(
       unionMembers: null,
       enumValues: null,
       isNumericEnum: false,
+      needsStringEnumMapping: false,
       implementedInterfaces: null,
       description: null,
       deprecated: null,
@@ -595,6 +624,26 @@ export function integrate(
     }))
     .filter((info) => info.members.length > 0);
 
+  const stringEnumMappings: StringEnumMappingInfo[] = baseTypes
+    .filter(
+      (
+        type,
+      ): type is BaseType & {
+        enumValues: NonNullable<BaseType["enumValues"]>;
+      } =>
+        type.kind === "Enum" &&
+        type.needsStringEnumMapping &&
+        type.enumValues !== null,
+    )
+    .map((type) => ({
+      enumName: type.name,
+      members: type.enumValues.map((value) => ({
+        graphqlValue: value.name,
+        typescriptValue: value.originalValue,
+      })),
+    }))
+    .filter((info) => info.members.length > 0);
+
   return {
     baseTypes,
     inputTypes,
@@ -610,6 +659,7 @@ export function integrate(
         : null,
     abstractTypeResolvers: resolversResult.abstractTypeResolvers,
     numericEnums,
+    stringEnumMappings,
     hasQuery,
     hasMutation,
     hasErrors,

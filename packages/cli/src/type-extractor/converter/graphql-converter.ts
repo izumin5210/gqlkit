@@ -45,17 +45,31 @@ function toScreamingSnakeCase(value: string): string {
     .toUpperCase();
 }
 
+interface ConvertEnumMembersParams {
+  readonly members: ReadonlyArray<EnumMemberInfo>;
+  readonly enumName: string;
+  readonly sourceFile: string;
+  readonly enumLocation: SourceLocation;
+}
+
+interface ConvertEnumMembersResult {
+  readonly values: ReadonlyArray<EnumValueInfo>;
+  readonly diagnostics: ReadonlyArray<Diagnostic>;
+  readonly isNumeric: boolean;
+  readonly needsMapping: boolean;
+  readonly hasError: boolean;
+}
+
 function convertEnumMembers(
-  members: ReadonlyArray<EnumMemberInfo>,
-  sourceFile: string,
-): {
-  values: ReadonlyArray<EnumValueInfo>;
-  diagnostics: ReadonlyArray<Diagnostic>;
-  isNumeric: boolean;
-} {
+  params: ConvertEnumMembersParams,
+): ConvertEnumMembersResult {
+  const { members, enumName, sourceFile, enumLocation } = params;
   const values: EnumValueInfo[] = [];
   const diagnostics: Diagnostic[] = [];
   let isNumeric = false;
+  let needsMapping = false;
+
+  const convertedNameToOriginals = new Map<string, string[]>();
 
   for (const member of members) {
     const convertedName = toScreamingSnakeCase(member.name);
@@ -79,6 +93,14 @@ function convertEnumMembers(
       isNumeric = true;
     }
 
+    if (convertedName !== member.value) {
+      needsMapping = true;
+    }
+
+    const existingOriginals = convertedNameToOriginals.get(convertedName) ?? [];
+    existingOriginals.push(member.value);
+    convertedNameToOriginals.set(convertedName, existingOriginals);
+
     values.push({
       name: convertedName,
       originalValue: member.value,
@@ -88,7 +110,20 @@ function convertEnumMembers(
     });
   }
 
-  return { values, diagnostics, isNumeric };
+  let hasError = false;
+  for (const [convertedName, originals] of convertedNameToOriginals) {
+    if (originals.length > 1) {
+      diagnostics.push({
+        code: "DUPLICATE_ENUM_VALUE_AFTER_CONVERSION",
+        message: `Enum '${enumName}' has duplicate value '${convertedName}' after conversion (from '${originals.join("' and '")}')`,
+        severity: "error",
+        location: enumLocation,
+      });
+      hasError = true;
+    }
+  }
+
+  return { values, diagnostics, isNumeric, needsMapping, hasError };
 }
 
 interface ConvertFieldsResult {
@@ -281,12 +316,28 @@ export function convertToGraphQL(
         });
       }
 
+      const enumLocation: SourceLocation = metadata.sourceLocation ?? {
+        file: metadata.sourceFile,
+        line: 1,
+        column: 1,
+      };
       const {
         values: enumValues,
         diagnostics: enumDiagnostics,
         isNumeric,
-      } = convertEnumMembers(extracted.enumMembers ?? [], metadata.sourceFile);
+        needsMapping,
+        hasError,
+      } = convertEnumMembers({
+        members: extracted.enumMembers ?? [],
+        enumName: metadata.name,
+        sourceFile: metadata.sourceFile,
+        enumLocation,
+      });
       diagnostics.push(...enumDiagnostics);
+
+      if (hasError) {
+        continue;
+      }
 
       types.push({
         name: metadata.name,
@@ -295,6 +346,7 @@ export function convertToGraphQL(
         unionMembers: null,
         enumValues,
         isNumericEnum: isNumeric,
+        needsStringEnumMapping: !isNumeric && needsMapping,
         implementedInterfaces: null,
         sourceFile: metadata.sourceFile,
         description: metadata.description,
@@ -315,6 +367,7 @@ export function convertToGraphQL(
         unionMembers: null,
         enumValues: null,
         isNumericEnum: false,
+        needsStringEnumMapping: false,
         implementedInterfaces: extracted.implementedInterfaces
           ? [...extracted.implementedInterfaces]
           : null,
@@ -346,6 +399,7 @@ export function convertToGraphQL(
               unionMembers: null,
               enumValues: null,
               isNumericEnum: false,
+              needsStringEnumMapping: false,
               implementedInterfaces: null,
               sourceFile: metadata.sourceFile,
               description: metadata.description,
@@ -366,6 +420,7 @@ export function convertToGraphQL(
           unionMembers,
           enumValues: null,
           isNumericEnum: false,
+          needsStringEnumMapping: false,
           implementedInterfaces: null,
           sourceFile: metadata.sourceFile,
           description: metadata.description,
@@ -388,6 +443,7 @@ export function convertToGraphQL(
         unionMembers: null,
         enumValues: null,
         isNumericEnum: false,
+        needsStringEnumMapping: false,
         implementedInterfaces: extracted.implementedInterfaces
           ? [...extracted.implementedInterfaces]
           : null,

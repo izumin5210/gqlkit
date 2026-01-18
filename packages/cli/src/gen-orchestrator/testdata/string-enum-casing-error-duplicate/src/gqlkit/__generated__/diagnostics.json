@@ -1,0 +1,22 @@
+[
+  {
+    "code": "DUPLICATE_ENUM_VALUE_AFTER_CONVERSION",
+    "message": "Enum 'Status' has duplicate value 'ACTIVE_USER' after conversion (from 'activeUser' and 'active_user')",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 4,
+      "column": 1
+    }
+  },
+  {
+    "code": "UNRESOLVED_REFERENCE",
+    "message": "Field 'status' references unresolved type 'Status'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]
