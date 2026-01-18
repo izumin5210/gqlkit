@@ -6,10 +6,6 @@ import { defineField, defineMutation, defineQuery } from "../gqlkit.js";
 import type { User } from "./user.js";
 
 export type Post = InferSelectModel<typeof postsTable>;
-export type CreatePostInput = Omit<
-  InferInsertModel<typeof postsTable>,
-  "id" | "createdAt"
->;
 
 export const allPosts = defineQuery<NoArgs, Post[]>(
   async (_root, _args, ctx) => {
@@ -27,20 +23,16 @@ export const post = defineQuery<{ id: number }, Post | null>(
   },
 );
 
-export const createPost = defineMutation<{ input: CreatePostInput }, Post>(
-  async (_root, args, ctx) => {
-    const result = await ctx.db
-      .insert(postsTable)
-      .values({
-        title: args.input.title,
-        content: args.input.content,
-        status: args.input.status ?? undefined,
-        authorId: args.input.authorId,
-      })
-      .returning();
-    return result[0]!;
-  },
-);
+export const createPost = defineMutation<
+  { input: Omit<InferInsertModel<typeof postsTable>, "id" | "createdAt"> },
+  Post
+>(async (_root, args, ctx) => {
+  const result = await ctx.db
+    .insert(postsTable)
+    .values(args.input)
+    .returning();
+  return result[0]!;
+});
 
 export const author = defineField<Post, NoArgs, User | null>(
   async (parent, _args, ctx) => {

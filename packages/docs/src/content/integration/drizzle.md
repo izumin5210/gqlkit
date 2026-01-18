@@ -65,17 +65,11 @@ Use Drizzle's type inference utilities to export GraphQL types from your table d
 
 ```typescript
 // src/gqlkit/schema/user.ts
-import type { InferInsertModel, InferSelectModel } from "drizzle-orm";
+import type { InferSelectModel } from "drizzle-orm";
 import { users as usersTable } from "../../db/schema.js";
 
 // Export as GraphQL object type
 export type User = InferSelectModel<typeof usersTable>;
-
-// Export as GraphQL input type (exclude auto-generated fields)
-export type CreateUserInput = Omit<
-  InferInsertModel<typeof usersTable>,
-  "id" | "createdAt"
->;
 ```
 
 This generates the following GraphQL schema:
@@ -86,11 +80,6 @@ type User {
   name: String!
   email: String!
   createdAt: DateTime!
-}
-
-input CreateUserInput {
-  name: String!
-  email: String!
 }
 ```
 
@@ -108,10 +97,6 @@ import { defineField, defineMutation, defineQuery } from "../gqlkit.js";
 import type { Post } from "./post.js";
 
 export type User = InferSelectModel<typeof usersTable>;
-export type CreateUserInput = Omit<
-  InferInsertModel<typeof usersTable>,
-  "id" | "createdAt"
->;
 
 // Query resolvers
 export const allUsers = defineQuery<NoArgs, User[]>(
@@ -130,19 +115,18 @@ export const user = defineQuery<{ id: number }, User | null>(
   }
 );
 
-// Mutation resolver
-export const createUser = defineMutation<{ input: CreateUserInput }, User>(
-  async (_root, args, ctx) => {
-    const result = await ctx.db
-      .insert(usersTable)
-      .values({
-        name: args.input.name,
-        email: args.input.email,
-      })
-      .returning();
-    return result[0]!;
-  }
-);
+// Mutation resolver with inline input type using InferInsertModel
+// gqlkit auto-generates "CreateUserInput" from the field name
+export const createUser = defineMutation<
+  { input: Omit<InferInsertModel<typeof usersTable>, "id" | "createdAt"> },
+  User
+>(async (_root, args, ctx) => {
+  const result = await ctx.db
+    .insert(usersTable)
+    .values(args.input)
+    .returning();
+  return result[0]!;
+});
 
 // Field resolver for relationships
 export const posts = defineField<User, NoArgs, Post[]>(
