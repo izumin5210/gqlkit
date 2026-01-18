@@ -174,7 +174,7 @@ export const { defineQuery, defineMutation, defineField } =
 
 ## Complete Example
 
-See the [examples/drizzle](https://github.com/gqlkit/gqlkit/tree/main/examples/drizzle) directory for a complete working example with:
+See the [examples/with-drizzle](https://github.com/gqlkit/gqlkit/tree/main/examples/with-drizzle) directory for a complete working example with:
 
 - PostgreSQL tables with custom DateTime scalar
 - User and Post types with relationships

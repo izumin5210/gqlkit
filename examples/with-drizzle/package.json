@@ -1,5 +1,5 @@
 {
-  "name": "@gqlkit-examples/drizzle",
+  "name": "@gqlkit-examples/with-drizzle",
   "type": "module",
   "private": true,
   "scripts": {
