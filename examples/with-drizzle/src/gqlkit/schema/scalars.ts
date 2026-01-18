@@ -1,1 +1,3 @@
-export type { DateTime } from "../../db/schema.js";
+import type { GqlScalar } from "@gqlkit-ts/runtime";
+
+export type DateTime = GqlScalar<"DateTime", Date>;

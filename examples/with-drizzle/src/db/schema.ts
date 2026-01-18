@@ -6,21 +6,8 @@ import {
   pgTable,
   serial,
   text,
+  timestamp,
 } from "drizzle-orm/pg-core";
-
-export type DateTime = GqlScalar<"DateTime", Date>;
-
-const dateTime = customType<{ data: DateTime; driverData: Date }>({
-  dataType() {
-    return "timestamp";
-  },
-  fromDriver(value: Date): DateTime {
-    return value as DateTime;
-  },
-  toDriver(value: DateTime): Date {
-    return value;
-  },
-});
 
 export const userStatusEnum = pgEnum("user_status", [
   "active",
@@ -39,7 +26,7 @@ export const users = pgTable("users", {
   name: text("name").notNull(),
   email: text("email").notNull().unique(),
   status: userStatusEnum("status").notNull().default("active"),
-  createdAt: dateTime("created_at").notNull().default(new Date()),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
 
 export const posts = pgTable("posts", {
@@ -50,5 +37,5 @@ export const posts = pgTable("posts", {
   authorId: integer("author_id")
     .notNull()
     .references(() => users.id),
-  createdAt: dateTime("created_at").notNull().default(new Date()),
+  createdAt: timestamp("created_at").notNull().defaultNow(),
 });
