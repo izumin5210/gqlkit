@@ -90,8 +90,8 @@ describe("runCommand", () => {
   describe("working directory", () => {
     it("executes command in specified working directory", async () => {
       const result = await runCommand({
-        command: "pwd",
-        args: [],
+        command: "node",
+        args: ["-e", "console.log(process.cwd())"],
         cwd: tempDir,
       });
 
