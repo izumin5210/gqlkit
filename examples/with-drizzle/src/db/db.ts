@@ -18,7 +18,7 @@ export async function pushSchema(): Promise<void> {
     schema,
     prevJson.id,
     undefined,
-    "snake_case"
+    "snake_case",
   );
   const statements = await generateMigration(prevJson, curJson);
   for (const statement of statements) {

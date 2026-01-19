@@ -2,6 +2,11 @@
   "name": "gqlkit",
   "private": true,
   "packageManager": "pnpm@10.28.0",
+  "pnpm": {
+    "overrides": {
+      "graphql": "$graphql"
+    }
+  },
   "scripts": {
     "build": "pnpm -r build",
     "check": "biome check --write",
