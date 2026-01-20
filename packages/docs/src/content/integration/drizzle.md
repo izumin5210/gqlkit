@@ -80,9 +80,9 @@ This generates the following GraphQL schema:
 
 ```graphql
 enum UserStatus {
-  active
-  inactive
-  suspended
+  ACTIVE
+  INACTIVE
+  SUSPENDED
 }
 
 type User {
