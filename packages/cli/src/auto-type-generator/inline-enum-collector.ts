@@ -11,7 +11,10 @@ import type {
   InlineObjectPropertyDef,
   SourceLocation,
 } from "../type-extractor/types/index.js";
-import type { AutoTypeNameContext } from "./naming-convention.js";
+import {
+  type AutoTypeNameContext,
+  buildFieldContext,
+} from "./naming-convention.js";
 
 /**
  * Inline enum with context information for naming and generation.
@@ -72,21 +75,9 @@ function collectInlineEnumsFromField(
   const fieldPath = [...parentPath, field.name];
 
   if (tsType.kind === "inlineEnum" && tsType.inlineEnumMembers) {
-    const context: AutoTypeNameContext = isInput
-      ? {
-          kind: "inputField",
-          parentTypeName,
-          fieldPath,
-        }
-      : {
-          kind: "objectField",
-          parentTypeName,
-          fieldPath,
-        };
-
     results.push({
       members: tsType.inlineEnumMembers,
-      context,
+      context: buildFieldContext(parentTypeName, fieldPath, isInput),
       sourceLocation: field.sourceLocation ?? {
         file: sourceFile,
         line: 1,
@@ -104,21 +95,9 @@ function collectInlineEnumsFromField(
     tsType.elementType?.kind === "inlineEnum" &&
     tsType.elementType.inlineEnumMembers
   ) {
-    const context: AutoTypeNameContext = isInput
-      ? {
-          kind: "inputField",
-          parentTypeName,
-          fieldPath,
-        }
-      : {
-          kind: "objectField",
-          parentTypeName,
-          fieldPath,
-        };
-
     results.push({
       members: tsType.elementType.inlineEnumMembers,
-      context,
+      context: buildFieldContext(parentTypeName, fieldPath, isInput),
       sourceLocation: field.sourceLocation ?? {
         file: sourceFile,
         line: 1,
@@ -156,21 +135,9 @@ function collectInlineEnumsFromInlineObjectProperties(
     const tsType = prop.tsType;
 
     if (tsType.kind === "inlineEnum" && tsType.inlineEnumMembers) {
-      const context: AutoTypeNameContext = isInput
-        ? {
-            kind: "inputField",
-            parentTypeName,
-            fieldPath: propPath,
-          }
-        : {
-            kind: "objectField",
-            parentTypeName,
-            fieldPath: propPath,
-          };
-
       results.push({
         members: tsType.inlineEnumMembers,
-        context,
+        context: buildFieldContext(parentTypeName, propPath, isInput),
         sourceLocation: prop.sourceLocation ?? {
           file: sourceFile,
           line: 1,

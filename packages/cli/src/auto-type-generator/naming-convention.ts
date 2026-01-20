@@ -72,6 +72,19 @@ function removeInputSuffix(typeName: string): string {
 }
 
 /**
+ * Build a field context (object or input) based on the parent type name.
+ */
+export function buildFieldContext(
+  parentTypeName: string,
+  fieldPath: ReadonlyArray<string>,
+  isInput: boolean,
+): ObjectFieldContext | InputFieldContext {
+  return isInput
+    ? { kind: "inputField", parentTypeName, fieldPath }
+    : { kind: "objectField", parentTypeName, fieldPath };
+}
+
+/**
  * Generate auto type name based on context.
  */
 export function generateAutoTypeName(context: AutoTypeNameContext): string {

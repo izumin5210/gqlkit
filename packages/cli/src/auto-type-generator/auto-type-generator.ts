@@ -13,14 +13,15 @@ import {
   isEligibleAsInputObjectField,
   isEligibleAsObjectField,
 } from "../type-extractor/converter/field-eligibility.js";
-import type {
-  Diagnostic,
-  ExtractedTypeInfo,
-  FieldDefinition,
-  GraphQLFieldType,
-  InlineEnumMemberInfo,
-  InlineObjectPropertyDef,
-  SourceLocation,
+import {
+  createReferenceType,
+  type Diagnostic,
+  type ExtractedTypeInfo,
+  type FieldDefinition,
+  type GraphQLFieldType,
+  type InlineEnumMemberInfo,
+  type InlineObjectPropertyDef,
+  type SourceLocation,
 } from "../type-extractor/types/index.js";
 import {
   collectInlineEnumsFromResolvers,
@@ -29,6 +30,7 @@ import {
 } from "./inline-enum-collector.js";
 import {
   type AutoTypeNameContext,
+  buildFieldContext,
   generateAutoTypeName,
 } from "./naming-convention.js";
 
@@ -114,6 +116,34 @@ function getContextKey(context: AutoTypeNameContext): string {
     case "resolverArg":
       return `resolverArg:${context.resolverType}:${context.parentTypeName ?? ""}:${context.fieldName}:${context.argName}:${context.fieldPath.join(".")}`;
   }
+}
+
+function mapContextKindToGeneratedFromContext(
+  kind: AutoTypeNameContext["kind"],
+): GeneratedFromInfo["context"] {
+  switch (kind) {
+    case "objectField":
+      return "typeField";
+    case "inputField":
+      return "inputField";
+    case "resolverArg":
+      return "resolverArg";
+  }
+}
+
+function buildGeneratedFromInfo(
+  context: AutoTypeNameContext,
+): GeneratedFromInfo {
+  const fieldPath =
+    context.kind === "resolverArg" && context.fieldPath.length === 0
+      ? [context.argName]
+      : context.fieldPath;
+
+  return {
+    parentTypeName: context.parentTypeName,
+    fieldPath,
+    context: mapContextKindToGeneratedFromContext(context.kind),
+  };
 }
 
 function collectInlineObjectsFromType(
@@ -427,21 +457,6 @@ function generateAutoType(
     });
   }
 
-  const generatedFrom: GeneratedFromInfo = {
-    parentTypeName: inlineObj.context.parentTypeName,
-    fieldPath:
-      inlineObj.context.kind === "resolverArg" &&
-      inlineObj.context.fieldPath.length === 0
-        ? [inlineObj.context.argName]
-        : inlineObj.context.fieldPath,
-    context:
-      inlineObj.context.kind === "objectField"
-        ? "typeField"
-        : inlineObj.context.kind === "inputField"
-          ? "inputField"
-          : "resolverArg",
-  };
-
   return {
     type: {
       name,
@@ -450,7 +465,7 @@ function generateAutoType(
       enumValues: null,
       needsStringEnumMapping: false,
       sourceLocation: inlineObj.sourceLocation,
-      generatedFrom,
+      generatedFrom: buildGeneratedFromInfo(inlineObj.context),
       description: null,
     },
     diagnostics,
@@ -509,16 +524,21 @@ function resolveFieldType(params: ResolveFieldTypeParams): GraphQLFieldType {
   return convertTsTypeToGraphQLType(prop.tsType, prop.optional);
 }
 
+interface UpdateTypeNamesParams {
+  readonly generatedTypeNames: Map<string, string>;
+  readonly enumTypeNames: Map<string, string>;
+}
+
 function updateExtractedTypes(
   extractedTypes: ReadonlyArray<ExtractedTypeInfo>,
-  generatedTypeNames: Map<string, string>,
+  params: UpdateTypeNamesParams,
 ): ExtractedTypeInfo[] {
   return extractedTypes.map((typeInfo) => {
     const isInput = isInputTypeName(typeInfo.metadata.name);
     return {
       ...typeInfo,
       fields: typeInfo.fields.map((field) =>
-        updateField(field, generatedTypeNames, typeInfo.metadata.name, isInput),
+        updateField(field, params, typeInfo.metadata.name, isInput),
       ),
     };
   });
@@ -526,66 +546,89 @@ function updateExtractedTypes(
 
 function updateField(
   field: FieldDefinition,
-  generatedTypeNames: Map<string, string>,
+  params: UpdateTypeNamesParams,
   parentTypeName: string,
   isInput: boolean,
 ): FieldDefinition {
+  const { generatedTypeNames, enumTypeNames } = params;
+  const context = buildFieldContext(parentTypeName, [field.name], isInput);
+  const contextKey = getContextKey(context);
+
+  // Handle inline objects
   if (
     field.tsType.kind === "inlineObject" &&
     field.tsType.inlineObjectProperties
   ) {
-    const context: AutoTypeNameContext = isInput
-      ? { kind: "inputField", parentTypeName, fieldPath: [field.name] }
-      : { kind: "objectField", parentTypeName, fieldPath: [field.name] };
-    const contextKey = getContextKey(context);
     const resolvedTypeName = generatedTypeNames.get(contextKey);
     if (resolvedTypeName) {
       return {
         ...field,
-        tsType: {
-          kind: "reference",
+        tsType: createReferenceType({
           name: resolvedTypeName,
-          elementType: null,
-          members: null,
           nullable: field.tsType.nullable,
-          scalarInfo: null,
-          inlineObjectProperties: null,
-          inlineEnumMembers: null,
-          externalEnumSymbol: null,
-          externalEnumDescription: null,
-          externalEnumDeprecated: null,
+        }),
+      };
+    }
+  }
+
+  // Handle inline enums
+  if (field.tsType.kind === "inlineEnum" && field.tsType.inlineEnumMembers) {
+    const resolvedTypeName = enumTypeNames.get(contextKey);
+    if (resolvedTypeName) {
+      return {
+        ...field,
+        tsType: createReferenceType({
+          name: resolvedTypeName,
+          nullable: field.tsType.nullable,
+        }),
+      };
+    }
+  }
+
+  // Handle array of inline enums
+  if (
+    field.tsType.kind === "array" &&
+    field.tsType.elementType?.kind === "inlineEnum" &&
+    field.tsType.elementType.inlineEnumMembers
+  ) {
+    const resolvedTypeName = enumTypeNames.get(contextKey);
+    if (resolvedTypeName) {
+      return {
+        ...field,
+        tsType: {
+          ...field.tsType,
+          elementType: createReferenceType({
+            name: resolvedTypeName,
+            nullable: field.tsType.elementType.nullable,
+          }),
         },
       };
     }
   }
+
   return field;
 }
 
 function updateResolversResult(
   resolversResult: ExtractResolversResult,
-  generatedTypeNames: Map<string, string>,
+  params: UpdateTypeNamesParams,
 ): ExtractResolversResult {
   return {
     ...resolversResult,
     queryFields: {
       fields: resolversResult.queryFields.fields.map((field) =>
-        updateResolverField(field, generatedTypeNames, "query", null),
+        updateResolverField(field, params, "query", null),
       ),
     },
     mutationFields: {
       fields: resolversResult.mutationFields.fields.map((field) =>
-        updateResolverField(field, generatedTypeNames, "mutation", null),
+        updateResolverField(field, params, "mutation", null),
       ),
     },
     typeExtensions: resolversResult.typeExtensions.map((ext) => ({
       ...ext,
       fields: ext.fields.map((field) =>
-        updateResolverField(
-          field,
-          generatedTypeNames,
-          "field",
-          ext.targetTypeName,
-        ),
+        updateResolverField(field, params, "field", ext.targetTypeName),
       ),
     })),
   };
@@ -593,15 +636,15 @@ function updateResolversResult(
 
 function updateResolverField(
   field: GraphQLFieldDefinition,
-  generatedTypeNames: Map<string, string>,
+  params: UpdateTypeNamesParams,
   resolverType: "query" | "mutation" | "field",
   parentTypeName: string | null,
 ): GraphQLFieldDefinition {
   if (!field.args) return field;
 
-  const updatedArgs = field.args.map((arg) => {
-    if (!arg.inlineObjectProperties) return arg;
+  const { generatedTypeNames, enumTypeNames } = params;
 
+  const updatedArgs = field.args.map((arg) => {
     const context: AutoTypeNameContext = {
       kind: "resolverArg",
       resolverType,
@@ -611,17 +654,35 @@ function updateResolverField(
       fieldPath: [],
     };
     const contextKey = getContextKey(context);
-    const resolvedTypeName = generatedTypeNames.get(contextKey);
 
-    if (resolvedTypeName) {
-      return {
-        ...arg,
-        type: {
-          ...arg.type,
-          typeName: resolvedTypeName,
-        },
-      };
+    // Handle inline objects
+    if (arg.inlineObjectProperties) {
+      const resolvedTypeName = generatedTypeNames.get(contextKey);
+      if (resolvedTypeName) {
+        return {
+          ...arg,
+          type: {
+            ...arg.type,
+            typeName: resolvedTypeName,
+          },
+        };
+      }
     }
+
+    // Handle inline enums
+    if (arg.inlineEnumMembers) {
+      const resolvedTypeName = enumTypeNames.get(contextKey);
+      if (resolvedTypeName) {
+        return {
+          ...arg,
+          type: {
+            ...arg.type,
+            typeName: resolvedTypeName,
+          },
+        };
+      }
+    }
+
     return arg;
   });
 
@@ -724,21 +785,6 @@ function generateAutoEnumType(
       sourceLocation: inlineEnum.sourceLocation,
     });
 
-  const generatedFrom: GeneratedFromInfo = {
-    parentTypeName: inlineEnum.context.parentTypeName,
-    fieldPath:
-      inlineEnum.context.kind === "resolverArg" &&
-      inlineEnum.context.fieldPath.length === 0
-        ? [inlineEnum.context.argName]
-        : inlineEnum.context.fieldPath,
-    context:
-      inlineEnum.context.kind === "objectField"
-        ? "typeField"
-        : inlineEnum.context.kind === "inputField"
-          ? "inputField"
-          : "resolverArg",
-  };
-
   return {
     type: {
       name: typeName,
@@ -747,7 +793,7 @@ function generateAutoEnumType(
       enumValues,
       needsStringEnumMapping,
       sourceLocation: inlineEnum.sourceLocation,
-      generatedFrom,
+      generatedFrom: buildGeneratedFromInfo(inlineEnum.context),
       description: inlineEnum.externalEnumDescription,
     },
     diagnostics,
@@ -804,164 +850,6 @@ function buildEnumTypeNamesMap(
   };
 }
 
-function updateExtractedTypesWithEnums(
-  extractedTypes: ReadonlyArray<ExtractedTypeInfo>,
-  enumTypeNames: Map<string, string>,
-): ExtractedTypeInfo[] {
-  return extractedTypes.map((typeInfo) => {
-    const isInput = isInputTypeName(typeInfo.metadata.name);
-    return {
-      ...typeInfo,
-      fields: typeInfo.fields.map((field) =>
-        updateFieldWithEnum(
-          field,
-          enumTypeNames,
-          typeInfo.metadata.name,
-          isInput,
-        ),
-      ),
-    };
-  });
-}
-
-function updateFieldWithEnum(
-  field: FieldDefinition,
-  enumTypeNames: Map<string, string>,
-  parentTypeName: string,
-  isInput: boolean,
-): FieldDefinition {
-  if (field.tsType.kind === "inlineEnum" && field.tsType.inlineEnumMembers) {
-    const context: AutoTypeNameContext = isInput
-      ? { kind: "inputField", parentTypeName, fieldPath: [field.name] }
-      : { kind: "objectField", parentTypeName, fieldPath: [field.name] };
-    const contextKey = getContextKey(context);
-    const resolvedTypeName = enumTypeNames.get(contextKey);
-    if (resolvedTypeName) {
-      return {
-        ...field,
-        tsType: {
-          kind: "reference",
-          name: resolvedTypeName,
-          elementType: null,
-          members: null,
-          nullable: field.tsType.nullable,
-          scalarInfo: null,
-          inlineObjectProperties: null,
-          inlineEnumMembers: null,
-          externalEnumSymbol: null,
-          externalEnumDescription: null,
-          externalEnumDeprecated: null,
-        },
-      };
-    }
-  }
-
-  if (
-    field.tsType.kind === "array" &&
-    field.tsType.elementType?.kind === "inlineEnum" &&
-    field.tsType.elementType.inlineEnumMembers
-  ) {
-    const context: AutoTypeNameContext = isInput
-      ? { kind: "inputField", parentTypeName, fieldPath: [field.name] }
-      : { kind: "objectField", parentTypeName, fieldPath: [field.name] };
-    const contextKey = getContextKey(context);
-    const resolvedTypeName = enumTypeNames.get(contextKey);
-    if (resolvedTypeName) {
-      return {
-        ...field,
-        tsType: {
-          ...field.tsType,
-          elementType: {
-            kind: "reference",
-            name: resolvedTypeName,
-            elementType: null,
-            members: null,
-            nullable: field.tsType.elementType.nullable,
-            scalarInfo: null,
-            inlineObjectProperties: null,
-            inlineEnumMembers: null,
-            externalEnumSymbol: null,
-            externalEnumDescription: null,
-            externalEnumDeprecated: null,
-          },
-        },
-      };
-    }
-  }
-
-  return field;
-}
-
-function updateResolversResultWithEnums(
-  resolversResult: ExtractResolversResult,
-  enumTypeNames: Map<string, string>,
-): ExtractResolversResult {
-  return {
-    ...resolversResult,
-    queryFields: {
-      fields: resolversResult.queryFields.fields.map((field) =>
-        updateResolverFieldWithEnum(field, enumTypeNames, "query", null),
-      ),
-    },
-    mutationFields: {
-      fields: resolversResult.mutationFields.fields.map((field) =>
-        updateResolverFieldWithEnum(field, enumTypeNames, "mutation", null),
-      ),
-    },
-    typeExtensions: resolversResult.typeExtensions.map((ext) => ({
-      ...ext,
-      fields: ext.fields.map((field) =>
-        updateResolverFieldWithEnum(
-          field,
-          enumTypeNames,
-          "field",
-          ext.targetTypeName,
-        ),
-      ),
-    })),
-  };
-}
-
-function updateResolverFieldWithEnum(
-  field: GraphQLFieldDefinition,
-  enumTypeNames: Map<string, string>,
-  resolverType: "query" | "mutation" | "field",
-  parentTypeName: string | null,
-): GraphQLFieldDefinition {
-  if (!field.args) return field;
-
-  const updatedArgs = field.args.map((arg) => {
-    if (!arg.inlineEnumMembers) return arg;
-
-    const context: AutoTypeNameContext = {
-      kind: "resolverArg",
-      resolverType,
-      fieldName: field.name,
-      argName: arg.name,
-      parentTypeName,
-      fieldPath: [],
-    };
-    const contextKey = getContextKey(context);
-    const resolvedTypeName = enumTypeNames.get(contextKey);
-
-    if (resolvedTypeName) {
-      return {
-        ...arg,
-        type: {
-          ...arg.type,
-          typeName: resolvedTypeName,
-        },
-      };
-    }
-    return arg;
-  });
-
-  return {
-    ...field,
-    args: updatedArgs,
-  };
-}
-
 export function generateAutoTypes(
   input: AutoTypeGeneratorInput,
 ): AutoTypeGeneratorResult {
@@ -1013,24 +901,19 @@ export function generateAutoTypes(
     diagnostics.push(...result.diagnostics);
   }
 
-  let updatedExtractedTypes = updateExtractedTypes(
+  const updateParams: UpdateTypeNamesParams = {
+    generatedTypeNames,
+    enumTypeNames,
+  };
+
+  const updatedExtractedTypes = updateExtractedTypes(
     input.extractedTypes,
-    generatedTypeNames,
+    updateParams,
   );
 
-  updatedExtractedTypes = updateExtractedTypesWithEnums(
-    updatedExtractedTypes,
-    enumTypeNames,
-  );
-
-  let updatedResolversResult = updateResolversResult(
+  const updatedResolversResult = updateResolversResult(
     input.resolversResult,
-    generatedTypeNames,
-  );
-
-  updatedResolversResult = updateResolversResultWithEnums(
-    updatedResolversResult,
-    enumTypeNames,
+    updateParams,
   );
 
   return {
