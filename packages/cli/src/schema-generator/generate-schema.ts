@@ -59,6 +59,20 @@ export function generateSchema(
     resolversResult,
   });
 
+  const autoTypeErrors = autoTypeResult.diagnostics.filter(
+    (d) => d.severity === "error",
+  );
+  if (autoTypeErrors.length > 0) {
+    return {
+      typeDefsCode: "",
+      sdlContent: "",
+      resolversCode: "",
+      diagnostics: autoTypeResult.diagnostics,
+      hasErrors: true,
+      prunedTypes: null,
+    };
+  }
+
   const userDefinedTypes = extractedTypes.map((t) => ({
     name: t.metadata.name,
     sourceLocation: t.metadata.sourceLocation,

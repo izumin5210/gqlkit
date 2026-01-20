@@ -258,6 +258,10 @@ function convertArgsToInputValues(
     deprecated: arg.deprecated,
     defaultValue: arg.defaultValue,
     inlineObjectProperties: arg.tsType.inlineObjectProperties ?? null,
+    inlineEnumMembers: arg.tsType.inlineEnumMembers ?? null,
+    externalEnumSymbol: arg.tsType.externalEnumSymbol ?? null,
+    externalEnumDescription: arg.tsType.externalEnumDescription ?? null,
+    externalEnumDeprecated: arg.tsType.externalEnumDeprecated ?? null,
   }));
 }
 

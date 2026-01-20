@@ -1,0 +1,12 @@
+[
+  {
+    "code": "DUPLICATE_ENUM_VALUE_AFTER_CONVERSION",
+    "message": "Enum 'PostStatus' has duplicate value 'ACTIVE_USER' after conversion (from 'activeUser' and 'active_user')",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 7,
+      "column": 3
+    }
+  }
+]
