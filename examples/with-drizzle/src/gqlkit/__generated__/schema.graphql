@@ -2,6 +2,24 @@
 
 scalar DateTime
 
+"""
+Defined in: src/gqlkit/schema/post.ts
+"""
+enum CreatePostStatusInput {
+  DRAFT
+  PUBLISHED
+  ARCHIVED
+}
+
+"""
+Defined in: src/gqlkit/schema/user.ts
+"""
+enum CreateUserStatusInput {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
 type Mutation
 
 """
@@ -12,14 +30,12 @@ type Post {
   content: String
   createdAt: DateTime!
   id: String!
-  status: String!
+  status: PostStatus!
   title: String!
 }
 
 """
-Post publication status
-
-Defined in: src/gqlkit/schema/enums.ts
+Defined in: src/gqlkit/schema/post.ts
 """
 enum PostStatus {
   DRAFT
@@ -37,13 +53,11 @@ type User {
   email: String!
   id: String!
   name: String!
-  status: String!
+  status: UserStatus!
 }
 
 """
-User account status
-
-Defined in: src/gqlkit/schema/enums.ts
+Defined in: src/gqlkit/schema/user.ts
 """
 enum UserStatus {
   ACTIVE
@@ -57,7 +71,7 @@ Defined in: src/gqlkit/schema/post.ts
 input CreatePostInput {
   authorId: String!
   content: String
-  status: String
+  status: CreatePostStatusInput
   title: String!
 }
 
@@ -67,7 +81,7 @@ Defined in: src/gqlkit/schema/user.ts
 input CreateUserInput {
   email: String!
   name: String!
-  status: String
+  status: CreateUserStatusInput
 }
 
 extend type Mutation {

@@ -13,15 +13,25 @@ export function createResolvers({
   };
 }) {
   return {
+    PostStatus: {
+      DRAFT: "draft",
+      PUBLISHED: "published",
+      ARCHIVED: "archived",
+    },
     UserStatus: {
       ACTIVE: "active",
       INACTIVE: "inactive",
       SUSPENDED: "suspended",
     },
-    PostStatus: {
+    CreatePostStatusInput: {
       DRAFT: "draft",
       PUBLISHED: "published",
       ARCHIVED: "archived",
+    },
+    CreateUserStatusInput: {
+      ACTIVE: "active",
+      INACTIVE: "inactive",
+      SUSPENDED: "suspended",
     },
     DateTime: scalars.DateTime,
     Mutation: {

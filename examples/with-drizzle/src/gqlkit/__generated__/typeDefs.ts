@@ -13,6 +13,76 @@ export const typeDefs: DocumentNode = {
       },
     },
     {
+      kind: "EnumTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "CreatePostStatusInput",
+      },
+      values: [
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "DRAFT",
+          },
+        },
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "PUBLISHED",
+          },
+        },
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "ARCHIVED",
+          },
+        },
+      ],
+      description: {
+        kind: "StringValue",
+        value: "Defined in: src/gqlkit/schema/post.ts",
+        block: true,
+      },
+    },
+    {
+      kind: "EnumTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "CreateUserStatusInput",
+      },
+      values: [
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "ACTIVE",
+          },
+        },
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "INACTIVE",
+          },
+        },
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "SUSPENDED",
+          },
+        },
+      ],
+      description: {
+        kind: "StringValue",
+        value: "Defined in: src/gqlkit/schema/user.ts",
+        block: true,
+      },
+    },
+    {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
@@ -104,7 +174,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "String",
+                value: "PostStatus",
               },
             },
           },
@@ -164,8 +234,7 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value:
-          "Post publication status\n\nDefined in: src/gqlkit/schema/enums.ts",
+        value: "Defined in: src/gqlkit/schema/post.ts",
         block: true,
       },
     },
@@ -264,7 +333,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "String",
+                value: "UserStatus",
               },
             },
           },
@@ -307,7 +376,7 @@ export const typeDefs: DocumentNode = {
       ],
       description: {
         kind: "StringValue",
-        value: "User account status\n\nDefined in: src/gqlkit/schema/enums.ts",
+        value: "Defined in: src/gqlkit/schema/user.ts",
         block: true,
       },
     },
@@ -359,7 +428,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "String",
+              value: "CreatePostStatusInput",
             },
           },
         },
@@ -438,7 +507,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "String",
+              value: "CreateUserStatusInput",
             },
           },
         },

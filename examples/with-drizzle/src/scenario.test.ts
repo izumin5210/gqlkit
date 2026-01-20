@@ -42,7 +42,12 @@ describe("with-drizzle scenario tests", () => {
 
   it("mutation creates data and query retrieves it with relations", async () => {
     const createUserResult = await executeGraphQL<{
-      createUser: { id: string; name: string; status: string; createdAt: string };
+      createUser: {
+        id: string;
+        name: string;
+        status: string;
+        createdAt: string;
+      };
     }>(
       schema,
       context,
@@ -57,14 +62,19 @@ describe("with-drizzle scenario tests", () => {
       }
     `,
       {
-        input: { name: "Alice", email: "alice@example.com", status: "active" },
+        input: { name: "Alice", email: "alice@example.com", status: "ACTIVE" },
       },
     );
     expect(createUserResult.errors).toBeUndefined();
     const userId = createUserResult.data!.createUser.id;
 
     const createPostResult = await executeGraphQL<{
-      createPost: { id: string; title: string; status: string; createdAt: string };
+      createPost: {
+        id: string;
+        title: string;
+        status: string;
+        createdAt: string;
+      };
     }>(
       schema,
       context,
@@ -82,7 +92,7 @@ describe("with-drizzle scenario tests", () => {
         input: {
           title: "Hello World",
           content: "Content",
-          status: "published",
+          status: "PUBLISHED",
           authorId: userId,
         },
       },
@@ -129,12 +139,12 @@ describe("with-drizzle scenario tests", () => {
     expect(result.data?.user).toMatchObject({
       id: userId,
       name: "Alice",
-      status: "active",
+      status: "ACTIVE",
       posts: [
         {
           id: postId,
           title: "Hello World",
-          status: "published",
+          status: "PUBLISHED",
           author: { name: "Alice" },
         },
       ],
