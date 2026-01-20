@@ -13,6 +13,26 @@ export function createResolvers({
   };
 }) {
   return {
+    PostPriority: {
+      LOW: "low",
+      MEDIUM: "medium",
+      HIGH: "high",
+    },
+    UserStatus: {
+      ACTIVE: "active",
+      INACTIVE: "inactive",
+      SUSPENDED: "suspended",
+    },
+    CreatePostPriorityInput: {
+      LOW: "low",
+      MEDIUM: "medium",
+      HIGH: "high",
+    },
+    CreateUserStatusInput: {
+      ACTIVE: "active",
+      INACTIVE: "inactive",
+      SUSPENDED: "suspended",
+    },
     DateTime: scalars.DateTime,
     Mutation: {
       createPost: createPost,

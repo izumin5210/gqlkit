@@ -2,6 +2,24 @@
 
 scalar DateTime
 
+"""
+Defined in: src/gqlkit/schema/post.ts
+"""
+enum CreatePostPriorityInput {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+"""
+Defined in: src/gqlkit/schema/user.ts
+"""
+enum CreateUserStatusInput {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
 type Mutation
 
 """
@@ -12,8 +30,17 @@ type Post {
   content: String
   createdAt: DateTime!
   id: String!
-  priority: String!
+  priority: PostPriority!
   title: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/post.ts
+"""
+enum PostPriority {
+  LOW
+  MEDIUM
+  HIGH
 }
 
 type Query
@@ -26,7 +53,16 @@ type User {
   email: String!
   id: String!
   name: String!
-  status: String!
+  status: UserStatus!
+}
+
+"""
+Defined in: src/gqlkit/schema/user.ts
+"""
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
 }
 
 """
@@ -35,7 +71,7 @@ Defined in: src/gqlkit/schema/post.ts
 input CreatePostInput {
   authorId: String!
   content: String
-  priority: String
+  priority: CreatePostPriorityInput
   title: String!
 }
 
@@ -45,7 +81,7 @@ Defined in: src/gqlkit/schema/user.ts
 input CreateUserInput {
   email: String!
   name: String!
-  status: String
+  status: CreateUserStatusInput
 }
 
 extend type Mutation {
