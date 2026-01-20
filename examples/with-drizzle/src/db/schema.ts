@@ -6,12 +6,6 @@ export const userStatusEnum = pgEnum("user_status", [
   "suspended",
 ]);
 
-export const postStatusEnum = pgEnum("post_status", [
-  "draft",
-  "published",
-  "archived",
-]);
-
 export const users = pgTable("users", {
   id: uuid().primaryKey().defaultRandom(),
   name: text().notNull(),
@@ -24,7 +18,6 @@ export const posts = pgTable("posts", {
   id: uuid().primaryKey().defaultRandom(),
   title: text().notNull(),
   content: text(),
-  status: postStatusEnum().notNull().default("draft"),
   priority: text({ enum: ["low", "medium", "high"] }).notNull().default("medium"),
   authorId: uuid()
     .notNull()

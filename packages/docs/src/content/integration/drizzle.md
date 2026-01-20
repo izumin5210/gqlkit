@@ -22,31 +22,35 @@ Define your database tables with Drizzle:
 
 ```typescript
 // src/db/schema.ts
-import {
-  integer,
-  pgTable,
-  text,
-  timestamp,
- uuid,
-} from "drizzle-orm/pg-core";
+import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+
+export const userStatusEnum = pgEnum("user_status", [
+  "active",
+  "inactive",
+  "suspended",
+]);
 
 export const users = pgTable("users", {
-  id: uuid().primaryKey(),
+  id: uuid().primaryKey().defaultRandom(),
   name: text().notNull(),
   email: text().notNull().unique(),
+  status: userStatusEnum().notNull().default("active"),
   createdAt: timestamp().notNull().defaultNow(),
 });
 
 export const posts = pgTable("posts", {
-  id: uuid().primaryKey(),
+  id: uuid().primaryKey().defaultRandom(),
   title: text().notNull(),
   content: text(),
+  priority: text({ enum: ["low", "medium", "high"] }).notNull().default("medium"),
   authorId: uuid()
     .notNull()
     .references(() => users.id),
   createdAt: timestamp().notNull().defaultNow(),
 });
 ```
+
+Both `pgEnum()` and `text({ enum: [...] })` are supported for defining enum columns. gqlkit automatically generates corresponding GraphQL enum types from these definitions.
 
 ## Defining Custom Scalars
 
@@ -75,10 +79,17 @@ export type User = InferSelectModel<typeof usersTable>;
 This generates the following GraphQL schema:
 
 ```graphql
+enum UserStatus {
+  active
+  inactive
+  suspended
+}
+
 type User {
-  id: Float!
+  id: String!
   name: String!
   email: String!
+  status: UserStatus!
   createdAt: DateTime!
 }
 ```
@@ -98,14 +109,13 @@ import type { Post } from "./post.js";
 
 export type User = InferSelectModel<typeof usersTable>;
 
-// Query resolvers
 export const allUsers = defineQuery<NoArgs, User[]>(
   async (_root, _args, ctx) => {
     return ctx.db.select().from(usersTable);
   },
 );
 
-export const user = defineQuery<{ id: number }, User | null>(
+export const user = defineQuery<{ id: string }, User | null>(
   async (_root, args, ctx) => {
     const result = await ctx.db
       .select()
@@ -115,8 +125,6 @@ export const user = defineQuery<{ id: number }, User | null>(
   },
 );
 
-// Mutation resolver with inline input type using InferInsertModel
-// gqlkit auto-generates "CreateUserInput" from the field name
 export const createUser = defineMutation<
   { input: Omit<InferInsertModel<typeof usersTable>, "id" | "createdAt"> },
   User
@@ -125,7 +133,6 @@ export const createUser = defineMutation<
   return result[0]!;
 });
 
-// Field resolver for relationships
 export const posts = defineField<User, NoArgs, Post[]>(
   async (parent, _args, ctx) => {
     return ctx.db
@@ -174,6 +181,7 @@ export const { defineQuery, defineMutation, defineField } =
 See the [examples/with-drizzle](https://github.com/gqlkit/gqlkit/tree/main/examples/with-drizzle) directory for a complete working example with:
 
 - PostgreSQL tables with DateTime scalar
+- Enum types using both `pgEnum()` and `text({ enum: [...] })`
 - User and Post types with relationships
 - Query, Mutation, and Field resolvers
 

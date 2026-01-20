@@ -13,111 +13,6 @@ export const typeDefs: DocumentNode = {
       },
     },
     {
-      kind: "EnumTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "CreatePostPriorityInput",
-      },
-      values: [
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "LOW",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "MEDIUM",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "HIGH",
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value: "Defined in: src/gqlkit/schema/post.ts",
-        block: true,
-      },
-    },
-    {
-      kind: "EnumTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "CreatePostStatusInput",
-      },
-      values: [
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "DRAFT",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "PUBLISHED",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "ARCHIVED",
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value: "Defined in: src/gqlkit/schema/post.ts",
-        block: true,
-      },
-    },
-    {
-      kind: "EnumTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "CreateUserStatusInput",
-      },
-      values: [
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "ACTIVE",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "INACTIVE",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "SUSPENDED",
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value: "Defined in: src/gqlkit/schema/user.ts",
-        block: true,
-      },
-    },
-    {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
@@ -209,24 +104,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "PostPriority",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "status",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "PostStatus",
+                value: "String",
               },
             },
           },
@@ -246,76 +124,6 @@ export const typeDefs: DocumentNode = {
                 value: "String",
               },
             },
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value: "Defined in: src/gqlkit/schema/post.ts",
-        block: true,
-      },
-    },
-    {
-      kind: "EnumTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "PostPriority",
-      },
-      values: [
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "LOW",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "MEDIUM",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "HIGH",
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value: "Defined in: src/gqlkit/schema/post.ts",
-        block: true,
-      },
-    },
-    {
-      kind: "EnumTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "PostStatus",
-      },
-      values: [
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "DRAFT",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "PUBLISHED",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "ARCHIVED",
           },
         },
       ],
@@ -420,44 +228,9 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "UserStatus",
+                value: "String",
               },
             },
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value: "Defined in: src/gqlkit/schema/user.ts",
-        block: true,
-      },
-    },
-    {
-      kind: "EnumTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "UserStatus",
-      },
-      values: [
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "ACTIVE",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "INACTIVE",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "SUSPENDED",
           },
         },
       ],
@@ -515,21 +288,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "CreatePostPriorityInput",
-            },
-          },
-        },
-        {
-          kind: "InputValueDefinition",
-          name: {
-            kind: "Name",
-            value: "status",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "CreatePostStatusInput",
+              value: "String",
             },
           },
         },
@@ -608,7 +367,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "CreateUserStatusInput",
+              value: "String",
             },
           },
         },

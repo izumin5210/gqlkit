@@ -62,7 +62,7 @@ describe("with-drizzle scenario tests", () => {
       }
     `,
       {
-        input: { name: "Alice", email: "alice@example.com", status: "ACTIVE" },
+        input: { name: "Alice", email: "alice@example.com", status: "active" },
       },
     );
     expect(createUserResult.errors).toBeUndefined();
@@ -72,7 +72,6 @@ describe("with-drizzle scenario tests", () => {
       createPost: {
         id: string;
         title: string;
-        status: string;
         priority: string;
         createdAt: string;
       };
@@ -84,7 +83,6 @@ describe("with-drizzle scenario tests", () => {
         createPost(input: $input) {
           id
           title
-          status
           priority
           createdAt
         }
@@ -94,8 +92,7 @@ describe("with-drizzle scenario tests", () => {
         input: {
           title: "Hello World",
           content: "Content",
-          status: "PUBLISHED",
-          priority: "HIGH",
+          priority: "high",
           authorId: userId,
         },
       },
@@ -111,7 +108,6 @@ describe("with-drizzle scenario tests", () => {
         posts: Array<{
           id: string;
           title: string;
-          status: string;
           priority: string;
           createdAt: string;
           author: { name: string };
@@ -130,7 +126,6 @@ describe("with-drizzle scenario tests", () => {
           posts {
             id
             title
-            status
             priority
             createdAt
             author { name }
@@ -144,13 +139,12 @@ describe("with-drizzle scenario tests", () => {
     expect(result.data?.user).toMatchObject({
       id: userId,
       name: "Alice",
-      status: "ACTIVE",
+      status: "active",
       posts: [
         {
           id: postId,
           title: "Hello World",
-          status: "PUBLISHED",
-          priority: "HIGH",
+          priority: "high",
           author: { name: "Alice" },
         },
       ],
