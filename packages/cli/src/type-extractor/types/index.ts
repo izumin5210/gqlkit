@@ -25,6 +25,7 @@ export type {
   EnumMemberInfo,
   ExtractedTypeInfo,
   FieldDefinition,
+  InlineEnumMemberInfo,
   InlineObjectMember,
   InlineObjectProperty,
   InlineObjectPropertyDef,

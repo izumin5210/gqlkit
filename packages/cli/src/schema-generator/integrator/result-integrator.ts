@@ -287,7 +287,7 @@ export function integrate(
       baseTypes.push({
         name: autoType.name,
         kind: "Object",
-        fields: autoType.fields.map((f) => ({
+        fields: autoType.fields!.map((f) => ({
           name: f.name,
           type: f.type,
           description: f.description,
@@ -305,10 +305,32 @@ export function integrate(
         sourceFile: autoType.sourceLocation.file,
         directives: null,
       });
+    } else if (autoType.kind === "Enum") {
+      baseTypes.push({
+        name: autoType.name,
+        kind: "Enum",
+        fields: null,
+        unionMembers: null,
+        enumValues:
+          autoType.enumValues?.map((v) => ({
+            name: v.name,
+            originalValue: v.originalValue,
+            numericValue: null,
+            description: v.description,
+            deprecated: v.deprecated,
+          })) ?? null,
+        isNumericEnum: false,
+        needsStringEnumMapping: autoType.needsStringEnumMapping,
+        implementedInterfaces: null,
+        description: autoType.description,
+        deprecated: null,
+        sourceFile: autoType.sourceLocation.file,
+        directives: null,
+      });
     } else {
       inputTypes.push({
         name: autoType.name,
-        fields: autoType.fields.map((f) => ({
+        fields: autoType.fields!.map((f) => ({
           name: f.name,
           type: f.type,
           description: f.description,

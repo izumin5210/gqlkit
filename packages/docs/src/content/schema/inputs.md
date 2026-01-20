@@ -58,6 +58,8 @@ input CreateUserProfileInput {
 
 Nested inline objects generate types with concatenated names (e.g., `UserProfileInput.address` → `UserProfileAddressInput`).
 
+Similarly, inline string literal unions and external TypeScript enums are automatically converted to GraphQL enum types. See [Inline Enums](./enums.md#inline-enums) for details.
+
 ## @oneOf Input Objects
 
 Union types with `Input` suffix using inline object literals generate `@oneOf` input objects. Each union member must be an inline object literal with exactly one property. Property values can be scalar types, enum types, or references to Input Object types:

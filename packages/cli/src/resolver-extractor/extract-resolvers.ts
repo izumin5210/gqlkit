@@ -1,3 +1,4 @@
+import type ts from "typescript";
 import type {
   DirectiveArgumentValue,
   DirectiveInfo,
@@ -6,6 +7,7 @@ import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
 import type {
   Diagnostics,
   GraphQLFieldType,
+  InlineEnumMemberInfo,
   InlineObjectPropertyDef,
   SourceLocation,
 } from "../type-extractor/types/index.js";
@@ -18,6 +20,14 @@ export interface GraphQLInputValue {
   readonly deprecated: DeprecationInfo | null;
   readonly defaultValue: DirectiveArgumentValue | null;
   readonly inlineObjectProperties: ReadonlyArray<InlineObjectPropertyDef> | null;
+  /** Inline enum members when arg type is an inline enum (string literal union or external TypeScript enum) */
+  readonly inlineEnumMembers: ReadonlyArray<InlineEnumMemberInfo> | null;
+  /** External TypeScript enum symbol for deduplication across multiple references */
+  readonly externalEnumSymbol: ts.Symbol | null;
+  /** TSDoc description from the external enum type itself (null for string literal unions) */
+  readonly externalEnumDescription: string | null;
+  /** @deprecated tag from the external enum type itself (null for string literal unions) */
+  readonly externalEnumDeprecated: DeprecationInfo | null;
 }
 
 export interface GraphQLFieldDefinition {

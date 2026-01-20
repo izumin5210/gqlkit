@@ -4,6 +4,10 @@ import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } 
 import { isInlineObjectType } from "../../shared/inline-object-utils.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
 import {
+  type DeprecationInfo,
+  extractTsDocFromSymbol,
+} from "../../shared/tsdoc-parser.js";
+import {
   findEnumParentSymbol,
   findNonNullTypeNode,
   getNonNullableTypes,
@@ -19,6 +23,7 @@ import type {
 import { lookupScalarMapping } from "../mapper/scalar-base-type-mapper.js";
 import {
   createArrayType,
+  createInlineEnumType,
   createInlineObjectType,
   createLiteralType,
   createPrimitiveType,
@@ -26,7 +31,10 @@ import {
   createScalarType,
   createUnionType,
 } from "../types/ts-type-reference-factory.js";
-import type { TSTypeReference } from "../types/typescript.js";
+import type {
+  InlineEnumMemberInfo,
+  TSTypeReference,
+} from "../types/typescript.js";
 import type { GlobalTypeMapping } from "./type-extractor.js";
 
 export interface FieldTypeResolverContext {
@@ -131,12 +139,39 @@ function resolveFieldTypeInternal(
 
     const nonNullTypes = getNonNullableTypes(type);
 
-    // Check if all non-null types belong to the same enum (for numeric enums)
+    // Check if all non-null types belong to the same enum
     const enumParentSymbol = findEnumParentSymbol(nonNullTypes);
     if (enumParentSymbol) {
-      return createReferenceType({
-        name: enumParentSymbol.getName(),
+      const enumName = enumParentSymbol.getName();
+      // If enum is in knownTypeNames, treat as reference type
+      if (isKnownSchemaType(enumName, enumParentSymbol, ctx)) {
+        return createReferenceType({ name: enumName, nullable });
+      }
+      // External enum: extract members and treat as inline enum
+      const externalEnumResult = tryExtractExternalEnumAsInlineEnum(
+        enumParentSymbol,
+        checker,
+      );
+      if (externalEnumResult) {
+        return createInlineEnumType({
+          members: externalEnumResult.members,
+          nullable,
+          externalEnumSymbol: enumParentSymbol,
+          externalEnumDescription: externalEnumResult.description,
+          externalEnumDeprecated: externalEnumResult.deprecated,
+        });
+      }
+    }
+
+    // Check if all non-null types are string literals (inline enum)
+    const inlineEnumResult = tryExtractAsInlineEnum(nonNullTypes);
+    if (inlineEnumResult) {
+      return createInlineEnumType({
+        members: inlineEnumResult,
         nullable,
+        externalEnumSymbol: null,
+        externalEnumDescription: null,
+        externalEnumDeprecated: null,
       });
     }
 
@@ -337,6 +372,28 @@ function resolveFieldTypeInternal(
         // Note: Conflicts are handled at the pipeline level, not here
       }
 
+      // Check for external TypeScript enum (not in knownTypeNames)
+      // When a field uses an enum type directly (not as a union), handle it here
+      // Check both symbol flags and declarations since the flags may vary
+      const isEnumSymbol =
+        (resolvedSymbol.flags & ts.SymbolFlags.Enum) !== 0 ||
+        resolvedSymbol.getDeclarations()?.some(ts.isEnumDeclaration) === true;
+      if (isEnumSymbol) {
+        const externalEnumResult = tryExtractExternalEnumAsInlineEnum(
+          resolvedSymbol,
+          checker,
+        );
+        if (externalEnumResult) {
+          return createInlineEnumType({
+            members: externalEnumResult.members,
+            nullable: false,
+            externalEnumSymbol: resolvedSymbol,
+            externalEnumDescription: externalEnumResult.description,
+            externalEnumDeprecated: externalEnumResult.deprecated,
+          });
+        }
+      }
+
       // Unknown type - still return reference but it will likely cause validation error later
       return createReferenceType({ name: symbolName, nullable: false });
     }
@@ -365,6 +422,104 @@ function tryExtractAsInlineObject(
   );
 
   return createInlineObjectType(inlineProperties);
+}
+
+/**
+ * Checks if all types are string literals and extracts them as inline enum members.
+ * Returns null if any type is not a string literal.
+ */
+function tryExtractAsInlineEnum(
+  types: ReadonlyArray<ts.Type>,
+): ReadonlyArray<InlineEnumMemberInfo> | null {
+  if (types.length === 0) {
+    return null;
+  }
+
+  const members: InlineEnumMemberInfo[] = [];
+
+  for (const type of types) {
+    if (!(type.flags & ts.TypeFlags.StringLiteral)) {
+      return null;
+    }
+
+    const literalType = type as ts.StringLiteralType;
+    const value = literalType.value;
+
+    members.push({
+      value,
+      description: null,
+      deprecated: null,
+    });
+  }
+
+  return members;
+}
+
+/**
+ * Result of extracting an external TypeScript enum.
+ * Includes both member info and type-level TSDoc.
+ */
+interface ExternalEnumExtractionResult {
+  readonly members: ReadonlyArray<InlineEnumMemberInfo>;
+  /** TSDoc description from the enum type itself */
+  readonly description: string | null;
+  /** @deprecated tag from the enum type itself */
+  readonly deprecated: DeprecationInfo | null;
+}
+
+/**
+ * Extracts enum members from an external TypeScript enum symbol.
+ * Returns the member info including TSDoc description and deprecated status,
+ * as well as the enum type's own TSDoc information.
+ * Returns null if the enum declaration cannot be found or has no valid members.
+ */
+function tryExtractExternalEnumAsInlineEnum(
+  enumSymbol: ts.Symbol,
+  checker: ts.TypeChecker,
+): ExternalEnumExtractionResult | null {
+  const declarations = enumSymbol.getDeclarations();
+  if (!declarations || declarations.length === 0) {
+    return null;
+  }
+
+  const enumDeclaration = declarations.find(ts.isEnumDeclaration);
+  if (!enumDeclaration) {
+    return null;
+  }
+
+  const members: InlineEnumMemberInfo[] = [];
+
+  for (const member of enumDeclaration.members) {
+    const initializer = member.initializer;
+    if (!initializer || !ts.isStringLiteral(initializer)) {
+      continue;
+    }
+
+    const value = initializer.text;
+    const memberSymbol = checker.getSymbolAtLocation(member.name);
+    const tsdocInfo = memberSymbol
+      ? extractTsDocFromSymbol(memberSymbol, checker)
+      : { description: null, deprecated: null };
+
+    members.push({
+      value,
+      description: tsdocInfo.description,
+      deprecated: tsdocInfo.deprecated,
+    });
+  }
+
+  if (members.length === 0) {
+    return null;
+  }
+
+  // Extract TSDoc from the enum type itself
+  const enumTsDoc = extractTsDocFromSymbol(enumSymbol, checker);
+
+  return {
+    members,
+    description: enumTsDoc.description,
+    deprecated: enumTsDoc.deprecated,
+  };
 }
 
 /**

@@ -27,6 +27,10 @@ function createScalarTypeRef(
       only,
     },
     inlineObjectProperties: null,
+    inlineEnumMembers: null,
+    externalEnumSymbol: null,
+    externalEnumDescription: null,
+    externalEnumDeprecated: null,
   };
 }
 
@@ -39,6 +43,10 @@ function createArrayTypeRef(elementType: TSTypeReference): TSTypeReference {
     nullable: false,
     scalarInfo: null,
     inlineObjectProperties: null,
+    inlineEnumMembers: null,
+    externalEnumSymbol: null,
+    externalEnumDescription: null,
+    externalEnumDeprecated: null,
   };
 }
 
@@ -58,6 +66,10 @@ function createObjectTypeRef(name: string): TSTypeReference {
     nullable: false,
     scalarInfo: null,
     inlineObjectProperties: null,
+    inlineEnumMembers: null,
+    externalEnumSymbol: null,
+    externalEnumDescription: null,
+    externalEnumDeprecated: null,
   };
 }
 

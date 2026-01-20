@@ -120,6 +120,8 @@ input UserPostsFilterInput {
 }
 ```
 
+Inline string literal unions and external TypeScript enums in arguments are also automatically converted to GraphQL enum types. See [Inline Enums](./enums.md#inline-enums) for details.
+
 ## Default Values in Arguments
 
 Default values in Input Objects are applied to resolver arguments:
