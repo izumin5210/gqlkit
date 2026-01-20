@@ -102,6 +102,8 @@ type UserProfile {
 
 Nested inline objects generate types with concatenated names (e.g., `User.profile.address` → `UserProfileAddress`).
 
+Similarly, inline string literal unions and external TypeScript enums are automatically converted to GraphQL enum types. See [Inline Enums](./enums.md#inline-enums) for details.
+
 ## Implementing Interfaces
 
 Use `GqlObject` with the `implements` option to declare that a type implements interfaces:
