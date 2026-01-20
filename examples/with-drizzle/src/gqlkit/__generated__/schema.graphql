@@ -5,6 +5,15 @@ scalar DateTime
 """
 Defined in: src/gqlkit/schema/post.ts
 """
+enum CreatePostPriorityInput {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+"""
+Defined in: src/gqlkit/schema/post.ts
+"""
 enum CreatePostStatusInput {
   DRAFT
   PUBLISHED
@@ -30,8 +39,18 @@ type Post {
   content: String
   createdAt: DateTime!
   id: String!
+  priority: PostPriority!
   status: PostStatus!
   title: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/post.ts
+"""
+enum PostPriority {
+  LOW
+  MEDIUM
+  HIGH
 }
 
 """
@@ -71,6 +90,7 @@ Defined in: src/gqlkit/schema/post.ts
 input CreatePostInput {
   authorId: String!
   content: String
+  priority: CreatePostPriorityInput
   status: CreatePostStatusInput
   title: String!
 }

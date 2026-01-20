@@ -73,6 +73,7 @@ describe("with-drizzle scenario tests", () => {
         id: string;
         title: string;
         status: string;
+        priority: string;
         createdAt: string;
       };
     }>(
@@ -84,6 +85,7 @@ describe("with-drizzle scenario tests", () => {
           id
           title
           status
+          priority
           createdAt
         }
       }
@@ -93,6 +95,7 @@ describe("with-drizzle scenario tests", () => {
           title: "Hello World",
           content: "Content",
           status: "PUBLISHED",
+          priority: "HIGH",
           authorId: userId,
         },
       },
@@ -109,6 +112,7 @@ describe("with-drizzle scenario tests", () => {
           id: string;
           title: string;
           status: string;
+          priority: string;
           createdAt: string;
           author: { name: string };
         }>;
@@ -127,6 +131,7 @@ describe("with-drizzle scenario tests", () => {
             id
             title
             status
+            priority
             createdAt
             author { name }
           }
@@ -145,6 +150,7 @@ describe("with-drizzle scenario tests", () => {
           id: postId,
           title: "Hello World",
           status: "PUBLISHED",
+          priority: "HIGH",
           author: { name: "Alice" },
         },
       ],

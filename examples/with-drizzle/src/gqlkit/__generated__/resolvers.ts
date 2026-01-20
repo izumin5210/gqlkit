@@ -18,6 +18,11 @@ export function createResolvers({
       PUBLISHED: "published",
       ARCHIVED: "archived",
     },
+    PostPriority: {
+      LOW: "low",
+      MEDIUM: "medium",
+      HIGH: "high",
+    },
     UserStatus: {
       ACTIVE: "active",
       INACTIVE: "inactive",
@@ -27,6 +32,11 @@ export function createResolvers({
       DRAFT: "draft",
       PUBLISHED: "published",
       ARCHIVED: "archived",
+    },
+    CreatePostPriorityInput: {
+      LOW: "low",
+      MEDIUM: "medium",
+      HIGH: "high",
     },
     CreateUserStatusInput: {
       ACTIVE: "active",

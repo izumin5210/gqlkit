@@ -16,6 +16,41 @@ export const typeDefs: DocumentNode = {
       kind: "EnumTypeDefinition",
       name: {
         kind: "Name",
+        value: "CreatePostPriorityInput",
+      },
+      values: [
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "LOW",
+          },
+        },
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "MEDIUM",
+          },
+        },
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "HIGH",
+          },
+        },
+      ],
+      description: {
+        kind: "StringValue",
+        value: "Defined in: src/gqlkit/schema/post.ts",
+        block: true,
+      },
+    },
+    {
+      kind: "EnumTypeDefinition",
+      name: {
+        kind: "Name",
         value: "CreatePostStatusInput",
       },
       values: [
@@ -166,6 +201,23 @@ export const typeDefs: DocumentNode = {
           kind: "FieldDefinition",
           name: {
             kind: "Name",
+            value: "priority",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "PostPriority",
+              },
+            },
+          },
+        },
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
             value: "status",
           },
           type: {
@@ -194,6 +246,41 @@ export const typeDefs: DocumentNode = {
                 value: "String",
               },
             },
+          },
+        },
+      ],
+      description: {
+        kind: "StringValue",
+        value: "Defined in: src/gqlkit/schema/post.ts",
+        block: true,
+      },
+    },
+    {
+      kind: "EnumTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "PostPriority",
+      },
+      values: [
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "LOW",
+          },
+        },
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "MEDIUM",
+          },
+        },
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
+            value: "HIGH",
           },
         },
       ],
@@ -415,6 +502,20 @@ export const typeDefs: DocumentNode = {
             name: {
               kind: "Name",
               value: "String",
+            },
+          },
+        },
+        {
+          kind: "InputValueDefinition",
+          name: {
+            kind: "Name",
+            value: "priority",
+          },
+          type: {
+            kind: "NamedType",
+            name: {
+              kind: "Name",
+              value: "CreatePostPriorityInput",
             },
           },
         },
