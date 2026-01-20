@@ -62,7 +62,7 @@ describe("with-drizzle scenario tests", () => {
       }
     `,
       {
-        input: { name: "Alice", email: "alice@example.com", status: "active" },
+        input: { name: "Alice", email: "alice@example.com", status: "ACTIVE" },
       },
     );
     expect(createUserResult.errors).toBeUndefined();
@@ -92,7 +92,7 @@ describe("with-drizzle scenario tests", () => {
         input: {
           title: "Hello World",
           content: "Content",
-          priority: "high",
+          priority: "HIGH",
           authorId: userId,
         },
       },
@@ -139,12 +139,12 @@ describe("with-drizzle scenario tests", () => {
     expect(result.data?.user).toMatchObject({
       id: userId,
       name: "Alice",
-      status: "active",
+      status: "ACTIVE",
       posts: [
         {
           id: postId,
           title: "Hello World",
-          priority: "high",
+          priority: "HIGH",
           author: { name: "Alice" },
         },
       ],
