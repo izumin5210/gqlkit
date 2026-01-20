@@ -1,4 +1,6 @@
+import type ts from "typescript";
 import type {
+  InlineEnumMemberInfo,
   InlineObjectPropertyDef,
   ScalarTypeInfo,
   TSTypeReference,
@@ -20,6 +22,10 @@ function createTSTypeReference(
     nullable: false,
     scalarInfo: null,
     inlineObjectProperties: null,
+    inlineEnumMembers: null,
+    externalEnumSymbol: null,
+    externalEnumDescription: null,
+    externalEnumDeprecated: null,
     ...params.overrides,
   };
 }
@@ -100,4 +106,32 @@ export function createScalarType(
 
 export function createLiteralType(name: string): TSTypeReference {
   return createTSTypeReference({ kind: "literal", overrides: { name } });
+}
+
+interface CreateInlineEnumTypeParams {
+  readonly members: ReadonlyArray<InlineEnumMemberInfo>;
+  readonly nullable: boolean;
+  /** External TypeScript enum symbol for deduplication (null for string literal unions) */
+  readonly externalEnumSymbol: ts.Symbol | null;
+  /** TSDoc description from the external enum type itself (null for string literal unions) */
+  readonly externalEnumDescription: string | null;
+  /** @deprecated tag from the external enum type itself (null for string literal unions) */
+  readonly externalEnumDeprecated:
+    | import("../../shared/tsdoc-parser.js").DeprecationInfo
+    | null;
+}
+
+export function createInlineEnumType(
+  params: CreateInlineEnumTypeParams,
+): TSTypeReference {
+  return createTSTypeReference({
+    kind: "inlineEnum",
+    overrides: {
+      inlineEnumMembers: params.members,
+      nullable: params.nullable,
+      externalEnumSymbol: params.externalEnumSymbol,
+      externalEnumDescription: params.externalEnumDescription,
+      externalEnumDeprecated: params.externalEnumDeprecated,
+    },
+  });
 }

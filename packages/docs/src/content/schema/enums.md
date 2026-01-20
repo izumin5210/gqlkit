@@ -111,6 +111,168 @@ input UpdateUserInput {
 }
 ```
 
+## Inline Enums
+
+When you define a string literal union or reference a TypeScript enum **inline** (without exporting it from the schema directory), gqlkit automatically generates a GraphQL enum type. This follows the same pattern as [inline objects](./objects.md#inline-objects).
+
+### Inline String Literal Unions
+
+String literal unions used directly in field or argument types generate enum types automatically:
+
+```typescript
+export type User = {
+  id: string;
+  name: string;
+  /** Current account status */
+  status: "active" | "inactive" | "pendingReview";
+};
+```
+
+Generates:
+
+```graphql
+type User {
+  id: String!
+  name: String!
+  """Current account status"""
+  status: UserStatus!
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING_REVIEW
+}
+```
+
+The generated enum type name follows the convention `{ParentTypeName}{PascalCaseFieldName}`.
+
+### External TypeScript Enums
+
+TypeScript enums defined outside the schema directory are also automatically converted:
+
+```typescript
+// src/types/order.ts (outside schema directory)
+/**
+ * Order status in the system
+ */
+export enum OrderStatus {
+  /** Order is pending payment */
+  Pending = "pending",
+  /** Order is being processed */
+  Processing = "processing",
+  /** Order has been shipped */
+  Shipped = "shipped",
+}
+
+// src/gqlkit/schema/order.ts
+import { OrderStatus } from "../../types/order.js";
+
+export type Order = {
+  id: string;
+  status: OrderStatus;
+};
+```
+
+Generates:
+
+```graphql
+type Order {
+  id: String!
+  status: OrderStatus!
+}
+
+"""Order status in the system"""
+enum OrderStatus {
+  """Order is pending payment"""
+  PENDING
+  """Order is being processed"""
+  PROCESSING
+  """Order has been shipped"""
+  SHIPPED
+}
+```
+
+TSDoc comments on the enum and its values are preserved as GraphQL descriptions. The `@deprecated` tag is also supported.
+
+When the same external TypeScript enum is referenced in multiple places, gqlkit generates a single GraphQL enum type and reuses it across all references.
+
+### Inline Enum Naming Convention
+
+The naming convention for auto-generated enum types matches [inline objects](./objects.md#inline-objects):
+
+| Context | Naming Pattern | Example |
+|---------|----------------|---------|
+| Object field | `{ParentTypeName}{PascalCaseFieldName}` | `User.status` → `UserStatus` |
+| Input field | `{ParentTypeNameWithoutInputSuffix}{PascalCaseFieldName}Input` | `CreateUserInput.role` → `CreateUserRoleInput` |
+| Query/Mutation argument | `{PascalCaseFieldName}{PascalCaseArgName}Input` | `searchUsers(status: ...)` → `SearchUsersStatusInput` |
+| Field resolver argument | `{ParentTypeName}{PascalCaseFieldName}{PascalCaseArgName}Input` | `User.posts(filter: ...)` → `UserPostsFilterInput` |
+
+### Nullable Inline Enums
+
+Nullable inline enums are supported:
+
+```typescript
+export type User = {
+  id: string;
+  status: "active" | "inactive" | null;
+};
+```
+
+Generates:
+
+```graphql
+type User {
+  id: String!
+  status: UserStatus
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+}
+```
+
+### Arrays of Inline Enums
+
+Inline enums in array types are also supported:
+
+```typescript
+export type User = {
+  id: string;
+  roles: ("admin" | "editor" | "viewer")[];
+};
+```
+
+Generates:
+
+```graphql
+type User {
+  id: String!
+  roles: [UserRoles!]!
+}
+
+enum UserRoles {
+  ADMIN
+  EDITOR
+  VIEWER
+}
+```
+
+### When Enums Are NOT Auto-Generated
+
+If you export a type from the schema directory, it is treated as an explicit type declaration and not auto-generated:
+
+```typescript
+// Exported from schema - used as-is, not auto-generated
+export type UserStatus = "active" | "inactive" | "pending";
+
+export type User = {
+  id: string;
+  status: UserStatus;  // References the exported type
+};
+```
+
 ## Automatic Case Conversion
 
 gqlkit automatically converts enum values to `SCREAMING_SNAKE_CASE` format, which is the GraphQL convention:

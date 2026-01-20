@@ -1,3 +1,4 @@
+import type ts from "typescript";
 import type {
   DirectiveArgumentValue,
   DirectiveInfo,
@@ -46,7 +47,20 @@ export type TSTypeReferenceKind =
   | "union"
   | "literal"
   | "scalar"
-  | "inlineObject";
+  | "inlineObject"
+  | "inlineEnum";
+
+/**
+ * Information about an inline enum member (string literal union value).
+ */
+export interface InlineEnumMemberInfo {
+  /** Original value from TypeScript (e.g., "pendingReview") */
+  readonly value: string;
+  /** Description from TSDoc (if available) */
+  readonly description: string | null;
+  /** Deprecation info from @deprecated tag */
+  readonly deprecated: DeprecationInfo | null;
+}
 
 export interface TSTypeReference {
   readonly kind: TSTypeReferenceKind;
@@ -56,6 +70,14 @@ export interface TSTypeReference {
   readonly nullable: boolean;
   readonly scalarInfo: ScalarTypeInfo | null;
   readonly inlineObjectProperties: ReadonlyArray<InlineObjectPropertyDef> | null;
+  /** Inline enum members when kind is "inlineEnum" */
+  readonly inlineEnumMembers: ReadonlyArray<InlineEnumMemberInfo> | null;
+  /** External TypeScript enum symbol for deduplication (Requirement 5.2) */
+  readonly externalEnumSymbol: ts.Symbol | null;
+  /** TSDoc description from the external enum type itself (Requirement 6.1) */
+  readonly externalEnumDescription: string | null;
+  /** @deprecated tag from the external enum type itself (Requirement 6.3) */
+  readonly externalEnumDeprecated: DeprecationInfo | null;
 }
 
 export interface InlineObjectPropertyDef {

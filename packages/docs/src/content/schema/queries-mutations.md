@@ -175,6 +175,8 @@ input SearchUsersFilterInput {
 }
 ```
 
+Inline string literal unions and external TypeScript enums in arguments are also automatically converted to GraphQL enum types. See [Inline Enums](./enums.md#inline-enums) for details.
+
 See [Field Resolvers](./fields.md) for more details on inline object arguments.
 
 ## Attaching Directives

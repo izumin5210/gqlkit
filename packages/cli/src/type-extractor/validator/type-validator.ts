@@ -10,7 +10,7 @@ export interface ValidateTypesOptions {
   readonly types: ReadonlyArray<GraphQLTypeInfo>;
   readonly customScalarNames: ReadonlyArray<string> | null;
 }
-const PLACEHOLDER_TYPES = new Set(["__INLINE_OBJECT__"]);
+const PLACEHOLDER_TYPES = new Set(["__INLINE_OBJECT__", "__INLINE_ENUM__"]);
 
 function isOptionsObject(
   arg: ReadonlyArray<GraphQLTypeInfo> | ValidateTypesOptions,

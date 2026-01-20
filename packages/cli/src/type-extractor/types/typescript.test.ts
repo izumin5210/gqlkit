@@ -26,6 +26,10 @@ describe("TSTypeReference", () => {
               nullable: false,
               scalarInfo: null,
               inlineObjectProperties: null,
+              inlineEnumMembers: null,
+              externalEnumSymbol: null,
+              externalEnumDescription: null,
+              externalEnumDeprecated: null,
             },
             optional: false,
             description: "Street address",
@@ -35,6 +39,10 @@ describe("TSTypeReference", () => {
             sourceLocation: null,
           },
         ],
+        inlineEnumMembers: null,
+        externalEnumSymbol: null,
+        externalEnumDescription: null,
+        externalEnumDeprecated: null,
       };
 
       expect(inlineObjectRef.kind).toBe("inlineObject");
@@ -71,6 +79,10 @@ describe("TSTypeReference", () => {
                     nullable: false,
                     scalarInfo: null,
                     inlineObjectProperties: null,
+                    inlineEnumMembers: null,
+                    externalEnumSymbol: null,
+                    externalEnumDescription: null,
+                    externalEnumDeprecated: null,
                   },
                   optional: false,
                   description: null,
@@ -80,6 +92,10 @@ describe("TSTypeReference", () => {
                   sourceLocation: null,
                 },
               ],
+              inlineEnumMembers: null,
+              externalEnumSymbol: null,
+              externalEnumDescription: null,
+              externalEnumDeprecated: null,
             },
             optional: false,
             description: null,
@@ -89,6 +105,10 @@ describe("TSTypeReference", () => {
             sourceLocation: null,
           },
         ],
+        inlineEnumMembers: null,
+        externalEnumSymbol: null,
+        externalEnumDescription: null,
+        externalEnumDeprecated: null,
       };
 
       expect(nestedInlineObject.kind).toBe("inlineObject");
@@ -108,6 +128,10 @@ describe("TSTypeReference", () => {
         nullable: true,
         scalarInfo: null,
         inlineObjectProperties: [],
+        inlineEnumMembers: null,
+        externalEnumSymbol: null,
+        externalEnumDescription: null,
+        externalEnumDeprecated: null,
       };
 
       expect(nullableInlineObject.nullable).toBe(true);
@@ -127,6 +151,10 @@ describe("InlineObjectPropertyDef", () => {
         nullable: false,
         scalarInfo: null,
         inlineObjectProperties: null,
+        inlineEnumMembers: null,
+        externalEnumSymbol: null,
+        externalEnumDescription: null,
+        externalEnumDeprecated: null,
       },
       optional: true,
       description: "User profile",
@@ -172,6 +200,10 @@ describe("InlineObjectPropertyDef", () => {
           only: null,
         },
         inlineObjectProperties: null,
+        inlineEnumMembers: null,
+        externalEnumSymbol: null,
+        externalEnumDescription: null,
+        externalEnumDeprecated: null,
       },
       optional: false,
       description: null,
@@ -210,6 +242,10 @@ describe("FieldDefinition with inline object type", () => {
               nullable: true,
               scalarInfo: null,
               inlineObjectProperties: null,
+              inlineEnumMembers: null,
+              externalEnumSymbol: null,
+              externalEnumDescription: null,
+              externalEnumDeprecated: null,
             },
             optional: true,
             description: "User biography",
@@ -219,6 +255,10 @@ describe("FieldDefinition with inline object type", () => {
             sourceLocation: null,
           },
         ],
+        inlineEnumMembers: null,
+        externalEnumSymbol: null,
+        externalEnumDescription: null,
+        externalEnumDeprecated: null,
       },
       optional: false,
       description: "User profile information",
@@ -243,6 +283,10 @@ describe("Backward compatibility", () => {
       nullable: false,
       scalarInfo: null,
       inlineObjectProperties: null,
+      inlineEnumMembers: null,
+      externalEnumSymbol: null,
+      externalEnumDescription: null,
+      externalEnumDeprecated: null,
     };
     expect(primitiveRef.kind).toBe("primitive");
     expect(primitiveRef.inlineObjectProperties).toBeNull();
@@ -255,6 +299,10 @@ describe("Backward compatibility", () => {
       nullable: false,
       scalarInfo: null,
       inlineObjectProperties: null,
+      inlineEnumMembers: null,
+      externalEnumSymbol: null,
+      externalEnumDescription: null,
+      externalEnumDeprecated: null,
     };
     expect(referenceRef.kind).toBe("reference");
 
@@ -266,6 +314,10 @@ describe("Backward compatibility", () => {
       nullable: false,
       scalarInfo: null,
       inlineObjectProperties: null,
+      inlineEnumMembers: null,
+      externalEnumSymbol: null,
+      externalEnumDescription: null,
+      externalEnumDeprecated: null,
     };
     expect(arrayRef.kind).toBe("array");
 
@@ -277,6 +329,10 @@ describe("Backward compatibility", () => {
       nullable: false,
       scalarInfo: null,
       inlineObjectProperties: null,
+      inlineEnumMembers: null,
+      externalEnumSymbol: null,
+      externalEnumDescription: null,
+      externalEnumDeprecated: null,
     };
     expect(unionRef.kind).toBe("union");
 
@@ -288,6 +344,10 @@ describe("Backward compatibility", () => {
       nullable: false,
       scalarInfo: null,
       inlineObjectProperties: null,
+      inlineEnumMembers: null,
+      externalEnumSymbol: null,
+      externalEnumDescription: null,
+      externalEnumDeprecated: null,
     };
     expect(literalRef.kind).toBe("literal");
 
@@ -305,6 +365,10 @@ describe("Backward compatibility", () => {
         only: null,
       },
       inlineObjectProperties: null,
+      inlineEnumMembers: null,
+      externalEnumSymbol: null,
+      externalEnumDescription: null,
+      externalEnumDeprecated: null,
     };
     expect(scalarRef.kind).toBe("scalar");
   });
