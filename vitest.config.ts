@@ -64,6 +64,31 @@ export default defineConfig({
           include: ["src/**/*.test.ts"],
         },
       },
+      {
+        resolve: {
+          alias: {
+            graphql: graphqlPath,
+          },
+          dedupe: ["graphql"],
+        },
+        test: {
+          name: "examples",
+          root: "./examples",
+          include: ["**/*.test.ts"],
+          server: {
+            deps: {
+              inline: [
+                "graphql",
+                "@graphql-tools/utils",
+                "@graphql-tools/schema",
+                "graphql-yoga",
+                "graphql-scalars",
+                "@envelop/core",
+              ],
+            },
+          },
+        },
+      },
     ],
   },
 });
