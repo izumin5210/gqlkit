@@ -18,7 +18,9 @@ export const posts = pgTable("posts", {
   id: uuid().primaryKey().defaultRandom(),
   title: text().notNull(),
   content: text(),
-  priority: text({ enum: ["low", "medium", "high"] }).notNull().default("medium"),
+  priority: text({ enum: ["low", "medium", "high"] })
+    .notNull()
+    .default("medium"),
   authorId: uuid()
     .notNull()
     .references(() => users.id),
