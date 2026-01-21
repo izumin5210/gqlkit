@@ -11,12 +11,10 @@ export type {
   InlineUnionMemberInfo,
   InlineUnionWithContext,
 } from "./inline-union-types.js";
-export {
-  type ValidateOneOfMembersParams,
-  type ValidateUnionMembersParams,
-  type ValidateUnionResult,
-  
-  
+export type {
+  ValidateOneOfMembersParams,
+  ValidateUnionMembersParams,
+  ValidateUnionResult,
 } from "./inline-union-validator.js";
 export {
   type NameCollisionValidatorInput,
