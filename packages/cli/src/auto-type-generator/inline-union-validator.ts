@@ -86,6 +86,15 @@ function validateUnionMemberType(
     };
   }
 
+  if (memberType.kind === "literal") {
+    return {
+      code: "INLINE_UNION_ENUM_MEMBER",
+      message: `Inline union '${typeName}' contains a literal type '${memberType.name}'. GraphQL unions can only contain object types.`,
+      severity: "error",
+      location: sourceLocation,
+    };
+  }
+
   if (memberType.kind === "scalar") {
     return {
       code: "INLINE_UNION_UNRESOLVABLE_MEMBER",

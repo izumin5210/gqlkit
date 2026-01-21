@@ -1,7 +1,7 @@
 [
   {
-    "code": "INLINE_UNION_UNRESOLVABLE_MEMBER",
-    "message": "Inline union 'ContainerItem' contains a type that cannot be resolved as an object type.",
+    "code": "INLINE_UNION_ENUM_MEMBER",
+    "message": "Inline union 'ContainerItem' contains a literal type 'active'. GraphQL unions can only contain object types.",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
@@ -10,8 +10,48 @@
     }
   },
   {
-    "code": "INLINE_UNION_UNRESOLVABLE_MEMBER",
-    "message": "Inline union 'PriorityContainerPriority' contains a type that cannot be resolved as an object type.",
+    "code": "INLINE_UNION_ENUM_MEMBER",
+    "message": "Inline union 'ContainerItem' contains a literal type 'inactive'. GraphQL unions can only contain object types.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 23,
+      "column": 3
+    }
+  },
+  {
+    "code": "INLINE_UNION_ENUM_MEMBER",
+    "message": "Inline union 'ContainerItem' contains a literal type 'pending'. GraphQL unions can only contain object types.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 23,
+      "column": 3
+    }
+  },
+  {
+    "code": "INLINE_UNION_ENUM_MEMBER",
+    "message": "Inline union 'PriorityContainerPriority' contains a literal type 'Priority.LOW'. GraphQL unions can only contain object types.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 43,
+      "column": 3
+    }
+  },
+  {
+    "code": "INLINE_UNION_ENUM_MEMBER",
+    "message": "Inline union 'PriorityContainerPriority' contains a literal type 'Priority.MEDIUM'. GraphQL unions can only contain object types.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 43,
+      "column": 3
+    }
+  },
+  {
+    "code": "INLINE_UNION_ENUM_MEMBER",
+    "message": "Inline union 'PriorityContainerPriority' contains a literal type 'Priority.HIGH'. GraphQL unions can only contain object types.",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/types.ts",

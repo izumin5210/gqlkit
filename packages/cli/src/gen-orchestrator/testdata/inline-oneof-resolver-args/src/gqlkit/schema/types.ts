@@ -1,4 +1,4 @@
-import { defineQuery, defineMutation, defineField } from "../gqlkit.js";
+import { defineField, defineMutation, defineQuery } from "../gqlkit.js";
 
 export type User = {
   id: string;

@@ -102,7 +102,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Input for creating a message that can target either a user or a group.\nThis tests basic inline\n\nDefined in: src/gqlkit/schema/types.ts",
+        "value": "Input for creating a message that can target either a user or a group.\nThis tests basic inline `@oneOf` input object generation.\n\nDefined in: src/gqlkit/schema/types.ts",
         "block": true
       }
     },

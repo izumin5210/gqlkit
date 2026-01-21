@@ -1,6 +1,6 @@
 /**
  * Input for creating a message that can target either a user or a group.
- * This tests basic inline @oneOf input object generation.
+ * This tests basic inline `@oneOf` input object generation.
  */
 export type CreateMessageInput = {
   content: string;

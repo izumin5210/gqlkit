@@ -8,7 +8,7 @@ type Message {
 
 """
 Input for creating a message that can target either a user or a group.
-This tests basic inline
+This tests basic inline `@oneOf` input object generation.
 
 Defined in: src/gqlkit/schema/types.ts
 """

@@ -21,7 +21,7 @@ type User {
 input CreatePostInput {
   content: String!
   """Post target - either a user or a topic"""
-  target: String!
+  target: CreatePostTargetInput!
   title: String!
 }
 
@@ -40,7 +40,7 @@ input FindUserCriteriaIdentifierInput @oneOf {
 """Defined in: src/gqlkit/schema/types.ts"""
 input FindUserCriteriaInput {
   """Find by identifier - either ID or email"""
-  identifier: String!
+  identifier: FindUserCriteriaIdentifierInput!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
@@ -52,7 +52,7 @@ input UserPostsOptionsFilterInput @oneOf {
 """Defined in: src/gqlkit/schema/types.ts"""
 input UserPostsOptionsInput {
   """Filter by status or date"""
-  filter: String
+  filter: UserPostsOptionsFilterInput
 }
 
 extend type Mutation {
