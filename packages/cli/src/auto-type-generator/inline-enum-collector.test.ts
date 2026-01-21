@@ -358,6 +358,7 @@ describe("collectInlineEnumsFromResolvers", () => {
                   externalEnumSymbol: null,
                   externalEnumDescription: null,
                   externalEnumDeprecated: null,
+                  inlineUnionMembers: null,
                 } satisfies GraphQLInputValue,
               ],
               sourceLocation: {
@@ -429,6 +430,7 @@ describe("collectInlineEnumsFromResolvers", () => {
                   externalEnumSymbol: null,
                   externalEnumDescription: null,
                   externalEnumDeprecated: null,
+                  inlineUnionMembers: null,
                 } satisfies GraphQLInputValue,
               ],
               sourceLocation: {
@@ -502,6 +504,7 @@ describe("collectInlineEnumsFromResolvers", () => {
                     externalEnumSymbol: null,
                     externalEnumDescription: null,
                     externalEnumDeprecated: null,
+                    inlineUnionMembers: null,
                   } satisfies GraphQLInputValue,
                 ],
                 sourceLocation: {
@@ -580,6 +583,7 @@ describe("collectInlineEnumsFromResolvers", () => {
                   externalEnumSymbol: null,
                   externalEnumDescription: null,
                   externalEnumDeprecated: null,
+                  inlineUnionMembers: null,
                 } satisfies GraphQLInputValue,
               ],
               sourceLocation: {
@@ -647,6 +651,7 @@ describe("collectInlineEnumsFromResolvers", () => {
                   externalEnumSymbol: mockSymbol,
                   externalEnumDescription: null,
                   externalEnumDeprecated: null,
+                  inlineUnionMembers: null,
                 } satisfies GraphQLInputValue,
               ],
               sourceLocation: {
@@ -748,6 +753,7 @@ describe("InlineEnumWithContext type name generation", () => {
                 externalEnumSymbol: null,
                 externalEnumDescription: null,
                 externalEnumDeprecated: null,
+                inlineUnionMembers: null,
               } satisfies GraphQLInputValue,
             ],
             sourceLocation: {
@@ -816,6 +822,7 @@ describe("InlineEnumWithContext type name generation", () => {
                   externalEnumSymbol: null,
                   externalEnumDescription: null,
                   externalEnumDeprecated: null,
+                  inlineUnionMembers: null,
                 } satisfies GraphQLInputValue,
               ],
               sourceLocation: {

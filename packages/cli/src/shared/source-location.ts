@@ -25,3 +25,14 @@ export function getSourceLocationFromNode(
     column: character + 1,
   };
 }
+
+/**
+ * Returns the source location if present, otherwise creates a default location
+ * with the given source file and line/column 1.
+ */
+export function getSourceLocationOrDefault(
+  location: SourceLocation | null,
+  sourceFile: string,
+): SourceLocation {
+  return location ?? { file: sourceFile, line: 1, column: 1 };
+}

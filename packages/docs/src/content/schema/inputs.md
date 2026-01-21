@@ -91,6 +91,94 @@ input ProductInput @oneOf {
 
 Each property becomes a nullable field in the generated input type. The `@oneOf` directive ensures exactly one field is provided at runtime.
 
+### Inline @oneOf in Input Fields
+
+Union types can be used as field types within Input Objects to create nested `@oneOf` input objects. The generated type name follows the convention `{ParentTypeNameWithoutInputSuffix}{PascalCaseFieldName}Input`:
+
+```typescript
+export type CreateUserInput = {
+  name: string;
+  /**
+   * User identifier - either by ID or email
+   */
+  identifier: { id: string } | { email: string };
+};
+```
+
+Generates:
+
+```graphql
+input CreateUserInput {
+  name: String!
+  """User identifier - either by ID or email"""
+  identifier: CreateUserIdentifierInput!
+}
+
+input CreateUserIdentifierInput @oneOf {
+  email: String
+  id: String
+}
+```
+
+### Inline @oneOf in Resolver Arguments
+
+Inline unions in resolver arguments are also converted to `@oneOf` input objects:
+
+**Query/Mutation arguments** - naming convention: `{PascalCaseResolverName}{PascalCaseArgPath}Input`
+
+```typescript
+export const findUser = defineQuery<
+  {
+    criteria: {
+      identifier: { id: string } | { email: string };
+    };
+  },
+  User | null
+>(...);
+```
+
+Generates:
+
+```graphql
+input FindUserCriteriaIdentifierInput @oneOf {
+  email: String
+  id: String
+}
+
+input FindUserCriteriaInput {
+  identifier: FindUserCriteriaIdentifierInput!
+}
+
+type Query {
+  findUser(criteria: FindUserCriteriaInput!): User
+}
+```
+
+**Field resolver arguments** - naming convention: `{ParentTypeName}{PascalCaseFieldName}{PascalCaseArgPath}Input`
+
+```typescript
+export const posts = defineField<
+  User,
+  {
+    filter: { status: string } | { createdAfter: string } | null;
+  },
+  Post[]
+>(...);
+```
+
+Generates:
+
+```graphql
+input UserPostsFilterInput @oneOf {
+  createdAfter: String
+  status: String
+}
+
+type User {
+  posts(filter: UserPostsFilterInput): [Post!]!
+}
+```
+
 ## Default Values
 
 Specify default values for Input Object fields using `GqlField` with the `defaultValue` option.

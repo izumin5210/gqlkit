@@ -327,6 +327,36 @@ export function integrate(
         sourceFile: autoType.sourceLocation.file,
         directives: null,
       });
+    } else if (autoType.kind === "Union") {
+      baseTypes.push({
+        name: autoType.name,
+        kind: "Union",
+        fields: null,
+        unionMembers: autoType.unionMembers ?? [],
+        enumValues: null,
+        isNumericEnum: false,
+        needsStringEnumMapping: false,
+        implementedInterfaces: null,
+        description: autoType.description,
+        deprecated: null,
+        sourceFile: autoType.sourceLocation.file,
+        directives: null,
+      });
+    } else if (autoType.kind === "OneOfInputObject") {
+      inputTypes.push({
+        name: autoType.name,
+        fields: autoType.fields!.map((f) => ({
+          name: f.name,
+          type: f.type,
+          description: f.description,
+          deprecated: f.deprecated,
+          directives: f.directives,
+          defaultValue: f.defaultValue,
+        })),
+        sourceFile: autoType.sourceLocation.file,
+        description: autoType.description,
+        isOneOf: true,
+      });
     } else {
       inputTypes.push({
         name: autoType.name,

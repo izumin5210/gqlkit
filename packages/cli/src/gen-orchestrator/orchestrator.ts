@@ -262,6 +262,8 @@ function convertArgsToInputValues(
     externalEnumSymbol: arg.tsType.externalEnumSymbol ?? null,
     externalEnumDescription: arg.tsType.externalEnumDescription ?? null,
     externalEnumDeprecated: arg.tsType.externalEnumDeprecated ?? null,
+    inlineUnionMembers:
+      arg.tsType.kind === "union" ? (arg.tsType.members ?? null) : null,
   }));
 }
 
@@ -673,6 +675,7 @@ function generateSchemaStep(ctx: PipelineContext): {
         : null,
     enablePruning: null,
     sourceRoot: ctx.config.cwd,
+    knownTypeNames: ctx.knownTypeNames,
   });
 
   const newDiagnostics = [...ctx.diagnostics, ...schemaResult.diagnostics];

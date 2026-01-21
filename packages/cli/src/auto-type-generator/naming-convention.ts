@@ -72,6 +72,13 @@ function removeInputSuffix(typeName: string): string {
 }
 
 /**
+ * Check if a type name follows the Input type naming convention.
+ */
+export function isInputTypeName(name: string): boolean {
+  return name.endsWith("Input");
+}
+
+/**
  * Build a field context (object or input) based on the parent type name.
  */
 export function buildFieldContext(

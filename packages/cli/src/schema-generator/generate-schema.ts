@@ -28,6 +28,7 @@ export interface GenerateSchemaInput {
   readonly directiveDefinitions: ReadonlyArray<DirectiveDefinitionInfo> | null;
   readonly enablePruning: boolean | null;
   readonly sourceRoot: string | null;
+  readonly knownTypeNames: ReadonlySet<string> | null;
 }
 
 export interface GenerateSchemaResult {
@@ -52,11 +53,13 @@ export function generateSchema(
     directiveDefinitions,
     enablePruning,
     sourceRoot,
+    knownTypeNames,
   } = input;
 
   const autoTypeResult = generateAutoTypes({
     extractedTypes,
     resolversResult,
+    knownTypeNames: knownTypeNames ?? new Set(),
   });
 
   const autoTypeErrors = autoTypeResult.diagnostics.filter(

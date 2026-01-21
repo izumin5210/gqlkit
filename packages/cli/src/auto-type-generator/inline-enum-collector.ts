@@ -3,6 +3,7 @@ import type {
   ExtractResolversResult,
   GraphQLFieldDefinition,
 } from "../resolver-extractor/index.js";
+import { getSourceLocationOrDefault } from "../shared/source-location.js";
 import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
 import type {
   ExtractedTypeInfo,
@@ -14,6 +15,7 @@ import type {
 import {
   type AutoTypeNameContext,
   buildFieldContext,
+  isInputTypeName,
 } from "./naming-convention.js";
 
 /**
@@ -30,10 +32,6 @@ export interface InlineEnumWithContext {
   readonly externalEnumDescription: string | null;
   /** @deprecated tag from the external enum type itself (null for string literal unions) */
   readonly externalEnumDeprecated: DeprecationInfo | null;
-}
-
-function isInputTypeName(name: string): boolean {
-  return name.endsWith("Input");
 }
 
 /**
@@ -78,11 +76,10 @@ function collectInlineEnumsFromField(
     results.push({
       members: tsType.inlineEnumMembers,
       context: buildFieldContext(parentTypeName, fieldPath, isInput),
-      sourceLocation: field.sourceLocation ?? {
-        file: sourceFile,
-        line: 1,
-        column: 1,
-      },
+      sourceLocation: getSourceLocationOrDefault(
+        field.sourceLocation,
+        sourceFile,
+      ),
       nullable: tsType.nullable,
       externalEnumSymbol: tsType.externalEnumSymbol,
       externalEnumDescription: tsType.externalEnumDescription,
@@ -98,11 +95,10 @@ function collectInlineEnumsFromField(
     results.push({
       members: tsType.elementType.inlineEnumMembers,
       context: buildFieldContext(parentTypeName, fieldPath, isInput),
-      sourceLocation: field.sourceLocation ?? {
-        file: sourceFile,
-        line: 1,
-        column: 1,
-      },
+      sourceLocation: getSourceLocationOrDefault(
+        field.sourceLocation,
+        sourceFile,
+      ),
       nullable: tsType.elementType.nullable,
       externalEnumSymbol: tsType.elementType.externalEnumSymbol,
       externalEnumDescription: tsType.elementType.externalEnumDescription,
@@ -138,11 +134,10 @@ function collectInlineEnumsFromInlineObjectProperties(
       results.push({
         members: tsType.inlineEnumMembers,
         context: buildFieldContext(parentTypeName, propPath, isInput),
-        sourceLocation: prop.sourceLocation ?? {
-          file: sourceFile,
-          line: 1,
-          column: 1,
-        },
+        sourceLocation: getSourceLocationOrDefault(
+          prop.sourceLocation,
+          sourceFile,
+        ),
         nullable: tsType.nullable,
         externalEnumSymbol: tsType.externalEnumSymbol,
         externalEnumDescription: tsType.externalEnumDescription,
