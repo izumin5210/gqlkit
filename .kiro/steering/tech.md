@@ -72,20 +72,27 @@ Static code generation tool that analyzes TypeScript source files and produces G
     - Union types with `*Input` suffix become `@oneOf` input objects
     - `GqlInterface<T>` becomes GraphQL interface types
     - Inline object types become auto-generated named types with predictable naming conventions
+    - Inline union types in fields become auto-generated GraphQL Union or `@oneOf` Input Object types
+    - Inline string literal unions become auto-generated GraphQL enum types
 12. **Interface types**: `GqlInterface<T, { implements?: [...] }>` for GraphQL interfaces. `GqlObject<T, { implements: [...] }>` for object types implementing interfaces. Supports interface inheritance
 13. **Abstract type resolution**: `defineResolveType<TAbstract>` for union/interface `__resolveType`, `defineIsTypeOf<TObject>` for object `__isTypeOf`. Both integrate with resolver map generation
 14. **Default values**: `GqlField<T, { defaultValue: literal }>` for input field defaults. Supports primitives, arrays, objects, and enum values. Requires TypeScript literal types (not `number` but `10`)
 15. **Configuration file**: Optional `gqlkit.config.ts` with `defineConfig()` for custom scalar mappings, output paths, and lifecycle hooks (e.g., `afterAllFileWrite`)
-16. **Auto-type generation naming conventions**: Predictable naming for inline object types:
-    - Object field: `{ParentTypeName}{PascalCaseFieldName}`
-    - Input field: `{ParentTypeNameWithoutInputSuffix}{PascalCaseFieldName}Input`
-    - Query/Mutation arg: `{PascalCaseFieldName}{PascalCaseArgName}Input`
-    - Field resolver arg: `{ParentTypeName}{PascalCaseFieldName}{PascalCaseArgName}Input`
-17. **2-phase type extraction**: Separates type declaration context from field type context:
+16. **Auto-type generation naming conventions**: Predictable naming for inline types:
+    - Object field inline object: `{ParentTypeName}{PascalCaseFieldPath}`
+    - Input field inline object: `{ParentTypeNameWithoutInputSuffix}{PascalCaseFieldPath}Input`
+    - Query/Mutation arg inline object: `{PascalCaseFieldName}{PascalCaseArgName}Input`
+    - Field resolver arg inline object: `{ParentTypeName}{PascalCaseFieldName}{PascalCaseArgName}Input`
+    - Object field inline union: `{ParentTypeName}{PascalCaseFieldName}` (GraphQL Union)
+    - Input field inline union: `{ParentTypeName}{PascalCaseFieldName}Input` (GraphQL `@oneOf` Input Object)
+    - Inline string literal union: `{ParentTypeName}{PascalCaseFieldName}` (GraphQL Enum)
+17. **SCREAMING_SNAKE_CASE enum conversion**: Enum values are auto-converted to GraphQL-compliant SCREAMING_SNAKE_CASE format. Supports camelCase, PascalCase, snake_case, and kebab-case inputs. Resolver mappings are generated for value conversion between TypeScript and GraphQL representations
+18. **Automatic scalar base type mapping**: When `GqlScalar<Name, Base>` definitions are detected, all occurrences of the base type (e.g., `Date`) are automatically mapped to the corresponding scalar type (e.g., `DateTime`). Supports input-only and output-only constraints via the `only` parameter
+19. **2-phase type extraction**: Separates type declaration context from field type context:
     - Phase 1: Collect all exported type names (`knownTypeNames`)
     - Phase 2: Resolve field types using `knownTypeNames` to determine if references should be preserved or expanded
     - Key principle: In field context, only types in `knownTypeNames` are preserved as references; utility types (Omit, Pick, Simplify, etc.) are expanded to inline objects
 
 ---
 _Document standards and patterns, not every dependency_
-_Updated: 2026-01-18 - Added 2-phase type extraction pattern_
+_Updated: 2026-01-21 - Added inline union/enum auto-generation, SCREAMING_SNAKE_CASE conversion, automatic scalar mapping_
