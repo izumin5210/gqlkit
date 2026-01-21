@@ -42,6 +42,100 @@ type Query {
 }
 ```
 
+## Inline Unions
+
+When a field type is an inline union of object types, gqlkit automatically generates a GraphQL Union type. The generated type name follows the convention `{ParentTypeName}{PascalCaseFieldName}`:
+
+```typescript
+import type { User } from "./User";
+import type { Post } from "./Post";
+
+export type SearchResult = {
+  id: string;
+  /**
+   * The matched item - either a User or a Post
+   */
+  item: User | Post;
+};
+```
+
+Generates:
+
+```graphql
+type SearchResult {
+  id: String!
+  """The matched item - either a User or a Post"""
+  item: SearchResultItem!
+}
+
+union SearchResultItem = Post | User
+```
+
+### Nullable Inline Unions
+
+Inline unions can be nullable:
+
+```typescript
+export type Container = {
+  id: string;
+  result: User | Post | null;
+};
+```
+
+Generates:
+
+```graphql
+type Container {
+  id: String!
+  result: ContainerResult
+}
+
+union ContainerResult = Post | User
+```
+
+### Known Type References
+
+When union members are exported types in the schema directory (`knownTypeNames`), they are preserved as references. Unknown inline object types are automatically generated:
+
+```typescript
+import type { User } from "./User"; // known type
+
+export type Activity = {
+  actor: User | { id: string; type: string }; // User is referenced, anonymous object is generated
+};
+```
+
+Generates:
+
+```graphql
+type Activity {
+  actor: ActivityActor!
+}
+
+union ActivityActor = ActivityActorAnonymous | User
+
+type ActivityActorAnonymous {
+  id: String!
+  type: String!
+}
+```
+
+### Validation
+
+Inline unions in output context must contain only object types. The following are not allowed:
+
+- Primitive types (string, number, boolean)
+- Enum types
+- Scalar types
+
+```typescript
+// These will produce errors:
+export type Invalid = {
+  value: string | number;        // Error: primitives not allowed
+  status: User | "active";       // Error: cannot mix object and enum
+};
+```
+
 ## Union vs Enum
 
 - Use **Union** when each member is a distinct object type with different fields
