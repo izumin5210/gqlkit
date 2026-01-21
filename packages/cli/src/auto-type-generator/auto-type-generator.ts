@@ -2,7 +2,6 @@ import type ts from "typescript";
 import type {
   ExtractResolversResult,
   GraphQLFieldDefinition,
-  GraphQLInputValue,
 } from "../resolver-extractor/index.js";
 import type {
   DirectiveArgumentValue,
@@ -23,7 +22,6 @@ import {
   type InlineEnumMemberInfo,
   type InlineObjectPropertyDef,
   type SourceLocation,
-  type TSTypeReference,
 } from "../type-extractor/types/index.js";
 import {
   collectInlineEnumsFromResolvers,
@@ -44,6 +42,7 @@ import {
   type AutoTypeNameContext,
   buildFieldContext,
   generateAutoTypeName,
+  isInputTypeName,
 } from "./naming-convention.js";
 
 /**
@@ -121,10 +120,6 @@ interface InlineObjectWithContext {
   readonly context: AutoTypeNameContext;
   readonly sourceLocation: SourceLocation;
   readonly nullable: boolean;
-}
-
-function isInputTypeName(name: string): boolean {
-  return name.endsWith("Input");
 }
 
 function getContextKey(context: AutoTypeNameContext): string {
@@ -748,10 +743,7 @@ function updateResolverField(
     }
 
     // Handle inline unions (OneOf input objects)
-    const extendedArg = arg as GraphQLInputValue & {
-      inlineUnionMembers?: TSTypeReference[];
-    };
-    if (extendedArg.inlineUnionMembers) {
+    if (arg.inlineUnionMembers) {
       const resolvedTypeName = unionTypeNames.get(contextKey);
       if (resolvedTypeName) {
         return {

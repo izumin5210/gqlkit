@@ -1083,6 +1083,7 @@ describe("generateAutoTypes", () => {
                     externalEnumSymbol: null,
                     externalEnumDescription: null,
                     externalEnumDeprecated: null,
+                    inlineUnionMembers: null,
                   } satisfies GraphQLInputValue,
                 ],
                 sourceLocation: {

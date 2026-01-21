@@ -262,6 +262,8 @@ function convertArgsToInputValues(
     externalEnumSymbol: arg.tsType.externalEnumSymbol ?? null,
     externalEnumDescription: arg.tsType.externalEnumDescription ?? null,
     externalEnumDeprecated: arg.tsType.externalEnumDeprecated ?? null,
+    inlineUnionMembers:
+      arg.tsType.kind === "union" ? (arg.tsType.members ?? null) : null,
   }));
 }
 

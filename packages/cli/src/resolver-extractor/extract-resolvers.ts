@@ -10,6 +10,7 @@ import type {
   InlineEnumMemberInfo,
   InlineObjectPropertyDef,
   SourceLocation,
+  TSTypeReference,
 } from "../type-extractor/types/index.js";
 import type { AbstractResolverInfo } from "./extractor/define-api-extractor.js";
 
@@ -28,6 +29,8 @@ export interface GraphQLInputValue {
   readonly externalEnumDescription: string | null;
   /** @deprecated tag from the external enum type itself (null for string literal unions) */
   readonly externalEnumDeprecated: DeprecationInfo | null;
+  /** Inline union members when arg type is a union type (for @oneOf input objects) */
+  readonly inlineUnionMembers: ReadonlyArray<TSTypeReference> | null;
 }
 
 export interface GraphQLFieldDefinition {

@@ -1,8 +1,8 @@
 import type {
   ExtractResolversResult,
   GraphQLFieldDefinition,
-  GraphQLInputValue,
 } from "../resolver-extractor/index.js";
+import { getSourceLocationOrDefault } from "../shared/source-location.js";
 import type {
   ExtractedTypeInfo,
   FieldDefinition,
@@ -14,20 +14,16 @@ import type {
   InlineUnionMemberInfo,
   InlineUnionWithContext,
 } from "./inline-union-types.js";
+import {
+  type AutoTypeNameContext,
+  buildFieldContext,
+  isInputTypeName,
+} from "./naming-convention.js";
 
 export type {
   InlineUnionMemberInfo,
   InlineUnionWithContext,
 } from "./inline-union-types.js";
-
-import {
-  type AutoTypeNameContext,
-  buildFieldContext,
-} from "./naming-convention.js";
-
-function isInputTypeName(name: string): boolean {
-  return name.endsWith("Input");
-}
 
 function createMemberInfo(
   memberType: TSTypeReference,
@@ -78,14 +74,17 @@ export function collectInlineUnionsFromTypes(
   return results;
 }
 
-interface CollectFromFieldParams {
-  readonly field: FieldDefinition;
+interface CollectInlineUnionBaseParams {
   readonly parentTypeName: string;
   readonly parentPath: ReadonlyArray<string>;
   readonly isInput: boolean;
   readonly sourceFile: string;
   readonly knownTypeNames: ReadonlySet<string>;
   readonly results: InlineUnionWithContext[];
+}
+
+interface CollectFromFieldParams extends CollectInlineUnionBaseParams {
+  readonly field: FieldDefinition;
 }
 
 function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
@@ -109,11 +108,10 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
     results.push({
       members,
       context: buildFieldContext(parentTypeName, fieldPath, isInput),
-      sourceLocation: field.sourceLocation ?? {
-        file: sourceFile,
-        line: 1,
-        column: 1,
-      },
+      sourceLocation: getSourceLocationOrDefault(
+        field.sourceLocation,
+        sourceFile,
+      ),
       nullable: tsType.nullable,
       isInputContext: isInput,
     });
@@ -131,11 +129,10 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
     results.push({
       members,
       context: buildFieldContext(parentTypeName, fieldPath, isInput),
-      sourceLocation: field.sourceLocation ?? {
-        file: sourceFile,
-        line: 1,
-        column: 1,
-      },
+      sourceLocation: getSourceLocationOrDefault(
+        field.sourceLocation,
+        sourceFile,
+      ),
       nullable: tsType.elementType.nullable,
       isInputContext: isInput,
     });
@@ -154,14 +151,8 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
   }
 }
 
-interface CollectFromPropertiesParams {
+interface CollectFromPropertiesParams extends CollectInlineUnionBaseParams {
   readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
-  readonly parentTypeName: string;
-  readonly parentPath: ReadonlyArray<string>;
-  readonly isInput: boolean;
-  readonly sourceFile: string;
-  readonly knownTypeNames: ReadonlySet<string>;
-  readonly results: InlineUnionWithContext[];
 }
 
 function collectInlineUnionsFromInlineObjectProperties(
@@ -189,11 +180,10 @@ function collectInlineUnionsFromInlineObjectProperties(
       results.push({
         members,
         context: buildFieldContext(parentTypeName, propPath, isInput),
-        sourceLocation: prop.sourceLocation ?? {
-          file: sourceFile,
-          line: 1,
-          column: 1,
-        },
+        sourceLocation: getSourceLocationOrDefault(
+          prop.sourceLocation,
+          sourceFile,
+        ),
         nullable: tsType.nullable,
         isInputContext: isInput,
       });
@@ -279,14 +269,8 @@ function collectInlineUnionsFromResolverArgs(
   if (!field.args) return;
 
   for (const arg of field.args) {
-    const inlineUnionMembers = (
-      arg as GraphQLInputValue & {
-        inlineUnionMembers?: ReadonlyArray<TSTypeReference>;
-      }
-    ).inlineUnionMembers;
-
-    if (inlineUnionMembers) {
-      const members = inlineUnionMembers.map((m) =>
+    if (arg.inlineUnionMembers) {
+      const members = arg.inlineUnionMembers.map((m) =>
         createMemberInfo(m, knownTypeNames),
       );
 

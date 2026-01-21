@@ -683,6 +683,7 @@ describe("collectInlineUnionsFromResolvers", () => {
                   externalEnumSymbol: null,
                   externalEnumDescription: null,
                   externalEnumDeprecated: null,
+                  inlineUnionMembers: null,
                 } satisfies GraphQLInputValue,
               ],
               sourceLocation: {
@@ -750,6 +751,7 @@ describe("collectInlineUnionsFromResolvers", () => {
                   externalEnumSymbol: null,
                   externalEnumDescription: null,
                   externalEnumDeprecated: null,
+                  inlineUnionMembers: null,
                 } satisfies GraphQLInputValue,
               ],
               sourceLocation: {

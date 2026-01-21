@@ -5,6 +5,7 @@ import type {
   TSTypeReference,
 } from "../type-extractor/types/index.js";
 import type { InlineUnionMemberInfo } from "./inline-union-types.js";
+import { isInputTypeName } from "./naming-convention.js";
 
 export interface ValidateUnionResult {
   readonly valid: boolean;
@@ -286,8 +287,4 @@ function validateOneOfFieldType(
   }
 
   return null;
-}
-
-function isInputTypeName(name: string): boolean {
-  return name.endsWith("Input");
 }
