@@ -21,7 +21,7 @@
     "@types/node": "24.10.9",
     "@vitest/coverage-v8": "4.0.17",
     "graphql": "catalog:",
-    "knip": "5.81.0",
+    "knip": "5.82.0",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "4.0.17"
