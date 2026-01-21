@@ -15,7 +15,7 @@ gqlkit is a convention-driven code generator for GraphQL servers in TypeScript. 
 - **Interface type definition**: `GqlInterface` utility type for GraphQL interfaces with inheritance support via `implements`
 - **Abstract type resolution**: `defineResolveType` and `defineIsTypeOf` for runtime type resolution of unions and interfaces
 - **Default values**: Input field and argument default values via `GqlField<T, { defaultValue: ... }>`
-- **Auto-type generation**: Inline object types in fields and resolver arguments are automatically converted to named GraphQL types with predictable naming conventions
+- **Auto-type generation**: Inline types (objects, unions, string literal unions) in fields and resolver arguments are automatically converted to named GraphQL types with predictable naming conventions
 - **Multiple output formats**: Generate schema AST (DocumentNode) or SDL string, with optional schema pruning
 
 ## Target Use Cases
@@ -31,4 +31,4 @@ gqlkit provides a "kit" experience: consistent conventions paired with consisten
 
 ---
 _Focus on patterns and purpose, not exhaustive feature lists_
-_Updated: 2026-01-14 - Added abstract type resolution capability_
+_Updated: 2026-01-21 - Expanded auto-type generation scope (unions, string literal unions)_
