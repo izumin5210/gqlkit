@@ -15,8 +15,8 @@ export {
   type ValidateOneOfMembersParams,
   type ValidateUnionMembersParams,
   type ValidateUnionResult,
-  validateOneOfMembers,
-  validateUnionMembers,
+  
+  
 } from "./inline-union-validator.js";
 export {
   type NameCollisionValidatorInput,
