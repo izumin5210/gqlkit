@@ -1,0 +1,22 @@
+[
+  {
+    "code": "INLINE_UNION_PRIMITIVE_MEMBER",
+    "message": "Inline union 'ContainerData' contains primitive type 'string'. GraphQL unions can only contain object types.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 18,
+      "column": 3
+    }
+  },
+  {
+    "code": "INLINE_UNION_PRIMITIVE_MEMBER",
+    "message": "Inline union 'NumberContainerValue' contains primitive type 'number'. GraphQL unions can only contain object types.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 29,
+      "column": 3
+    }
+  }
+]

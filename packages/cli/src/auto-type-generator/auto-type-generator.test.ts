@@ -146,6 +146,7 @@ describe("generateAutoTypes", () => {
       const input: AutoTypeGeneratorInput = {
         extractedTypes,
         resolversResult: createEmptyResolversResult(),
+        knownTypeNames: new Set(),
       };
 
       const result = generateAutoTypes(input);
@@ -193,6 +194,7 @@ describe("generateAutoTypes", () => {
       const input: AutoTypeGeneratorInput = {
         extractedTypes,
         resolversResult: createEmptyResolversResult(),
+        knownTypeNames: new Set(),
       };
 
       const result = generateAutoTypes(input);
@@ -231,6 +233,7 @@ describe("generateAutoTypes", () => {
       const input: AutoTypeGeneratorInput = {
         extractedTypes,
         resolversResult: createEmptyResolversResult(),
+        knownTypeNames: new Set(),
       };
 
       const result = generateAutoTypes(input);
@@ -258,6 +261,7 @@ describe("generateAutoTypes", () => {
       const input: AutoTypeGeneratorInput = {
         extractedTypes,
         resolversResult: createEmptyResolversResult(),
+        knownTypeNames: new Set(),
       };
 
       const result = generateAutoTypes(input);
@@ -293,6 +297,7 @@ describe("generateAutoTypes", () => {
       const input: AutoTypeGeneratorInput = {
         extractedTypes,
         resolversResult: createEmptyResolversResult(),
+        knownTypeNames: new Set(),
       };
 
       const result = generateAutoTypes(input);
@@ -329,6 +334,7 @@ describe("generateAutoTypes", () => {
       const input: AutoTypeGeneratorInput = {
         extractedTypes,
         resolversResult: createEmptyResolversResult(),
+        knownTypeNames: new Set(),
       };
 
       const result = generateAutoTypes(input);
@@ -403,6 +409,7 @@ describe("generateAutoTypes", () => {
       const input: AutoTypeGeneratorInput = {
         extractedTypes: [],
         resolversResult,
+        knownTypeNames: new Set(),
       };
 
       const result = generateAutoTypes(input);
@@ -475,6 +482,7 @@ describe("generateAutoTypes", () => {
       const input: AutoTypeGeneratorInput = {
         extractedTypes: [],
         resolversResult,
+        knownTypeNames: new Set(),
       };
 
       const result = generateAutoTypes(input);
@@ -544,6 +552,7 @@ describe("generateAutoTypes", () => {
       const input: AutoTypeGeneratorInput = {
         extractedTypes: [],
         resolversResult,
+        knownTypeNames: new Set(),
       };
 
       const result = generateAutoTypes(input);
@@ -622,6 +631,7 @@ describe("generateAutoTypes", () => {
       const input: AutoTypeGeneratorInput = {
         extractedTypes: [],
         resolversResult,
+        knownTypeNames: new Set(),
       };
 
       const result = generateAutoTypes(input);
@@ -652,6 +662,7 @@ describe("generateAutoTypes", () => {
       const input: AutoTypeGeneratorInput = {
         extractedTypes,
         resolversResult: createEmptyResolversResult(),
+        knownTypeNames: new Set(),
       };
 
       const result = generateAutoTypes(input);
@@ -721,6 +732,7 @@ describe("generateAutoTypes", () => {
       const input: AutoTypeGeneratorInput = {
         extractedTypes: [],
         resolversResult,
+        knownTypeNames: new Set(),
       };
 
       const result = generateAutoTypes(input);
@@ -747,6 +759,7 @@ describe("generateAutoTypes", () => {
       const input: AutoTypeGeneratorInput = {
         extractedTypes,
         resolversResult: createEmptyResolversResult(),
+        knownTypeNames: new Set(),
       };
 
       const result = generateAutoTypes(input);
@@ -772,6 +785,7 @@ describe("generateAutoTypes", () => {
       const input: AutoTypeGeneratorInput = {
         extractedTypes,
         resolversResult: createEmptyResolversResult(),
+        knownTypeNames: new Set(),
       };
 
       const result = generateAutoTypes(input);
@@ -834,6 +848,7 @@ describe("generateAutoTypes", () => {
         const input: AutoTypeGeneratorInput = {
           extractedTypes,
           resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(),
         };
 
         const result = generateAutoTypes(input);
@@ -872,6 +887,7 @@ describe("generateAutoTypes", () => {
         const input: AutoTypeGeneratorInput = {
           extractedTypes,
           resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(),
         };
 
         const result = generateAutoTypes(input);
@@ -905,6 +921,7 @@ describe("generateAutoTypes", () => {
         const input: AutoTypeGeneratorInput = {
           extractedTypes,
           resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(),
         };
 
         const result = generateAutoTypes(input);
@@ -929,6 +946,7 @@ describe("generateAutoTypes", () => {
         const input: AutoTypeGeneratorInput = {
           extractedTypes,
           resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(),
         };
 
         const result = generateAutoTypes(input);
@@ -954,6 +972,7 @@ describe("generateAutoTypes", () => {
         const input: AutoTypeGeneratorInput = {
           extractedTypes,
           resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(),
         };
 
         const result = generateAutoTypes(input);
@@ -983,6 +1002,7 @@ describe("generateAutoTypes", () => {
         const input: AutoTypeGeneratorInput = {
           extractedTypes,
           resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(),
         };
 
         const result = generateAutoTypes(input);
@@ -1015,6 +1035,7 @@ describe("generateAutoTypes", () => {
         const input: AutoTypeGeneratorInput = {
           extractedTypes,
           resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(),
         };
 
         const result = generateAutoTypes(input);
@@ -1085,6 +1106,7 @@ describe("generateAutoTypes", () => {
         const input: AutoTypeGeneratorInput = {
           extractedTypes: [],
           resolversResult,
+          knownTypeNames: new Set(),
         };
 
         const result = generateAutoTypes(input);
@@ -1126,6 +1148,7 @@ describe("generateAutoTypes", () => {
         const input: AutoTypeGeneratorInput = {
           extractedTypes,
           resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(),
         };
 
         const result = generateAutoTypes(input);
@@ -1160,6 +1183,7 @@ describe("generateAutoTypes", () => {
         const input: AutoTypeGeneratorInput = {
           extractedTypes,
           resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(),
         };
 
         const result = generateAutoTypes(input);
@@ -1193,6 +1217,7 @@ describe("generateAutoTypes", () => {
         const input: AutoTypeGeneratorInput = {
           extractedTypes,
           resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(),
         };
 
         const result = generateAutoTypes(input);
@@ -1232,6 +1257,7 @@ describe("generateAutoTypes", () => {
         const input: AutoTypeGeneratorInput = {
           extractedTypes,
           resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(),
         };
 
         const result = generateAutoTypes(input);
@@ -1265,6 +1291,7 @@ describe("generateAutoTypes", () => {
         const input: AutoTypeGeneratorInput = {
           extractedTypes,
           resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(),
         };
 
         const result = generateAutoTypes(input);
@@ -1296,6 +1323,7 @@ describe("generateAutoTypes", () => {
         const input: AutoTypeGeneratorInput = {
           extractedTypes,
           resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(),
         };
 
         const result = generateAutoTypes(input);
@@ -1335,6 +1363,7 @@ describe("generateAutoTypes", () => {
         const input: AutoTypeGeneratorInput = {
           extractedTypes,
           resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(),
         };
 
         const result = generateAutoTypes(input);
@@ -1355,6 +1384,724 @@ describe("generateAutoTypes", () => {
         expect(statusField!.tsType.name).toBe("UserStatus");
         expect(profileField!.tsType.kind).toBe("reference");
         expect(profileField!.tsType.name).toBe("UserProfile");
+      });
+    });
+  });
+
+  describe("Inline union types (Task 4)", () => {
+    function createUnionTsType(
+      members: TSTypeReference[],
+      nullable = false,
+    ): TSTypeReference {
+      return {
+        kind: "union",
+        name: null,
+        elementType: null,
+        members,
+        nullable,
+        scalarInfo: null,
+        inlineObjectProperties: null,
+        inlineEnumMembers: null,
+        externalEnumSymbol: null,
+        externalEnumDescription: null,
+        externalEnumDeprecated: null,
+      };
+    }
+
+    function createReferenceTsType(
+      name: string,
+      nullable = false,
+    ): TSTypeReference {
+      return {
+        kind: "reference",
+        name,
+        elementType: null,
+        members: null,
+        nullable,
+        scalarInfo: null,
+        inlineObjectProperties: null,
+        inlineEnumMembers: null,
+        externalEnumSymbol: null,
+        externalEnumDescription: null,
+        externalEnumDeprecated: null,
+      };
+    }
+
+    describe("Task 4.1: AutoGeneratedType with Union and OneOfInputObject kinds", () => {
+      it("generates Union type from inline union in Object type field", () => {
+        const memberA = createReferenceTsType("TypeA");
+        const memberB = createReferenceTsType("TypeB");
+
+        const extractedTypes: ExtractedTypeInfo[] = [
+          createExtractedType("TypeA", [
+            createField("id", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("TypeB", [
+            createField("id", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("Container", [
+            createField("item", createUnionTsType([memberA, memberB])),
+          ]),
+        ];
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes,
+          resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(["TypeA", "TypeB", "Container"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const unionType = result.autoGeneratedTypes.find(
+          (t) => t.kind === "Union",
+        );
+        expect(unionType).toBeDefined();
+        expect(unionType!.name).toBe("ContainerItem");
+        expect(unionType!.unionMembers).toEqual(["TypeA", "TypeB"]);
+        expect(unionType!.fields).toBeNull();
+      });
+
+      it("generates OneOfInputObject type from inline union in Input type field", () => {
+        const memberA: TSTypeReference = createInlineObjectTsType([
+          createProperty("byId", createPrimitiveTsType("string")),
+        ]);
+        const memberB: TSTypeReference = createInlineObjectTsType([
+          createProperty("byName", createPrimitiveTsType("string")),
+        ]);
+
+        const extractedTypes: ExtractedTypeInfo[] = [
+          createExtractedType("SearchInput", [
+            createField("filter", createUnionTsType([memberA, memberB])),
+          ]),
+        ];
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes,
+          resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(["SearchInput"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const oneOfType = result.autoGeneratedTypes.find(
+          (t) => t.kind === "OneOfInputObject",
+        );
+        expect(oneOfType).toBeDefined();
+        expect(oneOfType!.name).toBe("SearchFilterInput");
+        expect(oneOfType!.fields).toHaveLength(2);
+        expect(oneOfType!.fields!.map((f) => f.name)).toEqual([
+          "byId",
+          "byName",
+        ]);
+        expect(oneOfType!.unionMembers).toBeNull();
+      });
+
+      it("sets unionMembers for Union kind and fields for OneOfInputObject kind", () => {
+        const memberA = createReferenceTsType("TypeA");
+        const memberB = createReferenceTsType("TypeB");
+
+        const extractedTypes: ExtractedTypeInfo[] = [
+          createExtractedType("TypeA", [
+            createField("id", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("TypeB", [
+            createField("id", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("Container", [
+            createField("item", createUnionTsType([memberA, memberB])),
+          ]),
+        ];
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes,
+          resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(["TypeA", "TypeB", "Container"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const unionType = result.autoGeneratedTypes.find(
+          (t) => t.kind === "Union",
+        );
+        expect(unionType!.unionMembers).not.toBeNull();
+        expect(unionType!.fields).toBeNull();
+      });
+    });
+
+    describe("Task 4.2: Inline Union naming conventions and generation logic", () => {
+      it("generates {ParentTypeName}{PascalCaseFieldName} for Object field Union", () => {
+        const memberA = createReferenceTsType("Cat");
+        const memberB = createReferenceTsType("Dog");
+
+        const extractedTypes: ExtractedTypeInfo[] = [
+          createExtractedType("Cat", [
+            createField("name", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("Dog", [
+            createField("name", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("Person", [
+            createField("favoritePet", createUnionTsType([memberA, memberB])),
+          ]),
+        ];
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes,
+          resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(["Cat", "Dog", "Person"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const unionType = result.autoGeneratedTypes.find(
+          (t) => t.kind === "Union",
+        );
+        expect(unionType!.name).toBe("PersonFavoritePet");
+      });
+
+      it("generates {ParentTypeNameWithoutInputSuffix}{PascalCaseFieldName}Input for Input field OneOf", () => {
+        const memberA: TSTypeReference = createInlineObjectTsType([
+          createProperty("byEmail", createPrimitiveTsType("string")),
+        ]);
+        const memberB: TSTypeReference = createInlineObjectTsType([
+          createProperty("byPhone", createPrimitiveTsType("string")),
+        ]);
+
+        const extractedTypes: ExtractedTypeInfo[] = [
+          createExtractedType("CreateUserInput", [
+            createField("contactInfo", createUnionTsType([memberA, memberB])),
+          ]),
+        ];
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes,
+          resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(["CreateUserInput"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const oneOfType = result.autoGeneratedTypes.find(
+          (t) => t.kind === "OneOfInputObject",
+        );
+        expect(oneOfType!.name).toBe("CreateUserContactInfoInput");
+      });
+
+      it("generates {PascalCaseFieldName}{PascalCaseArgName}Input for Query/Mutation arg OneOf", () => {
+        const memberA: TSTypeReference = createInlineObjectTsType([
+          createProperty("byId", createPrimitiveTsType("string")),
+        ]);
+        const memberB: TSTypeReference = createInlineObjectTsType([
+          createProperty("bySlug", createPrimitiveTsType("string")),
+        ]);
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              {
+                name: "findPost",
+                type: {
+                  typeName: "Post",
+                  nullable: true,
+                  list: false,
+                  listItemNullable: null,
+                },
+                args: [
+                  {
+                    name: "where",
+                    type: {
+                      typeName: "__INLINE_UNION__",
+                      nullable: false,
+                      list: false,
+                      listItemNullable: null,
+                    },
+                    description: null,
+                    deprecated: null,
+                    defaultValue: null,
+                    inlineObjectProperties: null,
+                    inlineUnionMembers: [memberA, memberB],
+                  } as GraphQLInputValue & {
+                    inlineUnionMembers: TSTypeReference[];
+                  },
+                ],
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "findPost",
+                description: null,
+                deprecated: null,
+                directives: null,
+              },
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const oneOfType = result.autoGeneratedTypes.find(
+          (t) => t.kind === "OneOfInputObject",
+        );
+        expect(oneOfType!.name).toBe("FindPostWhereInput");
+      });
+
+      it("generates {ParentTypeName}{PascalCaseFieldName}{PascalCaseArgName}Input for Field resolver arg OneOf", () => {
+        const memberA: TSTypeReference = createInlineObjectTsType([
+          createProperty("first", createPrimitiveTsType("number")),
+        ]);
+        const memberB: TSTypeReference = createInlineObjectTsType([
+          createProperty("last", createPrimitiveTsType("number")),
+        ]);
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: { fields: [] },
+          typeExtensions: [
+            {
+              targetTypeName: "User",
+              fields: [
+                {
+                  name: "posts",
+                  type: {
+                    typeName: "Post",
+                    nullable: false,
+                    list: true,
+                    listItemNullable: false,
+                  },
+                  args: [
+                    {
+                      name: "pagination",
+                      type: {
+                        typeName: "__INLINE_UNION__",
+                        nullable: true,
+                        list: false,
+                        listItemNullable: null,
+                      },
+                      description: null,
+                      deprecated: null,
+                      defaultValue: null,
+                      inlineObjectProperties: null,
+                      inlineUnionMembers: [memberA, memberB],
+                    } as GraphQLInputValue & {
+                      inlineUnionMembers: TSTypeReference[];
+                    },
+                  ],
+                  sourceLocation: {
+                    file: "src/gqlkit/schema/resolvers.ts",
+                    line: 1,
+                    column: 1,
+                  },
+                  resolverExportName: "posts",
+                  description: null,
+                  deprecated: null,
+                  directives: null,
+                },
+              ],
+            },
+          ],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const oneOfType = result.autoGeneratedTypes.find(
+          (t) => t.kind === "OneOfInputObject",
+        );
+        expect(oneOfType!.name).toBe("UserPostsPaginationInput");
+      });
+
+      it("preserves Union member order as defined in source code", () => {
+        const memberA = createReferenceTsType("Zebra");
+        const memberB = createReferenceTsType("Apple");
+        const memberC = createReferenceTsType("Mango");
+
+        const extractedTypes: ExtractedTypeInfo[] = [
+          createExtractedType("Zebra", [
+            createField("id", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("Apple", [
+            createField("id", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("Mango", [
+            createField("id", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("Container", [
+            createField("item", createUnionTsType([memberA, memberB, memberC])),
+          ]),
+        ];
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes,
+          resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(["Zebra", "Apple", "Mango", "Container"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const unionType = result.autoGeneratedTypes.find(
+          (t) => t.kind === "Union",
+        );
+        expect(unionType!.unionMembers).toEqual(["Zebra", "Apple", "Mango"]);
+      });
+
+      it("recursively generates inline object members that are not in knownTypeNames", () => {
+        const memberA = createReferenceTsType("KnownType");
+        const memberB: TSTypeReference = createInlineObjectTsType([
+          createProperty("code", createPrimitiveTsType("string")),
+          createProperty("message", createPrimitiveTsType("string")),
+        ]);
+
+        const extractedTypes: ExtractedTypeInfo[] = [
+          createExtractedType("KnownType", [
+            createField("id", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("Result", [
+            createField("data", createUnionTsType([memberA, memberB])),
+          ]),
+        ];
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes,
+          resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(["KnownType", "Result"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const unionType = result.autoGeneratedTypes.find(
+          (t) => t.kind === "Union",
+        );
+        expect(unionType).toBeDefined();
+        expect(unionType!.unionMembers).toContain("KnownType");
+
+        const inlineObjectType = result.autoGeneratedTypes.find(
+          (t) => t.kind === "Object" && t.name !== "KnownType",
+        );
+        expect(inlineObjectType).toBeDefined();
+        expect(unionType!.unionMembers).toContain(inlineObjectType!.name);
+      });
+    });
+
+    describe("Task 4.3: Collector and Validator integration", () => {
+      it("collects inline unions from types and generates AutoGeneratedTypes", () => {
+        const memberA = createReferenceTsType("TypeA");
+        const memberB = createReferenceTsType("TypeB");
+
+        const extractedTypes: ExtractedTypeInfo[] = [
+          createExtractedType("TypeA", [
+            createField("id", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("TypeB", [
+            createField("id", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("Container", [
+            createField("item", createUnionTsType([memberA, memberB])),
+          ]),
+        ];
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes,
+          resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(["TypeA", "TypeB", "Container"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        expect(result.autoGeneratedTypes.some((t) => t.kind === "Union")).toBe(
+          true,
+        );
+      });
+
+      it("collects inline unions from resolver args and generates AutoGeneratedTypes", () => {
+        const memberA: TSTypeReference = createInlineObjectTsType([
+          createProperty("byId", createPrimitiveTsType("string")),
+        ]);
+        const memberB: TSTypeReference = createInlineObjectTsType([
+          createProperty("byEmail", createPrimitiveTsType("string")),
+        ]);
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              {
+                name: "findUser",
+                type: {
+                  typeName: "User",
+                  nullable: true,
+                  list: false,
+                  listItemNullable: null,
+                },
+                args: [
+                  {
+                    name: "where",
+                    type: {
+                      typeName: "__INLINE_UNION__",
+                      nullable: false,
+                      list: false,
+                      listItemNullable: null,
+                    },
+                    description: null,
+                    deprecated: null,
+                    defaultValue: null,
+                    inlineObjectProperties: null,
+                    inlineUnionMembers: [memberA, memberB],
+                  } as GraphQLInputValue & {
+                    inlineUnionMembers: TSTypeReference[];
+                  },
+                ],
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "findUser",
+                description: null,
+                deprecated: null,
+                directives: null,
+              },
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        expect(
+          result.autoGeneratedTypes.some((t) => t.kind === "OneOfInputObject"),
+        ).toBe(true);
+      });
+
+      it("reports validation errors when Union contains primitive types", () => {
+        const memberA = createReferenceTsType("TypeA");
+        const memberB = createPrimitiveTsType("string");
+
+        const extractedTypes: ExtractedTypeInfo[] = [
+          createExtractedType("TypeA", [
+            createField("id", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("Container", [
+            createField("item", createUnionTsType([memberA, memberB])),
+          ]),
+        ];
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes,
+          resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(["TypeA", "Container"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const errorDiagnostic = result.diagnostics.find(
+          (d) => d.code === "INLINE_UNION_PRIMITIVE_MEMBER",
+        );
+        expect(errorDiagnostic).toBeDefined();
+      });
+
+      it("reports validation errors when OneOf has duplicate property names", () => {
+        const memberA: TSTypeReference = createInlineObjectTsType([
+          createProperty("query", createPrimitiveTsType("string")),
+        ]);
+        const memberB: TSTypeReference = createInlineObjectTsType([
+          createProperty("query", createPrimitiveTsType("number")),
+        ]);
+
+        const extractedTypes: ExtractedTypeInfo[] = [
+          createExtractedType("SearchInput", [
+            createField("filter", createUnionTsType([memberA, memberB])),
+          ]),
+        ];
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes,
+          resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(["SearchInput"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const errorDiagnostic = result.diagnostics.find(
+          (d) => d.code === "ONEOF_DUPLICATE_PROPERTY",
+        );
+        expect(errorDiagnostic).toBeDefined();
+      });
+
+      it("skips generation when validation fails but continues with other types", () => {
+        const validMemberA = createReferenceTsType("TypeA");
+        const validMemberB = createReferenceTsType("TypeB");
+        const invalidMemberC = createPrimitiveTsType("string");
+
+        const extractedTypes: ExtractedTypeInfo[] = [
+          createExtractedType("TypeA", [
+            createField("id", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("TypeB", [
+            createField("id", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("ValidContainer", [
+            createField(
+              "item",
+              createUnionTsType([validMemberA, validMemberB]),
+            ),
+          ]),
+          createExtractedType("InvalidContainer", [
+            createField(
+              "item",
+              createUnionTsType([validMemberA, invalidMemberC]),
+            ),
+          ]),
+        ];
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes,
+          resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set([
+            "TypeA",
+            "TypeB",
+            "ValidContainer",
+            "InvalidContainer",
+          ]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const validUnion = result.autoGeneratedTypes.find(
+          (t) => t.kind === "Union" && t.name === "ValidContainerItem",
+        );
+        expect(validUnion).toBeDefined();
+
+        expect(result.diagnostics.length).toBeGreaterThan(0);
+      });
+
+      it("updates extractedTypes with resolved Union type references", () => {
+        const memberA = createReferenceTsType("TypeA");
+        const memberB = createReferenceTsType("TypeB");
+
+        const extractedTypes: ExtractedTypeInfo[] = [
+          createExtractedType("TypeA", [
+            createField("id", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("TypeB", [
+            createField("id", createPrimitiveTsType("string")),
+          ]),
+          createExtractedType("Container", [
+            createField("item", createUnionTsType([memberA, memberB])),
+          ]),
+        ];
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes,
+          resolversResult: createEmptyResolversResult(),
+          knownTypeNames: new Set(["TypeA", "TypeB", "Container"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const updatedContainer = result.updatedExtractedTypes.find(
+          (t) => t.metadata.name === "Container",
+        );
+        expect(updatedContainer).toBeDefined();
+
+        const itemField = updatedContainer!.fields.find(
+          (f) => f.name === "item",
+        );
+        expect(itemField!.tsType.kind).toBe("reference");
+        expect(itemField!.tsType.name).toBe("ContainerItem");
+      });
+
+      it("updates resolversResult with resolved OneOf type references", () => {
+        const memberA: TSTypeReference = createInlineObjectTsType([
+          createProperty("byId", createPrimitiveTsType("string")),
+        ]);
+        const memberB: TSTypeReference = createInlineObjectTsType([
+          createProperty("byName", createPrimitiveTsType("string")),
+        ]);
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              {
+                name: "findUser",
+                type: {
+                  typeName: "User",
+                  nullable: true,
+                  list: false,
+                  listItemNullable: null,
+                },
+                args: [
+                  {
+                    name: "where",
+                    type: {
+                      typeName: "__INLINE_UNION__",
+                      nullable: false,
+                      list: false,
+                      listItemNullable: null,
+                    },
+                    description: null,
+                    deprecated: null,
+                    defaultValue: null,
+                    inlineObjectProperties: null,
+                    inlineUnionMembers: [memberA, memberB],
+                  } as GraphQLInputValue & {
+                    inlineUnionMembers: TSTypeReference[];
+                  },
+                ],
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "findUser",
+                description: null,
+                deprecated: null,
+                directives: null,
+              },
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const queryField = result.updatedResolversResult.queryFields.fields[0]!;
+        const whereArg = queryField.args![0]!;
+        expect(whereArg.type.typeName).toBe("FindUserWhereInput");
       });
     });
   });

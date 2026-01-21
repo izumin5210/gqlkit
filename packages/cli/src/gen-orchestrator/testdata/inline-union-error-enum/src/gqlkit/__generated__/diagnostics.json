@@ -1,0 +1,22 @@
+[
+  {
+    "code": "INLINE_UNION_UNRESOLVABLE_MEMBER",
+    "message": "Inline union 'ContainerItem' contains a type that cannot be resolved as an object type.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 23,
+      "column": 3
+    }
+  },
+  {
+    "code": "INLINE_UNION_UNRESOLVABLE_MEMBER",
+    "message": "Inline union 'PriorityContainerPriority' contains a type that cannot be resolved as an object type.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 43,
+      "column": 3
+    }
+  }
+]

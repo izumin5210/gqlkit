@@ -7,6 +7,17 @@ export {
   type GeneratedFromInfo,
   generateAutoTypes,
 } from "./auto-type-generator.js";
+export type {
+  InlineUnionMemberInfo,
+  InlineUnionWithContext,
+} from "./inline-union-types.js";
+export {
+  type ValidateOneOfMembersParams,
+  type ValidateUnionMembersParams,
+  type ValidateUnionResult,
+  validateOneOfMembers,
+  validateUnionMembers,
+} from "./inline-union-validator.js";
 export {
   type NameCollisionValidatorInput,
   type NameCollisionValidatorResult,
