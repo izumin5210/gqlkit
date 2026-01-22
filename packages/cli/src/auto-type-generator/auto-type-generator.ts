@@ -22,7 +22,6 @@ import {
   type InlineEnumMemberInfo,
   type InlineObjectPropertyDef,
   type SourceLocation,
-  type TSTypeReference,
 } from "../type-extractor/types/index.js";
 import {
   collectInlineEnumsFromPayloads,
@@ -135,6 +134,64 @@ interface InlineObjectWithContext {
   readonly deprecated: DeprecationInfo | null;
 }
 
+type ContextBuilderFn = (
+  nestedPath: ReadonlyArray<string>,
+) => AutoTypeNameContext;
+
+interface ExtractNestedInlineObjectsParams {
+  readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
+  readonly currentPath: ReadonlyArray<string>;
+  readonly sourceLocation: SourceLocation;
+  readonly buildContext: ContextBuilderFn;
+  readonly preserveDocumentation: boolean;
+  readonly results: InlineObjectWithContext[];
+}
+
+function extractNestedInlineObjectsRecursively(
+  params: ExtractNestedInlineObjectsParams,
+): void {
+  const {
+    properties,
+    currentPath,
+    sourceLocation,
+    buildContext,
+    preserveDocumentation,
+    results,
+  } = params;
+
+  for (const prop of properties) {
+    if (
+      prop.tsType.kind === "inlineObject" &&
+      prop.tsType.inlineObjectProperties
+    ) {
+      const nestedPath = [...currentPath, prop.name];
+      const nestedContext = buildContext(nestedPath);
+
+      results.push({
+        properties: prop.tsType.inlineObjectProperties,
+        context: nestedContext,
+        sourceLocation,
+        nullable: prop.tsType.nullable,
+        description: preserveDocumentation
+          ? prop.tsType.inlineObjectDescription
+          : null,
+        deprecated: preserveDocumentation
+          ? prop.tsType.inlineObjectDeprecated
+          : null,
+      });
+
+      extractNestedInlineObjectsRecursively({
+        properties: prop.tsType.inlineObjectProperties,
+        currentPath: nestedPath,
+        sourceLocation,
+        buildContext,
+        preserveDocumentation,
+        results,
+      });
+    }
+  }
+}
+
 function getContextKey(context: AutoTypeNameContext): string {
   switch (context.kind) {
     case "objectField":
@@ -239,95 +296,21 @@ function collectInlineObjectsFromField(
     deprecated: tsType.inlineObjectDeprecated,
   });
 
-  for (const prop of tsType.inlineObjectProperties) {
-    if (
-      prop.tsType.kind === "inlineObject" &&
-      prop.tsType.inlineObjectProperties
-    ) {
-      const nestedPath = [...fieldPath, prop.name];
-      const nestedContext: AutoTypeNameContext = isInput
-        ? {
-            kind: "inputField",
-            parentTypeName,
-            fieldPath: nestedPath,
-          }
-        : {
-            kind: "objectField",
-            parentTypeName,
-            fieldPath: nestedPath,
-          };
-
-      extractNestedInlineObjects(
-        prop.tsType,
-        nestedContext,
-        nestedPath,
-        parentTypeName,
-        isInput,
-        sourceFile,
-        prop.sourceLocation,
-        results,
-      );
-    }
-  }
-}
-
-function extractNestedInlineObjects(
-  tsType: TSTypeReference,
-  context: AutoTypeNameContext,
-  currentPath: ReadonlyArray<string>,
-  parentTypeName: string,
-  isInput: boolean,
-  sourceFile: string,
-  parentSourceLocation: SourceLocation | null,
-  results: InlineObjectWithContext[],
-): void {
-  if (!tsType.inlineObjectProperties) {
-    return;
-  }
-
-  results.push({
+  extractNestedInlineObjectsRecursively({
     properties: tsType.inlineObjectProperties,
-    context,
-    sourceLocation: parentSourceLocation ?? {
+    currentPath: fieldPath,
+    sourceLocation: field.sourceLocation ?? {
       file: sourceFile,
       line: 1,
       column: 1,
     },
-    nullable: tsType.nullable,
-    description: tsType.inlineObjectDescription,
-    deprecated: tsType.inlineObjectDeprecated,
+    buildContext: (nestedPath) =>
+      isInput
+        ? { kind: "inputField", parentTypeName, fieldPath: nestedPath }
+        : { kind: "objectField", parentTypeName, fieldPath: nestedPath },
+    preserveDocumentation: true,
+    results,
   });
-
-  for (const prop of tsType.inlineObjectProperties) {
-    if (
-      prop.tsType.kind === "inlineObject" &&
-      prop.tsType.inlineObjectProperties
-    ) {
-      const nestedPath = [...currentPath, prop.name];
-      const nestedContext: AutoTypeNameContext = isInput
-        ? {
-            kind: "inputField",
-            parentTypeName,
-            fieldPath: nestedPath,
-          }
-        : {
-            kind: "objectField",
-            parentTypeName,
-            fieldPath: nestedPath,
-          };
-
-      extractNestedInlineObjects(
-        prop.tsType,
-        nestedContext,
-        nestedPath,
-        parentTypeName,
-        isInput,
-        sourceFile,
-        prop.sourceLocation,
-        results,
-      );
-    }
-  }
 }
 
 function collectInlineObjectsFromResolvers(
@@ -379,64 +362,21 @@ function collectInlineObjectsFromResolverArgs(
       deprecated: null,
     });
 
-    extractNestedInlineObjectsFromArg(
-      arg.inlineObjectProperties,
-      resolverType,
-      field.name,
-      arg.name,
-      parentTypeName,
-      [],
-      field.sourceLocation,
-      results,
-    );
-  }
-}
-
-function extractNestedInlineObjectsFromArg(
-  properties: ReadonlyArray<InlineObjectPropertyDef>,
-  resolverType: "query" | "mutation" | "field",
-  fieldName: string,
-  argName: string,
-  parentTypeName: string | null,
-  currentPath: ReadonlyArray<string>,
-  sourceLocation: SourceLocation,
-  results: InlineObjectWithContext[],
-): void {
-  for (const prop of properties) {
-    if (
-      prop.tsType.kind === "inlineObject" &&
-      prop.tsType.inlineObjectProperties
-    ) {
-      const nestedPath = [...currentPath, prop.name];
-      const nestedContext: AutoTypeNameContext = {
+    extractNestedInlineObjectsRecursively({
+      properties: arg.inlineObjectProperties,
+      currentPath: [],
+      sourceLocation: field.sourceLocation,
+      buildContext: (nestedPath) => ({
         kind: "resolverArg",
         resolverType,
-        fieldName,
-        argName,
+        fieldName: field.name,
+        argName: arg.name,
         parentTypeName,
         fieldPath: nestedPath,
-      };
-
-      results.push({
-        properties: prop.tsType.inlineObjectProperties,
-        context: nestedContext,
-        sourceLocation,
-        nullable: prop.tsType.nullable,
-        description: null,
-        deprecated: null,
-      });
-
-      extractNestedInlineObjectsFromArg(
-        prop.tsType.inlineObjectProperties,
-        resolverType,
-        fieldName,
-        argName,
-        parentTypeName,
-        nestedPath,
-        sourceLocation,
-        results,
-      );
-    }
+      }),
+      preserveDocumentation: false,
+      results,
+    });
   }
 }
 
@@ -485,60 +425,20 @@ function collectInlinePayloadFromReturnType(
     deprecated: field.returnTypeInlineObjectDeprecated,
   });
 
-  extractNestedInlineObjectsFromPayload(
-    field.returnTypeInlineObjectProperties,
-    resolverType,
-    field.name,
-    parentTypeName,
-    [],
-    field.sourceLocation,
+  extractNestedInlineObjectsRecursively({
+    properties: field.returnTypeInlineObjectProperties,
+    currentPath: [],
+    sourceLocation: field.sourceLocation,
+    buildContext: (nestedPath) => ({
+      kind: "resolverPayload",
+      resolverType,
+      fieldName: field.name,
+      parentTypeName,
+      fieldPath: nestedPath,
+    }),
+    preserveDocumentation: true,
     results,
-  );
-}
-
-function extractNestedInlineObjectsFromPayload(
-  properties: ReadonlyArray<InlineObjectPropertyDef>,
-  resolverType: "query" | "mutation" | "field",
-  fieldName: string,
-  parentTypeName: string | null,
-  currentPath: ReadonlyArray<string>,
-  sourceLocation: SourceLocation,
-  results: InlineObjectWithContext[],
-): void {
-  for (const prop of properties) {
-    if (
-      prop.tsType.kind === "inlineObject" &&
-      prop.tsType.inlineObjectProperties
-    ) {
-      const nestedPath = [...currentPath, prop.name];
-      const nestedContext: AutoTypeNameContext = {
-        kind: "resolverPayload",
-        resolverType,
-        fieldName,
-        parentTypeName,
-        fieldPath: nestedPath,
-      };
-
-      results.push({
-        properties: prop.tsType.inlineObjectProperties,
-        context: nestedContext,
-        sourceLocation,
-        nullable: prop.tsType.nullable,
-        description: prop.tsType.inlineObjectDescription,
-        deprecated: prop.tsType.inlineObjectDeprecated,
-      });
-
-      extractNestedInlineObjectsFromPayload(
-        prop.tsType.inlineObjectProperties,
-        resolverType,
-        fieldName,
-        parentTypeName,
-        nestedPath,
-        sourceLocation,
-        results,
-      );
-    }
-  }
+  });
 }
 
 interface GenerateAutoTypeResult {
@@ -1124,6 +1024,145 @@ interface ProcessInlineUnionsResult {
   readonly diagnostics: Diagnostic[];
 }
 
+interface ProcessOneOfInputObjectsParams {
+  readonly inlineUnions: ReadonlyArray<InlineUnionWithContext>;
+  readonly knownTypeNames: ReadonlySet<string>;
+  readonly typeMap: ReadonlyMap<string, ExtractedTypeInfo>;
+  readonly unionTypeNames: Map<string, string>;
+}
+
+function processOneOfInputObjects(
+  params: ProcessOneOfInputObjectsParams,
+): ProcessInlineUnionsResult {
+  const { inlineUnions, knownTypeNames, typeMap, unionTypeNames } = params;
+  const types: AutoGeneratedType[] = [];
+  const diagnostics: Diagnostic[] = [];
+
+  for (const inlineUnion of inlineUnions) {
+    const contextKey = getContextKey(inlineUnion.context);
+    const typeName = generateAutoTypeName(inlineUnion.context);
+
+    const validationResult = validateOneOfMembers({
+      members: inlineUnion.members,
+      typeName,
+      sourceLocation: inlineUnion.sourceLocation,
+      typeMap,
+    });
+
+    diagnostics.push(...validationResult.diagnostics);
+
+    if (!validationResult.valid) {
+      continue;
+    }
+
+    const fields = generateOneOfFields({
+      members: inlineUnion.members,
+      knownTypeNames,
+    });
+
+    types.push({
+      name: typeName,
+      kind: "OneOfInputObject",
+      fields,
+      enumValues: null,
+      unionMembers: null,
+      needsStringEnumMapping: false,
+      sourceLocation: inlineUnion.sourceLocation,
+      generatedFrom: buildGeneratedFromInfo(inlineUnion.context),
+      description: null,
+    });
+
+    unionTypeNames.set(contextKey, typeName);
+  }
+
+  return { types, diagnostics };
+}
+
+interface ProcessUnionTypesParams {
+  readonly inlineUnions: ReadonlyArray<InlineUnionWithContext>;
+  readonly knownTypeNames: ReadonlySet<string>;
+  readonly generatedTypeNames: Map<string, string>;
+  readonly enumTypeNames: Map<string, string>;
+  readonly unionTypeNames: Map<string, string>;
+  readonly typeMap: ReadonlyMap<string, ExtractedTypeInfo>;
+}
+
+function processUnionTypes(
+  params: ProcessUnionTypesParams,
+): ProcessInlineUnionsResult {
+  const {
+    inlineUnions,
+    knownTypeNames,
+    generatedTypeNames,
+    enumTypeNames,
+    unionTypeNames,
+    typeMap,
+  } = params;
+  const types: AutoGeneratedType[] = [];
+  const diagnostics: Diagnostic[] = [];
+  const generatedTypenameTypes = new Set<string>();
+
+  for (const inlineUnion of inlineUnions) {
+    const contextKey = getContextKey(inlineUnion.context);
+    const typeName = generateAutoTypeName(inlineUnion.context);
+
+    const validationResult = validateUnionMembers({
+      members: inlineUnion.members,
+      typeName,
+      sourceLocation: inlineUnion.sourceLocation,
+      typeMap,
+    });
+
+    diagnostics.push(...validationResult.diagnostics);
+
+    if (!validationResult.valid) {
+      continue;
+    }
+
+    if (inlineUnion.context.kind === "resolverPayload") {
+      const typenameValidationResult = validateUnionMemberTypenames({
+        members: inlineUnion.members,
+        unionTypeName: typeName,
+        sourceLocation: inlineUnion.sourceLocation,
+      });
+
+      diagnostics.push(...typenameValidationResult.diagnostics);
+
+      if (!typenameValidationResult.valid) {
+        continue;
+      }
+    }
+
+    const memberNames = resolveMemberNames({
+      members: inlineUnion.members,
+      knownTypeNames,
+      generatedTypeNames,
+      enumTypeNames,
+      parentContext: inlineUnion.context,
+      unionTypeNames,
+      types,
+      diagnostics,
+      generatedTypenameTypes,
+    });
+
+    types.push({
+      name: typeName,
+      kind: "Union",
+      fields: null,
+      enumValues: null,
+      unionMembers: memberNames,
+      needsStringEnumMapping: false,
+      sourceLocation: inlineUnion.sourceLocation,
+      generatedFrom: buildGeneratedFromInfo(inlineUnion.context),
+      description: null,
+    });
+
+    unionTypeNames.set(contextKey, typeName);
+  }
+
+  return { types, diagnostics };
+}
+
 function processInlineUnions(
   params: ProcessInlineUnionsParams,
 ): ProcessInlineUnionsResult {
@@ -1135,130 +1174,40 @@ function processInlineUnions(
     unionTypeNames,
     extractedTypes,
   } = params;
-  const types: AutoGeneratedType[] = [];
-  const diagnostics: Diagnostic[] = [];
-  const generatedTypenameTypes = new Set<string>();
 
   const typeMap = new Map<string, ExtractedTypeInfo>();
   for (const typeInfo of extractedTypes) {
     typeMap.set(typeInfo.metadata.name, typeInfo);
   }
 
-  for (const inlineUnion of inlineUnions) {
-    const contextKey = getContextKey(inlineUnion.context);
-    const typeName = generateAutoTypeName(inlineUnion.context);
-    const isInputContext = inlineUnion.isInputContext;
+  const inputUnions = inlineUnions.filter((u) => u.isInputContext);
+  const outputUnions = inlineUnions.filter((u) => !u.isInputContext);
 
-    if (isInputContext) {
-      // OneOf Input Object
-      const validationResult = validateOneOfMembers({
-        members: inlineUnion.members,
-        typeName,
-        sourceLocation: inlineUnion.sourceLocation,
-        typeMap,
-      });
+  const oneOfResult = processOneOfInputObjects({
+    inlineUnions: inputUnions,
+    knownTypeNames,
+    typeMap,
+    unionTypeNames,
+  });
 
-      diagnostics.push(...validationResult.diagnostics);
+  const unionResult = processUnionTypes({
+    inlineUnions: outputUnions,
+    knownTypeNames,
+    generatedTypeNames,
+    enumTypeNames,
+    unionTypeNames,
+    typeMap,
+  });
 
-      if (!validationResult.valid) {
-        continue;
-      }
-
-      const fields = generateOneOfFields({
-        members: inlineUnion.members,
-        knownTypeNames,
-        generatedTypeNames,
-        enumTypeNames,
-        parentContext: inlineUnion.context,
-        unionTypeNames,
-        types,
-        diagnostics,
-      });
-
-      types.push({
-        name: typeName,
-        kind: "OneOfInputObject",
-        fields,
-        enumValues: null,
-        unionMembers: null,
-        needsStringEnumMapping: false,
-        sourceLocation: inlineUnion.sourceLocation,
-        generatedFrom: buildGeneratedFromInfo(inlineUnion.context),
-        description: null,
-      });
-
-      unionTypeNames.set(contextKey, typeName);
-    } else {
-      // Union type
-      const validationResult = validateUnionMembers({
-        members: inlineUnion.members,
-        typeName,
-        sourceLocation: inlineUnion.sourceLocation,
-        typeMap,
-      });
-
-      diagnostics.push(...validationResult.diagnostics);
-
-      if (!validationResult.valid) {
-        continue;
-      }
-
-      // Validate __typename property on inline union members for payload unions (Requirements 4.1-4.3)
-      // Only payload unions require __typename because they use it for type name resolution
-      if (inlineUnion.context.kind === "resolverPayload") {
-        const typenameValidationResult = validateUnionMemberTypenames({
-          members: inlineUnion.members,
-          unionTypeName: typeName,
-          sourceLocation: inlineUnion.sourceLocation,
-        });
-
-        diagnostics.push(...typenameValidationResult.diagnostics);
-
-        if (!typenameValidationResult.valid) {
-          continue;
-        }
-      }
-
-      const memberNames = resolveMemberNames({
-        members: inlineUnion.members,
-        knownTypeNames,
-        generatedTypeNames,
-        enumTypeNames,
-        parentContext: inlineUnion.context,
-        unionTypeNames,
-        types,
-        diagnostics,
-        generatedTypenameTypes,
-      });
-
-      types.push({
-        name: typeName,
-        kind: "Union",
-        fields: null,
-        enumValues: null,
-        unionMembers: memberNames,
-        needsStringEnumMapping: false,
-        sourceLocation: inlineUnion.sourceLocation,
-        generatedFrom: buildGeneratedFromInfo(inlineUnion.context),
-        description: null,
-      });
-
-      unionTypeNames.set(contextKey, typeName);
-    }
-  }
-
-  return { types, diagnostics };
+  return {
+    types: [...oneOfResult.types, ...unionResult.types],
+    diagnostics: [...oneOfResult.diagnostics, ...unionResult.diagnostics],
+  };
 }
 
 interface GenerateOneOfFieldsParams {
   readonly members: ReadonlyArray<InlineUnionMemberInfo>;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly generatedTypeNames: Map<string, string>;
-  readonly enumTypeNames: Map<string, string>;
-  readonly parentContext: AutoTypeNameContext;
-  readonly unionTypeNames: Map<string, string>;
-  readonly types: AutoGeneratedType[];
-  readonly diagnostics: Diagnostic[];
 }
 
 function generateOneOfFields(

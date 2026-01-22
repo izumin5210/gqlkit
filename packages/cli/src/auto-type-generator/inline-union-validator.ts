@@ -23,11 +23,10 @@ export interface ValidateUnionMembersParams {
  * Validates that all union members are object types.
  * GraphQL unions cannot contain primitives, enums, or scalars.
  *
- * Task 3.1: GraphQL Union type validation
- * - All union members must be object types
- * - Reports INLINE_UNION_PRIMITIVE_MEMBER for primitive types
- * - Reports INLINE_UNION_ENUM_MEMBER for enum types
- * - Reports INLINE_UNION_UNRESOLVABLE_MEMBER for unresolvable types
+ * Reports:
+ * - INLINE_UNION_PRIMITIVE_MEMBER for primitive types
+ * - INLINE_UNION_ENUM_MEMBER for enum types
+ * - INLINE_UNION_UNRESOLVABLE_MEMBER for unresolvable types
  */
 export function validateUnionMembers(
   params: ValidateUnionMembersParams,
@@ -156,11 +155,11 @@ export interface ValidateOneOfMembersParams {
  * - Property names must be unique across all members
  * - Field types must be scalar, enum, or input object
  *
- * Task 3.2: @oneOf Input Object validation
- * - Reports ONEOF_EMPTY_OBJECT for empty object members
- * - Reports ONEOF_MULTIPLE_PROPERTIES for members with multiple properties
- * - Reports ONEOF_DUPLICATE_PROPERTY for duplicate property names
- * - Reports ONEOF_INVALID_FIELD_TYPE for invalid field types
+ * Reports:
+ * - ONEOF_EMPTY_OBJECT for empty object members
+ * - ONEOF_MULTIPLE_PROPERTIES for members with multiple properties
+ * - ONEOF_DUPLICATE_PROPERTY for duplicate property names
+ * - ONEOF_INVALID_FIELD_TYPE for invalid field types
  */
 export function validateOneOfMembers(
   params: ValidateOneOfMembersParams,
@@ -305,13 +304,13 @@ export interface ValidateUnionMemberTypenamesResult {
  * Validates __typename property on inline union members.
  * Returns extracted typename values for valid members.
  *
- * Task 5.1: Union member __typename validation
- * - Reports MISSING_TYPENAME_PROPERTY when __typename is not present
- * - Reports INVALID_TYPENAME_TYPE when __typename is not a string literal
+ * Behavior:
  * - Skips validation for named types (needsAutoGeneration: false)
  * - Only called for payload unions (context.kind === "resolverPayload")
  *
- * Requirements: 4.1, 4.2, 4.3
+ * Reports:
+ * - MISSING_TYPENAME_PROPERTY when __typename is not present
+ * - INVALID_TYPENAME_TYPE when __typename is not a string literal
  */
 export function validateUnionMemberTypenames(
   params: ValidateUnionMemberTypenamesParams,

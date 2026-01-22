@@ -7,6 +7,7 @@ import type {
   SourceLocation,
   TSTypeReference,
 } from "../type-extractor/types/index.js";
+import { traverseInlineObjectProperties } from "./inline-object-traverser.js";
 import type {
   InlineUnionMemberInfo,
   InlineUnionWithContext,
@@ -48,8 +49,7 @@ export interface CollectInlineUnionsFromTypesParams {
 }
 
 /**
- * Collect inline unions from ExtractedTypeInfo.
- * Task 2.1: Traverse type fields to find inline unions with context.
+ * Collect inline unions from ExtractedTypeInfo by traversing type fields.
  */
 export function collectInlineUnionsFromTypes(
   params: CollectInlineUnionsFromTypesParams,
@@ -141,67 +141,28 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
   }
 
   if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
-    collectInlineUnionsFromInlineObjectProperties({
-      properties: tsType.inlineObjectProperties,
-      parentTypeName,
-      parentPath: fieldPath,
-      isInput,
-      sourceFile,
-      knownTypeNames,
-      results,
-    });
-  }
-}
+    traverseInlineObjectProperties(
+      { properties: tsType.inlineObjectProperties, parentPath: fieldPath },
+      (prop, propPath) => {
+        const propTsType = prop.tsType;
+        if (propTsType.kind === "union" && propTsType.members) {
+          const members = propTsType.members.map((m) =>
+            createMemberInfo(m, knownTypeNames),
+          );
 
-interface CollectFromPropertiesParams extends CollectInlineUnionBaseParams {
-  readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
-}
-
-function collectInlineUnionsFromInlineObjectProperties(
-  params: CollectFromPropertiesParams,
-): void {
-  const {
-    properties,
-    parentTypeName,
-    parentPath,
-    isInput,
-    sourceFile,
-    knownTypeNames,
-    results,
-  } = params;
-
-  for (const prop of properties) {
-    const propPath = [...parentPath, prop.name];
-    const tsType = prop.tsType;
-
-    if (tsType.kind === "union" && tsType.members) {
-      const members = tsType.members.map((m) =>
-        createMemberInfo(m, knownTypeNames),
-      );
-
-      results.push({
-        members,
-        context: buildFieldContext(parentTypeName, propPath, isInput),
-        sourceLocation: getSourceLocationOrDefault(
-          prop.sourceLocation,
-          sourceFile,
-        ),
-        nullable: tsType.nullable,
-        isInputContext: isInput,
-      });
-    }
-
-    if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
-      collectInlineUnionsFromInlineObjectProperties({
-        properties: tsType.inlineObjectProperties,
-        parentTypeName,
-        parentPath: propPath,
-        isInput,
-        sourceFile,
-        knownTypeNames,
-        results,
-      });
-    }
+          results.push({
+            members,
+            context: buildFieldContext(parentTypeName, propPath, isInput),
+            sourceLocation: getSourceLocationOrDefault(
+              prop.sourceLocation,
+              sourceFile,
+            ),
+            nullable: propTsType.nullable,
+            isInputContext: isInput,
+          });
+        }
+      },
+    );
   }
 }
 
@@ -211,8 +172,7 @@ export interface CollectInlineUnionsFromResolversParams {
 }
 
 /**
- * Collect inline unions from ExtractResolversResult.
- * Task 2.2: Traverse resolver args to find inline unions with context.
+ * Collect inline unions from ExtractResolversResult by traversing resolver args.
  */
 export function collectInlineUnionsFromResolvers(
   params: CollectInlineUnionsFromResolversParams,
@@ -284,7 +244,7 @@ function collectInlineUnionsFromResolverArgs(
   }
 }
 
-interface CollectInlineUnionsFromResolverPropertiesParams {
+interface CollectInlineUnionsFromResolverPropertiesBaseParams {
   readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
   readonly resolverType: ResolverType;
   readonly fieldName: string;
@@ -292,10 +252,23 @@ interface CollectInlineUnionsFromResolverPropertiesParams {
   readonly parentPath: ReadonlyArray<string>;
   readonly sourceLocation: SourceLocation;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly contextKind: "resolverArg" | "resolverPayload";
-  readonly argName?: string;
   readonly results: InlineUnionWithContext[];
 }
+
+interface CollectInlineUnionsFromResolverArgPropertiesParams
+  extends CollectInlineUnionsFromResolverPropertiesBaseParams {
+  readonly contextKind: "resolverArg";
+  readonly argName: string;
+}
+
+interface CollectInlineUnionsFromResolverPayloadPropertiesParams
+  extends CollectInlineUnionsFromResolverPropertiesBaseParams {
+  readonly contextKind: "resolverPayload";
+}
+
+type CollectInlineUnionsFromResolverPropertiesParams =
+  | CollectInlineUnionsFromResolverArgPropertiesParams
+  | CollectInlineUnionsFromResolverPayloadPropertiesParams;
 
 /**
  * Unified function for collecting inline unions from nested object properties
@@ -312,55 +285,47 @@ function collectInlineUnionsFromResolverProperties(
     parentPath,
     sourceLocation,
     knownTypeNames,
-    contextKind,
-    argName,
     results,
   } = params;
 
-  for (const prop of properties) {
-    const propPath = [...parentPath, prop.name];
-    const tsType = prop.tsType;
+  traverseInlineObjectProperties(
+    { properties, parentPath },
+    (prop, propPath) => {
+      const tsType = prop.tsType;
 
-    if (tsType.kind === "union" && tsType.members) {
-      const members = tsType.members.map((m: TSTypeReference) =>
-        createMemberInfo(m, knownTypeNames),
-      );
+      if (tsType.kind === "union" && tsType.members) {
+        const members = tsType.members.map((m: TSTypeReference) =>
+          createMemberInfo(m, knownTypeNames),
+        );
 
-      const context: AutoTypeNameContext =
-        contextKind === "resolverArg"
-          ? {
-              kind: "resolverArg",
-              resolverType,
-              fieldName,
-              argName: argName!,
-              parentTypeName,
-              fieldPath: propPath,
-            }
-          : {
-              kind: "resolverPayload",
-              resolverType,
-              fieldName,
-              parentTypeName,
-              fieldPath: propPath,
-            };
+        const context: AutoTypeNameContext =
+          params.contextKind === "resolverArg"
+            ? {
+                kind: "resolverArg",
+                resolverType,
+                fieldName,
+                argName: params.argName,
+                parentTypeName,
+                fieldPath: propPath,
+              }
+            : {
+                kind: "resolverPayload",
+                resolverType,
+                fieldName,
+                parentTypeName,
+                fieldPath: propPath,
+              };
 
-      results.push({
-        members,
-        context,
-        sourceLocation: prop.sourceLocation ?? sourceLocation,
-        nullable: tsType.nullable,
-        isInputContext: contextKind === "resolverArg",
-      });
-    }
-
-    if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
-      collectInlineUnionsFromResolverProperties({
-        ...params,
-        properties: tsType.inlineObjectProperties,
-        parentPath: propPath,
-      });
-    }
-  }
+        results.push({
+          members,
+          context,
+          sourceLocation: prop.sourceLocation ?? sourceLocation,
+          nullable: tsType.nullable,
+          isInputContext: params.contextKind === "resolverArg",
+        });
+      }
+    },
+  );
 }
 
 export interface CollectInlineUnionsFromPayloadsParams {
@@ -370,7 +335,6 @@ export interface CollectInlineUnionsFromPayloadsParams {
 
 /**
  * Collect inline unions from resolver return types (Payload types).
- * Task 3.2: Traverse resolver return types to find inline unions with resolverPayload context.
  */
 export function collectInlineUnionsFromPayloads(
   params: CollectInlineUnionsFromPayloadsParams,
