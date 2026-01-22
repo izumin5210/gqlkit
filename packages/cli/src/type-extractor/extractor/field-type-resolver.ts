@@ -297,10 +297,10 @@ function resolveFieldTypeInternal(
     const aliasName = type.aliasSymbol.getName();
     if (!knownTypeNames.has(aliasName)) {
       // Check if this is an anonymous object type (not an interface or another named type)
-      // by checking if the type symbol is "__type" (anonymous type literal)
+      // using ts.ObjectFlags.Anonymous for a more robust check than internal symbol names
       const isAnonymousObject =
-        type.symbol?.getName() === "__type" &&
-        (type.flags & ts.TypeFlags.Object) !== 0;
+        (type.flags & ts.TypeFlags.Object) !== 0 &&
+        ((type as ts.ObjectType).objectFlags & ts.ObjectFlags.Anonymous) !== 0;
 
       if (isAnonymousObject) {
         // Not a known schema type and is an anonymous object - expand to generate Payload type
