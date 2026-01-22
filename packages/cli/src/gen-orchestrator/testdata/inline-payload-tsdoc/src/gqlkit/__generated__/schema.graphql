@@ -2,8 +2,6 @@
 
 """Defined in: src/gqlkit/schema/types.ts"""
 type CreateUserPayload {
-  """Request ID for tracking"""
-  requestId: String @deprecated(reason: """Use traceId from context instead""")
   """Operation success flag"""
   success: Boolean!
   """The created user"""
@@ -55,8 +53,6 @@ type User {
 
 """Defined in: src/gqlkit/schema/types.ts"""
 type UserStatsPayload {
-  """Legacy activity score"""
-  activityScore: Float @deprecated(reason: """Use the activityMetrics field instead""")
   """Total follower count"""
   followerCount: Float!
   """Total post count"""
@@ -65,7 +61,7 @@ type UserStatsPayload {
 
 extend type Mutation {
   """
-  Mutation returning inline object type with field-level TSDoc and deprecated fields.
+  Mutation returning inline object type with field-level TSDoc.
   
   Defined in: src/gqlkit/schema/types.ts
   """

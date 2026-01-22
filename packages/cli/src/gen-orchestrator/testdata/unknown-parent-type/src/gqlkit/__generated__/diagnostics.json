@@ -5,8 +5,8 @@
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/unknown.ts",
-      "line": 1,
-      "column": 1
+      "line": 8,
+      "column": 14
     }
   }
 ]

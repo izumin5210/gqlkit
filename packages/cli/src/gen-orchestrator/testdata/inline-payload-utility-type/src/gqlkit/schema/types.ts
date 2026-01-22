@@ -1,4 +1,9 @@
-import { defineField, defineMutation, defineQuery, type NoArgs } from "../gqlkit.js";
+import {
+  defineField,
+  defineMutation,
+  defineQuery,
+  type NoArgs,
+} from "../gqlkit.js";
 
 /**
  * Base user profile type with all fields.

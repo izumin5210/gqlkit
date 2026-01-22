@@ -11,7 +11,7 @@ export type User = {
 };
 
 /**
- * Mutation returning inline object type with field-level TSDoc and deprecated fields.
+ * Mutation returning inline object type with field-level TSDoc.
  */
 export const createUser = defineMutation<
   { name: string },
@@ -20,16 +20,10 @@ export const createUser = defineMutation<
     user: User;
     /** Operation success flag */
     success: boolean;
-    /**
-     * Request ID for tracking
-     * @deprecated Use traceId from context instead
-     */
-    requestId: string | null;
   }
 >((_root, args) => ({
   user: { id: "1", name: args.name },
   success: true,
-  requestId: null,
 }));
 
 /**
@@ -43,16 +37,10 @@ export const stats = defineField<
     postCount: number;
     /** Total follower count */
     followerCount: number;
-    /**
-     * Legacy activity score
-     * @deprecated Use the activityMetrics field instead
-     */
-    activityScore: number | null;
   }
 >((_parent, _args) => ({
   postCount: 10,
   followerCount: 5,
-  activityScore: null,
 }));
 
 /**

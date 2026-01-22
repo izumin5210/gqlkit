@@ -1,4 +1,9 @@
-import { defineField, defineMutation, defineQuery, type NoArgs } from "../gqlkit.js";
+import {
+  defineField,
+  defineMutation,
+  defineQuery,
+  type NoArgs,
+} from "../gqlkit.js";
 
 /**
  * Task type for field resolver test
@@ -18,10 +23,9 @@ export const tasks = defineQuery<NoArgs, Task[]>(() => []);
  * Expected generated type: GetStatusPayload (GraphQL Enum)
  * Tests requirement 4.1 (enum detection) and 4.2 (query naming)
  */
-export const getStatus = defineQuery<
-  NoArgs,
-  "active" | "inactive" | "pending"
->(() => "active");
+export const getStatus = defineQuery<NoArgs, "active" | "inactive" | "pending">(
+  () => "active",
+);
 
 /**
  * Mutation returning string literal union as enum payload.

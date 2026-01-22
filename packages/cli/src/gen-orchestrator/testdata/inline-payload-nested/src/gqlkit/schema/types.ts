@@ -154,16 +154,20 @@ export type OperationFailed = {
 };
 
 export const operationSuccessIsTypeOf = defineIsTypeOf<OperationSuccess>(
-  (value) => typeof value === "object" && value !== null && "timestamp" in value,
+  (value) =>
+    typeof value === "object" && value !== null && "timestamp" in value,
 );
 
 export const operationPendingIsTypeOf = defineIsTypeOf<OperationPending>(
   (value) =>
-    typeof value === "object" && value !== null && "estimatedCompletion" in value,
+    typeof value === "object" &&
+    value !== null &&
+    "estimatedCompletion" in value,
 );
 
 export const operationFailedIsTypeOf = defineIsTypeOf<OperationFailed>(
-  (value) => typeof value === "object" && value !== null && "errorCode" in value,
+  (value) =>
+    typeof value === "object" && value !== null && "errorCode" in value,
 );
 
 /**

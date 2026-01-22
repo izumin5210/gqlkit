@@ -16,48 +16,6 @@ export const typeDefs: DocumentNode = {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "requestId"
-          },
-          "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "String"
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Request ID for tracking",
-            "block": true
-          },
-          "directives": [
-            {
-              "kind": "Directive",
-              "name": {
-                "kind": "Name",
-                "value": "deprecated"
-              },
-              "arguments": [
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "reason"
-                  },
-                  "value": {
-                    "kind": "StringValue",
-                    "value": "Use traceId from context instead",
-                    "block": true
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
             "value": "success"
           },
           "type": {
@@ -368,48 +326,6 @@ export const typeDefs: DocumentNode = {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "activityScore"
-          },
-          "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "Float"
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Legacy activity score",
-            "block": true
-          },
-          "directives": [
-            {
-              "kind": "Directive",
-              "name": {
-                "kind": "Name",
-                "value": "deprecated"
-              },
-              "arguments": [
-                {
-                  "kind": "Argument",
-                  "name": {
-                    "kind": "Name",
-                    "value": "reason"
-                  },
-                  "value": {
-                    "kind": "StringValue",
-                    "value": "Use the activityMetrics field instead",
-                    "block": true
-                  }
-                }
-              ]
-            }
-          ]
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
             "value": "followerCount"
           },
           "type": {
@@ -501,7 +417,7 @@ export const typeDefs: DocumentNode = {
           },
           "description": {
             "kind": "StringValue",
-            "value": "Mutation returning inline object type with field-level TSDoc and deprecated fields.\n\nDefined in: src/gqlkit/schema/types.ts",
+            "value": "Mutation returning inline object type with field-level TSDoc.\n\nDefined in: src/gqlkit/schema/types.ts",
             "block": true
           }
         },

@@ -103,14 +103,13 @@ export const getUserResult = defineQuery<{ id: string }, UserResult>(
  * No Payload type should be generated - User type is used directly.
  * Tests requirement 6.1 for mutation.
  */
-export const createUser = defineMutation<
-  { name: string; email: string },
-  User
->((_root, args) => ({
-  id: "1",
-  name: args.name,
-  email: args.email,
-}));
+export const createUser = defineMutation<{ name: string; email: string }, User>(
+  (_root, args) => ({
+    id: "1",
+    name: args.name,
+    email: args.email,
+  }),
+);
 
 /**
  * Query returning a nullable known type.
