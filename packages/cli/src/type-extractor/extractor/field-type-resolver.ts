@@ -446,9 +446,7 @@ function tryExtractAsInlineObject(
   // Extract type-level TSDoc from the alias symbol if present (Requirement 7.2)
   // Only extract from user-defined types, not built-in TypeScript utility types
   let description: string | null = null;
-  let deprecated:
-    | import("../../shared/tsdoc-parser.js").DeprecationInfo
-    | null = null;
+  let deprecated: DeprecationInfo | null = null;
   if (type.aliasSymbol) {
     const declarations = type.aliasSymbol.getDeclarations();
     const isUserDefined =

@@ -1,4 +1,5 @@
 import type ts from "typescript";
+import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 import type {
   InlineEnumMemberInfo,
   InlineObjectPropertyDef,
@@ -83,9 +84,7 @@ interface CreateInlineObjectTypeParams {
   /** TSDoc description from the type alias (null for true inline objects) */
   readonly description: string | null;
   /** @deprecated tag from the type alias (null for true inline objects) */
-  readonly deprecated:
-    | import("../../shared/tsdoc-parser.js").DeprecationInfo
-    | null;
+  readonly deprecated: DeprecationInfo | null;
 }
 
 export function createInlineObjectType(
