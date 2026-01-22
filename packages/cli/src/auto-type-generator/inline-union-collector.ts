@@ -377,3 +377,169 @@ function collectInlineUnionsFromInlineObjectArg(
     }
   }
 }
+
+export interface CollectInlineUnionsFromPayloadsParams {
+  readonly resolversResult: ExtractResolversResult;
+  readonly knownTypeNames: ReadonlySet<string>;
+}
+
+/**
+ * Collect inline unions from resolver return types (Payload types).
+ * Task 3.2: Traverse resolver return types to find inline unions with resolverPayload context.
+ */
+export function collectInlineUnionsFromPayloads(
+  params: CollectInlineUnionsFromPayloadsParams,
+): InlineUnionWithContext[] {
+  const { resolversResult, knownTypeNames } = params;
+  const results: InlineUnionWithContext[] = [];
+
+  for (const field of resolversResult.queryFields.fields) {
+    collectInlineUnionsFromPayloadReturnType({
+      field,
+      resolverType: "query",
+      parentTypeName: null,
+      knownTypeNames,
+      results,
+    });
+  }
+
+  for (const field of resolversResult.mutationFields.fields) {
+    collectInlineUnionsFromPayloadReturnType({
+      field,
+      resolverType: "mutation",
+      parentTypeName: null,
+      knownTypeNames,
+      results,
+    });
+  }
+
+  for (const ext of resolversResult.typeExtensions) {
+    for (const field of ext.fields) {
+      collectInlineUnionsFromPayloadReturnType({
+        field,
+        resolverType: "field",
+        parentTypeName: ext.targetTypeName,
+        knownTypeNames,
+        results,
+      });
+    }
+  }
+
+  return results;
+}
+
+interface CollectFromPayloadReturnTypeParams {
+  readonly field: GraphQLFieldDefinition;
+  readonly resolverType: "query" | "mutation" | "field";
+  readonly parentTypeName: string | null;
+  readonly knownTypeNames: ReadonlySet<string>;
+  readonly results: InlineUnionWithContext[];
+}
+
+function collectInlineUnionsFromPayloadReturnType(
+  params: CollectFromPayloadReturnTypeParams,
+): void {
+  const { field, resolverType, parentTypeName, knownTypeNames, results } =
+    params;
+
+  if (field.returnTypeInlineUnionMembers) {
+    const members = field.returnTypeInlineUnionMembers.map((m) =>
+      createMemberInfo(m, knownTypeNames),
+    );
+
+    const context: AutoTypeNameContext = {
+      kind: "resolverPayload",
+      resolverType,
+      fieldName: field.name,
+      parentTypeName,
+      fieldPath: [],
+    };
+
+    results.push({
+      members,
+      context,
+      sourceLocation: field.sourceLocation,
+      nullable: field.type.nullable,
+      isInputContext: false,
+    });
+  }
+
+  if (field.returnTypeInlineObjectProperties) {
+    collectInlineUnionsFromPayloadObjectProperties({
+      properties: field.returnTypeInlineObjectProperties,
+      resolverType,
+      fieldName: field.name,
+      parentTypeName,
+      parentPath: [],
+      sourceLocation: field.sourceLocation,
+      knownTypeNames,
+      results,
+    });
+  }
+}
+
+interface CollectFromPayloadObjectPropertiesParams {
+  readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
+  readonly resolverType: "query" | "mutation" | "field";
+  readonly fieldName: string;
+  readonly parentTypeName: string | null;
+  readonly parentPath: ReadonlyArray<string>;
+  readonly sourceLocation: SourceLocation;
+  readonly knownTypeNames: ReadonlySet<string>;
+  readonly results: InlineUnionWithContext[];
+}
+
+function collectInlineUnionsFromPayloadObjectProperties(
+  params: CollectFromPayloadObjectPropertiesParams,
+): void {
+  const {
+    properties,
+    resolverType,
+    fieldName,
+    parentTypeName,
+    parentPath,
+    sourceLocation,
+    knownTypeNames,
+    results,
+  } = params;
+
+  for (const prop of properties) {
+    const propPath = [...parentPath, prop.name];
+    const tsType = prop.tsType;
+
+    if (tsType.kind === "union" && tsType.members) {
+      const members = tsType.members.map((m) =>
+        createMemberInfo(m, knownTypeNames),
+      );
+
+      const context: AutoTypeNameContext = {
+        kind: "resolverPayload",
+        resolverType,
+        fieldName,
+        parentTypeName,
+        fieldPath: propPath,
+      };
+
+      results.push({
+        members,
+        context,
+        sourceLocation: prop.sourceLocation ?? sourceLocation,
+        nullable: tsType.nullable,
+        isInputContext: false,
+      });
+    }
+
+    if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
+      collectInlineUnionsFromPayloadObjectProperties({
+        properties: tsType.inlineObjectProperties,
+        resolverType,
+        fieldName,
+        parentTypeName,
+        parentPath: propPath,
+        sourceLocation,
+        knownTypeNames,
+        results,
+      });
+    }
+  }
+}

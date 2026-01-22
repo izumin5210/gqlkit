@@ -148,4 +148,139 @@ describe("generateAutoTypeName", () => {
       expect(generateAutoTypeName(context)).toBe("UserPostsFilterOptionsInput");
     });
   });
+
+  describe("Resolver payload naming", () => {
+    describe("Query/Mutation payload naming", () => {
+      it("generates {PascalCaseFieldName}Payload for query payload", () => {
+        const context: AutoTypeNameContext = {
+          kind: "resolverPayload",
+          resolverType: "query",
+          fieldName: "getUser",
+          parentTypeName: null,
+          fieldPath: [],
+        };
+        expect(generateAutoTypeName(context)).toBe("GetUserPayload");
+      });
+
+      it("generates {PascalCaseFieldName}Payload for mutation payload", () => {
+        const context: AutoTypeNameContext = {
+          kind: "resolverPayload",
+          resolverType: "mutation",
+          fieldName: "updateUser",
+          parentTypeName: null,
+          fieldPath: [],
+        };
+        expect(generateAutoTypeName(context)).toBe("UpdateUserPayload");
+      });
+
+      it("converts camelCase field names to PascalCase", () => {
+        const context: AutoTypeNameContext = {
+          kind: "resolverPayload",
+          resolverType: "mutation",
+          fieldName: "createNewUser",
+          parentTypeName: null,
+          fieldPath: [],
+        };
+        expect(generateAutoTypeName(context)).toBe("CreateNewUserPayload");
+      });
+
+      it("converts snake_case field names to PascalCase", () => {
+        const context: AutoTypeNameContext = {
+          kind: "resolverPayload",
+          resolverType: "query",
+          fieldName: "get_user_profile",
+          parentTypeName: null,
+          fieldPath: [],
+        };
+        expect(generateAutoTypeName(context)).toBe("GetUserProfilePayload");
+      });
+    });
+
+    describe("Field resolver payload naming", () => {
+      it("generates {ParentTypeName}{PascalCaseFieldName}Payload for field resolver payload", () => {
+        const context: AutoTypeNameContext = {
+          kind: "resolverPayload",
+          resolverType: "field",
+          fieldName: "profile",
+          parentTypeName: "User",
+          fieldPath: [],
+        };
+        expect(generateAutoTypeName(context)).toBe("UserProfilePayload");
+      });
+
+      it("preserves PascalCase parent type name", () => {
+        const context: AutoTypeNameContext = {
+          kind: "resolverPayload",
+          resolverType: "field",
+          fieldName: "posts",
+          parentTypeName: "BlogAuthor",
+          fieldPath: [],
+        };
+        expect(generateAutoTypeName(context)).toBe("BlogAuthorPostsPayload");
+      });
+
+      it("converts camelCase field names to PascalCase", () => {
+        const context: AutoTypeNameContext = {
+          kind: "resolverPayload",
+          resolverType: "field",
+          fieldName: "socialLinks",
+          parentTypeName: "User",
+          fieldPath: [],
+        };
+        expect(generateAutoTypeName(context)).toBe("UserSocialLinksPayload");
+      });
+    });
+
+    describe("Nested payload type naming", () => {
+      it("generates {PayloadTypeName}{PascalCaseFieldName} for nested object in query payload (no Input suffix)", () => {
+        const context: AutoTypeNameContext = {
+          kind: "resolverPayload",
+          resolverType: "query",
+          fieldName: "getUser",
+          parentTypeName: null,
+          fieldPath: ["profile"],
+        };
+        expect(generateAutoTypeName(context)).toBe("GetUserPayloadProfile");
+      });
+
+      it("generates {PayloadTypeName}{PascalCaseFieldPath} for deeply nested types", () => {
+        const context: AutoTypeNameContext = {
+          kind: "resolverPayload",
+          resolverType: "mutation",
+          fieldName: "updateUser",
+          parentTypeName: null,
+          fieldPath: ["profile", "address"],
+        };
+        expect(generateAutoTypeName(context)).toBe(
+          "UpdateUserPayloadProfileAddress",
+        );
+      });
+
+      it("generates {ParentTypeName}{FieldName}Payload{FieldPath} for nested in field resolver payload", () => {
+        const context: AutoTypeNameContext = {
+          kind: "resolverPayload",
+          resolverType: "field",
+          fieldName: "details",
+          parentTypeName: "User",
+          fieldPath: ["metadata"],
+        };
+        expect(generateAutoTypeName(context)).toBe(
+          "UserDetailsPayloadMetadata",
+        );
+      });
+
+      it("handles multiple nesting levels", () => {
+        const context: AutoTypeNameContext = {
+          kind: "resolverPayload",
+          resolverType: "query",
+          fieldName: "getOrganization",
+          parentTypeName: null,
+          fieldPath: ["settings", "billing", "address"],
+        };
+        expect(generateAutoTypeName(context)).toBe(
+          "GetOrganizationPayloadSettingsBillingAddress",
+        );
+      });
+    });
+  });
 });

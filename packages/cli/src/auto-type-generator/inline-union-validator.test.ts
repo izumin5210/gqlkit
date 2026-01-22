@@ -29,6 +29,8 @@ function createReferenceTsType(
     externalEnumSymbol: null,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
   };
 }
 
@@ -48,6 +50,8 @@ function createPrimitiveTsType(
     externalEnumSymbol: null,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
   };
 }
 
@@ -71,6 +75,8 @@ function createInlineEnumTsType(
     externalEnumSymbol: null,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
   };
 }
 
@@ -97,6 +103,8 @@ function createScalarTsType(
     externalEnumSymbol: null,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
   };
 }
 
@@ -116,6 +124,8 @@ function createInlineObjectTsType(
     externalEnumSymbol: null,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
   };
 }
 

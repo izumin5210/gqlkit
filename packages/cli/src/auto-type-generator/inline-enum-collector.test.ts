@@ -2,6 +2,7 @@ import type ts from "typescript";
 import { describe, expect, it } from "vitest";
 import type {
   ExtractResolversResult,
+  GraphQLFieldDefinition,
   GraphQLInputValue,
 } from "../resolver-extractor/index.js";
 import type {
@@ -12,6 +13,7 @@ import type {
   TSTypeReference,
 } from "../type-extractor/types/index.js";
 import {
+  collectInlineEnumsFromPayloads,
   collectInlineEnumsFromResolvers,
   collectInlineEnumsFromTypes,
 } from "./inline-enum-collector.js";
@@ -33,6 +35,8 @@ function createInlineEnumTsType(
     externalEnumSymbol,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
   };
 }
 
@@ -52,6 +56,8 @@ function createPrimitiveTsType(
     externalEnumSymbol: null,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
   };
 }
 
@@ -109,6 +115,32 @@ function createExtractedType(
     inlineObjectMembers: null,
     enumMembers: null,
     implementedInterfaces: null,
+  };
+}
+
+function createFieldDefinition(
+  params: Omit<
+    GraphQLFieldDefinition,
+    | "returnTypeInlineObjectProperties"
+    | "returnTypeInlineEnumMembers"
+    | "returnTypeInlineUnionMembers"
+    | "returnTypeExternalEnumSymbol"
+    | "returnTypeExternalEnumDescription"
+    | "returnTypeExternalEnumDeprecated"
+    | "returnTypeInlineObjectDescription"
+    | "returnTypeInlineObjectDeprecated"
+  >,
+): GraphQLFieldDefinition {
+  return {
+    ...params,
+    returnTypeInlineObjectProperties: null,
+    returnTypeInlineEnumMembers: null,
+    returnTypeInlineUnionMembers: null,
+    returnTypeExternalEnumSymbol: null,
+    returnTypeExternalEnumDescription: null,
+    returnTypeExternalEnumDeprecated: null,
+    returnTypeInlineObjectDescription: null,
+    returnTypeInlineObjectDeprecated: null,
   };
 }
 
@@ -263,6 +295,8 @@ describe("collectInlineEnumsFromTypes", () => {
         externalEnumSymbol: null,
         externalEnumDescription: null,
         externalEnumDeprecated: null,
+        inlineObjectDescription: null,
+        inlineObjectDeprecated: null,
       };
 
       const extractedTypes: ExtractedTypeInfo[] = [
@@ -308,6 +342,8 @@ describe("collectInlineEnumsFromTypes", () => {
         externalEnumSymbol: null,
         externalEnumDescription: null,
         externalEnumDeprecated: null,
+        inlineObjectDescription: null,
+        inlineObjectDeprecated: null,
       };
 
       const extractedTypes: ExtractedTypeInfo[] = [
@@ -333,7 +369,7 @@ describe("collectInlineEnumsFromResolvers", () => {
       const resolversResult: ExtractResolversResult = {
         queryFields: {
           fields: [
-            {
+            createFieldDefinition({
               name: "listUsers",
               type: {
                 typeName: "User",
@@ -370,7 +406,7 @@ describe("collectInlineEnumsFromResolvers", () => {
               description: null,
               deprecated: null,
               directives: null,
-            },
+            }),
           ],
         },
         mutationFields: { fields: [] },
@@ -405,7 +441,7 @@ describe("collectInlineEnumsFromResolvers", () => {
         queryFields: { fields: [] },
         mutationFields: {
           fields: [
-            {
+            createFieldDefinition({
               name: "updateUser",
               type: {
                 typeName: "User",
@@ -442,7 +478,7 @@ describe("collectInlineEnumsFromResolvers", () => {
               description: null,
               deprecated: null,
               directives: null,
-            },
+            }),
           ],
         },
         typeExtensions: [],
@@ -479,7 +515,7 @@ describe("collectInlineEnumsFromResolvers", () => {
           {
             targetTypeName: "User",
             fields: [
-              {
+              createFieldDefinition({
                 name: "displayName",
                 type: {
                   typeName: "String",
@@ -516,7 +552,7 @@ describe("collectInlineEnumsFromResolvers", () => {
                 description: null,
                 deprecated: null,
                 directives: null,
-              },
+              }),
             ],
           },
         ],
@@ -547,7 +583,7 @@ describe("collectInlineEnumsFromResolvers", () => {
       const resolversResult: ExtractResolversResult = {
         queryFields: {
           fields: [
-            {
+            createFieldDefinition({
               name: "searchUsers",
               type: {
                 typeName: "User",
@@ -595,7 +631,7 @@ describe("collectInlineEnumsFromResolvers", () => {
               description: null,
               deprecated: null,
               directives: null,
-            },
+            }),
           ],
         },
         mutationFields: { fields: [] },
@@ -626,7 +662,7 @@ describe("collectInlineEnumsFromResolvers", () => {
       const resolversResult: ExtractResolversResult = {
         queryFields: {
           fields: [
-            {
+            createFieldDefinition({
               name: "listUsers",
               type: {
                 typeName: "User",
@@ -663,7 +699,7 @@ describe("collectInlineEnumsFromResolvers", () => {
               description: null,
               deprecated: null,
               directives: null,
-            },
+            }),
           ],
         },
         mutationFields: { fields: [] },
@@ -728,7 +764,7 @@ describe("InlineEnumWithContext type name generation", () => {
     const resolversResult: ExtractResolversResult = {
       queryFields: {
         fields: [
-          {
+          createFieldDefinition({
             name: "listUsers",
             type: {
               typeName: "User",
@@ -765,7 +801,7 @@ describe("InlineEnumWithContext type name generation", () => {
             description: null,
             deprecated: null,
             directives: null,
-          },
+          }),
         ],
       },
       mutationFields: { fields: [] },
@@ -797,7 +833,7 @@ describe("InlineEnumWithContext type name generation", () => {
         {
           targetTypeName: "User",
           fields: [
-            {
+            createFieldDefinition({
               name: "formattedName",
               type: {
                 typeName: "String",
@@ -834,7 +870,7 @@ describe("InlineEnumWithContext type name generation", () => {
               description: null,
               deprecated: null,
               directives: null,
-            },
+            }),
           ],
         },
       ],
@@ -852,6 +888,684 @@ describe("InlineEnumWithContext type name generation", () => {
       argName: "style",
       parentTypeName: "User",
       fieldPath: [],
+    });
+  });
+});
+
+describe("collectInlineEnumsFromPayloads", () => {
+  describe("Query resolver return type inline enums", () => {
+    it("collects inline enum from Query resolver return type", () => {
+      const statusMembers = [
+        createEnumMember("success"),
+        createEnumMember("error"),
+        createEnumMember("pending"),
+      ];
+
+      const resolversResult: ExtractResolversResult = {
+        queryFields: {
+          fields: [
+            {
+              name: "getStatus",
+              type: {
+                typeName: "__INLINE_ENUM__",
+                nullable: false,
+                list: false,
+                listItemNullable: null,
+              },
+              args: null,
+              sourceLocation: {
+                file: "src/gqlkit/schema/resolvers.ts",
+                line: 10,
+                column: 1,
+              },
+              resolverExportName: "getStatus",
+              description: null,
+              deprecated: null,
+              directives: null,
+              returnTypeInlineObjectProperties: null,
+              returnTypeInlineEnumMembers: statusMembers,
+              returnTypeInlineUnionMembers: null,
+              returnTypeExternalEnumSymbol: null,
+              returnTypeExternalEnumDescription: null,
+              returnTypeExternalEnumDeprecated: null,
+              returnTypeInlineObjectDescription: null,
+              returnTypeInlineObjectDeprecated: null,
+            } satisfies GraphQLFieldDefinition,
+          ],
+        },
+        mutationFields: { fields: [] },
+        typeExtensions: [],
+        abstractTypeResolvers: [],
+        diagnostics: { errors: [], warnings: [] },
+      };
+
+      const result = collectInlineEnumsFromPayloads(resolversResult);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]!.members).toEqual(statusMembers);
+      expect(result[0]!.context).toEqual({
+        kind: "resolverPayload",
+        resolverType: "query",
+        fieldName: "getStatus",
+        parentTypeName: null,
+        fieldPath: [],
+      });
+      expect(result[0]!.nullable).toBe(false);
+    });
+
+    it("collects nullable inline enum from Query resolver return type", () => {
+      const statusMembers = [
+        createEnumMember("active"),
+        createEnumMember("inactive"),
+      ];
+
+      const resolversResult: ExtractResolversResult = {
+        queryFields: {
+          fields: [
+            {
+              name: "getStatus",
+              type: {
+                typeName: "__INLINE_ENUM__",
+                nullable: true,
+                list: false,
+                listItemNullable: null,
+              },
+              args: null,
+              sourceLocation: {
+                file: "src/gqlkit/schema/resolvers.ts",
+                line: 10,
+                column: 1,
+              },
+              resolverExportName: "getStatus",
+              description: null,
+              deprecated: null,
+              directives: null,
+              returnTypeInlineObjectProperties: null,
+              returnTypeInlineEnumMembers: statusMembers,
+              returnTypeInlineUnionMembers: null,
+              returnTypeExternalEnumSymbol: null,
+              returnTypeExternalEnumDescription: null,
+              returnTypeExternalEnumDeprecated: null,
+              returnTypeInlineObjectDescription: null,
+              returnTypeInlineObjectDeprecated: null,
+            } satisfies GraphQLFieldDefinition,
+          ],
+        },
+        mutationFields: { fields: [] },
+        typeExtensions: [],
+        abstractTypeResolvers: [],
+        diagnostics: { errors: [], warnings: [] },
+      };
+
+      const result = collectInlineEnumsFromPayloads(resolversResult);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]!.nullable).toBe(true);
+    });
+  });
+
+  describe("Mutation resolver return type inline enums", () => {
+    it("collects inline enum from Mutation resolver return type", () => {
+      const resultMembers = [
+        createEnumMember("created"),
+        createEnumMember("updated"),
+        createEnumMember("failed"),
+      ];
+
+      const resolversResult: ExtractResolversResult = {
+        queryFields: { fields: [] },
+        mutationFields: {
+          fields: [
+            {
+              name: "updateUser",
+              type: {
+                typeName: "__INLINE_ENUM__",
+                nullable: false,
+                list: false,
+                listItemNullable: null,
+              },
+              args: null,
+              sourceLocation: {
+                file: "src/gqlkit/schema/resolvers.ts",
+                line: 20,
+                column: 1,
+              },
+              resolverExportName: "updateUser",
+              description: null,
+              deprecated: null,
+              directives: null,
+              returnTypeInlineObjectProperties: null,
+              returnTypeInlineEnumMembers: resultMembers,
+              returnTypeInlineUnionMembers: null,
+              returnTypeExternalEnumSymbol: null,
+              returnTypeExternalEnumDescription: null,
+              returnTypeExternalEnumDeprecated: null,
+              returnTypeInlineObjectDescription: null,
+              returnTypeInlineObjectDeprecated: null,
+            } satisfies GraphQLFieldDefinition,
+          ],
+        },
+        typeExtensions: [],
+        abstractTypeResolvers: [],
+        diagnostics: { errors: [], warnings: [] },
+      };
+
+      const result = collectInlineEnumsFromPayloads(resolversResult);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]!.members).toEqual(resultMembers);
+      expect(result[0]!.context).toEqual({
+        kind: "resolverPayload",
+        resolverType: "mutation",
+        fieldName: "updateUser",
+        parentTypeName: null,
+        fieldPath: [],
+      });
+    });
+  });
+
+  describe("Field resolver return type inline enums", () => {
+    it("collects inline enum from Field resolver return type", () => {
+      const tierMembers = [
+        createEnumMember("free"),
+        createEnumMember("basic"),
+        createEnumMember("premium"),
+      ];
+
+      const resolversResult: ExtractResolversResult = {
+        queryFields: { fields: [] },
+        mutationFields: { fields: [] },
+        typeExtensions: [
+          {
+            targetTypeName: "User",
+            fields: [
+              {
+                name: "subscriptionTier",
+                type: {
+                  typeName: "__INLINE_ENUM__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                args: null,
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 30,
+                  column: 1,
+                },
+                resolverExportName: "subscriptionTier",
+                description: null,
+                deprecated: null,
+                directives: null,
+                returnTypeInlineObjectProperties: null,
+                returnTypeInlineEnumMembers: tierMembers,
+                returnTypeInlineUnionMembers: null,
+                returnTypeExternalEnumSymbol: null,
+                returnTypeExternalEnumDescription: null,
+                returnTypeExternalEnumDeprecated: null,
+                returnTypeInlineObjectDescription: null,
+                returnTypeInlineObjectDeprecated: null,
+              } satisfies GraphQLFieldDefinition,
+            ],
+          },
+        ],
+        abstractTypeResolvers: [],
+        diagnostics: { errors: [], warnings: [] },
+      };
+
+      const result = collectInlineEnumsFromPayloads(resolversResult);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]!.members).toEqual(tierMembers);
+      expect(result[0]!.context).toEqual({
+        kind: "resolverPayload",
+        resolverType: "field",
+        fieldName: "subscriptionTier",
+        parentTypeName: "User",
+        fieldPath: [],
+      });
+    });
+  });
+
+  describe("Inline enums nested in Payload object properties", () => {
+    it("collects inline enum from nested Payload object properties", () => {
+      const statusMembers = [
+        createEnumMember("active"),
+        createEnumMember("suspended"),
+      ];
+
+      const resolversResult: ExtractResolversResult = {
+        queryFields: {
+          fields: [
+            {
+              name: "getUser",
+              type: {
+                typeName: "__INLINE_OBJECT__",
+                nullable: false,
+                list: false,
+                listItemNullable: null,
+              },
+              args: null,
+              sourceLocation: {
+                file: "src/gqlkit/schema/resolvers.ts",
+                line: 40,
+                column: 1,
+              },
+              resolverExportName: "getUser",
+              description: null,
+              deprecated: null,
+              directives: null,
+              returnTypeInlineObjectProperties: [
+                {
+                  name: "status",
+                  tsType: createInlineEnumTsType(statusMembers),
+                  optional: false,
+                  description: null,
+                  deprecated: null,
+                  directives: null,
+                  defaultValue: null,
+                  sourceLocation: null,
+                } satisfies InlineObjectPropertyDef,
+              ],
+              returnTypeInlineEnumMembers: null,
+              returnTypeInlineUnionMembers: null,
+              returnTypeExternalEnumSymbol: null,
+              returnTypeExternalEnumDescription: null,
+              returnTypeExternalEnumDeprecated: null,
+              returnTypeInlineObjectDescription: null,
+              returnTypeInlineObjectDeprecated: null,
+            } satisfies GraphQLFieldDefinition,
+          ],
+        },
+        mutationFields: { fields: [] },
+        typeExtensions: [],
+        abstractTypeResolvers: [],
+        diagnostics: { errors: [], warnings: [] },
+      };
+
+      const result = collectInlineEnumsFromPayloads(resolversResult);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]!.members).toEqual(statusMembers);
+      expect(result[0]!.context).toEqual({
+        kind: "resolverPayload",
+        resolverType: "query",
+        fieldName: "getUser",
+        parentTypeName: null,
+        fieldPath: ["status"],
+      });
+    });
+
+    it("collects inline enum from deeply nested Payload object properties", () => {
+      const levelMembers = [
+        createEnumMember("low"),
+        createEnumMember("medium"),
+        createEnumMember("high"),
+      ];
+
+      const nestedInlineObject: TSTypeReference = {
+        kind: "inlineObject",
+        name: null,
+        elementType: null,
+        members: null,
+        nullable: false,
+        scalarInfo: null,
+        inlineObjectProperties: [
+          {
+            name: "level",
+            tsType: createInlineEnumTsType(levelMembers),
+            optional: false,
+            description: null,
+            deprecated: null,
+            directives: null,
+            defaultValue: null,
+            sourceLocation: null,
+          } satisfies InlineObjectPropertyDef,
+        ],
+        inlineEnumMembers: null,
+        externalEnumSymbol: null,
+        externalEnumDescription: null,
+        externalEnumDeprecated: null,
+        inlineObjectDescription: null,
+        inlineObjectDeprecated: null,
+      };
+
+      const resolversResult: ExtractResolversResult = {
+        queryFields: {
+          fields: [
+            {
+              name: "getReport",
+              type: {
+                typeName: "__INLINE_OBJECT__",
+                nullable: false,
+                list: false,
+                listItemNullable: null,
+              },
+              args: null,
+              sourceLocation: {
+                file: "src/gqlkit/schema/resolvers.ts",
+                line: 50,
+                column: 1,
+              },
+              resolverExportName: "getReport",
+              description: null,
+              deprecated: null,
+              directives: null,
+              returnTypeInlineObjectProperties: [
+                {
+                  name: "severity",
+                  tsType: nestedInlineObject,
+                  optional: false,
+                  description: null,
+                  deprecated: null,
+                  directives: null,
+                  defaultValue: null,
+                  sourceLocation: null,
+                } satisfies InlineObjectPropertyDef,
+              ],
+              returnTypeInlineEnumMembers: null,
+              returnTypeInlineUnionMembers: null,
+              returnTypeExternalEnumSymbol: null,
+              returnTypeExternalEnumDescription: null,
+              returnTypeExternalEnumDeprecated: null,
+              returnTypeInlineObjectDescription: null,
+              returnTypeInlineObjectDeprecated: null,
+            } satisfies GraphQLFieldDefinition,
+          ],
+        },
+        mutationFields: { fields: [] },
+        typeExtensions: [],
+        abstractTypeResolvers: [],
+        diagnostics: { errors: [], warnings: [] },
+      };
+
+      const result = collectInlineEnumsFromPayloads(resolversResult);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]!.members).toEqual(levelMembers);
+      expect(result[0]!.context).toEqual({
+        kind: "resolverPayload",
+        resolverType: "query",
+        fieldName: "getReport",
+        parentTypeName: null,
+        fieldPath: ["severity", "level"],
+      });
+    });
+  });
+
+  describe("External enum symbol preservation", () => {
+    it("preserves external enum symbol from resolver return type", () => {
+      const mockSymbol = { name: "StatusEnum" } as unknown as ts.Symbol;
+      const statusMembers = [
+        createEnumMember("active"),
+        createEnumMember("inactive"),
+      ];
+
+      const resolversResult: ExtractResolversResult = {
+        queryFields: {
+          fields: [
+            {
+              name: "getStatus",
+              type: {
+                typeName: "__INLINE_ENUM__",
+                nullable: false,
+                list: false,
+                listItemNullable: null,
+              },
+              args: null,
+              sourceLocation: {
+                file: "src/gqlkit/schema/resolvers.ts",
+                line: 60,
+                column: 1,
+              },
+              resolverExportName: "getStatus",
+              description: null,
+              deprecated: null,
+              directives: null,
+              returnTypeInlineObjectProperties: null,
+              returnTypeInlineEnumMembers: statusMembers,
+              returnTypeInlineUnionMembers: null,
+              returnTypeExternalEnumSymbol: mockSymbol,
+              returnTypeExternalEnumDescription: "Status enum description",
+              returnTypeExternalEnumDeprecated: null,
+              returnTypeInlineObjectDescription: null,
+              returnTypeInlineObjectDeprecated: null,
+            } satisfies GraphQLFieldDefinition,
+          ],
+        },
+        mutationFields: { fields: [] },
+        typeExtensions: [],
+        abstractTypeResolvers: [],
+        diagnostics: { errors: [], warnings: [] },
+      };
+
+      const result = collectInlineEnumsFromPayloads(resolversResult);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]!.externalEnumSymbol).toBe(mockSymbol);
+      expect(result[0]!.externalEnumDescription).toBe(
+        "Status enum description",
+      );
+    });
+  });
+
+  describe("Naming convention for Payload inline enums", () => {
+    it("generates correct context for Query Payload enum: {PascalCaseFieldName}Payload", () => {
+      const statusMembers = [createEnumMember("ok"), createEnumMember("error")];
+
+      const resolversResult: ExtractResolversResult = {
+        queryFields: {
+          fields: [
+            {
+              name: "healthCheck",
+              type: {
+                typeName: "__INLINE_ENUM__",
+                nullable: false,
+                list: false,
+                listItemNullable: null,
+              },
+              args: null,
+              sourceLocation: {
+                file: "src/gqlkit/schema/resolvers.ts",
+                line: 70,
+                column: 1,
+              },
+              resolverExportName: "healthCheck",
+              description: null,
+              deprecated: null,
+              directives: null,
+              returnTypeInlineObjectProperties: null,
+              returnTypeInlineEnumMembers: statusMembers,
+              returnTypeInlineUnionMembers: null,
+              returnTypeExternalEnumSymbol: null,
+              returnTypeExternalEnumDescription: null,
+              returnTypeExternalEnumDeprecated: null,
+              returnTypeInlineObjectDescription: null,
+              returnTypeInlineObjectDeprecated: null,
+            } satisfies GraphQLFieldDefinition,
+          ],
+        },
+        mutationFields: { fields: [] },
+        typeExtensions: [],
+        abstractTypeResolvers: [],
+        diagnostics: { errors: [], warnings: [] },
+      };
+
+      const result = collectInlineEnumsFromPayloads(resolversResult);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]!.context).toEqual({
+        kind: "resolverPayload",
+        resolverType: "query",
+        fieldName: "healthCheck",
+        parentTypeName: null,
+        fieldPath: [],
+      });
+    });
+
+    it("generates correct context for Field Payload enum: {ParentTypeName}{PascalCaseFieldName}Payload", () => {
+      const roleMembers = [
+        createEnumMember("admin"),
+        createEnumMember("user"),
+        createEnumMember("guest"),
+      ];
+
+      const resolversResult: ExtractResolversResult = {
+        queryFields: { fields: [] },
+        mutationFields: { fields: [] },
+        typeExtensions: [
+          {
+            targetTypeName: "Organization",
+            fields: [
+              {
+                name: "memberRole",
+                type: {
+                  typeName: "__INLINE_ENUM__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                args: null,
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 80,
+                  column: 1,
+                },
+                resolverExportName: "memberRole",
+                description: null,
+                deprecated: null,
+                directives: null,
+                returnTypeInlineObjectProperties: null,
+                returnTypeInlineEnumMembers: roleMembers,
+                returnTypeInlineUnionMembers: null,
+                returnTypeExternalEnumSymbol: null,
+                returnTypeExternalEnumDescription: null,
+                returnTypeExternalEnumDeprecated: null,
+                returnTypeInlineObjectDescription: null,
+                returnTypeInlineObjectDeprecated: null,
+              } satisfies GraphQLFieldDefinition,
+            ],
+          },
+        ],
+        abstractTypeResolvers: [],
+        diagnostics: { errors: [], warnings: [] },
+      };
+
+      const result = collectInlineEnumsFromPayloads(resolversResult);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]!.context).toEqual({
+        kind: "resolverPayload",
+        resolverType: "field",
+        fieldName: "memberRole",
+        parentTypeName: "Organization",
+        fieldPath: [],
+      });
+    });
+
+    it("generates correct context for nested Payload enum: {PayloadTypeName}{PascalCaseFieldPath}", () => {
+      const priorityMembers = [
+        createEnumMember("critical"),
+        createEnumMember("normal"),
+      ];
+
+      const resolversResult: ExtractResolversResult = {
+        queryFields: {
+          fields: [
+            {
+              name: "createTask",
+              type: {
+                typeName: "__INLINE_OBJECT__",
+                nullable: false,
+                list: false,
+                listItemNullable: null,
+              },
+              args: null,
+              sourceLocation: {
+                file: "src/gqlkit/schema/resolvers.ts",
+                line: 90,
+                column: 1,
+              },
+              resolverExportName: "createTask",
+              description: null,
+              deprecated: null,
+              directives: null,
+              returnTypeInlineObjectProperties: [
+                {
+                  name: "taskPriority",
+                  tsType: createInlineEnumTsType(priorityMembers),
+                  optional: false,
+                  description: null,
+                  deprecated: null,
+                  directives: null,
+                  defaultValue: null,
+                  sourceLocation: null,
+                } satisfies InlineObjectPropertyDef,
+              ],
+              returnTypeInlineEnumMembers: null,
+              returnTypeInlineUnionMembers: null,
+              returnTypeExternalEnumSymbol: null,
+              returnTypeExternalEnumDescription: null,
+              returnTypeExternalEnumDeprecated: null,
+              returnTypeInlineObjectDescription: null,
+              returnTypeInlineObjectDeprecated: null,
+            } satisfies GraphQLFieldDefinition,
+          ],
+        },
+        mutationFields: { fields: [] },
+        typeExtensions: [],
+        abstractTypeResolvers: [],
+        diagnostics: { errors: [], warnings: [] },
+      };
+
+      const result = collectInlineEnumsFromPayloads(resolversResult);
+
+      expect(result).toHaveLength(1);
+      expect(result[0]!.context).toEqual({
+        kind: "resolverPayload",
+        resolverType: "query",
+        fieldName: "createTask",
+        parentTypeName: null,
+        fieldPath: ["taskPriority"],
+      });
+    });
+  });
+
+  describe("No inline enums in return type", () => {
+    it("returns empty array when no inline enums in return type", () => {
+      const resolversResult: ExtractResolversResult = {
+        queryFields: {
+          fields: [
+            createFieldDefinition({
+              name: "getUser",
+              type: {
+                typeName: "User",
+                nullable: false,
+                list: false,
+                listItemNullable: null,
+              },
+              args: null,
+              sourceLocation: {
+                file: "src/gqlkit/schema/resolvers.ts",
+                line: 100,
+                column: 1,
+              },
+              resolverExportName: "getUser",
+              description: null,
+              deprecated: null,
+              directives: null,
+            }),
+          ],
+        },
+        mutationFields: { fields: [] },
+        typeExtensions: [],
+        abstractTypeResolvers: [],
+        diagnostics: { errors: [], warnings: [] },
+      };
+
+      const result = collectInlineEnumsFromPayloads(resolversResult);
+
+      expect(result).toHaveLength(0);
     });
   });
 });

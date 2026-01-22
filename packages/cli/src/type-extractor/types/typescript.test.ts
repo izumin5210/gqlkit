@@ -30,6 +30,8 @@ describe("TSTypeReference", () => {
               externalEnumSymbol: null,
               externalEnumDescription: null,
               externalEnumDeprecated: null,
+              inlineObjectDescription: null,
+              inlineObjectDeprecated: null,
             },
             optional: false,
             description: "Street address",
@@ -43,6 +45,8 @@ describe("TSTypeReference", () => {
         externalEnumSymbol: null,
         externalEnumDescription: null,
         externalEnumDeprecated: null,
+        inlineObjectDescription: null,
+        inlineObjectDeprecated: null,
       };
 
       expect(inlineObjectRef.kind).toBe("inlineObject");
@@ -83,6 +87,8 @@ describe("TSTypeReference", () => {
                     externalEnumSymbol: null,
                     externalEnumDescription: null,
                     externalEnumDeprecated: null,
+                    inlineObjectDescription: null,
+                    inlineObjectDeprecated: null,
                   },
                   optional: false,
                   description: null,
@@ -96,6 +102,8 @@ describe("TSTypeReference", () => {
               externalEnumSymbol: null,
               externalEnumDescription: null,
               externalEnumDeprecated: null,
+              inlineObjectDescription: null,
+              inlineObjectDeprecated: null,
             },
             optional: false,
             description: null,
@@ -109,6 +117,8 @@ describe("TSTypeReference", () => {
         externalEnumSymbol: null,
         externalEnumDescription: null,
         externalEnumDeprecated: null,
+        inlineObjectDescription: null,
+        inlineObjectDeprecated: null,
       };
 
       expect(nestedInlineObject.kind).toBe("inlineObject");
@@ -132,6 +142,8 @@ describe("TSTypeReference", () => {
         externalEnumSymbol: null,
         externalEnumDescription: null,
         externalEnumDeprecated: null,
+        inlineObjectDescription: null,
+        inlineObjectDeprecated: null,
       };
 
       expect(nullableInlineObject.nullable).toBe(true);
@@ -155,6 +167,8 @@ describe("InlineObjectPropertyDef", () => {
         externalEnumSymbol: null,
         externalEnumDescription: null,
         externalEnumDeprecated: null,
+        inlineObjectDescription: null,
+        inlineObjectDeprecated: null,
       },
       optional: true,
       description: "User profile",
@@ -204,6 +218,8 @@ describe("InlineObjectPropertyDef", () => {
         externalEnumSymbol: null,
         externalEnumDescription: null,
         externalEnumDeprecated: null,
+        inlineObjectDescription: null,
+        inlineObjectDeprecated: null,
       },
       optional: false,
       description: null,
@@ -246,6 +262,8 @@ describe("FieldDefinition with inline object type", () => {
               externalEnumSymbol: null,
               externalEnumDescription: null,
               externalEnumDeprecated: null,
+              inlineObjectDescription: null,
+              inlineObjectDeprecated: null,
             },
             optional: true,
             description: "User biography",
@@ -259,6 +277,8 @@ describe("FieldDefinition with inline object type", () => {
         externalEnumSymbol: null,
         externalEnumDescription: null,
         externalEnumDeprecated: null,
+        inlineObjectDescription: null,
+        inlineObjectDeprecated: null,
       },
       optional: false,
       description: "User profile information",
@@ -287,6 +307,8 @@ describe("Backward compatibility", () => {
       externalEnumSymbol: null,
       externalEnumDescription: null,
       externalEnumDeprecated: null,
+      inlineObjectDescription: null,
+      inlineObjectDeprecated: null,
     };
     expect(primitiveRef.kind).toBe("primitive");
     expect(primitiveRef.inlineObjectProperties).toBeNull();
@@ -303,6 +325,8 @@ describe("Backward compatibility", () => {
       externalEnumSymbol: null,
       externalEnumDescription: null,
       externalEnumDeprecated: null,
+      inlineObjectDescription: null,
+      inlineObjectDeprecated: null,
     };
     expect(referenceRef.kind).toBe("reference");
 
@@ -318,6 +342,8 @@ describe("Backward compatibility", () => {
       externalEnumSymbol: null,
       externalEnumDescription: null,
       externalEnumDeprecated: null,
+      inlineObjectDescription: null,
+      inlineObjectDeprecated: null,
     };
     expect(arrayRef.kind).toBe("array");
 
@@ -333,6 +359,8 @@ describe("Backward compatibility", () => {
       externalEnumSymbol: null,
       externalEnumDescription: null,
       externalEnumDeprecated: null,
+      inlineObjectDescription: null,
+      inlineObjectDeprecated: null,
     };
     expect(unionRef.kind).toBe("union");
 
@@ -348,6 +376,8 @@ describe("Backward compatibility", () => {
       externalEnumSymbol: null,
       externalEnumDescription: null,
       externalEnumDeprecated: null,
+      inlineObjectDescription: null,
+      inlineObjectDeprecated: null,
     };
     expect(literalRef.kind).toBe("literal");
 
@@ -369,6 +399,8 @@ describe("Backward compatibility", () => {
       externalEnumSymbol: null,
       externalEnumDescription: null,
       externalEnumDeprecated: null,
+      inlineObjectDescription: null,
+      inlineObjectDeprecated: null,
     };
     expect(scalarRef.kind).toBe("scalar");
   });

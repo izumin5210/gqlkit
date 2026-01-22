@@ -22,13 +22,16 @@ import {
   type InlineEnumMemberInfo,
   type InlineObjectPropertyDef,
   type SourceLocation,
+  type TSTypeReference,
 } from "../type-extractor/types/index.js";
 import {
+  collectInlineEnumsFromPayloads,
   collectInlineEnumsFromResolvers,
   collectInlineEnumsFromTypes,
   type InlineEnumWithContext,
 } from "./inline-enum-collector.js";
 import {
+  collectInlineUnionsFromPayloads,
   collectInlineUnionsFromResolvers,
   collectInlineUnionsFromTypes,
   type InlineUnionWithContext,
@@ -51,7 +54,11 @@ import {
 export interface GeneratedFromInfo {
   readonly parentTypeName: string | null;
   readonly fieldPath: ReadonlyArray<string>;
-  readonly context: "typeField" | "inputField" | "resolverArg";
+  readonly context:
+    | "typeField"
+    | "inputField"
+    | "resolverArg"
+    | "resolverPayload";
 }
 
 /**
@@ -120,6 +127,10 @@ interface InlineObjectWithContext {
   readonly context: AutoTypeNameContext;
   readonly sourceLocation: SourceLocation;
   readonly nullable: boolean;
+  /** TSDoc description from the inline object type alias (Requirement 7.2) */
+  readonly description: string | null;
+  /** @deprecated tag from the inline object type alias (Requirement 7.3) */
+  readonly deprecated: DeprecationInfo | null;
 }
 
 function getContextKey(context: AutoTypeNameContext): string {
@@ -130,6 +141,8 @@ function getContextKey(context: AutoTypeNameContext): string {
       return `inputField:${context.parentTypeName}:${context.fieldPath.join(".")}`;
     case "resolverArg":
       return `resolverArg:${context.resolverType}:${context.parentTypeName ?? ""}:${context.fieldName}:${context.argName}:${context.fieldPath.join(".")}`;
+    case "resolverPayload":
+      return `resolverPayload:${context.resolverType}:${context.parentTypeName ?? ""}:${context.fieldName}:${context.fieldPath.join(".")}`;
   }
 }
 
@@ -143,6 +156,8 @@ function mapContextKindToGeneratedFromContext(
       return "inputField";
     case "resolverArg":
       return "resolverArg";
+    case "resolverPayload":
+      return "resolverPayload";
   }
 }
 
@@ -218,6 +233,8 @@ function collectInlineObjectsFromField(
       column: 1,
     },
     nullable: tsType.nullable,
+    description: tsType.inlineObjectDescription ?? null,
+    deprecated: tsType.inlineObjectDeprecated ?? null,
   });
 
   for (const prop of tsType.inlineObjectProperties) {
@@ -239,7 +256,7 @@ function collectInlineObjectsFromField(
           };
 
       extractNestedInlineObjects(
-        prop.tsType.inlineObjectProperties,
+        prop.tsType,
         nestedContext,
         nestedPath,
         parentTypeName,
@@ -253,7 +270,7 @@ function collectInlineObjectsFromField(
 }
 
 function extractNestedInlineObjects(
-  properties: ReadonlyArray<InlineObjectPropertyDef>,
+  tsType: TSTypeReference,
   context: AutoTypeNameContext,
   currentPath: ReadonlyArray<string>,
   parentTypeName: string,
@@ -262,18 +279,24 @@ function extractNestedInlineObjects(
   parentSourceLocation: SourceLocation | null,
   results: InlineObjectWithContext[],
 ): void {
+  if (!tsType.inlineObjectProperties) {
+    return;
+  }
+
   results.push({
-    properties,
+    properties: tsType.inlineObjectProperties,
     context,
     sourceLocation: parentSourceLocation ?? {
       file: sourceFile,
       line: 1,
       column: 1,
     },
-    nullable: false,
+    nullable: tsType.nullable,
+    description: tsType.inlineObjectDescription ?? null,
+    deprecated: tsType.inlineObjectDeprecated ?? null,
   });
 
-  for (const prop of properties) {
+  for (const prop of tsType.inlineObjectProperties) {
     if (
       prop.tsType.kind === "inlineObject" &&
       prop.tsType.inlineObjectProperties
@@ -292,7 +315,7 @@ function extractNestedInlineObjects(
           };
 
       extractNestedInlineObjects(
-        prop.tsType.inlineObjectProperties,
+        prop.tsType,
         nestedContext,
         nestedPath,
         parentTypeName,
@@ -357,6 +380,8 @@ function collectInlineObjectsFromResolverArgs(
       context,
       sourceLocation: field.sourceLocation,
       nullable: arg.type.nullable,
+      description: null,
+      deprecated: null,
     });
 
     extractNestedInlineObjectsFromArg(
@@ -402,6 +427,8 @@ function extractNestedInlineObjectsFromArg(
         context: nestedContext,
         sourceLocation,
         nullable: prop.tsType.nullable,
+        description: null,
+        deprecated: null,
       });
 
       extractNestedInlineObjectsFromArg(
@@ -409,6 +436,114 @@ function extractNestedInlineObjectsFromArg(
         resolverType,
         fieldName,
         argName,
+        parentTypeName,
+        nestedPath,
+        sourceLocation,
+        results,
+      );
+    }
+  }
+}
+
+function collectInlinePayloadsFromResolvers(
+  resolversResult: ExtractResolversResult,
+): InlineObjectWithContext[] {
+  const results: InlineObjectWithContext[] = [];
+
+  for (const field of resolversResult.queryFields.fields) {
+    collectInlinePayloadFromReturnType(field, "query", null, results);
+  }
+
+  for (const field of resolversResult.mutationFields.fields) {
+    collectInlinePayloadFromReturnType(field, "mutation", null, results);
+  }
+
+  for (const ext of resolversResult.typeExtensions) {
+    for (const field of ext.fields) {
+      collectInlinePayloadFromReturnType(
+        field,
+        "field",
+        ext.targetTypeName,
+        results,
+      );
+    }
+  }
+
+  return results;
+}
+
+function collectInlinePayloadFromReturnType(
+  field: GraphQLFieldDefinition,
+  resolverType: "query" | "mutation" | "field",
+  parentTypeName: string | null,
+  results: InlineObjectWithContext[],
+): void {
+  if (!field.returnTypeInlineObjectProperties) return;
+
+  const context: AutoTypeNameContext = {
+    kind: "resolverPayload",
+    resolverType,
+    fieldName: field.name,
+    parentTypeName,
+    fieldPath: [],
+  };
+
+  results.push({
+    properties: field.returnTypeInlineObjectProperties,
+    context,
+    sourceLocation: field.sourceLocation,
+    nullable: field.type.nullable,
+    description: field.returnTypeInlineObjectDescription ?? null,
+    deprecated: field.returnTypeInlineObjectDeprecated ?? null,
+  });
+
+  extractNestedInlineObjectsFromPayload(
+    field.returnTypeInlineObjectProperties,
+    resolverType,
+    field.name,
+    parentTypeName,
+    [],
+    field.sourceLocation,
+    results,
+  );
+}
+
+function extractNestedInlineObjectsFromPayload(
+  properties: ReadonlyArray<InlineObjectPropertyDef>,
+  resolverType: "query" | "mutation" | "field",
+  fieldName: string,
+  parentTypeName: string | null,
+  currentPath: ReadonlyArray<string>,
+  sourceLocation: SourceLocation,
+  results: InlineObjectWithContext[],
+): void {
+  for (const prop of properties) {
+    if (
+      prop.tsType.kind === "inlineObject" &&
+      prop.tsType.inlineObjectProperties
+    ) {
+      const nestedPath = [...currentPath, prop.name];
+      const nestedContext: AutoTypeNameContext = {
+        kind: "resolverPayload",
+        resolverType,
+        fieldName,
+        parentTypeName,
+        fieldPath: nestedPath,
+      };
+
+      results.push({
+        properties: prop.tsType.inlineObjectProperties,
+        context: nestedContext,
+        sourceLocation,
+        nullable: prop.tsType.nullable,
+        description: prop.tsType.inlineObjectDescription ?? null,
+        deprecated: prop.tsType.inlineObjectDeprecated ?? null,
+      });
+
+      extractNestedInlineObjectsFromPayload(
+        prop.tsType.inlineObjectProperties,
+        resolverType,
+        fieldName,
         parentTypeName,
         nestedPath,
         sourceLocation,
@@ -485,7 +620,7 @@ function generateAutoType(
       needsStringEnumMapping: false,
       sourceLocation: inlineObj.sourceLocation,
       generatedFrom: buildGeneratedFromInfo(inlineObj.context),
-      description: null,
+      description: inlineObj.description,
     },
     diagnostics,
   };
@@ -699,9 +834,73 @@ function updateResolverField(
   resolverType: "query" | "mutation" | "field",
   parentTypeName: string | null,
 ): GraphQLFieldDefinition {
-  if (!field.args) return field;
-
   const { generatedTypeNames, enumTypeNames, unionTypeNames } = params;
+
+  let updatedType = field.type;
+
+  // Handle inline payload objects in return type
+  if (field.returnTypeInlineObjectProperties) {
+    const payloadContext: AutoTypeNameContext = {
+      kind: "resolverPayload",
+      resolverType,
+      fieldName: field.name,
+      parentTypeName,
+      fieldPath: [],
+    };
+    const payloadContextKey = getContextKey(payloadContext);
+    const resolvedTypeName = generatedTypeNames.get(payloadContextKey);
+    if (resolvedTypeName) {
+      updatedType = {
+        ...field.type,
+        typeName: resolvedTypeName,
+      };
+    }
+  }
+
+  // Handle inline enum in return type
+  if (field.returnTypeInlineEnumMembers) {
+    const payloadContext: AutoTypeNameContext = {
+      kind: "resolverPayload",
+      resolverType,
+      fieldName: field.name,
+      parentTypeName,
+      fieldPath: [],
+    };
+    const payloadContextKey = getContextKey(payloadContext);
+    const resolvedTypeName = enumTypeNames.get(payloadContextKey);
+    if (resolvedTypeName) {
+      updatedType = {
+        ...field.type,
+        typeName: resolvedTypeName,
+      };
+    }
+  }
+
+  // Handle inline union in return type
+  if (field.returnTypeInlineUnionMembers) {
+    const payloadContext: AutoTypeNameContext = {
+      kind: "resolverPayload",
+      resolverType,
+      fieldName: field.name,
+      parentTypeName,
+      fieldPath: [],
+    };
+    const payloadContextKey = getContextKey(payloadContext);
+    const resolvedTypeName = unionTypeNames.get(payloadContextKey);
+    if (resolvedTypeName) {
+      updatedType = {
+        ...field.type,
+        typeName: resolvedTypeName,
+      };
+    }
+  }
+
+  if (!field.args) {
+    return {
+      ...field,
+      type: updatedType,
+    };
+  }
 
   const updatedArgs = field.args.map((arg) => {
     const context: AutoTypeNameContext = {
@@ -761,6 +960,7 @@ function updateResolverField(
 
   return {
     ...field,
+    type: updatedType,
     args: updatedArgs,
   };
 }
@@ -1211,9 +1411,14 @@ export function generateAutoTypes(
     input.resolversResult,
   );
 
+  const inlinePayloadsFromResolvers = collectInlinePayloadsFromResolvers(
+    input.resolversResult,
+  );
+
   const allInlineObjects = [
     ...inlineObjectsFromTypes,
     ...inlineObjectsFromResolvers,
+    ...inlinePayloadsFromResolvers,
   ];
 
   const generatedTypeNames = buildGeneratedTypeNamesMap(allInlineObjects);
@@ -1224,12 +1429,19 @@ export function generateAutoTypes(
   const inlineEnumsFromResolvers = collectInlineEnumsFromResolvers(
     input.resolversResult,
   );
-  const allInlineEnums = [...inlineEnumsFromTypes, ...inlineEnumsFromResolvers];
+  const inlineEnumsFromPayloads = collectInlineEnumsFromPayloads(
+    input.resolversResult,
+  );
+  const allInlineEnums = [
+    ...inlineEnumsFromTypes,
+    ...inlineEnumsFromResolvers,
+    ...inlineEnumsFromPayloads,
+  ];
 
   const { enumTypeNames, uniqueInlineEnums } =
     buildEnumTypeNamesMap(allInlineEnums);
 
-  // Collect inline unions from types and resolvers
+  // Collect inline unions from types, resolvers, and payloads
   const inlineUnionsFromTypes = collectInlineUnionsFromTypes({
     extractedTypes: input.extractedTypes,
     knownTypeNames: input.knownTypeNames,
@@ -1238,9 +1450,14 @@ export function generateAutoTypes(
     resolversResult: input.resolversResult,
     knownTypeNames: input.knownTypeNames,
   });
+  const inlineUnionsFromPayloads = collectInlineUnionsFromPayloads({
+    resolversResult: input.resolversResult,
+    knownTypeNames: input.knownTypeNames,
+  });
   const allInlineUnions = [
     ...inlineUnionsFromTypes,
     ...inlineUnionsFromResolvers,
+    ...inlineUnionsFromPayloads,
   ];
 
   // Build union type names map before generating auto types

@@ -287,6 +287,28 @@ function resolveFieldTypeInternal(
     }
   }
 
+  // Type alias expansion: type aliases not in knownTypeNames should be expanded as inline objects
+  // This handles cases like: type MyPayload = { user: User; success: boolean; }
+  // where MyPayload is used as return type but not declared as a schema type
+  // Only expand if the underlying type is an anonymous object literal, not a named type
+  // IMPORTANT: Only expand if the name doesn't exist in schema at all.
+  // If the name exists but symbols don't match, that's a shadowing case handled by later logic.
+  if (type.aliasSymbol) {
+    const aliasName = type.aliasSymbol.getName();
+    if (!knownTypeNames.has(aliasName)) {
+      // Check if this is an anonymous object type (not an interface or another named type)
+      // by checking if the type symbol is "__type" (anonymous type literal)
+      const isAnonymousObject =
+        type.symbol?.getName() === "__type" &&
+        (type.flags & ts.TypeFlags.Object) !== 0;
+
+      if (isAnonymousObject) {
+        // Not a known schema type and is an anonymous object - expand to generate Payload type
+        return tryExtractAsInlineObject(type, ctx);
+      }
+    }
+  }
+
   // Extract type name from typeNode first (takes precedence over type.symbol).
   // This handles cases like:
   // - `typeof def` where the type's symbol is internal (__type, __object)
@@ -406,7 +428,7 @@ function tryExtractAsInlineObject(
   type: ts.Type,
   ctx: InternalFieldTypeContext,
 ): TSTypeReference {
-  const { visitedTypes } = ctx;
+  const { visitedTypes, checker } = ctx;
   if (visitedTypes.has(type)) {
     // Cycle detected, return a placeholder reference
     const typeName = type.symbol?.getName() ?? "Unknown";
@@ -417,11 +439,36 @@ function tryExtractAsInlineObject(
 
   const inlineProperties = extractInlineObjectPropertiesShared(
     type,
-    ctx.checker,
+    checker,
     (propType) => resolveFieldTypeInternal(propType, undefined, ctx),
   );
 
-  return createInlineObjectType(inlineProperties);
+  // Extract type-level TSDoc from the alias symbol if present (Requirement 7.2)
+  // Only extract from user-defined types, not built-in TypeScript utility types
+  let description: string | null = null;
+  let deprecated:
+    | import("../../shared/tsdoc-parser.js").DeprecationInfo
+    | null = null;
+  if (type.aliasSymbol) {
+    const declarations = type.aliasSymbol.getDeclarations();
+    const isUserDefined =
+      declarations?.some((decl) => {
+        const sourceFile = decl.getSourceFile();
+        return !sourceFile.isDeclarationFile;
+      }) ?? false;
+
+    if (isUserDefined) {
+      const tsdocInfo = extractTsDocFromSymbol(type.aliasSymbol, checker);
+      description = tsdocInfo.description;
+      deprecated = tsdocInfo.deprecated;
+    }
+  }
+
+  return createInlineObjectType({
+    properties: inlineProperties,
+    description,
+    deprecated,
+  });
 }
 
 /**

@@ -283,3 +283,120 @@ function collectInlineEnumsFromInlineObjectArg(
     }
   }
 }
+
+/**
+ * Collect inline enums from resolver return types (Payload types).
+ * Task 3.1: Traverse resolver return types to find inline enums with resolverPayload context.
+ */
+export function collectInlineEnumsFromPayloads(
+  resolversResult: ExtractResolversResult,
+): InlineEnumWithContext[] {
+  const results: InlineEnumWithContext[] = [];
+
+  for (const field of resolversResult.queryFields.fields) {
+    collectInlineEnumsFromPayloadReturnType(field, "query", null, results);
+  }
+
+  for (const field of resolversResult.mutationFields.fields) {
+    collectInlineEnumsFromPayloadReturnType(field, "mutation", null, results);
+  }
+
+  for (const ext of resolversResult.typeExtensions) {
+    for (const field of ext.fields) {
+      collectInlineEnumsFromPayloadReturnType(
+        field,
+        "field",
+        ext.targetTypeName,
+        results,
+      );
+    }
+  }
+
+  return results;
+}
+
+function collectInlineEnumsFromPayloadReturnType(
+  field: GraphQLFieldDefinition,
+  resolverType: "query" | "mutation" | "field",
+  parentTypeName: string | null,
+  results: InlineEnumWithContext[],
+): void {
+  if (field.returnTypeInlineEnumMembers) {
+    const context: AutoTypeNameContext = {
+      kind: "resolverPayload",
+      resolverType,
+      fieldName: field.name,
+      parentTypeName,
+      fieldPath: [],
+    };
+
+    results.push({
+      members: field.returnTypeInlineEnumMembers,
+      context,
+      sourceLocation: field.sourceLocation,
+      nullable: field.type.nullable,
+      externalEnumSymbol: field.returnTypeExternalEnumSymbol,
+      externalEnumDescription: field.returnTypeExternalEnumDescription,
+      externalEnumDeprecated: field.returnTypeExternalEnumDeprecated,
+    });
+  }
+
+  if (field.returnTypeInlineObjectProperties) {
+    collectInlineEnumsFromPayloadObjectProperties(
+      field.returnTypeInlineObjectProperties,
+      resolverType,
+      field.name,
+      parentTypeName,
+      [],
+      field.sourceLocation,
+      results,
+    );
+  }
+}
+
+function collectInlineEnumsFromPayloadObjectProperties(
+  properties: ReadonlyArray<InlineObjectPropertyDef>,
+  resolverType: "query" | "mutation" | "field",
+  fieldName: string,
+  parentTypeName: string | null,
+  parentPath: ReadonlyArray<string>,
+  sourceLocation: SourceLocation,
+  results: InlineEnumWithContext[],
+): void {
+  for (const prop of properties) {
+    const propPath = [...parentPath, prop.name];
+    const tsType = prop.tsType;
+
+    if (tsType.kind === "inlineEnum" && tsType.inlineEnumMembers) {
+      const context: AutoTypeNameContext = {
+        kind: "resolverPayload",
+        resolverType,
+        fieldName,
+        parentTypeName,
+        fieldPath: propPath,
+      };
+
+      results.push({
+        members: tsType.inlineEnumMembers,
+        context,
+        sourceLocation: prop.sourceLocation ?? sourceLocation,
+        nullable: tsType.nullable,
+        externalEnumSymbol: tsType.externalEnumSymbol,
+        externalEnumDescription: tsType.externalEnumDescription,
+        externalEnumDeprecated: tsType.externalEnumDeprecated,
+      });
+    }
+
+    if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
+      collectInlineEnumsFromPayloadObjectProperties(
+        tsType.inlineObjectProperties,
+        resolverType,
+        fieldName,
+        parentTypeName,
+        propPath,
+        sourceLocation,
+        results,
+      );
+    }
+  }
+}

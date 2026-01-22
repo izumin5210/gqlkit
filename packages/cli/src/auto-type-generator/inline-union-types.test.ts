@@ -23,6 +23,8 @@ describe("InlineUnionMemberInfo", () => {
       externalEnumSymbol: null,
       externalEnumDescription: null,
       externalEnumDeprecated: null,
+      inlineObjectDescription: null,
+      inlineObjectDeprecated: null,
     };
 
     const memberInfo: InlineUnionMemberInfo = {
@@ -47,6 +49,8 @@ describe("InlineUnionMemberInfo", () => {
       externalEnumSymbol: null,
       externalEnumDescription: null,
       externalEnumDeprecated: null,
+      inlineObjectDescription: null,
+      inlineObjectDeprecated: null,
     };
 
     const memberInfo: InlineUnionMemberInfo = {
@@ -73,6 +77,8 @@ describe("InlineUnionWithContext", () => {
       externalEnumSymbol: null,
       externalEnumDescription: null,
       externalEnumDeprecated: null,
+      inlineObjectDescription: null,
+      inlineObjectDeprecated: null,
     };
 
     const members: InlineUnionMemberInfo[] = [
@@ -119,6 +125,8 @@ describe("InlineUnionWithContext", () => {
       externalEnumSymbol: null,
       externalEnumDescription: null,
       externalEnumDeprecated: null,
+      inlineObjectDescription: null,
+      inlineObjectDeprecated: null,
     };
 
     const members: InlineUnionMemberInfo[] = [
@@ -163,6 +171,8 @@ describe("InlineUnionWithContext", () => {
       externalEnumSymbol: null,
       externalEnumDescription: null,
       externalEnumDeprecated: null,
+      inlineObjectDescription: null,
+      inlineObjectDeprecated: null,
     };
 
     const members: InlineUnionMemberInfo[] = [

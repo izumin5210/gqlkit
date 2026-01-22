@@ -22,6 +22,8 @@ function createTSTypeReference(
     nullable: false,
     scalarInfo: null,
     inlineObjectProperties: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
     inlineEnumMembers: null,
     externalEnumSymbol: null,
     externalEnumDescription: null,
@@ -76,12 +78,26 @@ export function createUnionType(
   });
 }
 
+interface CreateInlineObjectTypeParams {
+  readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
+  /** TSDoc description from the type alias (null for true inline objects) */
+  readonly description: string | null;
+  /** @deprecated tag from the type alias (null for true inline objects) */
+  readonly deprecated:
+    | import("../../shared/tsdoc-parser.js").DeprecationInfo
+    | null;
+}
+
 export function createInlineObjectType(
-  properties: ReadonlyArray<InlineObjectPropertyDef>,
+  params: CreateInlineObjectTypeParams,
 ): TSTypeReference {
   return createTSTypeReference({
     kind: "inlineObject",
-    overrides: { inlineObjectProperties: properties },
+    overrides: {
+      inlineObjectProperties: params.properties,
+      inlineObjectDescription: params.description,
+      inlineObjectDeprecated: params.deprecated,
+    },
   });
 }
 

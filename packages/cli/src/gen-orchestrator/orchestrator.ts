@@ -279,9 +279,10 @@ function convertDefineApiToFields(
   const typeExtensionMap = new Map<string, GraphQLFieldDefinition[]>();
 
   for (const resolver of resolvers) {
+    const returnType = resolver.returnType;
     const fieldDef: GraphQLFieldDefinition = {
       name: resolver.fieldName,
-      type: convertTsTypeToGraphQLType(resolver.returnType),
+      type: convertTsTypeToGraphQLType(returnType),
       args: resolver.args ? convertArgsToInputValues(resolver.args) : null,
       sourceLocation: {
         file: resolver.sourceFile,
@@ -292,6 +293,20 @@ function convertDefineApiToFields(
       description: resolver.description,
       deprecated: resolver.deprecated,
       directives: resolver.directives,
+      returnTypeInlineObjectProperties:
+        returnType.inlineObjectProperties ?? null,
+      returnTypeInlineObjectDescription:
+        returnType.inlineObjectDescription ?? null,
+      returnTypeInlineObjectDeprecated:
+        returnType.inlineObjectDeprecated ?? null,
+      returnTypeInlineEnumMembers: returnType.inlineEnumMembers ?? null,
+      returnTypeInlineUnionMembers:
+        returnType.kind === "union" ? (returnType.members ?? null) : null,
+      returnTypeExternalEnumSymbol: returnType.externalEnumSymbol ?? null,
+      returnTypeExternalEnumDescription:
+        returnType.externalEnumDescription ?? null,
+      returnTypeExternalEnumDeprecated:
+        returnType.externalEnumDeprecated ?? null,
     };
 
     if (resolver.resolverType === "query") {

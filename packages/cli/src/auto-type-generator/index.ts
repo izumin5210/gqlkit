@@ -27,4 +27,5 @@ export type {
   InputFieldContext,
   ObjectFieldContext,
   ResolverArgContext,
+  ResolverPayloadContext,
 } from "./naming-convention.js";
