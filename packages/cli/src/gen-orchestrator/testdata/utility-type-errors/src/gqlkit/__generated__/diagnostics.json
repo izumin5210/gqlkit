@@ -18,15 +18,5 @@
       "line": 34,
       "column": 41
     }
-  },
-  {
-    "code": "EMPTY_TYPE_PROPERTIES",
-    "message": "Type 'EmptyFromOmit' has no properties. Consider adding properties or using a different type.",
-    "severity": "warning",
-    "location": {
-      "file": "src/gqlkit/schema/types.ts",
-      "line": 25,
-      "column": 39
-    }
   }
 ]
