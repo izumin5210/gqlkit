@@ -1,8 +1,5 @@
 import type ts from "typescript";
-import type {
-  ExtractResolversResult,
-  GraphQLFieldDefinition,
-} from "../resolver-extractor/index.js";
+import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import { getSourceLocationOrDefault } from "../shared/source-location.js";
 import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
 import type {
@@ -17,6 +14,11 @@ import {
   buildFieldContext,
   isInputTypeName,
 } from "./naming-convention.js";
+import {
+  forEachResolverField,
+  type ResolverFieldInfo,
+  type ResolverType,
+} from "./resolver-field-iterator.js";
 
 /**
  * Inline enum with context information for naming and generation.
@@ -158,43 +160,32 @@ function collectInlineEnumsFromInlineObjectProperties(
   }
 }
 
+export interface CollectInlineEnumsFromResolversParams {
+  readonly resolversResult: ExtractResolversResult;
+}
+
 /**
  * Collect inline enums from ExtractResolversResult.
  * Task 4.2: Traverse resolver args to find inline enums with context.
  */
 export function collectInlineEnumsFromResolvers(
-  resolversResult: ExtractResolversResult,
+  params: CollectInlineEnumsFromResolversParams,
 ): InlineEnumWithContext[] {
+  const { resolversResult } = params;
   const results: InlineEnumWithContext[] = [];
 
-  for (const field of resolversResult.queryFields.fields) {
-    collectInlineEnumsFromResolverArgs(field, "query", null, results);
-  }
-
-  for (const field of resolversResult.mutationFields.fields) {
-    collectInlineEnumsFromResolverArgs(field, "mutation", null, results);
-  }
-
-  for (const ext of resolversResult.typeExtensions) {
-    for (const field of ext.fields) {
-      collectInlineEnumsFromResolverArgs(
-        field,
-        "field",
-        ext.targetTypeName,
-        results,
-      );
-    }
-  }
+  forEachResolverField(resolversResult, (info) => {
+    collectInlineEnumsFromResolverArgs(info, results);
+  });
 
   return results;
 }
 
 function collectInlineEnumsFromResolverArgs(
-  field: GraphQLFieldDefinition,
-  resolverType: "query" | "mutation" | "field",
-  parentTypeName: string | null,
+  info: ResolverFieldInfo,
   results: InlineEnumWithContext[],
 ): void {
+  const { field, resolverType, parentTypeName } = info;
   if (!field.args) return;
 
   for (const arg of field.args) {
@@ -220,43 +211,74 @@ function collectInlineEnumsFromResolverArgs(
     }
 
     if (arg.inlineObjectProperties) {
-      collectInlineEnumsFromInlineObjectArg(
-        arg.inlineObjectProperties,
+      collectInlineEnumsFromResolverProperties({
+        properties: arg.inlineObjectProperties,
         resolverType,
-        field.name,
-        arg.name,
+        fieldName: field.name,
         parentTypeName,
-        [],
-        field.sourceLocation,
+        parentPath: [],
+        sourceLocation: field.sourceLocation,
+        contextKind: "resolverArg",
+        argName: arg.name,
         results,
-      );
+      });
     }
   }
 }
 
-function collectInlineEnumsFromInlineObjectArg(
-  properties: ReadonlyArray<InlineObjectPropertyDef>,
-  resolverType: "query" | "mutation" | "field",
-  fieldName: string,
-  argName: string,
-  parentTypeName: string | null,
-  parentPath: ReadonlyArray<string>,
-  sourceLocation: SourceLocation,
-  results: InlineEnumWithContext[],
+interface CollectInlineEnumsFromResolverPropertiesParams {
+  readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
+  readonly resolverType: ResolverType;
+  readonly fieldName: string;
+  readonly parentTypeName: string | null;
+  readonly parentPath: ReadonlyArray<string>;
+  readonly sourceLocation: SourceLocation;
+  readonly contextKind: "resolverArg" | "resolverPayload";
+  readonly argName?: string;
+  readonly results: InlineEnumWithContext[];
+}
+
+/**
+ * Unified function for collecting inline enums from nested object properties
+ * in both resolver args and payload return types.
+ */
+function collectInlineEnumsFromResolverProperties(
+  params: CollectInlineEnumsFromResolverPropertiesParams,
 ): void {
+  const {
+    properties,
+    resolverType,
+    fieldName,
+    parentTypeName,
+    parentPath,
+    sourceLocation,
+    contextKind,
+    argName,
+    results,
+  } = params;
+
   for (const prop of properties) {
     const propPath = [...parentPath, prop.name];
     const tsType = prop.tsType;
 
     if (tsType.kind === "inlineEnum" && tsType.inlineEnumMembers) {
-      const context: AutoTypeNameContext = {
-        kind: "resolverArg",
-        resolverType,
-        fieldName,
-        argName,
-        parentTypeName,
-        fieldPath: propPath,
-      };
+      const context: AutoTypeNameContext =
+        contextKind === "resolverArg"
+          ? {
+              kind: "resolverArg",
+              resolverType,
+              fieldName,
+              argName: argName!,
+              parentTypeName,
+              fieldPath: propPath,
+            }
+          : {
+              kind: "resolverPayload",
+              resolverType,
+              fieldName,
+              parentTypeName,
+              fieldPath: propPath,
+            };
 
       results.push({
         members: tsType.inlineEnumMembers,
@@ -270,18 +292,17 @@ function collectInlineEnumsFromInlineObjectArg(
     }
 
     if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
-      collectInlineEnumsFromInlineObjectArg(
-        tsType.inlineObjectProperties,
-        resolverType,
-        fieldName,
-        argName,
-        parentTypeName,
-        propPath,
-        sourceLocation,
-        results,
-      );
+      collectInlineEnumsFromResolverProperties({
+        ...params,
+        properties: tsType.inlineObjectProperties,
+        parentPath: propPath,
+      });
     }
   }
+}
+
+export interface CollectInlineEnumsFromPayloadsParams {
+  readonly resolversResult: ExtractResolversResult;
 }
 
 /**
@@ -289,38 +310,24 @@ function collectInlineEnumsFromInlineObjectArg(
  * Task 3.1: Traverse resolver return types to find inline enums with resolverPayload context.
  */
 export function collectInlineEnumsFromPayloads(
-  resolversResult: ExtractResolversResult,
+  params: CollectInlineEnumsFromPayloadsParams,
 ): InlineEnumWithContext[] {
+  const { resolversResult } = params;
   const results: InlineEnumWithContext[] = [];
 
-  for (const field of resolversResult.queryFields.fields) {
-    collectInlineEnumsFromPayloadReturnType(field, "query", null, results);
-  }
-
-  for (const field of resolversResult.mutationFields.fields) {
-    collectInlineEnumsFromPayloadReturnType(field, "mutation", null, results);
-  }
-
-  for (const ext of resolversResult.typeExtensions) {
-    for (const field of ext.fields) {
-      collectInlineEnumsFromPayloadReturnType(
-        field,
-        "field",
-        ext.targetTypeName,
-        results,
-      );
-    }
-  }
+  forEachResolverField(resolversResult, (info) => {
+    collectInlineEnumsFromPayloadReturnType(info, results);
+  });
 
   return results;
 }
 
 function collectInlineEnumsFromPayloadReturnType(
-  field: GraphQLFieldDefinition,
-  resolverType: "query" | "mutation" | "field",
-  parentTypeName: string | null,
+  info: ResolverFieldInfo,
   results: InlineEnumWithContext[],
 ): void {
+  const { field, resolverType, parentTypeName } = info;
+
   if (field.returnTypeInlineEnumMembers) {
     const context: AutoTypeNameContext = {
       kind: "resolverPayload",
@@ -342,61 +349,15 @@ function collectInlineEnumsFromPayloadReturnType(
   }
 
   if (field.returnTypeInlineObjectProperties) {
-    collectInlineEnumsFromPayloadObjectProperties(
-      field.returnTypeInlineObjectProperties,
+    collectInlineEnumsFromResolverProperties({
+      properties: field.returnTypeInlineObjectProperties,
       resolverType,
-      field.name,
+      fieldName: field.name,
       parentTypeName,
-      [],
-      field.sourceLocation,
+      parentPath: [],
+      sourceLocation: field.sourceLocation,
+      contextKind: "resolverPayload",
       results,
-    );
-  }
-}
-
-function collectInlineEnumsFromPayloadObjectProperties(
-  properties: ReadonlyArray<InlineObjectPropertyDef>,
-  resolverType: "query" | "mutation" | "field",
-  fieldName: string,
-  parentTypeName: string | null,
-  parentPath: ReadonlyArray<string>,
-  sourceLocation: SourceLocation,
-  results: InlineEnumWithContext[],
-): void {
-  for (const prop of properties) {
-    const propPath = [...parentPath, prop.name];
-    const tsType = prop.tsType;
-
-    if (tsType.kind === "inlineEnum" && tsType.inlineEnumMembers) {
-      const context: AutoTypeNameContext = {
-        kind: "resolverPayload",
-        resolverType,
-        fieldName,
-        parentTypeName,
-        fieldPath: propPath,
-      };
-
-      results.push({
-        members: tsType.inlineEnumMembers,
-        context,
-        sourceLocation: prop.sourceLocation ?? sourceLocation,
-        nullable: tsType.nullable,
-        externalEnumSymbol: tsType.externalEnumSymbol,
-        externalEnumDescription: tsType.externalEnumDescription,
-        externalEnumDeprecated: tsType.externalEnumDeprecated,
-      });
-    }
-
-    if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
-      collectInlineEnumsFromPayloadObjectProperties(
-        tsType.inlineObjectProperties,
-        resolverType,
-        fieldName,
-        parentTypeName,
-        propPath,
-        sourceLocation,
-        results,
-      );
-    }
+    });
   }
 }

@@ -415,7 +415,7 @@ describe("collectInlineEnumsFromResolvers", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromResolvers(resolversResult);
+      const result = collectInlineEnumsFromResolvers({ resolversResult });
 
       expect(result).toHaveLength(1);
       expect(result[0]!.members).toEqual(sortByMembers);
@@ -486,7 +486,7 @@ describe("collectInlineEnumsFromResolvers", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromResolvers(resolversResult);
+      const result = collectInlineEnumsFromResolvers({ resolversResult });
 
       expect(result).toHaveLength(1);
       expect(result[0]!.members).toEqual(statusMembers);
@@ -560,7 +560,7 @@ describe("collectInlineEnumsFromResolvers", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromResolvers(resolversResult);
+      const result = collectInlineEnumsFromResolvers({ resolversResult });
 
       expect(result).toHaveLength(1);
       expect(result[0]!.members).toEqual(formatMembers);
@@ -640,7 +640,7 @@ describe("collectInlineEnumsFromResolvers", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromResolvers(resolversResult);
+      const result = collectInlineEnumsFromResolvers({ resolversResult });
 
       expect(result).toHaveLength(1);
       expect(result[0]!.context).toEqual({
@@ -708,7 +708,7 @@ describe("collectInlineEnumsFromResolvers", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromResolvers(resolversResult);
+      const result = collectInlineEnumsFromResolvers({ resolversResult });
 
       expect(result).toHaveLength(1);
       expect(result[0]!.externalEnumSymbol).toBe(mockSymbol);
@@ -810,7 +810,7 @@ describe("InlineEnumWithContext type name generation", () => {
       diagnostics: { errors: [], warnings: [] },
     };
 
-    const result = collectInlineEnumsFromResolvers(resolversResult);
+    const result = collectInlineEnumsFromResolvers({ resolversResult });
 
     expect(result).toHaveLength(1);
     expect(result[0]!.context).toEqual({
@@ -878,7 +878,7 @@ describe("InlineEnumWithContext type name generation", () => {
       diagnostics: { errors: [], warnings: [] },
     };
 
-    const result = collectInlineEnumsFromResolvers(resolversResult);
+    const result = collectInlineEnumsFromResolvers({ resolversResult });
 
     expect(result).toHaveLength(1);
     expect(result[0]!.context).toEqual({
@@ -939,7 +939,7 @@ describe("collectInlineEnumsFromPayloads", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromPayloads(resolversResult);
+      const result = collectInlineEnumsFromPayloads({ resolversResult });
 
       expect(result).toHaveLength(1);
       expect(result[0]!.members).toEqual(statusMembers);
@@ -997,7 +997,7 @@ describe("collectInlineEnumsFromPayloads", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromPayloads(resolversResult);
+      const result = collectInlineEnumsFromPayloads({ resolversResult });
 
       expect(result).toHaveLength(1);
       expect(result[0]!.nullable).toBe(true);
@@ -1050,7 +1050,7 @@ describe("collectInlineEnumsFromPayloads", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromPayloads(resolversResult);
+      const result = collectInlineEnumsFromPayloads({ resolversResult });
 
       expect(result).toHaveLength(1);
       expect(result[0]!.members).toEqual(resultMembers);
@@ -1113,7 +1113,7 @@ describe("collectInlineEnumsFromPayloads", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromPayloads(resolversResult);
+      const result = collectInlineEnumsFromPayloads({ resolversResult });
 
       expect(result).toHaveLength(1);
       expect(result[0]!.members).toEqual(tierMembers);
@@ -1183,7 +1183,7 @@ describe("collectInlineEnumsFromPayloads", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromPayloads(resolversResult);
+      const result = collectInlineEnumsFromPayloads({ resolversResult });
 
       expect(result).toHaveLength(1);
       expect(result[0]!.members).toEqual(statusMembers);
@@ -1279,7 +1279,7 @@ describe("collectInlineEnumsFromPayloads", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromPayloads(resolversResult);
+      const result = collectInlineEnumsFromPayloads({ resolversResult });
 
       expect(result).toHaveLength(1);
       expect(result[0]!.members).toEqual(levelMembers);
@@ -1339,7 +1339,7 @@ describe("collectInlineEnumsFromPayloads", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromPayloads(resolversResult);
+      const result = collectInlineEnumsFromPayloads({ resolversResult });
 
       expect(result).toHaveLength(1);
       expect(result[0]!.externalEnumSymbol).toBe(mockSymbol);
@@ -1391,7 +1391,7 @@ describe("collectInlineEnumsFromPayloads", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromPayloads(resolversResult);
+      const result = collectInlineEnumsFromPayloads({ resolversResult });
 
       expect(result).toHaveLength(1);
       expect(result[0]!.context).toEqual({
@@ -1451,7 +1451,7 @@ describe("collectInlineEnumsFromPayloads", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromPayloads(resolversResult);
+      const result = collectInlineEnumsFromPayloads({ resolversResult });
 
       expect(result).toHaveLength(1);
       expect(result[0]!.context).toEqual({
@@ -1518,7 +1518,7 @@ describe("collectInlineEnumsFromPayloads", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromPayloads(resolversResult);
+      const result = collectInlineEnumsFromPayloads({ resolversResult });
 
       expect(result).toHaveLength(1);
       expect(result[0]!.context).toEqual({
@@ -1563,7 +1563,7 @@ describe("collectInlineEnumsFromPayloads", () => {
         diagnostics: { errors: [], warnings: [] },
       };
 
-      const result = collectInlineEnumsFromPayloads(resolversResult);
+      const result = collectInlineEnumsFromPayloads({ resolversResult });
 
       expect(result).toHaveLength(0);
     });

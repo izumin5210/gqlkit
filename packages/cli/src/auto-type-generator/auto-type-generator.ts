@@ -47,6 +47,7 @@ import {
   generateAutoTypeName,
   isInputTypeName,
 } from "./naming-convention.js";
+import { forEachResolverField } from "./resolver-field-iterator.js";
 
 /**
  * Information about where an auto-generated type was generated from.
@@ -233,8 +234,8 @@ function collectInlineObjectsFromField(
       column: 1,
     },
     nullable: tsType.nullable,
-    description: tsType.inlineObjectDescription ?? null,
-    deprecated: tsType.inlineObjectDeprecated ?? null,
+    description: tsType.inlineObjectDescription,
+    deprecated: tsType.inlineObjectDeprecated,
   });
 
   for (const prop of tsType.inlineObjectProperties) {
@@ -292,8 +293,8 @@ function extractNestedInlineObjects(
       column: 1,
     },
     nullable: tsType.nullable,
-    description: tsType.inlineObjectDescription ?? null,
-    deprecated: tsType.inlineObjectDeprecated ?? null,
+    description: tsType.inlineObjectDescription,
+    deprecated: tsType.inlineObjectDeprecated,
   });
 
   for (const prop of tsType.inlineObjectProperties) {
@@ -333,24 +334,17 @@ function collectInlineObjectsFromResolvers(
 ): InlineObjectWithContext[] {
   const results: InlineObjectWithContext[] = [];
 
-  for (const field of resolversResult.queryFields.fields) {
-    collectInlineObjectsFromResolverArgs(field, "query", null, results);
-  }
-
-  for (const field of resolversResult.mutationFields.fields) {
-    collectInlineObjectsFromResolverArgs(field, "mutation", null, results);
-  }
-
-  for (const ext of resolversResult.typeExtensions) {
-    for (const field of ext.fields) {
+  forEachResolverField(
+    resolversResult,
+    ({ field, resolverType, parentTypeName }) => {
       collectInlineObjectsFromResolverArgs(
         field,
-        "field",
-        ext.targetTypeName,
+        resolverType,
+        parentTypeName,
         results,
       );
-    }
-  }
+    },
+  );
 
   return results;
 }
@@ -450,24 +444,17 @@ function collectInlinePayloadsFromResolvers(
 ): InlineObjectWithContext[] {
   const results: InlineObjectWithContext[] = [];
 
-  for (const field of resolversResult.queryFields.fields) {
-    collectInlinePayloadFromReturnType(field, "query", null, results);
-  }
-
-  for (const field of resolversResult.mutationFields.fields) {
-    collectInlinePayloadFromReturnType(field, "mutation", null, results);
-  }
-
-  for (const ext of resolversResult.typeExtensions) {
-    for (const field of ext.fields) {
+  forEachResolverField(
+    resolversResult,
+    ({ field, resolverType, parentTypeName }) => {
       collectInlinePayloadFromReturnType(
         field,
-        "field",
-        ext.targetTypeName,
+        resolverType,
+        parentTypeName,
         results,
       );
-    }
-  }
+    },
+  );
 
   return results;
 }
@@ -493,8 +480,8 @@ function collectInlinePayloadFromReturnType(
     context,
     sourceLocation: field.sourceLocation,
     nullable: field.type.nullable,
-    description: field.returnTypeInlineObjectDescription ?? null,
-    deprecated: field.returnTypeInlineObjectDeprecated ?? null,
+    description: field.returnTypeInlineObjectDescription,
+    deprecated: field.returnTypeInlineObjectDeprecated,
   });
 
   extractNestedInlineObjectsFromPayload(
@@ -536,8 +523,8 @@ function extractNestedInlineObjectsFromPayload(
         context: nestedContext,
         sourceLocation,
         nullable: prop.tsType.nullable,
-        description: prop.tsType.inlineObjectDescription ?? null,
-        deprecated: prop.tsType.inlineObjectDeprecated ?? null,
+        description: prop.tsType.inlineObjectDescription,
+        deprecated: prop.tsType.inlineObjectDeprecated,
       });
 
       extractNestedInlineObjectsFromPayload(
@@ -838,27 +825,13 @@ function updateResolverField(
 
   let updatedType = field.type;
 
-  // Handle inline payload objects in return type
-  if (field.returnTypeInlineObjectProperties) {
-    const payloadContext: AutoTypeNameContext = {
-      kind: "resolverPayload",
-      resolverType,
-      fieldName: field.name,
-      parentTypeName,
-      fieldPath: [],
-    };
-    const payloadContextKey = getContextKey(payloadContext);
-    const resolvedTypeName = generatedTypeNames.get(payloadContextKey);
-    if (resolvedTypeName) {
-      updatedType = {
-        ...field.type,
-        typeName: resolvedTypeName,
-      };
-    }
-  }
+  // Create payload context once for all inline return type checks
+  const hasInlinePayload =
+    field.returnTypeInlineObjectProperties ||
+    field.returnTypeInlineEnumMembers ||
+    field.returnTypeInlineUnionMembers;
 
-  // Handle inline enum in return type
-  if (field.returnTypeInlineEnumMembers) {
+  if (hasInlinePayload) {
     const payloadContext: AutoTypeNameContext = {
       kind: "resolverPayload",
       resolverType,
@@ -867,31 +840,29 @@ function updateResolverField(
       fieldPath: [],
     };
     const payloadContextKey = getContextKey(payloadContext);
-    const resolvedTypeName = enumTypeNames.get(payloadContextKey);
-    if (resolvedTypeName) {
-      updatedType = {
-        ...field.type,
-        typeName: resolvedTypeName,
-      };
-    }
-  }
 
-  // Handle inline union in return type
-  if (field.returnTypeInlineUnionMembers) {
-    const payloadContext: AutoTypeNameContext = {
-      kind: "resolverPayload",
-      resolverType,
-      fieldName: field.name,
-      parentTypeName,
-      fieldPath: [],
-    };
-    const payloadContextKey = getContextKey(payloadContext);
-    const resolvedTypeName = unionTypeNames.get(payloadContextKey);
-    if (resolvedTypeName) {
-      updatedType = {
-        ...field.type,
-        typeName: resolvedTypeName,
-      };
+    // Handle inline payload objects in return type
+    if (field.returnTypeInlineObjectProperties) {
+      const resolvedTypeName = generatedTypeNames.get(payloadContextKey);
+      if (resolvedTypeName) {
+        updatedType = { ...field.type, typeName: resolvedTypeName };
+      }
+    }
+
+    // Handle inline enum in return type
+    if (field.returnTypeInlineEnumMembers) {
+      const resolvedTypeName = enumTypeNames.get(payloadContextKey);
+      if (resolvedTypeName) {
+        updatedType = { ...field.type, typeName: resolvedTypeName };
+      }
+    }
+
+    // Handle inline union in return type
+    if (field.returnTypeInlineUnionMembers) {
+      const resolvedTypeName = unionTypeNames.get(payloadContextKey);
+      if (resolvedTypeName) {
+        updatedType = { ...field.type, typeName: resolvedTypeName };
+      }
     }
   }
 
@@ -1426,12 +1397,12 @@ export function generateAutoTypes(
   const inlineEnumsFromTypes = collectInlineEnumsFromTypes(
     input.extractedTypes,
   );
-  const inlineEnumsFromResolvers = collectInlineEnumsFromResolvers(
-    input.resolversResult,
-  );
-  const inlineEnumsFromPayloads = collectInlineEnumsFromPayloads(
-    input.resolversResult,
-  );
+  const inlineEnumsFromResolvers = collectInlineEnumsFromResolvers({
+    resolversResult: input.resolversResult,
+  });
+  const inlineEnumsFromPayloads = collectInlineEnumsFromPayloads({
+    resolversResult: input.resolversResult,
+  });
   const allInlineEnums = [
     ...inlineEnumsFromTypes,
     ...inlineEnumsFromResolvers,
