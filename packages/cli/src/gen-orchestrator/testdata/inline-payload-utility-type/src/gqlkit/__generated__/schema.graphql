@@ -145,15 +145,6 @@ extend type Query {
   """
   findUserProfile(email: String!): FindUserProfilePayload
   """
-  Query returning known type directly (NOT utility type).
-  User is in knownTypeNames, so no Payload should be generated.
-  This contrasts with utility type expansion behavior.
-  Tests Requirement 6.3 (2-phase type extraction).
-  
-  Defined in: src/gqlkit/schema/types.ts
-  """
-  getUser(id: String!): User!
-  """
   Query returning Omit utility type.
   Omit<UserProfile, "phone" | "age"> should be expanded to inline object.
   Generates GetUserProfilePayload with name, email, bio fields.

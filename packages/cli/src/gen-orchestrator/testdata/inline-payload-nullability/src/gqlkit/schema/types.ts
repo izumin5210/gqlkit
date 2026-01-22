@@ -1,4 +1,4 @@
-import { defineMutation, defineQuery, type NoArgs } from "../gqlkit.js";
+import { defineMutation, defineQuery } from "../gqlkit.js";
 
 export type User = {
   id: string;
@@ -68,19 +68,4 @@ export const updatePosts = defineMutation<
 >((_root, _args) => ({
   posts: [],
   failedIds: null,
-}));
-
-/**
- * Query returning inline object without args (NoArgs).
- * Generated type: GetHealthPayload
- */
-export const getHealth = defineQuery<
-  NoArgs,
-  {
-    status: string;
-    uptime: number;
-  }
->(() => ({
-  status: "ok",
-  uptime: 12345,
 }));

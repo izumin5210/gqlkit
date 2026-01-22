@@ -1,9 +1,4 @@
-import {
-  defineField,
-  defineMutation,
-  defineQuery,
-  type NoArgs,
-} from "../gqlkit.js";
+import { defineField, defineMutation, type NoArgs } from "../gqlkit.js";
 
 export type User = {
   id: string;
@@ -41,30 +36,6 @@ export const stats = defineField<
 >((_parent, _args) => ({
   postCount: 10,
   followerCount: 5,
-}));
-
-/**
- * Query with nested inline objects and TSDoc
- */
-export const getOrder = defineQuery<
-  { id: string },
-  {
-    /** Order info */
-    order: {
-      /** Order ID */
-      id: string;
-      /** Shipping details */
-      shipping: {
-        /** Tracking number */
-        trackingNumber: string;
-      };
-    };
-  }
->((_root, _args) => ({
-  order: {
-    id: "order-1",
-    shipping: { trackingNumber: "TRACK-123" },
-  },
 }));
 
 /**

@@ -24,9 +24,6 @@ type DraftState {
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-union FindUserPayload = NotFoundError | UserSuccess
-
-"""Defined in: src/gqlkit/schema/types.ts"""
 union GetUserPayload = InvalidEmailError | NotFoundError | UserSuccess
 
 """
@@ -112,13 +109,6 @@ extend type Post {
 }
 
 extend type Query {
-  """
-  Nullable union test - Query returning nullable union of named types.
-  Expected generated type: FindUserPayload (GraphQL Union, nullable)
-  
-  Defined in: src/gqlkit/schema/types.ts
-  """
-  findUser(email: String!): FindUserPayload
   """
   Query returning union of named types.
   Expected generated type: GetUserPayload (GraphQL Union)

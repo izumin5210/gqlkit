@@ -1,9 +1,9 @@
+import type { NoArgs } from "@gqlkit-ts/runtime";
 import {
   defineField,
   defineIsTypeOf,
   defineMutation,
   defineQuery,
-  type NoArgs,
 } from "../gqlkit.js";
 
 /**
@@ -143,12 +143,3 @@ export const status = defineField<
   publishedAt: "2025-01-01",
   viewCount: 100,
 }));
-
-/**
- * Nullable union test - Query returning nullable union of named types.
- * Expected generated type: FindUserPayload (GraphQL Union, nullable)
- */
-export const findUser = defineQuery<
-  { email: string },
-  UserSuccess | NotFoundError | null
->((_root, _args) => null);

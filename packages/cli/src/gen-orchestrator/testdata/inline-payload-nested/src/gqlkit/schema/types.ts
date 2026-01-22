@@ -1,3 +1,16 @@
+/**
+ * @fileoverview Tests deeply nested inline payload structures.
+ *
+ * This test case focuses on multi-level nesting scenarios:
+ * - Deeply nested inline objects (3+ levels): getCompany
+ * - Inline enums within nested objects: updateStatus, submitForm
+ * - Inline unions within nested objects: processData, getTaskResult
+ * - Field resolvers with nested payloads: profile, latestAction
+ *
+ * Note: For basic field resolver payload naming, see inline-payload-field-resolver.
+ * Note: For standalone inline enum payloads, see inline-payload-enum.
+ * Note: For standalone inline union payloads, see inline-payload-union.
+ */
 import {
   defineField,
   defineIsTypeOf,

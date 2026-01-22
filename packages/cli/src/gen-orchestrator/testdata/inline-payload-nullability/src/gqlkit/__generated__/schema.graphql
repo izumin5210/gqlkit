@@ -7,12 +7,6 @@ type CreateUsersPayload {
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-type GetHealthPayload {
-  status: String!
-  uptime: Float!
-}
-
-"""Defined in: src/gqlkit/schema/types.ts"""
 type GetUserOrNullPayload {
   message: String!
   user: User
@@ -64,13 +58,6 @@ extend type Mutation {
 }
 
 extend type Query {
-  """
-  Query returning inline object without args (NoArgs).
-  Generated type: GetHealthPayload
-  
-  Defined in: src/gqlkit/schema/types.ts
-  """
-  getHealth: GetHealthPayload!
   """
   Query returning inline object with Non-Null fields.
   Generated type: GetUserPayload

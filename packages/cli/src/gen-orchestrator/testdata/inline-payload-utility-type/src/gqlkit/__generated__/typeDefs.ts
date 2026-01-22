@@ -906,47 +906,6 @@ export const typeDefs: DocumentNode = {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "getUser"
-          },
-          "arguments": [
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "id"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "String"
-                  }
-                }
-              }
-            }
-          ],
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "User"
-              }
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Query returning known type directly (NOT utility type).\nUser is in knownTypeNames, so no Payload should be generated.\nThis contrasts with utility type expansion behavior.\nTests Requirement 6.3 (2-phase type extraction).\n\nDefined in: src/gqlkit/schema/types.ts",
-            "block": true
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
             "value": "getUserProfile"
           },
           "arguments": [

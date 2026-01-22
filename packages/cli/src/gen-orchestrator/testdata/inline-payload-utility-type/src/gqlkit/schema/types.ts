@@ -147,17 +147,6 @@ export const contactInfo = defineField<
 }));
 
 /**
- * Query returning known type directly (NOT utility type).
- * User is in knownTypeNames, so no Payload should be generated.
- * This contrasts with utility type expansion behavior.
- * Tests Requirement 6.3 (2-phase type extraction).
- */
-export const getUser = defineQuery<{ id: string }, User>((_root, args) => ({
-  id: args.id,
-  name: "Direct User",
-}));
-
-/**
  * Query returning nullable utility type.
  * Tests that nullable wrapper is preserved with utility type expansion.
  */

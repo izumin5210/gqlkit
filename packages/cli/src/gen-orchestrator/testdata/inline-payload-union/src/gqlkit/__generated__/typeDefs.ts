@@ -133,34 +133,6 @@ export const typeDefs: DocumentNode = {
       "kind": "UnionTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "FindUserPayload"
-      },
-      "types": [
-        {
-          "kind": "NamedType",
-          "name": {
-            "kind": "Name",
-            "value": "NotFoundError"
-          }
-        },
-        {
-          "kind": "NamedType",
-          "name": {
-            "kind": "Name",
-            "value": "UserSuccess"
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/types.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "UnionTypeDefinition",
-      "name": {
-        "kind": "Name",
         "value": "GetUserPayload"
       },
       "types": [
@@ -605,44 +577,6 @@ export const typeDefs: DocumentNode = {
         "value": "Query"
       },
       "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "findUser"
-          },
-          "arguments": [
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "email"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "String"
-                  }
-                }
-              }
-            }
-          ],
-          "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "FindUserPayload"
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Nullable union test - Query returning nullable union of named types.\nExpected generated type: FindUserPayload (GraphQL Union, nullable)\n\nDefined in: src/gqlkit/schema/types.ts",
-            "block": true
-          }
-        },
         {
           "kind": "FieldDefinition",
           "name": {

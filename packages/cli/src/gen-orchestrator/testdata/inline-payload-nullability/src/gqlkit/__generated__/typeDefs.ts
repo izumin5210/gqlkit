@@ -63,54 +63,6 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "GetHealthPayload"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "status"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "uptime"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "Float"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/types.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
         "value": "GetUserOrNullPayload"
       },
       "fields": [
@@ -476,28 +428,6 @@ export const typeDefs: DocumentNode = {
         "value": "Query"
       },
       "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "getHealth"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "GetHealthPayload"
-              }
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Query returning inline object without args (NoArgs).\nGenerated type: GetHealthPayload\n\nDefined in: src/gqlkit/schema/types.ts",
-            "block": true
-          }
-        },
         {
           "kind": "FieldDefinition",
           "name": {

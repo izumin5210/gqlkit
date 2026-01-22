@@ -1,3 +1,14 @@
+/**
+ * @fileoverview Tests inline payload type naming conventions for field resolvers.
+ *
+ * This test case focuses on the payload type naming pattern: {ParentType}{FieldName}Payload
+ * - Single-word parent + single-word field (User.stats -> UserStatsPayload)
+ * - Multi-word parent + single-word field (BlogPost.metadata -> BlogPostMetadataPayload)
+ * - Single-word parent + multi-word field (Article.relatedContent -> ArticleRelatedContentPayload)
+ *
+ * Note: For nested inline objects within field resolvers, see inline-payload-nested.
+ * Note: Query resolvers here are auxiliary infrastructure to satisfy parent type requirements.
+ */
 import type { NoArgs } from "@gqlkit-ts/runtime";
 import { defineField, defineQuery } from "../gqlkit.js";
 

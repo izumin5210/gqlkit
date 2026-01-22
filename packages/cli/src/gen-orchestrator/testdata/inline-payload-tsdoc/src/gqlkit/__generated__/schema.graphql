@@ -8,29 +8,7 @@ type CreateUserPayload {
   user: User!
 }
 
-"""Defined in: src/gqlkit/schema/types.ts"""
-type GetOrderPayload {
-  """Order info"""
-  order: GetOrderPayloadOrder!
-}
-
-"""Defined in: src/gqlkit/schema/types.ts"""
-type GetOrderPayloadOrder {
-  """Order ID"""
-  id: String!
-  """Shipping details"""
-  shipping: GetOrderPayloadOrderShipping!
-}
-
-"""Defined in: src/gqlkit/schema/types.ts"""
-type GetOrderPayloadOrderShipping {
-  """Tracking number"""
-  trackingNumber: String!
-}
-
 type Mutation
-
-type Query
 
 """
 Payload type with type-level TSDoc documentation.
@@ -72,15 +50,6 @@ extend type Mutation {
   Defined in: src/gqlkit/schema/types.ts
   """
   updateUser(id: String!, name: String!): UpdateUserPayload!
-}
-
-extend type Query {
-  """
-  Query with nested inline objects and TSDoc
-  
-  Defined in: src/gqlkit/schema/types.ts
-  """
-  getOrder(id: String!): GetOrderPayload!
 }
 
 extend type User {
