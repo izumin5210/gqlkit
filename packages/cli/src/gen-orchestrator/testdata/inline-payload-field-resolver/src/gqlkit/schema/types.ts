@@ -1,4 +1,5 @@
-import { defineField, defineQuery, type NoArgs } from "../gqlkit.js";
+import type { NoArgs } from "@gqlkit-ts/runtime";
+import { defineField, defineQuery } from "../gqlkit.js";
 
 /**
  * User type - single word parent type name
