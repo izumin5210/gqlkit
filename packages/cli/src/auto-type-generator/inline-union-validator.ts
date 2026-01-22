@@ -288,3 +288,86 @@ function validateOneOfFieldType(
 
   return null;
 }
+
+export interface ValidateUnionMemberTypenamesParams {
+  readonly members: ReadonlyArray<InlineUnionMemberInfo>;
+  readonly unionTypeName: string;
+  readonly sourceLocation: SourceLocation;
+}
+
+export interface ValidateUnionMemberTypenamesResult {
+  readonly valid: boolean;
+  readonly diagnostics: ReadonlyArray<Diagnostic>;
+  readonly memberTypenames: ReadonlyMap<number, string>;
+}
+
+/**
+ * Validates __typename property on inline union members.
+ * Returns extracted typename values for valid members.
+ *
+ * Task 5.1: Union member __typename validation
+ * - Reports MISSING_TYPENAME_PROPERTY when __typename is not present
+ * - Reports INVALID_TYPENAME_TYPE when __typename is not a string literal
+ * - Skips validation for named types (needsAutoGeneration: false)
+ * - Only called for payload unions (context.kind === "resolverPayload")
+ *
+ * Requirements: 4.1, 4.2, 4.3
+ */
+export function validateUnionMemberTypenames(
+  params: ValidateUnionMemberTypenamesParams,
+): ValidateUnionMemberTypenamesResult {
+  const { members, unionTypeName, sourceLocation } = params;
+  const diagnostics: Diagnostic[] = [];
+  const memberTypenames = new Map<number, string>();
+
+  for (let i = 0; i < members.length; i++) {
+    const member = members[i]!;
+
+    if (!member.needsAutoGeneration) {
+      continue;
+    }
+
+    const memberType = member.memberType;
+
+    if (
+      memberType.kind !== "inlineObject" ||
+      !memberType.inlineObjectProperties
+    ) {
+      continue;
+    }
+
+    const typenameProperty = memberType.inlineObjectProperties.find(
+      (prop) => prop.name === "__typename",
+    );
+
+    if (!typenameProperty) {
+      diagnostics.push({
+        code: "MISSING_TYPENAME_PROPERTY",
+        message: `Union '${unionTypeName}' member at index ${i} is missing '__typename' property. Inline union members must have a '__typename' property with a string literal type.`,
+        severity: "error",
+        location: sourceLocation,
+      });
+      continue;
+    }
+
+    const typenameType = typenameProperty.tsType;
+
+    if (typenameType.kind !== "literal" || typenameType.name === null) {
+      diagnostics.push({
+        code: "INVALID_TYPENAME_TYPE",
+        message: `Union '${unionTypeName}' member at index ${i} has '__typename' that is not a string literal type. Expected a string literal like '__typename: "TypeName"'.`,
+        severity: "error",
+        location: sourceLocation,
+      });
+      continue;
+    }
+
+    memberTypenames.set(i, typenameType.name);
+  }
+
+  return {
+    valid: diagnostics.length === 0,
+    diagnostics,
+    memberTypenames,
+  };
+}

@@ -1,0 +1,42 @@
+[
+  {
+    "code": "MISSING_TYPENAME_PROPERTY",
+    "message": "Union 'SearchItemsPayload' member at index 1 is missing '__typename' property. Inline union members must have a '__typename' property with a string literal type.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 79,
+      "column": 14
+    }
+  },
+  {
+    "code": "INVALID_TYPENAME_TYPE",
+    "message": "Union 'SearchItemsPayload' member at index 2 has '__typename' that is not a string literal type. Expected a string literal like '__typename: \"TypeName\"'.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 79,
+      "column": 14
+    }
+  },
+  {
+    "code": "MISSING_TYPENAME_PROPERTY",
+    "message": "Union 'CreateUserPayload' member at index 1 is missing '__typename' property. Inline union members must have a '__typename' property with a string literal type.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 34,
+      "column": 14
+    }
+  },
+  {
+    "code": "INVALID_TYPENAME_TYPE",
+    "message": "Union 'UpdateUserPayload' member at index 1 has '__typename' that is not a string literal type. Expected a string literal like '__typename: \"TypeName\"'.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 57,
+      "column": 14
+    }
+  }
+]
