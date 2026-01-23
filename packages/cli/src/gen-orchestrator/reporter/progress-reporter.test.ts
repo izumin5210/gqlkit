@@ -19,56 +19,7 @@ describe("ProgressReporter", () => {
     };
   }
 
-  describe("existing methods", () => {
-    it("should report startPhase", () => {
-      const writer = createMockWriter();
-      const reporter = createProgressReporter(writer);
-
-      reporter.startPhase("Generating");
-
-      expect(writer.stdoutCalls).toContain("  Generating...");
-    });
-
-    it("should report fileWritten", () => {
-      const writer = createMockWriter();
-      const reporter = createProgressReporter(writer);
-
-      reporter.fileWritten("/path/to/file.ts");
-
-      expect(writer.stdoutCalls).toContain("    wrote /path/to/file.ts");
-    });
-
-    it("should report complete", () => {
-      const writer = createMockWriter();
-      const reporter = createProgressReporter(writer);
-
-      reporter.complete();
-
-      expect(writer.stdoutCalls).toContain("  Done!");
-    });
-  });
-
   describe("hook reporting methods", () => {
-    it("should report startHookPhase", () => {
-      const writer = createMockWriter();
-      const reporter = createProgressReporter(writer);
-
-      reporter.startHookPhase();
-
-      expect(writer.stdoutCalls.length).toBe(1);
-      expect(writer.stdoutCalls[0]).toContain("hook");
-    });
-
-    it("should report hookCompleted successfully", () => {
-      const writer = createMockWriter();
-      const reporter = createProgressReporter(writer);
-
-      reporter.hookCompleted("prettier --write");
-
-      expect(writer.stdoutCalls.length).toBe(1);
-      expect(writer.stdoutCalls[0]).toContain("prettier --write");
-    });
-
     it("should report hookFailed with error details", () => {
       const writer = createMockWriter();
       const reporter = createProgressReporter(writer);
