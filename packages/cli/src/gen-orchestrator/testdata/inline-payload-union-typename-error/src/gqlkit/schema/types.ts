@@ -92,3 +92,79 @@ export const searchItems = defineQuery<
   name: "Result",
   email: "result@example.com",
 }));
+
+/**
+ * Test case 4: Optional __typename property error (Requirement 4.4)
+ *
+ * This mutation returns a union where __typename is declared as optional.
+ * Using `__typename?: "DeleteError"` instead of `__typename: "DeleteError"`.
+ * Expected error: OPTIONAL_TYPENAME_PROPERTY
+ */
+export const deleteUser = defineMutation<
+  { id: string },
+  | User
+  | {
+      __typename?: "DeleteError";
+      code: string;
+      message: string;
+    }
+>((_root, _args) => ({
+  id: "1",
+  name: "Deleted",
+  email: "deleted@example.com",
+}));
+
+/**
+ * Test case 5: Nullable __typename property error (Requirement 4.5)
+ *
+ * This query returns a union where __typename is nullable.
+ * Using `__typename: "GetDataError" | null` instead of `__typename: "GetDataError"`.
+ * Expected error: NULLABLE_TYPENAME_PROPERTY
+ */
+export const getData = defineQuery<
+  { id: string },
+  | User
+  | {
+      __typename: "GetDataError" | null;
+      reason: string;
+    }
+>((_root, _args) => ({
+  id: "1",
+  name: "Data",
+  email: "data@example.com",
+}));
+
+/**
+ * Test case 6: __typename field structure mismatch error (Requirement 4.6)
+ *
+ * This test uses the SAME __typename value "SharedError" in two different
+ * union members, but with DIFFERENT field structures.
+ * Expected error: TYPENAME_FIELD_STRUCTURE_MISMATCH
+ */
+export const processA = defineQuery<
+  NoArgs,
+  | User
+  | {
+      __typename: "SharedError";
+      code: string;
+      message: string;
+    }
+>((_root, _args) => ({
+  id: "1",
+  name: "A",
+  email: "a@example.com",
+}));
+
+export const processB = defineQuery<
+  NoArgs,
+  | User
+  | {
+      __typename: "SharedError";
+      code: string;
+      reason: string;
+    }
+>((_root, _args) => ({
+  id: "1",
+  name: "B",
+  email: "b@example.com",
+}));
