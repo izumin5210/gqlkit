@@ -9,8 +9,10 @@ import type { InlineUnionMemberInfo } from "./inline-union-types.js";
 import {
   type ValidateOneOfMembersParams,
   type ValidateUnionMembersParams,
+  type ValidateUnionMemberTypenamesParams,
   validateOneOfMembers,
   validateUnionMembers,
+  validateUnionMemberTypenames,
 } from "./inline-union-validator.js";
 
 function createReferenceTsType(
@@ -29,6 +31,8 @@ function createReferenceTsType(
     externalEnumSymbol: null,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
   };
 }
 
@@ -48,6 +52,8 @@ function createPrimitiveTsType(
     externalEnumSymbol: null,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
   };
 }
 
@@ -71,6 +77,8 @@ function createInlineEnumTsType(
     externalEnumSymbol: null,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
   };
 }
 
@@ -97,6 +105,26 @@ function createScalarTsType(
     externalEnumSymbol: null,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
+  };
+}
+
+function createLiteralTsType(value: string, nullable = false): TSTypeReference {
+  return {
+    kind: "literal",
+    name: value,
+    elementType: null,
+    members: null,
+    nullable,
+    scalarInfo: null,
+    inlineObjectProperties: null,
+    inlineEnumMembers: null,
+    externalEnumSymbol: null,
+    externalEnumDescription: null,
+    externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
   };
 }
 
@@ -116,6 +144,8 @@ function createInlineObjectTsType(
     externalEnumSymbol: null,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
   };
 }
 
@@ -768,6 +798,450 @@ describe("validateOneOfMembers", () => {
 
       expect(result.valid).toBe(false);
       expect(result.diagnostics.length).toBeGreaterThanOrEqual(3);
+    });
+  });
+});
+
+describe("validateUnionMemberTypenames", () => {
+  describe("valid union members with __typename", () => {
+    it("returns valid when all inline members have __typename with string literal type", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "__typename",
+                createLiteralTsType("UpdateUserSuccess"),
+              ),
+              createInlineObjectProperty("user", createReferenceTsType("User")),
+            ]),
+            true,
+          ),
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "__typename",
+                createLiteralTsType("UpdateUserError"),
+              ),
+              createInlineObjectProperty(
+                "message",
+                createPrimitiveTsType("string"),
+              ),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "UpdateUserPayload",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.valid).toBe(true);
+      expect(result.diagnostics).toHaveLength(0);
+      expect(result.memberTypenames.get(0)).toBe("UpdateUserSuccess");
+      expect(result.memberTypenames.get(1)).toBe("UpdateUserError");
+    });
+
+    it("skips validation for named type members (needsAutoGeneration: false)", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(createReferenceTsType("ExistingSuccess"), false),
+          createMemberInfo(createReferenceTsType("ExistingError"), false),
+        ],
+        unionTypeName: "MixedPayload",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.valid).toBe(true);
+      expect(result.diagnostics).toHaveLength(0);
+      expect(result.memberTypenames.size).toBe(0);
+    });
+
+    it("validates only inline members in mixed union", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(createReferenceTsType("ExistingType"), false),
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "__typename",
+                createLiteralTsType("InlineSuccess"),
+              ),
+              createInlineObjectProperty(
+                "data",
+                createPrimitiveTsType("string"),
+              ),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "MixedPayload",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.valid).toBe(true);
+      expect(result.diagnostics).toHaveLength(0);
+      expect(result.memberTypenames.size).toBe(1);
+      expect(result.memberTypenames.get(1)).toBe("InlineSuccess");
+    });
+  });
+
+  describe("missing __typename property errors", () => {
+    it("reports error when inline member is missing __typename property", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty("user", createReferenceTsType("User")),
+              createInlineObjectProperty(
+                "message",
+                createPrimitiveTsType("string"),
+              ),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "UpdateUserPayload",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toHaveLength(1);
+      expect(result.diagnostics[0]).toMatchObject({
+        code: "MISSING_TYPENAME_PROPERTY",
+        severity: "error",
+        location: defaultSourceLocation,
+      });
+      expect(result.diagnostics[0]?.message).toContain("UpdateUserPayload");
+      expect(result.diagnostics[0]?.message).toContain("0");
+    });
+
+    it("reports errors for multiple members missing __typename", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty("id", createPrimitiveTsType("string")),
+            ]),
+            true,
+          ),
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "name",
+                createPrimitiveTsType("string"),
+              ),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "ResultPayload",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toHaveLength(2);
+      expect(
+        result.diagnostics.every((d) => d.code === "MISSING_TYPENAME_PROPERTY"),
+      ).toBe(true);
+    });
+  });
+
+  describe("optional __typename property errors", () => {
+    it("reports error when __typename is optional", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "__typename",
+                createLiteralTsType("UpdateUserSuccess"),
+                true, // optional
+              ),
+              createInlineObjectProperty("user", createReferenceTsType("User")),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "UpdateUserPayload",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toHaveLength(1);
+      expect(result.diagnostics[0]).toMatchObject({
+        code: "OPTIONAL_TYPENAME_PROPERTY",
+        severity: "error",
+        location: defaultSourceLocation,
+      });
+      expect(result.diagnostics[0]?.message).toContain("UpdateUserPayload");
+      expect(result.diagnostics[0]?.message).toContain("optional");
+    });
+  });
+
+  describe("nullable __typename property errors", () => {
+    it("reports error when __typename is nullable", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "__typename",
+                createLiteralTsType("UpdateUserSuccess", true), // nullable
+              ),
+              createInlineObjectProperty("user", createReferenceTsType("User")),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "UpdateUserPayload",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toHaveLength(1);
+      expect(result.diagnostics[0]).toMatchObject({
+        code: "NULLABLE_TYPENAME_PROPERTY",
+        severity: "error",
+        location: defaultSourceLocation,
+      });
+      expect(result.diagnostics[0]?.message).toContain("UpdateUserPayload");
+      expect(result.diagnostics[0]?.message).toContain("nullable");
+    });
+
+    it("reports error when __typename is both optional and nullable", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "__typename",
+                createLiteralTsType("UpdateUserSuccess", true), // nullable
+                true, // optional
+              ),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "UpdateUserPayload",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.valid).toBe(false);
+      // Should report both errors
+      expect(result.diagnostics).toHaveLength(2);
+      expect(
+        result.diagnostics.some((d) => d.code === "OPTIONAL_TYPENAME_PROPERTY"),
+      ).toBe(true);
+      expect(
+        result.diagnostics.some((d) => d.code === "NULLABLE_TYPENAME_PROPERTY"),
+      ).toBe(true);
+    });
+  });
+
+  describe("invalid __typename type errors", () => {
+    it("reports error when __typename is not a string literal type (primitive string)", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "__typename",
+                createPrimitiveTsType("string"),
+              ),
+              createInlineObjectProperty("user", createReferenceTsType("User")),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "UpdateUserPayload",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toHaveLength(1);
+      expect(result.diagnostics[0]).toMatchObject({
+        code: "INVALID_TYPENAME_TYPE",
+        severity: "error",
+        location: defaultSourceLocation,
+      });
+      expect(result.diagnostics[0]?.message).toContain("UpdateUserPayload");
+      expect(result.diagnostics[0]?.message).toContain("0");
+      expect(result.diagnostics[0]?.message).toContain("string literal");
+    });
+
+    it("reports error when __typename is a reference type", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "__typename",
+                createReferenceTsType("SomeType"),
+              ),
+              createInlineObjectProperty(
+                "data",
+                createPrimitiveTsType("string"),
+              ),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "PayloadUnion",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toHaveLength(1);
+      expect(result.diagnostics[0]?.code).toBe("INVALID_TYPENAME_TYPE");
+    });
+
+    it("reports error when __typename is a number type", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "__typename",
+                createPrimitiveTsType("number"),
+              ),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "InvalidPayload",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toHaveLength(1);
+      expect(result.diagnostics[0]?.code).toBe("INVALID_TYPENAME_TYPE");
+    });
+  });
+
+  describe("error message content", () => {
+    it("includes union type name in error message", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty("id", createPrimitiveTsType("string")),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "SpecificUnionName",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.diagnostics[0]?.message).toContain("SpecificUnionName");
+    });
+
+    it("includes member index in error message", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "__typename",
+                createLiteralTsType("ValidType"),
+              ),
+            ]),
+            true,
+          ),
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty("id", createPrimitiveTsType("string")),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "TestPayload",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.diagnostics[0]?.message).toContain("1");
+    });
+  });
+
+  describe("mixed valid and invalid members", () => {
+    it("reports only errors for invalid members", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "__typename",
+                createLiteralTsType("ValidSuccess"),
+              ),
+              createInlineObjectProperty(
+                "data",
+                createPrimitiveTsType("string"),
+              ),
+            ]),
+            true,
+          ),
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "message",
+                createPrimitiveTsType("string"),
+              ),
+            ]),
+            true,
+          ),
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "__typename",
+                createPrimitiveTsType("string"),
+              ),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "MixedPayload",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toHaveLength(2);
+      expect(
+        result.diagnostics.some((d) => d.code === "MISSING_TYPENAME_PROPERTY"),
+      ).toBe(true);
+      expect(
+        result.diagnostics.some((d) => d.code === "INVALID_TYPENAME_TYPE"),
+      ).toBe(true);
+      expect(result.memberTypenames.get(0)).toBe("ValidSuccess");
+      expect(result.memberTypenames.has(1)).toBe(false);
+      expect(result.memberTypenames.has(2)).toBe(false);
     });
   });
 });

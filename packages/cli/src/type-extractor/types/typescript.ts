@@ -70,6 +70,10 @@ export interface TSTypeReference {
   readonly nullable: boolean;
   readonly scalarInfo: ScalarTypeInfo | null;
   readonly inlineObjectProperties: ReadonlyArray<InlineObjectPropertyDef> | null;
+  /** TSDoc description from the inline object type alias (Requirement 7.2) */
+  readonly inlineObjectDescription: string | null;
+  /** @deprecated tag from the inline object type alias (Requirement 7.3) */
+  readonly inlineObjectDeprecated: DeprecationInfo | null;
   /** Inline enum members when kind is "inlineEnum" */
   readonly inlineEnumMembers: ReadonlyArray<InlineEnumMemberInfo> | null;
   /** External TypeScript enum symbol for deduplication (Requirement 5.2) */

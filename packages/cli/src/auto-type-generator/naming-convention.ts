@@ -4,7 +4,8 @@
 export type AutoTypeNameContext =
   | ObjectFieldContext
   | InputFieldContext
-  | ResolverArgContext;
+  | ResolverArgContext
+  | ResolverPayloadContext;
 
 /**
  * Context for Object type field inline objects.
@@ -36,6 +37,20 @@ export interface ResolverArgContext {
   readonly resolverType: "query" | "mutation" | "field";
   readonly fieldName: string;
   readonly argName: string;
+  readonly parentTypeName: string | null;
+  readonly fieldPath: ReadonlyArray<string>;
+}
+
+/**
+ * Context for resolver payload inline types.
+ * Query/Mutation: {PascalCaseFieldName}Payload
+ * Field resolver: {ParentTypeName}{PascalCaseFieldName}Payload
+ * Nested: {PayloadTypeName}{PascalCaseFieldPath} (no Input suffix)
+ */
+export interface ResolverPayloadContext {
+  readonly kind: "resolverPayload";
+  readonly resolverType: "query" | "mutation" | "field";
+  readonly fieldName: string;
   readonly parentTypeName: string | null;
   readonly fieldPath: ReadonlyArray<string>;
 }
@@ -102,6 +117,8 @@ export function generateAutoTypeName(context: AutoTypeNameContext): string {
       return generateInputFieldTypeName(context);
     case "resolverArg":
       return generateResolverArgTypeName(context);
+    case "resolverPayload":
+      return generateResolverPayloadTypeName(context);
   }
 }
 
@@ -130,4 +147,17 @@ function generateResolverArgTypeName(context: ResolverArgContext): string {
   }
 
   return `${fieldNamePascal}${argNamePascal}${pathParts}Input`;
+}
+
+function generateResolverPayloadTypeName(
+  context: ResolverPayloadContext,
+): string {
+  const fieldNamePascal = toPascalCase(context.fieldName);
+  const pathParts = context.fieldPath.map(toPascalCase).join("");
+
+  if (context.resolverType === "field" && context.parentTypeName) {
+    return `${context.parentTypeName}${fieldNamePascal}Payload${pathParts}`;
+  }
+
+  return `${fieldNamePascal}Payload${pathParts}`;
 }

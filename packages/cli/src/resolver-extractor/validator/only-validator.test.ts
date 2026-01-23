@@ -31,6 +31,8 @@ function createScalarTypeRef(
     externalEnumSymbol: null,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
   };
 }
 
@@ -47,6 +49,8 @@ function createArrayTypeRef(elementType: TSTypeReference): TSTypeReference {
     externalEnumSymbol: null,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
   };
 }
 
@@ -70,6 +74,8 @@ function createObjectTypeRef(name: string): TSTypeReference {
     externalEnumSymbol: null,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
   };
 }
 

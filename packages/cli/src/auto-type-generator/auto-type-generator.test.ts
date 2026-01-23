@@ -2,6 +2,7 @@ import type ts from "typescript";
 import { describe, expect, it } from "vitest";
 import type {
   ExtractResolversResult,
+  GraphQLFieldDefinition,
   GraphQLInputValue,
 } from "../resolver-extractor/index.js";
 import type {
@@ -28,6 +29,8 @@ function createInlineObjectTsType(
     nullable,
     scalarInfo: null,
     inlineObjectProperties: properties,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
     inlineEnumMembers: null,
     externalEnumSymbol: null,
     externalEnumDescription: null,
@@ -47,6 +50,8 @@ function createPrimitiveTsType(
     nullable,
     scalarInfo: null,
     inlineObjectProperties: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
     inlineEnumMembers: null,
     externalEnumSymbol: null,
     externalEnumDescription: null,
@@ -125,6 +130,32 @@ function createEmptyResolversResult(): ExtractResolversResult {
     typeExtensions: [],
     abstractTypeResolvers: [],
     diagnostics: { errors: [], warnings: [] },
+  };
+}
+
+function createFieldDefinition(
+  params: Omit<
+    GraphQLFieldDefinition,
+    | "returnTypeInlineObjectProperties"
+    | "returnTypeInlineEnumMembers"
+    | "returnTypeInlineUnionMembers"
+    | "returnTypeExternalEnumSymbol"
+    | "returnTypeExternalEnumDescription"
+    | "returnTypeExternalEnumDeprecated"
+    | "returnTypeInlineObjectDescription"
+    | "returnTypeInlineObjectDeprecated"
+  >,
+): GraphQLFieldDefinition {
+  return {
+    ...params,
+    returnTypeInlineObjectProperties: null,
+    returnTypeInlineEnumMembers: null,
+    returnTypeInlineUnionMembers: null,
+    returnTypeExternalEnumSymbol: null,
+    returnTypeExternalEnumDescription: null,
+    returnTypeExternalEnumDeprecated: null,
+    returnTypeInlineObjectDescription: null,
+    returnTypeInlineObjectDeprecated: null,
   };
 }
 
@@ -353,7 +384,7 @@ describe("generateAutoTypes", () => {
       const resolversResult: ExtractResolversResult = {
         queryFields: {
           fields: [
-            {
+            createFieldDefinition({
               name: "searchUsers",
               type: {
                 typeName: "User",
@@ -397,7 +428,7 @@ describe("generateAutoTypes", () => {
               description: null,
               deprecated: null,
               directives: null,
-            },
+            }),
           ],
         },
         mutationFields: { fields: [] },
@@ -431,7 +462,7 @@ describe("generateAutoTypes", () => {
         queryFields: { fields: [] },
         mutationFields: {
           fields: [
-            {
+            createFieldDefinition({
               name: "createUser",
               type: {
                 typeName: "User",
@@ -471,7 +502,7 @@ describe("generateAutoTypes", () => {
               description: null,
               deprecated: null,
               directives: null,
-            },
+            }),
           ],
         },
         typeExtensions: [],
@@ -502,7 +533,7 @@ describe("generateAutoTypes", () => {
           {
             targetTypeName: "User",
             fields: [
-              {
+              createFieldDefinition({
                 name: "posts",
                 type: {
                   typeName: "Post",
@@ -541,7 +572,7 @@ describe("generateAutoTypes", () => {
                 description: null,
                 deprecated: null,
                 directives: null,
-              },
+              }),
             ],
           },
         ],
@@ -586,7 +617,7 @@ describe("generateAutoTypes", () => {
         queryFields: { fields: [] },
         mutationFields: {
           fields: [
-            {
+            createFieldDefinition({
               name: "updateSettings",
               type: {
                 typeName: "Result",
@@ -620,7 +651,7 @@ describe("generateAutoTypes", () => {
               description: null,
               deprecated: null,
               directives: null,
-            },
+            }),
           ],
         },
         typeExtensions: [],
@@ -684,7 +715,7 @@ describe("generateAutoTypes", () => {
       const resolversResult: ExtractResolversResult = {
         queryFields: {
           fields: [
-            {
+            createFieldDefinition({
               name: "createUser",
               type: {
                 typeName: "User",
@@ -720,7 +751,7 @@ describe("generateAutoTypes", () => {
               description: null,
               deprecated: null,
               directives: null,
-            },
+            }),
           ],
         },
         mutationFields: { fields: [] },
@@ -816,6 +847,8 @@ describe("generateAutoTypes", () => {
         externalEnumSymbol,
         externalEnumDescription: null,
         externalEnumDeprecated: null,
+        inlineObjectDescription: null,
+        inlineObjectDeprecated: null,
       };
     }
 
@@ -1058,7 +1091,7 @@ describe("generateAutoTypes", () => {
         const resolversResult: ExtractResolversResult = {
           queryFields: {
             fields: [
-              {
+              createFieldDefinition({
                 name: "listUsers",
                 type: {
                   typeName: "User",
@@ -1095,7 +1128,7 @@ describe("generateAutoTypes", () => {
                 description: null,
                 deprecated: null,
                 directives: null,
-              },
+              }),
             ],
           },
           mutationFields: { fields: [] },
@@ -1406,6 +1439,8 @@ describe("generateAutoTypes", () => {
         externalEnumSymbol: null,
         externalEnumDescription: null,
         externalEnumDeprecated: null,
+        inlineObjectDescription: null,
+        inlineObjectDeprecated: null,
       };
     }
 
@@ -1425,6 +1460,8 @@ describe("generateAutoTypes", () => {
         externalEnumSymbol: null,
         externalEnumDescription: null,
         externalEnumDeprecated: null,
+        inlineObjectDescription: null,
+        inlineObjectDeprecated: null,
       };
     }
 
@@ -1599,7 +1636,7 @@ describe("generateAutoTypes", () => {
         const resolversResult: ExtractResolversResult = {
           queryFields: {
             fields: [
-              {
+              createFieldDefinition({
                 name: "findPost",
                 type: {
                   typeName: "Post",
@@ -1634,7 +1671,7 @@ describe("generateAutoTypes", () => {
                 description: null,
                 deprecated: null,
                 directives: null,
-              },
+              }),
             ],
           },
           mutationFields: { fields: [] },
@@ -1672,7 +1709,7 @@ describe("generateAutoTypes", () => {
             {
               targetTypeName: "User",
               fields: [
-                {
+                createFieldDefinition({
                   name: "posts",
                   type: {
                     typeName: "Post",
@@ -1707,7 +1744,7 @@ describe("generateAutoTypes", () => {
                   description: null,
                   deprecated: null,
                   directives: null,
-                },
+                }),
               ],
             },
           ],
@@ -1842,7 +1879,7 @@ describe("generateAutoTypes", () => {
         const resolversResult: ExtractResolversResult = {
           queryFields: {
             fields: [
-              {
+              createFieldDefinition({
                 name: "findUser",
                 type: {
                   typeName: "User",
@@ -1877,7 +1914,7 @@ describe("generateAutoTypes", () => {
                 description: null,
                 deprecated: null,
                 directives: null,
-              },
+              }),
             ],
           },
           mutationFields: { fields: [] },
@@ -2048,7 +2085,7 @@ describe("generateAutoTypes", () => {
         const resolversResult: ExtractResolversResult = {
           queryFields: {
             fields: [
-              {
+              createFieldDefinition({
                 name: "findUser",
                 type: {
                   typeName: "User",
@@ -2083,7 +2120,7 @@ describe("generateAutoTypes", () => {
                 description: null,
                 deprecated: null,
                 directives: null,
-              },
+              }),
             ],
           },
           mutationFields: { fields: [] },
@@ -2103,6 +2140,2192 @@ describe("generateAutoTypes", () => {
         const queryField = result.updatedResolversResult.queryFields.fields[0]!;
         const whereArg = queryField.args![0]!;
         expect(whereArg.type.typeName).toBe("FindUserWhereInput");
+      });
+    });
+  });
+
+  describe("Inline payload types from resolver return types (Task 4.1)", () => {
+    function createFullFieldDefinition(
+      params: Partial<GraphQLFieldDefinition> & {
+        name: string;
+        type: GraphQLFieldDefinition["type"];
+        sourceLocation: GraphQLFieldDefinition["sourceLocation"];
+      },
+    ): GraphQLFieldDefinition {
+      return {
+        name: params.name,
+        type: params.type,
+        args: params.args ?? null,
+        sourceLocation: params.sourceLocation,
+        resolverExportName: params.resolverExportName ?? null,
+        description: params.description ?? null,
+        deprecated: params.deprecated ?? null,
+        directives: params.directives ?? null,
+        returnTypeInlineObjectProperties:
+          params.returnTypeInlineObjectProperties ?? null,
+        returnTypeInlineEnumMembers: params.returnTypeInlineEnumMembers ?? null,
+        returnTypeInlineUnionMembers:
+          params.returnTypeInlineUnionMembers ?? null,
+        returnTypeExternalEnumSymbol:
+          params.returnTypeExternalEnumSymbol ?? null,
+        returnTypeExternalEnumDescription:
+          params.returnTypeExternalEnumDescription ?? null,
+        returnTypeExternalEnumDeprecated:
+          params.returnTypeExternalEnumDeprecated ?? null,
+        returnTypeInlineObjectDescription:
+          params.returnTypeInlineObjectDescription ?? null,
+        returnTypeInlineObjectDeprecated:
+          params.returnTypeInlineObjectDeprecated ?? null,
+      };
+    }
+
+    describe("collectInlinePayloadsFromResolvers", () => {
+      it("collects inline object from Query resolver return type", () => {
+        const payloadProperties: InlineObjectPropertyDef[] = [
+          createProperty("user", {
+            kind: "reference",
+            name: "User",
+            elementType: null,
+            members: null,
+            nullable: false,
+            scalarInfo: null,
+            inlineObjectProperties: null,
+            inlineEnumMembers: null,
+            externalEnumSymbol: null,
+            externalEnumDescription: null,
+            externalEnumDeprecated: null,
+            inlineObjectDescription: null,
+            inlineObjectDeprecated: null,
+          }),
+          createProperty("success", createPrimitiveTsType("boolean")),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "getUser",
+                type: {
+                  typeName: "__INLINE_OBJECT__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "getUser",
+                returnTypeInlineObjectProperties: payloadProperties,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(["User"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const payloadType = result.autoGeneratedTypes.find(
+          (t) => t.name === "GetUserPayload",
+        );
+        expect(payloadType).toBeDefined();
+        expect(payloadType!.kind).toBe("Object");
+        expect(payloadType!.fields).toHaveLength(2);
+        expect(payloadType!.fields!.map((f) => f.name)).toEqual([
+          "user",
+          "success",
+        ]);
+        expect(payloadType!.generatedFrom).toEqual({
+          parentTypeName: null,
+          fieldPath: [],
+          context: "resolverPayload",
+        });
+      });
+
+      it("collects inline object from Mutation resolver return type", () => {
+        const payloadProperties: InlineObjectPropertyDef[] = [
+          createProperty("user", {
+            kind: "reference",
+            name: "User",
+            elementType: null,
+            members: null,
+            nullable: false,
+            scalarInfo: null,
+            inlineObjectProperties: null,
+            inlineEnumMembers: null,
+            externalEnumSymbol: null,
+            externalEnumDescription: null,
+            externalEnumDeprecated: null,
+            inlineObjectDescription: null,
+            inlineObjectDeprecated: null,
+          }),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "updateUser",
+                type: {
+                  typeName: "__INLINE_OBJECT__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 10,
+                  column: 1,
+                },
+                resolverExportName: "updateUser",
+                returnTypeInlineObjectProperties: payloadProperties,
+              }),
+            ],
+          },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(["User"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const payloadType = result.autoGeneratedTypes.find(
+          (t) => t.name === "UpdateUserPayload",
+        );
+        expect(payloadType).toBeDefined();
+        expect(payloadType!.kind).toBe("Object");
+        expect(payloadType!.generatedFrom.context).toBe("resolverPayload");
+      });
+
+      it("collects inline object from Field resolver return type with parent type name", () => {
+        const payloadProperties: InlineObjectPropertyDef[] = [
+          createProperty("count", createPrimitiveTsType("number")),
+          createProperty("hasMore", createPrimitiveTsType("boolean")),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: { fields: [] },
+          typeExtensions: [
+            {
+              targetTypeName: "User",
+              fields: [
+                createFullFieldDefinition({
+                  name: "postsConnection",
+                  type: {
+                    typeName: "__INLINE_OBJECT__",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  sourceLocation: {
+                    file: "src/gqlkit/schema/resolvers.ts",
+                    line: 20,
+                    column: 1,
+                  },
+                  resolverExportName: "postsConnection",
+                  returnTypeInlineObjectProperties: payloadProperties,
+                }),
+              ],
+            },
+          ],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(["User"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const payloadType = result.autoGeneratedTypes.find(
+          (t) => t.name === "UserPostsConnectionPayload",
+        );
+        expect(payloadType).toBeDefined();
+        expect(payloadType!.kind).toBe("Object");
+        expect(payloadType!.generatedFrom).toEqual({
+          parentTypeName: "User",
+          fieldPath: [],
+          context: "resolverPayload",
+        });
+      });
+
+      it("skips collection when return type is a known type name", () => {
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "getUser",
+                type: {
+                  typeName: "User",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "getUser",
+                returnTypeInlineObjectProperties: null,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(["User"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        expect(
+          result.autoGeneratedTypes.filter(
+            (t) => t.generatedFrom.context === "resolverPayload",
+          ),
+        ).toHaveLength(0);
+      });
+
+      it("collects nested inline objects from payload properties", () => {
+        const nestedProperties: InlineObjectPropertyDef[] = [
+          createProperty("name", createPrimitiveTsType("string")),
+          createProperty("email", createPrimitiveTsType("string")),
+        ];
+
+        const payloadProperties: InlineObjectPropertyDef[] = [
+          createProperty(
+            "userInfo",
+            createInlineObjectTsType(nestedProperties),
+          ),
+          createProperty("success", createPrimitiveTsType("boolean")),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "createUser",
+                type: {
+                  typeName: "__INLINE_OBJECT__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "createUser",
+                returnTypeInlineObjectProperties: payloadProperties,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const typeNames = result.autoGeneratedTypes.map((t) => t.name).sort();
+        expect(typeNames).toContain("CreateUserPayload");
+        expect(typeNames).toContain("CreateUserPayloadUserInfo");
+      });
+    });
+
+    describe("Task 4.2: Payload Object type generation and return type update", () => {
+      it("updates Query resolver return type to generated Payload type name", () => {
+        const payloadProperties: InlineObjectPropertyDef[] = [
+          createProperty("user", {
+            kind: "reference",
+            name: "User",
+            elementType: null,
+            members: null,
+            nullable: false,
+            scalarInfo: null,
+            inlineObjectProperties: null,
+            inlineEnumMembers: null,
+            externalEnumSymbol: null,
+            externalEnumDescription: null,
+            externalEnumDeprecated: null,
+            inlineObjectDescription: null,
+            inlineObjectDeprecated: null,
+          }),
+          createProperty("success", createPrimitiveTsType("boolean")),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "getUser",
+                type: {
+                  typeName: "__INLINE_OBJECT__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "getUser",
+                returnTypeInlineObjectProperties: payloadProperties,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(["User"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const queryField = result.updatedResolversResult.queryFields.fields[0]!;
+        expect(queryField.type.typeName).toBe("GetUserPayload");
+      });
+
+      it("updates Mutation resolver return type to generated Payload type name", () => {
+        const payloadProperties: InlineObjectPropertyDef[] = [
+          createProperty("user", {
+            kind: "reference",
+            name: "User",
+            elementType: null,
+            members: null,
+            nullable: false,
+            scalarInfo: null,
+            inlineObjectProperties: null,
+            inlineEnumMembers: null,
+            externalEnumSymbol: null,
+            externalEnumDescription: null,
+            externalEnumDeprecated: null,
+            inlineObjectDescription: null,
+            inlineObjectDeprecated: null,
+          }),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "updateUser",
+                type: {
+                  typeName: "__INLINE_OBJECT__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 10,
+                  column: 1,
+                },
+                resolverExportName: "updateUser",
+                returnTypeInlineObjectProperties: payloadProperties,
+              }),
+            ],
+          },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(["User"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const mutationField =
+          result.updatedResolversResult.mutationFields.fields[0]!;
+        expect(mutationField.type.typeName).toBe("UpdateUserPayload");
+      });
+
+      it("updates Field resolver return type to generated Payload type name with parent type", () => {
+        const payloadProperties: InlineObjectPropertyDef[] = [
+          createProperty("count", createPrimitiveTsType("number")),
+          createProperty("hasMore", createPrimitiveTsType("boolean")),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: { fields: [] },
+          typeExtensions: [
+            {
+              targetTypeName: "User",
+              fields: [
+                createFullFieldDefinition({
+                  name: "postsConnection",
+                  type: {
+                    typeName: "__INLINE_OBJECT__",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  sourceLocation: {
+                    file: "src/gqlkit/schema/resolvers.ts",
+                    line: 20,
+                    column: 1,
+                  },
+                  resolverExportName: "postsConnection",
+                  returnTypeInlineObjectProperties: payloadProperties,
+                }),
+              ],
+            },
+          ],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(["User"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const typeExtField =
+          result.updatedResolversResult.typeExtensions[0]!.fields[0]!;
+        expect(typeExtField.type.typeName).toBe("UserPostsConnectionPayload");
+      });
+
+      it("preserves nullable on return type when updating to Payload type", () => {
+        const payloadProperties: InlineObjectPropertyDef[] = [
+          createProperty("data", createPrimitiveTsType("string")),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "findUser",
+                type: {
+                  typeName: "__INLINE_OBJECT__",
+                  nullable: true,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "findUser",
+                returnTypeInlineObjectProperties: payloadProperties,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const queryField = result.updatedResolversResult.queryFields.fields[0]!;
+        expect(queryField.type.typeName).toBe("FindUserPayload");
+        expect(queryField.type.nullable).toBe(true);
+      });
+
+      it("generates Payload type fields with correct Non-Null markers", () => {
+        const payloadProperties: InlineObjectPropertyDef[] = [
+          createProperty("requiredField", createPrimitiveTsType("string")),
+          createProperty(
+            "optionalField",
+            createPrimitiveTsType("string", true),
+          ),
+          createProperty(
+            "optionalByProperty",
+            createPrimitiveTsType("string"),
+            true,
+          ),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "getPayload",
+                type: {
+                  typeName: "__INLINE_OBJECT__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "getPayload",
+                returnTypeInlineObjectProperties: payloadProperties,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const payloadType = result.autoGeneratedTypes.find(
+          (t) => t.name === "GetPayloadPayload",
+        );
+        expect(payloadType).toBeDefined();
+        expect(payloadType!.fields).toHaveLength(3);
+
+        const requiredField = payloadType!.fields!.find(
+          (f) => f.name === "requiredField",
+        );
+        expect(requiredField!.type.nullable).toBe(false);
+
+        const optionalField = payloadType!.fields!.find(
+          (f) => f.name === "optionalField",
+        );
+        expect(optionalField!.type.nullable).toBe(true);
+
+        const optionalByProperty = payloadType!.fields!.find(
+          (f) => f.name === "optionalByProperty",
+        );
+        expect(optionalByProperty!.type.nullable).toBe(true);
+      });
+
+      it("generates Payload type fields with correct List types", () => {
+        const payloadProperties: InlineObjectPropertyDef[] = [
+          createProperty("items", {
+            kind: "array",
+            name: null,
+            elementType: {
+              kind: "reference",
+              name: "Item",
+              elementType: null,
+              members: null,
+              nullable: false,
+              scalarInfo: null,
+              inlineObjectProperties: null,
+              inlineEnumMembers: null,
+              externalEnumSymbol: null,
+              externalEnumDescription: null,
+              externalEnumDeprecated: null,
+              inlineObjectDescription: null,
+              inlineObjectDeprecated: null,
+            },
+            members: null,
+            nullable: false,
+            scalarInfo: null,
+            inlineObjectProperties: null,
+            inlineEnumMembers: null,
+            externalEnumSymbol: null,
+            externalEnumDescription: null,
+            externalEnumDeprecated: null,
+            inlineObjectDescription: null,
+            inlineObjectDeprecated: null,
+          }),
+          createProperty("nullableItems", {
+            kind: "array",
+            name: null,
+            elementType: {
+              kind: "primitive",
+              name: "string",
+              elementType: null,
+              members: null,
+              nullable: true,
+              scalarInfo: null,
+              inlineObjectProperties: null,
+              inlineEnumMembers: null,
+              externalEnumSymbol: null,
+              externalEnumDescription: null,
+              externalEnumDeprecated: null,
+              inlineObjectDescription: null,
+              inlineObjectDeprecated: null,
+            },
+            members: null,
+            nullable: true,
+            scalarInfo: null,
+            inlineObjectProperties: null,
+            inlineEnumMembers: null,
+            externalEnumSymbol: null,
+            externalEnumDescription: null,
+            externalEnumDeprecated: null,
+            inlineObjectDescription: null,
+            inlineObjectDeprecated: null,
+          }),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "getItems",
+                type: {
+                  typeName: "__INLINE_OBJECT__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "getItems",
+                returnTypeInlineObjectProperties: payloadProperties,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(["Item"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const payloadType = result.autoGeneratedTypes.find(
+          (t) => t.name === "GetItemsPayload",
+        );
+        expect(payloadType).toBeDefined();
+        expect(payloadType!.fields).toHaveLength(2);
+
+        const itemsField = payloadType!.fields!.find((f) => f.name === "items");
+        expect(itemsField!.type.list).toBe(true);
+        expect(itemsField!.type.nullable).toBe(false);
+        expect(itemsField!.type.listItemNullable).toBe(false);
+        expect(itemsField!.type.typeName).toBe("Item");
+
+        const nullableItemsField = payloadType!.fields!.find(
+          (f) => f.name === "nullableItems",
+        );
+        expect(nullableItemsField!.type.list).toBe(true);
+        expect(nullableItemsField!.type.nullable).toBe(true);
+        expect(nullableItemsField!.type.listItemNullable).toBe(true);
+        expect(nullableItemsField!.type.typeName).toBe("String");
+      });
+
+      it("applies scalar type conversion to Payload type fields", () => {
+        const payloadProperties: InlineObjectPropertyDef[] = [
+          createProperty("stringField", createPrimitiveTsType("string")),
+          createProperty("numberField", createPrimitiveTsType("number")),
+          createProperty("booleanField", createPrimitiveTsType("boolean")),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "getPrimitives",
+                type: {
+                  typeName: "__INLINE_OBJECT__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "getPrimitives",
+                returnTypeInlineObjectProperties: payloadProperties,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const payloadType = result.autoGeneratedTypes.find(
+          (t) => t.name === "GetPrimitivesPayload",
+        );
+        expect(payloadType).toBeDefined();
+
+        const stringField = payloadType!.fields!.find(
+          (f) => f.name === "stringField",
+        );
+        expect(stringField!.type.typeName).toBe("String");
+
+        const numberField = payloadType!.fields!.find(
+          (f) => f.name === "numberField",
+        );
+        expect(numberField!.type.typeName).toBe("Float");
+
+        const booleanField = payloadType!.fields!.find(
+          (f) => f.name === "booleanField",
+        );
+        expect(booleanField!.type.typeName).toBe("Boolean");
+      });
+
+      it("resolves nested inline object references in Payload type fields", () => {
+        const nestedProperties: InlineObjectPropertyDef[] = [
+          createProperty("name", createPrimitiveTsType("string")),
+        ];
+
+        const payloadProperties: InlineObjectPropertyDef[] = [
+          createProperty("nested", createInlineObjectTsType(nestedProperties)),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "getWithNested",
+                type: {
+                  typeName: "__INLINE_OBJECT__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "getWithNested",
+                returnTypeInlineObjectProperties: payloadProperties,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const payloadType = result.autoGeneratedTypes.find(
+          (t) => t.name === "GetWithNestedPayload",
+        );
+        expect(payloadType).toBeDefined();
+
+        const nestedField = payloadType!.fields!.find(
+          (f) => f.name === "nested",
+        );
+        expect(nestedField!.type.typeName).toBe("GetWithNestedPayloadNested");
+
+        const nestedType = result.autoGeneratedTypes.find(
+          (t) => t.name === "GetWithNestedPayloadNested",
+        );
+        expect(nestedType).toBeDefined();
+        expect(nestedType!.kind).toBe("Object");
+      });
+    });
+
+    describe("Task 4.3: Payload Enum type generation", () => {
+      function createInlineEnumMembers(
+        values: string[],
+      ): InlineEnumMemberInfo[] {
+        return values.map((value) => ({
+          value,
+          description: null,
+          deprecated: null,
+        }));
+      }
+
+      it("generates Enum type from Query resolver return type with inline enum", () => {
+        const statusMembers = createInlineEnumMembers([
+          "pending",
+          "completed",
+          "failed",
+        ]);
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "getStatus",
+                type: {
+                  typeName: "__INLINE_ENUM__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "getStatus",
+                returnTypeInlineEnumMembers: statusMembers,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const enumType = result.autoGeneratedTypes.find(
+          (t) => t.name === "GetStatusPayload",
+        );
+        expect(enumType).toBeDefined();
+        expect(enumType!.kind).toBe("Enum");
+        expect(enumType!.enumValues).toHaveLength(3);
+        expect(enumType!.enumValues!.map((v) => v.name)).toEqual([
+          "PENDING",
+          "COMPLETED",
+          "FAILED",
+        ]);
+        expect(enumType!.generatedFrom).toEqual({
+          parentTypeName: null,
+          fieldPath: [],
+          context: "resolverPayload",
+        });
+      });
+
+      it("generates Enum type from Mutation resolver return type with inline enum", () => {
+        const resultMembers = createInlineEnumMembers([
+          "success",
+          "validationError",
+          "notFound",
+        ]);
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "updateUser",
+                type: {
+                  typeName: "__INLINE_ENUM__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 10,
+                  column: 1,
+                },
+                resolverExportName: "updateUser",
+                returnTypeInlineEnumMembers: resultMembers,
+              }),
+            ],
+          },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const enumType = result.autoGeneratedTypes.find(
+          (t) => t.name === "UpdateUserPayload",
+        );
+        expect(enumType).toBeDefined();
+        expect(enumType!.kind).toBe("Enum");
+        expect(enumType!.enumValues!.map((v) => v.name)).toEqual([
+          "SUCCESS",
+          "VALIDATION_ERROR",
+          "NOT_FOUND",
+        ]);
+      });
+
+      it("generates Enum type from Field resolver return type with parent type name", () => {
+        const tierMembers = createInlineEnumMembers([
+          "basic",
+          "premium",
+          "enterprise",
+        ]);
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: { fields: [] },
+          typeExtensions: [
+            {
+              targetTypeName: "User",
+              fields: [
+                createFullFieldDefinition({
+                  name: "membershipTier",
+                  type: {
+                    typeName: "__INLINE_ENUM__",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  sourceLocation: {
+                    file: "src/gqlkit/schema/resolvers.ts",
+                    line: 20,
+                    column: 1,
+                  },
+                  resolverExportName: "membershipTier",
+                  returnTypeInlineEnumMembers: tierMembers,
+                }),
+              ],
+            },
+          ],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(["User"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const enumType = result.autoGeneratedTypes.find(
+          (t) => t.name === "UserMembershipTierPayload",
+        );
+        expect(enumType).toBeDefined();
+        expect(enumType!.kind).toBe("Enum");
+        expect(enumType!.enumValues!.map((v) => v.name)).toEqual([
+          "BASIC",
+          "PREMIUM",
+          "ENTERPRISE",
+        ]);
+        expect(enumType!.generatedFrom).toEqual({
+          parentTypeName: "User",
+          fieldPath: [],
+          context: "resolverPayload",
+        });
+      });
+
+      it("converts string literals to SCREAMING_SNAKE_CASE and sets needsStringEnumMapping", () => {
+        const statusMembers = createInlineEnumMembers([
+          "inProgress",
+          "on-hold",
+          "completed_with_errors",
+        ]);
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "getTaskStatus",
+                type: {
+                  typeName: "__INLINE_ENUM__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "getTaskStatus",
+                returnTypeInlineEnumMembers: statusMembers,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const enumType = result.autoGeneratedTypes.find(
+          (t) => t.name === "GetTaskStatusPayload",
+        );
+        expect(enumType).toBeDefined();
+        expect(enumType!.needsStringEnumMapping).toBe(true);
+        expect(enumType!.enumValues!.map((v) => v.name)).toEqual([
+          "IN_PROGRESS",
+          "ON_HOLD",
+          "COMPLETED_WITH_ERRORS",
+        ]);
+        expect(enumType!.enumValues!.map((v) => v.originalValue)).toEqual([
+          "inProgress",
+          "on-hold",
+          "completed_with_errors",
+        ]);
+      });
+
+      it("updates Query resolver return type to generated Payload Enum type name", () => {
+        const statusMembers = createInlineEnumMembers(["active", "inactive"]);
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "getUserStatus",
+                type: {
+                  typeName: "__INLINE_ENUM__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "getUserStatus",
+                returnTypeInlineEnumMembers: statusMembers,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const queryField = result.updatedResolversResult.queryFields.fields[0]!;
+        expect(queryField.type.typeName).toBe("GetUserStatusPayload");
+      });
+
+      it("updates Mutation resolver return type to generated Payload Enum type name", () => {
+        const resultMembers = createInlineEnumMembers(["success", "failure"]);
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "deleteUser",
+                type: {
+                  typeName: "__INLINE_ENUM__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 10,
+                  column: 1,
+                },
+                resolverExportName: "deleteUser",
+                returnTypeInlineEnumMembers: resultMembers,
+              }),
+            ],
+          },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const mutationField =
+          result.updatedResolversResult.mutationFields.fields[0]!;
+        expect(mutationField.type.typeName).toBe("DeleteUserPayload");
+      });
+
+      it("updates Field resolver return type to generated Payload Enum type name", () => {
+        const statusMembers = createInlineEnumMembers(["online", "offline"]);
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: { fields: [] },
+          typeExtensions: [
+            {
+              targetTypeName: "User",
+              fields: [
+                createFullFieldDefinition({
+                  name: "presenceStatus",
+                  type: {
+                    typeName: "__INLINE_ENUM__",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  sourceLocation: {
+                    file: "src/gqlkit/schema/resolvers.ts",
+                    line: 20,
+                    column: 1,
+                  },
+                  resolverExportName: "presenceStatus",
+                  returnTypeInlineEnumMembers: statusMembers,
+                }),
+              ],
+            },
+          ],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(["User"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const typeExtField =
+          result.updatedResolversResult.typeExtensions[0]!.fields[0]!;
+        expect(typeExtField.type.typeName).toBe("UserPresenceStatusPayload");
+      });
+    });
+
+    describe("Task 4.4: Payload Union type generation", () => {
+      function createReferenceTsType(
+        name: string,
+        nullable = false,
+      ): TSTypeReference {
+        return {
+          kind: "reference",
+          name,
+          elementType: null,
+          members: null,
+          nullable,
+          scalarInfo: null,
+          inlineObjectProperties: null,
+          inlineEnumMembers: null,
+          externalEnumSymbol: null,
+          externalEnumDescription: null,
+          externalEnumDeprecated: null,
+          inlineObjectDescription: null,
+          inlineObjectDeprecated: null,
+        };
+      }
+
+      it("generates Union type from Query resolver return type with inline union", () => {
+        const unionMembers = [
+          createReferenceTsType("Success"),
+          createReferenceTsType("Error"),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "getUser",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "getUser",
+                returnTypeInlineUnionMembers: unionMembers,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [
+            createExtractedType("Success", [
+              createField("message", createPrimitiveTsType("string")),
+            ]),
+            createExtractedType("Error", [
+              createField("code", createPrimitiveTsType("string")),
+            ]),
+          ],
+          resolversResult,
+          knownTypeNames: new Set(["Success", "Error"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const unionType = result.autoGeneratedTypes.find(
+          (t) => t.name === "GetUserPayload",
+        );
+        expect(unionType).toBeDefined();
+        expect(unionType!.kind).toBe("Union");
+        expect(unionType!.unionMembers).toEqual(["Success", "Error"]);
+        expect(unionType!.generatedFrom).toEqual({
+          parentTypeName: null,
+          fieldPath: [],
+          context: "resolverPayload",
+        });
+      });
+
+      it("generates Union type from Mutation resolver return type with inline union", () => {
+        const unionMembers = [
+          createReferenceTsType("UpdateUserSuccess"),
+          createReferenceTsType("UpdateUserInvalidEmail"),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "updateUser",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 10,
+                  column: 1,
+                },
+                resolverExportName: "updateUser",
+                returnTypeInlineUnionMembers: unionMembers,
+              }),
+            ],
+          },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [
+            createExtractedType("UpdateUserSuccess", [
+              createField("user", createPrimitiveTsType("string")),
+            ]),
+            createExtractedType("UpdateUserInvalidEmail", [
+              createField("message", createPrimitiveTsType("string")),
+            ]),
+          ],
+          resolversResult,
+          knownTypeNames: new Set([
+            "UpdateUserSuccess",
+            "UpdateUserInvalidEmail",
+          ]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const unionType = result.autoGeneratedTypes.find(
+          (t) => t.name === "UpdateUserPayload",
+        );
+        expect(unionType).toBeDefined();
+        expect(unionType!.kind).toBe("Union");
+        expect(unionType!.unionMembers).toEqual([
+          "UpdateUserSuccess",
+          "UpdateUserInvalidEmail",
+        ]);
+      });
+
+      it("generates Union type from Field resolver return type with parent type name", () => {
+        const unionMembers = [
+          createReferenceTsType("Post"),
+          createReferenceTsType("DeletedPost"),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: { fields: [] },
+          typeExtensions: [
+            {
+              targetTypeName: "User",
+              fields: [
+                createFullFieldDefinition({
+                  name: "latestPost",
+                  type: {
+                    typeName: "__INLINE_UNION__",
+                    nullable: true,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  sourceLocation: {
+                    file: "src/gqlkit/schema/resolvers.ts",
+                    line: 20,
+                    column: 1,
+                  },
+                  resolverExportName: "latestPost",
+                  returnTypeInlineUnionMembers: unionMembers,
+                }),
+              ],
+            },
+          ],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [
+            createExtractedType("Post", [
+              createField("title", createPrimitiveTsType("string")),
+            ]),
+            createExtractedType("DeletedPost", [
+              createField("reason", createPrimitiveTsType("string")),
+            ]),
+          ],
+          resolversResult,
+          knownTypeNames: new Set(["User", "Post", "DeletedPost"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const unionType = result.autoGeneratedTypes.find(
+          (t) => t.name === "UserLatestPostPayload",
+        );
+        expect(unionType).toBeDefined();
+        expect(unionType!.kind).toBe("Union");
+        expect(unionType!.unionMembers).toEqual(["Post", "DeletedPost"]);
+        expect(unionType!.generatedFrom).toEqual({
+          parentTypeName: "User",
+          fieldPath: [],
+          context: "resolverPayload",
+        });
+      });
+
+      it("updates Query resolver return type to generated Payload Union type name", () => {
+        const unionMembers = [
+          createReferenceTsType("Found"),
+          createReferenceTsType("NotFound"),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "findItem",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "findItem",
+                returnTypeInlineUnionMembers: unionMembers,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [
+            createExtractedType("Found", [
+              createField("item", createPrimitiveTsType("string")),
+            ]),
+            createExtractedType("NotFound", [
+              createField("message", createPrimitiveTsType("string")),
+            ]),
+          ],
+          resolversResult,
+          knownTypeNames: new Set(["Found", "NotFound"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const queryField = result.updatedResolversResult.queryFields.fields[0]!;
+        expect(queryField.type.typeName).toBe("FindItemPayload");
+      });
+
+      it("updates Mutation resolver return type to generated Payload Union type name", () => {
+        const unionMembers = [
+          createReferenceTsType("CreateSuccess"),
+          createReferenceTsType("CreateError"),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "createItem",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 10,
+                  column: 1,
+                },
+                resolverExportName: "createItem",
+                returnTypeInlineUnionMembers: unionMembers,
+              }),
+            ],
+          },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [
+            createExtractedType("CreateSuccess", [
+              createField("id", createPrimitiveTsType("string")),
+            ]),
+            createExtractedType("CreateError", [
+              createField("message", createPrimitiveTsType("string")),
+            ]),
+          ],
+          resolversResult,
+          knownTypeNames: new Set(["CreateSuccess", "CreateError"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const mutationField =
+          result.updatedResolversResult.mutationFields.fields[0]!;
+        expect(mutationField.type.typeName).toBe("CreateItemPayload");
+      });
+
+      it("updates Field resolver return type to generated Payload Union type name", () => {
+        const unionMembers = [
+          createReferenceTsType("Active"),
+          createReferenceTsType("Inactive"),
+        ];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: { fields: [] },
+          typeExtensions: [
+            {
+              targetTypeName: "User",
+              fields: [
+                createFullFieldDefinition({
+                  name: "accountStatus",
+                  type: {
+                    typeName: "__INLINE_UNION__",
+                    nullable: false,
+                    list: false,
+                    listItemNullable: null,
+                  },
+                  sourceLocation: {
+                    file: "src/gqlkit/schema/resolvers.ts",
+                    line: 20,
+                    column: 1,
+                  },
+                  resolverExportName: "accountStatus",
+                  returnTypeInlineUnionMembers: unionMembers,
+                }),
+              ],
+            },
+          ],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [
+            createExtractedType("Active", [
+              createField("since", createPrimitiveTsType("string")),
+            ]),
+            createExtractedType("Inactive", [
+              createField("reason", createPrimitiveTsType("string")),
+            ]),
+          ],
+          resolversResult,
+          knownTypeNames: new Set(["User", "Active", "Inactive"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const typeExtField =
+          result.updatedResolversResult.typeExtensions[0]!.fields[0]!;
+        expect(typeExtField.type.typeName).toBe("UserAccountStatusPayload");
+      });
+    });
+
+    describe("Task 5.2: Inline Union member Object type generation with __typename", () => {
+      function createReferenceTsType(
+        name: string,
+        nullable = false,
+      ): TSTypeReference {
+        return {
+          kind: "reference",
+          name,
+          elementType: null,
+          members: null,
+          nullable,
+          scalarInfo: null,
+          inlineObjectProperties: null,
+          inlineEnumMembers: null,
+          externalEnumSymbol: null,
+          externalEnumDescription: null,
+          externalEnumDeprecated: null,
+          inlineObjectDescription: null,
+          inlineObjectDeprecated: null,
+        };
+      }
+
+      function createLiteralTsType(
+        value: string,
+        nullable = false,
+      ): TSTypeReference {
+        return {
+          kind: "literal",
+          name: value,
+          elementType: null,
+          members: null,
+          nullable,
+          scalarInfo: null,
+          inlineObjectProperties: null,
+          inlineEnumMembers: null,
+          externalEnumSymbol: null,
+          externalEnumDescription: null,
+          externalEnumDeprecated: null,
+          inlineObjectDescription: null,
+          inlineObjectDeprecated: null,
+        };
+      }
+
+      function createInlineObjectWithTypename(
+        typename: string,
+        otherProperties: InlineObjectPropertyDef[],
+        description: string | null = null,
+      ): TSTypeReference {
+        return {
+          kind: "inlineObject",
+          name: null,
+          elementType: null,
+          members: null,
+          nullable: false,
+          scalarInfo: null,
+          inlineObjectProperties: [
+            createProperty("__typename", createLiteralTsType(typename)),
+            ...otherProperties,
+          ],
+          inlineEnumMembers: null,
+          externalEnumSymbol: null,
+          externalEnumDescription: null,
+          externalEnumDeprecated: null,
+          inlineObjectDescription: description,
+          inlineObjectDeprecated: null,
+        };
+      }
+
+      it("generates Object type from inline union member using __typename value as type name", () => {
+        const inlineMember = createInlineObjectWithTypename("CreateUserError", [
+          createProperty("code", createPrimitiveTsType("string")),
+          createProperty("message", createPrimitiveTsType("string")),
+        ]);
+
+        const unionMembers = [createReferenceTsType("User"), inlineMember];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "createUser",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "createUser",
+                returnTypeInlineUnionMembers: unionMembers,
+              }),
+            ],
+          },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [
+            createExtractedType("User", [
+              createField("id", createPrimitiveTsType("string")),
+              createField("name", createPrimitiveTsType("string")),
+            ]),
+          ],
+          resolversResult,
+          knownTypeNames: new Set(["User"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const objectType = result.autoGeneratedTypes.find(
+          (t) => t.name === "CreateUserError",
+        );
+        expect(objectType).toBeDefined();
+        expect(objectType!.kind).toBe("Object");
+        expect(objectType!.fields).toHaveLength(2);
+        expect(objectType!.fields!.map((f) => f.name)).toEqual([
+          "code",
+          "message",
+        ]);
+      });
+
+      it("excludes __typename field from generated Object type fields", () => {
+        const inlineMember = createInlineObjectWithTypename("SuccessResult", [
+          createProperty("data", createPrimitiveTsType("string")),
+          createProperty("timestamp", createPrimitiveTsType("string")),
+        ]);
+
+        const unionMembers = [inlineMember];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "getData",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "getData",
+                returnTypeInlineUnionMembers: unionMembers,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const objectType = result.autoGeneratedTypes.find(
+          (t) => t.name === "SuccessResult",
+        );
+        expect(objectType).toBeDefined();
+        expect(objectType!.fields!.map((f) => f.name)).not.toContain(
+          "__typename",
+        );
+        expect(objectType!.fields).toHaveLength(2);
+      });
+
+      it("includes inline Object type in Union members list using __typename value", () => {
+        const inlineMember = createInlineObjectWithTypename("NotFoundError", [
+          createProperty("message", createPrimitiveTsType("string")),
+        ]);
+
+        const unionMembers = [createReferenceTsType("User"), inlineMember];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "getUser",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "getUser",
+                returnTypeInlineUnionMembers: unionMembers,
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [
+            createExtractedType("User", [
+              createField("id", createPrimitiveTsType("string")),
+            ]),
+          ],
+          resolversResult,
+          knownTypeNames: new Set(["User"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const unionType = result.autoGeneratedTypes.find(
+          (t) => t.name === "GetUserPayload",
+        );
+        expect(unionType).toBeDefined();
+        expect(unionType!.kind).toBe("Union");
+        expect(unionType!.unionMembers).toContain("User");
+        expect(unionType!.unionMembers).toContain("NotFoundError");
+      });
+
+      it("prevents duplicate Object type generation for same __typename value across unions", () => {
+        const sharedError = createInlineObjectWithTypename("SharedError", [
+          createProperty("message", createPrimitiveTsType("string")),
+          createProperty("code", createPrimitiveTsType("string")),
+        ]);
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "queryA",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "queryA",
+                returnTypeInlineUnionMembers: [
+                  createReferenceTsType("ResultA"),
+                  sharedError,
+                ],
+              }),
+              createFullFieldDefinition({
+                name: "queryB",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 10,
+                  column: 1,
+                },
+                resolverExportName: "queryB",
+                returnTypeInlineUnionMembers: [
+                  createReferenceTsType("ResultB"),
+                  sharedError,
+                ],
+              }),
+            ],
+          },
+          mutationFields: { fields: [] },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [
+            createExtractedType("ResultA", [
+              createField("dataA", createPrimitiveTsType("string")),
+            ]),
+            createExtractedType("ResultB", [
+              createField("dataB", createPrimitiveTsType("string")),
+            ]),
+          ],
+          resolversResult,
+          knownTypeNames: new Set(["ResultA", "ResultB"]),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const sharedErrorTypes = result.autoGeneratedTypes.filter(
+          (t) => t.name === "SharedError",
+        );
+        expect(sharedErrorTypes).toHaveLength(1);
+
+        const unionA = result.autoGeneratedTypes.find(
+          (t) => t.name === "QueryAPayload",
+        );
+        const unionB = result.autoGeneratedTypes.find(
+          (t) => t.name === "QueryBPayload",
+        );
+
+        expect(unionA!.unionMembers).toContain("SharedError");
+        expect(unionB!.unionMembers).toContain("SharedError");
+      });
+
+      it("generates Object type with correct fields from inline member with __typename", () => {
+        const inlineMember = createInlineObjectWithTypename(
+          "ValidationError",
+          [
+            createProperty("field", createPrimitiveTsType("string")),
+            createProperty("reason", createPrimitiveTsType("string")),
+            createProperty(
+              "suggestions",
+              createPrimitiveTsType("string"),
+              true,
+            ),
+          ],
+          "Validation error with field information",
+        );
+
+        const unionMembers = [inlineMember];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "validate",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "validate",
+                returnTypeInlineUnionMembers: unionMembers,
+              }),
+            ],
+          },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        const objectType = result.autoGeneratedTypes.find(
+          (t) => t.name === "ValidationError",
+        );
+        expect(objectType).toBeDefined();
+        expect(objectType!.kind).toBe("Object");
+        expect(objectType!.fields).toHaveLength(3);
+
+        const fieldField = objectType!.fields!.find((f) => f.name === "field");
+        expect(fieldField).toBeDefined();
+        expect(fieldField!.type.nullable).toBe(false);
+
+        const suggestionsField = objectType!.fields!.find(
+          (f) => f.name === "suggestions",
+        );
+        expect(suggestionsField).toBeDefined();
+        expect(suggestionsField!.type.nullable).toBe(true);
+
+        expect(objectType!.description).toBe(
+          "Validation error with field information",
+        );
+      });
+    });
+
+    describe("duplicate __typename with different field structures", () => {
+      function createLiteralTsType(
+        value: string,
+        nullable = false,
+      ): TSTypeReference {
+        return {
+          kind: "literal",
+          name: value,
+          elementType: null,
+          members: null,
+          nullable,
+          scalarInfo: null,
+          inlineObjectProperties: null,
+          inlineEnumMembers: null,
+          externalEnumSymbol: null,
+          externalEnumDescription: null,
+          externalEnumDeprecated: null,
+          inlineObjectDescription: null,
+          inlineObjectDeprecated: null,
+        };
+      }
+
+      function createInlineObjectWithTypename(
+        typename: string,
+        otherProperties: InlineObjectPropertyDef[],
+      ): TSTypeReference {
+        return {
+          kind: "inlineObject",
+          name: null,
+          elementType: null,
+          members: null,
+          nullable: false,
+          scalarInfo: null,
+          inlineObjectProperties: [
+            createProperty("__typename", createLiteralTsType(typename)),
+            ...otherProperties,
+          ],
+          inlineEnumMembers: null,
+          externalEnumSymbol: null,
+          externalEnumDescription: null,
+          externalEnumDeprecated: null,
+          inlineObjectDescription: null,
+          inlineObjectDeprecated: null,
+        };
+      }
+
+      it("reports error when same __typename has different field structures across union members", () => {
+        const inlineMember1 = createInlineObjectWithTypename("ErrorType", [
+          createProperty("message", createPrimitiveTsType("string")),
+        ]);
+
+        const inlineMember2 = createInlineObjectWithTypename("ErrorType", [
+          createProperty("code", createPrimitiveTsType("number")),
+        ]);
+
+        const unionMembers1 = [inlineMember1];
+        const unionMembers2 = [inlineMember2];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "createUser",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "createUser",
+                returnTypeInlineUnionMembers: unionMembers1,
+              }),
+              createFullFieldDefinition({
+                name: "updateUser",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 10,
+                  column: 1,
+                },
+                resolverExportName: "updateUser",
+                returnTypeInlineUnionMembers: unionMembers2,
+              }),
+            ],
+          },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        expect(result.diagnostics).toHaveLength(1);
+        expect(result.diagnostics[0]).toMatchObject({
+          code: "TYPENAME_FIELD_STRUCTURE_MISMATCH",
+          severity: "error",
+        });
+        expect(result.diagnostics[0]?.message).toContain("ErrorType");
+      });
+
+      it("does not report error when same __typename has identical field structures", () => {
+        const inlineMember1 = createInlineObjectWithTypename("SuccessResult", [
+          createProperty("id", createPrimitiveTsType("string")),
+        ]);
+
+        const inlineMember2 = createInlineObjectWithTypename("SuccessResult", [
+          createProperty("id", createPrimitiveTsType("string")),
+        ]);
+
+        const unionMembers1 = [inlineMember1];
+        const unionMembers2 = [inlineMember2];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "createUser",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "createUser",
+                returnTypeInlineUnionMembers: unionMembers1,
+              }),
+              createFullFieldDefinition({
+                name: "updateUser",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 10,
+                  column: 1,
+                },
+                resolverExportName: "updateUser",
+                returnTypeInlineUnionMembers: unionMembers2,
+              }),
+            ],
+          },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        // No error when field structures are identical
+        const structureMismatchErrors = result.diagnostics.filter(
+          (d) => d.code === "TYPENAME_FIELD_STRUCTURE_MISMATCH",
+        );
+        expect(structureMismatchErrors).toHaveLength(0);
       });
     });
   });

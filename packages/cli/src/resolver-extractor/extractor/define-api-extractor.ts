@@ -62,6 +62,11 @@ export interface DefineApiResolverInfo {
   readonly args: ReadonlyArray<ArgumentDefinition> | null;
   readonly returnType: TSTypeReference;
   readonly sourceFile: string;
+  readonly sourceLocation: {
+    readonly file: string;
+    readonly line: number;
+    readonly column: number;
+  };
   readonly exportedInputTypes: ReadonlyArray<ExportedInputType>;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
@@ -784,6 +789,11 @@ export function extractDefineApiResolvers(
         diagnostics.push(...typeInfo.diagnostics);
 
         const tsdocInfo = extractTsDocInfo(node, checker);
+        const sourceLocation = getSourceLocationFromNode(declaration.name) ?? {
+          file: filePath,
+          line: 1,
+          column: 1,
+        };
 
         resolvers.push({
           fieldName,
@@ -793,6 +803,7 @@ export function extractDefineApiResolvers(
           args: typeInfo.args,
           returnType: typeInfo.returnType,
           sourceFile: filePath,
+          sourceLocation,
           exportedInputTypes,
           description: tsdocInfo.description,
           deprecated: tsdocInfo.deprecated,

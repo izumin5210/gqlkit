@@ -166,6 +166,89 @@ export type Node = GqlInterface<{
 
 See [Interfaces](./interfaces.md) for more details on interface types.
 
+## Inline Union Payloads
+
+When a resolver return type is an inline union with object literals, gqlkit generates a GraphQL Union type. Each union member must have a `__typename` property with a string literal type:
+
+```typescript
+export const updateUser = defineMutation<
+  { input: UpdateUserInput },
+  | { __typename: "UpdateUserSuccess"; user: User }
+  | { __typename: "UpdateUserError"; message: string }
+>(/* ... */);
+```
+
+Generates:
+
+```graphql
+type Mutation {
+  updateUser(input: UpdateUserInput!): UpdateUserPayload!
+}
+
+union UpdateUserPayload = UpdateUserError | UpdateUserSuccess
+
+type UpdateUserSuccess {
+  user: User!
+}
+
+type UpdateUserError {
+  message: String!
+}
+```
+
+### `__typename` Requirement
+
+For inline union payloads, the `__typename` property is required and must be a string literal type:
+
+```typescript
+// ✅ OK: __typename with string literal type
+type Result =
+  | { __typename: "Success"; data: string }
+  | { __typename: "Error"; message: string };
+
+// ❌ Error: __typename missing
+type Invalid =
+  | { data: string }
+  | { message: string };
+
+// ❌ Error: __typename is not a string literal
+type AlsoInvalid =
+  | { __typename: string; data: string }
+  | { __typename: string; message: string };
+```
+
+### Automatic `__resolveType` Generation
+
+For inline union payloads, gqlkit automatically generates a `__resolveType` function that returns the `__typename` property value. You don't need to define it manually.
+
+If you need custom type resolution logic, use [defineResolveType](./abstract-resolvers.md#defineresolveType).
+
+### Mixed Union Payloads
+
+You can mix inline object literals with named types. Only inline objects require `__typename`:
+
+```typescript
+import type { User } from "./user";
+
+export const findEntity = defineQuery<
+  { id: string },
+  | User // named type - __typename determined by type
+  | { __typename: "Guest"; sessionId: string } // inline type - __typename required
+>(/* ... */);
+```
+
+Generates:
+
+```graphql
+union FindEntityPayload = Guest | User
+
+type Guest {
+  sessionId: String!
+}
+```
+
+See [Queries & Mutations](./queries-mutations.md#inline-payload-types) for more details on inline payload types.
+
 ## Runtime Type Resolution
 
 When GraphQL executes a query that returns a union type, it needs to determine the concrete type at runtime. Use `defineResolveType` to handle this:

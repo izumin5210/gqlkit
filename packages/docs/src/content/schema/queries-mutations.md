@@ -179,6 +179,136 @@ Inline string literal unions and external TypeScript enums in arguments are also
 
 See [Field Resolvers](./fields.md) for more details on inline object arguments.
 
+## Inline Payload Types
+
+Return types can use inline object literals. gqlkit automatically generates GraphQL Object types with the naming convention `{PascalCaseResolverName}Payload`:
+
+```typescript
+export const updateUser = defineMutation<
+  { input: UpdateUserInput },
+  { user: User; updatedAt: string }
+>((_root, args, ctx) => ({
+  user: ctx.db.updateUser(args.input),
+  updatedAt: new Date().toISOString(),
+}));
+```
+
+Generates:
+
+```graphql
+type Mutation {
+  updateUser(input: UpdateUserInput!): UpdateUserPayload!
+}
+
+type UpdateUserPayload {
+  user: User!
+  updatedAt: String!
+}
+```
+
+### Inline Union Payloads
+
+Union types with inline object literals generate GraphQL Union types. Each union member must have a `__typename` property with a string literal type:
+
+```typescript
+export const updateUser = defineMutation<
+  { input: UpdateUserInput },
+  | { __typename: "UpdateUserSuccess"; user: User }
+  | { __typename: "UpdateUserError"; message: string }
+>((_root, args, ctx) => {
+  const result = ctx.db.updateUser(args.input);
+  if (result.ok) {
+    return { __typename: "UpdateUserSuccess", user: result.user };
+  }
+  return { __typename: "UpdateUserError", message: result.error };
+});
+```
+
+Generates:
+
+```graphql
+type Mutation {
+  updateUser(input: UpdateUserInput!): UpdateUserPayload!
+}
+
+union UpdateUserPayload = UpdateUserError | UpdateUserSuccess
+
+type UpdateUserSuccess {
+  user: User!
+}
+
+type UpdateUserError {
+  message: String!
+}
+```
+
+The `__resolveType` function is automatically generated based on the `__typename` property. See [Abstract Type Resolution](./abstract-resolvers.md) for more details.
+
+### Inline Enum Payloads
+
+String literal unions in return types generate GraphQL Enum types:
+
+```typescript
+export const getStatus = defineQuery<NoArgs, "active" | "inactive" | "pending">(
+  (_root, _args, ctx) => ctx.db.getStatus()
+);
+```
+
+Generates:
+
+```graphql
+type Query {
+  getStatus: GetStatusPayload!
+}
+
+enum GetStatusPayload {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+```
+
+### Nested Inline Types
+
+Inline types can be nested within payload objects:
+
+```typescript
+export const createOrder = defineMutation<
+  { input: CreateOrderInput },
+  {
+    order: {
+      id: string;
+      status: "pending" | "confirmed";
+      items: { productId: string; quantity: number }[];
+    };
+  }
+>(/* ... */);
+```
+
+Generates:
+
+```graphql
+type CreateOrderPayload {
+  order: CreateOrderPayloadOrder!
+}
+
+type CreateOrderPayloadOrder {
+  id: String!
+  status: CreateOrderPayloadOrderStatus!
+  items: [CreateOrderPayloadOrderItems!]!
+}
+
+enum CreateOrderPayloadOrderStatus {
+  PENDING
+  CONFIRMED
+}
+
+type CreateOrderPayloadOrderItems {
+  productId: String!
+  quantity: Float!
+}
+```
+
 ## Attaching Directives
 
 Add a third type parameter to attach directives to Query/Mutation fields:

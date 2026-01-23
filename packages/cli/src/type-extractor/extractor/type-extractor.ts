@@ -157,7 +157,11 @@ function tryExtractAsInlineObject(
     (t) => convertTsTypeToReference(t, ctx).tsType,
   );
   return {
-    tsType: createInlineObjectType(inlineProperties),
+    tsType: createInlineObjectType({
+      properties: inlineProperties,
+      description: null,
+      deprecated: null,
+    }),
   };
 }
 

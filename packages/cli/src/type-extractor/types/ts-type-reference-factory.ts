@@ -1,4 +1,5 @@
 import type ts from "typescript";
+import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 import type {
   InlineEnumMemberInfo,
   InlineObjectPropertyDef,
@@ -22,6 +23,8 @@ function createTSTypeReference(
     nullable: false,
     scalarInfo: null,
     inlineObjectProperties: null,
+    inlineObjectDescription: null,
+    inlineObjectDeprecated: null,
     inlineEnumMembers: null,
     externalEnumSymbol: null,
     externalEnumDescription: null,
@@ -76,12 +79,24 @@ export function createUnionType(
   });
 }
 
+interface CreateInlineObjectTypeParams {
+  readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
+  /** TSDoc description from the type alias (null for true inline objects) */
+  readonly description: string | null;
+  /** @deprecated tag from the type alias (null for true inline objects) */
+  readonly deprecated: DeprecationInfo | null;
+}
+
 export function createInlineObjectType(
-  properties: ReadonlyArray<InlineObjectPropertyDef>,
+  params: CreateInlineObjectTypeParams,
 ): TSTypeReference {
   return createTSTypeReference({
     kind: "inlineObject",
-    overrides: { inlineObjectProperties: properties },
+    overrides: {
+      inlineObjectProperties: params.properties,
+      inlineObjectDescription: params.description,
+      inlineObjectDeprecated: params.deprecated,
+    },
   });
 }
 
@@ -116,9 +131,7 @@ interface CreateInlineEnumTypeParams {
   /** TSDoc description from the external enum type itself (null for string literal unions) */
   readonly externalEnumDescription: string | null;
   /** @deprecated tag from the external enum type itself (null for string literal unions) */
-  readonly externalEnumDeprecated:
-    | import("../../shared/tsdoc-parser.js").DeprecationInfo
-    | null;
+  readonly externalEnumDeprecated: DeprecationInfo | null;
 }
 
 export function createInlineEnumType(

@@ -273,6 +273,54 @@ export type User = {
 };
 ```
 
+### Inline Enum Payloads
+
+String literal unions in resolver return types generate GraphQL Enum types with the naming convention `{ResolverName}Payload`:
+
+```typescript
+export const getStatus = defineQuery<NoArgs, "active" | "inactive" | "pending">(
+  (_root, _args, ctx) => ctx.db.getStatus()
+);
+```
+
+Generates:
+
+```graphql
+type Query {
+  getStatus: GetStatusPayload!
+}
+
+enum GetStatusPayload {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+```
+
+For field resolvers, the naming convention is `{ParentTypeName}{PascalCaseFieldName}Payload`:
+
+```typescript
+export const status = defineField<User, NoArgs, "online" | "offline" | "away">(
+  (parent) => parent.currentStatus
+);
+```
+
+Generates:
+
+```graphql
+type User {
+  status: UserStatusPayload!
+}
+
+enum UserStatusPayload {
+  ONLINE
+  OFFLINE
+  AWAY
+}
+```
+
+See [Queries & Mutations](./queries-mutations.md#inline-payload-types) for more details on inline payload types.
+
 ## Automatic Case Conversion
 
 gqlkit automatically converts enum values to `SCREAMING_SNAKE_CASE` format, which is the GraphQL convention:

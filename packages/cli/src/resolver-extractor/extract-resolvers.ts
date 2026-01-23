@@ -42,6 +42,22 @@ export interface GraphQLFieldDefinition {
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
   readonly directives: ReadonlyArray<DirectiveInfo> | null;
+  /** Inline object properties when return type is an inline object type */
+  readonly returnTypeInlineObjectProperties: ReadonlyArray<InlineObjectPropertyDef> | null;
+  /** TSDoc description from the inline object type alias (Requirement 7.2) */
+  readonly returnTypeInlineObjectDescription: string | null;
+  /** @deprecated tag from the inline object type alias (Requirement 7.3) */
+  readonly returnTypeInlineObjectDeprecated: DeprecationInfo | null;
+  /** Inline enum members when return type is an inline enum (string literal union or external TypeScript enum) */
+  readonly returnTypeInlineEnumMembers: ReadonlyArray<InlineEnumMemberInfo> | null;
+  /** Inline union members when return type is a union type (for Payload union types) */
+  readonly returnTypeInlineUnionMembers: ReadonlyArray<TSTypeReference> | null;
+  /** External TypeScript enum symbol for deduplication across multiple references */
+  readonly returnTypeExternalEnumSymbol: ts.Symbol | null;
+  /** TSDoc description from the external enum type itself (null for string literal unions) */
+  readonly returnTypeExternalEnumDescription: string | null;
+  /** @deprecated tag from the external enum type itself (null for string literal unions) */
+  readonly returnTypeExternalEnumDeprecated: DeprecationInfo | null;
 }
 
 export interface QueryFieldDefinitions {

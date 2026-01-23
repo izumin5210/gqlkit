@@ -4,8 +4,14 @@ import { postIsTypeOf, userIsTypeOf } from "../schema/types.js";
 
 export function createResolvers() {
   return {
+    ContainerResult: {
+      __resolveType: (obj) => obj.__typename,
+    },
     Post: {
       __isTypeOf: postIsTypeOf,
+    },
+    SearchResultItem: {
+      __resolveType: (obj) => obj.__typename,
     },
     User: {
       __isTypeOf: userIsTypeOf,
