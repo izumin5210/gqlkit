@@ -351,6 +351,26 @@ export function validateUnionMemberTypenames(
 
     const typenameType = typenameProperty.tsType;
 
+    // Check if __typename is optional (using ?) - this would make runtime resolution unreliable
+    if (typenameProperty.optional) {
+      diagnostics.push({
+        code: "OPTIONAL_TYPENAME_PROPERTY",
+        message: `Union '${unionTypeName}' member at index ${i} has optional '__typename' property. The '__typename' property must be required for union type resolution.`,
+        severity: "error",
+        location: sourceLocation,
+      });
+    }
+
+    // Check if __typename is nullable (| null) - this would make runtime resolution unreliable
+    if (typenameType.nullable) {
+      diagnostics.push({
+        code: "NULLABLE_TYPENAME_PROPERTY",
+        message: `Union '${unionTypeName}' member at index ${i} has nullable '__typename' property. The '__typename' property must not be nullable for union type resolution.`,
+        severity: "error",
+        location: sourceLocation,
+      });
+    }
+
     if (typenameType.kind !== "literal" || typenameType.name === null) {
       diagnostics.push({
         code: "INVALID_TYPENAME_TYPE",
@@ -361,7 +381,10 @@ export function validateUnionMemberTypenames(
       continue;
     }
 
-    memberTypenames.set(i, typenameType.name);
+    // Only record typename if there are no errors for this member
+    if (!typenameProperty.optional && !typenameType.nullable) {
+      memberTypenames.set(i, typenameType.name);
+    }
   }
 
   return {

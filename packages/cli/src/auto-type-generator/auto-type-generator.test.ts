@@ -4140,5 +4140,193 @@ describe("generateAutoTypes", () => {
         );
       });
     });
+
+    describe("duplicate __typename with different field structures", () => {
+      function createLiteralTsType(
+        value: string,
+        nullable = false,
+      ): TSTypeReference {
+        return {
+          kind: "literal",
+          name: value,
+          elementType: null,
+          members: null,
+          nullable,
+          scalarInfo: null,
+          inlineObjectProperties: null,
+          inlineEnumMembers: null,
+          externalEnumSymbol: null,
+          externalEnumDescription: null,
+          externalEnumDeprecated: null,
+          inlineObjectDescription: null,
+          inlineObjectDeprecated: null,
+        };
+      }
+
+      function createInlineObjectWithTypename(
+        typename: string,
+        otherProperties: InlineObjectPropertyDef[],
+      ): TSTypeReference {
+        return {
+          kind: "inlineObject",
+          name: null,
+          elementType: null,
+          members: null,
+          nullable: false,
+          scalarInfo: null,
+          inlineObjectProperties: [
+            createProperty("__typename", createLiteralTsType(typename)),
+            ...otherProperties,
+          ],
+          inlineEnumMembers: null,
+          externalEnumSymbol: null,
+          externalEnumDescription: null,
+          externalEnumDeprecated: null,
+          inlineObjectDescription: null,
+          inlineObjectDeprecated: null,
+        };
+      }
+
+      it("reports error when same __typename has different field structures across union members", () => {
+        const inlineMember1 = createInlineObjectWithTypename("ErrorType", [
+          createProperty("message", createPrimitiveTsType("string")),
+        ]);
+
+        const inlineMember2 = createInlineObjectWithTypename("ErrorType", [
+          createProperty("code", createPrimitiveTsType("number")),
+        ]);
+
+        const unionMembers1 = [inlineMember1];
+        const unionMembers2 = [inlineMember2];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "createUser",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "createUser",
+                returnTypeInlineUnionMembers: unionMembers1,
+              }),
+              createFullFieldDefinition({
+                name: "updateUser",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 10,
+                  column: 1,
+                },
+                resolverExportName: "updateUser",
+                returnTypeInlineUnionMembers: unionMembers2,
+              }),
+            ],
+          },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        expect(result.diagnostics).toHaveLength(1);
+        expect(result.diagnostics[0]).toMatchObject({
+          code: "TYPENAME_FIELD_STRUCTURE_MISMATCH",
+          severity: "error",
+        });
+        expect(result.diagnostics[0]?.message).toContain("ErrorType");
+      });
+
+      it("does not report error when same __typename has identical field structures", () => {
+        const inlineMember1 = createInlineObjectWithTypename("SuccessResult", [
+          createProperty("id", createPrimitiveTsType("string")),
+        ]);
+
+        const inlineMember2 = createInlineObjectWithTypename("SuccessResult", [
+          createProperty("id", createPrimitiveTsType("string")),
+        ]);
+
+        const unionMembers1 = [inlineMember1];
+        const unionMembers2 = [inlineMember2];
+
+        const resolversResult: ExtractResolversResult = {
+          queryFields: { fields: [] },
+          mutationFields: {
+            fields: [
+              createFullFieldDefinition({
+                name: "createUser",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 1,
+                  column: 1,
+                },
+                resolverExportName: "createUser",
+                returnTypeInlineUnionMembers: unionMembers1,
+              }),
+              createFullFieldDefinition({
+                name: "updateUser",
+                type: {
+                  typeName: "__INLINE_UNION__",
+                  nullable: false,
+                  list: false,
+                  listItemNullable: null,
+                },
+                sourceLocation: {
+                  file: "src/gqlkit/schema/resolvers.ts",
+                  line: 10,
+                  column: 1,
+                },
+                resolverExportName: "updateUser",
+                returnTypeInlineUnionMembers: unionMembers2,
+              }),
+            ],
+          },
+          typeExtensions: [],
+          abstractTypeResolvers: [],
+          diagnostics: { errors: [], warnings: [] },
+        };
+
+        const input: AutoTypeGeneratorInput = {
+          extractedTypes: [],
+          resolversResult,
+          knownTypeNames: new Set(),
+        };
+
+        const result = generateAutoTypes(input);
+
+        // No error when field structures are identical
+        const structureMismatchErrors = result.diagnostics.filter(
+          (d) => d.code === "TYPENAME_FIELD_STRUCTURE_MISMATCH",
+        );
+        expect(structureMismatchErrors).toHaveLength(0);
+      });
+    });
   });
 });

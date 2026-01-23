@@ -956,6 +956,104 @@ describe("validateUnionMemberTypenames", () => {
     });
   });
 
+  describe("optional __typename property errors", () => {
+    it("reports error when __typename is optional", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "__typename",
+                createLiteralTsType("UpdateUserSuccess"),
+                true, // optional
+              ),
+              createInlineObjectProperty("user", createReferenceTsType("User")),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "UpdateUserPayload",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toHaveLength(1);
+      expect(result.diagnostics[0]).toMatchObject({
+        code: "OPTIONAL_TYPENAME_PROPERTY",
+        severity: "error",
+        location: defaultSourceLocation,
+      });
+      expect(result.diagnostics[0]?.message).toContain("UpdateUserPayload");
+      expect(result.diagnostics[0]?.message).toContain("optional");
+    });
+  });
+
+  describe("nullable __typename property errors", () => {
+    it("reports error when __typename is nullable", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "__typename",
+                createLiteralTsType("UpdateUserSuccess", true), // nullable
+              ),
+              createInlineObjectProperty("user", createReferenceTsType("User")),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "UpdateUserPayload",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.valid).toBe(false);
+      expect(result.diagnostics).toHaveLength(1);
+      expect(result.diagnostics[0]).toMatchObject({
+        code: "NULLABLE_TYPENAME_PROPERTY",
+        severity: "error",
+        location: defaultSourceLocation,
+      });
+      expect(result.diagnostics[0]?.message).toContain("UpdateUserPayload");
+      expect(result.diagnostics[0]?.message).toContain("nullable");
+    });
+
+    it("reports error when __typename is both optional and nullable", () => {
+      const params: ValidateUnionMemberTypenamesParams = {
+        members: [
+          createMemberInfo(
+            createInlineObjectTsType([
+              createInlineObjectProperty(
+                "__typename",
+                createLiteralTsType("UpdateUserSuccess", true), // nullable
+                true, // optional
+              ),
+            ]),
+            true,
+          ),
+        ],
+        unionTypeName: "UpdateUserPayload",
+        sourceLocation: defaultSourceLocation,
+      };
+
+      const result = validateUnionMemberTypenames(params);
+
+      expect(result.valid).toBe(false);
+      // Should report both errors
+      expect(result.diagnostics).toHaveLength(2);
+      expect(
+        result.diagnostics.some((d) => d.code === "OPTIONAL_TYPENAME_PROPERTY"),
+      ).toBe(true);
+      expect(
+        result.diagnostics.some((d) => d.code === "NULLABLE_TYPENAME_PROPERTY"),
+      ).toBe(true);
+    });
+  });
+
   describe("invalid __typename type errors", () => {
     it("reports error when __typename is not a string literal type (primitive string)", () => {
       const params: ValidateUnionMemberTypenamesParams = {
