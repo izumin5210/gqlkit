@@ -311,6 +311,8 @@ export interface ValidateUnionMemberTypenamesResult {
  * Reports:
  * - MISSING_TYPENAME_PROPERTY when __typename is not present
  * - INVALID_TYPENAME_TYPE when __typename is not a string literal
+ * - OPTIONAL_TYPENAME_PROPERTY when __typename is declared as optional
+ * - NULLABLE_TYPENAME_PROPERTY when __typename is nullable
  */
 export function validateUnionMemberTypenames(
   params: ValidateUnionMemberTypenamesParams,

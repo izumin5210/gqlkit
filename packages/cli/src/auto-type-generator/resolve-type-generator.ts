@@ -24,9 +24,9 @@ export interface CollectAutoResolveTypesParams {
  * 1. Are auto-generated (not in knownTypeNames)
  * 2. Don't have a manual defineResolveType defined
  *
- * The generated function returns `obj.__typename` which works for:
- * - Inline union members with __typename property
- * - Falls back to __isTypeOf for members without __typename
+ * The generated function returns `obj.__typename` for runtime type resolution.
+ * All Payload union members (both inline and named types) are required to
+ * include a `__typename` property in their return values.
  */
 export function collectAutoResolveTypes(
   params: CollectAutoResolveTypesParams,
