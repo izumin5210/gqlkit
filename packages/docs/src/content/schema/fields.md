@@ -122,6 +122,65 @@ input UserPostsFilterInput {
 
 Inline string literal unions and external TypeScript enums in arguments are also automatically converted to GraphQL enum types. See [Inline Enums](./enums.md#inline-enums) for details.
 
+## Inline Payload Types
+
+Field resolver return types can use inline object literals. gqlkit automatically generates GraphQL Object types with the naming convention `{ParentTypeName}{PascalCaseFieldName}Payload`:
+
+```typescript
+export const statistics = defineField<
+  User,
+  NoArgs,
+  { postCount: number; followerCount: number; isActive: boolean }
+>((parent, _args, ctx) => ctx.db.getUserStatistics(parent.id));
+```
+
+Generates:
+
+```graphql
+type User {
+  statistics: UserStatisticsPayload!
+}
+
+type UserStatisticsPayload {
+  postCount: Float!
+  followerCount: Float!
+  isActive: Boolean!
+}
+```
+
+### Inline Union Payloads
+
+Union types with inline object literals generate GraphQL Union types. Each union member must have a `__typename` property:
+
+```typescript
+export const verification = defineField<
+  User,
+  NoArgs,
+  | { __typename: "Verified"; verifiedAt: string }
+  | { __typename: "Unverified"; reason: string }
+>((parent) => parent.verification);
+```
+
+Generates:
+
+```graphql
+type User {
+  verification: UserVerificationPayload!
+}
+
+union UserVerificationPayload = Unverified | Verified
+
+type Verified {
+  verifiedAt: String!
+}
+
+type Unverified {
+  reason: String!
+}
+```
+
+See [Queries & Mutations](./queries-mutations.md#inline-payload-types) for more details on inline payload types.
+
 ## Default Values in Arguments
 
 Default values in Input Objects are applied to resolver arguments:
