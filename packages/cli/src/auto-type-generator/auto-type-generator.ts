@@ -7,6 +7,7 @@ import type {
   DirectiveArgumentValue,
   DirectiveInfo,
 } from "../shared/directive-detector.js";
+import { getSourceLocationOrDefault } from "../shared/source-location.js";
 import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
 import { convertTsTypeToGraphQLType } from "../shared/type-converter.js";
 import {
@@ -285,14 +286,15 @@ function collectInlineObjectsFromField(
         fieldPath,
       };
 
+  const sourceLocation = getSourceLocationOrDefault(
+    field.sourceLocation,
+    sourceFile,
+  );
+
   results.push({
     properties: tsType.inlineObjectProperties,
     context,
-    sourceLocation: field.sourceLocation ?? {
-      file: sourceFile,
-      line: 1,
-      column: 1,
-    },
+    sourceLocation,
     nullable: tsType.nullable,
     description: tsType.inlineObjectDescription,
     deprecated: tsType.inlineObjectDeprecated,
@@ -301,11 +303,7 @@ function collectInlineObjectsFromField(
   extractNestedInlineObjectsRecursively({
     properties: tsType.inlineObjectProperties,
     currentPath: fieldPath,
-    sourceLocation: field.sourceLocation ?? {
-      file: sourceFile,
-      line: 1,
-      column: 1,
-    },
+    sourceLocation,
     buildContext: (nestedPath) =>
       isInput
         ? { kind: "inputField", parentTypeName, fieldPath: nestedPath }
@@ -524,6 +522,30 @@ interface ResolveFieldTypeParams {
   readonly parentContext: AutoTypeNameContext;
 }
 
+function tryResolveNestedType(
+  prop: InlineObjectPropertyDef,
+  parentContext: AutoTypeNameContext,
+  typeNamesMap: ReadonlyMap<string, string>,
+): GraphQLFieldType | null {
+  const nestedPath = [...parentContext.fieldPath, prop.name];
+  const nestedContext: AutoTypeNameContext = {
+    ...parentContext,
+    fieldPath: nestedPath,
+  };
+  const contextKey = getContextKey(nestedContext);
+  const resolvedTypeName = typeNamesMap.get(contextKey);
+
+  if (resolvedTypeName) {
+    return {
+      typeName: resolvedTypeName,
+      nullable: prop.tsType.nullable || prop.optional,
+      list: false,
+      listItemNullable: null,
+    };
+  }
+  return null;
+}
+
 function resolveFieldType(params: ResolveFieldTypeParams): GraphQLFieldType {
   const {
     prop,
@@ -537,57 +559,22 @@ function resolveFieldType(params: ResolveFieldTypeParams): GraphQLFieldType {
     prop.tsType.kind === "inlineObject" &&
     prop.tsType.inlineObjectProperties
   ) {
-    const nestedPath = [...parentContext.fieldPath, prop.name];
-    const nestedContext: AutoTypeNameContext = {
-      ...parentContext,
-      fieldPath: nestedPath,
-    };
-    const contextKey = getContextKey(nestedContext);
-    const resolvedTypeName = generatedTypeNames.get(contextKey);
-    if (resolvedTypeName) {
-      return {
-        typeName: resolvedTypeName,
-        nullable: prop.tsType.nullable || prop.optional,
-        list: false,
-        listItemNullable: null,
-      };
-    }
+    const result = tryResolveNestedType(
+      prop,
+      parentContext,
+      generatedTypeNames,
+    );
+    if (result) return result;
   }
 
   if (prop.tsType.kind === "inlineEnum" && prop.tsType.inlineEnumMembers) {
-    const nestedPath = [...parentContext.fieldPath, prop.name];
-    const nestedContext: AutoTypeNameContext = {
-      ...parentContext,
-      fieldPath: nestedPath,
-    };
-    const contextKey = getContextKey(nestedContext);
-    const resolvedTypeName = enumTypeNames.get(contextKey);
-    if (resolvedTypeName) {
-      return {
-        typeName: resolvedTypeName,
-        nullable: prop.tsType.nullable || prop.optional,
-        list: false,
-        listItemNullable: null,
-      };
-    }
+    const result = tryResolveNestedType(prop, parentContext, enumTypeNames);
+    if (result) return result;
   }
 
   if (prop.tsType.kind === "union" && prop.tsType.members) {
-    const nestedPath = [...parentContext.fieldPath, prop.name];
-    const nestedContext: AutoTypeNameContext = {
-      ...parentContext,
-      fieldPath: nestedPath,
-    };
-    const contextKey = getContextKey(nestedContext);
-    const resolvedTypeName = unionTypeNames.get(contextKey);
-    if (resolvedTypeName) {
-      return {
-        typeName: resolvedTypeName,
-        nullable: prop.tsType.nullable || prop.optional,
-        list: false,
-        listItemNullable: null,
-      };
-    }
+    const result = tryResolveNestedType(prop, parentContext, unionTypeNames);
+    if (result) return result;
   }
 
   return convertTsTypeToGraphQLType(prop.tsType, prop.optional);
