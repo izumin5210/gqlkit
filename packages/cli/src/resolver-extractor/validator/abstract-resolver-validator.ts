@@ -16,6 +16,7 @@ import type { AbstractResolverInfo } from "../extractor/define-api-extractor.js"
 export interface ValidateAbstractResolversOptions {
   readonly abstractResolvers: ReadonlyArray<AbstractResolverInfo>;
   readonly baseTypes: ReadonlyArray<BaseType>;
+  readonly typenameAutoResolveTypeNames?: ReadonlySet<string>;
 }
 
 export interface ValidateAbstractResolversResult {
@@ -113,21 +114,26 @@ function createMissingResolverDiagnostic(
   };
 }
 
+interface DetectMissingAbstractTypeResolversParams {
+  readonly resolvers: ReadonlyArray<AbstractResolverInfo>;
+  readonly typeMap: Map<string, BaseType>;
+  readonly typenameAutoResolveTypeNames: ReadonlySet<string>;
+}
+
 /**
  * Detects abstract types (union/interface) that have no resolveType defined
  * and whose member/implementing types don't all have isTypeOf defined.
  *
- * @param resolvers - All abstract resolvers to check
- * @param typeMap - Map of type names to their definitions
+ * @param params - Parameters including resolvers, type map, and auto-generated typename resolveType names
  * @returns Array of warning diagnostics for missing resolvers
  */
 function detectMissingAbstractTypeResolvers(
-  resolvers: ReadonlyArray<AbstractResolverInfo>,
-  typeMap: Map<string, BaseType>,
+  params: DetectMissingAbstractTypeResolversParams,
 ): Diagnostic[] {
+  const { resolvers, typeMap, typenameAutoResolveTypeNames } = params;
   const diagnostics: Diagnostic[] = [];
 
-  const resolveTypeSet = new Set<string>();
+  const resolveTypeSet = new Set<string>(typenameAutoResolveTypeNames);
   const isTypeOfSet = new Set<string>();
 
   for (const resolver of resolvers) {
@@ -241,10 +247,12 @@ export function validateAbstractResolvers(
   );
   diagnostics.push(...duplicateDiagnostics);
 
-  const missingResolverWarnings = detectMissingAbstractTypeResolvers(
-    options.abstractResolvers,
+  const missingResolverWarnings = detectMissingAbstractTypeResolvers({
+    resolvers: options.abstractResolvers,
     typeMap,
-  );
+    typenameAutoResolveTypeNames:
+      options.typenameAutoResolveTypeNames ?? new Set(),
+  });
   diagnostics.push(...missingResolverWarnings);
 
   return { diagnostics };

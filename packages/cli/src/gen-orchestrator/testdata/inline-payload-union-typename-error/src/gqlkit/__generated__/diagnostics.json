@@ -1,7 +1,7 @@
 [
   {
     "code": "MISSING_TYPENAME_PROPERTY",
-    "message": "Union 'SearchItemsPayload' member at index 1 is missing '__typename' property. Inline union members must have a '__typename' property with a string literal type.",
+    "message": "Union 'SearchItemsPayload' member at index 1 is missing '__typename' or '$typeName' property. Inline union members must have a '__typename' or '$typeName' property with a string literal type.",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
@@ -51,7 +51,7 @@
   },
   {
     "code": "MISSING_TYPENAME_PROPERTY",
-    "message": "Union 'CreateUserPayload' member at index 1 is missing '__typename' property. Inline union members must have a '__typename' property with a string literal type.",
+    "message": "Union 'CreateUserPayload' member at index 1 is missing '__typename' or '$typeName' property. Inline union members must have a '__typename' or '$typeName' property with a string literal type.",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/types.ts",

@@ -1,0 +1,32 @@
+[
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field '__typename' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 2,
+      "column": 3
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field '__typename' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 8,
+      "column": 3
+    }
+  },
+  {
+    "code": "INVALID_TYPENAME_TYPE",
+    "message": "Union 'SearchResult' member at index 2 has '__typename' that is not a string literal type. Expected a string literal like '__typename: \"TypeName\"'.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 19,
+      "column": 1
+    }
+  }
+]

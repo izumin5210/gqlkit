@@ -1,0 +1,42 @@
+[
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field '__typename' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 9,
+      "column": 3
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field '__typename' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 15,
+      "column": 3
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field '__typename' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 21,
+      "column": 3
+    }
+  },
+  {
+    "code": "DUPLICATE_TYPENAME_VALUE",
+    "message": "Duplicate typename value 'Person' in schema: types 'Admin' and 'User' have the same __typename value.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 8,
+      "column": 1
+    }
+  }
+]

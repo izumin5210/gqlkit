@@ -91,7 +91,8 @@ export type DiagnosticCode =
   | "INVALID_TYPENAME_TYPE"
   | "OPTIONAL_TYPENAME_PROPERTY"
   | "NULLABLE_TYPENAME_PROPERTY"
-  | "TYPENAME_FIELD_STRUCTURE_MISMATCH";
+  | "TYPENAME_FIELD_STRUCTURE_MISMATCH"
+  | "DUPLICATE_TYPENAME_VALUE";
 
 export interface Diagnostic {
   readonly code: DiagnosticCode;
