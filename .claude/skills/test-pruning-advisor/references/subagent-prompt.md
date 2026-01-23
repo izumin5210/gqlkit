@@ -85,7 +85,7 @@ Return your analysis in this exact JSON format:
       "reason": "golden_replaceable|trivial|implementation_coupled|orphaned",
       "confidence": "high|medium|low",
       "explanation": "Why this test should be considered for deletion",
-      "goldenTestEquivalent": "testdata/case-name/ (if applicable)",
+      "goldenTestEquivalent": "testdata/case-name/ (only for golden_replaceable, omit otherwise)",
       "recommendation": "delete|review|keep_for_now"
     }
   ],

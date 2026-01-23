@@ -34,7 +34,7 @@ When the review target is not explicitly specified, use AskUserQuestion to prese
 
 ```bash
 # Branch/PR changes - test files added or modified
-git diff main --name-only -- '*.test.ts' | grep -v testdata
+git diff main --name-only -- '**/*.test.ts' | grep -v testdata
 
 # All test files (excluding testdata golden tests which are reviewed by golden-test-reviewer)
 find packages -name "*.test.ts" -not -path "*/testdata/*" -not -path "*/__generated__/*"
