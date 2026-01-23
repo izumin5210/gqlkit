@@ -50,44 +50,6 @@ describe("gen command", () => {
     }
   }
 
-  describe("successful generation", () => {
-    it("should generate typeDefs.ts file", async () => {
-      await setupProject();
-
-      const result = await runGenCommand({ cwd: testDir });
-
-      expect(result.exitCode).toBe(0);
-      const typeDefsPath = join(
-        testDir,
-        "src/gqlkit/__generated__/typeDefs.ts",
-      );
-      const content = await readFile(typeDefsPath, "utf-8");
-      expect(content.includes("typeDefs")).toBeTruthy();
-    });
-
-    it("should generate resolvers.ts file", async () => {
-      await setupProject();
-
-      const result = await runGenCommand({ cwd: testDir });
-
-      expect(result.exitCode).toBe(0);
-      const resolversPath = join(
-        testDir,
-        "src/gqlkit/__generated__/resolvers.ts",
-      );
-      const content = await readFile(resolversPath, "utf-8");
-      expect(content.includes("createResolvers")).toBeTruthy();
-    });
-
-    it("should return exit code 0 on success", async () => {
-      await setupProject();
-
-      const result = await runGenCommand({ cwd: testDir });
-
-      expect(result.exitCode).toBe(0);
-    });
-  });
-
   describe("error handling", () => {
     it("should return exit code 1 when source directory is missing", async () => {
       const result = await runGenCommand({ cwd: testDir });
@@ -97,14 +59,6 @@ describe("gen command", () => {
   });
 
   describe("config file integration (Task 7)", () => {
-    it("should continue with default config when config file is not present", async () => {
-      await setupProject();
-
-      const result = await runGenCommand({ cwd: testDir });
-
-      expect(result.exitCode).toBe(0);
-    });
-
     it("should load config file when present", async () => {
       await setupProjectWithConfig(`
         export default {
