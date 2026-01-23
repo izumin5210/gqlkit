@@ -111,9 +111,9 @@ export const posts = defineQuery<NoArgs, Post[]>(() => []);
  * Since no manual defineResolveType is defined for CreateUserPayload,
  * the auto-generated __resolveType should be used.
  *
- * Note: When union members are named types (not inline with __typename),
- * the auto-generated __resolveType still returns obj.__typename.
- * The __isTypeOf functions on each member type provide the actual resolution.
+ * Note: The auto-generated __resolveType returns obj.__typename, which requires
+ * all union members (both inline and named types) to include __typename in their
+ * return values. This is a design requirement for payload unions in gqlkit.
  */
 export const createUser = defineMutation<
   { name: string; email: string },

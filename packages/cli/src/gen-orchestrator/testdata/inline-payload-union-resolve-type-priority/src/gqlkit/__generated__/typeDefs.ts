@@ -409,7 +409,7 @@ export const typeDefs: DocumentNode = {
           },
           "description": {
             "kind": "StringValue",
-            "value": "Test case 1: Mutation WITHOUT manual defineResolveType (Requirement 6.4)\n\nThis mutation returns a union of named types.\nSince no manual defineResolveType is defined for CreateUserPayload,\nthe auto-generated __resolveType should be used.\n\nNote: When union members are named types (not inline with __typename),\nthe auto-generated __resolveType still returns obj.__typename.\nThe __isTypeOf functions on each member type provide the actual resolution.\n\nDefined in: src/gqlkit/schema/types.ts",
+            "value": "Test case 1: Mutation WITHOUT manual defineResolveType (Requirement 6.4)\n\nThis mutation returns a union of named types.\nSince no manual defineResolveType is defined for CreateUserPayload,\nthe auto-generated __resolveType should be used.\n\nNote: The auto-generated __resolveType returns obj.__typename, which requires\nall union members (both inline and named types) to include __typename in their\nreturn values. This is a design requirement for payload unions in gqlkit.\n\nDefined in: src/gqlkit/schema/types.ts",
             "block": true
           }
         },
