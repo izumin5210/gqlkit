@@ -11,9 +11,3 @@ export type {
   AbstractResolverInfo,
   AbstractResolverKind,
 } from "./extractor/define-api-extractor.js";
-export type {
-  OnlyConstraintViolation,
-  OnlyConstraintViolationCode,
-  ValidateOnlyConstraintsOptions,
-  ValidationContext,
-} from "./validator/only-validator.js";
