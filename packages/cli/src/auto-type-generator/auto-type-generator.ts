@@ -731,24 +731,22 @@ function updateResolverField(
     };
     const payloadContextKey = getContextKey(payloadContext);
 
-    // Handle inline payload objects in return type
+    // These are mutually exclusive - a return type can only be one of:
+    // inline object, inline enum, or inline union
     if (field.returnTypeInlineObjectProperties) {
+      // Handle inline payload objects in return type
       const resolvedTypeName = generatedTypeNames.get(payloadContextKey);
       if (resolvedTypeName) {
         updatedType = { ...field.type, typeName: resolvedTypeName };
       }
-    }
-
-    // Handle inline enum in return type
-    if (field.returnTypeInlineEnumMembers) {
+    } else if (field.returnTypeInlineEnumMembers) {
+      // Handle inline enum in return type
       const resolvedTypeName = enumTypeNames.get(payloadContextKey);
       if (resolvedTypeName) {
         updatedType = { ...field.type, typeName: resolvedTypeName };
       }
-    }
-
-    // Handle inline union in return type
-    if (field.returnTypeInlineUnionMembers) {
+    } else if (field.returnTypeInlineUnionMembers) {
+      // Handle inline union in return type
       const resolvedTypeName = unionTypeNames.get(payloadContextKey);
       if (resolvedTypeName) {
         updatedType = { ...field.type, typeName: resolvedTypeName };
