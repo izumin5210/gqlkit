@@ -283,15 +283,23 @@ function shouldUnwrapAsGqlField(type: ts.Type): boolean {
 }
 
 /**
- * Checks if a type is structurally equivalent to Record<string, never>.
- * This is a special type that represents "no arguments".
- * Detection is based on type structure, not type names.
+ * Checks if a type has only index signatures with no named properties.
+ * Types like `{ [key: string]: number }` return true.
+ * Returns false for NoArgs type (Record<string, never>).
  */
-function isNoArgsType(type: ts.Type, checker: ts.TypeChecker): boolean {
-  const apparentType = checker.getApparentType(type);
+function hasOnlyIndexSignatures(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+): boolean {
+  const targetType = checker.getApparentType(type);
 
-  // Check for string index signature with 'never' value type
-  const indexInfos = checker.getIndexInfosOfType(apparentType);
+  const indexInfos = checker.getIndexInfosOfType(targetType);
+  const hasIndexSignatures = indexInfos.length > 0;
+
+  if (!hasIndexSignatures) {
+    return false;
+  }
+
   const hasNeverStringIndex = indexInfos.some((info) => {
     return (
       (info.keyType.flags & ts.TypeFlags.String) !== 0 &&
@@ -299,37 +307,7 @@ function isNoArgsType(type: ts.Type, checker: ts.TypeChecker): boolean {
     );
   });
 
-  if (!hasNeverStringIndex) {
-    return false;
-  }
-
-  // Check that there are no named properties (excluding metadata properties)
-  const properties = apparentType
-    .getProperties()
-    .filter((p) => !p.getName().startsWith("$"));
-
-  return properties.length === 0;
-}
-
-/**
- * Checks if a type has only index signatures with no named properties.
- * Types like `{ [key: string]: number }` return true.
- * Does NOT return true for NoArgs type.
- */
-function hasOnlyIndexSignatures(
-  type: ts.Type,
-  checker: ts.TypeChecker,
-): boolean {
-  if (isNoArgsType(type, checker)) {
-    return false;
-  }
-
-  const targetType = checker.getApparentType(type);
-
-  const indexInfos = checker.getIndexInfosOfType(targetType);
-  const hasIndexSignatures = indexInfos.length > 0;
-
-  if (!hasIndexSignatures) {
+  if (hasNeverStringIndex) {
     return false;
   }
 
@@ -463,37 +441,6 @@ function validateArgsType(
   return diagnostics;
 }
 
-/**
- * Checks if the extracted args are empty and the original type was not NoArgs.
- * This indicates the type resolved to an empty object.
- * Does not emit warnings for types that only have index signatures (they get INDEX_SIGNATURE_ONLY error instead).
- */
-function checkEmptyArgsType(
-  argsType: ts.Type,
-  argsTypeNode: ts.TypeNode,
-  args: ArgumentDefinition[] | null,
-  checker: ts.TypeChecker,
-): Diagnostic | null {
-  if (isNoArgsType(argsType, checker)) {
-    return null;
-  }
-
-  if (hasOnlyIndexSignatures(argsType, checker)) {
-    return null;
-  }
-
-  if (args !== null && args.length === 0) {
-    const typeName = getTypeNameForDiagnostic(argsType, checker);
-    return {
-      code: "EMPTY_TYPE_PROPERTIES",
-      message: `Type '${typeName}' has no properties. Consider adding properties or using a different type.`,
-      severity: "warning",
-      location: getSourceLocationFromNode(argsTypeNode),
-    };
-  }
-  return null;
-}
-
 interface ExtractTypeArgumentsFromCallParams {
   readonly node: ts.CallExpression;
   readonly inputContext: FieldTypeResolverContext;
@@ -543,18 +490,6 @@ function extractTypeArgumentsFromCall(
       ? null
       : extractArgsFromType(argsType, inputContext, argsTypeNode);
 
-    if (!isNoArgs) {
-      const emptyDiagnostic = checkEmptyArgsType(
-        argsType,
-        argsTypeNode,
-        args,
-        checker,
-      );
-      if (emptyDiagnostic) {
-        diagnostics.push(emptyDiagnostic);
-      }
-    }
-
     const directives = extractDirectivesFromTypeNode(
       directiveTypeNode,
       checker,
@@ -598,18 +533,6 @@ function extractTypeArgumentsFromCall(
   const args = isNoArgs
     ? null
     : extractArgsFromType(argsType, inputContext, argsTypeNode);
-
-  if (!isNoArgs) {
-    const emptyDiagnostic = checkEmptyArgsType(
-      argsType,
-      argsTypeNode,
-      args,
-      checker,
-    );
-    if (emptyDiagnostic) {
-      diagnostics.push(emptyDiagnostic);
-    }
-  }
 
   const directives = extractDirectivesFromTypeNode(directiveTypeNode, checker);
 
