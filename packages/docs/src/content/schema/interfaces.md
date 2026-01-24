@@ -163,7 +163,32 @@ See [Object Types](./objects.md) for more details on implementing interfaces.
 
 ## Runtime Type Resolution
 
-When GraphQL executes a query that returns an interface type, it needs to determine the concrete type at runtime. You can use either `defineResolveType` on the interface or `defineIsTypeOf` on each implementing type.
+When GraphQL executes a query that returns an interface type, it needs to determine the concrete type at runtime.
+
+### Automatic Resolution
+
+If all implementing types have `__typename` or `$typeName` fields with string literal values, gqlkit automatically generates the `resolveType` function:
+
+```typescript
+export interface User {
+  __typename: "User";
+  id: IDString;
+  name: string;
+}
+
+export interface Post {
+  __typename: "Post";
+  id: IDString;
+  title: string;
+}
+
+// Both User and Post implement Node
+// resolveType is automatically generated - no manual definition needed
+```
+
+### Manual Resolution
+
+For types without `__typename` or `$typeName`, use `defineResolveType` on the interface or `defineIsTypeOf` on each implementing type:
 
 ```typescript
 import { defineResolveType } from "../gqlkit";

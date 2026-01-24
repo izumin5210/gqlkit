@@ -11,6 +11,118 @@ When a GraphQL query returns an abstract type, the server needs to determine whi
 | `resolveType` | Abstract type (union/interface) | Type name string | Single resolver decides the type |
 | `isTypeOf` | Object type | Boolean | Each type checks if value matches |
 
+## Automatic resolveType Generation
+
+When Union or Interface member types have `__typename` or `$typeName` fields with string literal values, gqlkit automatically generates the `resolveType` function. No manual definition is needed.
+
+### Basic Example
+
+```typescript
+export interface User {
+  __typename: "User";
+  id: string;
+  name: string;
+}
+
+export interface Post {
+  __typename: "Post";
+  id: string;
+  title: string;
+}
+
+export type SearchResult = User | Post;
+// resolveType is automatically generated: (obj) => obj.__typename
+```
+
+### Using `$typeName`
+
+If you prefer not to use `__typename` (e.g., to avoid conflicts with GraphQL introspection), you can use `$typeName` instead:
+
+```typescript
+export interface User {
+  $typeName: "User";
+  id: string;
+  name: string;
+}
+
+export interface Post {
+  $typeName: "Post";
+  id: string;
+  title: string;
+}
+
+export type SearchResult = User | Post;
+// resolveType is automatically generated: (obj) => obj.$typeName
+```
+
+### Priority Rules
+
+When both `__typename` and `$typeName` are present, `__typename` takes priority:
+
+```typescript
+export interface User {
+  __typename: "User";  // This value is used
+  $typeName: "UserType";
+  id: string;
+}
+```
+
+### Mixed Patterns
+
+When some members use `__typename` and others use `$typeName`, gqlkit generates a fallback pattern:
+
+```typescript
+export interface User {
+  __typename: "User";
+  id: string;
+}
+
+export interface Post {
+  $typeName: "Post";
+  id: string;
+}
+
+export type SearchResult = User | Post;
+// resolveType: (obj) => obj.__typename ?? obj.$typeName
+```
+
+### Requirements
+
+For automatic generation, the typename field must be:
+
+- Named `__typename` or `$typeName`
+- A **non-optional** field
+- A **non-nullable** type
+- A **string literal** type (not `string`)
+
+```typescript
+// ✅ OK: Valid typename fields
+interface Valid {
+  __typename: "TypeA";       // string literal, required
+}
+
+// ❌ Error: These will not trigger auto-generation
+interface Invalid1 {
+  __typename?: "TypeA";      // optional field
+}
+
+interface Invalid2 {
+  __typename: "TypeA" | null; // nullable type
+}
+
+interface Invalid3 {
+  __typename: string;        // not a string literal
+}
+```
+
+### When to Use Manual defineResolveType
+
+Use `defineResolveType` manually when:
+
+- Your types don't have `__typename` or `$typeName` fields
+- You need custom resolution logic (e.g., checking other properties)
+- You want to override the automatic generation
+
 ## Using resolveType
 
 Define a `resolveType` resolver on a union or interface type to determine the concrete type.
