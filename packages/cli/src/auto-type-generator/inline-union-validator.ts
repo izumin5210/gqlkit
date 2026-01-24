@@ -6,6 +6,10 @@ import type {
 } from "../type-extractor/types/index.js";
 import type { InlineUnionMemberInfo } from "./inline-union-types.js";
 import { isInputTypeName } from "./naming-convention.js";
+import {
+  findTypenameProperty,
+  type TypenameFieldName,
+} from "./typename-types.js";
 
 export interface ValidateUnionResult {
   readonly valid: boolean;
@@ -294,9 +298,7 @@ export interface ValidateUnionMemberTypenamesParams {
   readonly sourceLocation: SourceLocation;
 }
 
-export type TypenameFieldName = "__typename" | "$typeName";
-
-export interface MemberTypenameInfo {
+export interface ValidatedTypenameInfo {
   readonly typeName: string;
   readonly fieldName: TypenameFieldName;
 }
@@ -304,7 +306,7 @@ export interface MemberTypenameInfo {
 export interface ValidateUnionMemberTypenamesResult {
   readonly valid: boolean;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
-  readonly memberTypenames: ReadonlyMap<number, MemberTypenameInfo>;
+  readonly memberTypenames: ReadonlyMap<number, ValidatedTypenameInfo>;
 }
 
 /**
@@ -327,7 +329,7 @@ export function validateUnionMemberTypenames(
 ): ValidateUnionMemberTypenamesResult {
   const { members, unionTypeName, sourceLocation } = params;
   const diagnostics: Diagnostic[] = [];
-  const memberTypenames = new Map<number, MemberTypenameInfo>();
+  const memberTypenames = new Map<number, ValidatedTypenameInfo>();
 
   for (let i = 0; i < members.length; i++) {
     const member = members[i]!;
@@ -345,20 +347,12 @@ export function validateUnionMemberTypenames(
       continue;
     }
 
-    const typenameProperty = memberType.inlineObjectProperties.find(
-      (prop) => prop.name === "__typename",
+    const found = findTypenameProperty(
+      memberType.inlineObjectProperties,
+      (prop) => prop.name,
     );
 
-    const dollarTypenameProperty = memberType.inlineObjectProperties.find(
-      (prop) => prop.name === "$typeName",
-    );
-
-    const selectedProperty = typenameProperty ?? dollarTypenameProperty;
-    const selectedFieldName: TypenameFieldName = typenameProperty
-      ? "__typename"
-      : "$typeName";
-
-    if (!selectedProperty) {
+    if (!found) {
       diagnostics.push({
         code: "MISSING_TYPENAME_PROPERTY",
         message: `Union '${unionTypeName}' member at index ${i} is missing '__typename' or '$typeName' property. Inline union members must have a '__typename' or '$typeName' property with a string literal type.`,
@@ -368,6 +362,7 @@ export function validateUnionMemberTypenames(
       continue;
     }
 
+    const { property: selectedProperty, fieldName: selectedFieldName } = found;
     const typenameType = selectedProperty.tsType;
 
     if (selectedProperty.optional) {

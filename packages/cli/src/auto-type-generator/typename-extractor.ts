@@ -3,11 +3,12 @@ import type {
   FieldDefinition,
   InlineObjectProperty,
 } from "../type-extractor/types/index.js";
+import {
+  findTypenameProperty,
+  type TypenameFieldInfo,
+} from "./typename-types.js";
 
-export interface TypenameFieldInfo {
-  readonly typeName: string;
-  readonly fieldName: "__typename" | "$typeName";
-}
+export type { TypenameFieldInfo } from "./typename-types.js";
 
 export interface MemberTypenameInfo {
   readonly memberTypeName: string | null;
@@ -32,69 +33,41 @@ export interface ExtractTypenamesParams {
 function extractTypenameFromFields(
   fields: ReadonlyArray<FieldDefinition>,
 ): TypenameFieldInfo | null {
-  const typenameField = fields.find((f) => f.name === "__typename");
-  if (typenameField) {
-    const typenameValue = extractStringLiteralValue(typenameField);
-    if (typenameValue !== null) {
-      return { typeName: typenameValue, fieldName: "__typename" };
-    }
+  const found = findTypenameProperty(fields, (f) => f.name);
+  if (!found) {
     return null;
   }
 
-  const dollarTypenameField = fields.find((f) => f.name === "$typeName");
-  if (dollarTypenameField) {
-    const typenameValue = extractStringLiteralValue(dollarTypenameField);
-    if (typenameValue !== null) {
-      return { typeName: typenameValue, fieldName: "$typeName" };
-    }
-  }
+  const { property: field, fieldName } = found;
 
-  return null;
-}
-
-function extractStringLiteralValue(field: FieldDefinition): string | null {
   if (field.optional) {
     return null;
   }
 
-  const tsType = field.tsType;
-
-  if (tsType.nullable) {
+  const { tsType } = field;
+  if (tsType.nullable || tsType.kind !== "literal" || tsType.name === null) {
     return null;
   }
 
-  if (tsType.kind === "literal" && tsType.name !== null) {
-    return tsType.name;
-  }
-
-  return null;
+  return { typeName: tsType.name, fieldName };
 }
 
 function extractTypenameFromInlineObjectProperties(
   properties: ReadonlyArray<InlineObjectProperty>,
 ): TypenameFieldInfo | null {
-  const typenameProperty = properties.find(
-    (p) => p.propertyName === "__typename",
-  );
-  if (typenameProperty) {
-    const tsType = typenameProperty.propertyType;
-    if (!tsType.nullable && tsType.kind === "literal" && tsType.name !== null) {
-      return { typeName: tsType.name, fieldName: "__typename" };
-    }
+  const found = findTypenameProperty(properties, (p) => p.propertyName);
+  if (!found) {
     return null;
   }
 
-  const dollarTypenameProperty = properties.find(
-    (p) => p.propertyName === "$typeName",
-  );
-  if (dollarTypenameProperty) {
-    const tsType = dollarTypenameProperty.propertyType;
-    if (!tsType.nullable && tsType.kind === "literal" && tsType.name !== null) {
-      return { typeName: tsType.name, fieldName: "$typeName" };
-    }
+  const { property, fieldName } = found;
+  const { propertyType: tsType } = property;
+
+  if (tsType.nullable || tsType.kind !== "literal" || tsType.name === null) {
+    return null;
   }
 
-  return null;
+  return { typeName: tsType.name, fieldName };
 }
 
 function extractUnionMemberTypenames(

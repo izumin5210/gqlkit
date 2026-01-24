@@ -11,13 +11,14 @@ import {
   collectTypenameExtractions,
   type TypenameExtractionResult,
 } from "./typename-extractor.js";
+import type { TypenameFieldName } from "./typename-types.js";
 
 export type ResolveTypePattern =
   | { readonly kind: "typenameOnly" }
   | { readonly kind: "dollarTypenameOnly" }
   | {
       readonly kind: "mixed";
-      readonly memberFieldMap: ReadonlyMap<string, "__typename" | "$typeName">;
+      readonly memberFieldMap: ReadonlyMap<string, TypenameFieldName>;
     };
 
 export interface TypenameAutoResolveTypeInfo {
@@ -79,7 +80,7 @@ function determineResolveTypePattern(
     return { kind: "dollarTypenameOnly" };
   }
 
-  const memberFieldMap = new Map<string, "__typename" | "$typeName">();
+  const memberFieldMap = new Map<string, TypenameFieldName>();
   for (const member of members) {
     if (member.typenameInfo && member.memberTypeName) {
       memberFieldMap.set(member.memberTypeName, member.typenameInfo.fieldName);

@@ -5,6 +5,10 @@ import type {
   SourceLocation,
 } from "../type-extractor/types/index.js";
 import type { TypenameExtractionResult } from "./typename-extractor.js";
+import {
+  findTypenameProperty,
+  type TypenameFieldName,
+} from "./typename-types.js";
 
 export interface ValidateTypenamesParams {
   readonly extractionResult: TypenameExtractionResult;
@@ -29,7 +33,7 @@ export interface ValidateSchemaTypenamesResult {
 
 interface TypenameValueInfo {
   readonly memberTypeName: string;
-  readonly fieldName: "__typename" | "$typeName";
+  readonly fieldName: TypenameFieldName;
 }
 
 function getAbstractTypeLabel(kind: "union" | "interface"): string {
@@ -42,7 +46,7 @@ function getMemberLabel(kind: "union" | "interface"): string {
 
 interface InlineObjectTypenameAnalysis {
   readonly exists: boolean;
-  readonly fieldName: "__typename" | "$typeName" | null;
+  readonly fieldName: TypenameFieldName | null;
   readonly isStringLiteral: boolean;
   readonly isNullable: boolean;
 }
@@ -50,37 +54,28 @@ interface InlineObjectTypenameAnalysis {
 function analyzeInlineObjectTypename(
   inlineObjectMember: InlineObjectMember,
 ): InlineObjectTypenameAnalysis {
-  const typenameProperty = inlineObjectMember.properties.find(
-    (p) => p.propertyName === "__typename",
+  const found = findTypenameProperty(
+    inlineObjectMember.properties,
+    (p) => p.propertyName,
   );
-  if (typenameProperty) {
-    const tsType = typenameProperty.propertyType;
+
+  if (!found) {
     return {
-      exists: true,
-      fieldName: "__typename",
-      isStringLiteral: tsType.kind === "literal" && tsType.name !== null,
-      isNullable: tsType.nullable,
+      exists: false,
+      fieldName: null,
+      isStringLiteral: false,
+      isNullable: false,
     };
   }
 
-  const dollarTypenameProperty = inlineObjectMember.properties.find(
-    (p) => p.propertyName === "$typeName",
-  );
-  if (dollarTypenameProperty) {
-    const tsType = dollarTypenameProperty.propertyType;
-    return {
-      exists: true,
-      fieldName: "$typeName",
-      isStringLiteral: tsType.kind === "literal" && tsType.name !== null,
-      isNullable: tsType.nullable,
-    };
-  }
+  const { property, fieldName } = found;
+  const { propertyType: tsType } = property;
 
   return {
-    exists: false,
-    fieldName: null,
-    isStringLiteral: false,
-    isNullable: false,
+    exists: true,
+    fieldName,
+    isStringLiteral: tsType.kind === "literal" && tsType.name !== null,
+    isNullable: tsType.nullable,
   };
 }
 
@@ -225,52 +220,36 @@ export function validateTypenames(
 interface ObjectTypeTypenameInfo {
   readonly typeName: string;
   readonly typenameValue: string;
-  readonly fieldName: "__typename" | "$typeName";
+  readonly fieldName: TypenameFieldName;
   readonly sourceLocation: SourceLocation;
 }
 
 function extractTypenameFromObjectType(
   typeInfo: ExtractedTypeInfo,
 ): ObjectTypeTypenameInfo | null {
-  const typenameField = typeInfo.fields.find((f) => f.name === "__typename");
-  if (typenameField) {
-    const tsType = typenameField.tsType;
-    if (
-      !typenameField.optional &&
-      !tsType.nullable &&
-      tsType.kind === "literal" &&
-      tsType.name !== null
-    ) {
-      return {
-        typeName: typeInfo.metadata.name,
-        typenameValue: tsType.name,
-        fieldName: "__typename",
-        sourceLocation: typeInfo.metadata.sourceLocation,
-      };
-    }
+  const found = findTypenameProperty(typeInfo.fields, (f) => f.name);
+  if (!found) {
+    return null;
   }
 
-  const dollarTypenameField = typeInfo.fields.find(
-    (f) => f.name === "$typeName",
-  );
-  if (dollarTypenameField) {
-    const tsType = dollarTypenameField.tsType;
-    if (
-      !dollarTypenameField.optional &&
-      !tsType.nullable &&
-      tsType.kind === "literal" &&
-      tsType.name !== null
-    ) {
-      return {
-        typeName: typeInfo.metadata.name,
-        typenameValue: tsType.name,
-        fieldName: "$typeName",
-        sourceLocation: typeInfo.metadata.sourceLocation,
-      };
-    }
+  const { property: field, fieldName } = found;
+  const { tsType } = field;
+
+  if (
+    field.optional ||
+    tsType.nullable ||
+    tsType.kind !== "literal" ||
+    tsType.name === null
+  ) {
+    return null;
   }
 
-  return null;
+  return {
+    typeName: typeInfo.metadata.name,
+    typenameValue: tsType.name,
+    fieldName,
+    sourceLocation: typeInfo.metadata.sourceLocation,
+  };
 }
 
 /**

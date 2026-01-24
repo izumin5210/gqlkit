@@ -40,7 +40,6 @@ export {
   type ExtractTypenamesParams,
   type MemberTypenameInfo,
   type TypenameExtractionResult,
-  type TypenameFieldInfo,
 } from "./typename-extractor.js";
 export {
   type CollectTypenameResolveTypesParams,
@@ -50,6 +49,11 @@ export {
   type ResolveTypePattern,
   type TypenameAutoResolveTypeInfo,
 } from "./typename-resolve-type-generator.js";
+export {
+  findTypenameProperty,
+  type TypenameFieldInfo,
+  type TypenameFieldName,
+} from "./typename-types.js";
 export {
   type ValidateSchemaTypenamesParams,
   type ValidateSchemaTypenamesResult,
