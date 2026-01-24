@@ -1,6 +1,12 @@
 {
   "extends": "../../tsconfig.base.json",
-  "exclude": ["examples", "dist", "scripts", "src/**/testdata", "vitest.global-setup.ts"],
+  "exclude": [
+    "examples",
+    "dist",
+    "scripts",
+    "src/**/testdata",
+    "vitest.global-setup.ts"
+  ],
   "compilerOptions": {
     "rootDir": "./src",
     "outDir": "./dist",

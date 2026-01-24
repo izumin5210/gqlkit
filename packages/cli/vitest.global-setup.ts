@@ -7,6 +7,7 @@ declare module "vitest" {
 }
 
 export default function setup(project: TestProject): void {
-  const hasUpdateFlag = process.argv.includes("-u") || process.argv.includes("--update");
+  const hasUpdateFlag =
+    process.argv.includes("-u") || process.argv.includes("--update");
   project.provide("isSnapshotUpdateMode", hasUpdateFlag);
 }
