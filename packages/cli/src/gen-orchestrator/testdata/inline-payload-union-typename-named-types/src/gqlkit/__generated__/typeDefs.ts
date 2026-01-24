@@ -9,14 +9,14 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "CreateUserError"
+        "value": "CreateUserInvalidEmailError"
       },
       "fields": [
         {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "code"
+            "value": "email"
           },
           "type": {
             "kind": "NonNullType",
@@ -49,7 +49,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "CreateUserError type - exported named type for union member.\nHas __typename field to enable auto-generated resolveType.\n\nDefined in: src/gqlkit/schema/types.ts",
+        "value": "Error result type with __typename\n\nDefined in: src/gqlkit/schema/types.ts",
         "block": true
       }
     },
@@ -64,7 +64,7 @@ export const typeDefs: DocumentNode = {
           "kind": "NamedType",
           "name": {
             "kind": "Name",
-            "value": "CreateUserError"
+            "value": "CreateUserInvalidEmailError"
           }
         },
         {
@@ -100,7 +100,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "User"
+                "value": "CreateUserSuccessUser"
               }
             }
           }
@@ -108,7 +108,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "CreateUserSuccess type - exported named type for union member.\nHas __typename field to enable auto-generated resolveType.\n\nDefined in: src/gqlkit/schema/types.ts",
+        "value": "Success result type with __typename\n\nDefined in: src/gqlkit/schema/types.ts",
         "block": true
       }
     },
@@ -116,197 +116,9 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "Mutation"
-      },
-      "fields": []
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "Post"
+        "value": "CreateUserSuccessUser"
       },
       "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "title"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Post type for query test.\n\nDefined in: src/gqlkit/schema/types.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
-      },
-      "fields": []
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "UpdateUserError"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "code"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "message"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "UpdateUserError type - exported named type for union member.\n\nDefined in: src/gqlkit/schema/types.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "UnionTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "UpdateUserPayload"
-      },
-      "types": [
-        {
-          "kind": "NamedType",
-          "name": {
-            "kind": "Name",
-            "value": "UpdateUserError"
-          }
-        },
-        {
-          "kind": "NamedType",
-          "name": {
-            "kind": "Name",
-            "value": "UpdateUserSuccess"
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Union type for UpdateUserPayload.\nThis type is explicitly named to allow defineResolveType to target it.\n\nDefined in: src/gqlkit/schema/types.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "UpdateUserSuccess"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "user"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "User"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "UpdateUserSuccess type - exported named type for union member.\n\nDefined in: src/gqlkit/schema/types.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "User"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "email"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        },
         {
           "kind": "FieldDefinition",
           "name": {
@@ -344,7 +156,147 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "User type - named type for success case.\n\nDefined in: src/gqlkit/schema/types.ts",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "GetUserNotFoundError"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "message"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "requestedId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Another error type with __typename\n\nDefined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
+    },
+    {
+      "kind": "UnionTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "GetUserPayload"
+      },
+      "types": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "CreateUserSuccess"
+          }
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "GetUserNotFoundError"
+          }
+        }
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Mutation"
+      },
+      "fields": []
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
+      },
+      "fields": []
+    },
+    {
+      "kind": "InputObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "CreateUserInput"
+      },
+      "fields": [
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "email"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "InputValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "name"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
         "block": true
       }
     },
@@ -366,7 +318,7 @@ export const typeDefs: DocumentNode = {
               "kind": "InputValueDefinition",
               "name": {
                 "kind": "Name",
-                "value": "name"
+                "value": "input"
               },
               "type": {
                 "kind": "NonNullType",
@@ -374,24 +326,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "String"
-                  }
-                }
-              }
-            },
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "email"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "String"
+                    "value": "CreateUserInput"
                   }
                 }
               }
@@ -409,15 +344,24 @@ export const typeDefs: DocumentNode = {
           },
           "description": {
             "kind": "StringValue",
-            "value": "Test case 1: Mutation WITHOUT manual defineResolveType\n\nThis mutation returns a union of named types (CreateUserSuccess | CreateUserError).\nBoth types have __typename fields, so auto-generated __resolveType is used.\n\nExpected: CreateUserPayload uses auto-generated __resolveType: (obj) => obj.__typename\n\nDefined in: src/gqlkit/schema/types.ts",
+            "value": "Mutation returning union of named types, all with __typename.\nExpected: resolveType should be auto-generated from __typename fields.\n\nDefined in: src/gqlkit/schema/types.ts",
             "block": true
           }
-        },
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeExtension",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
+      },
+      "fields": [
         {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "updateUser"
+            "value": "getUser"
           },
           "arguments": [
             {
@@ -436,23 +380,6 @@ export const typeDefs: DocumentNode = {
                   }
                 }
               }
-            },
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "name"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "String"
-                  }
-                }
-              }
             }
           ],
           "type": {
@@ -461,50 +388,13 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "UpdateUserPayload"
+                "value": "GetUserPayload"
               }
             }
           },
           "description": {
             "kind": "StringValue",
-            "value": "Test case 2: Mutation WITH manual defineResolveType\n\nThis mutation uses UpdateUserPayload which has a manual defineResolveType.\nThe manual resolveType takes priority over any auto-generated one.\n\nExpected behavior:\n- CreateUserPayload: uses auto-generated __resolveType: (obj) => obj.__typename\n- UpdateUserPayload: uses manual updateUserPayloadResolveType (priority over auto)\n\nDefined in: src/gqlkit/schema/types.ts",
-            "block": true
-          }
-        }
-      ]
-    },
-    {
-      "kind": "ObjectTypeExtension",
-      "name": {
-        "kind": "Name",
-        "value": "Query"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "posts"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "ListType",
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "Post"
-                  }
-                }
-              }
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Query to fetch posts.\n\nDefined in: src/gqlkit/schema/types.ts",
+            "value": "Query returning union of named types, all with __typename.\nExpected: resolveType should be auto-generated from __typename fields.\n\nDefined in: src/gqlkit/schema/types.ts",
             "block": true
           }
         }

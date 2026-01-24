@@ -4,15 +4,6 @@ import { createUser, getPost, getUser, postIsTypeOf, sharedErrorIsTypeOf, userIs
 
 export function createResolvers() {
   return {
-    CreateUserPayload: {
-      __resolveType: (obj) => obj.__typename,
-    },
-    GetPostPayload: {
-      __resolveType: (obj) => obj.__typename,
-    },
-    GetUserPayload: {
-      __resolveType: (obj) => obj.__typename,
-    },
     Mutation: {
       createUser: createUser,
     },
