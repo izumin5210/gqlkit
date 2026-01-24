@@ -1,7 +1,7 @@
 import { access, readdir, readFile, unlink } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, inject, it } from "vitest";
 import type { GqlkitConfig } from "../config/index.js";
 import type { ResolvedScalarMapping } from "../config-loader/index.js";
 import {
@@ -11,9 +11,15 @@ import {
 } from "../config-loader/loader.js";
 import { executeGeneration } from "./orchestrator.js";
 
+declare module "vitest" {
+  interface ProvidedContext {
+    isSnapshotUpdateMode: boolean;
+  }
+}
+
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const testdataDir = join(__dirname, "testdata");
-const isUpdateMode = process.env["UPDATE_GOLDEN"] === "true";
+const isUpdateMode = inject("isSnapshotUpdateMode");
 
 async function fileExists(path: string): Promise<boolean> {
   try {
@@ -33,7 +39,7 @@ async function assertFileNotExists(
       await unlink(path);
     } else {
       throw new Error(
-        `${description} should not exist but found at: ${path}. Run with UPDATE_GOLDEN=true to remove it.`,
+        `${description} should not exist but found at: ${path}. Run with -u flag to remove it.`,
       );
     }
   }
