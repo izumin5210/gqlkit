@@ -296,6 +296,7 @@ export interface ValidateUnionMemberTypenamesParams {
   readonly members: ReadonlyArray<InlineUnionMemberInfo>;
   readonly unionTypeName: string;
   readonly sourceLocation: SourceLocation;
+  readonly typeMap: ReadonlyMap<string, ExtractedTypeInfo>;
 }
 
 export interface ValidatedTypenameInfo {
@@ -303,10 +304,54 @@ export interface ValidatedTypenameInfo {
   readonly fieldName: TypenameFieldName;
 }
 
+interface ExtractTypenameFromNamedTypeParams {
+  readonly memberType: TSTypeReference;
+  readonly typeMap: ReadonlyMap<string, ExtractedTypeInfo>;
+}
+
+/**
+ * Extract typename info from a named type by looking up its fields in the typeMap.
+ * Returns null if the type doesn't have a valid __typename or $typeName field.
+ */
+function extractTypenameFromNamedType(
+  params: ExtractTypenameFromNamedTypeParams,
+): ValidatedTypenameInfo | null {
+  const { memberType, typeMap } = params;
+
+  if (memberType.kind !== "reference" || memberType.name === null) {
+    return null;
+  }
+
+  const referencedType = typeMap.get(memberType.name);
+  if (!referencedType) {
+    return null;
+  }
+
+  const found = findTypenameProperty(referencedType.fields, (f) => f.name);
+  if (!found) {
+    return null;
+  }
+
+  const { property: field, fieldName } = found;
+  const { tsType } = field;
+
+  if (
+    field.optional ||
+    tsType.nullable ||
+    tsType.kind !== "literal" ||
+    tsType.name === null
+  ) {
+    return null;
+  }
+
+  return { typeName: tsType.name, fieldName };
+}
+
 export interface ValidateUnionMemberTypenamesResult {
   readonly valid: boolean;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
   readonly memberTypenames: ReadonlyMap<number, ValidatedTypenameInfo>;
+  readonly allMembersHaveTypename: boolean;
 }
 
 /**
@@ -314,7 +359,8 @@ export interface ValidateUnionMemberTypenamesResult {
  * Returns extracted typename values for valid members.
  *
  * Behavior:
- * - Skips validation for named types (needsAutoGeneration: false)
+ * - For named types (needsAutoGeneration: false), extracts typename from typeMap
+ * - For inline types (needsAutoGeneration: true), validates and extracts typename
  * - Only called for payload unions (context.kind === "resolverPayload")
  * - __typename takes priority over $typeName if both are present
  *
@@ -327,18 +373,32 @@ export interface ValidateUnionMemberTypenamesResult {
 export function validateUnionMemberTypenames(
   params: ValidateUnionMemberTypenamesParams,
 ): ValidateUnionMemberTypenamesResult {
-  const { members, unionTypeName, sourceLocation } = params;
+  const { members, unionTypeName, sourceLocation, typeMap } = params;
   const diagnostics: Diagnostic[] = [];
   const memberTypenames = new Map<number, ValidatedTypenameInfo>();
 
+  // Counters for determining allMembersHaveTypename
+  let inlineTypeCount = 0;
+  let inlineTypesWithTypename = 0;
+  let namedTypeCount = 0;
+  let namedTypesWithTypename = 0;
+
   for (let i = 0; i < members.length; i++) {
     const member = members[i]!;
+    const memberType = member.memberType;
 
     if (!member.needsAutoGeneration) {
+      namedTypeCount++;
+      const typenameInfo = extractTypenameFromNamedType({
+        memberType,
+        typeMap,
+      });
+      if (typenameInfo) {
+        memberTypenames.set(i, typenameInfo);
+        namedTypesWithTypename++;
+      }
       continue;
     }
-
-    const memberType = member.memberType;
 
     if (
       memberType.kind !== "inlineObject" ||
@@ -346,6 +406,8 @@ export function validateUnionMemberTypenames(
     ) {
       continue;
     }
+
+    inlineTypeCount++;
 
     const found = findTypenameProperty(
       memberType.inlineObjectProperties,
@@ -398,12 +460,23 @@ export function validateUnionMemberTypenames(
         typeName: typenameType.name,
         fieldName: selectedFieldName,
       });
+      inlineTypesWithTypename++;
     }
   }
+
+  // Determine allMembersHaveTypename: all members (both inline and named) must have typename
+  // for resolveType to be auto-generated. This ensures the generated resolveType function
+  // can resolve all union members correctly at runtime.
+  const totalMemberCount = inlineTypeCount + namedTypeCount;
+  const totalMembersWithTypename =
+    inlineTypesWithTypename + namedTypesWithTypename;
+  const allMembersHaveTypename =
+    totalMemberCount > 0 && totalMembersWithTypename === totalMemberCount;
 
   return {
     valid: diagnostics.length === 0,
     diagnostics,
     memberTypenames,
+    allMembersHaveTypename,
   };
 }

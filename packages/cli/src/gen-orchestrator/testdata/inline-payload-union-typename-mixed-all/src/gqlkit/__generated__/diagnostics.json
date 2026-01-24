@@ -5,17 +5,17 @@
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 31,
+      "line": 8,
       "column": 3
     }
   },
   {
     "code": "SKIPPED_FIELD",
-    "message": "Field '__typename' starts with '__' which is reserved for GraphQL introspection",
+    "message": "Field '$typeName' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
     "severity": "warning",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 40,
+      "line": 17,
       "column": 3
     }
   }

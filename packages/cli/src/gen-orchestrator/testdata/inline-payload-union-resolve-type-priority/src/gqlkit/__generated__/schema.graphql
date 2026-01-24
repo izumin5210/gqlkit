@@ -2,6 +2,7 @@
 
 """
 CreateUserError type - exported named type for union member.
+Has __typename field to enable auto-generated resolveType.
 
 Defined in: src/gqlkit/schema/types.ts
 """
@@ -15,6 +16,7 @@ union CreateUserPayload = CreateUserError | CreateUserSuccess
 
 """
 CreateUserSuccess type - exported named type for union member.
+Has __typename field to enable auto-generated resolveType.
 
 Defined in: src/gqlkit/schema/types.ts
 """
@@ -76,27 +78,25 @@ type User {
 
 extend type Mutation {
   """
-  Test case 1: Mutation WITHOUT manual defineResolveType (Requirement 6.4)
+  Test case 1: Mutation WITHOUT manual defineResolveType
   
-  This mutation returns a union of named types.
-  Since no manual defineResolveType is defined for CreateUserPayload,
-  the auto-generated __resolveType should be used.
+  This mutation returns a union of named types (CreateUserSuccess | CreateUserError).
+  Both types have __typename fields, so auto-generated __resolveType is used.
   
-  Note: The auto-generated __resolveType returns obj.__typename, which requires
-  all union members (both inline and named types) to include __typename in their
-  return values. This is a design requirement for payload unions in gqlkit.
+  Expected: CreateUserPayload uses auto-generated __resolveType: (obj) => obj.__typename
   
   Defined in: src/gqlkit/schema/types.ts
   """
   createUser(name: String!, email: String!): CreateUserPayload!
   """
-  Mutation that uses the explicitly typed UpdateUserPayload.
-  Since UpdateUserPayload has a manual defineResolveType,
-  the auto-generated __resolveType should NOT be included for this union.
+  Test case 2: Mutation WITH manual defineResolveType
+  
+  This mutation uses UpdateUserPayload which has a manual defineResolveType.
+  The manual resolveType takes priority over any auto-generated one.
   
   Expected behavior:
   - CreateUserPayload: uses auto-generated __resolveType: (obj) => obj.__typename
-  - UpdateUserPayload: uses manual updateUserPayloadResolveType
+  - UpdateUserPayload: uses manual updateUserPayloadResolveType (priority over auto)
   
   Defined in: src/gqlkit/schema/types.ts
   """

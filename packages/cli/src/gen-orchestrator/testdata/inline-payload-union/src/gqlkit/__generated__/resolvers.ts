@@ -7,14 +7,8 @@ export function createResolvers() {
     ArchivedState: {
       __isTypeOf: archivedStateIsTypeOf,
     },
-    CreateUserPayload: {
-      __resolveType: (obj) => obj.__typename,
-    },
     DraftState: {
       __isTypeOf: draftStateIsTypeOf,
-    },
-    GetUserPayload: {
-      __resolveType: (obj) => obj.__typename,
     },
     InvalidEmailError: {
       __isTypeOf: invalidEmailErrorIsTypeOf,
@@ -27,9 +21,6 @@ export function createResolvers() {
     },
     Post: {
       status: status,
-    },
-    PostStatusPayload: {
-      __resolveType: (obj) => obj.__typename,
     },
     PublishedState: {
       __isTypeOf: publishedStateIsTypeOf,
