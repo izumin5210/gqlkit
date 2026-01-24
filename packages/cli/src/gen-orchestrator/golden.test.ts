@@ -1,7 +1,7 @@
 import { access, readdir, readFile, unlink } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, inject, it } from "vitest";
+import { describe, expect, it } from "vitest";
 import type { GqlkitConfig } from "../config/index.js";
 import type { ResolvedScalarMapping } from "../config-loader/index.js";
 import {
@@ -9,17 +9,12 @@ import {
   DEFAULT_SCHEMA_PATH,
   DEFAULT_TYPEDEFS_PATH,
 } from "../config-loader/loader.js";
+import { isSnapshotUpdateMode } from "../testing/snapshot.js";
 import { executeGeneration } from "./orchestrator.js";
-
-declare module "vitest" {
-  interface ProvidedContext {
-    isSnapshotUpdateMode: boolean;
-  }
-}
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const testdataDir = join(__dirname, "testdata");
-const isUpdateMode = inject("isSnapshotUpdateMode");
+const isUpdateMode = isSnapshotUpdateMode();
 
 async function fileExists(path: string): Promise<boolean> {
   try {
