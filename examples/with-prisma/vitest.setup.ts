@@ -3,7 +3,7 @@ import { existsSync, mkdirSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { beforeAll, afterAll } from "vitest";
+import { afterAll, beforeAll } from "vitest";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const testDbDir = join(tmpdir(), "gqlkit-prisma-test");
