@@ -304,6 +304,49 @@ export interface ValidatedTypenameInfo {
   readonly fieldName: TypenameFieldName;
 }
 
+interface ExtractTypenameFromNamedTypeParams {
+  readonly memberType: TSTypeReference;
+  readonly typeMap: ReadonlyMap<string, ExtractedTypeInfo>;
+}
+
+/**
+ * Extract typename info from a named type by looking up its fields in the typeMap.
+ * Returns null if the type doesn't have a valid __typename or $typeName field.
+ */
+function extractTypenameFromNamedType(
+  params: ExtractTypenameFromNamedTypeParams,
+): ValidatedTypenameInfo | null {
+  const { memberType, typeMap } = params;
+
+  if (memberType.kind !== "reference" || memberType.name === null) {
+    return null;
+  }
+
+  const referencedType = typeMap.get(memberType.name);
+  if (!referencedType) {
+    return null;
+  }
+
+  const found = findTypenameProperty(referencedType.fields, (f) => f.name);
+  if (!found) {
+    return null;
+  }
+
+  const { property: field, fieldName } = found;
+  const { tsType } = field;
+
+  if (
+    field.optional ||
+    tsType.nullable ||
+    tsType.kind !== "literal" ||
+    tsType.name === null
+  ) {
+    return null;
+  }
+
+  return { typeName: tsType.name, fieldName };
+}
+
 export interface ValidateUnionMemberTypenamesResult {
   readonly valid: boolean;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
@@ -334,6 +377,7 @@ export function validateUnionMemberTypenames(
   const diagnostics: Diagnostic[] = [];
   const memberTypenames = new Map<number, ValidatedTypenameInfo>();
 
+  // Counters for determining allMembersHaveTypename
   let inlineTypeCount = 0;
   let inlineTypesWithTypename = 0;
   let namedTypeCount = 0;
@@ -345,30 +389,13 @@ export function validateUnionMemberTypenames(
 
     if (!member.needsAutoGeneration) {
       namedTypeCount++;
-      if (memberType.kind === "reference" && memberType.name !== null) {
-        const referencedType = typeMap.get(memberType.name);
-        if (referencedType) {
-          const found = findTypenameProperty(
-            referencedType.fields,
-            (f) => f.name,
-          );
-          if (found) {
-            const field = found.property;
-            const { tsType } = field;
-            if (
-              !field.optional &&
-              !tsType.nullable &&
-              tsType.kind === "literal" &&
-              tsType.name !== null
-            ) {
-              memberTypenames.set(i, {
-                typeName: tsType.name,
-                fieldName: found.fieldName,
-              });
-              namedTypesWithTypename++;
-            }
-          }
-        }
+      const typenameInfo = extractTypenameFromNamedType({
+        memberType,
+        typeMap,
+      });
+      if (typenameInfo) {
+        memberTypenames.set(i, typenameInfo);
+        namedTypesWithTypename++;
       }
       continue;
     }
