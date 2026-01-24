@@ -348,7 +348,10 @@ export function validateUnionMemberTypenames(
       if (memberType.kind === "reference" && memberType.name !== null) {
         const referencedType = typeMap.get(memberType.name);
         if (referencedType) {
-          const found = findTypenameProperty(referencedType.fields, (f) => f.name);
+          const found = findTypenameProperty(
+            referencedType.fields,
+            (f) => f.name,
+          );
           if (found) {
             const field = found.property;
             const { tsType } = field;
