@@ -12,5 +12,5 @@
     }
   },
   "ignoreWorkspaces": ["examples/*", "packages/docs"],
-  "ignoreDependencies": ["graphql", "tsx", "@changesets/cli"]
+  "ignoreDependencies": ["graphql", "tsx"]
 }
