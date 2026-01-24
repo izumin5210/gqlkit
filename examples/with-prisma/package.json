@@ -8,7 +8,7 @@
     "prisma:push": "prisma db push",
     "start": "node --import tsx src/server.ts",
     "dev": "pnpm prisma:generate && pnpm prisma:push && pnpm gen && pnpm start",
-    "test": "vitest run",
+    "test": "pnpm -w test -- --project examples/with-prisma",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
