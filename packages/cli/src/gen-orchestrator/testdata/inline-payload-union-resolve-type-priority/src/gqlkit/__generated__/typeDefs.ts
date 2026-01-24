@@ -49,7 +49,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "CreateUserError type - exported named type for union member.\n\nDefined in: src/gqlkit/schema/types.ts",
+        "value": "CreateUserError type - exported named type for union member.\nHas __typename field to enable auto-generated resolveType.\n\nDefined in: src/gqlkit/schema/types.ts",
         "block": true
       }
     },
@@ -108,7 +108,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "CreateUserSuccess type - exported named type for union member.\n\nDefined in: src/gqlkit/schema/types.ts",
+        "value": "CreateUserSuccess type - exported named type for union member.\nHas __typename field to enable auto-generated resolveType.\n\nDefined in: src/gqlkit/schema/types.ts",
         "block": true
       }
     },
@@ -409,7 +409,7 @@ export const typeDefs: DocumentNode = {
           },
           "description": {
             "kind": "StringValue",
-            "value": "Test case 1: Mutation WITHOUT manual defineResolveType (Requirement 6.4)\n\nThis mutation returns a union of named types.\nSince no manual defineResolveType is defined for CreateUserPayload,\nthe auto-generated __resolveType should be used.\n\nNote: The auto-generated __resolveType returns obj.__typename, which requires\nall union members (both inline and named types) to include __typename in their\nreturn values. This is a design requirement for payload unions in gqlkit.\n\nDefined in: src/gqlkit/schema/types.ts",
+            "value": "Test case 1: Mutation WITHOUT manual defineResolveType\n\nThis mutation returns a union of named types (CreateUserSuccess | CreateUserError).\nBoth types have __typename fields, so auto-generated __resolveType is used.\n\nExpected: CreateUserPayload uses auto-generated __resolveType: (obj) => obj.__typename\n\nDefined in: src/gqlkit/schema/types.ts",
             "block": true
           }
         },
@@ -467,7 +467,7 @@ export const typeDefs: DocumentNode = {
           },
           "description": {
             "kind": "StringValue",
-            "value": "Mutation that uses the explicitly typed UpdateUserPayload.\nSince UpdateUserPayload has a manual defineResolveType,\nthe auto-generated __resolveType should NOT be included for this union.\n\nExpected behavior:\n- CreateUserPayload: uses auto-generated __resolveType: (obj) => obj.__typename\n- UpdateUserPayload: uses manual updateUserPayloadResolveType\n\nDefined in: src/gqlkit/schema/types.ts",
+            "value": "Test case 2: Mutation WITH manual defineResolveType\n\nThis mutation uses UpdateUserPayload which has a manual defineResolveType.\nThe manual resolveType takes priority over any auto-generated one.\n\nExpected behavior:\n- CreateUserPayload: uses auto-generated __resolveType: (obj) => obj.__typename\n- UpdateUserPayload: uses manual updateUserPayloadResolveType (priority over auto)\n\nDefined in: src/gqlkit/schema/types.ts",
             "block": true
           }
         }
