@@ -70,6 +70,8 @@ jobs:
           echo "=== Platform Info ==="
           node -e "console.log(process.platform, process.arch)"
       - name: test
+        env:
+          GQLKIT_TIMING: "true"
         run: |
           pnpm build
           pnpm test --coverage=${COVERAGE}

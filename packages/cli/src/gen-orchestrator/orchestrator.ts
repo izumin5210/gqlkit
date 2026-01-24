@@ -731,20 +731,59 @@ function generateOutputFiles(
   return files;
 }
 
+const ENABLE_TIMING = process.env["GQLKIT_TIMING"] === "true";
+
+interface StepTiming {
+  step: string;
+  duration: number;
+}
+
+function logTiming(label: string, timings: StepTiming[]): void {
+  if (!ENABLE_TIMING) return;
+  console.log(`\n[TIMING] ${label}`);
+  for (const t of timings) {
+    console.log(`  ${t.step}: ${t.duration.toFixed(0)}ms`);
+  }
+  const total = timings.reduce((sum, t) => sum + t.duration, 0);
+  console.log(`  TOTAL: ${total.toFixed(0)}ms`);
+}
+
 export async function executeGeneration(
   config: GenerationConfig,
 ): Promise<GenerationResult> {
+  const timings: StepTiming[] = [];
   let ctx = createInitialContext(config);
 
+  let t0 = performance.now();
   ctx = await scanSourceFilesStep(ctx);
+  timings.push({ step: "scanSourceFiles", duration: performance.now() - t0 });
+
+  t0 = performance.now();
   ctx = createProgramStep(ctx);
+  timings.push({ step: "createProgram", duration: performance.now() - t0 });
+
+  t0 = performance.now();
   ctx = collectTypeNamesStep(ctx);
+  timings.push({ step: "collectTypeNames", duration: performance.now() - t0 });
+
+  t0 = performance.now();
   ctx = extractTypesStep(ctx);
+  timings.push({ step: "extractTypes", duration: performance.now() - t0 });
+
+  t0 = performance.now();
   ctx = extractResolversStep(ctx);
+  timings.push({ step: "extractResolvers", duration: performance.now() - t0 });
+
+  t0 = performance.now();
   ctx = extractDirectivesStep(ctx);
+  timings.push({ step: "extractDirectives", duration: performance.now() - t0 });
+
+  t0 = performance.now();
   ctx = validateExtractionStep(ctx);
+  timings.push({ step: "validateExtraction", duration: performance.now() - t0 });
 
   if (ctx.aborted) {
+    logTiming("executeGeneration (aborted)", timings);
     return {
       success: false,
       files: [],
@@ -752,10 +791,13 @@ export async function executeGeneration(
     };
   }
 
+  t0 = performance.now();
   const { ctx: schemaCtx, schemaResult } = generateSchemaStep(ctx);
   ctx = schemaCtx;
+  timings.push({ step: "generateSchema", duration: performance.now() - t0 });
 
   if (ctx.aborted || !schemaResult) {
+    logTiming("executeGeneration (schema failed)", timings);
     return {
       success: false,
       files: [],
@@ -763,8 +805,11 @@ export async function executeGeneration(
     };
   }
 
+  t0 = performance.now();
   const files = generateOutputFiles(config, schemaResult);
+  timings.push({ step: "generateOutputFiles", duration: performance.now() - t0 });
 
+  logTiming("executeGeneration", timings);
   return {
     success: true,
     files,
