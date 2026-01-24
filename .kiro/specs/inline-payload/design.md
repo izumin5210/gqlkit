@@ -698,4 +698,4 @@ classDiagram
 ### E2E Tests
 
 - 既存の golden file テストフレームワークを使用
-- `UPDATE_GOLDEN=true pnpm test` でスナップショット更新
+- `pnpm test -- -u` でスナップショット更新

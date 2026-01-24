@@ -193,10 +193,10 @@ Error case naming patterns:
 To update golden files after implementation changes:
 
 ```bash
-UPDATE_GOLDEN=true pnpm test -- packages/cli/src/gen-orchestrator/golden.test.ts
+pnpm test -- -u packages/cli/src/gen-orchestrator/golden.test.ts
 ```
 
-This regenerates all `__generated__/` files based on current implementation.
+This regenerates all `__generated__/` files based on current implementation and deletes obsolete files.
 
 ## Adding New Test Cases
 
@@ -205,7 +205,7 @@ This regenerates all `__generated__/` files based on current implementation.
 3. Create `src/gqlkit/schema/` with source files
 4. Run test to generate golden files:
    ```bash
-   UPDATE_GOLDEN=true pnpm test -- packages/cli/src/gen-orchestrator/golden.test.ts
+   pnpm test -- -u packages/cli/src/gen-orchestrator/golden.test.ts
    ```
 5. Verify generated files are correct
 6. Commit all files
