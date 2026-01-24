@@ -5,11 +5,34 @@
  */
 
 /**
- * The field name used for type discrimination.
+ * All recognized field names for type discrimination.
  * - "__typename" is the standard GraphQL introspection field
  * - "$typeName" is a gqlkit-specific alternative that won't appear in the schema
+ *
+ * To add a new typename field:
+ * 1. Add the field name to this array
+ * 2. Update findTypenameProperty priority if needed
  */
-export type TypenameFieldName = "__typename" | "$typeName";
+export const TYPENAME_FIELD_NAMES = ["__typename", "$typeName"] as const;
+
+/**
+ * The field name used for type discrimination.
+ */
+export type TypenameFieldName = (typeof TYPENAME_FIELD_NAMES)[number];
+
+/**
+ * A set of typename field names used in a resolve type pattern.
+ */
+export type TypenameFieldNameSet = ReadonlySet<TypenameFieldName>;
+
+/**
+ * Create a TypenameFieldNameSet from field names.
+ */
+export function createFieldNameSet(
+  fieldNames: ReadonlyArray<TypenameFieldName>,
+): TypenameFieldNameSet {
+  return new Set(fieldNames);
+}
 
 /**
  * Information about a typename field extracted from a type definition.
@@ -17,20 +40,6 @@ export type TypenameFieldName = "__typename" | "$typeName";
 export interface TypenameFieldInfo {
   readonly typeName: string;
   readonly fieldName: TypenameFieldName;
-}
-
-/**
- * Type structure for extracting typename from a property.
- */
-interface TypeWithLiteralInfo {
-  readonly nullable: boolean;
-  readonly kind: string;
-  readonly name: string | null;
-}
-
-interface PropertyForTypenameExtraction {
-  readonly name: string;
-  readonly type: TypeWithLiteralInfo;
 }
 
 /**
@@ -51,26 +60,6 @@ export function findTypenameProperty<T>(
   );
   if (dollarTypenameProperty) {
     return { property: dollarTypenameProperty, fieldName: "$typeName" };
-  }
-
-  return null;
-}
-
-/**
- * Extract typename info from a property's type if it's a non-nullable string literal.
- */
-export function extractTypenameFromProperty(
-  property: PropertyForTypenameExtraction,
-  fieldName: TypenameFieldName,
-): TypenameFieldInfo | null {
-  const { type } = property;
-
-  if (type.nullable) {
-    return null;
-  }
-
-  if (type.kind === "literal" && type.name !== null) {
-    return { typeName: type.name, fieldName };
   }
 
   return null;
