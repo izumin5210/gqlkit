@@ -15,9 +15,6 @@ export function createResolvers() {
       INVALID: "invalid",
       PARTIAL: "partial",
     },
-    GetTaskResultPayloadTaskOutcome: {
-      __resolveType: (obj) => obj.__typename,
-    },
     Mutation: {
       createOrder: createOrder,
       processData: processData,
@@ -33,9 +30,6 @@ export function createResolvers() {
     OperationSuccess: {
       __isTypeOf: operationSuccessIsTypeOf,
     },
-    ProcessDataPayloadResult: {
-      __resolveType: (obj) => obj.__typename,
-    },
     Query: {
       getCompany: getCompany,
       getTaskResult: getTaskResult,
@@ -43,9 +37,6 @@ export function createResolvers() {
     User: {
       latestAction: latestAction,
       profile: profile,
-    },
-    UserLatestActionPayloadAction: {
-      __resolveType: (obj) => obj.__typename,
     },
   };
 }

@@ -232,6 +232,45 @@ For each category, verify all sub-features are covered:
 - [ ] Custom directive definition
 - [ ] Invalid directive errors
 
+### Combination Coverage
+
+When input patterns have multiple independent variation axes, verify that combinations of values across axes are tested.
+
+#### When to Apply
+
+Apply this check when:
+- Input has 2 or more independent variation axes
+- Different values on each axis are expected to produce different outputs or behaviors
+
+#### Methodology
+
+1. **Identify variation axes**
+   - Analyze input patterns and enumerate independent variation axes
+   - Example: Axis A (inline/named/mixed), Axis B (all have/some have/none have)
+
+2. **Create a matrix**
+   - Create a matrix of all combinations of values across axes
+   - Describe expected behavior for each cell
+
+3. **Verify coverage**
+   - Check if existing test cases cover each combination
+   - Identify missing combinations
+
+#### Example Matrix
+
+| | Condition X satisfied | Condition X partially satisfied | Condition X not satisfied |
+|---|---|---|---|
+| **Pattern A** | test-case-name | test-case-name | - |
+| **Pattern B** | test-case-name | - | test-case-name |
+| **Pattern A+B mixed** | test-case-name | - | - |
+
+#### Checklist
+
+- [ ] For features with multiple variation axes, create a combination matrix
+- [ ] Verify test cases exist for each combination
+- [ ] Report ⚠️ Warning if important combinations are missing
+- [ ] Verify new test cases don't duplicate existing combinations
+
 ## 8. Rating Guidelines
 
 ### ✅ Good

@@ -7,9 +7,6 @@ export function createResolvers() {
     CreateUserError: {
       __isTypeOf: createUserErrorIsTypeOf,
     },
-    CreateUserPayload: {
-      __resolveType: (obj) => obj.$typeName,
-    },
     Mutation: {
       createUser: createUser,
     },
@@ -18,9 +15,6 @@ export function createResolvers() {
     },
     Post: {
       authorOrError: authorOrError,
-    },
-    PostAuthorOrErrorPayload: {
-      __resolveType: (obj) => obj.$typeName,
     },
     Query: {
       posts: posts,

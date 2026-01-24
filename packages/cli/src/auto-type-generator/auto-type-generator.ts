@@ -1130,6 +1130,7 @@ function processUnionTypes(
         members: inlineUnion.members,
         unionTypeName: typeName,
         sourceLocation: inlineUnion.sourceLocation,
+        typeMap,
       });
 
       diagnostics.push(...typenameValidationResult.diagnostics);
@@ -1138,9 +1139,11 @@ function processUnionTypes(
         continue;
       }
 
-      resolveTypeFieldPattern = determineFieldPattern(
-        typenameValidationResult.memberTypenames,
-      );
+      if (typenameValidationResult.allMembersHaveTypename) {
+        resolveTypeFieldPattern = determineFieldPattern(
+          typenameValidationResult.memberTypenames,
+        );
+      }
     }
 
     const memberNames = resolveMemberNames({

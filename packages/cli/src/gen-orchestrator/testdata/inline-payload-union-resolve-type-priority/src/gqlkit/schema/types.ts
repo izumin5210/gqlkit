@@ -25,15 +25,19 @@ export type Post = {
 
 /**
  * CreateUserSuccess type - exported named type for union member.
+ * Has __typename field to enable auto-generated resolveType.
  */
 export type CreateUserSuccess = {
+  __typename: "CreateUserSuccess";
   user: User;
 };
 
 /**
  * CreateUserError type - exported named type for union member.
+ * Has __typename field to enable auto-generated resolveType.
  */
 export type CreateUserError = {
+  __typename: "CreateUserError";
   code: string;
   message: string;
 };
@@ -105,20 +109,18 @@ export const updateUserErrorIsTypeOf = defineIsTypeOf<UpdateUserError>(
 export const posts = defineQuery<NoArgs, Post[]>(() => []);
 
 /**
- * Test case 1: Mutation WITHOUT manual defineResolveType (Requirement 6.4)
+ * Test case 1: Mutation WITHOUT manual defineResolveType
  *
- * This mutation returns a union of named types.
- * Since no manual defineResolveType is defined for CreateUserPayload,
- * the auto-generated __resolveType should be used.
+ * This mutation returns a union of named types (CreateUserSuccess | CreateUserError).
+ * Both types have __typename fields, so auto-generated __resolveType is used.
  *
- * Note: The auto-generated __resolveType returns obj.__typename, which requires
- * all union members (both inline and named types) to include __typename in their
- * return values. This is a design requirement for payload unions in gqlkit.
+ * Expected: CreateUserPayload uses auto-generated __resolveType: (obj) => obj.__typename
  */
 export const createUser = defineMutation<
   { name: string; email: string },
   CreateUserSuccess | CreateUserError
 >((_root, args) => ({
+  __typename: "CreateUserSuccess" as const,
   user: {
     id: "1",
     name: args.name,
@@ -149,13 +151,14 @@ export const updateUserPayloadResolveType =
   });
 
 /**
- * Mutation that uses the explicitly typed UpdateUserPayload.
- * Since UpdateUserPayload has a manual defineResolveType,
- * the auto-generated __resolveType should NOT be included for this union.
+ * Test case 2: Mutation WITH manual defineResolveType
+ *
+ * This mutation uses UpdateUserPayload which has a manual defineResolveType.
+ * The manual resolveType takes priority over any auto-generated one.
  *
  * Expected behavior:
  * - CreateUserPayload: uses auto-generated __resolveType: (obj) => obj.__typename
- * - UpdateUserPayload: uses manual updateUserPayloadResolveType
+ * - UpdateUserPayload: uses manual updateUserPayloadResolveType (priority over auto)
  */
 export const updateUser = defineMutation<
   { id: string; name: string },
