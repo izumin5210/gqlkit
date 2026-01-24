@@ -73,9 +73,37 @@ export default defineConfig({
           dedupe: ["graphql"],
         },
         test: {
-          name: "examples",
-          root: "./examples",
-          include: ["**/*.test.ts"],
+          name: "examples/with-drizzle",
+          root: "./examples/with-drizzle",
+          include: ["src/**/*.test.ts"],
+          server: {
+            deps: {
+              inline: [
+                "graphql",
+                "@graphql-tools/utils",
+                "@graphql-tools/schema",
+                "graphql-yoga",
+                "graphql-scalars",
+                "@envelop/core",
+              ],
+            },
+          },
+        },
+      },
+      {
+        resolve: {
+          alias: {
+            graphql: graphqlPath,
+          },
+          dedupe: ["graphql"],
+        },
+        test: {
+          name: "examples/with-prisma",
+          root: "./examples/with-prisma",
+          include: ["src/**/*.test.ts"],
+          setupFiles: [
+            resolve(__dirname, "examples/with-prisma/vitest.setup.ts"),
+          ],
           server: {
             deps: {
               inline: [

@@ -1,0 +1,43 @@
+generator client {
+  provider = "prisma-client"
+  output   = "../src/__generated__/prisma"
+}
+
+datasource db {
+  provider = "sqlite"
+}
+
+enum UserStatus {
+  active
+  inactive
+  suspended
+}
+
+model User {
+  id        String     @id @default(uuid())
+  name      String
+  email     String     @unique
+  status    UserStatus @default(active)
+  createdAt DateTime   @default(now()) @map("created_at")
+  posts     Post[]
+
+  @@map("users")
+}
+
+enum PostPriority {
+  low
+  medium
+  high
+}
+
+model Post {
+  id        String       @id @default(uuid())
+  title     String
+  content   String?
+  priority  PostPriority @default(medium)
+  authorId  String       @map("author_id")
+  createdAt DateTime     @default(now()) @map("created_at")
+  author    User         @relation(fields: [authorId], references: [id])
+
+  @@map("posts")
+}
