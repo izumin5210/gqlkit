@@ -37,6 +37,9 @@ export default defineConfig({
           root: "./packages/cli",
           include: ["src/**/*.test.ts"],
           testTimeout: 30000,
+          globalSetup: [
+            resolve(__dirname, "packages/cli/vitest.global-setup.ts"),
+          ],
           server: {
             deps: {
               inline: ["graphql", "@graphql-tools/utils"],

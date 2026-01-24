@@ -12,6 +12,7 @@
     "docs",
     "src",
     "!**/testdata/**",
+    "!**/testing/**",
     "!**/*.test.ts",
     "!**/*.test.js",
     "!**/*.test.d.ts",

@@ -31,7 +31,7 @@ pnpm test -- packages/cli/src/gen-orchestrator/golden.test.ts
 
 **Update golden file snapshots:**
 ```bash
-UPDATE_GOLDEN=true pnpm test
+pnpm test -- -u
 ```
 
 **Coverage:**

@@ -121,7 +121,7 @@ sequenceDiagram
     participant Updater as GoldenUpdater
     participant FS as FileSystem
 
-    Dev->>Runner: UPDATE_GOLDEN=true pnpm test
+    Dev->>Runner: pnpm test -- -u
     Runner->>Core: coreGenerate(program, config)
     Core-->>Runner: GenerationOutput
     Runner->>Updater: updateGolden(output, expectedDir)
@@ -357,7 +357,7 @@ function compareOutputs(
 
 **Responsibilities & Constraints**
 
-- 環境変数 `UPDATE_GOLDEN=true` で更新モードを有効化
+- vitest の `-u` フラグで更新モードを有効化
 - 更新されたファイルをコンソールにレポート
 
 **Dependencies**

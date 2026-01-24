@@ -9,11 +9,12 @@ import {
   DEFAULT_SCHEMA_PATH,
   DEFAULT_TYPEDEFS_PATH,
 } from "../config-loader/loader.js";
+import { isSnapshotUpdateMode } from "../testing/snapshot.js";
 import { executeGeneration } from "./orchestrator.js";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const testdataDir = join(__dirname, "testdata");
-const isUpdateMode = process.env["UPDATE_GOLDEN"] === "true";
+const isUpdateMode = isSnapshotUpdateMode();
 
 async function fileExists(path: string): Promise<boolean> {
   try {
@@ -33,7 +34,7 @@ async function assertFileNotExists(
       await unlink(path);
     } else {
       throw new Error(
-        `${description} should not exist but found at: ${path}. Run with UPDATE_GOLDEN=true to remove it.`,
+        `${description} should not exist but found at: ${path}. Run with -u flag to remove it.`,
       );
     }
   }
