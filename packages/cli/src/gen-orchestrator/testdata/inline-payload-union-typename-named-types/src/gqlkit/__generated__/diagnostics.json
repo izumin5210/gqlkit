@@ -1,0 +1,32 @@
+[
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field '__typename' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 7,
+      "column": 3
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field '__typename' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 18,
+      "column": 3
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field '__typename' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 42,
+      "column": 3
+    }
+  }
+]

@@ -296,6 +296,7 @@ export interface ValidateUnionMemberTypenamesParams {
   readonly members: ReadonlyArray<InlineUnionMemberInfo>;
   readonly unionTypeName: string;
   readonly sourceLocation: SourceLocation;
+  readonly typeMap: ReadonlyMap<string, ExtractedTypeInfo>;
 }
 
 export interface ValidatedTypenameInfo {
@@ -307,6 +308,7 @@ export interface ValidateUnionMemberTypenamesResult {
   readonly valid: boolean;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
   readonly memberTypenames: ReadonlyMap<number, ValidatedTypenameInfo>;
+  readonly allMembersHaveTypename: boolean;
 }
 
 /**
@@ -314,7 +316,8 @@ export interface ValidateUnionMemberTypenamesResult {
  * Returns extracted typename values for valid members.
  *
  * Behavior:
- * - Skips validation for named types (needsAutoGeneration: false)
+ * - For named types (needsAutoGeneration: false), extracts typename from typeMap
+ * - For inline types (needsAutoGeneration: true), validates and extracts typename
  * - Only called for payload unions (context.kind === "resolverPayload")
  * - __typename takes priority over $typeName if both are present
  *
@@ -327,18 +330,45 @@ export interface ValidateUnionMemberTypenamesResult {
 export function validateUnionMemberTypenames(
   params: ValidateUnionMemberTypenamesParams,
 ): ValidateUnionMemberTypenamesResult {
-  const { members, unionTypeName, sourceLocation } = params;
+  const { members, unionTypeName, sourceLocation, typeMap } = params;
   const diagnostics: Diagnostic[] = [];
   const memberTypenames = new Map<number, ValidatedTypenameInfo>();
 
+  let inlineTypeCount = 0;
+  let inlineTypesWithTypename = 0;
+  let namedTypeCount = 0;
+  let namedTypesWithTypename = 0;
+
   for (let i = 0; i < members.length; i++) {
     const member = members[i]!;
+    const memberType = member.memberType;
 
     if (!member.needsAutoGeneration) {
+      namedTypeCount++;
+      if (memberType.kind === "reference" && memberType.name !== null) {
+        const referencedType = typeMap.get(memberType.name);
+        if (referencedType) {
+          const found = findTypenameProperty(referencedType.fields, (f) => f.name);
+          if (found) {
+            const field = found.property;
+            const { tsType } = field;
+            if (
+              !field.optional &&
+              !tsType.nullable &&
+              tsType.kind === "literal" &&
+              tsType.name !== null
+            ) {
+              memberTypenames.set(i, {
+                typeName: tsType.name,
+                fieldName: found.fieldName,
+              });
+              namedTypesWithTypename++;
+            }
+          }
+        }
+      }
       continue;
     }
-
-    const memberType = member.memberType;
 
     if (
       memberType.kind !== "inlineObject" ||
@@ -346,6 +376,8 @@ export function validateUnionMemberTypenames(
     ) {
       continue;
     }
+
+    inlineTypeCount++;
 
     const found = findTypenameProperty(
       memberType.inlineObjectProperties,
@@ -398,12 +430,25 @@ export function validateUnionMemberTypenames(
         typeName: typenameType.name,
         fieldName: selectedFieldName,
       });
+      inlineTypesWithTypename++;
     }
+  }
+
+  // Determine allMembersHaveTypename based on member composition:
+  // - If there are inline types: only inline types need typename (original behavior)
+  // - If all members are named types: all named types need typename (new behavior for issue #116)
+  let allMembersHaveTypename: boolean;
+  if (inlineTypeCount > 0) {
+    allMembersHaveTypename = inlineTypesWithTypename === inlineTypeCount;
+  } else {
+    allMembersHaveTypename =
+      namedTypeCount > 0 && namedTypesWithTypename === namedTypeCount;
   }
 
   return {
     valid: diagnostics.length === 0,
     diagnostics,
     memberTypenames,
+    allMembersHaveTypename,
   };
 }
