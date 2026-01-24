@@ -23,6 +23,7 @@ beforeAll(() => {
     cwd: __dirname,
     env: { ...process.env, DATABASE_URL: testDbUrl },
     stdio: "inherit",
+    shell: process.platform === "win32",
   });
 });
 

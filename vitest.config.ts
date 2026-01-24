@@ -100,7 +100,9 @@ export default defineConfig({
           name: "examples/with-prisma",
           root: "./examples/with-prisma",
           include: ["src/**/*.test.ts"],
-          setupFiles: [resolve(__dirname, "examples/with-prisma/vitest.setup.ts")],
+          setupFiles: [
+            resolve(__dirname, "examples/with-prisma/vitest.setup.ts"),
+          ],
           server: {
             deps: {
               inline: [
