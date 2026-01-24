@@ -1,4 +1,5 @@
-import { defineField, defineMutation, type NoArgs } from "../gqlkit.js";
+import type { NoArgs } from "@gqlkit-ts/runtime";
+import { defineField, defineMutation } from "../gqlkit.js";
 
 export type User = {
   id: string;

@@ -3,8 +3,7 @@ import {
   type GqlInterface,
   type GqlObject,
 } from "@gqlkit-ts/runtime";
-
-export type Context = unknown;
+import type { Context } from "./context.js";
 
 export const { defineQuery } = createGqlkitApis<Context>();
 

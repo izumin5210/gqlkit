@@ -1,8 +1,5 @@
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
-
-export type Context = unknown;
+import { createGqlkitApis } from "@gqlkit-ts/runtime";
+import type { Context } from "./context.js";
 
 export const { defineField, defineIsTypeOf, defineMutation, defineQuery } =
   createGqlkitApis<Context>();
-
-export type { NoArgs };
