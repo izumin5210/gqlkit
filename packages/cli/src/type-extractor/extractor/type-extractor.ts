@@ -1134,17 +1134,23 @@ interface ExtractInlineObjectMembersParams {
   readonly checker: ts.TypeChecker;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
+  readonly typeNode: ts.TypeNode | undefined;
 }
 
 function extractInlineObjectMembers(
   params: ExtractInlineObjectMembersParams,
 ): InlineObjectExtractionResult | null {
-  const { type, checker, globalTypeMappings, knownTypeNames } = params;
+  const { type, checker, globalTypeMappings, knownTypeNames, typeNode } =
+    params;
   if (!type.isUnion()) {
     return null;
   }
 
   const nonNullTypes = getNonNullableTypes(type);
+  const memberTypeNodes =
+    typeNode && ts.isUnionTypeNode(typeNode)
+      ? filterNonNullTypeNodes(typeNode)
+      : [];
 
   const allObjectTypes = nonNullTypes.every(
     (t) =>
@@ -1167,28 +1173,45 @@ function extractInlineObjectMembers(
     visitedTypes: new WeakSet(),
   };
 
-  for (const memberType of nonNullTypes) {
-    if (isAnonymousObjectType(memberType)) {
-      hasInlineObjects = true;
-      const properties = memberType.getProperties();
-      const memberProperties: InlineObjectProperty[] = [];
-
-      for (const prop of properties) {
-        const propType = checker.getTypeOfSymbol(prop);
-        const tsdocInfo = extractTsDocFromSymbol(prop, checker);
-        const typeResult = convertTsTypeToReference(propType, ctx);
-
-        memberProperties.push({
-          propertyName: prop.getName(),
-          propertyType: typeResult.tsType,
-          description: tsdocInfo.description ?? null,
-          deprecated: tsdocInfo.deprecated ?? null,
-        });
+  if (memberTypeNodes.length > 0) {
+    for (const memberNode of memberTypeNodes) {
+      if (ts.isTypeReferenceNode(memberNode)) {
+        hasNamedTypes = true;
+      } else {
+        hasInlineObjects = true;
       }
+    }
+  } else {
+    for (const memberType of nonNullTypes) {
+      if (isAnonymousObjectType(memberType)) {
+        hasInlineObjects = true;
+      } else {
+        hasNamedTypes = true;
+      }
+    }
+  }
 
-      members.push({ properties: memberProperties });
-    } else {
-      hasNamedTypes = true;
+  if (hasInlineObjects) {
+    for (const memberType of nonNullTypes) {
+      if (isAnonymousObjectType(memberType)) {
+        const properties = memberType.getProperties();
+        const memberProperties: InlineObjectProperty[] = [];
+
+        for (const prop of properties) {
+          const propType = checker.getTypeOfSymbol(prop);
+          const tsdocInfo = extractTsDocFromSymbol(prop, checker);
+          const typeResult = convertTsTypeToReference(propType, ctx);
+
+          memberProperties.push({
+            propertyName: prop.getName(),
+            propertyType: typeResult.tsType,
+            description: tsdocInfo.description ?? null,
+            deprecated: tsdocInfo.deprecated ?? null,
+          });
+        }
+
+        members.push({ properties: memberProperties });
+      }
     }
   }
 
@@ -1419,6 +1442,7 @@ export function extractTypesFromProgram(
           checker,
           globalTypeMappings,
           knownTypeNames,
+          typeNode: typeAliasTypeNode,
         });
         const tsdocInfo = extractTsDocInfo(node, checker);
 
@@ -1521,11 +1545,9 @@ export function extractTypesFromProgram(
           }
         }
 
-        const inlineObjectMembers =
-          inlineObjectResult?.hasInlineObjects &&
-          !inlineObjectResult.hasNamedTypes
-            ? inlineObjectResult.members
-            : null;
+        const inlineObjectMembers = inlineObjectResult?.hasInlineObjects
+          ? inlineObjectResult.members
+          : null;
 
         const typeInfo: ExtractedTypeInfo = {
           metadata,

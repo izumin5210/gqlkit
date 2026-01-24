@@ -6,6 +6,10 @@ import type {
 } from "../type-extractor/types/index.js";
 import type { InlineUnionMemberInfo } from "./inline-union-types.js";
 import { isInputTypeName } from "./naming-convention.js";
+import {
+  findTypenameProperty,
+  type TypenameFieldName,
+} from "./typename-types.js";
 
 export interface ValidateUnionResult {
   readonly valid: boolean;
@@ -294,32 +298,38 @@ export interface ValidateUnionMemberTypenamesParams {
   readonly sourceLocation: SourceLocation;
 }
 
+export interface ValidatedTypenameInfo {
+  readonly typeName: string;
+  readonly fieldName: TypenameFieldName;
+}
+
 export interface ValidateUnionMemberTypenamesResult {
   readonly valid: boolean;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
-  readonly memberTypenames: ReadonlyMap<number, string>;
+  readonly memberTypenames: ReadonlyMap<number, ValidatedTypenameInfo>;
 }
 
 /**
- * Validates __typename property on inline union members.
+ * Validates __typename or $typeName property on inline union members.
  * Returns extracted typename values for valid members.
  *
  * Behavior:
  * - Skips validation for named types (needsAutoGeneration: false)
  * - Only called for payload unions (context.kind === "resolverPayload")
+ * - __typename takes priority over $typeName if both are present
  *
  * Reports:
- * - MISSING_TYPENAME_PROPERTY when __typename is not present
- * - INVALID_TYPENAME_TYPE when __typename is not a string literal
- * - OPTIONAL_TYPENAME_PROPERTY when __typename is declared as optional
- * - NULLABLE_TYPENAME_PROPERTY when __typename is nullable
+ * - MISSING_TYPENAME_PROPERTY when neither __typename nor $typeName is present
+ * - INVALID_TYPENAME_TYPE when the property is not a string literal
+ * - OPTIONAL_TYPENAME_PROPERTY when the property is declared as optional
+ * - NULLABLE_TYPENAME_PROPERTY when the property is nullable
  */
 export function validateUnionMemberTypenames(
   params: ValidateUnionMemberTypenamesParams,
 ): ValidateUnionMemberTypenamesResult {
   const { members, unionTypeName, sourceLocation } = params;
   const diagnostics: Diagnostic[] = [];
-  const memberTypenames = new Map<number, string>();
+  const memberTypenames = new Map<number, ValidatedTypenameInfo>();
 
   for (let i = 0; i < members.length; i++) {
     const member = members[i]!;
@@ -337,37 +347,37 @@ export function validateUnionMemberTypenames(
       continue;
     }
 
-    const typenameProperty = memberType.inlineObjectProperties.find(
-      (prop) => prop.name === "__typename",
+    const found = findTypenameProperty(
+      memberType.inlineObjectProperties,
+      (prop) => prop.name,
     );
 
-    if (!typenameProperty) {
+    if (!found) {
       diagnostics.push({
         code: "MISSING_TYPENAME_PROPERTY",
-        message: `Union '${unionTypeName}' member at index ${i} is missing '__typename' property. Inline union members must have a '__typename' property with a string literal type.`,
+        message: `Union '${unionTypeName}' member at index ${i} is missing '__typename' or '$typeName' property. Inline union members must have a '__typename' or '$typeName' property with a string literal type.`,
         severity: "error",
         location: sourceLocation,
       });
       continue;
     }
 
-    const typenameType = typenameProperty.tsType;
+    const { property: selectedProperty, fieldName: selectedFieldName } = found;
+    const typenameType = selectedProperty.tsType;
 
-    // Check if __typename is optional (using ?) - this would make runtime resolution unreliable
-    if (typenameProperty.optional) {
+    if (selectedProperty.optional) {
       diagnostics.push({
         code: "OPTIONAL_TYPENAME_PROPERTY",
-        message: `Union '${unionTypeName}' member at index ${i} has optional '__typename' property. The '__typename' property must be required for union type resolution.`,
+        message: `Union '${unionTypeName}' member at index ${i} has optional '${selectedFieldName}' property. The '${selectedFieldName}' property must be required for union type resolution.`,
         severity: "error",
         location: sourceLocation,
       });
     }
 
-    // Check if __typename is nullable (| null) - this would make runtime resolution unreliable
     if (typenameType.nullable) {
       diagnostics.push({
         code: "NULLABLE_TYPENAME_PROPERTY",
-        message: `Union '${unionTypeName}' member at index ${i} has nullable '__typename' property. The '__typename' property must not be nullable for union type resolution.`,
+        message: `Union '${unionTypeName}' member at index ${i} has nullable '${selectedFieldName}' property. The '${selectedFieldName}' property must not be nullable for union type resolution.`,
         severity: "error",
         location: sourceLocation,
       });
@@ -376,16 +386,18 @@ export function validateUnionMemberTypenames(
     if (typenameType.kind !== "literal" || typenameType.name === null) {
       diagnostics.push({
         code: "INVALID_TYPENAME_TYPE",
-        message: `Union '${unionTypeName}' member at index ${i} has '__typename' that is not a string literal type. Expected a string literal like '__typename: "TypeName"'.`,
+        message: `Union '${unionTypeName}' member at index ${i} has '${selectedFieldName}' that is not a string literal type. Expected a string literal like '${selectedFieldName}: "TypeName"'.`,
         severity: "error",
         location: sourceLocation,
       });
       continue;
     }
 
-    // Only record typename if there are no errors for this member
-    if (!typenameProperty.optional && !typenameType.nullable) {
-      memberTypenames.set(i, typenameType.name);
+    if (!selectedProperty.optional && !typenameType.nullable) {
+      memberTypenames.set(i, {
+        typeName: typenameType.name,
+        fieldName: selectedFieldName,
+      });
     }
   }
 

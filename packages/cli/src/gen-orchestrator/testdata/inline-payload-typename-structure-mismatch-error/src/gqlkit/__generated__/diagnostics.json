@@ -1,0 +1,12 @@
+[
+  {
+    "code": "TYPENAME_FIELD_STRUCTURE_MISMATCH",
+    "message": "Type with __typename 'SharedError' has inconsistent field structures across different union members. All types with the same __typename must have identical field definitions.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 31,
+      "column": 14
+    }
+  }
+]

@@ -1,0 +1,12 @@
+[
+  {
+    "code": "INVALID_TYPENAME_TYPE",
+    "message": "Union 'UpdateUserPayload' member at index 1 has '__typename' that is not a string literal type. Expected a string literal like '__typename: \"TypeName\"'.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 18,
+      "column": 14
+    }
+  }
+]

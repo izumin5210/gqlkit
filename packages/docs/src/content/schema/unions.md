@@ -251,7 +251,32 @@ See [Queries & Mutations](./queries-mutations.md#inline-payload-types) for more 
 
 ## Runtime Type Resolution
 
-When GraphQL executes a query that returns a union type, it needs to determine the concrete type at runtime. Use `defineResolveType` to handle this:
+When GraphQL executes a query that returns a union type, it needs to determine the concrete type at runtime.
+
+### Automatic Resolution
+
+If your union member types have `__typename` or `$typeName` fields with string literal values, gqlkit automatically generates the `resolveType` function:
+
+```typescript
+export interface User {
+  __typename: "User";
+  id: string;
+  name: string;
+}
+
+export interface Post {
+  __typename: "Post";
+  id: string;
+  title: string;
+}
+
+export type SearchResult = User | Post;
+// resolveType is automatically generated - no manual definition needed
+```
+
+### Manual Resolution
+
+For types without `__typename` or `$typeName`, use `defineResolveType`:
 
 ```typescript
 import { defineResolveType } from "../gqlkit";

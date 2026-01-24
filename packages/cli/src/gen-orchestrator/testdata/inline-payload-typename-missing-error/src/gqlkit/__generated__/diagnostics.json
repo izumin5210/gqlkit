@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MISSING_TYPENAME_PROPERTY",
+    "message": "Union 'CreateUserPayload' member at index 1 is missing '__typename' or '$typeName' property. Inline union members must have a '__typename' or '$typeName' property with a string literal type.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 17,
+      "column": 14
+    }
+  }
+]
