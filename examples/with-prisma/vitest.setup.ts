@@ -27,7 +27,11 @@ beforeAll(() => {
 });
 
 afterAll(() => {
-  if (existsSync(testDbPath)) {
-    unlinkSync(testDbPath);
+  try {
+    if (existsSync(testDbPath)) {
+      unlinkSync(testDbPath);
+    }
+  } catch {
+    // Ignore cleanup errors - file may already be deleted or locked
   }
 });
