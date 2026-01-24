@@ -4,3 +4,9 @@ packages:
 
 catalog:
   graphql: "16.12.0"
+onlyBuiltDependencies:
+  - "@prisma/engines"
+  - "better-sqlite3"
+  - "esbuild"
+  - "prisma"
+  - "sharp"
