@@ -10,4 +10,5 @@ export default {
     title: "External Models",
   },
   drizzle: "Drizzle ORM",
+  prisma: "Prisma",
 };
