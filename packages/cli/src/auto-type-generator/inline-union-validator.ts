@@ -464,16 +464,14 @@ export function validateUnionMemberTypenames(
     }
   }
 
-  // Determine allMembersHaveTypename based on member composition:
-  // - If there are inline types: only inline types need typename (original behavior)
-  // - If all members are named types: all named types need typename (new behavior for issue #116)
-  let allMembersHaveTypename: boolean;
-  if (inlineTypeCount > 0) {
-    allMembersHaveTypename = inlineTypesWithTypename === inlineTypeCount;
-  } else {
-    allMembersHaveTypename =
-      namedTypeCount > 0 && namedTypesWithTypename === namedTypeCount;
-  }
+  // Determine allMembersHaveTypename: all members (both inline and named) must have typename
+  // for resolveType to be auto-generated. This ensures the generated resolveType function
+  // can resolve all union members correctly at runtime.
+  const totalMemberCount = inlineTypeCount + namedTypeCount;
+  const totalMembersWithTypename =
+    inlineTypesWithTypename + namedTypesWithTypename;
+  const allMembersHaveTypename =
+    totalMemberCount > 0 && totalMembersWithTypename === totalMemberCount;
 
   return {
     valid: diagnostics.length === 0,
