@@ -61,6 +61,14 @@ jobs:
           cache: pnpm
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Environment Info
+        run: |
+          echo "=== Node.js Version ==="
+          node --version
+          echo "=== TypeScript Version ==="
+          npx tsc --version
+          echo "=== Platform Info ==="
+          node -e "console.log(process.platform, process.arch)"
       - name: test
         run: |
           pnpm build

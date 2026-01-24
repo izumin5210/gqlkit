@@ -1,7 +1,7 @@
 import { access, readdir, readFile, unlink } from "node:fs/promises";
 import { basename, dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { describe, expect, it } from "vitest";
+import { describe, expect, it, afterAll } from "vitest";
 import type { GqlkitConfig } from "../config/index.js";
 import type { ResolvedScalarMapping } from "../config-loader/index.js";
 import {
@@ -10,6 +10,8 @@ import {
   DEFAULT_TYPEDEFS_PATH,
 } from "../config-loader/loader.js";
 import { executeGeneration } from "./orchestrator.js";
+
+const testTimings: Array<{ name: string; duration: number }> = [];
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const testdataDir = join(__dirname, "testdata");
@@ -73,6 +75,25 @@ function findFile(
 }
 
 describe("Golden File Tests", async () => {
+  const suiteStart = performance.now();
+
+  afterAll(() => {
+    const suiteEnd = performance.now();
+    const total = suiteEnd - suiteStart;
+    console.log("\n=== Test Timing Summary ===");
+    console.log(`Total suite time: ${(total / 1000).toFixed(2)}s`);
+
+    const sorted = [...testTimings].sort((a, b) => b.duration - a.duration);
+    console.log("\nTop 10 slowest tests:");
+    for (const t of sorted.slice(0, 10)) {
+      console.log(`  ${t.name}: ${t.duration.toFixed(0)}ms`);
+    }
+
+    const avg = testTimings.reduce((sum, t) => sum + t.duration, 0) / testTimings.length;
+    console.log(`\nAverage per test: ${avg.toFixed(0)}ms`);
+    console.log(`Number of tests: ${testTimings.length}`);
+  });
+
   const entries = await readdir(testdataDir, { withFileTypes: true });
   const caseNames = entries
     .filter((e) => e.isDirectory() && !e.name.startsWith("_"))
@@ -81,6 +102,7 @@ describe("Golden File Tests", async () => {
 
   for (const caseName of caseNames) {
     it(caseName, async () => {
+      const testStart = performance.now();
       const caseDir = join(testdataDir, caseName);
 
       const config = await readJsonIfExists<Partial<GqlkitConfig>>(
@@ -150,6 +172,9 @@ describe("Golden File Tests", async () => {
           "resolvers.ts",
         );
       }
+
+      const testEnd = performance.now();
+      testTimings.push({ name: caseName, duration: testEnd - testStart });
     });
   }
 });
