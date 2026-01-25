@@ -171,7 +171,7 @@ export type User = GqlObject<
   {
     id: IDString;
     name: string;
-    email: string;
+    email: string | null;
     internalId: string;  // Internal field - excluded from schema
     cacheKey: string;    // Internal field - excluded from schema
   },
