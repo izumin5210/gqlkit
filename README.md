@@ -23,10 +23,17 @@ npm install -D @gqlkit-ts/cli
 ### 2. Create types and resolvers
 
 ```ts
-// src/gqlkit/schema/task.ts
-import { createGqlkitApis, type IDString, type NoArgs } from "@gqlkit-ts/runtime";
+// src/gqlkit/gqlkit.ts
+import { createGqlkitApis } from "@gqlkit-ts/runtime";
+import { Context } from "./context.js";
 
-const { defineQuery, defineMutation } = createGqlkitApis();
+export const { defineField, defineQuery, defineMutation } = createGqlkitApis<Context>();
+```
+
+```ts
+// src/gqlkit/schema/task.ts
+import type { IDString, NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery, defineMutation } from "../gqlkit.js";
 
 export type Task = {
   id: IDString;
@@ -35,18 +42,15 @@ export type Task = {
 };
 
 const tasksData: Task[] = [];
-let nextId = 1;
 
+// Query
 export const tasks = defineQuery<NoArgs, Task[]>(() => tasksData);
 
-export type CreateTaskInput = {
-  title: string;
-};
-
-export const createTask = defineMutation<{ input: CreateTaskInput }, Task>(
+// Mutation
+export const createTask = defineMutation<{ input: { title: string } }, Task>(
   (_root, { input }) => {
     const task: Task = {
-      id: String(nextId++) as Task["id"],
+      id: crypto.randomUUID(),
       title: input.title,
       completed: false,
     };
@@ -110,7 +114,7 @@ mutation {
 }
 
 query {
-  tasks_ {
+  tasks {
     id
     title
     completed
