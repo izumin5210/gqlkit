@@ -1,5 +1,12 @@
 /**
  * Tests for ignoreFields metadata detection.
+ *
+ * Most scenarios are covered by golden file tests in testdata/:
+ * - ignore-fields-single-field/: Single field ignoreFields
+ * - ignore-fields-basic/: Multiple fields ignoreFields
+ * - ignore-fields-with-directives/: ignoreFields with other metadata
+ *
+ * This file only contains tests for edge cases not suitable for golden tests.
  */
 
 import ts from "typescript";
@@ -79,8 +86,8 @@ function getTypeFromDeclaration(
 }
 
 describe("detectIgnoreFieldsMetadata", () => {
-  describe("when ignoreFields is not specified", () => {
-    it("returns null for plain object type", () => {
+  describe("edge cases", () => {
+    it("returns null for plain object type (non-GqlObject)", () => {
       const source = `
         type User = {
           id: string;
@@ -93,128 +100,6 @@ describe("detectIgnoreFieldsMetadata", () => {
       const result = detectIgnoreFieldsMetadata({ type, checker });
 
       expect(result).toBeNull();
-    });
-
-    it("returns null for GqlObject without ignoreFields", () => {
-      const source = `
-        type GqlTypeMetaShape<Meta extends { ignoreFields?: string }> = {
-          readonly ignoreFields?: Meta["ignoreFields"];
-        };
-
-        type GqlObject<T, Meta extends { ignoreFields?: keyof T & string } = object> = T & {
-          readonly " $gqlkitTypeMeta"?: GqlTypeMetaShape<Meta>;
-        };
-
-        type User = GqlObject<{
-          id: string;
-          name: string;
-        }>;
-      `;
-      const { checker, sourceFile } = createTestProgram(source);
-      const type = getTypeFromDeclaration(sourceFile, checker, "User");
-
-      const result = detectIgnoreFieldsMetadata({ type, checker });
-
-      expect(result).toBeNull();
-    });
-  });
-
-  describe("when ignoreFields is specified with a single field", () => {
-    it("returns a Set containing the single field name", () => {
-      const source = `
-        type GqlTypeMetaShape<Meta extends { ignoreFields?: string }> = {
-          readonly ignoreFields?: Meta["ignoreFields"];
-        };
-
-        type GqlObject<T, Meta extends { ignoreFields?: keyof T & string } = object> = T & {
-          readonly " $gqlkitTypeMeta"?: GqlTypeMetaShape<Meta>;
-        };
-
-        type User = GqlObject<{
-          id: string;
-          name: string;
-          internalId: string;
-        }, { ignoreFields: "internalId" }>;
-      `;
-      const { checker, sourceFile } = createTestProgram(source);
-      const type = getTypeFromDeclaration(sourceFile, checker, "User");
-
-      const result = detectIgnoreFieldsMetadata({ type, checker });
-
-      expect(result).not.toBeNull();
-      expect(result).toEqual(new Set(["internalId"]));
-    });
-  });
-
-  describe("when ignoreFields is specified with multiple fields (union)", () => {
-    it("returns a Set containing all field names from the union", () => {
-      const source = `
-        type GqlTypeMetaShape<Meta extends { ignoreFields?: string }> = {
-          readonly ignoreFields?: Meta["ignoreFields"];
-        };
-
-        type GqlObject<T, Meta extends { ignoreFields?: keyof T & string } = object> = T & {
-          readonly " $gqlkitTypeMeta"?: GqlTypeMetaShape<Meta>;
-        };
-
-        type User = GqlObject<{
-          id: string;
-          name: string;
-          internalId: string;
-          cacheKey: string;
-        }, { ignoreFields: "internalId" | "cacheKey" }>;
-      `;
-      const { checker, sourceFile } = createTestProgram(source);
-      const type = getTypeFromDeclaration(sourceFile, checker, "User");
-
-      const result = detectIgnoreFieldsMetadata({ type, checker });
-
-      expect(result).not.toBeNull();
-      expect(result).toEqual(new Set(["internalId", "cacheKey"]));
-    });
-  });
-
-  describe("when ignoreFields is combined with other metadata", () => {
-    it("extracts ignoreFields when used with directives", () => {
-      const source = `
-        type GqlDirective<Name extends string, Args = object> = {
-          readonly " $directiveName": Name;
-          readonly " $directiveArgs": Args;
-        };
-
-        type CacheDirective = GqlDirective<"cache", { maxAge: number }>;
-
-        type GqlTypeMetaShape<Meta extends {
-          directives?: readonly unknown[];
-          ignoreFields?: string;
-        }> = {
-          readonly directives?: Meta["directives"];
-          readonly ignoreFields?: Meta["ignoreFields"];
-        };
-
-        type GqlObject<T, Meta extends {
-          directives?: readonly unknown[];
-          ignoreFields?: keyof T & string;
-        } = object> = T & {
-          readonly " $gqlkitTypeMeta"?: GqlTypeMetaShape<Meta>;
-        };
-
-        type User = GqlObject<{
-          id: string;
-          name: string;
-          internalId: string;
-        }, {
-          ignoreFields: "internalId";
-          directives: [CacheDirective];
-        }>;
-      `;
-      const { checker, sourceFile } = createTestProgram(source);
-      const type = getTypeFromDeclaration(sourceFile, checker, "User");
-
-      const result = detectIgnoreFieldsMetadata({ type, checker });
-
-      expect(result).not.toBeNull();
-      expect(result).toEqual(new Set(["internalId"]));
     });
   });
 });

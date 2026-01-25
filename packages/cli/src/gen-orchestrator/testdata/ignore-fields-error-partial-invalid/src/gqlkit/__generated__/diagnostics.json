@@ -1,0 +1,12 @@
+[
+  {
+    "code": "IGNORE_FIELD_NOT_FOUND",
+    "message": "Type 'User': ignoreFields contains unknown field 'unknownField'. Available fields: email, id, internalId, name",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 3,
+      "column": 1
+    }
+  }
+]
