@@ -369,8 +369,6 @@ input CreateUserInput {
 }
 ```
 
-The excluded fields are not included in the generated input type. See [Object Types - Excluding Fields](./objects.md#excluding-fields) for more details on type safety, combining with other options, and validation.
-
 ## Invalid Field Names
 
 Input field names that are not valid GraphQL identifiers are automatically skipped with a warning. Valid GraphQL names must:
