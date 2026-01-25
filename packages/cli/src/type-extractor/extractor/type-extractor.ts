@@ -9,6 +9,8 @@ import {
   hasDirectiveMetadata,
   unwrapDirectiveType,
 } from "../../shared/directive-detector.js";
+import { detectIgnoreFieldsMetadata } from "../../shared/ignore-fields-detector.js";
+import { validateIgnoreFields } from "../../shared/ignore-fields-validator.js";
 import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } from "../../shared/inline-object-extractor.js";
 import { isInlineObjectType } from "../../shared/inline-object-utils.js";
 import {
@@ -408,6 +410,21 @@ interface FieldExtractionResult {
   diagnostics: Diagnostic[];
 }
 
+function collectAllFieldNames(
+  type: ts.Type,
+  checker: ts.TypeChecker,
+): ReadonlySet<string> {
+  const properties = extractPropertySymbols(type, checker);
+  const fieldNames = new Set<string>();
+  for (const prop of properties) {
+    const propName = prop.getName();
+    if (!propName.startsWith(" $")) {
+      fieldNames.add(propName);
+    }
+  }
+  return fieldNames;
+}
+
 interface ExtractFieldsParams {
   readonly type: ts.Type;
   readonly checker: ts.TypeChecker;
@@ -418,6 +435,7 @@ interface ExtractFieldsParams {
   readonly sourceFiles: ReadonlySet<string>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   readonly scalarMappingContext: ScalarMappingContext;
+  readonly ignoreFields: ReadonlySet<string> | null;
 }
 
 function extractFieldsFromType(
@@ -433,6 +451,7 @@ function extractFieldsFromType(
     sourceFiles,
     scalarMappingTable,
     scalarMappingContext,
+    ignoreFields,
   } = params;
   const fields: FieldDefinition[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -442,6 +461,10 @@ function extractFieldsFromType(
     const propName = prop.getName();
 
     if (propName.startsWith(" $")) {
+      continue;
+    }
+
+    if (ignoreFields?.has(propName)) {
       continue;
     }
 
@@ -949,6 +972,19 @@ function processReexportedSymbol(
       ? reexportDeclaration.type
       : undefined;
   const unionMembers = extractUnionMembers(type, reexportTypeNode);
+  const ignoreFields = detectIgnoreFieldsMetadata({ type, checker });
+
+  if (ignoreFields !== null && kind !== "union") {
+    const allFieldNames = collectAllFieldNames(type, checker);
+    const validationDiagnostics = validateIgnoreFields({
+      typeName: exportedName,
+      ignoreFields,
+      allFieldNames,
+      sourceLocation: location,
+    });
+    diagnostics.push(...validationDiagnostics);
+  }
+
   const fieldResult =
     kind === "union"
       ? { fields: [], diagnostics: [] }
@@ -962,6 +998,7 @@ function processReexportedSymbol(
           sourceFiles: scannedSourceFiles,
           scalarMappingTable,
           scalarMappingContext,
+          ignoreFields,
         });
   diagnostics.push(...fieldResult.diagnostics);
 
@@ -1496,6 +1533,19 @@ export function extractTypesFromProgram(
           return;
         }
 
+        const ignoreFields = detectIgnoreFieldsMetadata({ type, checker });
+
+        if (ignoreFields !== null && kind !== "union") {
+          const allFieldNames = collectAllFieldNames(type, checker);
+          const validationDiagnostics = validateIgnoreFields({
+            typeName: name,
+            ignoreFields,
+            allFieldNames,
+            sourceLocation: typeSourceLocation,
+          });
+          diagnostics.push(...validationDiagnostics);
+        }
+
         const fieldResult =
           kind === "union"
             ? { fields: [], diagnostics: [] }
@@ -1511,6 +1561,7 @@ export function extractTypesFromProgram(
                 scalarMappingContext: name.endsWith("Input")
                   ? "input"
                   : "output",
+                ignoreFields,
               });
         const fields = fieldResult.fields;
         diagnostics.push(...fieldResult.diagnostics);

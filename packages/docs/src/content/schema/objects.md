@@ -157,6 +157,41 @@ export type Post = GqlObject<
 
 See [Interfaces](./interfaces.md) for more details on defining interface types.
 
+## Excluding Fields
+
+Use `GqlObject` with the `ignoreFields` option to exclude specific fields from the generated GraphQL schema. This is useful for internal fields that should not be exposed in the public API:
+
+```typescript
+import { type GqlObject, type IDString } from "@gqlkit-ts/runtime";
+
+/**
+ * A user in the system.
+ */
+export type User = GqlObject<
+  {
+    id: IDString;
+    name: string;
+    email: string | null;
+    internalId: string;  // Internal field - excluded from schema
+    cacheKey: string;    // Internal field - excluded from schema
+  },
+  { ignoreFields: "internalId" | "cacheKey" }
+>;
+```
+
+Generates:
+
+```graphql
+"""A user in the system."""
+type User {
+  id: ID!
+  name: String!
+  email: String
+}
+```
+
+The excluded fields (`internalId` and `cacheKey`) are not included in the generated schema, and no resolvers are generated for them.
+
 ## Invalid Field Names
 
 Field names that are not valid GraphQL identifiers are automatically skipped with a warning. Valid GraphQL names must:

@@ -178,7 +178,7 @@ export type GqlInterface<
 
 /**
  * Metadata structure for type-level GraphQL metadata.
- * Used to attach directives and other metadata to types.
+ * Used to attach directives, interface implementations, and field exclusions to types.
  *
  * @typeParam Meta - The metadata configuration object
  */
@@ -192,10 +192,12 @@ export interface GqlTypeMetaShape<
       >
     >;
     implements?: ReadonlyArray<GqlInterfaceMarker>;
+    ignoreFields?: string;
   },
 > {
   readonly directives?: Meta["directives"];
   readonly implements?: Meta["implements"];
+  readonly ignoreFields?: Meta["ignoreFields"];
 }
 
 /**
@@ -204,11 +206,11 @@ export interface GqlTypeMetaShape<
  * with the underlying type.
  *
  * The structure uses two properties:
- * - `$gqlkitTypeMeta`: Contains the metadata object with directives and implements
+ * - `$gqlkitTypeMeta`: Contains the metadata object with directives, implements, and ignoreFields
  * - `$gqlkitOriginalType`: Preserves the original type T to maintain nullability information
  *
  * @typeParam T - The base type to attach metadata to
- * @typeParam Meta - The metadata configuration object containing directives and/or implements
+ * @typeParam Meta - The metadata configuration object containing directives, implements, and/or ignoreFields
  *
  * @example
  * ```typescript
@@ -242,6 +244,27 @@ export interface GqlTypeMetaShape<
  *     directives: [CacheDirective<{ maxAge: 60 }>]
  *   }
  * >;
+ *
+ * // Type with ignoreFields to exclude fields from GraphQL schema
+ * type User = GqlObject<
+ *   {
+ *     id: IDString;
+ *     name: string;
+ *     internalId: string;
+ *   },
+ *   { ignoreFields: "internalId" }
+ * >;
+ *
+ * // Type with multiple ignored fields
+ * type User = GqlObject<
+ *   {
+ *     id: IDString;
+ *     name: string;
+ *     cacheKey: string;
+ *     internalId: string;
+ *   },
+ *   { ignoreFields: "cacheKey" | "internalId" }
+ * >;
  * ```
  */
 export type GqlObject<
@@ -255,6 +278,7 @@ export type GqlObject<
       >
     >;
     implements?: ReadonlyArray<GqlInterfaceMarker>;
+    ignoreFields?: keyof T & string;
   } = { directives: [] },
 > = T & {
   readonly " $gqlkitTypeMeta"?: GqlTypeMetaShape<Meta>;

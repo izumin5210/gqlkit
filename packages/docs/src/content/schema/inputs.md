@@ -338,6 +338,37 @@ export type BadInput = {
 };
 ```
 
+## Excluding Fields
+
+Use `GqlObject` with the `ignoreFields` option to exclude specific fields from the generated Input Object. This is useful for internal fields that should not be accepted from clients:
+
+```typescript
+import { type GqlObject } from "@gqlkit-ts/runtime";
+
+/**
+ * Input for creating a user.
+ */
+export type CreateUserInput = GqlObject<
+  {
+    name: string;
+    email: string;
+    internalData: string;  // Internal field - excluded from schema
+    trackingId: string;    // Internal field - excluded from schema
+  },
+  { ignoreFields: "internalData" | "trackingId" }
+>;
+```
+
+Generates:
+
+```graphql
+"""Input for creating a user."""
+input CreateUserInput {
+  name: String!
+  email: String!
+}
+```
+
 ## Invalid Field Names
 
 Input field names that are not valid GraphQL identifiers are automatically skipped with a warning. Valid GraphQL names must:
