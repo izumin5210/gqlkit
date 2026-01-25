@@ -24,7 +24,19 @@ export type Meta = Record<string, MetaValue>;
 export const HEADER_LINES = [
   "# gqlkit",
   "",
-  "> gqlkit is a convention-driven code generator for GraphQL servers in TypeScript. Define GraphQL types and resolver signatures in TypeScript, then `gqlkit gen` generates GraphQL schema AST and a resolver map from your codebase.",
+  "gqlkit generates GraphQL schema and resolver maps from TypeScript types and functions.",
+  "",
+  "## How it works",
+  "",
+  "1. Write TypeScript types in `src/gqlkit/schema/` → become GraphQL types",
+  "2. Write resolver functions using `defineQuery`, `defineMutation`, `defineField` → become GraphQL resolvers",
+  "3. Run `gqlkit gen` → outputs `typeDefs` and `resolvers` to `src/gqlkit/__generated__/`",
+  "",
+  "## Design principles",
+  "",
+  "- **Implement first**: Write types and resolvers, generate schema when ready. No edit-regenerate-implement loops.",
+  "- **Just types and functions**: Plain TypeScript with a thin API. No decorators, no complex generics.",
+  "- **Type-safe**: TypeScript types become GraphQL types. Resolver signatures checked at compile time.",
   "",
 ];
 
