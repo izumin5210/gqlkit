@@ -1,6 +1,6 @@
 ---
 title: Coding Assistants
-description: Set up AI coding assistants like Claude Code and Codex to understand gqlkit conventions.
+description: Set up AI coding assistants like Claude Code and Codex to understand gqlkit conventions. (skip if reading via `gqlkit-guide` skill)
 ---
 
 # Coding Assistants
