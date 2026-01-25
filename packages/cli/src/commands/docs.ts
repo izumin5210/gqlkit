@@ -110,6 +110,13 @@ async function appendOrCreateFile(
 export async function runDocsCommand(
   options: RunDocsCommandOptions,
 ): Promise<RunDocsCommandResult> {
+  if (!(await exists(CLI_DOCS_DIR))) {
+    console.error(
+      `Documentation directory not found: ${CLI_DOCS_DIR}\nRun "pnpm build" to generate documentation files.`,
+    );
+    return { exitCode: 1, filesWritten: [] };
+  }
+
   const filesWritten: string[] = [];
 
   const generateClaude =

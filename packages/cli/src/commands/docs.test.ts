@@ -1,3 +1,5 @@
+import { dirname, join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { vol } from "memfs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -8,6 +10,16 @@ vi.mock("node:fs/promises", async () => {
 
 import { runDocsCommand } from "./docs.js";
 
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const CLI_DOCS_DIR = join(__dirname, "../../docs");
+
+function setupVolume(files: Record<string, string>): void {
+  vol.fromJSON({
+    [`${CLI_DOCS_DIR}/index.md`]: "# Docs",
+    ...files,
+  });
+}
+
 describe("docs command", () => {
   beforeEach(() => {
     vol.reset();
@@ -15,7 +27,7 @@ describe("docs command", () => {
 
   describe("environment detection", () => {
     it("should detect Claude environment when CLAUDE.md exists", async () => {
-      vol.fromJSON({
+      setupVolume({
         "/project/CLAUDE.md": "# Project",
       });
 
@@ -33,7 +45,7 @@ describe("docs command", () => {
     });
 
     it("should detect Claude environment when .claude directory exists", async () => {
-      vol.fromJSON({
+      setupVolume({
         "/project/.claude/.gitkeep": "",
       });
 
@@ -50,7 +62,7 @@ describe("docs command", () => {
     });
 
     it("should detect Codex environment when AGENTS.md exists", async () => {
-      vol.fromJSON({
+      setupVolume({
         "/project/AGENTS.md": "# Agents",
       });
 
@@ -68,7 +80,7 @@ describe("docs command", () => {
     });
 
     it("should detect Codex environment when .codex directory exists", async () => {
-      vol.fromJSON({
+      setupVolume({
         "/project/.codex/.gitkeep": "",
       });
 
@@ -85,7 +97,7 @@ describe("docs command", () => {
     });
 
     it("should detect both environments when both exist", async () => {
-      vol.fromJSON({
+      setupVolume({
         "/project/CLAUDE.md": "# Project",
         "/project/AGENTS.md": "# Agents",
       });
@@ -106,7 +118,7 @@ describe("docs command", () => {
     });
 
     it("should return empty filesWritten when no environment detected", async () => {
-      vol.fromJSON({
+      setupVolume({
         "/project/.gitkeep": "",
       });
 
@@ -123,7 +135,7 @@ describe("docs command", () => {
 
   describe("explicit flags", () => {
     it("should generate Claude files when --claude flag is set", async () => {
-      vol.fromJSON({
+      setupVolume({
         "/project/.gitkeep": "",
       });
 
@@ -143,7 +155,7 @@ describe("docs command", () => {
     });
 
     it("should generate Codex files when --codex flag is set", async () => {
-      vol.fromJSON({
+      setupVolume({
         "/project/.gitkeep": "",
       });
 
@@ -163,7 +175,7 @@ describe("docs command", () => {
     });
 
     it("should generate both when both flags are set", async () => {
-      vol.fromJSON({
+      setupVolume({
         "/project/.gitkeep": "",
       });
 
@@ -185,7 +197,7 @@ describe("docs command", () => {
 
   describe("rules file appending", () => {
     it("should append rules to existing CLAUDE.md", async () => {
-      vol.fromJSON({
+      setupVolume({
         "/project/CLAUDE.md": "# Project\n\nSome content\n",
       });
 
@@ -203,7 +215,7 @@ describe("docs command", () => {
     });
 
     it("should not duplicate rules if already present", async () => {
-      vol.fromJSON({
+      setupVolume({
         "/project/CLAUDE.md":
           "# Project\n\n## gqlkit\n\nExisting gqlkit section\n",
       });
@@ -220,7 +232,7 @@ describe("docs command", () => {
     });
 
     it("should create CLAUDE.md if it does not exist when --claude is set", async () => {
-      vol.fromJSON({
+      setupVolume({
         "/project/.gitkeep": "",
       });
 
@@ -238,7 +250,7 @@ describe("docs command", () => {
 
   describe("SKILL.md generation", () => {
     it("should generate SKILL.md with correct content", async () => {
-      vol.fromJSON({
+      setupVolume({
         "/project/.gitkeep": "",
       });
 
@@ -262,7 +274,7 @@ describe("docs command", () => {
 
   describe("symlink creation", () => {
     it("should create references symlink", async () => {
-      vol.fromJSON({
+      setupVolume({
         "/project/.gitkeep": "",
       });
 
@@ -278,7 +290,7 @@ describe("docs command", () => {
     });
 
     it("should not fail if symlink already exists", async () => {
-      vol.fromJSON({
+      setupVolume({
         "/project/.claude/skills/gqlkit-guide/references": "",
       });
 
@@ -289,6 +301,23 @@ describe("docs command", () => {
       });
 
       expect(result.exitCode).toBe(0);
+    });
+  });
+
+  describe("docs directory validation", () => {
+    it("should return exit code 1 when docs directory is missing", async () => {
+      vol.fromJSON({
+        "/project/CLAUDE.md": "# Project",
+      });
+
+      const result = await runDocsCommand({
+        output: "/project",
+        claude: true,
+        codex: false,
+      });
+
+      expect(result.exitCode).toBe(1);
+      expect(result.filesWritten).toEqual([]);
     });
   });
 });
