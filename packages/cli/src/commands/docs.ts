@@ -81,7 +81,7 @@ async function createSymlinkIfNotExists(
   target: string,
 ): Promise<void> {
   try {
-    await symlink(target, linkPath);
+    await symlink(target, linkPath, "dir");
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
       throw error;
