@@ -4,6 +4,7 @@
 
 **Just types and functions** — write TypeScript, generate GraphQL.
 
+[![gqlkit Documnents](https://img.shields.io/badge/docs-gqlkit.izumin.dev-blue?logo=nextra&color=pink)](https://gqlkit.izumin.dev)
 [![NPM Version](https://img.shields.io/npm/v/%40gqlkit-ts%2Fcli)](https://www.npmjs.com/package/@gqlkit-ts/cli)
 [![Socket Badge](https://badge.socket.dev/npm/package/@gqlkit-ts/cli)](https://socket.dev/npm/package/@gqlkit-ts/cli)
 [![GitHub License](https://img.shields.io/github/license/izumin5210/gqlkit)](./LICENSE)
