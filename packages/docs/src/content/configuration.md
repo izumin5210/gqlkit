@@ -49,7 +49,7 @@ export default defineConfig({
 
 ## Custom Scalar Types
 
-Map TypeScript types to GraphQL custom scalars via config:
+Map TypeScript types to GraphQL custom scalars via config. See [Scalars](./schema/scalars) for complete documentation including the `GqlScalar` approach.
 
 ```ts
 export default defineConfig({
@@ -59,28 +59,9 @@ export default defineConfig({
       tsType: { from: "./src/gqlkit/schema/scalars", name: "DateTime" },
       description: "ISO 8601 datetime string",
     },
-    {
-      name: "UUID",
-      tsType: { name: "string" },
-      only: "input", // Input-only scalar
-    },
   ],
 });
 ```
-
-### Scalar Options
-
-| Option | Type | Description |
-|--------|------|-------------|
-| `name` | `string` | The GraphQL scalar name |
-| `tsType.name` | `string` | The TypeScript type name |
-| `tsType.from` | `string` (optional) | Import path for the type (omit for global types) |
-| `description` | `string` (optional) | Description for the GraphQL schema |
-| `only` | `"input"` \| `"output"` (optional) | Restrict scalar to input or output positions |
-
-> [!TIP]
->
-> You can also define custom scalars using the `GqlScalar` utility type directly in your schema files. See [Scalars](/schema/scalars) for more details.
 
 ## Output Paths
 

@@ -23,6 +23,22 @@ gqlkit maps TypeScript types to GraphQL types as follows:
 | Union with `*Input` suffix | `@oneOf` input object |
 | `GqlInterface<T>` | Interface type |
 | `GqlScalar<Name, Base>` | Custom scalar |
+| `NoArgs` | Indicates resolver takes no arguments |
+
+## Naming Conventions
+
+gqlkit generates type names using predictable conventions:
+
+| Context | Pattern | Example |
+|---------|---------|---------|
+| Object field (inline) | `{ParentType}{Field}` | `User.profile` → `UserProfile` |
+| Input field (inline) | `{ParentWithoutInput}{Field}Input` | `CreateUserInput.address` → `CreateUserAddressInput` |
+| Query/Mutation arg | `{Resolver}{Arg}Input` | `searchUsers(filter)` → `SearchUsersFilterInput` |
+| Field resolver arg | `{Parent}{Field}{Arg}Input` | `User.posts(filter)` → `UserPostsFilterInput` |
+| Inline enum | Same as parent context | `User.status` → `UserStatus` |
+| Payload type | `{Resolver}Payload` | `updateUser` → `UpdateUserPayload` |
+
+For complete details on inline enum naming, see [Inline Enums](./enums.md#inline-enums).
 
 ## Project Layout
 

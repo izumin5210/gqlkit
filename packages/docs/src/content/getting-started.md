@@ -66,6 +66,7 @@ export type User = {
   email: string | null;
 };
 
+// NoArgs indicates this query takes no arguments
 export const me = defineQuery<NoArgs, User | null>(
   (_root, _args, ctx) => ctx.currentUser
 );
