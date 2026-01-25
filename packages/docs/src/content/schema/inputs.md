@@ -1,3 +1,8 @@
+---
+title: Defining Input Types
+description: TypeScript types with Input suffix are treated as GraphQL input types.
+---
+
 # Input Types
 
 TypeScript types with `Input` suffix are treated as GraphQL input types.

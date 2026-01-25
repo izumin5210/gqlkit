@@ -1,3 +1,8 @@
+---
+title: Defining Queries and Mutations
+description: Define Query and Mutation fields using the @gqlkit-ts/runtime API.
+---
+
 # Queries & Mutations
 
 Define Query and Mutation fields using the `@gqlkit-ts/runtime` API.

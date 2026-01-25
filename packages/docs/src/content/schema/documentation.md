@@ -1,3 +1,8 @@
+---
+title: Adding Documentation to Schema
+description: gqlkit extracts TSDoc/JSDoc comments and converts them to GraphQL descriptions.
+---
+
 # Documentation
 
 gqlkit extracts TSDoc/JSDoc comments and converts them to GraphQL descriptions.

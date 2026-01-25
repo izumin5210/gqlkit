@@ -1,3 +1,8 @@
+---
+title: Coding Assistants
+description: Set up AI coding assistants like Claude Code and Codex to understand gqlkit conventions.
+---
+
 # Coding Assistants
 
 gqlkit provides built-in support for AI coding assistants like [Claude Code](https://claude.ai/code) and [OpenAI Codex](https://openai.com/index/openai-codex/). The `gqlkit docs` command generates skill files that help these tools understand gqlkit conventions and provide better assistance.

@@ -1,3 +1,8 @@
+---
+title: Defining Interface Types
+description: Define GraphQL interface types using the GqlInterface utility type.
+---
+
 # Interface Types
 
 Define GraphQL interface types using the `GqlInterface` utility type.

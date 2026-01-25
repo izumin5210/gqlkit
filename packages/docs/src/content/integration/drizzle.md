@@ -1,3 +1,8 @@
+---
+title: Integration with Drizzle ORM
+description: Derive GraphQL types from Drizzle table definitions.
+---
+
 # Drizzle ORM
 
 [Drizzle ORM](https://orm.drizzle.team/) is a TypeScript ORM with type-safe schema definitions. gqlkit integrates seamlessly with Drizzle by using `InferSelectModel` and `InferInsertModel` to derive GraphQL types from your table definitions.

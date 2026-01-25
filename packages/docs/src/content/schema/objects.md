@@ -1,3 +1,8 @@
+---
+title: Defining Object Types
+description: Plain TypeScript type exports become GraphQL Object types.
+---
+
 # Object Types
 
 Plain TypeScript type exports become GraphQL Object types.

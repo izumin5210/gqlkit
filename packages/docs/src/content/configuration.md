@@ -1,3 +1,8 @@
+---
+title: Configuration
+description: Configure gqlkit via gqlkit.config.ts in your project root.
+---
+
 # Configuration
 
 gqlkit can be configured via `gqlkit.config.ts` in your project root.

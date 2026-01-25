@@ -1,3 +1,8 @@
+---
+title: Resolving Abstract Types
+description: Handle runtime type resolution for GraphQL unions and interfaces.
+---
+
 # Abstract Type Resolution
 
 GraphQL abstract types (unions and interfaces) require runtime type resolution to determine the concrete type of returned values. gqlkit provides `defineResolveType` and `defineIsTypeOf` to handle this.

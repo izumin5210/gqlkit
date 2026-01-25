@@ -1,3 +1,8 @@
+---
+title: Schema Definition
+description: gqlkit generates GraphQL schema from your TypeScript types.
+---
+
 # Schema Definition
 
 gqlkit generates GraphQL schema from your TypeScript types. All exported types from `src/gqlkit/schema/` are automatically scanned and converted to GraphQL types.

@@ -1,3 +1,8 @@
+---
+title: Getting Started
+description: Install gqlkit and create your first GraphQL schema from TypeScript.
+---
+
 # Getting Started
 
 ## Installation

@@ -1,3 +1,8 @@
+---
+title: Integration with Prisma
+description: Derive GraphQL types from Prisma model types.
+---
+
 # Prisma
 
 [Prisma](https://www.prisma.io/) is a next-generation ORM for Node.js and TypeScript. gqlkit integrates seamlessly with Prisma by using its generated model types to derive GraphQL types from your schema definitions.

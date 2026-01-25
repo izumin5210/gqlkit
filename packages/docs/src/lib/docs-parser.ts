@@ -62,50 +62,66 @@ export function isSeparator(
   );
 }
 
+interface Frontmatter {
+  title: string;
+  description: string;
+}
+
+function parseFrontmatter(
+  content: string,
+  filePath: string,
+): { frontmatter: Frontmatter; body: string } {
+  if (!content.startsWith("---\n")) {
+    throw new Error(`Missing frontmatter in ${filePath}`);
+  }
+
+  const endIndex = content.indexOf("\n---\n", 4);
+  if (endIndex === -1) {
+    throw new Error(`Invalid frontmatter format in ${filePath}`);
+  }
+
+  const frontmatterText = content.slice(4, endIndex);
+  const body = content.slice(endIndex + 5);
+
+  const frontmatter: Record<string, string> = {};
+  for (const line of frontmatterText.split("\n")) {
+    const colonIndex = line.indexOf(":");
+    if (colonIndex !== -1) {
+      const key = line.slice(0, colonIndex).trim();
+      const value = line.slice(colonIndex + 1).trim();
+      frontmatter[key] = value;
+    }
+  }
+
+  if (!frontmatter.title) {
+    throw new Error(`Missing 'title' in frontmatter of ${filePath}`);
+  }
+  if (!frontmatter.description) {
+    throw new Error(`Missing 'description' in frontmatter of ${filePath}`);
+  }
+
+  return {
+    frontmatter: {
+      title: frontmatter.title,
+      description: frontmatter.description,
+    },
+    body,
+  };
+}
+
 export async function extractPageInfo(
   filePath: string,
   slug: string,
 ): Promise<PageInfo> {
-  const content = await fs.readFile(filePath, "utf-8");
-  const lines = content.split("\n");
+  const rawContent = await fs.readFile(filePath, "utf-8");
+  const { frontmatter, body } = parseFrontmatter(rawContent, filePath);
 
-  let title = slug;
-  let description = "";
-  let titleFound = false;
-  let inCodeBlock = false;
-
-  for (const line of lines) {
-    if (line.startsWith("```")) {
-      inCodeBlock = !inCodeBlock;
-      continue;
-    }
-
-    if (inCodeBlock) continue;
-
-    if (!titleFound && line.startsWith("# ")) {
-      title = line.slice(2).trim();
-      titleFound = true;
-      continue;
-    }
-
-    if (titleFound && !description) {
-      const trimmed = line.trim();
-      const isContentLine =
-        trimmed &&
-        !trimmed.startsWith("#") &&
-        !trimmed.startsWith("-") &&
-        !trimmed.startsWith("|") &&
-        !trimmed.startsWith("!") &&
-        !trimmed.startsWith(">");
-
-      if (isContentLine) {
-        description = trimmed;
-        break;
-      }
-    }
-  }
-
-  return { slug, title, description, content };
+  return {
+    slug,
+    title: frontmatter.title,
+    description: frontmatter.description,
+    content: body,
+  };
 }
 
 async function loadSubdirectoryPages(
