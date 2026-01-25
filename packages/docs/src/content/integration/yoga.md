@@ -16,18 +16,9 @@ pnpm add graphql-yoga
 yarn add graphql-yoga
 ```
 
-## Creating the Schema
+## Prerequisites
 
-First, create an executable schema using `makeExecutableSchema`:
-
-```typescript
-// src/schema.ts
-import { makeExecutableSchema } from "@graphql-tools/schema";
-import { typeDefs } from "./gqlkit/__generated__/schema";
-import { resolvers } from "./gqlkit/__generated__/resolvers";
-
-export const schema = makeExecutableSchema({ typeDefs, resolvers });
-```
+Create an executable schema following the [Getting Started guide](../getting-started.md#create-graphql-schema).
 
 ## Basic Server
 
@@ -47,35 +38,7 @@ server.listen(4000, () => {
 
 ## With Context
 
-If your resolvers use a context type, provide a context factory:
-
-```typescript
-// src/gqlkit/context.ts
-export type Context = {
-  currentUser: User | null;
-  db: Database;
-};
-```
-
-```typescript
-// src/gqlkit/gqlkit.ts
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
-import type { Context } from "./context";
-
-export const { defineQuery, defineMutation, defineField } =
-  createGqlkitApis<Context>();
-```
-
-```typescript
-// src/gqlkit/schema/query.ts
-import { defineQuery } from "../gqlkit";
-import type { NoArgs } from "@gqlkit-ts/runtime";
-import type { User } from "./user";
-
-export const me = defineQuery<NoArgs, User | null>(
-  (_root, _args, ctx) => ctx.currentUser
-);
-```
+If your resolvers use a context type, first [set up context and resolver factories](../getting-started.md#set-up-context-and-resolver-factories), then provide a context factory to your server:
 
 ```typescript
 // src/server.ts
