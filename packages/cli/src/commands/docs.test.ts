@@ -13,6 +13,10 @@ import { runDocsCommand } from "./docs.js";
 const __dirname = dirname(fileURLToPath(import.meta.url));
 const CLI_DOCS_DIR = join(__dirname, "../../docs");
 
+function normalizePaths(paths: string[]): string[] {
+  return paths.map((p) => p.replace(/\\/g, "/"));
+}
+
 function setupVolume(files: Record<string, string>): void {
   vol.fromJSON({
     [`${CLI_DOCS_DIR}/index.md`]: "# Docs",
@@ -38,10 +42,12 @@ describe("docs command", () => {
       });
 
       expect(result.exitCode).toBe(0);
-      expect(result.filesWritten).toContain(
+      expect(normalizePaths(result.filesWritten)).toContain(
         "/project/.claude/skills/gqlkit-guide/SKILL.md",
       );
-      expect(result.filesWritten).toContain("/project/CLAUDE.md");
+      expect(normalizePaths(result.filesWritten)).toContain(
+        "/project/CLAUDE.md",
+      );
     });
 
     it("should detect Claude environment when .claude directory exists", async () => {
@@ -56,7 +62,7 @@ describe("docs command", () => {
       });
 
       expect(result.exitCode).toBe(0);
-      expect(result.filesWritten).toContain(
+      expect(normalizePaths(result.filesWritten)).toContain(
         "/project/.claude/skills/gqlkit-guide/SKILL.md",
       );
     });
@@ -73,10 +79,12 @@ describe("docs command", () => {
       });
 
       expect(result.exitCode).toBe(0);
-      expect(result.filesWritten).toContain(
+      expect(normalizePaths(result.filesWritten)).toContain(
         "/project/.codex/skills/gqlkit-guide/SKILL.md",
       );
-      expect(result.filesWritten).toContain("/project/AGENTS.md");
+      expect(normalizePaths(result.filesWritten)).toContain(
+        "/project/AGENTS.md",
+      );
     });
 
     it("should detect Codex environment when .codex directory exists", async () => {
@@ -91,7 +99,7 @@ describe("docs command", () => {
       });
 
       expect(result.exitCode).toBe(0);
-      expect(result.filesWritten).toContain(
+      expect(normalizePaths(result.filesWritten)).toContain(
         "/project/.codex/skills/gqlkit-guide/SKILL.md",
       );
     });
@@ -109,10 +117,10 @@ describe("docs command", () => {
       });
 
       expect(result.exitCode).toBe(0);
-      expect(result.filesWritten).toContain(
+      expect(normalizePaths(result.filesWritten)).toContain(
         "/project/.claude/skills/gqlkit-guide/SKILL.md",
       );
-      expect(result.filesWritten).toContain(
+      expect(normalizePaths(result.filesWritten)).toContain(
         "/project/.codex/skills/gqlkit-guide/SKILL.md",
       );
     });
@@ -146,10 +154,10 @@ describe("docs command", () => {
       });
 
       expect(result.exitCode).toBe(0);
-      expect(result.filesWritten).toContain(
+      expect(normalizePaths(result.filesWritten)).toContain(
         "/project/.claude/skills/gqlkit-guide/SKILL.md",
       );
-      expect(result.filesWritten).not.toContainEqual(
+      expect(normalizePaths(result.filesWritten)).not.toContainEqual(
         expect.stringContaining(".codex"),
       );
     });
@@ -166,10 +174,10 @@ describe("docs command", () => {
       });
 
       expect(result.exitCode).toBe(0);
-      expect(result.filesWritten).toContain(
+      expect(normalizePaths(result.filesWritten)).toContain(
         "/project/.codex/skills/gqlkit-guide/SKILL.md",
       );
-      expect(result.filesWritten).not.toContainEqual(
+      expect(normalizePaths(result.filesWritten)).not.toContainEqual(
         expect.stringContaining(".claude"),
       );
     });
@@ -186,10 +194,10 @@ describe("docs command", () => {
       });
 
       expect(result.exitCode).toBe(0);
-      expect(result.filesWritten).toContain(
+      expect(normalizePaths(result.filesWritten)).toContain(
         "/project/.claude/skills/gqlkit-guide/SKILL.md",
       );
-      expect(result.filesWritten).toContain(
+      expect(normalizePaths(result.filesWritten)).toContain(
         "/project/.codex/skills/gqlkit-guide/SKILL.md",
       );
     });
@@ -284,7 +292,7 @@ describe("docs command", () => {
         codex: false,
       });
 
-      expect(result.filesWritten).toContain(
+      expect(normalizePaths(result.filesWritten)).toContain(
         "/project/.claude/skills/gqlkit-guide/references",
       );
     });

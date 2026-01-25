@@ -71,17 +71,19 @@ function parseFrontmatter(
   content: string,
   filePath: string,
 ): { frontmatter: Frontmatter; body: string } {
-  if (!content.startsWith("---\n")) {
+  const normalizedContent = content.replace(/\r\n/g, "\n");
+
+  if (!normalizedContent.startsWith("---\n")) {
     throw new Error(`Missing frontmatter in ${filePath}`);
   }
 
-  const endIndex = content.indexOf("\n---\n", 4);
+  const endIndex = normalizedContent.indexOf("\n---\n", 4);
   if (endIndex === -1) {
     throw new Error(`Invalid frontmatter format in ${filePath}`);
   }
 
-  const frontmatterText = content.slice(4, endIndex);
-  const body = content.slice(endIndex + 5);
+  const frontmatterText = normalizedContent.slice(4, endIndex);
+  const body = normalizedContent.slice(endIndex + 5);
 
   const frontmatter: Record<string, string> = {};
   for (const line of frontmatterText.split("\n")) {
