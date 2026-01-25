@@ -107,6 +107,33 @@ async function appendOrCreateFile(
   }
 }
 
+interface AiToolConfig {
+  readonly configDir: string;
+  readonly rulesFile: string;
+}
+
+async function generateToolFiles(
+  outputDir: string,
+  config: AiToolConfig,
+  filesWritten: string[],
+): Promise<void> {
+  const skillDir = join(outputDir, `${config.configDir}/skills/${SKILL_NAME}`);
+  await mkdir(skillDir, { recursive: true });
+
+  const skillMdPath = join(skillDir, "SKILL.md");
+  await writeFile(skillMdPath, generateSkillMd());
+  filesWritten.push(skillMdPath);
+
+  const referencesPath = join(skillDir, "references");
+  const relativePath = relative(skillDir, CLI_DOCS_DIR);
+  await createSymlinkIfNotExists(referencesPath, relativePath);
+  filesWritten.push(referencesPath);
+
+  const rulesPath = join(outputDir, config.rulesFile);
+  await appendOrCreateFile(rulesPath, generateRules());
+  filesWritten.push(rulesPath);
+}
+
 export async function runDocsCommand(
   options: RunDocsCommandOptions,
 ): Promise<RunDocsCommandResult> {
@@ -119,16 +146,13 @@ export async function runDocsCommand(
 
   const filesWritten: string[] = [];
 
+  const autoDetect = !options.claude && !options.codex;
   const generateClaude =
     options.claude ||
-    (!options.claude &&
-      !options.codex &&
-      (await detectClaudeEnvironment(options.output)));
+    (autoDetect && (await detectClaudeEnvironment(options.output)));
   const generateCodex =
     options.codex ||
-    (!options.claude &&
-      !options.codex &&
-      (await detectCodexEnvironment(options.output)));
+    (autoDetect && (await detectCodexEnvironment(options.output)));
 
   if (!generateClaude && !generateCodex) {
     console.log(
@@ -138,35 +162,19 @@ export async function runDocsCommand(
   }
 
   if (generateClaude) {
-    const claudeSkillDir = join(options.output, `.claude/skills/${SKILL_NAME}`);
-    await mkdir(claudeSkillDir, { recursive: true });
-    await writeFile(join(claudeSkillDir, "SKILL.md"), generateSkillMd());
-    filesWritten.push(join(claudeSkillDir, "SKILL.md"));
-
-    const claudeReferencesPath = join(claudeSkillDir, "references");
-    const claudeRelativePath = relative(claudeSkillDir, CLI_DOCS_DIR);
-    await createSymlinkIfNotExists(claudeReferencesPath, claudeRelativePath);
-    filesWritten.push(claudeReferencesPath);
-
-    const claudeMdPath = join(options.output, "CLAUDE.md");
-    await appendOrCreateFile(claudeMdPath, generateRules());
-    filesWritten.push(claudeMdPath);
+    await generateToolFiles(
+      options.output,
+      { configDir: ".claude", rulesFile: "CLAUDE.md" },
+      filesWritten,
+    );
   }
 
   if (generateCodex) {
-    const codexSkillDir = join(options.output, `.codex/skills/${SKILL_NAME}`);
-    await mkdir(codexSkillDir, { recursive: true });
-    await writeFile(join(codexSkillDir, "SKILL.md"), generateSkillMd());
-    filesWritten.push(join(codexSkillDir, "SKILL.md"));
-
-    const codexReferencesPath = join(codexSkillDir, "references");
-    const codexRelativePath = relative(codexSkillDir, CLI_DOCS_DIR);
-    await createSymlinkIfNotExists(codexReferencesPath, codexRelativePath);
-    filesWritten.push(codexReferencesPath);
-
-    const agentsMdPath = join(options.output, "AGENTS.md");
-    await appendOrCreateFile(agentsMdPath, generateRules());
-    filesWritten.push(agentsMdPath);
+    await generateToolFiles(
+      options.output,
+      { configDir: ".codex", rulesFile: "AGENTS.md" },
+      filesWritten,
+    );
   }
 
   return { exitCode: 0, filesWritten };
