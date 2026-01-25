@@ -1,3 +1,8 @@
+---
+title: What is gqlkit?
+description: Just types and functions — write TypeScript, generate GraphQL.
+---
+
 # What is gqlkit?
 
 Just types and functions — write TypeScript, generate GraphQL.

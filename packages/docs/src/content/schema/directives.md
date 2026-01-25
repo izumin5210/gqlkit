@@ -1,3 +1,8 @@
+---
+title: Defining Custom Directives
+description: Define custom directives using the GqlDirective utility type.
+---
+
 # Custom Directives
 
 Define custom directives using the `GqlDirective` utility type and attach them using `GqlField` or `GqlObject`.

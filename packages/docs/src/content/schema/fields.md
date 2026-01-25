@@ -1,3 +1,8 @@
+---
+title: Defining Field Resolvers
+description: Add computed fields to object types using defineField.
+---
+
 # Field Resolvers
 
 Add computed fields to object types using `defineField`. Define them alongside the type.

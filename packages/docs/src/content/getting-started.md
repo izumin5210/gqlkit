@@ -1,3 +1,8 @@
+---
+title: Getting Started
+description: Install gqlkit and create your first GraphQL schema from TypeScript.
+---
+
 # Getting Started
 
 ## Installation
@@ -16,6 +21,10 @@ pnpm add -D @gqlkit-ts/cli
 yarn add @gqlkit-ts/runtime @graphql-tools/schema graphql
 yarn add -D @gqlkit-ts/cli
 ```
+
+> [!TIP]
+>
+> If you use AI coding agents like Claude Code or Codex, run `gqlkit docs` to set up gqlkit skills. See [Coding Agents](./coding-agents) for details.
 
 ## Project Structure
 

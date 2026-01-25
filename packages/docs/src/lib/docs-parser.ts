@@ -24,7 +24,19 @@ export type Meta = Record<string, MetaValue>;
 export const HEADER_LINES = [
   "# gqlkit",
   "",
-  "> gqlkit is a convention-driven code generator for GraphQL servers in TypeScript. Define GraphQL types and resolver signatures in TypeScript, then `gqlkit gen` generates GraphQL schema AST and a resolver map from your codebase.",
+  "gqlkit generates GraphQL schema and resolver maps from TypeScript types and functions.",
+  "",
+  "## How it works",
+  "",
+  "1. Write TypeScript types in `src/gqlkit/schema/` → become GraphQL types",
+  "2. Write resolver functions using `defineQuery`, `defineMutation`, `defineField` → become GraphQL resolvers",
+  "3. Run `gqlkit gen` → outputs `typeDefs` and `resolvers` to `src/gqlkit/__generated__/`",
+  "",
+  "## Design principles",
+  "",
+  "- **Implement first**: Write types and resolvers, generate schema when ready. No edit-regenerate-implement loops.",
+  "- **Just types and functions**: Plain TypeScript with a thin API. No decorators, no complex generics.",
+  "- **Type-safe**: TypeScript types become GraphQL types. Resolver signatures checked at compile time.",
   "",
 ];
 
@@ -50,49 +62,68 @@ export function isSeparator(
   );
 }
 
+interface Frontmatter {
+  title: string;
+  description: string;
+}
+
+function parseFrontmatter(
+  content: string,
+  filePath: string,
+): { frontmatter: Frontmatter; body: string } {
+  const normalizedContent = content.replace(/\r\n/g, "\n");
+
+  if (!normalizedContent.startsWith("---\n")) {
+    throw new Error(`Missing frontmatter in ${filePath}`);
+  }
+
+  const endIndex = normalizedContent.indexOf("\n---\n", 4);
+  if (endIndex === -1) {
+    throw new Error(`Invalid frontmatter format in ${filePath}`);
+  }
+
+  const frontmatterText = normalizedContent.slice(4, endIndex);
+  const body = normalizedContent.slice(endIndex + 5);
+
+  const frontmatter: Record<string, string> = {};
+  for (const line of frontmatterText.split("\n")) {
+    const colonIndex = line.indexOf(":");
+    if (colonIndex !== -1) {
+      const key = line.slice(0, colonIndex).trim();
+      const value = line.slice(colonIndex + 1).trim();
+      frontmatter[key] = value;
+    }
+  }
+
+  if (!frontmatter.title) {
+    throw new Error(`Missing 'title' in frontmatter of ${filePath}`);
+  }
+  if (!frontmatter.description) {
+    throw new Error(`Missing 'description' in frontmatter of ${filePath}`);
+  }
+
+  return {
+    frontmatter: {
+      title: frontmatter.title,
+      description: frontmatter.description,
+    },
+    body,
+  };
+}
+
 export async function extractPageInfo(
   filePath: string,
   slug: string,
 ): Promise<PageInfo> {
-  const content = await fs.readFile(filePath, "utf-8");
-  const lines = content.split("\n");
+  const rawContent = await fs.readFile(filePath, "utf-8");
+  const { frontmatter, body } = parseFrontmatter(rawContent, filePath);
 
-  let title = slug;
-  let description = "";
-  let titleFound = false;
-  let inCodeBlock = false;
-
-  for (const line of lines) {
-    if (line.startsWith("```")) {
-      inCodeBlock = !inCodeBlock;
-      continue;
-    }
-
-    if (inCodeBlock) continue;
-
-    if (!titleFound && line.startsWith("# ")) {
-      title = line.slice(2).trim();
-      titleFound = true;
-      continue;
-    }
-
-    if (titleFound && !description) {
-      const trimmed = line.trim();
-      const isContentLine =
-        trimmed &&
-        !trimmed.startsWith("#") &&
-        !trimmed.startsWith("-") &&
-        !trimmed.startsWith("|") &&
-        !trimmed.startsWith("!");
-
-      if (isContentLine) {
-        description = trimmed;
-        break;
-      }
-    }
-  }
-
-  return { slug, title, description, content };
+  return {
+    slug,
+    title: frontmatter.title,
+    description: frontmatter.description,
+    content: body,
+  };
 }
 
 async function loadSubdirectoryPages(
@@ -113,8 +144,10 @@ async function loadSubdirectoryPages(
     try {
       const pageInfo = await extractPageInfo(filePath, slug);
       pages.push(pageInfo);
-    } catch {
-      // File doesn't exist, skip
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
     }
   }
 
@@ -153,8 +186,10 @@ export async function buildSections(sourceDir: string): Promise<Section[]> {
       try {
         const pageInfo = await extractPageInfo(filePath, key);
         currentSection.pages.push(pageInfo);
-      } catch {
-        // File doesn't exist, skip
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+          throw error;
+        }
       }
     }
   }

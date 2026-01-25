@@ -1,3 +1,8 @@
+---
+title: Integration with graphql-yoga
+description: Use gqlkit with graphql-yoga, a batteries-included GraphQL server.
+---
+
 # graphql-yoga
 
 [graphql-yoga](https://the-guild.dev/graphql/yoga-server) is a batteries-included GraphQL server that works in any JavaScript runtime.

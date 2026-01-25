@@ -1,3 +1,8 @@
+---
+title: Defining Union Types
+description: TypeScript union types of object types are converted to GraphQL union types.
+---
+
 # Union Types
 
 TypeScript union types of object types are converted to GraphQL union types.

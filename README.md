@@ -10,6 +10,12 @@
 
 </div>
 
+## How it works
+
+1. Write TypeScript types in `src/gqlkit/schema/` → become GraphQL types
+2. Write resolver functions using `defineQuery`, `defineMutation`, `defineField` → become GraphQL resolvers
+3. Run `gqlkit gen` → outputs `typeDefs` and `resolvers` to `src/gqlkit/__generated__/`
+
 ## Highlights
 
 - **Implement first** - Write types and resolvers, generate schema when ready. No edit-regenerate-implement loops.

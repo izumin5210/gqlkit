@@ -1,3 +1,8 @@
+---
+title: Defining Scalar Types
+description: gqlkit provides built-in scalar types and supports custom scalar definitions.
+---
+
 # Scalar Types
 
 gqlkit provides built-in scalar types and supports custom scalar definitions.

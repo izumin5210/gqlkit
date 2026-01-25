@@ -1,3 +1,8 @@
+---
+title: Defining Enum Types
+description: gqlkit converts TypeScript string literal unions and enums to GraphQL enum types.
+---
+
 # Enum Types
 
 gqlkit converts TypeScript string literal unions and enums to GraphQL enum types.

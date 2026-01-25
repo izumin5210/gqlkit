@@ -1,3 +1,8 @@
+---
+title: Integration with Apollo Server
+description: Use gqlkit with Apollo Server, a popular GraphQL server.
+---
+
 # Apollo Server
 
 [Apollo Server](https://www.apollographql.com/docs/apollo-server/) is a popular GraphQL server with extensive features and ecosystem.

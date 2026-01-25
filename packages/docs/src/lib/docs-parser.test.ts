@@ -16,57 +16,68 @@ describe("docs-parser", () => {
   });
 
   describe("extractPageInfo", () => {
-    it("should extract title and description from markdown", async () => {
+    it("should extract title and description from frontmatter", async () => {
       const filePath = path.join(tempDir, "test.md");
       await fs.writeFile(
         filePath,
-        `# Page Title
+        `---
+title: Page Title
+description: This is the description.
+---
 
-This is the description paragraph.
+# Page Title
 
-## Another section
-More content here.`,
+Body content here.`,
       );
 
       const info = await extractPageInfo(filePath, "test");
 
       expect(info.slug).toBe("test");
       expect(info.title).toBe("Page Title");
-      expect(info.description).toBe("This is the description paragraph.");
+      expect(info.description).toBe("This is the description.");
+      expect(info.content).not.toContain("---");
       expect(info.content).toContain("# Page Title");
     });
 
-    it("should handle markdown without description", async () => {
+    it("should throw error when frontmatter is missing", async () => {
       const filePath = path.join(tempDir, "test.md");
-      await fs.writeFile(
-        filePath,
-        `# Title Only
+      await fs.writeFile(filePath, "# Title Only\n\nContent.");
 
-## Section`,
+      await expect(extractPageInfo(filePath, "test")).rejects.toThrow(
+        "Missing frontmatter",
       );
-
-      const info = await extractPageInfo(filePath, "test");
-
-      expect(info.title).toBe("Title Only");
-      expect(info.description).toBe("");
     });
 
-    it("should skip code blocks when extracting content", async () => {
+    it("should throw error when title is missing in frontmatter", async () => {
       const filePath = path.join(tempDir, "test.md");
       await fs.writeFile(
         filePath,
-        `# Title
+        `---
+description: Some description.
+---
 
-\`\`\`typescript
-const code = "not description";
-\`\`\`
-
-This is the real description.`,
+# Title`,
       );
 
-      const info = await extractPageInfo(filePath, "test");
+      await expect(extractPageInfo(filePath, "test")).rejects.toThrow(
+        "Missing 'title'",
+      );
+    });
 
-      expect(info.description).toBe("This is the real description.");
+    it("should throw error when description is missing in frontmatter", async () => {
+      const filePath = path.join(tempDir, "test.md");
+      await fs.writeFile(
+        filePath,
+        `---
+title: Some Title
+---
+
+# Title`,
+      );
+
+      await expect(extractPageInfo(filePath, "test")).rejects.toThrow(
+        "Missing 'description'",
+      );
     });
   });
 
@@ -85,7 +96,14 @@ This is the real description.`,
       );
       await fs.writeFile(
         path.join(sourceDir, "getting-started.md"),
-        "# Getting Started\n\nIntro text.",
+        `---
+title: Getting Started
+description: Intro text.
+---
+
+# Getting Started
+
+Body content.`,
       );
 
       await fs.mkdir(path.join(sourceDir, "schema"), { recursive: true });
@@ -98,11 +116,21 @@ This is the real description.`,
       );
       await fs.writeFile(
         path.join(sourceDir, "schema", "index.md"),
-        "# Schema Overview\n\nSchema intro.",
+        `---
+title: Schema Overview
+description: Schema intro.
+---
+
+# Schema Overview`,
       );
       await fs.writeFile(
         path.join(sourceDir, "schema", "objects.md"),
-        "# Object Types\n\nObject intro.",
+        `---
+title: Object Types
+description: Object intro.
+---
+
+# Object Types`,
       );
 
       const sections = await buildSections(sourceDir);
