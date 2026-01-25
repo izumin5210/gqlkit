@@ -107,7 +107,7 @@ async function appendOrCreateFile(
   }
 }
 
-async function runDocsCommand(
+export async function runDocsCommand(
   options: RunDocsCommandOptions,
 ): Promise<RunDocsCommandResult> {
   const filesWritten: string[] = [];
