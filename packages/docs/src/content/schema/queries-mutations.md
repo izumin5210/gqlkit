@@ -2,28 +2,7 @@
 
 Define Query and Mutation fields using the `@gqlkit-ts/runtime` API.
 
-## Setup
-
-Create `src/gqlkit/context.ts` to define your context type:
-
-```typescript
-export type Context = {
-  userId: string;
-  db: Database;
-};
-```
-
-Create `src/gqlkit/gqlkit.ts` to export resolver factories:
-
-```typescript
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
-import type { Context } from "./context";
-
-export const { defineQuery, defineMutation, defineField } =
-  createGqlkitApis<Context>();
-```
-
-Then import the factories in your schema files.
+> **Prerequisites**: This guide assumes you have completed the [basic setup](../getting-started.md#set-up-context-and-resolver-factories).
 
 ## Query Resolvers
 

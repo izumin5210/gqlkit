@@ -157,7 +157,7 @@ export const posts = defineField<User, NoArgs, Post[]>(
 
 ## Context with Database
 
-Set up the context type to include your Prisma client instance:
+Set up the context type to include your Prisma client instance. For basic setup, see [Set Up Context and Resolver Factories](../getting-started.md#set-up-context-and-resolver-factories).
 
 ```typescript
 // src/db/db.ts
@@ -174,15 +174,6 @@ import type { PrismaDatabase } from "../db/db.js";
 export type Context = {
   db: PrismaDatabase;
 };
-```
-
-```typescript
-// src/gqlkit/gqlkit.ts
-import { createGqlkitApis } from "@gqlkit-ts/runtime";
-import type { Context } from "./context.js";
-
-export const { defineQuery, defineMutation, defineField } =
-  createGqlkitApis<Context>();
 ```
 
 ## Complete Example
