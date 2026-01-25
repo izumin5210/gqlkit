@@ -1,22 +1,22 @@
 # What is gqlkit?
 
-gqlkit is a convention-driven code generator for GraphQL servers in TypeScript.
+Just types and functions — write TypeScript, generate GraphQL.
 
 ## Core Concept
 
-Define GraphQL types and resolver signatures in TypeScript → `gqlkit gen` generates GraphQL schema AST and a resolver map from your codebase.
+Write types and resolvers in TypeScript → run `gqlkit gen` → get GraphQL schema AST and resolver map.
 
 ## Design Principles
 
-- **Type-First**: Define types using plain TypeScript, no decorators needed
-- **Fail fast with actionable errors**: Invalid resolver references, type mismatches, etc.
-- **No runtime schema mutation**: Pure static analysis of TypeScript code
-- **Deterministic**: Same code → same outputs, always
-- **GraphQL-tools compatible**: Generated outputs work seamlessly with `makeExecutableSchema`
+- **Implement first**: Write types and resolvers, generate schema when ready. No edit-regenerate-implement loops.
+- **Just types and functions**: Plain TypeScript with a thin API. No complex generics, no decorators.
+- **Type-safe**: TypeScript types become GraphQL types. Resolver signatures checked at compile time.
+- **Fail fast with actionable errors**: Invalid resolver references, type mismatches, and convention violations.
+- **GraphQL-tools compatible**: Generated outputs work seamlessly with `makeExecutableSchema`.
 
 ## How It Works
 
-1. You write TypeScript types and resolvers in `src/gqlkit/schema/`
+1. Write TypeScript types and resolvers in `src/gqlkit/schema/`
 2. Run `gqlkit gen`
 3. gqlkit scans your code, builds internal type graph, and validates resolver signatures
 4. Outputs `typeDefs` (GraphQL AST) and `resolvers` map to `src/gqlkit/__generated__/`

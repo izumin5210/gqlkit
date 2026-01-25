@@ -1,21 +1,19 @@
 # gqlkit
 
-**Convention-driven GraphQL Code Generator**
-
-Write types and resolvers in TypeScript, get a complete GraphQL API.
+**Just types and functions — write TypeScript, generate GraphQL.**
 
 [Get Started](/getting-started) | [View on GitHub](https://github.com/izumin5210/gqlkit)
 
 ## Features
 
-### Type-First
+### Implement First
 
-Define GraphQL types using plain TypeScript types. No decorators, no runtime schema mutation.
+Write types and resolvers, generate schema when ready. No edit-regenerate-implement loops.
 
-### Convention over Configuration
+### Just Types and Functions
 
-Follow simple conventions, and gqlkit generates your schema AST and resolver map automatically.
+Plain TypeScript with a thin API. No complex generics, no decorators.
 
-### Deterministic
+### Type-Safe
 
-Same code always produces the same outputs. Pure static analysis of your TypeScript code.
+TypeScript types become GraphQL types. Resolver signatures checked at compile time.

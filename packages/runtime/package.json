@@ -1,7 +1,7 @@
 {
   "name": "@gqlkit-ts/runtime",
   "version": "0.1.1",
-  "description": "Runtime utilities for gqlkit - type-safe resolver definition functions",
+  "description": "Runtime utilities for gqlkit — type-safe resolver definitions with a thin API",
   "type": "module",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",

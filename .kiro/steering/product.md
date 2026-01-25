@@ -1,6 +1,14 @@
 # Product Overview
 
-gqlkit is a convention-driven code generator for GraphQL servers in TypeScript. It transforms TypeScript type definitions and resolver signatures into GraphQL schema AST and resolver maps without decorators, configuration, or runtime schema mutation.
+Just types and functions — write TypeScript, generate GraphQL.
+
+gqlkit is a code generator for GraphQL servers in TypeScript. Write types and resolvers first, then generate schema when ready.
+
+## Design Principles
+
+- **Implement first**: Write types and resolvers, generate schema when ready. No edit-regenerate-implement loops.
+- **Just types and functions**: Plain TypeScript with a thin API. No complex generics, no decorators.
+- **Type-safe**: TypeScript types become GraphQL types. Resolver signatures checked at compile time.
 
 ## Core Capabilities
 
@@ -20,15 +28,15 @@ gqlkit is a convention-driven code generator for GraphQL servers in TypeScript. 
 
 ## Target Use Cases
 
-- Projects wanting GraphQL schema derived directly from TypeScript types
-- Teams preferring convention over configuration for schema generation
-- Developers seeking type-safe GraphQL without decorator ceremony
+- Teams tired of schema-first edit-regenerate-implement loops
+- Developers wanting implementation-first workflow where schema follows code
+- Projects seeking type-safe GraphQL without complex DSLs or decorator ceremony
 - Codebases requiring deterministic, reproducible build outputs
 
 ## Value Proposition
 
-gqlkit provides a "kit" experience: consistent conventions paired with consistent diagnostics. By using the Define API via `createGqlkitApis<TContext>()`, it enables explicit, type-safe resolver definitions with custom context types while maintaining full type safety. The output is compatible with graphql-tools' `makeExecutableSchema`, integrating seamlessly with any GraphQL runtime.
+gqlkit inverts the typical schema-first workflow: write implementation first, generate schema later. This eliminates the friction of constantly switching between schema definition and code generation. With plain TypeScript types and a thin API layer, there's minimal learning curve—just familiar types and functions. The output is compatible with graphql-tools' `makeExecutableSchema`, integrating seamlessly with any GraphQL runtime.
 
 ---
 _Focus on patterns and purpose, not exhaustive feature lists_
-_Updated: 2026-01-21 - Expanded auto-type generation scope (unions, string literal unions)_
+_Updated: 2026-01-25 - Revised messaging: "Just types and functions — write TypeScript, generate GraphQL"_
