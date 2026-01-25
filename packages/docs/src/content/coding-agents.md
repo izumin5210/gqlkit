@@ -1,11 +1,11 @@
 ---
-title: Coding Assistants
-description: Set up AI coding assistants like Claude Code and Codex to understand gqlkit conventions. (skip if reading via `gqlkit-guide` skill)
+title: Coding Agents
+description: Set up AI coding agents like Claude Code and Codex to understand gqlkit conventions. (skip if reading via `gqlkit-guide` skill)
 ---
 
-# Coding Assistants
+# Coding Agents
 
-gqlkit provides built-in support for AI coding assistants like [Claude Code](https://claude.ai/code) and [OpenAI Codex](https://openai.com/index/openai-codex/). The `gqlkit docs` command generates skill files that help these tools understand gqlkit conventions and provide better assistance.
+gqlkit provides built-in support for AI coding agents like [Claude Code](https://claude.ai/code) and [OpenAI Codex](https://openai.com/index/openai-codex/). The `gqlkit docs` command generates skill files that help these tools understand gqlkit conventions and provide better assistance.
 
 ## Setup
 
@@ -53,7 +53,7 @@ When Codex environment is detected (or `--codex` flag is used):
 
 ## How It Works
 
-The generated skill files follow the [Agent Skills](https://agentskills.io/) specification. When you ask the coding assistant about gqlkit, it will:
+The generated skill files follow the [Agent Skills](https://agentskills.io/) specification. When you ask the coding agent about gqlkit, it will:
 
 1. Recognize gqlkit-related questions from the skill description
 2. Read the bundled documentation to understand gqlkit conventions

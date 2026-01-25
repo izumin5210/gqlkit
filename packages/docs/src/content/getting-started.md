@@ -24,7 +24,7 @@ yarn add -D @gqlkit-ts/cli
 
 > [!TIP]
 >
-> If you use AI coding assistants like Claude Code or Codex, run `gqlkit docs` to set up gqlkit skills. See [Coding Assistants](./coding-assistants) for details.
+> If you use AI coding agents like Claude Code or Codex, run `gqlkit docs` to set up gqlkit skills. See [Coding Agents](./coding-agents) for details.
 
 ## Project Structure
 
