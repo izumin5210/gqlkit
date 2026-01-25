@@ -142,8 +142,10 @@ async function loadSubdirectoryPages(
     try {
       const pageInfo = await extractPageInfo(filePath, slug);
       pages.push(pageInfo);
-    } catch {
-      // File doesn't exist, skip
+    } catch (error) {
+      if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+        throw error;
+      }
     }
   }
 
@@ -182,8 +184,10 @@ export async function buildSections(sourceDir: string): Promise<Section[]> {
       try {
         const pageInfo = await extractPageInfo(filePath, key);
         currentSection.pages.push(pageInfo);
-      } catch {
-        // File doesn't exist, skip
+      } catch (error) {
+        if ((error as NodeJS.ErrnoException).code !== "ENOENT") {
+          throw error;
+        }
       }
     }
   }

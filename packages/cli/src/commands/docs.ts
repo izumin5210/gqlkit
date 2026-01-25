@@ -98,8 +98,12 @@ async function appendOrCreateFile(
     if (!existing.includes("## gqlkit")) {
       await writeFile(filePath, `${existing}\n${content}`);
     }
-  } catch {
-    await writeFile(filePath, content);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code === "ENOENT") {
+      await writeFile(filePath, content);
+    } else {
+      throw error;
+    }
   }
 }
 
@@ -184,6 +188,9 @@ export const docsCommand = define({
     const result = await runDocsCommand({ output, claude, codex });
     for (const file of result.filesWritten) {
       console.log(`Generated: ${file}`);
+    }
+    if (result.exitCode !== 0) {
+      process.exitCode = result.exitCode;
     }
   },
 });
