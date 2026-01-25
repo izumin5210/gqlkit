@@ -1,0 +1,173 @@
+import { access, mkdir, readFile, symlink, writeFile } from "node:fs/promises";
+import { dirname, join, relative } from "node:path";
+import { fileURLToPath } from "node:url";
+import { define } from "gunshi";
+
+const __dirname = dirname(fileURLToPath(import.meta.url));
+const CLI_DOCS_DIR = join(__dirname, "../../docs");
+const SKILL_NAME = "gqlkit-guide";
+
+export interface RunDocsCommandOptions {
+  readonly output: string;
+  readonly claude: boolean;
+  readonly codex: boolean;
+}
+
+export interface RunDocsCommandResult {
+  readonly exitCode: number;
+  readonly filesWritten: string[];
+}
+
+async function exists(path: string): Promise<boolean> {
+  try {
+    await access(path);
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+async function detectClaudeEnvironment(dir: string): Promise<boolean> {
+  const claudeMdExists = await exists(join(dir, "CLAUDE.md"));
+  const claudeDirExists = await exists(join(dir, ".claude"));
+  return claudeMdExists || claudeDirExists;
+}
+
+async function detectCodexEnvironment(dir: string): Promise<boolean> {
+  const agentsMdExists = await exists(join(dir, "AGENTS.md"));
+  const codexDirExists = await exists(join(dir, ".codex"));
+  return agentsMdExists || codexDirExists;
+}
+
+function generateSkillMd(): string {
+  return `---
+name: ${SKILL_NAME}
+description: Guide for using gqlkit to generate GraphQL schema from TypeScript types. Use when defining GraphQL types, writing resolvers, configuring gqlkit, or running gqlkit gen.
+---
+
+# gqlkit
+
+Write TypeScript types and functions, generate GraphQL schema.
+
+For complete documentation, see [references/index.md](references/index.md).
+`;
+}
+
+function generateRules(): string {
+  return `## gqlkit
+
+When working with GraphQL schema, types, or resolvers using gqlkit, use the \`${SKILL_NAME}\` skill.
+`;
+}
+
+async function createSymlinkIfNotExists(
+  linkPath: string,
+  target: string,
+): Promise<void> {
+  try {
+    await symlink(target, linkPath);
+  } catch (error) {
+    if ((error as NodeJS.ErrnoException).code !== "EEXIST") {
+      throw error;
+    }
+  }
+}
+
+async function appendOrCreateFile(
+  filePath: string,
+  content: string,
+): Promise<void> {
+  try {
+    const existing = await readFile(filePath, "utf-8");
+    if (!existing.includes("## gqlkit")) {
+      await writeFile(filePath, `${existing}\n${content}`);
+    }
+  } catch {
+    await writeFile(filePath, content);
+  }
+}
+
+export async function runDocsCommand(
+  options: RunDocsCommandOptions,
+): Promise<RunDocsCommandResult> {
+  const filesWritten: string[] = [];
+
+  const generateClaude =
+    options.claude ||
+    (!options.claude &&
+      !options.codex &&
+      (await detectClaudeEnvironment(options.output)));
+  const generateCodex =
+    options.codex ||
+    (!options.claude &&
+      !options.codex &&
+      (await detectCodexEnvironment(options.output)));
+
+  if (!generateClaude && !generateCodex) {
+    console.log(
+      "No AI tool environment detected. Use --claude or --codex to generate explicitly.",
+    );
+    return { exitCode: 0, filesWritten: [] };
+  }
+
+  if (generateClaude) {
+    const claudeSkillDir = join(options.output, `.claude/skills/${SKILL_NAME}`);
+    await mkdir(claudeSkillDir, { recursive: true });
+    await writeFile(join(claudeSkillDir, "SKILL.md"), generateSkillMd());
+    filesWritten.push(join(claudeSkillDir, "SKILL.md"));
+
+    const claudeReferencesPath = join(claudeSkillDir, "references");
+    const claudeRelativePath = relative(claudeSkillDir, CLI_DOCS_DIR);
+    await createSymlinkIfNotExists(claudeReferencesPath, claudeRelativePath);
+    filesWritten.push(claudeReferencesPath);
+
+    const claudeMdPath = join(options.output, "CLAUDE.md");
+    await appendOrCreateFile(claudeMdPath, generateRules());
+    filesWritten.push(claudeMdPath);
+  }
+
+  if (generateCodex) {
+    const codexSkillDir = join(options.output, `.codex/skills/${SKILL_NAME}`);
+    await mkdir(codexSkillDir, { recursive: true });
+    await writeFile(join(codexSkillDir, "SKILL.md"), generateSkillMd());
+    filesWritten.push(join(codexSkillDir, "SKILL.md"));
+
+    const codexReferencesPath = join(codexSkillDir, "references");
+    const codexRelativePath = relative(codexSkillDir, CLI_DOCS_DIR);
+    await createSymlinkIfNotExists(codexReferencesPath, codexRelativePath);
+    filesWritten.push(codexReferencesPath);
+
+    const agentsMdPath = join(options.output, "AGENTS.md");
+    await appendOrCreateFile(agentsMdPath, generateRules());
+    filesWritten.push(agentsMdPath);
+  }
+
+  return { exitCode: 0, filesWritten };
+}
+
+export const docsCommand = define({
+  name: "docs",
+  args: {
+    output: {
+      type: "string",
+      description: "Output directory for generated files",
+    },
+    claude: {
+      type: "boolean",
+      description: `Generate Claude Code files (.claude/skills/${SKILL_NAME}/, CLAUDE.md)`,
+    },
+    codex: {
+      type: "boolean",
+      description: `Generate Codex files (.codex/skills/${SKILL_NAME}/, AGENTS.md)`,
+    },
+  },
+  run: async (ctx) => {
+    const output = ctx.values.output ?? process.cwd();
+    const claude = ctx.values.claude ?? false;
+    const codex = ctx.values.codex ?? false;
+    const result = await runDocsCommand({ output, claude, codex });
+    for (const file of result.filesWritten) {
+      console.log(`Generated: ${file}`);
+    }
+  },
+});
