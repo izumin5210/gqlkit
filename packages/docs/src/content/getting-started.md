@@ -52,26 +52,19 @@ export const { defineQuery, defineMutation, defineField } =
   createGqlkitApis<Context>();
 ```
 
-## Define Your First Type
+## Define Your First Type and Query
 
-Create a simple User type in `src/gqlkit/schema/user.ts`:
+Create a simple User type and query in `src/gqlkit/schema/user.ts`:
 
 ```typescript
+import { defineQuery } from "../gqlkit";
+import type { NoArgs } from "@gqlkit-ts/runtime";
+
 export type User = {
   id: string;
   name: string;
   email: string | null;
 };
-```
-
-## Define a Query
-
-Create a query resolver in `src/gqlkit/schema/query.ts`:
-
-```typescript
-import { defineQuery } from "../gqlkit";
-import type { NoArgs } from "@gqlkit-ts/runtime";
-import type { User } from "./user";
 
 export const me = defineQuery<NoArgs, User | null>(
   (_root, _args, ctx) => ctx.currentUser

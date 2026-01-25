@@ -1,7 +1,7 @@
 {
   "name": "@gqlkit-ts/cli",
   "version": "0.2.0",
-  "description": "gqlkit is a toolkit for building GraphQL servers by following simple TypeScript conventions. Write types and resolvers, and you get a complete GraphQL API — schema included.",
+  "description": "Just types and functions — write TypeScript, generate GraphQL.",
   "type": "module",
   "main": "dist/index.js",
   "bin": {

@@ -1,16 +1,12 @@
 # gqlkit
 
-gqlkit is a convention-driven code generator for GraphQL servers in TypeScript.
-
-You define GraphQL types and resolver signatures in TypeScript.
-Then `gqlkit gen` generates GraphQL schema AST and a resolver map from your codebase.
+Just types and functions — write TypeScript, generate GraphQL.
 
 ## Highlights
 
-- **TypeScript-first** - Type-safe schema and resolvers in plain TypeScript, no decorators needed
-- **Simple and minimal** - No DSL or complex generics; just types and functions; friendly for humans and AI
-- **Convention over configuration** - Few rules, sensible defaults, works out of the box
-- **Deterministic** - Same code always generates the same schema
+- **Implement first** - Write types and resolvers, generate schema when ready. No edit-regenerate-implement loops.
+- **Just types and functions** - Plain TypeScript with a thin API. No complex generics, no decorators.
+- **Type-safe** - TypeScript types become GraphQL types. Resolver signatures checked at compile time.
 
 ## Getting started
 
@@ -27,10 +23,17 @@ npm install -D @gqlkit-ts/cli
 ### 2. Create types and resolvers
 
 ```ts
-// src/gqlkit/schema/task.ts
-import { createGqlkitApis, type IDString, type NoArgs } from "@gqlkit-ts/runtime";
+// src/gqlkit/gqlkit.ts
+import { createGqlkitApis } from "@gqlkit-ts/runtime";
+import { Context } from "./context.js";
 
-const { defineQuery, defineMutation } = createGqlkitApis();
+export const { defineField, defineQuery, defineMutation } = createGqlkitApis<Context>();
+```
+
+```ts
+// src/gqlkit/schema/task.ts
+import type { IDString, NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery, defineMutation } from "../gqlkit.js";
 
 export type Task = {
   id: IDString;
@@ -39,18 +42,15 @@ export type Task = {
 };
 
 const tasksData: Task[] = [];
-let nextId = 1;
 
+// Query
 export const tasks = defineQuery<NoArgs, Task[]>(() => tasksData);
 
-export type CreateTaskInput = {
-  title: string;
-};
-
-export const createTask = defineMutation<{ input: CreateTaskInput }, Task>(
+// Mutation
+export const createTask = defineMutation<{ input: { title: string } }, Task>(
   (_root, { input }) => {
     const task: Task = {
-      id: String(nextId++) as Task["id"],
+      id: crypto.randomUUID(),
       title: input.title,
       completed: false,
     };
@@ -114,7 +114,7 @@ mutation {
 }
 
 query {
-  tasks_ {
+  tasks {
     id
     title
     completed

@@ -8,13 +8,38 @@ import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Search } from "../components/search";
 
+const siteUrl = "https://gqlkit.izumin.dev";
+const description =
+  "Just types and functions — write TypeScript, generate GraphQL.";
+
 export const metadata: Metadata = {
   title: {
     default: "gqlkit",
     template: "%s – gqlkit",
   },
-  description:
-    "Convention-driven code generator for GraphQL servers in TypeScript",
+  description,
+  metadataBase: new URL(siteUrl),
+  openGraph: {
+    title: "gqlkit",
+    description,
+    url: siteUrl,
+    siteName: "gqlkit",
+    type: "website",
+    locale: "en_US",
+  },
+  twitter: {
+    card: "summary",
+    title: "gqlkit",
+    description,
+  },
+  keywords: [
+    "GraphQL",
+    "TypeScript",
+    "code generator",
+    "schema",
+    "resolver",
+    "type-safe",
+  ],
 };
 
 const navbar = (
