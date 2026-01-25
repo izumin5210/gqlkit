@@ -92,7 +92,7 @@ describe("detectIgnoreFieldsMetadata", () => {
 
       const result = detectIgnoreFieldsMetadata({ type, checker });
 
-      expect(result.ignoreFields).toBeNull();
+      expect(result).toBeNull();
     });
 
     it("returns null for GqlObject without ignoreFields", () => {
@@ -115,7 +115,7 @@ describe("detectIgnoreFieldsMetadata", () => {
 
       const result = detectIgnoreFieldsMetadata({ type, checker });
 
-      expect(result.ignoreFields).toBeNull();
+      expect(result).toBeNull();
     });
   });
 
@@ -141,8 +141,8 @@ describe("detectIgnoreFieldsMetadata", () => {
 
       const result = detectIgnoreFieldsMetadata({ type, checker });
 
-      expect(result.ignoreFields).not.toBeNull();
-      expect(result.ignoreFields).toEqual(new Set(["internalId"]));
+      expect(result).not.toBeNull();
+      expect(result).toEqual(new Set(["internalId"]));
     });
   });
 
@@ -169,8 +169,8 @@ describe("detectIgnoreFieldsMetadata", () => {
 
       const result = detectIgnoreFieldsMetadata({ type, checker });
 
-      expect(result.ignoreFields).not.toBeNull();
-      expect(result.ignoreFields).toEqual(new Set(["internalId", "cacheKey"]));
+      expect(result).not.toBeNull();
+      expect(result).toEqual(new Set(["internalId", "cacheKey"]));
     });
   });
 
@@ -213,8 +213,8 @@ describe("detectIgnoreFieldsMetadata", () => {
 
       const result = detectIgnoreFieldsMetadata({ type, checker });
 
-      expect(result.ignoreFields).not.toBeNull();
-      expect(result.ignoreFields).toEqual(new Set(["internalId"]));
+      expect(result).not.toBeNull();
+      expect(result).toEqual(new Set(["internalId"]));
     });
   });
 });

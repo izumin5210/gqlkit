@@ -26,14 +26,8 @@ export {
   type ScanResult,
   scanDirectory,
 } from "./file-scanner.js";
-export type {
-  DetectIgnoreFieldsParams,
-  DetectIgnoreFieldsResult,
-} from "./ignore-fields-detector.js";
-export type {
-  ValidateIgnoreFieldsParams,
-  ValidateIgnoreFieldsResult,
-} from "./ignore-fields-validator.js";
+export type { DetectIgnoreFieldsParams } from "./ignore-fields-detector.js";
+export type { ValidateIgnoreFieldsParams } from "./ignore-fields-validator.js";
 export type { TypeConverter } from "./inline-object-extractor.js";
 export { toPosixPath } from "./path-utils.js";
 export type { SourceLocation } from "./source-location.js";

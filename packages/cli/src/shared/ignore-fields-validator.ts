@@ -22,14 +22,6 @@ export interface ValidateIgnoreFieldsParams {
 }
 
 /**
- * Result of ignoreFields validation.
- */
-export interface ValidateIgnoreFieldsResult {
-  readonly isValid: boolean;
-  readonly diagnostics: ReadonlyArray<Diagnostic>;
-}
-
-/**
  * Validates ignoreFields metadata.
  *
  * This function checks:
@@ -37,11 +29,11 @@ export interface ValidateIgnoreFieldsResult {
  * 2. Not all fields are excluded (at least one field must remain)
  *
  * @param params - The validation parameters
- * @returns Validation result with isValid flag and any diagnostics
+ * @returns Array of diagnostics (empty if valid)
  */
 export function validateIgnoreFields(
   params: ValidateIgnoreFieldsParams,
-): ValidateIgnoreFieldsResult {
+): ReadonlyArray<Diagnostic> {
   const { typeName, ignoreFields, allFieldNames, sourceLocation } = params;
   const diagnostics: Diagnostic[] = [];
 
@@ -57,10 +49,9 @@ export function validateIgnoreFields(
     }
   }
 
-  const existingIgnoreFields = [...ignoreFields].filter((f) =>
-    allFieldNames.has(f),
-  );
-  const remainingFieldCount = allFieldNames.size - existingIgnoreFields.length;
+  const remainingFieldCount = [...allFieldNames].filter(
+    (f) => !ignoreFields.has(f),
+  ).length;
 
   if (remainingFieldCount === 0 && allFieldNames.size > 0) {
     diagnostics.push({
@@ -71,8 +62,5 @@ export function validateIgnoreFields(
     });
   }
 
-  return {
-    isValid: diagnostics.length === 0,
-    diagnostics,
-  };
+  return diagnostics;
 }

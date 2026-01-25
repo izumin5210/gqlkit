@@ -20,13 +20,6 @@ export interface DetectIgnoreFieldsParams {
 }
 
 /**
- * Result of ignoreFields metadata detection.
- */
-export interface DetectIgnoreFieldsResult {
-  readonly ignoreFields: ReadonlySet<string> | null;
-}
-
-/**
  * Extracts ignoreFields from a type's metadata.
  * Returns null if the type doesn't have $gqlkitTypeMeta or ignoreFields is not specified.
  */
@@ -91,26 +84,26 @@ function extractStringLiteralUnion(type: ts.Type): ReadonlySet<string> | null {
  * literal union types and returns them as a Set.
  *
  * @param params - The detection parameters containing type and checker
- * @returns Detection result with ignoreFields set or null if not specified
+ * @returns The ignoreFields set or null if not specified
  */
 export function detectIgnoreFieldsMetadata(
   params: DetectIgnoreFieldsParams,
-): DetectIgnoreFieldsResult {
+): ReadonlySet<string> | null {
   const { type, checker } = params;
 
   const result = extractIgnoreFieldsFromType(type, checker);
   if (result) {
-    return { ignoreFields: result };
+    return result;
   }
 
   if (type.isIntersection()) {
     for (const member of type.types) {
       const memberResult = extractIgnoreFieldsFromType(member, checker);
       if (memberResult) {
-        return { ignoreFields: memberResult };
+        return memberResult;
       }
     }
   }
 
-  return { ignoreFields: null };
+  return null;
 }

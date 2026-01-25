@@ -972,17 +972,17 @@ function processReexportedSymbol(
       ? reexportDeclaration.type
       : undefined;
   const unionMembers = extractUnionMembers(type, reexportTypeNode);
-  const ignoreFieldsResult = detectIgnoreFieldsMetadata({ type, checker });
+  const ignoreFields = detectIgnoreFieldsMetadata({ type, checker });
 
-  if (ignoreFieldsResult.ignoreFields !== null && kind !== "union") {
+  if (ignoreFields !== null && kind !== "union") {
     const allFieldNames = collectAllFieldNames(type, checker);
-    const validationResult = validateIgnoreFields({
+    const validationDiagnostics = validateIgnoreFields({
       typeName: exportedName,
-      ignoreFields: ignoreFieldsResult.ignoreFields,
+      ignoreFields,
       allFieldNames,
       sourceLocation: location,
     });
-    diagnostics.push(...validationResult.diagnostics);
+    diagnostics.push(...validationDiagnostics);
   }
 
   const fieldResult =
@@ -998,7 +998,7 @@ function processReexportedSymbol(
           sourceFiles: scannedSourceFiles,
           scalarMappingTable,
           scalarMappingContext,
-          ignoreFields: ignoreFieldsResult.ignoreFields,
+          ignoreFields,
         });
   diagnostics.push(...fieldResult.diagnostics);
 
@@ -1533,20 +1533,17 @@ export function extractTypesFromProgram(
           return;
         }
 
-        const ignoreFieldsResult = detectIgnoreFieldsMetadata({
-          type,
-          checker,
-        });
+        const ignoreFields = detectIgnoreFieldsMetadata({ type, checker });
 
-        if (ignoreFieldsResult.ignoreFields !== null && kind !== "union") {
+        if (ignoreFields !== null && kind !== "union") {
           const allFieldNames = collectAllFieldNames(type, checker);
-          const validationResult = validateIgnoreFields({
+          const validationDiagnostics = validateIgnoreFields({
             typeName: name,
-            ignoreFields: ignoreFieldsResult.ignoreFields,
+            ignoreFields,
             allFieldNames,
             sourceLocation: typeSourceLocation,
           });
-          diagnostics.push(...validationResult.diagnostics);
+          diagnostics.push(...validationDiagnostics);
         }
 
         const fieldResult =
@@ -1564,7 +1561,7 @@ export function extractTypesFromProgram(
                 scalarMappingContext: name.endsWith("Input")
                   ? "input"
                   : "output",
-                ignoreFields: ignoreFieldsResult.ignoreFields,
+                ignoreFields,
               });
         const fields = fieldResult.fields;
         diagnostics.push(...fieldResult.diagnostics);
