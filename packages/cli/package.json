@@ -66,6 +66,6 @@
     "@gqlkit-ts/docs": "workspace:*",
     "@gqlkit-ts/runtime": "workspace:*",
     "@types/shell-quote": "1.7.5",
-    "memfs": "^4.56.10"
+    "memfs": "4.56.10"
   }
 }
