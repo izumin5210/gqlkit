@@ -95,7 +95,8 @@ export async function extractPageInfo(
         !trimmed.startsWith("#") &&
         !trimmed.startsWith("-") &&
         !trimmed.startsWith("|") &&
-        !trimmed.startsWith("!");
+        !trimmed.startsWith("!") &&
+        !trimmed.startsWith(">");
 
       if (isContentLine) {
         description = trimmed;

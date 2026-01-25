@@ -17,6 +17,10 @@ yarn add @gqlkit-ts/runtime @graphql-tools/schema graphql
 yarn add -D @gqlkit-ts/cli
 ```
 
+> [!TIP]
+>
+> If you use AI coding assistants like Claude Code or Codex, run `gqlkit docs` to set up gqlkit skills. See [Coding Assistants](./coding-assistants) for details.
+
 ## Project Structure
 
 gqlkit expects your types and resolvers to be in `src/gqlkit/schema/`:

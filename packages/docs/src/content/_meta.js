@@ -7,6 +7,11 @@ export default {
   },
   "what-is-gqlkit": "What is gqlkit?",
   "getting-started": "Getting Started",
+  "coding-assistants": "Coding Assistants",
+  "-- CLI": {
+    type: "separator",
+    title: "CLI",
+  },
   configuration: "Configuration",
   "-- Guides": {
     type: "separator",
