@@ -3,6 +3,10 @@ import {
   isBuiltInScalar,
   PRIMITIVE_TYPE_MAP,
 } from "../../shared/constants.js";
+import {
+  detectEnumPrefix,
+  stripEnumPrefix,
+} from "../../shared/enum-prefix-detector.js";
 import { convertTsTypeToGraphQLType } from "../../shared/type-converter.js";
 import type {
   Diagnostic,
@@ -60,6 +64,11 @@ interface ConvertEnumMembersResult {
   readonly hasError: boolean;
 }
 
+interface ConvertedMemberInfo {
+  readonly convertedName: string;
+  readonly member: EnumMemberInfo;
+}
+
 function convertEnumMembers(
   params: ConvertEnumMembersParams,
 ): ConvertEnumMembersResult {
@@ -69,7 +78,7 @@ function convertEnumMembers(
   let isNumeric = false;
   let needsMapping = false;
 
-  const convertedNameToOriginals = new Map<string, string[]>();
+  const eligibleMembers: ConvertedMemberInfo[] = [];
 
   for (const member of members) {
     const convertedName = toScreamingSnakeCase(member.name);
@@ -93,16 +102,31 @@ function convertEnumMembers(
       isNumeric = true;
     }
 
-    if (convertedName !== member.value) {
+    eligibleMembers.push({ convertedName, member });
+  }
+
+  const prefixDetectionResult = detectEnumPrefix({
+    enumName,
+    memberValues: eligibleMembers.map((m) => m.convertedName),
+  });
+
+  const finalNameToOriginals = new Map<string, string[]>();
+
+  for (const { convertedName, member } of eligibleMembers) {
+    let finalName = convertedName;
+    if (prefixDetectionResult.shouldStrip && prefixDetectionResult.prefix) {
+      finalName = stripEnumPrefix(convertedName, prefixDetectionResult.prefix);
+      needsMapping = true;
+    } else if (convertedName !== member.value) {
       needsMapping = true;
     }
 
-    const existingOriginals = convertedNameToOriginals.get(convertedName) ?? [];
+    const existingOriginals = finalNameToOriginals.get(finalName) ?? [];
     existingOriginals.push(member.value);
-    convertedNameToOriginals.set(convertedName, existingOriginals);
+    finalNameToOriginals.set(finalName, existingOriginals);
 
     values.push({
-      name: convertedName,
+      name: finalName,
       originalValue: member.value,
       numericValue: member.numericValue,
       description: member.description,
@@ -111,11 +135,11 @@ function convertEnumMembers(
   }
 
   let hasError = false;
-  for (const [convertedName, originals] of convertedNameToOriginals) {
+  for (const [finalName, originals] of finalNameToOriginals) {
     if (originals.length > 1) {
       diagnostics.push({
         code: "DUPLICATE_ENUM_VALUE_AFTER_CONVERSION",
-        message: `Enum '${enumName}' has duplicate value '${convertedName}' after conversion (from '${originals.join("' and '")}')`,
+        message: `Enum '${enumName}' has duplicate value '${finalName}' after conversion (from '${originals.join("' and '")}')`,
         severity: "error",
         location: enumLocation,
       });
