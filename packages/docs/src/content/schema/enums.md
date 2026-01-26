@@ -363,6 +363,52 @@ export function createResolvers() {
 
 If values are already in `SCREAMING_SNAKE_CASE`, no resolver mapping is generated.
 
+### Automatic Prefix Stripping
+
+When all enum values share a common prefix that matches the enum name, gqlkit automatically strips the prefix to produce cleaner GraphQL values:
+
+```typescript
+export type UserStatus = "USER_STATUS_ACTIVE" | "USER_STATUS_INACTIVE" | "USER_STATUS_PENDING";
+```
+
+Generates:
+
+```graphql
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
+}
+```
+
+This works with various naming conventions:
+
+| TypeScript Enum | Values | Generated GraphQL Values |
+|-----------------|--------|--------------------------|
+| `UserStatus` | `USER_STATUS_ACTIVE`, `USER_STATUS_INACTIVE` | `ACTIVE`, `INACTIVE` |
+| `orderStatus` | `ORDER_STATUS_PENDING`, `ORDER_STATUS_SHIPPED` | `PENDING`, `SHIPPED` |
+| `Status` | `STATUS_ACTIVE`, `STATUS_INACTIVE` | `ACTIVE`, `INACTIVE` |
+
+Prefix stripping is **not applied** when:
+
+- Not all values share the common prefix
+- Stripping would result in an empty value (e.g., `USER_STATUS_` for `UserStatus`)
+
+When prefix stripping is applied, gqlkit generates resolver mappings to preserve the original TypeScript values:
+
+```typescript
+// Generated resolvers.ts
+export function createResolvers() {
+  return {
+    UserStatus: {
+      ACTIVE: "USER_STATUS_ACTIVE",
+      INACTIVE: "USER_STATUS_INACTIVE",
+      PENDING: "USER_STATUS_PENDING",
+    },
+  };
+}
+```
+
 ### Duplicate Value Detection
 
 If multiple TypeScript values convert to the same GraphQL enum value, gqlkit reports a `DUPLICATE_ENUM_VALUE_AFTER_CONVERSION` error:
