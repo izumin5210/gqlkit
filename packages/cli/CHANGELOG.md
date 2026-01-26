@@ -1,5 +1,27 @@
 # @gqlkit-ts/cli
 
+## 0.3.0
+
+### Minor Changes
+
+- [#126](https://github.com/izumin5210/gqlkit/pull/126) [`88586a0`](https://github.com/izumin5210/gqlkit/commit/88586a00445f5432726d4c995942c96bbf1429da) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: add `docs` command to generate AI agent skill files
+
+- [#107](https://github.com/izumin5210/gqlkit/pull/107) [`59eefd0`](https://github.com/izumin5210/gqlkit/commit/59eefd0951c8c6fceb313e002518445296b24fdf) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: auto-generate Payload types from inline types in resolver return types
+
+- [#103](https://github.com/izumin5210/gqlkit/pull/103) [`6501429`](https://github.com/izumin5210/gqlkit/commit/65014296069e4753d143ef323b07aaab6d0fbfdb) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: auto-generate GraphQL Union types from inline unions and `@oneOf` Input Objects from inline unions in input context
+
+- [#129](https://github.com/izumin5210/gqlkit/pull/129) [`a2a884b`](https://github.com/izumin5210/gqlkit/commit/a2a884b544179e10b364e1d6afd420555d94291f) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: add enum prefix stripping for cleaner GraphQL enum values
+
+- [#121](https://github.com/izumin5210/gqlkit/pull/121) [`7ae9406`](https://github.com/izumin5210/gqlkit/commit/7ae94065e4cafb3e81717e1943a7700ea23bfa35) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: add `ignoreFields` option to exclude fields from generated GraphQL schema
+
+- [#114](https://github.com/izumin5210/gqlkit/pull/114) [`e0d093c`](https://github.com/izumin5210/gqlkit/commit/e0d093c29fa9eed74021cd81e038fd01b758f6dc) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: auto-generate `resolveType` from `__typename` and `$typeName` fields
+
+### Patch Changes
+
+- [#117](https://github.com/izumin5210/gqlkit/pull/117) [`0cc4e7a`](https://github.com/izumin5210/gqlkit/commit/0cc4e7ababa74c64c159303fe239358dd27bc370) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: auto-generate `resolveType` for inline unions where all members are named types with `__typename` or `$typeName` fields
+
+- [#108](https://github.com/izumin5210/gqlkit/pull/108) [`eefdabd`](https://github.com/izumin5210/gqlkit/commit/eefdabd3e2179c209a9ccf56fc973ed96924e904) Thanks [@izumin5210](https://github.com/izumin5210)! - refactor: remove `EMPTY_TYPE_PROPERTIES` warning
+
 ## 0.2.0
 
 ### Minor Changes
