@@ -1,5 +1,11 @@
 # @gqlkit-ts/runtime
 
+## 0.2.0
+
+### Minor Changes
+
+- [#121](https://github.com/izumin5210/gqlkit/pull/121) [`7ae9406`](https://github.com/izumin5210/gqlkit/commit/7ae94065e4cafb3e81717e1943a7700ea23bfa35) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: add `ignoreFields` option to exclude fields from generated GraphQL schema
+
 ## 0.1.1
 
 ### Patch Changes
