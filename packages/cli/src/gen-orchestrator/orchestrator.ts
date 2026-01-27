@@ -522,11 +522,7 @@ function collectTypeNamesStep(ctx: PipelineContext): PipelineContext {
   };
 }
 
-function prepareScalarConfig(config: GenerationConfig): {
-  customScalarNames: string[];
-  globalTypeMappings: GlobalTypeMapping[];
-  configScalars: ConfigScalarMapping[];
-} {
+function prepareScalarConfig(config: GenerationConfig): ScalarConfig {
   const customScalarNames =
     config.customScalars?.map((s) => s.graphqlName) ?? [];
 

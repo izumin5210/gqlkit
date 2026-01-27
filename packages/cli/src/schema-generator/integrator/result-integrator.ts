@@ -149,14 +149,7 @@ export interface IntegratedResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
-function toBaseField(field: {
-  name: string;
-  type: GraphQLFieldType;
-  description: string | null;
-  deprecated: DeprecationInfo | null;
-  directives: ReadonlyArray<DirectiveInfo> | null;
-  defaultValue: DirectiveArgumentValue | null;
-}): BaseField {
+function toBaseField(field: BaseField): BaseField {
   return {
     name: field.name,
     type: field.type,
