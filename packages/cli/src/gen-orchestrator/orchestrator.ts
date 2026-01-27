@@ -91,6 +91,12 @@ interface ResolversResult {
   diagnostics: Diagnostics;
 }
 
+interface ScalarConfig {
+  readonly customScalarNames: string[];
+  readonly globalTypeMappings: GlobalTypeMapping[];
+  readonly configScalars: ConfigScalarMapping[];
+}
+
 interface PipelineContext {
   readonly config: GenerationConfig;
   readonly sourceFiles: ReadonlyArray<string>;
@@ -101,6 +107,7 @@ interface PipelineContext {
   readonly typesResult: TypesResult | null;
   readonly resolversResult: ResolversResult | null;
   readonly directiveDefinitions: DirectiveDefinitionInfo[] | null;
+  readonly scalarConfig: ScalarConfig | null;
   readonly diagnostics: Diagnostic[];
   readonly aborted: boolean;
 }
@@ -449,6 +456,7 @@ function createInitialContext(config: GenerationConfig): PipelineContext {
     typesResult: null,
     resolversResult: null,
     directiveDefinitions: null,
+    scalarConfig: null,
     diagnostics: [],
     aborted: false,
   };
@@ -556,18 +564,25 @@ function prepareScalarConfig(config: GenerationConfig): {
   return { customScalarNames, globalTypeMappings, configScalars };
 }
 
+function prepareScalarConfigStep(ctx: PipelineContext): PipelineContext {
+  if (ctx.aborted) return ctx;
+
+  return { ...ctx, scalarConfig: prepareScalarConfig(ctx.config) };
+}
+
 function extractTypesStep(ctx: PipelineContext): PipelineContext {
   if (
     ctx.aborted ||
     !ctx.program ||
     !ctx.knownTypeNames ||
     !ctx.knownTypeSymbols ||
-    !ctx.underlyingSymbolToTypeName
+    !ctx.underlyingSymbolToTypeName ||
+    !ctx.scalarConfig
   )
     return ctx;
 
   const { customScalarNames, globalTypeMappings, configScalars } =
-    prepareScalarConfig(ctx.config);
+    ctx.scalarConfig;
 
   const typesResult = extractTypesCore({
     program: ctx.program,
@@ -591,11 +606,12 @@ function extractResolversStep(ctx: PipelineContext): PipelineContext {
     !ctx.knownTypeNames ||
     !ctx.knownTypeSymbols ||
     !ctx.underlyingSymbolToTypeName ||
-    !ctx.typesResult
+    !ctx.typesResult ||
+    !ctx.scalarConfig
   )
     return ctx;
 
-  const { globalTypeMappings } = prepareScalarConfig(ctx.config);
+  const { globalTypeMappings } = ctx.scalarConfig;
 
   const resolversResult = extractResolversCore({
     program: ctx.program,
@@ -663,11 +679,16 @@ function generateSchemaStep(ctx: PipelineContext): {
   ctx: PipelineContext;
   schemaResult: ReturnType<typeof generateSchema> | null;
 } {
-  if (ctx.aborted || !ctx.typesResult || !ctx.resolversResult) {
+  if (
+    ctx.aborted ||
+    !ctx.typesResult ||
+    !ctx.resolversResult ||
+    !ctx.scalarConfig
+  ) {
     return { ctx, schemaResult: null };
   }
 
-  const { customScalarNames } = prepareScalarConfig(ctx.config);
+  const { customScalarNames } = ctx.scalarConfig;
   const allCustomScalarNames = [
     ...customScalarNames,
     ...ctx.typesResult.detectedScalarNames,
@@ -739,6 +760,7 @@ export async function executeGeneration(
   ctx = await scanSourceFilesStep(ctx);
   ctx = createProgramStep(ctx);
   ctx = collectTypeNamesStep(ctx);
+  ctx = prepareScalarConfigStep(ctx);
   ctx = extractTypesStep(ctx);
   ctx = extractResolversStep(ctx);
   ctx = extractDirectivesStep(ctx);

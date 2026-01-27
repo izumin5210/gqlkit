@@ -7,6 +7,7 @@ import {
   detectEnumPrefix,
   stripEnumPrefix,
 } from "../../shared/enum-prefix-detector.js";
+import { toScreamingSnakeCase } from "../../shared/string-utils.js";
 import { convertTsTypeToGraphQLType } from "../../shared/type-converter.js";
 import type {
   Diagnostic,
@@ -19,11 +20,7 @@ import type {
   InlineObjectProperty,
   SourceLocation,
 } from "../types/index.js";
-import {
-  isEligibleAsEnumValue,
-  isEligibleAsInputObjectField,
-  isEligibleAsObjectField,
-} from "./field-eligibility.js";
+import { isEligibleAsEnumValue, isEligibleField } from "./field-eligibility.js";
 
 export interface ConversionResult {
   readonly types: ReadonlyArray<GraphQLTypeInfo>;
@@ -39,14 +36,6 @@ const RESERVED_TYPE_NAMES = new Set([
 
 function isInputTypeName(name: string): boolean {
   return name.endsWith("Input");
-}
-
-function toScreamingSnakeCase(value: string): string {
-  return value
-    .replace(/[-\s]+/g, "_")
-    .replace(/([a-z])([A-Z])/g, "$1_$2")
-    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
-    .toUpperCase();
 }
 
 interface ConvertEnumMembersParams {
@@ -163,9 +152,10 @@ function convertFields(
   const diagnostics: Diagnostic[] = [];
 
   for (const field of extracted.fields) {
-    const eligibility = isInput
-      ? isEligibleAsInputObjectField(field.name)
-      : isEligibleAsObjectField(field.name);
+    const eligibility = isEligibleField({
+      fieldName: field.name,
+      kind: isInput ? "input" : "object",
+    });
 
     if (!eligibility.eligible) {
       diagnostics.push({

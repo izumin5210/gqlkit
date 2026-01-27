@@ -12,21 +12,8 @@ export interface ValidateTypesOptions {
 }
 const PLACEHOLDER_TYPES = new Set(["__INLINE_OBJECT__", "__INLINE_ENUM__"]);
 
-function isOptionsObject(
-  arg: ReadonlyArray<GraphQLTypeInfo> | ValidateTypesOptions,
-): arg is ValidateTypesOptions {
-  return !Array.isArray(arg) && "types" in arg;
-}
-
-export function validateTypes(
-  typesOrOptions: ReadonlyArray<GraphQLTypeInfo> | ValidateTypesOptions,
-): ValidationResult {
-  const types = isOptionsObject(typesOrOptions)
-    ? typesOrOptions.types
-    : typesOrOptions;
-  const customScalarNames = isOptionsObject(typesOrOptions)
-    ? typesOrOptions.customScalarNames
-    : undefined;
+export function validateTypes(options: ValidateTypesOptions): ValidationResult {
+  const { types, customScalarNames } = options;
 
   const diagnostics: Diagnostic[] = [];
 

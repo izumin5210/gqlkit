@@ -24,45 +24,29 @@ function isReservedName(name: string): boolean {
   return name.startsWith("__");
 }
 
-/**
- * Check if a field name is eligible to be included as a GraphQL object field.
- */
-export function isEligibleAsObjectField(fieldName: string): EligibilityResult {
-  if (isReservedName(fieldName)) {
-    return {
-      eligible: false,
-      skipReason: {
-        code: "RESERVED_NAME",
-        message: `Field '${fieldName}' starts with '__' which is reserved for GraphQL introspection`,
-      },
-    };
-  }
+export type FieldEligibilityKind = "object" | "input";
 
-  if (!isValidGraphQLName(fieldName)) {
-    return {
-      eligible: false,
-      skipReason: {
-        code: "INVALID_NAME",
-        message: `Field '${fieldName}' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)`,
-      },
-    };
-  }
-
-  return { eligible: true, skipReason: null };
+export interface IsEligibleFieldParams {
+  readonly fieldName: string;
+  readonly kind: FieldEligibilityKind;
 }
 
 /**
- * Check if a field name is eligible to be included as a GraphQL input object field.
+ * Check if a field name is eligible to be included as a GraphQL field.
+ * Uses the kind parameter to determine the error message prefix.
  */
-export function isEligibleAsInputObjectField(
-  fieldName: string,
+export function isEligibleField(
+  params: IsEligibleFieldParams,
 ): EligibilityResult {
+  const { fieldName, kind } = params;
+  const prefix = kind === "input" ? "Input field" : "Field";
+
   if (isReservedName(fieldName)) {
     return {
       eligible: false,
       skipReason: {
         code: "RESERVED_NAME",
-        message: `Input field '${fieldName}' starts with '__' which is reserved for GraphQL introspection`,
+        message: `${prefix} '${fieldName}' starts with '__' which is reserved for GraphQL introspection`,
       },
     };
   }
@@ -72,7 +56,7 @@ export function isEligibleAsInputObjectField(
       eligible: false,
       skipReason: {
         code: "INVALID_NAME",
-        message: `Input field '${fieldName}' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)`,
+        message: `${prefix} '${fieldName}' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)`,
       },
     };
   }
