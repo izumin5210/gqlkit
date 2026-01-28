@@ -6,6 +6,7 @@ import {
   validateSchemaTypenames,
   validateTypenames,
 } from "../auto-type-generator/index.js";
+import type { ImportExtension } from "../config/types.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import type { DirectiveDefinitionInfo } from "../shared/directive-definition-extractor.js";
 import type { CollectedScalarType } from "../type-extractor/collector/scalar-collector.js";
@@ -33,6 +34,7 @@ export interface GenerateSchemaInput {
   readonly enablePruning: boolean | null;
   readonly sourceRoot: string | null;
   readonly knownTypeNames: ReadonlySet<string> | null;
+  readonly importExtension: ImportExtension;
 }
 
 export interface GenerateSchemaResult {
@@ -58,6 +60,7 @@ export function generateSchema(
     enablePruning,
     sourceRoot,
     knownTypeNames,
+    importExtension,
   } = input;
 
   const autoTypeResult = generateAutoTypes({
@@ -248,6 +251,7 @@ export function generateSchema(
     customScalars: customScalars ?? [],
     numericEnums: integratedResult.numericEnums,
     stringEnumMappings: integratedResult.stringEnumMappings,
+    importExtension,
   });
 
   return {

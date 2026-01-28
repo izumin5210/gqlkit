@@ -107,6 +107,7 @@ describe("Golden File Tests", async () => {
           resolversPath: DEFAULT_RESOLVERS_PATH,
           typeDefsPath: DEFAULT_TYPEDEFS_PATH,
           schemaPath: DEFAULT_SCHEMA_PATH,
+          importExtension: config?.output?.importExtension ?? "js",
         },
         configDir: null,
         customScalars,

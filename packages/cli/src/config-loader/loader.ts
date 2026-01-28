@@ -1,6 +1,7 @@
 import { existsSync } from "node:fs";
 import { join } from "node:path";
 import { createJiti } from "jiti";
+import type { ImportExtension } from "../config/types.js";
 import type { Diagnostic } from "../type-extractor/types/index.js";
 import { validateConfig } from "./validator.js";
 
@@ -27,6 +28,8 @@ export interface ResolvedOutputConfig {
   readonly typeDefsPath: string | null;
   /** Schema SDL output path. Null suppresses output */
   readonly schemaPath: string | null;
+  /** File extension for imports. Default: "js" */
+  readonly importExtension: ImportExtension;
 }
 
 /**
@@ -64,6 +67,7 @@ const DEFAULT_OUTPUT_CONFIG: ResolvedOutputConfig = {
   resolversPath: DEFAULT_RESOLVERS_PATH,
   typeDefsPath: DEFAULT_TYPEDEFS_PATH,
   schemaPath: DEFAULT_SCHEMA_PATH,
+  importExtension: "js",
 };
 
 const DEFAULT_HOOKS_CONFIG: ResolvedHooksConfig = {

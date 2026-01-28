@@ -1,3 +1,4 @@
+import type { ImportExtension } from "../config/types.js";
 import type { Diagnostic } from "../type-extractor/types/index.js";
 import {
   DEFAULT_RESOLVERS_PATH,
@@ -186,6 +187,31 @@ function validateTsconfigPath(
   return { resolved: value, diagnostics: [] };
 }
 
+function validateImportExtension(
+  value: unknown,
+  configPath: string,
+): { resolved: ImportExtension; diagnostics: Diagnostic[] } {
+  if (value === undefined) {
+    return { resolved: "js", diagnostics: [] };
+  }
+
+  if (value !== "js" && value !== "none" && value !== "ts") {
+    return {
+      resolved: "js",
+      diagnostics: [
+        {
+          code: "CONFIG_INVALID_IMPORT_EXTENSION",
+          message: 'output.importExtension must be "js", "none", or "ts"',
+          severity: "error",
+          location: { file: configPath, line: 1, column: 1 },
+        },
+      ],
+    };
+  }
+
+  return { resolved: value, diagnostics: [] };
+}
+
 function validateOutputConfig(
   output: unknown,
   configPath: string,
@@ -198,6 +224,7 @@ function validateOutputConfig(
         resolversPath: DEFAULT_RESOLVERS_PATH,
         typeDefsPath: DEFAULT_TYPEDEFS_PATH,
         schemaPath: DEFAULT_SCHEMA_PATH,
+        importExtension: "js",
       },
       diagnostics: [],
     };
@@ -228,10 +255,15 @@ function validateOutputConfig(
     "output.schemaPath",
     configPath,
   );
+  const importExtensionResult = validateImportExtension(
+    output["importExtension"],
+    configPath,
+  );
 
   diagnostics.push(...resolversPathResult.diagnostics);
   diagnostics.push(...typeDefsPathResult.diagnostics);
   diagnostics.push(...schemaPathResult.diagnostics);
+  diagnostics.push(...importExtensionResult.diagnostics);
 
   if (diagnostics.length > 0) {
     return { resolved: undefined, diagnostics };
@@ -242,6 +274,7 @@ function validateOutputConfig(
       resolversPath: resolversPathResult.resolved,
       typeDefsPath: typeDefsPathResult.resolved,
       schemaPath: schemaPathResult.resolved,
+      importExtension: importExtensionResult.resolved,
     },
     diagnostics: [],
   };
