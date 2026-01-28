@@ -1,3 +1,4 @@
+import type { ImportExtension } from "../config/types.js";
 import type { Diagnostic } from "../type-extractor/types/index.js";
 import {
   DEFAULT_RESOLVERS_PATH,
@@ -189,7 +190,7 @@ function validateTsconfigPath(
 function validateImportExtension(
   value: unknown,
   configPath: string,
-): { resolved: "js" | "none" | "ts"; diagnostics: Diagnostic[] } {
+): { resolved: ImportExtension; diagnostics: Diagnostic[] } {
   if (value === undefined) {
     return { resolved: "js", diagnostics: [] };
   }

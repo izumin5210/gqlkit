@@ -6,6 +6,7 @@ import {
   validateSchemaTypenames,
   validateTypenames,
 } from "../auto-type-generator/index.js";
+import type { ImportExtension } from "../config/types.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import type { DirectiveDefinitionInfo } from "../shared/directive-definition-extractor.js";
 import type { CollectedScalarType } from "../type-extractor/collector/scalar-collector.js";
@@ -33,7 +34,7 @@ export interface GenerateSchemaInput {
   readonly enablePruning: boolean | null;
   readonly sourceRoot: string | null;
   readonly knownTypeNames: ReadonlySet<string> | null;
-  readonly importExtension: "js" | "none" | "ts";
+  readonly importExtension: ImportExtension;
 }
 
 export interface GenerateSchemaResult {

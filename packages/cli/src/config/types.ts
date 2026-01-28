@@ -1,4 +1,12 @@
 /**
+ * File extension mode for generated import statements.
+ * - "js": Convert .ts to .js (default, compatible with ESM + Node16)
+ * - "none": No extension (for bundlers)
+ * - "ts": Keep .ts extension (for Deno)
+ */
+export type ImportExtension = "js" | "none" | "ts";
+
+/**
  * Output configuration for generated files.
  * All paths are relative to project root.
  */
@@ -32,12 +40,10 @@ export interface OutputConfig {
 
   /**
    * File extension to use in generated import statements.
-   * - "js": Convert .ts to .js (default, compatible with ESM + Node16)
-   * - "none": No extension (for bundlers)
-   * - "ts": Keep .ts extension (for Deno)
+   * @see ImportExtension
    * @default "js"
    */
-  readonly importExtension?: "js" | "none" | "ts";
+  readonly importExtension?: ImportExtension;
 }
 
 /**
