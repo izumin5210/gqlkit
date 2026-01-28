@@ -36,6 +36,51 @@ export type User = {
 };
 ```
 
+## Branded Types
+
+gqlkit automatically recognizes TypeScript branded types (intersection types with brand markers) and maps them to the appropriate default GraphQL scalars:
+
+```typescript
+// Define branded types
+type UserId = string & { __brand: "UserId" };
+type Price = number & { readonly __brand: unique symbol };
+type IsVerified = boolean & { __nominal: true };
+
+export type Product = {
+  id: UserId;         // → String!
+  price: Price;       // → Float!
+  verified: IsVerified; // → Boolean!
+};
+```
+
+### Supported Brand Patterns
+
+gqlkit recognizes the following brand marker property names:
+
+- `__brand`, `_brand`, `brand`
+- `__nominal`, `_nominal`
+- `__tag`, `_tag`
+
+### Custom Scalars for Branded Types
+
+To map a branded type to a custom scalar instead of the default, use the config:
+
+```typescript
+// gqlkit.config.ts
+import { defineConfig } from "@gqlkit-ts/cli";
+
+export default defineConfig({
+  scalars: [
+    {
+      name: "UserID",
+      tsType: { name: "UserId" },
+    },
+  ],
+});
+```
+
+This maps `UserId` to the custom `UserID` scalar instead of `String`.
+
 ## Custom Scalars with GqlScalar
 
 Define custom scalar types using the `GqlScalar` utility type:
