@@ -1,14 +1,18 @@
-// Custom scalars using GqlScalar type helper with embedded metadata
-// Import GqlScalar-based types that have scalar metadata embedded
-import type { ProductPrice, UserId } from "../../../scalars.js";
+// Branded types with custom scalar configuration
 
-// Boolean-based branded type - no custom scalar metadata, uses default Boolean
+// String-based branded type - configured as UserID scalar
+type UserId = string & { __brand: "UserId" };
+
+// Number-based branded type - configured as Price scalar
+type ProductPrice = number & { readonly __brand: unique symbol };
+
+// Boolean-based branded type - no custom scalar, should use Boolean
 type IsActive = boolean & { __nominal: true };
 
-// Product type using custom scalars:
-// - id: UserId → UserID! (custom scalar via GqlScalar metadata)
-// - price: ProductPrice → Price! (custom scalar via GqlScalar metadata)
-// - active: IsActive → Boolean! (default scalar for branded boolean)
+// Product type using branded types:
+// - id: UserId → UserID! (custom scalar)
+// - price: ProductPrice → Price! (custom scalar)
+// - active: IsActive → Boolean! (default scalar)
 export interface Product {
   id: UserId;
   price: ProductPrice;
