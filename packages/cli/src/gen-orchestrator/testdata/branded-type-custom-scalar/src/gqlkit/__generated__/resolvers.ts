@@ -2,6 +2,7 @@
 
 import { GraphQLScalarType } from "graphql";
 import { products } from "../schema/query.js";
+import type { ProductPrice, UserId } from "../../../scalars.js";
 
 export function createResolvers({ scalars }: {
   scalars: {
