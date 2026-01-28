@@ -23,7 +23,7 @@ const GENERATED_FILE_HEADER =
 
 function formatDocumentNodeAsCode(
   integratedResult: IntegratedResult,
-  options?: BuildDocumentOptions,
+  options: BuildDocumentOptions,
 ): string {
   const doc = buildDocumentNode(integratedResult, options);
 
@@ -32,7 +32,7 @@ function formatDocumentNodeAsCode(
 
 export function emitTypeDefsCode(
   integratedResult: IntegratedResult,
-  options?: BuildDocumentOptions,
+  options: BuildDocumentOptions,
 ): string {
   const documentNodeCode = formatDocumentNodeAsCode(integratedResult, options);
 

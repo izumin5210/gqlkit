@@ -200,23 +200,23 @@ function extractTypeNameFromType(
 function detectResolverFromMetadataType(
   callExpr: ts.CallExpression,
   checker: ts.TypeChecker,
-): DefineApiResolverType | undefined {
+): DefineApiResolverType | null {
   const returnType = checker.getTypeAtLocation(callExpr);
 
   const metadataProp = returnType.getProperty(RESOLVER_METADATA_PROPERTY);
   if (!metadataProp) {
-    return undefined;
+    return null;
   }
 
   const metadataType = checker.getTypeOfSymbol(metadataProp);
   const actualType = getActualMetadataType(metadataType);
   if (!actualType) {
-    return undefined;
+    return null;
   }
 
   const kindProp = actualType.getProperty("kind");
   if (!kindProp) {
-    return undefined;
+    return null;
   }
 
   const kindType = checker.getTypeOfSymbol(kindProp);
@@ -227,7 +227,7 @@ function detectResolverFromMetadataType(
     }
   }
 
-  return undefined;
+  return null;
 }
 
 function isInlineTypeLiteralDeclaration(declaration: ts.Declaration): boolean {

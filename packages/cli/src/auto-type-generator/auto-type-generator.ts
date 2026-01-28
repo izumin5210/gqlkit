@@ -12,12 +12,10 @@ import {
   stripEnumPrefix,
 } from "../shared/enum-prefix-detector.js";
 import { getSourceLocationOrDefault } from "../shared/source-location.js";
+import { toScreamingSnakeCase } from "../shared/string-utils.js";
 import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
 import { convertTsTypeToGraphQLType } from "../shared/type-converter.js";
-import {
-  isEligibleAsInputObjectField,
-  isEligibleAsObjectField,
-} from "../type-extractor/converter/field-eligibility.js";
+import { isEligibleField } from "../type-extractor/converter/field-eligibility.js";
 import {
   createReferenceType,
   type Diagnostic,
@@ -259,27 +257,33 @@ function collectInlineObjectsFromType(
   const isInput = isInputTypeName(typeInfo.metadata.name);
 
   for (const field of typeInfo.fields) {
-    collectInlineObjectsFromField(
+    collectInlineObjectsFromField({
       field,
-      typeInfo.metadata.name,
-      [],
+      parentTypeName: typeInfo.metadata.name,
+      parentPath: [],
       isInput,
-      typeInfo.metadata.sourceFile,
+      sourceFile: typeInfo.metadata.sourceFile,
       results,
-    );
+    });
   }
 
   return results;
 }
 
+interface CollectInlineObjectsFromFieldParams {
+  readonly field: FieldDefinition;
+  readonly parentTypeName: string;
+  readonly parentPath: ReadonlyArray<string>;
+  readonly isInput: boolean;
+  readonly sourceFile: string;
+  readonly results: InlineObjectWithContext[];
+}
+
 function collectInlineObjectsFromField(
-  field: FieldDefinition,
-  parentTypeName: string,
-  parentPath: ReadonlyArray<string>,
-  isInput: boolean,
-  sourceFile: string,
-  results: InlineObjectWithContext[],
+  params: CollectInlineObjectsFromFieldParams,
 ): void {
+  const { field, parentTypeName, parentPath, isInput, sourceFile, results } =
+    params;
   const tsType = field.tsType;
 
   if (tsType.kind !== "inlineObject" || !tsType.inlineObjectProperties) {
@@ -481,9 +485,10 @@ function generateAutoType(
   const diagnostics: Diagnostic[] = [];
 
   for (const prop of inlineObj.properties) {
-    const eligibility = isInput
-      ? isEligibleAsInputObjectField(prop.name)
-      : isEligibleAsObjectField(prop.name);
+    const eligibility = isEligibleField({
+      fieldName: prop.name,
+      kind: isInput ? "input" : "object",
+    });
 
     if (!eligibility.eligible) {
       diagnostics.push({
@@ -851,14 +856,6 @@ function buildGeneratedTypeNamesMap(
   }
 
   return map;
-}
-
-function toScreamingSnakeCase(value: string): string {
-  return value
-    .replace(/[-\s]+/g, "_")
-    .replace(/([a-z])([A-Z])/g, "$1_$2")
-    .replace(/([A-Z]+)([A-Z][a-z])/g, "$1_$2")
-    .toUpperCase();
 }
 
 interface ConvertInlineEnumMembersParams {

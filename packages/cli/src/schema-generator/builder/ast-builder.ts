@@ -48,13 +48,13 @@ import type {
 } from "../integrator/result-integrator.js";
 
 export interface BuildDocumentOptions {
-  readonly sourceRoot?: string;
+  readonly sourceRoot: string | null;
 }
 
 function appendSourceLocation(
   description: string | null,
   sourceFile: string | null,
-  sourceRoot: string | undefined,
+  sourceRoot: string | null,
 ): string | null {
   if (!sourceRoot || !sourceFile) {
     return description;
@@ -113,7 +113,7 @@ function buildOneOfDirective(): ConstDirectiveNode {
 
 function buildDirectiveArgumentValue(
   value: DirectiveArgumentValue,
-  expectedTypeName?: string,
+  expectedTypeName: string | null,
 ): ConstValueNode {
   switch (value.kind) {
     case "string":
@@ -159,7 +159,7 @@ function buildDirectiveArgumentValue(
         fields: value.fields.map((f) => ({
           kind: Kind.OBJECT_FIELD as const,
           name: buildNameNode(f.name),
-          value: buildDirectiveArgumentValue(f.value),
+          value: buildDirectiveArgumentValue(f.value, null),
         })),
       };
   }
@@ -167,7 +167,7 @@ function buildDirectiveArgumentValue(
 
 function buildDirectiveArgument(
   arg: DirectiveArgument,
-  expectedTypeName?: string,
+  expectedTypeName: string | null,
 ): ConstArgumentNode {
   return {
     kind: Kind.ARGUMENT,
@@ -178,7 +178,7 @@ function buildDirectiveArgument(
 
 function buildCustomDirective(
   directive: DirectiveInfo,
-  directiveDefMap?: Map<string, DirectiveDefinitionInfo>,
+  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): ConstDirectiveNode {
   const def = directiveDefMap?.get(directive.name);
   const argTypeMap = new Map<string, string>();
@@ -189,7 +189,7 @@ function buildCustomDirective(
   }
 
   const args = directive.args.map((arg) =>
-    buildDirectiveArgument(arg, argTypeMap.get(arg.name)),
+    buildDirectiveArgument(arg, argTypeMap.get(arg.name) ?? null),
   );
 
   return {
@@ -202,7 +202,7 @@ function buildCustomDirective(
 function buildDirectives(
   directives: ReadonlyArray<DirectiveInfo> | null,
   deprecated: DeprecationInfo | null,
-  directiveDefMap?: Map<string, DirectiveDefinitionInfo>,
+  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): ConstDirectiveNode[] {
   const result: ConstDirectiveNode[] = [];
 
@@ -278,7 +278,12 @@ function buildInputValueDefinitionNode(
       ? { description: buildStringValueNode(inputValue.description) }
       : {}),
     ...(inputValue.defaultValue
-      ? { defaultValue: buildDirectiveArgumentValue(inputValue.defaultValue) }
+      ? {
+          defaultValue: buildDirectiveArgumentValue(
+            inputValue.defaultValue,
+            null,
+          ),
+        }
       : {}),
     ...(directives.length > 0 ? { directives } : {}),
   };
@@ -290,7 +295,7 @@ function sortByName<T extends { name: string }>(items: ReadonlyArray<T>): T[] {
 
 function buildBaseFieldDefinitionNode(
   field: BaseField,
-  directiveDefMap?: Map<string, DirectiveDefinitionInfo>,
+  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): FieldDefinitionNode {
   const directives = buildDirectives(
     field.directives,
@@ -311,8 +316,8 @@ function buildBaseFieldDefinitionNode(
 
 function buildFieldDefinitionNode(
   field: ExtensionField,
-  sourceRoot?: string,
-  directiveDefMap?: Map<string, DirectiveDefinitionInfo>,
+  sourceRoot: string | null,
+  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): FieldDefinitionNode {
   const directives = buildDirectives(
     field.directives,
@@ -338,11 +343,14 @@ function buildFieldDefinitionNode(
   };
 }
 
-function buildObjectTypeDefinitionNode(
+function buildTypeDefinitionNode(
   baseType: BaseType,
-  sourceRoot?: string,
-  directiveDefMap?: Map<string, DirectiveDefinitionInfo>,
-): ObjectTypeDefinitionNode {
+  kind:
+    | typeof Kind.OBJECT_TYPE_DEFINITION
+    | typeof Kind.INTERFACE_TYPE_DEFINITION,
+  sourceRoot: string | null,
+  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
+): ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode {
   const sortedFields = baseType.fields ? sortByName(baseType.fields) : [];
   const directives = buildDirectives(
     baseType.directives,
@@ -364,7 +372,7 @@ function buildObjectTypeDefinitionNode(
       : undefined;
 
   return {
-    kind: Kind.OBJECT_TYPE_DEFINITION,
+    kind,
     name: buildNameNode(baseType.name),
     fields: sortedFields.map((f) =>
       buildBaseFieldDefinitionNode(f, directiveDefMap),
@@ -372,49 +380,12 @@ function buildObjectTypeDefinitionNode(
     ...(description ? { description: buildStringValueNode(description) } : {}),
     ...(directives.length > 0 ? { directives } : {}),
     ...(interfaces ? { interfaces } : {}),
-  };
-}
-
-function buildInterfaceTypeDefinitionNode(
-  baseType: BaseType,
-  sourceRoot?: string,
-  directiveDefMap?: Map<string, DirectiveDefinitionInfo>,
-): InterfaceTypeDefinitionNode {
-  const sortedFields = baseType.fields ? sortByName(baseType.fields) : [];
-  const directives = buildDirectives(
-    baseType.directives,
-    baseType.deprecated,
-    directiveDefMap,
-  );
-
-  const description = appendSourceLocation(
-    baseType.description,
-    baseType.sourceFile,
-    sourceRoot,
-  );
-
-  const interfaces =
-    baseType.implementedInterfaces && baseType.implementedInterfaces.length > 0
-      ? [...baseType.implementedInterfaces]
-          .sort((a, b) => a.localeCompare(b))
-          .map(buildNamedTypeNode)
-      : undefined;
-
-  return {
-    kind: Kind.INTERFACE_TYPE_DEFINITION,
-    name: buildNameNode(baseType.name),
-    fields: sortedFields.map((f) =>
-      buildBaseFieldDefinitionNode(f, directiveDefMap),
-    ),
-    ...(description ? { description: buildStringValueNode(description) } : {}),
-    ...(directives.length > 0 ? { directives } : {}),
-    ...(interfaces ? { interfaces } : {}),
-  };
+  } as ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode;
 }
 
 function buildUnionTypeDefinitionNode(
   baseType: BaseType,
-  sourceRoot?: string,
+  sourceRoot: string | null,
 ): UnionTypeDefinitionNode {
   const sortedMembers = baseType.unionMembers
     ? [...baseType.unionMembers].sort((a, b) => a.localeCompare(b))
@@ -454,7 +425,7 @@ function buildEnumValueDefinitionNode(
 
 function buildEnumTypeDefinitionNode(
   baseType: BaseType,
-  sourceRoot?: string,
+  sourceRoot: string | null,
 ): EnumTypeDefinitionNode {
   const enumValues = baseType.enumValues ?? [];
 
@@ -474,7 +445,7 @@ function buildEnumTypeDefinitionNode(
 
 function buildScalarTypeDefinitionNode(
   name: string,
-  description?: string,
+  description: string | null,
 ): ScalarTypeDefinitionNode {
   return {
     kind: Kind.SCALAR_TYPE_DEFINITION,
@@ -485,7 +456,7 @@ function buildScalarTypeDefinitionNode(
 
 function buildInputFieldDefinitionNode(
   field: BaseField,
-  directiveDefMap?: Map<string, DirectiveDefinitionInfo>,
+  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): InputValueDefinitionNode {
   const directives = buildDirectives(
     field.directives,
@@ -501,7 +472,7 @@ function buildInputFieldDefinitionNode(
       ? { description: buildStringValueNode(field.description) }
       : {}),
     ...(field.defaultValue
-      ? { defaultValue: buildDirectiveArgumentValue(field.defaultValue) }
+      ? { defaultValue: buildDirectiveArgumentValue(field.defaultValue, null) }
       : {}),
     ...(directives.length > 0 ? { directives } : {}),
   };
@@ -509,8 +480,8 @@ function buildInputFieldDefinitionNode(
 
 function buildInputObjectTypeDefinitionNode(
   inputType: InputType,
-  sourceRoot?: string,
-  directiveDefMap?: Map<string, DirectiveDefinitionInfo>,
+  sourceRoot: string | null,
+  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): InputObjectTypeDefinitionNode {
   const sortedFields = sortByName(inputType.fields);
 
@@ -538,8 +509,8 @@ function buildInputObjectTypeDefinitionNode(
 
 function buildObjectTypeExtensionNode(
   typeExtension: TypeExtension,
-  sourceRoot?: string,
-  directiveDefMap?: Map<string, DirectiveDefinitionInfo>,
+  sourceRoot: string | null,
+  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): ObjectTypeExtensionNode {
   const sortedFields = sortByName(typeExtension.fields);
   return {
@@ -553,8 +524,8 @@ function buildObjectTypeExtensionNode(
 
 function buildInterfaceTypeExtensionNode(
   typeExtension: TypeExtension,
-  sourceRoot?: string,
-  directiveDefMap?: Map<string, DirectiveDefinitionInfo>,
+  sourceRoot: string | null,
+  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): InterfaceTypeExtensionNode {
   const sortedFields = sortByName(typeExtension.fields);
   return {
@@ -600,9 +571,9 @@ function buildDirectiveDefinitionNode(
 
 export function buildDocumentNode(
   integratedResult: IntegratedResult,
-  options?: BuildDocumentOptions,
+  options: BuildDocumentOptions,
 ): DocumentNode {
-  const sourceRoot = options?.sourceRoot;
+  const sourceRoot = options.sourceRoot;
   const definitions: DefinitionNode[] = [];
 
   // Build directive definition map for argument type lookup
@@ -628,18 +599,8 @@ export function buildDocumentNode(
     );
     for (const scalar of sortedScalars) {
       definitions.push(
-        buildScalarTypeDefinitionNode(
-          scalar.scalarName,
-          scalar.description ?? undefined,
-        ),
+        buildScalarTypeDefinitionNode(scalar.scalarName, scalar.description),
       );
-    }
-  } else if (integratedResult.customScalarNames) {
-    const sortedScalarNames = [...integratedResult.customScalarNames].sort(
-      (a, b) => a.localeCompare(b),
-    );
-    for (const scalarName of sortedScalarNames) {
-      definitions.push(buildScalarTypeDefinitionNode(scalarName));
     }
   }
 
@@ -650,11 +611,21 @@ export function buildDocumentNode(
   for (const baseType of sortedBaseTypes) {
     if (baseType.kind === "Interface") {
       definitions.push(
-        buildInterfaceTypeDefinitionNode(baseType, sourceRoot, directiveDefMap),
+        buildTypeDefinitionNode(
+          baseType,
+          Kind.INTERFACE_TYPE_DEFINITION,
+          sourceRoot,
+          directiveDefMap,
+        ),
       );
     } else if (baseType.kind === "Object") {
       definitions.push(
-        buildObjectTypeDefinitionNode(baseType, sourceRoot, directiveDefMap),
+        buildTypeDefinitionNode(
+          baseType,
+          Kind.OBJECT_TYPE_DEFINITION,
+          sourceRoot,
+          directiveDefMap,
+        ),
       );
     } else if (baseType.kind === "Union") {
       definitions.push(buildUnionTypeDefinitionNode(baseType, sourceRoot));
