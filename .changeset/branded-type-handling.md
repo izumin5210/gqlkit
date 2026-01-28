@@ -1,5 +1,5 @@
 ---
-"@gqlkit-ts/cli": minor
+"@gqlkit-ts/cli": patch
 ---
 
-feat: add branded type handling for intersection types
+fix: add branded type handling for intersection types
