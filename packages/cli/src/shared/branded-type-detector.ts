@@ -91,6 +91,37 @@ export function detectBrandedType(type: ts.Type): BrandedTypeResult {
 }
 
 /**
+ * Detects if all types in the array are branded with the same base type.
+ *
+ * This is useful for union types where branded boolean expands to:
+ * `(true & { __nominal: true }) | (false & { __nominal: true })`
+ *
+ * @param types - Array of TypeScript types to analyze
+ * @returns Common branded result if all types are branded with the same base, otherwise non-branded
+ */
+export function detectUniformBrandedType(
+  types: ReadonlyArray<ts.Type>,
+): BrandedTypeResult {
+  if (types.length === 0) {
+    return { isBranded: false, baseType: null };
+  }
+
+  const first = detectBrandedType(types[0]!);
+  if (!first.isBranded) {
+    return { isBranded: false, baseType: null };
+  }
+
+  for (let i = 1; i < types.length; i++) {
+    const result = detectBrandedType(types[i]!);
+    if (!result.isBranded || result.baseType !== first.baseType) {
+      return { isBranded: false, baseType: null };
+    }
+  }
+
+  return first;
+}
+
+/**
  * Gets the primitive type from a TypeScript type.
  *
  * @returns "string", "number", "boolean", or null if not a primitive

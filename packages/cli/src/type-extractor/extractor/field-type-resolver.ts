@@ -1,5 +1,8 @@
 import ts from "typescript";
-import { detectBrandedType } from "../../shared/branded-type-detector.js";
+import {
+  detectBrandedType,
+  detectUniformBrandedType,
+} from "../../shared/branded-type-detector.js";
 import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } from "../../shared/inline-object-extractor.js";
 import { isInlineObjectType } from "../../shared/inline-object-utils.js";
@@ -179,16 +182,15 @@ function resolveFieldTypeInternal(
     // Check if all non-null types are branded primitives with the same base type
     // This handles cases like: boolean & { __nominal: true }
     // which expands to: (true & { __nominal: true }) | (false & { __nominal: true })
-    const brandedResults = nonNullTypes.map((t) => detectBrandedType(t));
-    const allBranded = brandedResults.every((r) => r.isBranded);
-    if (allBranded && brandedResults.length > 0) {
-      const baseTypes = new Set(brandedResults.map((r) => r.baseType));
-      if (baseTypes.size === 1) {
-        const baseType = brandedResults[0]!.baseType;
-        if (baseType !== null) {
-          return createPrimitiveType({ name: baseType, nullable });
-        }
-      }
+    const uniformBrandedResult = detectUniformBrandedType(nonNullTypes);
+    if (
+      uniformBrandedResult.isBranded &&
+      uniformBrandedResult.baseType !== null
+    ) {
+      return createPrimitiveType({
+        name: uniformBrandedResult.baseType,
+        nullable,
+      });
     }
 
     if (nonNullTypes.length === 1) {
