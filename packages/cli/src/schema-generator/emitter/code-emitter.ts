@@ -44,13 +44,28 @@ export const typeDefs: DocumentNode = ${documentNodeCode} as DocumentNode;
 `;
 }
 
-function computeRelativeImportPath(fromDir: string, toFile: string): string {
+function computeRelativeImportPath(
+  fromDir: string,
+  toFile: string,
+  importExtension: "js" | "none" | "ts",
+): string {
   const relativePath = toPosixPath(path.relative(fromDir, toFile));
-  const withoutExt = relativePath.replace(/\.ts$/, ".js");
-  if (!withoutExt.startsWith(".")) {
-    return `./${withoutExt}`;
+  let withExt: string;
+  switch (importExtension) {
+    case "js":
+      withExt = relativePath.replace(/\.ts$/, ".js");
+      break;
+    case "ts":
+      withExt = relativePath;
+      break;
+    case "none":
+      withExt = relativePath.replace(/\.ts$/, "");
+      break;
   }
-  return withoutExt;
+  if (!withExt.startsWith(".")) {
+    return `./${withExt}`;
+  }
+  return withExt;
 }
 
 interface ScalarTypeImport {
@@ -94,6 +109,7 @@ function collectScalarTypeImports(
 function buildScalarTypeImports(
   scalarTypeImports: ScalarTypeImport[],
   outputDir: string,
+  importExtension: "js" | "none" | "ts",
 ): string[] {
   const importsByFile = new Map<string, string[]>();
 
@@ -108,7 +124,11 @@ function buildScalarTypeImports(
 
   for (const sourceFile of sortedFiles) {
     const typeNames = importsByFile.get(sourceFile) ?? [];
-    const importPath = computeRelativeImportPath(outputDir, sourceFile);
+    const importPath = computeRelativeImportPath(
+      outputDir,
+      sourceFile,
+      importExtension,
+    );
     imports.push(
       `import type { ${typeNames.sort().join(", ")} } from "${importPath}";`,
     );
@@ -172,13 +192,18 @@ function collectResolverImportsByFile(
 function buildResolverImports(
   importsByFile: Map<string, Set<string>>,
   outputDir: string,
+  importExtension: "js" | "none" | "ts",
 ): string[] {
   const imports: string[] = [];
   const sortedFiles = [...importsByFile.keys()].sort();
 
   for (const sourceFile of sortedFiles) {
     const valueNames = importsByFile.get(sourceFile) ?? new Set<string>();
-    const importPath = computeRelativeImportPath(outputDir, sourceFile);
+    const importPath = computeRelativeImportPath(
+      outputDir,
+      sourceFile,
+      importExtension,
+    );
     const sortedValues = [...valueNames].sort();
 
     if (sortedValues.length > 0) {
@@ -331,6 +356,7 @@ interface EmitResolversCodeParams {
   readonly customScalars: ReadonlyArray<CollectedScalarType>;
   readonly numericEnums: ReadonlyArray<NumericEnumInfo>;
   readonly stringEnumMappings: ReadonlyArray<StringEnumMappingInfo>;
+  readonly importExtension: "js" | "none" | "ts";
 }
 
 export function emitResolversCode(params: EmitResolversCodeParams): string {
@@ -340,6 +366,7 @@ export function emitResolversCode(params: EmitResolversCodeParams): string {
     customScalars,
     numericEnums,
     stringEnumMappings,
+    importExtension,
   } = params;
   const hasCustomScalars = customScalars.length > 0;
   const imports: string[] = [];
@@ -349,11 +376,17 @@ export function emitResolversCode(params: EmitResolversCodeParams): string {
   }
 
   const importsByFile = collectResolverImportsByFile(resolverInfo);
-  imports.push(...buildResolverImports(importsByFile, outputDir));
+  imports.push(
+    ...buildResolverImports(importsByFile, outputDir, importExtension),
+  );
 
   if (hasCustomScalars) {
     const scalarTypeImports = collectScalarTypeImports(customScalars);
-    const scalarImports = buildScalarTypeImports(scalarTypeImports, outputDir);
+    const scalarImports = buildScalarTypeImports(
+      scalarTypeImports,
+      outputDir,
+      importExtension,
+    );
     imports.push(...scalarImports);
   }
 

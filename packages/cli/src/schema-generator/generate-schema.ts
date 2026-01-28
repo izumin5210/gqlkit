@@ -33,6 +33,7 @@ export interface GenerateSchemaInput {
   readonly enablePruning: boolean | null;
   readonly sourceRoot: string | null;
   readonly knownTypeNames: ReadonlySet<string> | null;
+  readonly importExtension: "js" | "none" | "ts";
 }
 
 export interface GenerateSchemaResult {
@@ -58,6 +59,7 @@ export function generateSchema(
     enablePruning,
     sourceRoot,
     knownTypeNames,
+    importExtension,
   } = input;
 
   const autoTypeResult = generateAutoTypes({
@@ -248,6 +250,7 @@ export function generateSchema(
     customScalars: customScalars ?? [],
     numericEnums: integratedResult.numericEnums,
     stringEnumMappings: integratedResult.stringEnumMappings,
+    importExtension,
   });
 
   return {

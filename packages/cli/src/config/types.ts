@@ -29,6 +29,15 @@ export interface OutputConfig {
    * @default "src/gqlkit/__generated__/schema.graphql"
    */
   readonly schemaPath?: string | null;
+
+  /**
+   * File extension to use in generated import statements.
+   * - "js": Convert .ts to .js (default, compatible with ESM + Node16)
+   * - "none": No extension (for bundlers)
+   * - "ts": Keep .ts extension (for Deno)
+   * @default "js"
+   */
+  readonly importExtension?: "js" | "none" | "ts";
 }
 
 /**

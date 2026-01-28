@@ -704,6 +704,7 @@ function generateSchemaStep(ctx: PipelineContext): {
     enablePruning: null,
     sourceRoot: ctx.config.cwd,
     knownTypeNames: ctx.knownTypeNames,
+    importExtension: ctx.config.output.importExtension,
   });
 
   const newDiagnostics = [...ctx.diagnostics, ...schemaResult.diagnostics];

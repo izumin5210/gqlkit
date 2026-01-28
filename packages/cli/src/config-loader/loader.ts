@@ -27,6 +27,8 @@ export interface ResolvedOutputConfig {
   readonly typeDefsPath: string | null;
   /** Schema SDL output path. Null suppresses output */
   readonly schemaPath: string | null;
+  /** File extension for imports. Default: "js" */
+  readonly importExtension: "js" | "none" | "ts";
 }
 
 /**
@@ -64,6 +66,7 @@ const DEFAULT_OUTPUT_CONFIG: ResolvedOutputConfig = {
   resolversPath: DEFAULT_RESOLVERS_PATH,
   typeDefsPath: DEFAULT_TYPEDEFS_PATH,
   schemaPath: DEFAULT_SCHEMA_PATH,
+  importExtension: "js",
 };
 
 const DEFAULT_HOOKS_CONFIG: ResolvedHooksConfig = {
