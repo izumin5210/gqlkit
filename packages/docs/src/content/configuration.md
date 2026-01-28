@@ -40,6 +40,8 @@ export default defineConfig({
     schemaPath: "src/gqlkit/__generated__/schema.graphql",
     // Set to null to disable output:
     // schemaPath: null,
+    // Import extension in generated files (default: "js")
+    // importExtension: "none", // for bundlers
   },
 
   // Hooks
@@ -89,8 +91,15 @@ export default defineConfig({
 | `typeDefsPath` | `string` \| `null` | `"src/gqlkit/__generated__/typeDefs.ts"` | Path for the TypeDefs output |
 | `resolversPath` | `string` \| `null` | `"src/gqlkit/__generated__/resolvers.ts"` | Path for the resolvers output |
 | `schemaPath` | `string` \| `null` | `"src/gqlkit/__generated__/schema.graphql"` | Path for the SDL output |
+| `importExtension` | `"js"` \| `"none"` \| `"ts"` | `"js"` | File extension for import statements |
 
 Set any path to `null` to disable that output.
+
+The `importExtension` option controls file extensions in generated import statements:
+
+- `"js"` (default): Converts `.ts` to `.js` (compatible with ESM + Node16)
+- `"none"`: No extension (for bundlers like webpack, vite)
+- `"ts"`: Keeps `.ts` extension (for Deno)
 
 ## Hooks
 
