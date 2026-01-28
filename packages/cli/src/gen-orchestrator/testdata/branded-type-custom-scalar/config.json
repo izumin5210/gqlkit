@@ -2,11 +2,11 @@
   "scalars": [
     {
       "name": "UserID",
-      "tsType": { "name": "UserId" }
+      "tsType": { "name": "UserId", "from": "./scalars" }
     },
     {
       "name": "Price",
-      "tsType": { "name": "ProductPrice" }
+      "tsType": { "name": "ProductPrice", "from": "./scalars" }
     }
   ]
 }
