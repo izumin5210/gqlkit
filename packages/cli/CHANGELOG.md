@@ -1,5 +1,17 @@
 # @gqlkit-ts/cli
 
+## 0.4.0
+
+### Minor Changes
+
+- [#134](https://github.com/izumin5210/gqlkit/pull/134) [`37623b6`](https://github.com/izumin5210/gqlkit/commit/37623b6100e5fa6e7e111b8dfdb2ad8a12375fb8) Thanks [@izumin5210](https://github.com/izumin5210)! - Add `output.importExtension` config option to control file extensions in generated imports
+
+### Patch Changes
+
+- [#135](https://github.com/izumin5210/gqlkit/pull/135) [`20779e1`](https://github.com/izumin5210/gqlkit/commit/20779e124dd0265a879bbc014d321f4c72cd4b1e) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: add branded type handling for intersection types
+
+- [#132](https://github.com/izumin5210/gqlkit/pull/132) [`315d56c`](https://github.com/izumin5210/gqlkit/commit/315d56c1d5ea5c0e2e0e4eabeceeab529bc98545) Thanks [@izumin5210](https://github.com/izumin5210)! - Refactor internal types to use explicit type references instead of inline declarations
+
 ## 0.3.0
 
 ### Minor Changes
