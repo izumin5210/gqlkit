@@ -1,0 +1,12 @@
+[
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Field '__brand' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 21,
+      "column": 55
+    }
+  }
+]

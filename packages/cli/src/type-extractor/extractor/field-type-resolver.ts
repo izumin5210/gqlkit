@@ -1,4 +1,8 @@
 import ts from "typescript";
+import {
+  detectBrandedType,
+  detectUniformBrandedType,
+} from "../../shared/branded-type-detector.js";
 import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } from "../../shared/inline-object-extractor.js";
 import { isInlineObjectType } from "../../shared/inline-object-utils.js";
@@ -175,6 +179,20 @@ function resolveFieldTypeInternal(
       });
     }
 
+    // Check if all non-null types are branded primitives with the same base type
+    // This handles cases like: boolean & { __nominal: true }
+    // which expands to: (true & { __nominal: true }) | (false & { __nominal: true })
+    const uniformBrandedResult = detectUniformBrandedType(nonNullTypes);
+    if (
+      uniformBrandedResult.isBranded &&
+      uniformBrandedResult.baseType !== null
+    ) {
+      return createPrimitiveType({
+        name: uniformBrandedResult.baseType,
+        nullable,
+      });
+    }
+
     if (nonNullTypes.length === 1) {
       const nonNullTypeNode =
         typeNode && ts.isUnionTypeNode(typeNode)
@@ -235,18 +253,45 @@ function resolveFieldTypeInternal(
     return createLiteralType(typeString);
   }
 
-  // Intersection types in field context are ALWAYS treated as inline objects
-  // GraphQL doesn't have intersection types, so we must expand them
+  // Intersection types in field context
+  // GraphQL doesn't have intersection types, so we must resolve them appropriately
   if (type.isIntersection()) {
-    // If the intersection has an alias that's in knownTypeNames, use it
+    // 1. If the intersection has an alias that's in knownTypeNames, use it as reference
     if (type.aliasSymbol) {
       const aliasName = type.aliasSymbol.getName();
       if (isKnownSchemaType(aliasName, type.aliasSymbol, ctx)) {
         return createReferenceType({ name: aliasName, nullable: false });
       }
+
+      // 2. Check if aliasSymbol has a globalTypeMapping (custom scalar)
+      const globalMapping = globalTypeMappings.find(
+        (m) => m.typeName === aliasName,
+      );
+      if (globalMapping) {
+        return createScalarType({
+          name: globalMapping.scalarName,
+          scalarInfo: {
+            scalarName: globalMapping.scalarName,
+            typeName: globalMapping.typeName,
+            baseType: undefined,
+            isCustom: true,
+            only: globalMapping.only,
+          },
+          nullable: false,
+        });
+      }
     }
 
-    // Otherwise, treat as inline object
+    // 3. Check if this is a branded primitive type pattern
+    const brandedResult = detectBrandedType(type);
+    if (brandedResult.isBranded && brandedResult.baseType !== null) {
+      return createPrimitiveType({
+        name: brandedResult.baseType,
+        nullable: false,
+      });
+    }
+
+    // 4. Otherwise, treat as inline object
     return tryExtractAsInlineObject(type, ctx);
   }
 

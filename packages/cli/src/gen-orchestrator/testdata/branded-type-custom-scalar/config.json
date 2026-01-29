@@ -1,0 +1,12 @@
+{
+  "scalars": [
+    {
+      "name": "UserID",
+      "tsType": { "name": "UserId", "from": "./scalars" }
+    },
+    {
+      "name": "Price",
+      "tsType": { "name": "ProductPrice", "from": "./scalars" }
+    }
+  ]
+}
