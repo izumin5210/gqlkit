@@ -1,5 +1,3 @@
-import { dirname, join } from "node:path";
-import { fileURLToPath } from "node:url";
 import { vol } from "memfs";
 import { beforeEach, describe, expect, it, vi } from "vitest";
 
@@ -10,16 +8,17 @@ vi.mock("node:fs/promises", async () => {
 
 import { runDocsCommand } from "./docs.js";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const CLI_DOCS_DIR = join(__dirname, "../../docs");
+function normalizePath(p: string): string {
+  return p.replace(/\\/g, "/");
+}
 
 function normalizePaths(paths: string[]): string[] {
-  return paths.map((p) => p.replace(/\\/g, "/"));
+  return paths.map(normalizePath);
 }
 
 function setupVolume(files: Record<string, string>): void {
   vol.fromJSON({
-    [`${CLI_DOCS_DIR}/index.md`]: "# Docs",
+    "/project/node_modules/@gqlkit-ts/cli/docs/index.md": "# Docs",
     ...files,
   });
 }
@@ -312,8 +311,72 @@ describe("docs command", () => {
     });
   });
 
-  describe("docs directory validation", () => {
-    it("should return exit code 1 when docs directory is missing", async () => {
+  describe("node_modules docs discovery", () => {
+    it("should find docs in project root node_modules", async () => {
+      setupVolume({
+        "/project/.gitkeep": "",
+      });
+
+      const result = await runDocsCommand({
+        output: "/project",
+        claude: true,
+        codex: false,
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(normalizePaths(result.filesWritten)).toContain(
+        "/project/.claude/skills/gqlkit-guide/references",
+      );
+    });
+
+    it("should find docs in monorepo root node_modules (hoisted)", async () => {
+      vol.fromJSON({
+        "/mono/node_modules/@gqlkit-ts/cli/docs/index.md": "# Docs",
+        "/mono/packages/app/.gitkeep": "",
+      });
+
+      const result = await runDocsCommand({
+        output: "/mono/packages/app",
+        claude: true,
+        codex: false,
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(normalizePaths(result.filesWritten)).toContain(
+        "/mono/packages/app/.claude/skills/gqlkit-guide/references",
+      );
+    });
+
+    it("should prefer nearest node_modules in monorepo", async () => {
+      vol.fromJSON({
+        "/mono/node_modules/@gqlkit-ts/cli/docs/index.md": "# Root Docs",
+        "/mono/packages/app/node_modules/@gqlkit-ts/cli/docs/index.md":
+          "# App Docs",
+        "/mono/packages/app/.gitkeep": "",
+      });
+
+      const result = await runDocsCommand({
+        output: "/mono/packages/app",
+        claude: true,
+        codex: false,
+      });
+
+      expect(result.exitCode).toBe(0);
+      expect(normalizePaths(result.filesWritten)).toContain(
+        "/mono/packages/app/.claude/skills/gqlkit-guide/references",
+      );
+
+      const symlinkTarget = vol.readlinkSync(
+        "/mono/packages/app/.claude/skills/gqlkit-guide/references",
+      );
+      // Relative path to nearest node_modules: ../../../node_modules/...
+      // If it used root node_modules, it would be ../../../../../../node_modules/...
+      expect(normalizePath(symlinkTarget.toString())).toBe(
+        "../../../node_modules/@gqlkit-ts/cli/docs",
+      );
+    });
+
+    it("should return exit code 1 when node_modules docs not found", async () => {
       vol.fromJSON({
         "/project/CLAUDE.md": "# Project",
       });
