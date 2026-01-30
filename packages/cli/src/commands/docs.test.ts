@@ -8,8 +8,12 @@ vi.mock("node:fs/promises", async () => {
 
 import { runDocsCommand } from "./docs.js";
 
+function normalizePath(p: string): string {
+  return p.replace(/\\/g, "/");
+}
+
 function normalizePaths(paths: string[]): string[] {
-  return paths.map((p) => p.replace(/\\/g, "/"));
+  return paths.map(normalizePath);
 }
 
 function setupVolume(files: Record<string, string>): void {
@@ -367,7 +371,9 @@ describe("docs command", () => {
       );
       // Relative path to nearest node_modules: ../../../node_modules/...
       // If it used root node_modules, it would be ../../../../../../node_modules/...
-      expect(symlinkTarget).toBe("../../../node_modules/@gqlkit-ts/cli/docs");
+      expect(normalizePath(symlinkTarget.toString())).toBe(
+        "../../../node_modules/@gqlkit-ts/cli/docs",
+      );
     });
 
     it("should return exit code 1 when node_modules docs not found", async () => {
