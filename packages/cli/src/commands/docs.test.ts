@@ -361,6 +361,13 @@ describe("docs command", () => {
       expect(normalizePaths(result.filesWritten)).toContain(
         "/mono/packages/app/.claude/skills/gqlkit-guide/references",
       );
+
+      const symlinkTarget = vol.readlinkSync(
+        "/mono/packages/app/.claude/skills/gqlkit-guide/references",
+      );
+      // Relative path to nearest node_modules: ../../../node_modules/...
+      // If it used root node_modules, it would be ../../../../../../node_modules/...
+      expect(symlinkTarget).toBe("../../../node_modules/@gqlkit-ts/cli/docs");
     });
 
     it("should return exit code 1 when node_modules docs not found", async () => {

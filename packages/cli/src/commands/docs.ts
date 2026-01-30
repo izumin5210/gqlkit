@@ -1,5 +1,5 @@
 import { access, mkdir, readFile, symlink, writeFile } from "node:fs/promises";
-import { dirname, join, parse, relative } from "node:path";
+import { dirname, join, parse, relative, resolve } from "node:path";
 import { define } from "gunshi";
 
 const SKILL_NAME = "gqlkit-guide";
@@ -27,7 +27,7 @@ async function exists(path: string): Promise<boolean> {
 async function findNodeModulesDocsPath(
   startDir: string,
 ): Promise<string | null> {
-  let currentDir = startDir;
+  let currentDir = resolve(startDir);
   const root = parse(currentDir).root;
 
   while (currentDir !== root) {
@@ -35,7 +35,11 @@ async function findNodeModulesDocsPath(
     if (await exists(candidate)) {
       return candidate;
     }
-    currentDir = dirname(currentDir);
+    const parent = dirname(currentDir);
+    if (parent === currentDir) {
+      break;
+    }
+    currentDir = parent;
   }
 
   return null;
@@ -141,7 +145,7 @@ async function generateToolFiles(
   const docsPath = await findNodeModulesDocsPath(skillDir);
   if (docsPath === null) {
     throw new Error(
-      "Could not find @gqlkit-ts/cli docs directory in node_modules. " +
+      `Could not find @gqlkit-ts/cli docs directory under node_modules (starting from ${resolve(skillDir)}). ` +
         "Ensure @gqlkit-ts/cli is installed.",
     );
   }
@@ -193,7 +197,9 @@ export async function runDocsCommand(
       );
     }
   } catch (error) {
-    console.error((error as Error).message);
+    console.error(
+      error instanceof Error ? (error.stack ?? error.message) : String(error),
+    );
     return { exitCode: 1, filesWritten: [] };
   }
 
