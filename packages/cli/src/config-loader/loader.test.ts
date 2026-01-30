@@ -17,7 +17,7 @@ describe("ConfigLoader", () => {
 
   describe("loadConfig", () => {
     it("should return default config when gqlkit.config.ts does not exist", async () => {
-      const result = await loadConfig({ cwd: tempDir });
+      const result = await loadConfig({ cwd: tempDir, configPath: null });
 
       expect(result.configPath).toBe(undefined);
       expect(result.config).toEqual({
@@ -50,7 +50,7 @@ export default {
 `;
       fs.writeFileSync(path.join(tempDir, "gqlkit.config.ts"), configContent);
 
-      const result = await loadConfig({ cwd: tempDir });
+      const result = await loadConfig({ cwd: tempDir, configPath: null });
 
       expect(result.configPath).toBe(path.join(tempDir, "gqlkit.config.ts"));
       expect(result.config.scalars.length).toBe(1);
@@ -72,7 +72,7 @@ export default {
 `;
       fs.writeFileSync(path.join(tempDir, "gqlkit.config.ts"), configContent);
 
-      const result = await loadConfig({ cwd: tempDir });
+      const result = await loadConfig({ cwd: tempDir, configPath: null });
 
       expect(result.config.scalars.length).toBe(3);
       expect(result.config.scalars[0]?.graphqlName).toBe("DateTime");
@@ -91,7 +91,7 @@ export default {
 `;
       fs.writeFileSync(path.join(tempDir, "gqlkit.config.ts"), configContent);
 
-      const result = await loadConfig({ cwd: tempDir });
+      const result = await loadConfig({ cwd: tempDir, configPath: null });
 
       expect(result.diagnostics.length).toBe(1);
       expect(result.diagnostics[0]?.code).toBe("CONFIG_SYNTAX_ERROR");
@@ -108,7 +108,7 @@ export default {
 `;
       fs.writeFileSync(path.join(tempDir, "gqlkit.config.ts"), configContent);
 
-      const result = await loadConfig({ cwd: tempDir });
+      const result = await loadConfig({ cwd: tempDir, configPath: null });
 
       expect(result.config.scalars.length).toBe(1);
       expect(result.config.scalars[0]?.graphqlName).toBe("DateTime");
@@ -120,7 +120,7 @@ export default {};
 `;
       fs.writeFileSync(path.join(tempDir, "gqlkit.config.ts"), configContent);
 
-      const result = await loadConfig({ cwd: tempDir });
+      const result = await loadConfig({ cwd: tempDir, configPath: null });
 
       expect(result.config).toEqual({
         sourceDir: "src/gqlkit/schema",
@@ -136,6 +136,78 @@ export default {};
           afterAllFileWrite: [],
         },
       });
+      expect(result.diagnostics.length).toBe(0);
+    });
+  });
+
+  describe("loadConfig with configPath", () => {
+    it("should load config from specified relative path", async () => {
+      const configContent = `
+export default {
+  sourceDir: "custom/schema",
+};
+`;
+      fs.mkdirSync(path.join(tempDir, "configs"));
+      fs.writeFileSync(
+        path.join(tempDir, "configs", "custom.config.ts"),
+        configContent,
+      );
+
+      const result = await loadConfig({
+        cwd: tempDir,
+        configPath: "configs/custom.config.ts",
+      });
+
+      expect(result.configPath).toBe(
+        path.join(tempDir, "configs", "custom.config.ts"),
+      );
+      expect(result.config.sourceDir).toBe("custom/schema");
+      expect(result.diagnostics.length).toBe(0);
+    });
+
+    it("should load config from specified absolute path", async () => {
+      const configContent = `
+export default {
+  sourceDir: "absolute/schema",
+};
+`;
+      const absolutePath = path.join(tempDir, "absolute.config.ts");
+      fs.writeFileSync(absolutePath, configContent);
+
+      const result = await loadConfig({
+        cwd: tempDir,
+        configPath: absolutePath,
+      });
+
+      expect(result.configPath).toBe(absolutePath);
+      expect(result.config.sourceDir).toBe("absolute/schema");
+      expect(result.diagnostics.length).toBe(0);
+    });
+
+    it("should return error diagnostic when specified config file does not exist", async () => {
+      const result = await loadConfig({
+        cwd: tempDir,
+        configPath: "nonexistent.config.ts",
+      });
+
+      expect(result.diagnostics.length).toBe(1);
+      expect(result.diagnostics[0]?.code).toBe("CONFIG_FILE_NOT_FOUND");
+      expect(result.diagnostics[0]?.severity).toBe("error");
+      expect(result.diagnostics[0]?.message).toContain("nonexistent.config.ts");
+    });
+
+    it("should fall back to auto-discovery when configPath is null", async () => {
+      const configContent = `
+export default {
+  sourceDir: "auto/schema",
+};
+`;
+      fs.writeFileSync(path.join(tempDir, "gqlkit.config.ts"), configContent);
+
+      const result = await loadConfig({ cwd: tempDir, configPath: null });
+
+      expect(result.configPath).toBe(path.join(tempDir, "gqlkit.config.ts"));
+      expect(result.config.sourceDir).toBe("auto/schema");
       expect(result.diagnostics.length).toBe(0);
     });
   });

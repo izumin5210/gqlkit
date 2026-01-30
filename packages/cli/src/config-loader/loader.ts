@@ -1,11 +1,12 @@
 import { existsSync } from "node:fs";
-import { join } from "node:path";
+import { isAbsolute, join } from "node:path";
 import { createJiti } from "jiti";
 import type { Diagnostic } from "../type-extractor/types/index.js";
 import { validateConfig } from "./validator.js";
 
 export interface LoadConfigOptions {
   readonly cwd: string;
+  readonly configPath: string | null;
 }
 
 export interface ResolvedScalarMapping {
@@ -82,9 +83,35 @@ const DEFAULT_RESOLVED_CONFIG: ResolvedConfig = {
 export async function loadConfig(
   options: LoadConfigOptions,
 ): Promise<LoadConfigResult> {
-  const configPath = join(options.cwd, CONFIG_FILE_NAME);
+  const configPath = resolveConfigPath(options);
+
+  if (configPath === null) {
+    return {
+      config: DEFAULT_RESOLVED_CONFIG,
+      configPath: undefined,
+      diagnostics: [],
+    };
+  }
 
   if (!existsSync(configPath)) {
+    if (options.configPath !== null) {
+      return {
+        config: DEFAULT_RESOLVED_CONFIG,
+        configPath,
+        diagnostics: [
+          {
+            code: "CONFIG_FILE_NOT_FOUND",
+            message: `Config file not found: ${configPath}`,
+            severity: "error",
+            location: {
+              file: configPath,
+              line: 1,
+              column: 1,
+            },
+          },
+        ],
+      };
+    }
     return {
       config: DEFAULT_RESOLVED_CONFIG,
       configPath: undefined,
@@ -140,4 +167,18 @@ export async function loadConfig(
       ],
     };
   }
+}
+
+function resolveConfigPath(options: LoadConfigOptions): string | null {
+  if (options.configPath !== null) {
+    if (isAbsolute(options.configPath)) {
+      return options.configPath;
+    }
+    return join(options.cwd, options.configPath);
+  }
+  const defaultPath = join(options.cwd, CONFIG_FILE_NAME);
+  if (existsSync(defaultPath)) {
+    return defaultPath;
+  }
+  return null;
 }

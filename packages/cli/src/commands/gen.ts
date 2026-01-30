@@ -12,6 +12,7 @@ import { createProgressReporter } from "../gen-orchestrator/reporter/progress-re
 
 export interface RunGenCommandOptions {
   readonly cwd: string;
+  readonly configPath: string | null;
 }
 
 export interface RunGenCommandResult {
@@ -29,7 +30,10 @@ export async function runGenCommand(
   const progressReporter = createProgressReporter(writer);
   const diagnosticReporter = createDiagnosticReporter(writer);
 
-  const configResult = await loadConfig({ cwd: options.cwd });
+  const configResult = await loadConfig({
+    cwd: options.cwd,
+    configPath: options.configPath,
+  });
 
   if (configResult.diagnostics.length > 0) {
     diagnosticReporter.reportDiagnostics(configResult.diagnostics);
@@ -130,10 +134,16 @@ export const genCommand = define({
       type: "string",
       description: "Working directory for code generation",
     },
+    config: {
+      type: "string",
+      short: "c",
+      description: "Path to config file",
+    },
   },
   run: async (ctx) => {
     const cwd = ctx.values.cwd ?? process.cwd();
-    const result = await runGenCommand({ cwd });
+    const configPath = ctx.values.config ?? null;
+    const result = await runGenCommand({ cwd, configPath });
     if (result.exitCode !== 0) {
       process.exitCode = result.exitCode;
     }

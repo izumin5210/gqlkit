@@ -7,6 +7,30 @@ description: Configure gqlkit via gqlkit.config.ts in your project root.
 
 gqlkit can be configured via `gqlkit.config.ts` in your project root.
 
+## CLI Options
+
+The `gqlkit gen` command accepts the following options:
+
+| Option | Short | Description |
+|--------|-------|-------------|
+| `--config <path>` | `-c` | Path to config file (default: `gqlkit.config.ts`) |
+| `--cwd <path>` | | Working directory for code generation |
+
+### Using Multiple Config Files
+
+You can use different config files for different GraphQL schemas:
+
+```sh
+# Generate with default config (gqlkit.config.ts)
+gqlkit gen
+
+# Generate with a specific config file
+gqlkit gen --config gqlkit.public.config.ts
+gqlkit gen -c gqlkit.admin.config.ts
+```
+
+This is useful when you need to generate multiple GraphQL schemas from the same project, such as separate public and internal APIs.
+
 ## Basic Configuration
 
 ```ts

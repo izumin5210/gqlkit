@@ -52,7 +52,7 @@ describe("gen command", () => {
 
   describe("error handling", () => {
     it("should return exit code 1 when source directory is missing", async () => {
-      const result = await runGenCommand({ cwd: testDir });
+      const result = await runGenCommand({ cwd: testDir, configPath: null });
 
       expect(result.exitCode).toBe(1);
     });
@@ -66,7 +66,7 @@ describe("gen command", () => {
         };
       `);
 
-      const result = await runGenCommand({ cwd: testDir });
+      const result = await runGenCommand({ cwd: testDir, configPath: null });
 
       expect(result.exitCode).toBe(0);
     });
@@ -78,7 +78,7 @@ describe("gen command", () => {
         // invalid syntax
       `);
 
-      const result = await runGenCommand({ cwd: testDir });
+      const result = await runGenCommand({ cwd: testDir, configPath: null });
 
       expect(result.exitCode).toBe(1);
     });
@@ -95,7 +95,7 @@ describe("gen command", () => {
         };
       `);
 
-      const result = await runGenCommand({ cwd: testDir });
+      const result = await runGenCommand({ cwd: testDir, configPath: null });
 
       expect(result.exitCode).toBe(1);
     });
@@ -147,7 +147,7 @@ describe("gen command", () => {
         "utf-8",
       );
 
-      const result = await runGenCommand({ cwd: testDir });
+      const result = await runGenCommand({ cwd: testDir, configPath: null });
 
       expect(result.exitCode).toBe(0);
       const typeDefsPath = join(
@@ -162,6 +162,87 @@ describe("gen command", () => {
     });
   });
 
+  describe("--config option", () => {
+    it("should load config from specified path", async () => {
+      await setupProject();
+
+      const configDir = join(testDir, "configs");
+      await mkdir(configDir, { recursive: true });
+      await writeFile(
+        join(configDir, "custom.config.ts"),
+        `export default { scalars: [] };`,
+        "utf-8",
+      );
+
+      const result = await runGenCommand({
+        cwd: testDir,
+        configPath: "configs/custom.config.ts",
+      });
+
+      expect(result.exitCode).toBe(0);
+    });
+
+    it("should return exit code 1 when specified config file does not exist", async () => {
+      await setupProject();
+
+      const result = await runGenCommand({
+        cwd: testDir,
+        configPath: "nonexistent.config.ts",
+      });
+
+      expect(result.exitCode).toBe(1);
+    });
+
+    it("should use config settings from specified file", async () => {
+      const customSourceDir = join(testDir, "custom/schema");
+      await mkdir(customSourceDir, { recursive: true });
+
+      await writeFile(
+        join(customSourceDir, "types.ts"),
+        "export interface CustomType { id: string; }",
+        "utf-8",
+      );
+
+      await writeFile(
+        join(customSourceDir, "resolvers.ts"),
+        `
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          import type { CustomType } from "./types.js";
+          type Context = unknown;
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const custom = defineQuery<NoArgs, CustomType[]>(() => []);
+        `,
+        "utf-8",
+      );
+
+      await writeFile(
+        join(testDir, "custom.config.ts"),
+        `
+          export default {
+            sourceDir: "custom/schema",
+            output: {
+              resolversPath: "custom/__generated__/resolvers.ts",
+              typeDefsPath: "custom/__generated__/typeDefs.ts",
+              schemaPath: "custom/__generated__/schema.graphql",
+            },
+          };
+        `,
+        "utf-8",
+      );
+
+      const result = await runGenCommand({
+        cwd: testDir,
+        configPath: "custom.config.ts",
+      });
+
+      expect(result.exitCode).toBe(0);
+
+      const typeDefsPath = join(testDir, "custom/__generated__/typeDefs.ts");
+      const content = await readFile(typeDefsPath, "utf-8");
+      expect(content).toContain("CustomType");
+    });
+  });
+
   describe("hooks integration", () => {
     it("should execute hooks after file generation", async () => {
       await setupProjectWithConfig(`
@@ -172,7 +253,7 @@ describe("gen command", () => {
         };
       `);
 
-      const result = await runGenCommand({ cwd: testDir });
+      const result = await runGenCommand({ cwd: testDir, configPath: null });
 
       expect(result.exitCode).toBe(0);
     });
@@ -189,7 +270,7 @@ describe("gen command", () => {
         };
       `);
 
-      const result = await runGenCommand({ cwd: testDir });
+      const result = await runGenCommand({ cwd: testDir, configPath: null });
 
       expect(result.exitCode).toBe(0);
     });
@@ -206,7 +287,7 @@ describe("gen command", () => {
         };
       `);
 
-      const result = await runGenCommand({ cwd: testDir });
+      const result = await runGenCommand({ cwd: testDir, configPath: null });
 
       expect(result.exitCode).toBe(1);
     });
@@ -220,7 +301,7 @@ describe("gen command", () => {
         };
       `);
 
-      const result = await runGenCommand({ cwd: testDir });
+      const result = await runGenCommand({ cwd: testDir, configPath: null });
 
       expect(result.exitCode).toBe(1);
     });
@@ -239,7 +320,7 @@ describe("gen command", () => {
         };
       `);
 
-      const result = await runGenCommand({ cwd: testDir });
+      const result = await runGenCommand({ cwd: testDir, configPath: null });
 
       // Should succeed because hooks are skipped when no files are written
       expect(result.exitCode).toBe(0);
@@ -258,7 +339,7 @@ describe("gen command", () => {
         "utf-8",
       );
 
-      const result = await runGenCommand({ cwd: testDir });
+      const result = await runGenCommand({ cwd: testDir, configPath: null });
 
       // Should fail due to generation failure, not hook failure
       expect(result.exitCode).toBe(1);
@@ -271,7 +352,7 @@ describe("gen command", () => {
         };
       `);
 
-      const result = await runGenCommand({ cwd: testDir });
+      const result = await runGenCommand({ cwd: testDir, configPath: null });
 
       expect(result.exitCode).toBe(0);
     });
