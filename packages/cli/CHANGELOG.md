@@ -1,5 +1,11 @@
 # @gqlkit-ts/cli
 
+## 0.4.1
+
+### Patch Changes
+
+- [#138](https://github.com/izumin5210/gqlkit/pull/138) [`d7fb677`](https://github.com/izumin5210/gqlkit/commit/d7fb6770c4ad8aabaa68c8436527d1a5f0c48906) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: improve docs symlink to discover node_modules by walking up directories
+
 ## 0.4.0
 
 ### Minor Changes
