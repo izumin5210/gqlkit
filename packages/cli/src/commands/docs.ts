@@ -1,10 +1,7 @@
 import { access, mkdir, readFile, symlink, writeFile } from "node:fs/promises";
-import { dirname, join, relative } from "node:path";
-import { fileURLToPath } from "node:url";
+import { dirname, join, parse, relative } from "node:path";
 import { define } from "gunshi";
 
-const __dirname = dirname(fileURLToPath(import.meta.url));
-const CLI_DOCS_DIR = join(__dirname, "../../docs");
 const SKILL_NAME = "gqlkit-guide";
 
 export interface RunDocsCommandOptions {
@@ -25,6 +22,23 @@ async function exists(path: string): Promise<boolean> {
   } catch {
     return false;
   }
+}
+
+async function findNodeModulesDocsPath(
+  startDir: string,
+): Promise<string | null> {
+  let currentDir = startDir;
+  const root = parse(currentDir).root;
+
+  while (currentDir !== root) {
+    const candidate = join(currentDir, "node_modules/@gqlkit-ts/cli/docs");
+    if (await exists(candidate)) {
+      return candidate;
+    }
+    currentDir = dirname(currentDir);
+  }
+
+  return null;
 }
 
 async function detectClaudeEnvironment(dir: string): Promise<boolean> {
@@ -124,8 +138,16 @@ async function generateToolFiles(
   await writeFile(skillMdPath, generateSkillMd());
   filesWritten.push(skillMdPath);
 
+  const docsPath = await findNodeModulesDocsPath(skillDir);
+  if (docsPath === null) {
+    throw new Error(
+      "Could not find @gqlkit-ts/cli docs directory in node_modules. " +
+        "Ensure @gqlkit-ts/cli is installed.",
+    );
+  }
+
   const referencesPath = join(skillDir, "references");
-  const relativePath = relative(skillDir, CLI_DOCS_DIR);
+  const relativePath = relative(skillDir, docsPath);
   await createSymlinkIfNotExists(referencesPath, relativePath);
   filesWritten.push(referencesPath);
 
@@ -137,13 +159,6 @@ async function generateToolFiles(
 export async function runDocsCommand(
   options: RunDocsCommandOptions,
 ): Promise<RunDocsCommandResult> {
-  if (!(await exists(CLI_DOCS_DIR))) {
-    console.error(
-      `Documentation directory not found: ${CLI_DOCS_DIR}\nRun "pnpm build" to generate documentation files.`,
-    );
-    return { exitCode: 1, filesWritten: [] };
-  }
-
   const filesWritten: string[] = [];
 
   const autoDetect = !options.claude && !options.codex;
@@ -161,20 +176,25 @@ export async function runDocsCommand(
     return { exitCode: 0, filesWritten: [] };
   }
 
-  if (generateClaude) {
-    await generateToolFiles(
-      options.output,
-      { configDir: ".claude", rulesFile: "CLAUDE.md" },
-      filesWritten,
-    );
-  }
+  try {
+    if (generateClaude) {
+      await generateToolFiles(
+        options.output,
+        { configDir: ".claude", rulesFile: "CLAUDE.md" },
+        filesWritten,
+      );
+    }
 
-  if (generateCodex) {
-    await generateToolFiles(
-      options.output,
-      { configDir: ".codex", rulesFile: "AGENTS.md" },
-      filesWritten,
-    );
+    if (generateCodex) {
+      await generateToolFiles(
+        options.output,
+        { configDir: ".codex", rulesFile: "AGENTS.md" },
+        filesWritten,
+      );
+    }
+  } catch (error) {
+    console.error((error as Error).message);
+    return { exitCode: 1, filesWritten: [] };
   }
 
   return { exitCode: 0, filesWritten };
