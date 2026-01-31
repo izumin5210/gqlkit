@@ -1,5 +1,5 @@
 export default {
-  index: "Overview",
+  conventions: "Conventions",
   "-- Core": {
     type: "separator",
     title: "Core",
