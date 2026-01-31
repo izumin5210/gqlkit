@@ -1,0 +1,47 @@
+---
+title: Integrations
+description: Learn how to integrate gqlkit with popular GraphQL servers and ORMs.
+asIndexPage: true
+---
+
+import { IndexCards } from '../../components/index-cards'
+
+# Integrations
+
+gqlkit integrates with popular GraphQL servers and ORMs.
+
+## GraphQL Servers
+
+<IndexCards
+  items={[
+    {
+      title: "graphql-yoga",
+      description: "A batteries-included GraphQL server that works in any JavaScript runtime.",
+      href: "/integration/yoga",
+    },
+    {
+      title: "Apollo Server",
+      description: "A popular GraphQL server with extensive features and ecosystem.",
+      href: "/integration/apollo",
+    },
+  ]}
+/>
+
+## External Models
+
+Use your existing ORM models as GraphQL types.
+
+<IndexCards
+  items={[
+    {
+      title: "Drizzle ORM",
+      description: "Derive GraphQL types from Drizzle table definitions.",
+      href: "/integration/drizzle",
+    },
+    {
+      title: "Prisma",
+      description: "Derive GraphQL types from Prisma model types.",
+      href: "/integration/prisma",
+    },
+  ]}
+/>
