@@ -192,18 +192,14 @@ function makeResolverLocalName(parentType: string, fieldName: string): string {
  * Collects resolver imports with unique aliases.
  * All imports use the pattern <Parent>$<field> to guarantee uniqueness.
  */
-function collectResolverImports(resolverInfo: ResolverInfo): {
-  importsByFile: Map<string, ResolverImportInfo[]>;
-  localNameLookup: Map<string, string>;
-} {
+function collectResolverImports(
+  resolverInfo: ResolverInfo,
+): Map<string, ResolverImportInfo[]> {
   const importsByFile = new Map<string, ResolverImportInfo[]>();
-  const localNameLookup = new Map<string, string>();
 
   for (const type of resolverInfo.types) {
     for (const field of type.fields) {
       const localName = makeResolverLocalName(type.typeName, field.fieldName);
-      const lookupKey = `${type.typeName}$${field.fieldName}`;
-      localNameLookup.set(lookupKey, localName);
 
       const infos = importsByFile.get(field.sourceFile) ?? [];
       infos.push({ originalName: field.resolverValueName, localName });
@@ -216,15 +212,13 @@ function collectResolverImports(resolverInfo: ResolverInfo): {
       abstractResolver.typeName,
       abstractResolver.resolverKey,
     );
-    const lookupKey = `${abstractResolver.typeName}$${abstractResolver.resolverKey}`;
-    localNameLookup.set(lookupKey, localName);
 
     const infos = importsByFile.get(abstractResolver.sourceFile) ?? [];
     infos.push({ originalName: abstractResolver.exportName, localName });
     importsByFile.set(abstractResolver.sourceFile, infos);
   }
 
-  return { importsByFile, localNameLookup };
+  return importsByFile;
 }
 
 function buildResolverImports(
@@ -264,11 +258,11 @@ function buildResolverImports(
 
 function buildAbstractOnlyTypeEntry(
   abstractResolver: AbstractTypeResolverInfo,
-  localNameLookup: Map<string, string>,
 ): string {
-  const lookupKey = `${abstractResolver.typeName}$${abstractResolver.resolverKey}`;
-  const localName =
-    localNameLookup.get(lookupKey) ?? abstractResolver.exportName;
+  const localName = makeResolverLocalName(
+    abstractResolver.typeName,
+    abstractResolver.resolverKey,
+  );
   return `    ${abstractResolver.typeName}: {\n      ${abstractResolver.resolverKey}: ${localName},\n    },`;
 }
 
@@ -303,13 +297,11 @@ function buildStringEnumResolvers(
 function buildTypeResolverEntry(
   type: TypeResolvers,
   abstractResolverForType: AbstractTypeResolverInfo | null,
-  localNameLookup: Map<string, string>,
 ): string {
   const entries: string[] = [];
 
   for (const field of type.fields) {
-    const lookupKey = `${type.typeName}$${field.fieldName}`;
-    const localName = localNameLookup.get(lookupKey) ?? field.resolverValueName;
+    const localName = makeResolverLocalName(type.typeName, field.fieldName);
 
     if (field.isDirectExport) {
       entries.push(`      ${field.fieldName}: ${localName},`);
@@ -321,9 +313,10 @@ function buildTypeResolverEntry(
   }
 
   if (abstractResolverForType !== null) {
-    const lookupKey = `${abstractResolverForType.typeName}$${abstractResolverForType.resolverKey}`;
-    const localName =
-      localNameLookup.get(lookupKey) ?? abstractResolverForType.exportName;
+    const localName = makeResolverLocalName(
+      abstractResolverForType.typeName,
+      abstractResolverForType.resolverKey,
+    );
     entries.push(`      ${abstractResolverForType.resolverKey}: ${localName},`);
   }
 
@@ -357,7 +350,6 @@ function buildAutoResolveTypeEntry(
 function buildTypeEntries(
   resolverInfo: ResolverInfo,
   customScalars: ReadonlyArray<CollectedScalarType>,
-  localNameLookup: Map<string, string>,
 ): string[] {
   const typeEntries: string[] = [];
   const hasCustomScalars = customScalars.length > 0;
@@ -394,16 +386,10 @@ function buildTypeEntries(
 
     if (typeWithFields !== undefined) {
       typeEntries.push(
-        buildTypeResolverEntry(
-          typeWithFields,
-          abstractResolver,
-          localNameLookup,
-        ),
+        buildTypeResolverEntry(typeWithFields, abstractResolver),
       );
     } else if (abstractResolver !== null) {
-      typeEntries.push(
-        buildAbstractOnlyTypeEntry(abstractResolver, localNameLookup),
-      );
+      typeEntries.push(buildAbstractOnlyTypeEntry(abstractResolver));
     } else if (autoResolveType !== undefined) {
       typeEntries.push(buildAutoResolveTypeEntry(autoResolveType));
     }
@@ -437,8 +423,7 @@ export function emitResolversCode(params: EmitResolversCodeParams): string {
     imports.push('import { GraphQLScalarType } from "graphql";');
   }
 
-  const { importsByFile, localNameLookup } =
-    collectResolverImports(resolverInfo);
+  const importsByFile = collectResolverImports(resolverInfo);
   imports.push(
     ...buildResolverImports(importsByFile, outputDir, importExtension),
   );
@@ -456,11 +441,7 @@ export function emitResolversCode(params: EmitResolversCodeParams): string {
   const numericEnumResolverEntries = buildNumericEnumResolvers(numericEnums);
   const stringEnumResolverEntries =
     buildStringEnumResolvers(stringEnumMappings);
-  const typeEntries = buildTypeEntries(
-    resolverInfo,
-    customScalars,
-    localNameLookup,
-  );
+  const typeEntries = buildTypeEntries(resolverInfo, customScalars);
 
   const allEntries = [
     ...numericEnumResolverEntries,
