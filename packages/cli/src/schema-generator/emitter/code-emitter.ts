@@ -190,16 +190,29 @@ function makeResolverLocalName(parentType: string, fieldName: string): string {
 
 /**
  * Collects resolver imports with unique aliases.
- * All imports use the pattern <Parent>$<field> to guarantee uniqueness.
+ * Uses the pattern <Parent>$<field> for alias names.
+ *
+ * Note: Uniqueness assumes no duplicate resolver definitions for the same
+ * (parentType, fieldName) pair. Duplicate field definitions are caught
+ * by GraphQL schema validation at build time.
  */
 function collectResolverImports(
   resolverInfo: ResolverInfo,
 ): Map<string, ResolverImportInfo[]> {
   const importsByFile = new Map<string, ResolverImportInfo[]>();
+  // Track seen localNames per file to avoid duplicate import specifiers
+  const seenByFile = new Map<string, Set<string>>();
 
   for (const type of resolverInfo.types) {
     for (const field of type.fields) {
       const localName = makeResolverLocalName(type.typeName, field.fieldName);
+
+      const seen = seenByFile.get(field.sourceFile) ?? new Set<string>();
+      if (seen.has(localName)) {
+        continue;
+      }
+      seen.add(localName);
+      seenByFile.set(field.sourceFile, seen);
 
       const infos = importsByFile.get(field.sourceFile) ?? [];
       infos.push({ originalName: field.resolverValueName, localName });
@@ -212,6 +225,14 @@ function collectResolverImports(
       abstractResolver.typeName,
       abstractResolver.resolverKey,
     );
+
+    const seen =
+      seenByFile.get(abstractResolver.sourceFile) ?? new Set<string>();
+    if (seen.has(localName)) {
+      continue;
+    }
+    seen.add(localName);
+    seenByFile.set(abstractResolver.sourceFile, seen);
 
     const infos = importsByFile.get(abstractResolver.sourceFile) ?? [];
     infos.push({ originalName: abstractResolver.exportName, localName });
