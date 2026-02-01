@@ -170,31 +170,80 @@ function buildScalarResolverEntries(
   );
 }
 
-function collectResolverImportsByFile(
+/**
+ * Information about a resolver import with a unique alias.
+ */
+interface ResolverImportInfo {
+  /** The original export name from the source file */
+  readonly originalName: string;
+  /** The unique local name using the pattern <Parent>$<field> */
+  readonly localName: string;
+}
+
+/**
+ * Creates a unique local name for a resolver import.
+ * Format: <ParentType>$<FieldName>
+ */
+function makeResolverLocalName(parentType: string, fieldName: string): string {
+  return `${parentType}$${fieldName}`;
+}
+
+/**
+ * Collects resolver imports with unique aliases.
+ * Uses the pattern <Parent>$<field> for alias names.
+ *
+ * Note: Uniqueness assumes no duplicate resolver definitions for the same
+ * (parentType, fieldName) pair. Duplicate field definitions are caught
+ * by GraphQL schema validation at build time.
+ */
+function collectResolverImports(
   resolverInfo: ResolverInfo,
-): Map<string, Set<string>> {
-  const importsByFile = new Map<string, Set<string>>();
+): Map<string, ResolverImportInfo[]> {
+  const importsByFile = new Map<string, ResolverImportInfo[]>();
+  // Track seen localNames per file to avoid duplicate import specifiers
+  const seenByFile = new Map<string, Set<string>>();
 
   for (const type of resolverInfo.types) {
     for (const field of type.fields) {
-      const existing = importsByFile.get(field.sourceFile) ?? new Set<string>();
-      existing.add(field.resolverValueName);
-      importsByFile.set(field.sourceFile, existing);
+      const localName = makeResolverLocalName(type.typeName, field.fieldName);
+
+      const seen = seenByFile.get(field.sourceFile) ?? new Set<string>();
+      if (seen.has(localName)) {
+        continue;
+      }
+      seen.add(localName);
+      seenByFile.set(field.sourceFile, seen);
+
+      const infos = importsByFile.get(field.sourceFile) ?? [];
+      infos.push({ originalName: field.resolverValueName, localName });
+      importsByFile.set(field.sourceFile, infos);
     }
   }
 
   for (const abstractResolver of resolverInfo.abstractTypeResolvers) {
-    const existing =
-      importsByFile.get(abstractResolver.sourceFile) ?? new Set<string>();
-    existing.add(abstractResolver.exportName);
-    importsByFile.set(abstractResolver.sourceFile, existing);
+    const localName = makeResolverLocalName(
+      abstractResolver.typeName,
+      abstractResolver.resolverKey,
+    );
+
+    const seen =
+      seenByFile.get(abstractResolver.sourceFile) ?? new Set<string>();
+    if (seen.has(localName)) {
+      continue;
+    }
+    seen.add(localName);
+    seenByFile.set(abstractResolver.sourceFile, seen);
+
+    const infos = importsByFile.get(abstractResolver.sourceFile) ?? [];
+    infos.push({ originalName: abstractResolver.exportName, localName });
+    importsByFile.set(abstractResolver.sourceFile, infos);
   }
 
   return importsByFile;
 }
 
 function buildResolverImports(
-  importsByFile: Map<string, Set<string>>,
+  importsByFile: Map<string, ResolverImportInfo[]>,
   outputDir: string,
   importExtension: ImportExtension,
 ): string[] {
@@ -202,17 +251,25 @@ function buildResolverImports(
   const sortedFiles = [...importsByFile.keys()].sort();
 
   for (const sourceFile of sortedFiles) {
-    const valueNames = importsByFile.get(sourceFile) ?? new Set<string>();
+    const importInfos = importsByFile.get(sourceFile) ?? [];
     const importPath = computeRelativeImportPath(
       outputDir,
       sourceFile,
       importExtension,
     );
-    const sortedValues = [...valueNames].sort();
 
-    if (sortedValues.length > 0) {
+    // Sort by localName for consistent output
+    const sortedInfos = [...importInfos].sort((a, b) =>
+      a.localName.localeCompare(b.localName),
+    );
+
+    if (sortedInfos.length > 0) {
+      const importSpecifiers = sortedInfos.map(
+        (info) => `${info.originalName} as ${info.localName}`,
+      );
+
       imports.push(
-        `import { ${sortedValues.join(", ")} } from "${importPath}";`,
+        `import { ${importSpecifiers.join(", ")} } from "${importPath}";`,
       );
     }
   }
@@ -223,7 +280,11 @@ function buildResolverImports(
 function buildAbstractOnlyTypeEntry(
   abstractResolver: AbstractTypeResolverInfo,
 ): string {
-  return `    ${abstractResolver.typeName}: {\n      ${abstractResolver.resolverKey}: ${abstractResolver.exportName},\n    },`;
+  const localName = makeResolverLocalName(
+    abstractResolver.typeName,
+    abstractResolver.resolverKey,
+  );
+  return `    ${abstractResolver.typeName}: {\n      ${abstractResolver.resolverKey}: ${localName},\n    },`;
 }
 
 function buildNumericEnumResolver(enumInfo: NumericEnumInfo): string {
@@ -261,19 +322,23 @@ function buildTypeResolverEntry(
   const entries: string[] = [];
 
   for (const field of type.fields) {
+    const localName = makeResolverLocalName(type.typeName, field.fieldName);
+
     if (field.isDirectExport) {
-      entries.push(`      ${field.fieldName}: ${field.resolverValueName},`);
+      entries.push(`      ${field.fieldName}: ${localName},`);
     } else {
       entries.push(
-        `      ${field.fieldName}: ${field.resolverValueName}.${field.fieldName},`,
+        `      ${field.fieldName}: ${localName}.${field.fieldName},`,
       );
     }
   }
 
   if (abstractResolverForType !== null) {
-    entries.push(
-      `      ${abstractResolverForType.resolverKey}: ${abstractResolverForType.exportName},`,
+    const localName = makeResolverLocalName(
+      abstractResolverForType.typeName,
+      abstractResolverForType.resolverKey,
     );
+    entries.push(`      ${abstractResolverForType.resolverKey}: ${localName},`);
   }
 
   return `    ${type.typeName}: {\n${entries.join("\n")}\n    },`;
@@ -379,7 +444,7 @@ export function emitResolversCode(params: EmitResolversCodeParams): string {
     imports.push('import { GraphQLScalarType } from "graphql";');
   }
 
-  const importsByFile = collectResolverImportsByFile(resolverInfo);
+  const importsByFile = collectResolverImports(resolverInfo);
   imports.push(
     ...buildResolverImports(importsByFile, outputDir, importExtension),
   );
