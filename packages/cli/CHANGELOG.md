@@ -1,5 +1,15 @@
 # @gqlkit-ts/cli
 
+## 0.5.0
+
+### Minor Changes
+
+- [#141](https://github.com/izumin5210/gqlkit/pull/141) [`0ef5d25`](https://github.com/izumin5210/gqlkit/commit/0ef5d259bff256cf7d3e37a00c5a7ed037bd6f49) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: add --config option to specify config file path
+
+### Patch Changes
+
+- [#144](https://github.com/izumin5210/gqlkit/pull/144) [`066f788`](https://github.com/izumin5210/gqlkit/commit/066f78897c746f2978deff7e1708f75ffbf10675) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: resolve import name conflicts when same export name exists in multiple files
+
 ## 0.4.1
 
 ### Patch Changes
