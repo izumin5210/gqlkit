@@ -1,0 +1,12 @@
+[
+  {
+    "code": "DUPLICATE_TYPE_EXPORT",
+    "message": "Type 'CreateUserInput' is exported from multiple files. First defined at src/gqlkit/schema/a.ts:2.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/b.ts",
+      "line": 2,
+      "column": 1
+    }
+  }
+]

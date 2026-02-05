@@ -1,0 +1,12 @@
+[
+  {
+    "code": "DUPLICATE_TYPE_EXPORT",
+    "message": "Type 'User' is exported from multiple files. First defined at src/gqlkit/schema/post.ts:2.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/user.ts",
+      "line": 2,
+      "column": 1
+    }
+  }
+]
