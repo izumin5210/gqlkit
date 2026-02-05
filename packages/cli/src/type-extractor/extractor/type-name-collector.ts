@@ -61,7 +61,6 @@ export function collectDeclaredTypeNames(
   const diagnostics: Diagnostic[] = [];
   const checker = program.getTypeChecker();
 
-  // Track first occurrence of each type name for duplicate detection
   const typeLocations = new Map<string, TypeDeclarationLocation>();
 
   /**
@@ -88,7 +87,6 @@ export function collectDeclaredTypeNames(
         // Same underlying type - not a true duplicate, skip silently
         return false;
       }
-      // Different types with same name - report error
       diagnostics.push({
         code: "DUPLICATE_TYPE_EXPORT",
         message: `Type '${name}' is exported from multiple files. First defined at ${formatLocation(existing.location)}.`,

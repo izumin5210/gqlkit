@@ -514,9 +514,10 @@ function collectTypeNamesStep(ctx: PipelineContext): PipelineContext {
 
   const result = collectDeclaredTypeNames(ctx.program, ctx.sourceFiles);
 
-  // Propagate diagnostics (including duplicate type export errors)
   const diagnostics = [...ctx.diagnostics, ...result.diagnostics];
-  const hasErrors = result.diagnostics.some((d) => d.severity === "error");
+  const hasDiagnosticErrors = result.diagnostics.some(
+    (d) => d.severity === "error",
+  );
 
   return {
     ...ctx,
@@ -524,7 +525,7 @@ function collectTypeNamesStep(ctx: PipelineContext): PipelineContext {
     knownTypeSymbols: result.typeSymbols,
     underlyingSymbolToTypeName: result.underlyingSymbolToTypeName,
     diagnostics,
-    aborted: hasErrors,
+    aborted: hasDiagnosticErrors,
   };
 }
 
