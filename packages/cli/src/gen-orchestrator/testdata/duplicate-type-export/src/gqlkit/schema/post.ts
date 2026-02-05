@@ -1,4 +1,4 @@
-// Second (conflicting) definition of User in post.ts
+// Conflicting definition of User in post.ts
 export interface User {
   id: string;
   displayName: string;

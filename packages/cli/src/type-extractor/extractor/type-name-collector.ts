@@ -10,11 +10,11 @@ import {
 import type { Diagnostic } from "../types/index.js";
 
 /**
- * Tracks location of a type declaration for duplicate detection.
+ * Tracks location and symbol of a type declaration for duplicate detection.
  */
 interface TypeDeclarationLocation {
-  readonly name: string;
   readonly location: SourceLocation;
+  readonly symbol: ts.Symbol | null;
 }
 
 /**
@@ -73,9 +73,22 @@ export function collectDeclaredTypeNames(
     location: SourceLocation,
     symbol: ts.Symbol | undefined,
   ): boolean {
+    const resolvedSymbol = symbol
+      ? resolveOriginalSymbol(symbol, checker)
+      : null;
     const existing = typeLocations.get(name);
     if (existing) {
-      // Duplicate found - report error
+      // Check if both symbols resolve to the same underlying type
+      // (e.g., re-exports of the same type from different files)
+      if (
+        resolvedSymbol &&
+        existing.symbol &&
+        resolvedSymbol === existing.symbol
+      ) {
+        // Same underlying type - not a true duplicate, skip silently
+        return false;
+      }
+      // Different types with same name - report error
       diagnostics.push({
         code: "DUPLICATE_TYPE_EXPORT",
         message: `Type '${name}' is exported from multiple files. First defined at ${formatLocation(existing.location)}.`,
@@ -84,10 +97,10 @@ export function collectDeclaredTypeNames(
       });
       return false;
     }
-    typeLocations.set(name, { name, location });
+    typeLocations.set(name, { location, symbol: resolvedSymbol });
     typeNames.add(name);
-    if (symbol) {
-      typeSymbols.set(name, resolveOriginalSymbol(symbol, checker));
+    if (resolvedSymbol) {
+      typeSymbols.set(name, resolvedSymbol);
     }
     return true;
   }

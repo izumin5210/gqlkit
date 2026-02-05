@@ -1,4 +1,4 @@
-// First definition of User in user.ts
+// User type definition in user.ts
 export interface User {
   id: string;
   name: string;
