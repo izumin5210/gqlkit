@@ -514,11 +514,18 @@ function collectTypeNamesStep(ctx: PipelineContext): PipelineContext {
 
   const result = collectDeclaredTypeNames(ctx.program, ctx.sourceFiles);
 
+  const diagnostics = [...ctx.diagnostics, ...result.diagnostics];
+  const hasDiagnosticErrors = result.diagnostics.some(
+    (d) => d.severity === "error",
+  );
+
   return {
     ...ctx,
     knownTypeNames: result.typeNames,
     knownTypeSymbols: result.typeSymbols,
     underlyingSymbolToTypeName: result.underlyingSymbolToTypeName,
+    diagnostics,
+    aborted: hasDiagnosticErrors,
   };
 }
 
