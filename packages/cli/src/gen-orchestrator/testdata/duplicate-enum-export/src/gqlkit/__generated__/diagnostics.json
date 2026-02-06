@@ -1,11 +1,11 @@
 [
   {
     "code": "DUPLICATE_TYPE_EXPORT",
-    "message": "Type 'Status' is exported from multiple files. First defined at src/gqlkit/schema/a.ts:2.",
+    "message": "Type 'Status' is exported from multiple files. First defined at src/gqlkit/schema/a.ts:1.",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/b.ts",
-      "line": 2,
+      "line": 1,
       "column": 1
     }
   }
