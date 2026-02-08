@@ -1,6 +1,6 @@
 {
   "name": "@gqlkit-ts/cli",
-  "version": "0.5.0",
+  "version": "0.5.1",
   "description": "Just types and functions — write TypeScript, generate GraphQL.",
   "type": "module",
   "main": "dist/index.js",

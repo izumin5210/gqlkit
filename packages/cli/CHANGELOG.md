@@ -1,5 +1,11 @@
 # @gqlkit-ts/cli
 
+## 0.5.1
+
+### Patch Changes
+
+- [#147](https://github.com/izumin5210/gqlkit/pull/147) [`5fc46f3`](https://github.com/izumin5210/gqlkit/commit/5fc46f34bbda12c00ae1832a782f3e51631e7481) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: detect and report errors when the same type name is exported from multiple files
+
 ## 0.5.0
 
 ### Minor Changes
