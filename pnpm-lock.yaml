@@ -163,8 +163,8 @@ importers:
         specifier: ^16.12.0
         version: 16.12.0
       gunshi:
-        specifier: ^0.27.5
-        version: 0.27.5
+        specifier: ^0.28.0
+        version: 0.28.0
       jiti:
         specifier: ^2.4.2
         version: 2.6.1
@@ -2269,10 +2269,6 @@ packages:
   argparse@2.0.1:
     resolution: {integrity: sha512-8+9WqebbFzpX9OR+Wa6O29asIogeRMzcGtAINdpMHHyAg10f05aSFVBbcEqGf/PXw1EjAZ+q2/bEBg3DvurK3Q==}
 
-  args-tokens@0.23.0:
-    resolution: {integrity: sha512-VZETsQmpEGO7A9adjfIOTyZuxKzurUas9kh1Hm0WGhFq8dOyw50P6OjiTwKyURwnmDabw0DbFjI+BUucJfCtnQ==}
-    engines: {node: '>= 20'}
-
   array-iterate@2.0.1:
     resolution: {integrity: sha512-I1jXZMjAgCMmxT4qxXfPXa6SthSoE8h6gkSI9BGGNv8mP8G/v0blc+qFnZu6K42vTOiuME596QaLO0TP3Lk0xg==}
 
@@ -3025,8 +3021,8 @@ packages:
     resolution: {integrity: sha512-DKKrynuQRne0PNpEbzuEdHlYOMksHSUI8Zc9Unei5gTsMNA2/vMpoMz/yKba50pejK56qj98qM0SjYxAKi13gQ==}
     engines: {node: ^12.22.0 || ^14.16.0 || ^16.0.0 || >=17.0.0}
 
-  gunshi@0.27.5:
-    resolution: {integrity: sha512-ExdnmI90hQ/eR1wnUc5rVom+K16F1hSpbYrplpt6rrJhXLprVGK9/E63bk7Rju27hAqc3WvpCa8PeY95R165fw==}
+  gunshi@0.28.0:
+    resolution: {integrity: sha512-xR/iKAT4zMeYsboTDHOVSEGS1BNyYReUE48vXdNIT6ujcZLqE+BR/p9T6n0N7ugNdfoZtHm3NTuya9jc7cdsbw==}
     engines: {node: '>= 20'}
 
   hachure-fill@0.5.2:
@@ -6360,8 +6356,6 @@ snapshots:
 
   argparse@2.0.1: {}
 
-  args-tokens@0.23.0: {}
-
   array-iterate@2.0.1: {}
 
   array-union@2.1.0: {}
@@ -7129,9 +7123,7 @@ snapshots:
 
   graphql@16.12.0: {}
 
-  gunshi@0.27.5:
-    dependencies:
-      args-tokens: 0.23.0
+  gunshi@0.28.0: {}
 
   hachure-fill@0.5.2: {}
 
