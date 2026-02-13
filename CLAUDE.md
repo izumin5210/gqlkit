@@ -41,37 +41,6 @@ pnpm test -- --coverage
 
 **Package manager**: pnpm (v10.28.0)
 
-## Development Workflow
-
-### AI-DLC and Spec-Driven Development
-
-This project follows Kiro-style Spec-Driven Development.
-
-**Paths**:
-- Steering: `.kiro/steering/` - Project-wide rules and context
-- Specs: `.kiro/specs/` - Individual feature specifications
-
-**Minimal workflow**:
-- Phase 0 (optional): `/kiro:steering`, `/kiro:steering-custom`
-- Phase 1 (Specification):
-  - `/kiro:spec-init "description"`
-  - `/kiro:spec-requirements {feature}`
-  - `/kiro:validate-gap {feature}` (optional: for existing codebase)
-  - `/kiro:spec-design {feature} [-y]`
-  - `/kiro:validate-design {feature}` (optional: design review)
-  - `/kiro:spec-tasks {feature} [-y]`
-- Phase 2 (Implementation): `/kiro:spec-impl {feature} [tasks]`
-  - `/kiro:validate-impl {feature}` (optional: after implementation)
-- Progress check: `/kiro:spec-status {feature}`
-
-**Development rules**:
-- 3-phase approval workflow: Requirements → Design → Tasks → Implementation
-- Human review required each phase; use `-y` only for intentional fast-track
-- Keep steering current and verify alignment with `/kiro:spec-status`
-- Follow user instructions precisely; act autonomously within that scope; ask questions only when essential information is missing or instructions are critically ambiguous
-
-**Language**: Think in English, generate responses in Japanese. All Markdown content written to project files (e.g., requirements.md, design.md, tasks.md) MUST be written in the target language configured for the specification (see spec.json.language).
-
 ## Testing
 
 Uses **golden file testing** for CLI validation:

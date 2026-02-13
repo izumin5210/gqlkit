@@ -13,7 +13,7 @@ Analyze test files to identify redundant, low-value, or obsolete tests that may 
 
 ## Deletion Consideration Criteria
 
-Based on project testing guidelines (CLAUDE.md):
+Based on project testing guidelines (AGENTS.md / CLAUDE.md):
 
 1. **Golden file test replaceable unit tests**: Function-level unit tests for code analysis, schema generation, or code generation logic that could be covered by testdata golden file tests
 2. **Trivial tests**: Tests for simple getters/setters, direct value passthrough, or obvious behavior that provides minimal value
@@ -24,7 +24,7 @@ Based on project testing guidelines (CLAUDE.md):
 
 ### Step 1: Select Review Target
 
-When the review target is not explicitly specified, use AskUserQuestion to present the following options:
+When the review target is not explicitly specified, ask the user (using the runtime's available interaction mechanism) to choose from the following options:
 
 1. **Branch/PR changes**: Review only test files added/modified in current branch vs main
 2. **All tests**: Review all `*.test.ts` files in the codebase
@@ -60,9 +60,14 @@ Group test files by their purpose:
 
 ### Step 3: Launch Subagents for Analysis
 
-For each test file (or batch of related files), launch a subagent using the Task tool with `subagent_type: "general-purpose"`.
+For each test file (or cohesive batch of closely related files), create a separate subtask with an isolated context (subagent/subtask model) using the runtime's available execution mechanism (`1 review unit = 1 isolated subtask`).
 
-**IMPORTANT**: Launch all subagents in a single response with multiple Task tool calls to enable parallel execution.
+**IMPORTANT**:
+- Design each review unit as an independent subtask with explicit input/output.
+- Execute independent subtasks in parallel when supported by the runtime.
+- Pass only minimal required context to each subtask (target file(s), related source files, and evaluation criteria) to keep context isolated.
+- Do not provide full repository-wide context to every subtask; keep context scoped to the review unit.
+- Normalize and aggregate subtask outputs in the final report.
 
 #### Subagent Prompt
 
@@ -90,6 +95,8 @@ After all subagents complete:
 ```
 
 3. **List deletion candidates by reason**:
+
+   Note: Cross-file synthesis (e.g., overlap and priority decisions across multiple categories) must be done during aggregation, not inside isolated subtasks.
 
 ```markdown
 ## Deletion Candidates
