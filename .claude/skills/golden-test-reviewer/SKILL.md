@@ -15,7 +15,7 @@ Systematically evaluate golden test cases under `packages/cli/src/gen-orchestrat
 
 ### Step 1: Select Review Target
 
-When the review target is not explicitly specified, use AskUserQuestion to present the following options:
+When the review target is not explicitly specified, ask the user (using the runtime's available interaction mechanism) to choose from the following options:
 
 1. **All**: Review all test cases
 2. **Category**: Review test cases in a specific category only
@@ -110,9 +110,13 @@ This analysis will be included in the final report (Step 3).
 
 ### Step 2: Launch Subagents for Parallel Evaluation
 
-For each test case to be reviewed, launch a subagent using the Task tool with `subagent_type: "general-purpose"`.
+For each test case to be reviewed, create a separate subtask with an isolated context (subagent/subtask model) using the runtime's available execution mechanism.
 
-**IMPORTANT**: Launch all subagents in a single response with multiple Task tool calls to enable parallel execution.
+**IMPORTANT**:
+- Treat each test case as an independently designed subtask with clear inputs/outputs.
+- Execute independent subtasks in parallel when supported by the runtime.
+- Pass only minimal required context to each subtask (target test case, relevant diff, and evaluation criteria) to keep context isolated.
+- Normalize and aggregate subtask outputs in the final report.
 
 #### Subagent Prompt
 
@@ -132,25 +136,29 @@ Read the prompt template from **`references/subagent-prompt.md`** and use it for
   - `{test-case-diff}` - diff content for the specific test case
 - Evaluates against 7 criteria (standard 6 + change appropriateness)
 
-#### Example: Launching Multiple Subagents (Standard Mode)
+#### Example: Launching Multiple Analysis Tasks (Standard Mode)
 
 When reviewing test cases `interface-basic`, `union-type`, and `field-resolver`:
 
-```
-// In a single response, make 3 Task tool calls in parallel:
-Task(subagent_type="general-purpose", prompt="Review the golden test case 'interface-basic'...")
-Task(subagent_type="general-purpose", prompt="Review the golden test case 'union-type'...")
-Task(subagent_type="general-purpose", prompt="Review the golden test case 'field-resolver'...")
-```
+Use the runtime's parallel task mechanism to evaluate these test cases as isolated subtasks concurrently:
+- `interface-basic`
+- `union-type`
+- `field-resolver`
 
-#### Example: Launching Subagents (PR/Branch Review Mode)
+#### Example: Launching Analysis Tasks (PR/Branch Review Mode)
 
 When reviewing test cases modified in PR #123:
 
-```
-// In a single response, make Task tool calls for each modified test case:
-Task(subagent_type="general-purpose", prompt="Review the golden test case 'interface-basic' modified in PR #123. Context: Changes in this PR... [diff-summary]. Test case diff: [test-case-diff]...")
-```
+Create one isolated subtask per modified test case (`1 test case = 1 isolated subtask`).
+
+For each subtask, provide only:
+- target test case name
+- PR number or branch name
+- diff summary limited to files relevant to that test case
+- per-test-case diff
+- required evaluation criteria
+
+Do not share full PR/branch-wide cross-case context with every subtask. Cross-case reasoning (e.g., coverage gaps across categories) must be performed only in Step 3 aggregation.
 
 ### Step 3: Aggregate Results and Generate Report
 
@@ -182,6 +190,8 @@ After all subagents complete:
 ```
 
 4. **Provide detailed reports** for test cases with issues (expand from JSON)
+
+   Note: Perform repository-wide or cross-case synthesis only at aggregation time, not inside isolated subtasks.
 
 5. **(PR/Branch Review mode only) Include Test Coverage Analysis**:
 
