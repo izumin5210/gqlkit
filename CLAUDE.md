@@ -89,3 +89,17 @@ Uses **golden file testing** for CLI validation:
 ## CLI Development
 
 When creating command-line interfaces, use the `use-gunshi-cli` skill.
+
+## Commit and Pull Request Rules
+- Use Conventional Commits for titles: `<type>(<scope>): <description>`.
+- PR descriptions must include:
+  - `Why`: reason for the change.
+  - `Summary`: short overview of what changed.
+- If `Why` is unknown, ask the user before finalizing the PR description.
+
+## Changeset Rules
+- First, decide whether a changeset is required for the change before writing one.
+- Use Conventional Commits style without scope: `<type>: <description>`.
+- Keep changesets concise (title line only); add details in the PR.
+- If there is a breaking change, add one blank line and then:
+  - `**BREAKING CHANGE**: <impact and brief migration guidance if needed>`
