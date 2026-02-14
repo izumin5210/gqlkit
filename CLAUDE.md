@@ -92,10 +92,10 @@ When creating command-line interfaces, use the `use-gunshi-cli` skill.
 
 ## Commit and Pull Request Rules
 - Use Conventional Commits for titles: `<type>(<scope>): <description>`.
-- Commit bodies and PR descriptions must include:
+- PR descriptions must include:
   - `Why`: reason for the change.
   - `Summary`: short overview of what changed.
-- If `Why` is unknown, ask the user before finalizing.
+- If `Why` is unknown, ask the user before finalizing the PR description.
 
 ## Changeset Rules
 - First, decide whether a changeset is required for the change before writing one.
