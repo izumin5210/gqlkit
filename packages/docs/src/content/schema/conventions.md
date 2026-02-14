@@ -34,6 +34,13 @@ gqlkit maps TypeScript types to GraphQL types as follows:
 
 gqlkit generates type names using predictable conventions:
 
+For `defineQuery`, `defineMutation`, and `defineField`, GraphQL field names are also derived from exported variable names:
+
+- Default: the full export name is used as-is.
+- If the export name contains `$`, gqlkit uses the substring after the last `$`.
+- Common usage is a single prefix (for example, `Query$users` -> `users`).
+- If the export name ends with `$`, gqlkit reports an error.
+
 | Context | Pattern | Example |
 |---------|---------|---------|
 | Object field (inline) | `{ParentType}{Field}` | `User.profile` → `UserProfile` |

@@ -7,6 +7,12 @@ description: Add computed fields to object types using defineField.
 
 Add computed fields to object types using `defineField`. Define them alongside the type.
 
+GraphQL field names are derived from the exported variable name:
+
+- Default: the full export name is used as-is.
+- If the export name contains `$`, gqlkit uses the substring after the last `$`.
+- If the export name ends with `$`, gqlkit reports an error.
+
 ## Basic Usage
 
 ```typescript
@@ -42,6 +48,15 @@ type User {
   """Get user's post count"""
   postCount: Float!
 }
+```
+
+Example with `$` delimiter:
+
+```typescript
+// GraphQL field name: posts
+export const User$posts = defineField<User, NoArgs, Post[]>(
+  (parent) => findPostsByAuthor(parent.id)
+);
 ```
 
 ## Resolver Function Signature
