@@ -292,7 +292,7 @@ function convertDefineApiToFields(
       type: convertTsTypeToGraphQLType(returnType),
       args: resolver.args ? convertArgsToInputValues(resolver.args) : null,
       sourceLocation: resolver.sourceLocation,
-      resolverExportName: resolver.fieldName,
+      resolverExportName: resolver.resolverExportName,
       description: resolver.description,
       deprecated: resolver.deprecated,
       directives: resolver.directives,

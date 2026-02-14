@@ -56,6 +56,7 @@ export interface ArgumentDefinition {
 
 export interface DefineApiResolverInfo {
   readonly fieldName: string;
+  readonly resolverExportName: string;
   readonly resolverType: DefineApiResolverType;
   readonly parentTypeName: string | null;
   readonly argsType: TSTypeReference | null;
@@ -228,6 +229,20 @@ function detectResolverFromMetadataType(
   }
 
   return null;
+}
+
+function resolveFieldNameFromExportName(exportName: string): string | null {
+  const delimiterIndex = exportName.lastIndexOf("$");
+  if (delimiterIndex === -1) {
+    return exportName;
+  }
+
+  const fieldName = exportName.slice(delimiterIndex + 1);
+  if (fieldName.length === 0) {
+    return null;
+  }
+
+  return fieldName;
 }
 
 function isInlineTypeLiteralDeclaration(declaration: ts.Declaration): boolean {
@@ -633,7 +648,7 @@ export function extractDefineApiResolvers(
           continue;
         }
 
-        const fieldName = declaration.name.getText(sourceFile);
+        const exportName = declaration.name.getText(sourceFile);
         const initializer = declaration.initializer;
 
         if (!initializer) {
@@ -651,7 +666,7 @@ export function extractDefineApiResolvers(
             if (hasDefineCall) {
               diagnostics.push({
                 code: "INVALID_DEFINE_CALL",
-                message: `Complex expressions with define* functions are not supported. Use a simple 'export const ${fieldName} = defineXxx(...)' pattern.`,
+                message: `Complex expressions with define* functions are not supported. Use a simple 'export const ${exportName} = defineXxx(...)' pattern.`,
                 severity: "error",
                 location: getSourceLocationFromNode(declaration.name),
               });
@@ -671,7 +686,7 @@ export function extractDefineApiResolvers(
             abstractTypeResolvers.push({
               kind: abstractResolverInfo.kind,
               targetTypeName: abstractResolverInfo.targetTypeName,
-              exportName: fieldName,
+              exportName,
               sourceFile: filePath,
               sourceLocation,
             });
@@ -685,6 +700,17 @@ export function extractDefineApiResolvers(
         );
 
         if (!resolverType) {
+          continue;
+        }
+
+        const fieldName = resolveFieldNameFromExportName(exportName);
+        if (fieldName === null) {
+          diagnostics.push({
+            code: "INVALID_DEFINE_CALL",
+            message: `Resolver export '${exportName}' must have a non-empty field name after '$'.`,
+            severity: "error",
+            location: getSourceLocationFromNode(declaration.name),
+          });
           continue;
         }
 
@@ -702,7 +728,7 @@ export function extractDefineApiResolvers(
         if (!typeInfo) {
           diagnostics.push({
             code: "INVALID_DEFINE_CALL",
-            message: `Failed to extract type arguments from ${funcName ?? "define*"} call for '${fieldName}'`,
+            message: `Failed to extract type arguments from ${funcName ?? "define*"} call for '${exportName}'`,
             severity: "error",
             location: getSourceLocationFromNode(declaration.name),
           });
@@ -720,6 +746,7 @@ export function extractDefineApiResolvers(
 
         resolvers.push({
           fieldName,
+          resolverExportName: exportName,
           resolverType,
           parentTypeName: typeInfo.parentTypeName,
           argsType: typeInfo.argsType,

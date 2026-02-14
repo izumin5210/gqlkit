@@ -1,0 +1,12 @@
+[
+  {
+    "code": "INVALID_DEFINE_CALL",
+    "message": "Resolver export 'Query$' must have a non-empty field name after '$'.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/query.ts",
+      "line": 9,
+      "column": 14
+    }
+  }
+]

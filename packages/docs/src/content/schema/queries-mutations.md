@@ -11,7 +11,11 @@ Define Query and Mutation fields using the `@gqlkit-ts/runtime` API.
 
 ## Query Resolvers
 
-Use `defineQuery` to define Query fields. The export name becomes the GraphQL field name:
+Use `defineQuery` to define Query fields. GraphQL field names are derived from the exported variable name:
+
+- Default: the full export name is used as-is.
+- If the export name contains `$`, gqlkit uses the substring after the last `$`.
+- If the export name ends with `$`, gqlkit reports an error.
 
 ```typescript
 import { defineQuery } from "../gqlkit";
@@ -50,9 +54,16 @@ type Query {
 }
 ```
 
+Example with `$` delimiter:
+
+```typescript
+// GraphQL field name: users
+export const Query$users = defineQuery<NoArgs, User[]>(() => []);
+```
+
 ## Mutation Resolvers
 
-Use `defineMutation` to define Mutation fields:
+Use `defineMutation` to define Mutation fields. The same export-name rule applies:
 
 ```typescript
 import { defineMutation } from "../gqlkit";
@@ -71,6 +82,14 @@ export const deleteUser = defineMutation<{ id: string }, boolean>(
     return ctx.db.deleteUser(args.id);
   }
 );
+
+// GraphQL field name: createUser
+export const Mutation$createUser = defineMutation<
+  { input: CreateUserInput },
+  User
+>((_root, args, ctx) => {
+  return ctx.db.createUser(args.input);
+});
 ```
 
 Generates:
