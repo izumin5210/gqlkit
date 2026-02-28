@@ -65,7 +65,7 @@
   - subscription のみ（Query/Mutation なし）が定義された場合に `type Subscription` のみが生成されることを検証する
   - _Requirements: 4.1, 4.4_
 
-- [ ] 7.3 (P) ディレクティブ・TSDoc・インライン引数型の golden file テストケースを追加する
+- [x] 7.3 (P) ディレクティブ・TSDoc・インライン引数型の golden file テストケースを追加する
   - `TDirectives` 型引数によるディレクティブ付与を検証する
   - TSDoc コメントからの description と `@deprecated` の抽出を検証する
   - 引数にインラインオブジェクト型を使用した場合の auto-type 生成と `{PascalCaseFieldName}{PascalCaseArgName}Input` 命名規則を検証する
