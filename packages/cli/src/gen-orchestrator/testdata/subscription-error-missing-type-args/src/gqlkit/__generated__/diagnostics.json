@@ -1,0 +1,12 @@
+[
+  {
+    "code": "INVALID_DEFINE_CALL",
+    "message": "Failed to extract type arguments from defineSubscription call for 'messageAdded'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/subscription.ts",
+      "line": 4,
+      "column": 14
+    }
+  }
+]

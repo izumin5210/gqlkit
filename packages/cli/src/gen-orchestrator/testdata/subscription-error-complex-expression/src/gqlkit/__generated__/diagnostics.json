@@ -1,0 +1,12 @@
+[
+  {
+    "code": "INVALID_DEFINE_CALL",
+    "message": "Complex expressions with define* functions are not supported. Use a simple 'export const messageAdded = defineXxx(...)' pattern.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/subscription.ts",
+      "line": 12,
+      "column": 14
+    }
+  }
+]

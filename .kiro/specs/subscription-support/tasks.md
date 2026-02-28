@@ -71,7 +71,7 @@
   - 引数にインラインオブジェクト型を使用した場合の auto-type 生成と `{PascalCaseFieldName}{PascalCaseArgName}Input` 命名規則を検証する
   - _Requirements: 3.5, 4.3, 4.6, 6.1, 6.2, 6.3, 6.4, 6.5_
 
-- [ ] 7.4 (P) エラーケースの golden file テストケースを追加する
+- [x] 7.4 (P) エラーケースの golden file テストケースを追加する
   - `defineSubscription` に型引数が不足した場合のエラー diagnostic を検証する
   - 空フィールド名 (`subscription$` パターン) のエラーを検証する
   - 複雑式（条件式・バイナリ式）内で `defineSubscription` を使用した場合のエラーを検証する

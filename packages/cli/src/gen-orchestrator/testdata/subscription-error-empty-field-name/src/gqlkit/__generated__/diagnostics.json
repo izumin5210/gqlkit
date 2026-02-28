@@ -1,0 +1,12 @@
+[
+  {
+    "code": "INVALID_DEFINE_CALL",
+    "message": "Resolver export 'subscription$' must have a non-empty field name after '$'.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/subscription.ts",
+      "line": 10,
+      "column": 14
+    }
+  }
+]
