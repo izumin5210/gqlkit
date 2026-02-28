@@ -38,7 +38,7 @@
   - _Requirements: 6.1, 6.2, 6.3, 6.4, 6.5_
 
 - [ ] 5. CLI スキーマ生成: Result Integrator に Subscription サポートを追加
-- [ ] 5.1 `IntegratedResult` に `hasSubscription` フラグを追加し、統合ロジックを拡張する
+- [x] 5.1 `IntegratedResult` に `hasSubscription` フラグを追加し、統合ロジックを拡張する
   - `IntegratedResult` interface に `hasSubscription: boolean` プロパティを追加する
   - `integrate` 関数で `subscriptionFields.fields.length > 0` を判定し、true の場合に `type Subscription` の baseType と typeExtension を生成する
   - subscription フィールドが0件の場合はスキーマに含めない

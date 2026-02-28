@@ -145,6 +145,7 @@ export interface IntegratedResult {
   readonly stringEnumMappings: ReadonlyArray<StringEnumMappingInfo>;
   readonly hasQuery: boolean;
   readonly hasMutation: boolean;
+  readonly hasSubscription: boolean;
   readonly hasErrors: boolean;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
@@ -469,6 +470,7 @@ export function integrate(params: IntegrateParams): IntegratedResult {
 
   const hasQuery = resolversResult.queryFields.fields.length > 0;
   const hasMutation = resolversResult.mutationFields.fields.length > 0;
+  const hasSubscription = resolversResult.subscriptionFields.fields.length > 0;
 
   if (hasQuery) {
     baseTypes.push({
@@ -489,6 +491,22 @@ export function integrate(params: IntegrateParams): IntegratedResult {
   if (hasMutation) {
     baseTypes.push({
       name: "Mutation",
+      kind: "Object",
+      fields: [],
+      unionMembers: null,
+      enumValues: null,
+      isNumericEnum: false,
+      needsStringEnumMapping: false,
+      implementedInterfaces: null,
+      description: null,
+      deprecated: null,
+      sourceFile: null,
+      directives: null,
+    });
+  }
+  if (hasSubscription) {
+    baseTypes.push({
+      name: "Subscription",
       kind: "Object",
       fields: [],
       unionMembers: null,
@@ -535,6 +553,15 @@ export function integrate(params: IntegrateParams): IntegratedResult {
     typeExtensions.push({
       targetTypeName: "Mutation",
       fields: resolversResult.mutationFields.fields.map(
+        convertToExtensionField,
+      ),
+    });
+  }
+
+  if (hasSubscription) {
+    typeExtensions.push({
+      targetTypeName: "Subscription",
+      fields: resolversResult.subscriptionFields.fields.map(
         convertToExtensionField,
       ),
     });
@@ -712,6 +739,7 @@ export function integrate(params: IntegrateParams): IntegratedResult {
     stringEnumMappings,
     hasQuery,
     hasMutation,
+    hasSubscription,
     hasErrors,
     diagnostics,
   };
