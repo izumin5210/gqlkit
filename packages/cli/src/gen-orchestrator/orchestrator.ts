@@ -86,6 +86,7 @@ interface TypesResult {
 interface ResolversResult {
   queryFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
   mutationFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
+  subscriptionFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
   typeExtensions: ReadonlyArray<TypeExtension>;
   abstractTypeResolvers: ReadonlyArray<AbstractResolverInfo>;
   diagnostics: Diagnostics;
@@ -279,10 +280,12 @@ function convertDefineApiToFields(
 ): {
   queryFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
   mutationFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
+  subscriptionFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
   typeExtensions: ReadonlyArray<TypeExtension>;
 } {
   const queryFields: GraphQLFieldDefinition[] = [];
   const mutationFields: GraphQLFieldDefinition[] = [];
+  const subscriptionFields: GraphQLFieldDefinition[] = [];
   const typeExtensionMap = new Map<string, GraphQLFieldDefinition[]>();
 
   for (const resolver of resolvers) {
@@ -316,6 +319,8 @@ function convertDefineApiToFields(
       queryFields.push(fieldDef);
     } else if (resolver.resolverType === "mutation") {
       mutationFields.push(fieldDef);
+    } else if (resolver.resolverType === "subscription") {
+      subscriptionFields.push(fieldDef);
     } else if (resolver.resolverType === "field" && resolver.parentTypeName) {
       const existing = typeExtensionMap.get(resolver.parentTypeName) ?? [];
       existing.push(fieldDef);
@@ -331,6 +336,7 @@ function convertDefineApiToFields(
   return {
     queryFields: { fields: queryFields },
     mutationFields: { fields: mutationFields },
+    subscriptionFields: { fields: subscriptionFields },
     typeExtensions,
   };
 }
@@ -414,6 +420,7 @@ function extractResolversCore(
   return {
     queryFields: result.queryFields,
     mutationFields: result.mutationFields,
+    subscriptionFields: result.subscriptionFields,
     typeExtensions: result.typeExtensions,
     abstractTypeResolvers: defineApiExtractionResult.abstractTypeResolvers,
     diagnostics: collectDiagnostics(allDiagnostics),

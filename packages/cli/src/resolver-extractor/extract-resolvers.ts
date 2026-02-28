@@ -68,6 +68,10 @@ export interface MutationFieldDefinitions {
   readonly fields: ReadonlyArray<GraphQLFieldDefinition>;
 }
 
+export interface SubscriptionFieldDefinitions {
+  readonly fields: ReadonlyArray<GraphQLFieldDefinition>;
+}
+
 export interface TypeExtension {
   readonly targetTypeName: string;
   readonly fields: ReadonlyArray<GraphQLFieldDefinition>;
@@ -76,6 +80,7 @@ export interface TypeExtension {
 export interface ExtractResolversResult {
   readonly queryFields: QueryFieldDefinitions;
   readonly mutationFields: MutationFieldDefinitions;
+  readonly subscriptionFields: SubscriptionFieldDefinitions;
   readonly typeExtensions: ReadonlyArray<TypeExtension>;
   readonly abstractTypeResolvers: ReadonlyArray<AbstractResolverInfo>;
   readonly diagnostics: Diagnostics;

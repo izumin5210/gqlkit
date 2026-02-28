@@ -23,7 +23,7 @@
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5, 7.1, 7.2, 7.3, 7.4_
 
 - [ ] 3. CLI オーケストレータ: Subscription フィールドのデータフロー追加
-- [ ] 3.1 `ResolversResult` と `ExtractResolversResult` に `subscriptionFields` を追加する
+- [x] 3.1 `ResolversResult` と `ExtractResolversResult` に `subscriptionFields` を追加する
   - `ResolversResult` interface に `subscriptionFields: { fields: ReadonlyArray<GraphQLFieldDefinition> }` プロパティを追加する
   - `ExtractResolversResult` interface に同等の `subscriptionFields` プロパティを追加する
   - `convertDefineApiToFields` で `resolverType === "subscription"` の分岐を追加し、subscription リゾルバを `subscriptionFields` に振り分ける
@@ -31,7 +31,7 @@
   - _Requirements: 3.1, 3.2, 3.3, 3.4, 3.5_
 
 - [ ] 4. CLI 自動型生成: Subscription フィールドの走査対象追加
-- [ ] 4.1 (P) `forEachResolverField` で `subscriptionFields` をイテレーション対象に追加する
+- [x] 4.1 (P) `forEachResolverField` で `subscriptionFields` をイテレーション対象に追加する
   - `ResolverType` union に `"subscription"` を追加する
   - `forEachResolverField` に `resolversResult.subscriptionFields.fields` をイテレーションするループを追加し、`resolverType: "subscription"`, `parentTypeName: null` で visitor を呼び出す
   - これにより auto-type-generator の各 collector（inline-object, inline-union, inline-enum, naming-convention）が自動的に subscription フィールドも対象にする
