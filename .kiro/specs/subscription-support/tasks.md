@@ -46,7 +46,7 @@
   - _Requirements: 4.1, 4.2, 4.3, 4.4, 4.5, 4.6_
 
 - [ ] 6. CLI コード生成: Subscription リゾルバの `{ subscribe: fn }` ラップ出力
-- [ ] 6.1 `buildTypeResolverEntry` を拡張し、Subscription フィールドのリゾルバ出力形式を分岐する
+- [x] 6.1 `buildTypeResolverEntry` を拡張し、Subscription フィールドのリゾルバ出力形式を分岐する
   - `typeName === "Subscription"` の場合、各フィールドエントリを `fieldName: { subscribe: localName }` 形式で出力するロジックを追加する
   - `directExport` パターンと非 `directExport` パターンの両方で正しい `{ subscribe: ... }` ラップを生成する
   - 非 Subscription 型の場合は既存ロジックを維持し影響を与えない
