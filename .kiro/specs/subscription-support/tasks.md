@@ -60,7 +60,7 @@
   - 複数 subscription フィールドのソート順序と resolver map 構造を検証する
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6, 2.1, 2.2, 2.3, 2.4, 2.5, 2.6, 5.1, 5.2, 5.3, 5.4, 5.5_
 
-- [ ] 7.2 (P) Query/Mutation/Subscription 混在テストケースを追加する
+- [x] 7.2 (P) Query/Mutation/Subscription 混在テストケースを追加する
   - 3 種の root operation type が共存する場合の統合結果を検証する
   - subscription のみ（Query/Mutation なし）が定義された場合に `type Subscription` のみが生成されることを検証する
   - _Requirements: 4.1, 4.4_
