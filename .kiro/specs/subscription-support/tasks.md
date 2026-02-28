@@ -54,7 +54,7 @@
   - _Requirements: 5.1, 5.2, 5.3, 5.4, 5.5_
 
 - [ ] 7. Golden file テスト: Subscription サポートの検証
-- [ ] 7.1 基本的な subscription の golden file テストケースを追加する
+- [x] 7.1 基本的な subscription の golden file テストケースを追加する
   - `defineSubscription<Args, Result>` の基本パターンで `type Subscription` がスキーマに含まれ、resolver map に `{ subscribe: fn }` 形式が出力されることを検証する
   - 引数なし subscription（`NoArgs` 使用）が正しく生成されることを検証する
   - 複数 subscription フィールドのソート順序と resolver map 構造を検証する
