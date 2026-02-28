@@ -14,7 +14,7 @@
   - _Requirements: 1.1, 1.2, 1.3, 1.4, 1.5, 1.6_
 
 - [ ] 2. CLI リゾルバ抽出: Subscription リゾルバの認識と型情報抽出
-- [ ] 2.1 `DefineApiResolverType` と検出ロジックを拡張する
+- [x] 2.1 `DefineApiResolverType` と検出ロジックを拡張する
   - `DefineApiResolverType` union に `"subscription"` を追加する
   - `detectResolverFromMetadataType` の kind チェック条件に `"subscription"` を追加する
   - 複雑式検出の正規表現を `/define(Query|Mutation|Field|Subscription)/` に更新する
