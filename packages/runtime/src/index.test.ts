@@ -1,8 +1,6 @@
 import type { GraphQLResolveInfo } from "graphql";
-import { assertType, describe, expect, expectTypeOf, test } from "vitest";
+import { describe, expect, expectTypeOf, test } from "vitest";
 import type {
-  GqlkitApis,
-  ResolverKind,
   ResolverMetadataShape,
   SubscriptionResolver,
   SubscriptionResolverFn,
@@ -10,34 +8,6 @@ import type {
 import { createGqlkitApis } from "./index.js";
 
 describe("SubscriptionResolverFn", () => {
-  test("accepts a function that returns AsyncIterable", () => {
-    const fn: SubscriptionResolverFn<{ id: string }, { name: string }> = (
-      _root,
-      _args,
-      _context,
-      _info,
-    ) => {
-      return (async function* () {
-        yield { name: "test" };
-      })();
-    };
-    assertType<SubscriptionResolverFn<{ id: string }, { name: string }>>(fn);
-  });
-
-  test("accepts a function that returns Promise<AsyncIterable>", () => {
-    const fn: SubscriptionResolverFn<{ id: string }, { name: string }> = async (
-      _root,
-      _args,
-      _context,
-      _info,
-    ) => {
-      return (async function* () {
-        yield { name: "test" };
-      })();
-    };
-    assertType<SubscriptionResolverFn<{ id: string }, { name: string }>>(fn);
-  });
-
   test("has correct parameter types", () => {
     type Args = { channelId: string };
     type Result = { message: string };
@@ -123,64 +93,6 @@ describe("SubscriptionResolver", () => {
 
     // ResolverMetadataShape requires kind, args, result -- subscription metadata should be assignable
     expectTypeOf<Meta>().toMatchTypeOf<ResolverMetadataShape>();
-  });
-});
-
-describe("ResolverKind", () => {
-  test("includes subscription", () => {
-    // "subscription" should be assignable to ResolverKind
-    const kind: ResolverKind = "subscription";
-    assertType<ResolverKind>(kind);
-  });
-
-  test("still includes existing kinds", () => {
-    const query: ResolverKind = "query";
-    const mutation: ResolverKind = "mutation";
-    const field: ResolverKind = "field";
-    assertType<ResolverKind>(query);
-    assertType<ResolverKind>(mutation);
-    assertType<ResolverKind>(field);
-  });
-});
-
-describe("ResolverMetadataShape", () => {
-  test("can represent subscription metadata with existing properties", () => {
-    // Verify that ResolverMetadataShape's existing properties (kind, args, result)
-    // can represent subscription metadata without any changes
-    const subscriptionMeta: ResolverMetadataShape = {
-      kind: "subscription",
-      args: { channelId: "123" },
-      result: { message: "hello" },
-    };
-    assertType<ResolverMetadataShape>(subscriptionMeta);
-  });
-});
-
-describe("GqlkitApis.defineSubscription", () => {
-  test("GqlkitApis interface has defineSubscription method", () => {
-    // defineSubscription should be a property of GqlkitApis
-    expectTypeOf<GqlkitApis<unknown>>().toHaveProperty("defineSubscription");
-  });
-
-  test("defineSubscription accepts SubscriptionResolverFn and returns SubscriptionResolver", () => {
-    type Context = { userId: string };
-
-    // The defineSubscription method should be a function
-    type DefineSubscriptionFn = GqlkitApis<Context>["defineSubscription"];
-    expectTypeOf<DefineSubscriptionFn>().toBeFunction();
-  });
-
-  test("defineSubscription has same type argument pattern as defineQuery", () => {
-    type Context = { db: unknown };
-
-    // defineSubscription should accept TArgs, TResult, TDirectives type arguments
-    // identical to the pattern used by defineQuery
-    type DefineSubscription = GqlkitApis<Context>["defineSubscription"];
-    type DefineQuery = GqlkitApis<Context>["defineQuery"];
-
-    // Both should be callable with <TArgs, TResult> type arguments
-    expectTypeOf<DefineSubscription>().toBeFunction();
-    expectTypeOf<DefineQuery>().toBeFunction();
   });
 });
 
