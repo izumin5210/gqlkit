@@ -26,7 +26,6 @@ import {
   scanDirectory,
   toPosixPath,
 } from "../shared/index.js";
-import { isEligibleField } from "../type-extractor/converter/field-eligibility.js";
 import { createSharedProgram } from "../shared/program-factory.js";
 import { collectResults } from "../type-extractor/collector/result-collector.js";
 import {
@@ -35,6 +34,7 @@ import {
   collectScalars,
   type ScalarMetadataInfo,
 } from "../type-extractor/collector/scalar-collector.js";
+import { isEligibleField } from "../type-extractor/converter/field-eligibility.js";
 import { convertToGraphQL } from "../type-extractor/converter/graphql-converter.js";
 import {
   extractTypesFromProgram,
