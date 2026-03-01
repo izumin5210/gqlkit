@@ -34,6 +34,7 @@ import {
   collectScalars,
   type ScalarMetadataInfo,
 } from "../type-extractor/collector/scalar-collector.js";
+import { isEligibleField } from "../type-extractor/converter/field-eligibility.js";
 import { convertToGraphQL } from "../type-extractor/converter/graphql-converter.js";
 import {
   extractTypesFromProgram,
@@ -282,13 +283,33 @@ function convertDefineApiToFields(
   mutationFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
   subscriptionFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
   typeExtensions: ReadonlyArray<TypeExtension>;
+  diagnostics: ReadonlyArray<Diagnostic>;
 } {
   const queryFields: GraphQLFieldDefinition[] = [];
   const mutationFields: GraphQLFieldDefinition[] = [];
   const subscriptionFields: GraphQLFieldDefinition[] = [];
   const typeExtensionMap = new Map<string, GraphQLFieldDefinition[]>();
+  const diagnostics: Diagnostic[] = [];
 
   for (const resolver of resolvers) {
+    const eligibility = isEligibleField({
+      fieldName: resolver.fieldName,
+      kind: "object",
+    });
+    if (!eligibility.eligible) {
+      diagnostics.push({
+        code: "SKIPPED_FIELD",
+        message: eligibility.skipReason.message,
+        severity: "warning",
+        location: {
+          file: resolver.sourceLocation.file,
+          line: resolver.sourceLocation.line,
+          column: resolver.sourceLocation.column,
+        },
+      });
+      continue;
+    }
+
     const returnType = resolver.returnType;
     const fieldDef: GraphQLFieldDefinition = {
       name: resolver.fieldName,
@@ -338,6 +359,7 @@ function convertDefineApiToFields(
     mutationFields: { fields: mutationFields },
     subscriptionFields: { fields: subscriptionFields },
     typeExtensions,
+    diagnostics,
   };
 }
 
@@ -417,6 +439,7 @@ function extractResolversCore(
   allDiagnostics.push(...defineApiExtractionResult.diagnostics);
 
   const result = convertDefineApiToFields(defineApiExtractionResult.resolvers);
+  allDiagnostics.push(...result.diagnostics);
   return {
     queryFields: result.queryFields,
     mutationFields: result.mutationFields,

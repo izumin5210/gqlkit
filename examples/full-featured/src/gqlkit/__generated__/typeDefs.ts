@@ -1391,38 +1391,6 @@ export const typeDefs: DocumentNode = {
       ],
     },
     {
-      kind: "InterfaceTypeExtension",
-      name: {
-        kind: "Name",
-        value: "Node",
-      },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "__typename",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value:
-              "Get the typename of a Node.\nIn a real implementation, this would resolve the actual type.\n\nDefined in: src/gqlkit/schema/node.ts",
-            block: true,
-          },
-        },
-      ],
-    },
-    {
       kind: "ObjectTypeExtension",
       name: {
         kind: "Name",

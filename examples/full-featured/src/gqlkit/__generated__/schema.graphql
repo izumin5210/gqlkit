@@ -299,16 +299,6 @@ extend type Mutation {
   updateUser(id: String!, input: UpdateUserInput!): User
 }
 
-extend interface Node {
-  """
-  Get the typename of a Node.
-  In a real implementation, this would resolve the actual type.
-
-  Defined in: src/gqlkit/schema/node.ts
-  """
-  __typename: String!
-}
-
 extend type Post {
   """
   Get the author of this post
