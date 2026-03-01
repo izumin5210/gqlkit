@@ -5,8 +5,8 @@ import { eventOccurred as Subscription$eventOccurred, heartbeat as Subscription$
 export function createResolvers() {
   return {
     Subscription: {
-      eventOccurred: { subscribe: Subscription$eventOccurred },
-      heartbeat: { subscribe: Subscription$heartbeat },
+      eventOccurred: { subscribe: Subscription$eventOccurred, resolve: (event: unknown) => event },
+      heartbeat: { subscribe: Subscription$heartbeat, resolve: (event: unknown) => event },
     },
   };
 }

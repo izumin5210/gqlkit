@@ -5,9 +5,9 @@ import { alertReceived as Subscription$alertReceived, messageAdded as Subscripti
 export function createResolvers() {
   return {
     Subscription: {
-      alertReceived: { subscribe: Subscription$alertReceived },
-      messageAdded: { subscribe: Subscription$messageAdded },
-      notificationReceived: { subscribe: Subscription$notificationReceived },
+      alertReceived: { subscribe: Subscription$alertReceived, resolve: (event: unknown) => event },
+      messageAdded: { subscribe: Subscription$messageAdded, resolve: (event: unknown) => event },
+      notificationReceived: { subscribe: Subscription$notificationReceived, resolve: (event: unknown) => event },
     },
   };
 }

@@ -13,8 +13,8 @@ export function createResolvers() {
       users: Query$users,
     },
     Subscription: {
-      messageAdded: { subscribe: Subscription$messageAdded },
-      onlineUserCountChanged: { subscribe: Subscription$onlineUserCountChanged },
+      messageAdded: { subscribe: Subscription$messageAdded, resolve: (event: unknown) => event },
+      onlineUserCountChanged: { subscribe: Subscription$onlineUserCountChanged, resolve: (event: unknown) => event },
     },
   };
 }

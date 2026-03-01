@@ -339,7 +339,7 @@ function buildTypeResolverEntry(
 
     if (isSubscription) {
       entries.push(
-        `      ${field.fieldName}: { subscribe: ${resolverValue} },`,
+        `      ${field.fieldName}: { subscribe: ${resolverValue}, resolve: (event: unknown) => event },`,
       );
     } else {
       entries.push(`      ${field.fieldName}: ${resolverValue},`);

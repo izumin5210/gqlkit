@@ -5,7 +5,7 @@ import { orderUpdated as Subscription$orderUpdated } from "../schema/subscriptio
 export function createResolvers() {
   return {
     Subscription: {
-      orderUpdated: { subscribe: Subscription$orderUpdated },
+      orderUpdated: { subscribe: Subscription$orderUpdated, resolve: (event: unknown) => event },
     },
   };
 }
