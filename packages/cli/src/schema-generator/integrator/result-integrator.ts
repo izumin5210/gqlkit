@@ -472,7 +472,8 @@ export function integrate(params: IntegrateParams): IntegratedResult {
   const hasMutation = resolversResult.mutationFields.fields.length > 0;
   const hasSubscription = resolversResult.subscriptionFields.fields.length > 0;
 
-  if (hasQuery) {
+  // GraphQL spec requires Query root type even when only Subscription/Mutation are defined
+  if (hasQuery || hasMutation || hasSubscription) {
     baseTypes.push({
       name: "Query",
       kind: "Object",

@@ -10,6 +10,8 @@ type CreateUserPayload {
 
 type Mutation
 
+type Query
+
 """
 Payload type with type-level TSDoc documentation.
 This description should be reflected in the generated GraphQL type.

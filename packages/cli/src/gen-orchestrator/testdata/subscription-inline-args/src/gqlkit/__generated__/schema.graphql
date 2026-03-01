@@ -6,6 +6,8 @@ type OrderUpdatedPayload {
   status: String!
 }
 
+type Query
+
 type Subscription
 
 """Defined in: src/gqlkit/schema/subscription.ts"""
