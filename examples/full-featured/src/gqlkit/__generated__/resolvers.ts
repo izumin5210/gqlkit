@@ -8,7 +8,6 @@ import {
 } from "../schema/content.js";
 import {
   nodeResolveType as Node$__resolveType,
-  __typename as Node$__typename,
   node as Query$node,
   timestampedResolveType as Timestamped$__resolveType,
 } from "../schema/node.js";
@@ -52,7 +51,6 @@ export function createResolvers({
       updateUser: Mutation$updateUser,
     },
     Node: {
-      __typename: Node$__typename,
       __resolveType: Node$__resolveType,
     },
     Post: {
