@@ -111,16 +111,20 @@ export const post = defineQuery<{ id: string }, Post | null>(
  * Create a new post
  */
 export const createPost = defineMutation<{ input: CreatePostInput }, Post>(
-  (_root, args, ctx) => ({
-    id: crypto.randomUUID() as Post["id"],
-    title: args.input.title,
-    body: args.input.body,
-    status: "DRAFT" as unknown as Post["status"],
-    authorId: (ctx.currentUserId ?? "anonymous") as Post["authorId"],
-    tags: args.input.tags ?? [],
-    publishedAt: null,
-    createdAt: new Date(),
-  }),
+  (_root, args, ctx) => {
+    const newPost: Post = {
+      id: crypto.randomUUID() as Post["id"],
+      title: args.input.title,
+      body: args.input.body,
+      status: "DRAFT" as unknown as Post["status"],
+      authorId: (ctx.currentUserId ?? "anonymous") as Post["authorId"],
+      tags: args.input.tags ?? [],
+      publishedAt: null,
+      createdAt: new Date(),
+    };
+    ctx.pubsub.publish("POST_CREATED", newPost);
+    return newPost;
+  },
 );
 
 /**

@@ -143,6 +143,8 @@ Defined in: src/gqlkit/schema/content.ts
 """
 union SearchResult = Comment | Post
 
+type Subscription
+
 """
 Timeline content (posts and comments mixed)
 
@@ -239,6 +241,16 @@ enum UserStatus {
 }
 
 """
+Input for adding a comment to a post
+
+Defined in: src/gqlkit/schema/comment.ts
+"""
+input AddCommentInput {
+  body: String!
+  postId: String!
+}
+
+"""
 Input for creating a new post
 
 Defined in: src/gqlkit/schema/post.ts
@@ -273,6 +285,13 @@ input UpdateUserInput {
 }
 
 extend type Mutation {
+  """
+  Add a comment to a post.
+  Publishes a COMMENT_ADDED event scoped to the post ID.
+
+  Defined in: src/gqlkit/schema/comment.ts
+  """
+  addComment(input: AddCommentInput!): Comment!
   """
   Create a new post
 
@@ -376,6 +395,21 @@ extend type Query {
   Defined in: src/gqlkit/schema/user.ts
   """
   users_(limit: Float!, offset: Float, status: String): [User!]!
+}
+
+extend type Subscription {
+  """
+  Notifies when a comment is added to a specific post
+
+  Defined in: src/gqlkit/schema/subscription.ts
+  """
+  commentAdded(postId: String!): Comment!
+  """
+  Notifies when a new post is created
+
+  Defined in: src/gqlkit/schema/subscription.ts
+  """
+  postCreated: Post!
 }
 
 extend type User {

@@ -57,7 +57,7 @@ Create `src/gqlkit/gqlkit.ts` to export resolver factories:
 import { createGqlkitApis } from "@gqlkit-ts/runtime";
 import type { Context } from "./context";
 
-export const { defineQuery, defineMutation, defineField } =
+export const { defineQuery, defineMutation, defineSubscription, defineField } =
   createGqlkitApis<Context>();
 ```
 
@@ -118,3 +118,4 @@ export const schema = makeExecutableSchema({ typeDefs, resolvers });
 - [HTTP Server Integration](./integration/yoga) - Connect your schema to graphql-yoga, Apollo Server, or other HTTP servers
 - [Object Types](./schema/objects) - Learn more about defining types
 - [Queries & Mutations](./schema/queries-mutations) - Advanced resolver patterns
+- [Subscriptions](./schema/subscriptions) - Real-time data with subscriptions

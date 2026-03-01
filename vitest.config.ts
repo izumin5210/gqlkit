@@ -120,6 +120,31 @@ export default defineConfig({
           },
         },
       },
+      {
+        resolve: {
+          alias: {
+            graphql: graphqlPath,
+          },
+          dedupe: ["graphql"],
+        },
+        test: {
+          name: "examples/full-featured",
+          root: "./examples/full-featured",
+          include: ["src/**/*.test.ts"],
+          server: {
+            deps: {
+              inline: [
+                "graphql",
+                "@graphql-tools/utils",
+                "@graphql-tools/schema",
+                "graphql-yoga",
+                "graphql-scalars",
+                "@envelop/core",
+              ],
+            },
+          },
+        },
+      },
     ],
   },
 });

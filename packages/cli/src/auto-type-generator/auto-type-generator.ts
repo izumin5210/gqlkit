@@ -52,7 +52,10 @@ import {
   isInputTypeName,
 } from "./naming-convention.js";
 import type { ResolveTypeFieldPattern } from "./resolve-type-generator.js";
-import { forEachResolverField } from "./resolver-field-iterator.js";
+import {
+  forEachResolverField,
+  type ResolverType,
+} from "./resolver-field-iterator.js";
 import {
   createFieldNameSet,
   findTypenameProperty,
@@ -353,7 +356,7 @@ function collectInlineObjectsFromResolvers(
 
 function collectInlineObjectsFromResolverArgs(
   field: GraphQLFieldDefinition,
-  resolverType: "query" | "mutation" | "field",
+  resolverType: ResolverType,
   parentTypeName: string | null,
   results: InlineObjectWithContext[],
 ): void {
@@ -420,7 +423,7 @@ function collectInlinePayloadsFromResolvers(
 
 function collectInlinePayloadFromReturnType(
   field: GraphQLFieldDefinition,
-  resolverType: "query" | "mutation" | "field",
+  resolverType: ResolverType,
   parentTypeName: string | null,
   results: InlineObjectWithContext[],
 ): void {
@@ -716,6 +719,11 @@ function updateResolversResult(
         updateResolverField(field, params, "mutation", null),
       ),
     },
+    subscriptionFields: {
+      fields: resolversResult.subscriptionFields.fields.map((field) =>
+        updateResolverField(field, params, "subscription", null),
+      ),
+    },
     typeExtensions: resolversResult.typeExtensions.map((ext) => ({
       ...ext,
       fields: ext.fields.map((field) =>
@@ -728,7 +736,7 @@ function updateResolversResult(
 function updateResolverField(
   field: GraphQLFieldDefinition,
   params: UpdateTypeNamesParams,
-  resolverType: "query" | "mutation" | "field",
+  resolverType: "query" | "mutation" | "subscription" | "field",
   parentTypeName: string | null,
 ): GraphQLFieldDefinition {
   const { generatedTypeNames, enumTypeNames, unionTypeNames } = params;

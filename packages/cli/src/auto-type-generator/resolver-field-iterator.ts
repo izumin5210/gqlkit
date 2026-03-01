@@ -3,7 +3,7 @@ import type {
   GraphQLFieldDefinition,
 } from "../resolver-extractor/index.js";
 
-export type ResolverType = "query" | "mutation" | "field";
+export type ResolverType = "query" | "mutation" | "field" | "subscription";
 
 export interface ResolverFieldInfo {
   readonly field: GraphQLFieldDefinition;
@@ -25,6 +25,10 @@ export function forEachResolverField(
 
   for (const field of resolversResult.mutationFields.fields) {
     visitor({ field, resolverType: "mutation", parentTypeName: null });
+  }
+
+  for (const field of resolversResult.subscriptionFields.fields) {
+    visitor({ field, resolverType: "subscription", parentTypeName: null });
   }
 
   for (const ext of resolversResult.typeExtensions) {

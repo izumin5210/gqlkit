@@ -624,6 +624,14 @@ export const typeDefs: DocumentNode = {
       },
     },
     {
+      kind: "ObjectTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "Subscription",
+      },
+      fields: [],
+    },
+    {
       kind: "UnionTypeDefinition",
       name: {
         kind: "Name",
@@ -1002,6 +1010,55 @@ export const typeDefs: DocumentNode = {
       kind: "InputObjectTypeDefinition",
       name: {
         kind: "Name",
+        value: "AddCommentInput",
+      },
+      fields: [
+        {
+          kind: "InputValueDefinition",
+          name: {
+            kind: "Name",
+            value: "body",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "String",
+              },
+            },
+          },
+        },
+        {
+          kind: "InputValueDefinition",
+          name: {
+            kind: "Name",
+            value: "postId",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "String",
+              },
+            },
+          },
+        },
+      ],
+      description: {
+        kind: "StringValue",
+        value:
+          "Input for adding a comment to a post\n\nDefined in: src/gqlkit/schema/comment.ts",
+        block: true,
+      },
+    },
+    {
+      kind: "InputObjectTypeDefinition",
+      name: {
+        kind: "Name",
         value: "CreatePostInput",
       },
       fields: [
@@ -1208,6 +1265,48 @@ export const typeDefs: DocumentNode = {
         value: "Mutation",
       },
       fields: [
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "addComment",
+          },
+          arguments: [
+            {
+              kind: "InputValueDefinition",
+              name: {
+                kind: "Name",
+                value: "input",
+              },
+              type: {
+                kind: "NonNullType",
+                type: {
+                  kind: "NamedType",
+                  name: {
+                    kind: "Name",
+                    value: "AddCommentInput",
+                  },
+                },
+              },
+            },
+          ],
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "Comment",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value:
+              "Add a comment to a post.\nPublishes a COMMENT_ADDED event scoped to the post ID.\n\nDefined in: src/gqlkit/schema/comment.ts",
+            block: true,
+          },
+        },
         {
           kind: "FieldDefinition",
           name: {
@@ -1859,6 +1958,80 @@ export const typeDefs: DocumentNode = {
             kind: "StringValue",
             value:
               "List users with pagination\n\nDefined in: src/gqlkit/schema/user.ts",
+            block: true,
+          },
+        },
+      ],
+    },
+    {
+      kind: "ObjectTypeExtension",
+      name: {
+        kind: "Name",
+        value: "Subscription",
+      },
+      fields: [
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "commentAdded",
+          },
+          arguments: [
+            {
+              kind: "InputValueDefinition",
+              name: {
+                kind: "Name",
+                value: "postId",
+              },
+              type: {
+                kind: "NonNullType",
+                type: {
+                  kind: "NamedType",
+                  name: {
+                    kind: "Name",
+                    value: "String",
+                  },
+                },
+              },
+            },
+          ],
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "Comment",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value:
+              "Notifies when a comment is added to a specific post\n\nDefined in: src/gqlkit/schema/subscription.ts",
+            block: true,
+          },
+        },
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "postCreated",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "Post",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value:
+              "Notifies when a new post is created\n\nDefined in: src/gqlkit/schema/subscription.ts",
             block: true,
           },
         },

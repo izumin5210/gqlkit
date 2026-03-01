@@ -7,6 +7,7 @@ export default {
   objects: "Object Types",
   inputs: "Input Types",
   "queries-mutations": "Queries & Mutations",
+  subscriptions: "Subscriptions",
   fields: "Field Resolvers",
   "-- More Types": {
     type: "separator",

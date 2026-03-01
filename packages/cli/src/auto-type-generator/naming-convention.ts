@@ -34,7 +34,7 @@ export interface InputFieldContext {
  */
 export interface ResolverArgContext {
   readonly kind: "resolverArg";
-  readonly resolverType: "query" | "mutation" | "field";
+  readonly resolverType: "query" | "mutation" | "subscription" | "field";
   readonly fieldName: string;
   readonly argName: string;
   readonly parentTypeName: string | null;
@@ -49,7 +49,7 @@ export interface ResolverArgContext {
  */
 export interface ResolverPayloadContext {
   readonly kind: "resolverPayload";
-  readonly resolverType: "query" | "mutation" | "field";
+  readonly resolverType: "query" | "mutation" | "subscription" | "field";
   readonly fieldName: string;
   readonly parentTypeName: string | null;
   readonly fieldPath: ReadonlyArray<string>;

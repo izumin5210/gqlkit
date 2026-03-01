@@ -5,6 +5,7 @@ export type {
   GraphQLInputValue,
   MutationFieldDefinitions,
   QueryFieldDefinitions,
+  SubscriptionFieldDefinitions,
   TypeExtension,
 } from "./extract-resolvers.js";
 export type {

@@ -15,6 +15,7 @@ import type {
 } from "../integrator/result-integrator.js";
 import type {
   AbstractTypeResolverInfo,
+  FieldResolver,
   ResolverInfo,
   TypeResolvers,
 } from "../resolver-collector/resolver-collector.js";
@@ -315,21 +316,33 @@ function buildStringEnumResolvers(
   return stringEnumMappings.map(buildStringEnumResolver);
 }
 
+function buildFieldResolverValue(
+  localName: string,
+  field: FieldResolver,
+): string {
+  if (field.isDirectExport) {
+    return localName;
+  }
+  return `${localName}.${field.fieldName}`;
+}
+
 function buildTypeResolverEntry(
   type: TypeResolvers,
   abstractResolverForType: AbstractTypeResolverInfo | null,
 ): string {
   const entries: string[] = [];
+  const isSubscription = type.typeName === "Subscription";
 
   for (const field of type.fields) {
     const localName = makeResolverLocalName(type.typeName, field.fieldName);
+    const resolverValue = buildFieldResolverValue(localName, field);
 
-    if (field.isDirectExport) {
-      entries.push(`      ${field.fieldName}: ${localName},`);
-    } else {
+    if (isSubscription) {
       entries.push(
-        `      ${field.fieldName}: ${localName}.${field.fieldName},`,
+        `      ${field.fieldName}: { subscribe: ${resolverValue}, resolve: (event: unknown) => event },`,
       );
+    } else {
+      entries.push(`      ${field.fieldName}: ${resolverValue},`);
     }
   }
 

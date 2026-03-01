@@ -394,6 +394,20 @@ export type MutationResolverFn<TArgs, TResult, TContext = unknown> = (
 ) => TResult | Promise<TResult>;
 
 /**
+ * Type for Subscription resolver functions.
+ * Returns AsyncIterable for the subscription event stream.
+ * @typeParam TArgs - The type of arguments the resolver accepts
+ * @typeParam TResult - The type of each event in the subscription stream
+ * @typeParam TContext - The context type (defaults to unknown)
+ */
+export type SubscriptionResolverFn<TArgs, TResult, TContext = unknown> = (
+  root: undefined,
+  args: TArgs,
+  context: TContext,
+  info: GraphQLResolveInfo,
+) => AsyncIterable<TResult> | Promise<AsyncIterable<TResult>>;
+
+/**
  * Type for Field resolver functions.
  * @typeParam TParent - The parent type this field belongs to
  * @typeParam TArgs - The type of arguments the resolver accepts
@@ -410,7 +424,7 @@ export type FieldResolverFn<TParent, TArgs, TResult, TContext = unknown> = (
 /**
  * The kind of resolver.
  */
-export type ResolverKind = "query" | "mutation" | "field";
+export type ResolverKind = "query" | "mutation" | "field" | "subscription";
 
 /**
  * The kind of abstract type resolver.
@@ -553,6 +567,35 @@ export type MutationResolver<
 };
 
 /**
+ * Subscription resolver type with metadata.
+ * The metadata is embedded as an optional property with space-prefixed key
+ * to avoid collision with user-defined properties.
+ * @typeParam TArgs - The type of arguments the resolver accepts
+ * @typeParam TResult - The type of each event in the subscription stream
+ * @typeParam TContext - The context type (defaults to unknown)
+ * @typeParam TDirectives - Array of directives to attach to this field (defaults to [])
+ */
+export type SubscriptionResolver<
+  TArgs,
+  TResult,
+  TContext = unknown,
+  TDirectives extends ReadonlyArray<
+    GqlDirective<
+      string,
+      Record<string, unknown>,
+      DirectiveLocation | DirectiveLocation[]
+    >
+  > = [],
+> = SubscriptionResolverFn<TArgs, TResult, TContext> & {
+  " $gqlkitResolver"?: {
+    kind: "subscription";
+    args: TArgs;
+    result: TResult;
+    directives: TDirectives;
+  };
+};
+
+/**
  * Field resolver type with metadata.
  * The metadata is embedded as an optional property with space-prefixed key
  * to avoid collision with user-defined properties.
@@ -655,6 +698,45 @@ export interface GqlkitApis<TContext> {
   >(
     resolver: MutationResolverFn<TArgs, TResult, TContext>,
   ) => MutationResolver<TArgs, TResult, TContext, TDirectives>;
+
+  /**
+   * Defines a Subscription field resolver with the specified Context type.
+   * @typeParam TArgs - The type of arguments the resolver accepts
+   * @typeParam TResult - The type of each event in the subscription stream
+   * @typeParam TDirectives - Array of directives to attach to this field (defaults to [])
+   * @param resolver - The resolver function returning an AsyncIterable
+   * @returns The resolver with metadata for CLI detection
+   *
+   * @example
+   * ```typescript
+   * // Without directives
+   * export const messageAdded = defineSubscription<{ channelId: string }, Message>(
+   *   async function* (_root, args, ctx) {
+   *     yield* ctx.pubsub.subscribe(`channel:${args.channelId}`);
+   *   }
+   * );
+   *
+   * // With directives
+   * export const userStatusChanged = defineSubscription<NoArgs, UserStatus, [AuthDirective<{ role: ["USER"] }>]>(
+   *   async function* (_root, _args, ctx) {
+   *     yield* ctx.pubsub.subscribe("userStatus");
+   *   }
+   * );
+   * ```
+   */
+  defineSubscription: <
+    TArgs,
+    TResult,
+    TDirectives extends ReadonlyArray<
+      GqlDirective<
+        string,
+        Record<string, unknown>,
+        DirectiveLocation | DirectiveLocation[]
+      >
+    > = [],
+  >(
+    resolver: SubscriptionResolverFn<TArgs, TResult, TContext>,
+  ) => SubscriptionResolver<TArgs, TResult, TContext, TDirectives>;
 
   /**
    * Defines an object type field resolver with the specified Context type.
@@ -767,6 +849,11 @@ export function createGqlkitApis<TContext = unknown>(): GqlkitApis<TContext> {
     },
     defineMutation: <TArgs, TResult>(
       resolver: MutationResolverFn<TArgs, TResult, TContext>,
+    ) => {
+      return resolver;
+    },
+    defineSubscription: <TArgs, TResult>(
+      resolver: SubscriptionResolverFn<TArgs, TResult, TContext>,
     ) => {
       return resolver;
     },

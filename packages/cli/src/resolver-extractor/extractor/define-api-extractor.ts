@@ -35,7 +35,11 @@ import type {
   TSTypeReference,
 } from "../../type-extractor/types/index.js";
 
-export type DefineApiResolverType = "query" | "mutation" | "field";
+export type DefineApiResolverType =
+  | "query"
+  | "mutation"
+  | "field"
+  | "subscription";
 
 export type AbstractResolverKind = "resolveType" | "isTypeOf";
 
@@ -223,7 +227,12 @@ function detectResolverFromMetadataType(
   const kindType = checker.getTypeOfSymbol(kindProp);
   if (kindType.isStringLiteral()) {
     const kind = kindType.value;
-    if (kind === "query" || kind === "mutation" || kind === "field") {
+    if (
+      kind === "query" ||
+      kind === "mutation" ||
+      kind === "field" ||
+      kind === "subscription"
+    ) {
       return kind;
     }
   }
@@ -662,7 +671,7 @@ export function extractDefineApiResolvers(
           ) {
             const hasDefineCall = initializer
               .getText(sourceFile)
-              .match(/define(Query|Mutation|Field)/);
+              .match(/define(Query|Mutation|Field|Subscription)/);
             if (hasDefineCall) {
               diagnostics.push({
                 code: "INVALID_DEFINE_CALL",
