@@ -23,7 +23,7 @@ export const { defineQuery, defineMutation, defineSubscription } =
 
 ## Subscription Resolvers
 
-Use `defineSubscription` to define Subscription fields. The resolver function must return an `AsyncIterable` (or `Promise<AsyncIterable>`):
+Use `defineSubscription` to define Subscription fields. The resolver is typically an async generator function:
 
 ```typescript
 import { defineSubscription } from "../gqlkit";
@@ -33,8 +33,8 @@ import type { Message } from "./message";
 export const messageAdded = defineSubscription<
   { channelId: string },
   Message
->(async (_root, args, ctx) => {
-  return ctx.pubsub.subscribe("MESSAGE_ADDED", args.channelId);
+>(async function* (_root, args, ctx) {
+  yield* ctx.pubsub.subscribe<Message>("MESSAGE_ADDED", args.channelId);
 });
 ```
 
@@ -53,31 +53,14 @@ The same export name conventions apply as with [Queries & Mutations](./queries-m
 export const Subscription$messageAdded = defineSubscription<
   { channelId: string },
   Message
->(async (_root, args, ctx) => {
-  return ctx.pubsub.subscribe("MESSAGE_ADDED", args.channelId);
+>(async function* (_root, args, ctx) {
+  yield* ctx.pubsub.subscribe<Message>("MESSAGE_ADDED", args.channelId);
 });
 ```
 
 ## NoArgs Subscriptions
 
-Use `NoArgs` for subscriptions without arguments:
-
-```typescript
-import { defineSubscription } from "../gqlkit";
-import type { NoArgs } from "@gqlkit-ts/runtime";
-
-// Subscription.heartbeat
-export const heartbeat = defineSubscription<NoArgs, { timestamp: string }>(
-  async () => {
-    return (async function* () {
-      while (true) {
-        yield { timestamp: new Date().toISOString() };
-        await new Promise((r) => setTimeout(r, 1000));
-      }
-    })();
-  }
-);
-```
+For subscriptions without arguments, use `NoArgs` as the first type parameter — same as with `defineQuery` and `defineMutation`. See [Queries & Mutations](./queries-mutations.md#noargs-queries) for details.
 
 ## Resolver Function Signature
 
@@ -94,20 +77,6 @@ Subscription resolvers receive the same four arguments as Query/Mutation resolve
 | `ctx` | The context object (typed via `createGqlkitApis<Context>()`) |
 | `info` | GraphQL resolve info |
 
-## Generated Resolver Map
-
-gqlkit wraps each subscription resolver in the `{ subscribe: fn }` format required by GraphQL execution engines:
-
-```typescript
-// Generated resolvers.ts
-export const resolvers = {
-  Subscription: {
-    messageAdded: { subscribe: messageAdded },
-    heartbeat: { subscribe: heartbeat },
-  },
-};
-```
-
 ## Inline Object Arguments
 
 Subscription arguments support the same inline object types as queries and mutations:
@@ -121,8 +90,8 @@ export const orderUpdated = defineSubscription<
     };
   },
   Order
->(async (_root, args, ctx) => {
-  return ctx.pubsub.subscribe("ORDER_UPDATED", args.filter);
+>(async function* (_root, args, ctx) {
+  yield* ctx.pubsub.subscribe<Order>("ORDER_UPDATED", args.filter);
 });
 ```
 
@@ -152,8 +121,8 @@ export const messageAdded = defineSubscription<
   { channelId: string },
   Message,
   [AuthDirective<{ role: ["USER"] }>]
->(async (_root, args, ctx) => {
-  return ctx.pubsub.subscribe("MESSAGE_ADDED", args.channelId);
+>(async function* (_root, args, ctx) {
+  yield* ctx.pubsub.subscribe<Message>("MESSAGE_ADDED", args.channelId);
 });
 ```
 
@@ -176,8 +145,8 @@ TSDoc comments on subscription exports are extracted as GraphQL descriptions:
 export const messageAdded = defineSubscription<
   { channelId: string },
   Message
->(async (_root, args, ctx) => {
-  return ctx.pubsub.subscribe("MESSAGE_ADDED", args.channelId);
+>(async function* (_root, args, ctx) {
+  yield* ctx.pubsub.subscribe<Message>("MESSAGE_ADDED", args.channelId);
 });
 
 /**
@@ -186,8 +155,8 @@ export const messageAdded = defineSubscription<
 export const onMessage = defineSubscription<
   { channelId: string },
   Message
->(async (_root, args, ctx) => {
-  return ctx.pubsub.subscribe("MESSAGE_ADDED", args.channelId);
+>(async function* (_root, args, ctx) {
+  yield* ctx.pubsub.subscribe<Message>("MESSAGE_ADDED", args.channelId);
 });
 ```
 
