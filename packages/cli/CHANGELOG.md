@@ -1,5 +1,17 @@
 # @gqlkit-ts/cli
 
+## 0.6.0
+
+### Minor Changes
+
+- [#182](https://github.com/izumin5210/gqlkit/pull/182) [`b0d6621`](https://github.com/izumin5210/gqlkit/commit/b0d6621a72da6e167c75f0f0617854924897dd9e) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: add GraphQL Subscription support
+
+- [#163](https://github.com/izumin5210/gqlkit/pull/163) [`337b5b1`](https://github.com/izumin5210/gqlkit/commit/337b5b199212face22e15e899ee2be9f4ea7dd00) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: support $ delimiter in resolver export names
+
+### Patch Changes
+
+- [#183](https://github.com/izumin5210/gqlkit/pull/183) [`da9277b`](https://github.com/izumin5210/gqlkit/commit/da9277b6c1b038ea82276501315cb0ceaa33afa0) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: skip reserved field names in resolver extraction path
+
 ## 0.5.1
 
 ### Patch Changes
