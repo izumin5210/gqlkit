@@ -1,5 +1,11 @@
 # @gqlkit-ts/runtime
 
+## 0.3.0
+
+### Minor Changes
+
+- [#182](https://github.com/izumin5210/gqlkit/pull/182) [`b0d6621`](https://github.com/izumin5210/gqlkit/commit/b0d6621a72da6e167c75f0f0617854924897dd9e) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: add GraphQL Subscription support
+
 ## 0.2.0
 
 ### Minor Changes
