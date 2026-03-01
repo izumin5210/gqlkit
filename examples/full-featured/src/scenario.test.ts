@@ -2,8 +2,8 @@ import { makeExecutableSchema } from "@graphql-tools/schema";
 import {
   type DocumentNode,
   type ExecutionResult,
-  type GraphQLSchema,
   execute,
+  type GraphQLSchema,
   parse,
   subscribe,
 } from "graphql";
