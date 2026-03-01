@@ -4,6 +4,7 @@ import { GraphQLDateTime } from "graphql-scalars";
 import { createYoga } from "graphql-yoga";
 import { createResolvers } from "./gqlkit/__generated__/resolvers.js";
 import { typeDefs } from "./gqlkit/__generated__/typeDefs.js";
+import { PubSub } from "./pubsub.js";
 
 const resolvers = createResolvers({
   scalars: {
@@ -13,7 +14,15 @@ const resolvers = createResolvers({
 
 const schema = makeExecutableSchema({ typeDefs, resolvers });
 
-const yoga = createYoga({ schema });
+const pubsub = new PubSub();
+
+const yoga = createYoga({
+  schema,
+  context: () => ({
+    currentUserId: null,
+    pubsub,
+  }),
+});
 const server = createServer(yoga);
 
 server.listen(4000, () => {
