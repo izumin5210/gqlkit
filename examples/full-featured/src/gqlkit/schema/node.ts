@@ -1,5 +1,5 @@
-import type { GqlInterface, IDString, NoArgs } from "@gqlkit-ts/runtime";
-import { defineField, defineQuery, defineResolveType } from "../gqlkit.js";
+import type { GqlInterface, IDString } from "@gqlkit-ts/runtime";
+import { defineQuery, defineResolveType } from "../gqlkit.js";
 import type { DateTime } from "./scalars.js";
 
 /**
@@ -44,12 +44,6 @@ export const node = defineQuery<{ id: string }, Node | null>((_root, args) => {
     id: args.id,
   } as Node;
 });
-
-/**
- * Get the typename of a Node.
- * In a real implementation, this would resolve the actual type.
- */
-export const __typename = defineField<Node, NoArgs, string>(() => "Node");
 
 export const nodeResolveType = defineResolveType<Node>((value) => {
   if ("title" in value) {
