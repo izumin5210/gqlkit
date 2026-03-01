@@ -3,26 +3,12 @@
 directive @auth(role: [Role!]!) on FIELD_DEFINITION
 
 """Defined in: src/gqlkit/schema/subscription.ts"""
-type OrderUpdatedPayload {
-  orderId: String!
-  status: String!
-}
-
-"""Defined in: src/gqlkit/schema/subscription.ts"""
 enum Role {
   USER
   ADMIN
 }
 
 type Subscription
-
-"""Defined in: src/gqlkit/schema/subscription.ts"""
-input OrderUpdatedFilterInput {
-  """Minimum order amount"""
-  minAmount: Float
-  """Order status to filter by"""
-  status: String
-}
 
 extend type Subscription {
   """
@@ -35,9 +21,4 @@ extend type Subscription {
   messageAdded(channelId: String!): Message! @auth(role: [USER])
   """Defined in: src/gqlkit/schema/subscription.ts"""
   notificationReceived(userId: String!): Alert! @deprecated(reason: """Use alertReceived instead""")
-  """Defined in: src/gqlkit/schema/subscription.ts"""
-  orderUpdated(
-    """Filter options for order updates"""
-    filter: OrderUpdatedFilterInput!
-  ): OrderUpdatedPayload!
 }

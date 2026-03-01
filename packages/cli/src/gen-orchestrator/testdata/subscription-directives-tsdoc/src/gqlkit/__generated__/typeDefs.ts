@@ -45,54 +45,6 @@ export const typeDefs: DocumentNode = {
       ]
     },
     {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "OrderUpdatedPayload"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "orderId"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "status"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/subscription.ts",
-        "block": true
-      }
-    },
-    {
       "kind": "EnumTypeDefinition",
       "name": {
         "kind": "Name",
@@ -127,58 +79,6 @@ export const typeDefs: DocumentNode = {
         "value": "Subscription"
       },
       "fields": []
-    },
-    {
-      "kind": "InputObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "OrderUpdatedFilterInput"
-      },
-      "fields": [
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "minAmount"
-          },
-          "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "Float"
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Minimum order amount",
-            "block": true
-          }
-        },
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "status"
-          },
-          "type": {
-            "kind": "NamedType",
-            "name": {
-              "kind": "Name",
-              "value": "String"
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Order status to filter by",
-            "block": true
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/subscription.ts",
-        "block": true
-      }
     },
     {
       "kind": "ObjectTypeExtension",
@@ -340,52 +240,6 @@ export const typeDefs: DocumentNode = {
               ]
             }
           ]
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "orderUpdated"
-          },
-          "arguments": [
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "filter"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "OrderUpdatedFilterInput"
-                  }
-                }
-              },
-              "description": {
-                "kind": "StringValue",
-                "value": "Filter options for order updates",
-                "block": true
-              }
-            }
-          ],
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "OrderUpdatedPayload"
-              }
-            }
-          },
-          "description": {
-            "kind": "StringValue",
-            "value": "Defined in: src/gqlkit/schema/subscription.ts",
-            "block": true
-          }
         }
       ]
     }

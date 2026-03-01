@@ -48,19 +48,3 @@ export const notificationReceived = defineSubscription<
 >(async function* () {
   yield { id: "1", title: "Notice", severity: "low" };
 });
-
-// Subscription with inline object type arguments
-export const orderUpdated = defineSubscription<
-  {
-    /** Filter options for order updates */
-    filter: {
-      /** Order status to filter by */
-      status: string | null;
-      /** Minimum order amount */
-      minAmount: number | null;
-    };
-  },
-  { orderId: string; status: string }
->(async function* () {
-  yield { orderId: "1", status: "shipped" };
-});
