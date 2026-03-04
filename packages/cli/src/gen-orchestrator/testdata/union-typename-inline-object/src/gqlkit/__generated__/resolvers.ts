@@ -8,7 +8,7 @@ export function createResolvers() {
       searchQuery: Query$searchQuery,
     },
     SearchResult: {
-      __resolveType: (obj) => obj.__typename,
+      __resolveType: (obj: { __typename: string }) => obj.__typename,
     },
   };
 }

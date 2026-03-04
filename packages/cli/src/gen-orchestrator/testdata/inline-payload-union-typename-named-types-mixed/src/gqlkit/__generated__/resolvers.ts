@@ -5,7 +5,7 @@ import { getUser as Query$getUser } from "../schema/types.js";
 export function createResolvers() {
   return {
     GetUserPayload: {
-      __resolveType: (obj) => obj.__typename ?? obj.$typeName,
+      __resolveType: (obj: { __typename: string; $typeName: string }) => obj.__typename ?? obj.$typeName,
     },
     Query: {
       getUser: Query$getUser,
