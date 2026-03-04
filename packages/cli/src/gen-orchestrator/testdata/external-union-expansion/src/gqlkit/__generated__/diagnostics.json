@@ -1,0 +1,12 @@
+[
+  {
+    "code": "MISSING_ABSTRACT_TYPE_RESOLVER",
+    "message": "Union type 'ContainerItems' has no resolveType defined, and not all member types have isTypeOf defined. To prevent runtime errors, either define a resolveType for 'ContainerItems' or define isTypeOf for each member type.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

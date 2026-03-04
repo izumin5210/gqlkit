@@ -207,9 +207,22 @@ function resolveFieldTypeInternal(
       return { ...innerResult, nullable };
     }
 
-    const memberResults = nonNullTypes.map((t) =>
-      resolveFieldTypeInternal(t, undefined, ctx),
-    );
+    const memberResults = nonNullTypes.map((t) => {
+      const result = resolveFieldTypeInternal(t, undefined, ctx);
+      // If the result is an unresolvable reference and the original type is an
+      // object type with properties, try to expand it as an inline object.
+      // This handles external library types used as union members.
+      if (
+        result.kind === "reference" &&
+        result.name !== null &&
+        !ctx.knownTypeNames.has(result.name) &&
+        t.flags & ts.TypeFlags.Object &&
+        t.getProperties().length > 0
+      ) {
+        return tryExtractAsInlineObject(t, ctx);
+      }
+      return result;
+    });
 
     return createUnionType({ members: memberResults, nullable });
   }
