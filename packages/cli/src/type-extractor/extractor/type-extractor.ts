@@ -539,6 +539,11 @@ function extractFieldsFromType(
       scalarMappingContext,
     });
 
+    // Skip fields with never type — they have no GraphQL representation
+    if (resolvedType.kind === "never") {
+      continue;
+    }
+
     // Preserve nullability from original WithDirectives type
     const tsType =
       directiveNullable && !resolvedType.nullable

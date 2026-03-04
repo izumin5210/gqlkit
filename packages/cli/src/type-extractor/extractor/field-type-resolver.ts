@@ -30,6 +30,7 @@ import {
   createInlineEnumType,
   createInlineObjectType,
   createLiteralType,
+  createNeverType,
   createPrimitiveType,
   createReferenceType,
   createScalarType,
@@ -229,6 +230,12 @@ function resolveFieldTypeInternal(
       : createPrimitiveType({ name: "unknown", nullable: false });
 
     return createArrayType(elementResult);
+  }
+
+  // Never type — represents an impossible value, skip this field
+  // Also handles `undefined` which results from `field?: never` (never | undefined simplifies to undefined)
+  if (type.flags & ts.TypeFlags.Never || type.flags & ts.TypeFlags.Undefined) {
+    return createNeverType();
   }
 
   // Primitive types
