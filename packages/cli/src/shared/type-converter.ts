@@ -20,6 +20,9 @@ function convertElementTypeName(elementType: TSTypeReference): string {
   if (elementType.kind === "inlineEnum") {
     return "__INLINE_ENUM__";
   }
+  if (elementType.kind === "literal") {
+    return "String";
+  }
   return elementType.name ?? "String";
 }
 
@@ -84,6 +87,15 @@ export function convertTsTypeToGraphQLType(
   if (tsType.kind === "inlineEnum") {
     return {
       typeName: "__INLINE_ENUM__",
+      nullable,
+      list: false,
+      listItemNullable: null,
+    };
+  }
+
+  if (tsType.kind === "literal") {
+    return {
+      typeName: "String",
       nullable,
       list: false,
       listItemNullable: null,
