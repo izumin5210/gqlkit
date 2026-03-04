@@ -252,6 +252,10 @@ function resolveFieldTypeInternal(
   if (type.flags & ts.TypeFlags.NumberLiteral) {
     return createLiteralType(typeString);
   }
+  // Template literal types (e.g., `prefix-${string}`) represent string subsets
+  if (type.flags & ts.TypeFlags.TemplateLiteral) {
+    return createPrimitiveType({ name: "string", nullable: false });
+  }
 
   // Intersection types in field context
   // GraphQL doesn't have intersection types, so we must resolve them appropriately
