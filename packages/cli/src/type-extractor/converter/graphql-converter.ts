@@ -158,16 +158,18 @@ function convertFields(
     });
 
     if (!eligibility.eligible) {
-      diagnostics.push({
-        code: "SKIPPED_FIELD",
-        message: eligibility.skipReason!.message,
-        severity: "warning",
-        location: field.sourceLocation ?? {
-          file: extracted.metadata.sourceFile,
-          line: 1,
-          column: 1,
-        },
-      });
+      if (eligibility.skipReason!.code !== "TYPENAME_FIELD") {
+        diagnostics.push({
+          code: "SKIPPED_FIELD",
+          message: eligibility.skipReason!.message,
+          severity: "warning",
+          location: field.sourceLocation ?? {
+            file: extracted.metadata.sourceFile,
+            line: 1,
+            column: 1,
+          },
+        });
+      }
       continue;
     }
 

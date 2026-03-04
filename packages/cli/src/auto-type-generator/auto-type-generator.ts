@@ -494,12 +494,14 @@ function generateAutoType(
     });
 
     if (!eligibility.eligible) {
-      diagnostics.push({
-        code: "SKIPPED_FIELD",
-        message: eligibility.skipReason.message,
-        severity: "warning",
-        location: prop.sourceLocation ?? inlineObj.sourceLocation,
-      });
+      if (eligibility.skipReason.code !== "TYPENAME_FIELD") {
+        diagnostics.push({
+          code: "SKIPPED_FIELD",
+          message: eligibility.skipReason.message,
+          severity: "warning",
+          location: prop.sourceLocation ?? inlineObj.sourceLocation,
+        });
+      }
       continue;
     }
 
