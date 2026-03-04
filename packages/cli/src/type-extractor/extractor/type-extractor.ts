@@ -260,6 +260,7 @@ function convertTsTypeToReference(
       tsType: createUnionType({
         members: memberResults.map((r) => r.tsType),
         nullable,
+        aliasName: type.aliasSymbol?.getName() ?? null,
       }),
     };
   }
