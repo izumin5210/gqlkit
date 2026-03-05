@@ -1,5 +1,5 @@
 ---
-"@gqlkit-ts/cli": patch
+"@gqlkit-ts/cli": minor
 ---
 
-fix: suppress warnings for typename discrimination fields
+feat: discover and register external union member types with original names
