@@ -171,7 +171,10 @@ function convertFields(
       continue;
     }
 
-    const graphqlType = convertTsTypeToGraphQLType(field.tsType, field.optional);
+    const graphqlType = convertTsTypeToGraphQLType(
+      field.tsType,
+      field.optional,
+    );
 
     // Skip fields with never type — they represent impossible values
     if (graphqlType.typeName === "__NEVER__") {
