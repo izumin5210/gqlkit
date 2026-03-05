@@ -706,27 +706,6 @@ function updateField(
     }
   }
 
-  // Handle array of inline union types
-  if (
-    field.tsType.kind === "array" &&
-    field.tsType.elementType?.kind === "union" &&
-    field.tsType.elementType.members
-  ) {
-    const resolvedTypeName = unionTypeNames.get(contextKey);
-    if (resolvedTypeName) {
-      return {
-        ...field,
-        tsType: {
-          ...field.tsType,
-          elementType: createReferenceType({
-            name: resolvedTypeName,
-            nullable: field.tsType.elementType.nullable,
-          }),
-        },
-      };
-    }
-  }
-
   return field;
 }
 

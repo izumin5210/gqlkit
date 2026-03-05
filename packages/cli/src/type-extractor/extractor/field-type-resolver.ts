@@ -1,4 +1,3 @@
-import { relative } from "node:path";
 import ts from "typescript";
 import {
   detectBrandedType,
@@ -8,10 +7,6 @@ import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } from "../../shared/inline-object-extractor.js";
 import { isInlineObjectType } from "../../shared/inline-object-utils.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
-import {
-  getSourceLocationFromNode,
-  type SourceLocation,
-} from "../../shared/source-location.js";
 import {
   type DeprecationInfo,
   extractTsDocFromSymbol,
@@ -46,14 +41,6 @@ import type {
 } from "../types/typescript.js";
 import type { GlobalTypeMapping } from "./type-extractor.js";
 
-export interface DiscoveredTypeEntry {
-  readonly name: string;
-  readonly tsType: ts.Type;
-  readonly tsSymbol: ts.Symbol;
-  readonly sourceFile: string;
-  readonly sourceLocation: SourceLocation;
-}
-
 export interface FieldTypeResolverContext {
   readonly checker: ts.TypeChecker;
   readonly knownTypeNames: ReadonlySet<string>;
@@ -65,8 +52,6 @@ export interface FieldTypeResolverContext {
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   /** Current resolution context for scalar mapping (input or output) */
   readonly scalarMappingContext: ScalarMappingContext;
-  /** Mutable map for collecting transitively discovered types */
-  readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
 }
 
 /**
@@ -473,30 +458,6 @@ function resolveFieldTypeInternal(
             externalEnumDescription: externalEnumResult.description,
             externalEnumDeprecated: externalEnumResult.deprecated,
           });
-        }
-      }
-
-      // Discover extractable named types for transitive type registration
-      if (ctx.discoveredTypes && !ctx.discoveredTypes.has(symbolName)) {
-        const declarations = resolvedSymbol.getDeclarations();
-        const decl = declarations?.[0];
-        if (decl && !decl.getSourceFile().isDeclarationFile) {
-          const properties = type.getProperties();
-          if (properties.length > 0) {
-            const declSourceFile = decl.getSourceFile();
-            const location = getSourceLocationFromNode(decl) ?? {
-              file: declSourceFile.fileName,
-              line: 1,
-              column: 1,
-            };
-            ctx.discoveredTypes.set(symbolName, {
-              name: symbolName,
-              tsType: type,
-              tsSymbol: resolvedSymbol,
-              sourceFile: relative(process.cwd(), declSourceFile.fileName),
-              sourceLocation: location,
-            });
-          }
         }
       }
 

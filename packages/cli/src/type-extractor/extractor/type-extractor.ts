@@ -65,10 +65,7 @@ import {
   type TypeKind,
   type TypeMetadata,
 } from "../types/index.js";
-import {
-  type DiscoveredTypeEntry,
-  resolveFieldType,
-} from "./field-type-resolver.js";
+import { resolveFieldType } from "./field-type-resolver.js";
 
 /**
  * Global type mapping configuration.
@@ -101,7 +98,6 @@ export interface ExtractionResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
   readonly detectedScalarNames: ReadonlyArray<string>;
   readonly detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
-  readonly discoveredTypeNames: ReadonlySet<string>;
 }
 
 function isDefaultExport(node: ts.Node, sourceFile: ts.SourceFile): boolean {
@@ -440,7 +436,6 @@ interface ExtractFieldsParams {
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   readonly scalarMappingContext: ScalarMappingContext;
   readonly ignoreFields: ReadonlySet<string> | null;
-  readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
 }
 
 function extractFieldsFromType(
@@ -457,7 +452,6 @@ function extractFieldsFromType(
     scalarMappingTable,
     scalarMappingContext,
     ignoreFields,
-    discoveredTypes,
   } = params;
   const fields: FieldDefinition[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -543,7 +537,6 @@ function extractFieldsFromType(
       sourceFiles,
       scalarMappingTable,
       scalarMappingContext,
-      discoveredTypes,
     });
 
     // Preserve nullability from original WithDirectives type
@@ -854,7 +847,6 @@ interface ProcessReexportedSymbolParams {
   readonly scannedSourceFiles: ReadonlySet<string>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   readonly scalarMappingContext: ScalarMappingContext;
-  readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
 }
 
 interface ProcessReexportedSymbolResult {
@@ -882,7 +874,6 @@ function processReexportedSymbol(
     scannedSourceFiles,
     scalarMappingTable,
     scalarMappingContext,
-    discoveredTypes,
   } = params;
 
   const diagnostics: Diagnostic[] = [];
@@ -1008,7 +999,6 @@ function processReexportedSymbol(
           scalarMappingTable,
           scalarMappingContext,
           ignoreFields,
-          discoveredTypes,
         });
   diagnostics.push(...fieldResult.diagnostics);
 
@@ -1046,7 +1036,6 @@ function processExportDeclaration(
   underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>,
   scannedSourceFiles: ReadonlySet<string>,
   scalarMappingTable: ScalarBaseTypeMappingTable | null,
-  discoveredTypes: Map<string, DiscoveredTypeEntry> | null,
 ): ProcessExportDeclarationResult {
   const types: ExtractedTypeInfo[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -1143,7 +1132,6 @@ function processExportDeclaration(
       scannedSourceFiles,
       scalarMappingTable,
       scalarMappingContext: exportedName.endsWith("Input") ? "input" : "output",
-      discoveredTypes,
     });
 
     if (result.skip) continue;
@@ -1329,7 +1317,6 @@ export function extractTypesFromProgram(
   const diagnostics: Diagnostic[] = [];
   const detectedScalarNames = new Set<string>();
   const detectedScalars: ScalarMetadataInfo[] = [];
-  const discoveredTypes = new Map<string, DiscoveredTypeEntry>();
   const {
     globalTypeMappings,
     knownTypeNames,
@@ -1575,7 +1562,6 @@ export function extractTypesFromProgram(
                   ? "input"
                   : "output",
                 ignoreFields,
-                discoveredTypes,
               });
         const fields = fieldResult.fields;
         diagnostics.push(...fieldResult.diagnostics);
@@ -1638,7 +1624,6 @@ export function extractTypesFromProgram(
           underlyingSymbolToTypeName,
           scannedSourceFilesSet,
           scalarMappingTable,
-          discoveredTypes,
         );
         types.push(...result.types);
         diagnostics.push(...result.diagnostics);
@@ -1650,54 +1635,10 @@ export function extractTypesFromProgram(
     });
   }
 
-  // Process transitively discovered types
-  const processedDiscovered = new Set<string>();
-  while (discoveredTypes.size > processedDiscovered.size) {
-    for (const [name, entry] of discoveredTypes) {
-      if (processedDiscovered.has(name)) continue;
-      processedDiscovered.add(name);
-      if (knownTypeNames.has(name)) continue;
-
-      const { fields } = extractFieldsFromType({
-        type: entry.tsType,
-        checker,
-        globalTypeMappings,
-        knownTypeNames,
-        knownTypeSymbols,
-        underlyingSymbolToTypeName,
-        sourceFiles: scannedSourceFilesSet,
-        scalarMappingTable,
-        scalarMappingContext: "output",
-        ignoreFields: null,
-        discoveredTypes,
-      });
-      if (fields.length === 0) continue;
-
-      types.push({
-        metadata: {
-          name,
-          kind: "object",
-          sourceFile: entry.sourceFile,
-          sourceLocation: entry.sourceLocation,
-          exportKind: "named",
-          description: null,
-          deprecated: null,
-          directives: null,
-        },
-        fields,
-        enumMembers: null,
-        unionMembers: null,
-        implementedInterfaces: null,
-        inlineObjectMembers: null,
-      });
-    }
-  }
-
   return {
     types,
     diagnostics,
     detectedScalarNames: [...detectedScalarNames],
     detectedScalars,
-    discoveredTypeNames: new Set(discoveredTypes.keys()),
   };
 }
