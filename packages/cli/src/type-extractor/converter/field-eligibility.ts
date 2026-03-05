@@ -5,14 +5,11 @@
  * in the generated GraphQL schema based on naming conventions and other rules.
  */
 
-import { TYPENAME_FIELD_NAMES } from "../../auto-type-generator/typename-types.js";
-
 const GRAPHQL_NAME_PATTERN = /^[_A-Za-z][_0-9A-Za-z]*$/;
 
 export type SkipReason =
   | { readonly code: "INVALID_NAME"; readonly message: string }
-  | { readonly code: "RESERVED_NAME"; readonly message: string }
-  | { readonly code: "TYPENAME_FIELD"; readonly message: string };
+  | { readonly code: "RESERVED_NAME"; readonly message: string };
 
 export type EligibilityResult =
   | { readonly eligible: true; readonly skipReason: null }
@@ -43,17 +40,6 @@ export function isEligibleField(
 ): EligibilityResult {
   const { fieldName, kind } = params;
   const prefix = kind === "input" ? "Input field" : "Field";
-
-  // Typename discrimination fields are intentionally excluded from the schema
-  if ((TYPENAME_FIELD_NAMES as readonly string[]).includes(fieldName)) {
-    return {
-      eligible: false,
-      skipReason: {
-        code: "TYPENAME_FIELD",
-        message: `${prefix} '${fieldName}' is a typename discrimination field used by gqlkit for union type resolution`,
-      },
-    };
-  }
 
   if (isReservedName(fieldName)) {
     return {

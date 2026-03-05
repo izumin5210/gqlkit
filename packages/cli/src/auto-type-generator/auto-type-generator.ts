@@ -16,6 +16,7 @@ import { toScreamingSnakeCase } from "../shared/string-utils.js";
 import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
 import { convertTsTypeToGraphQLType } from "../shared/type-converter.js";
 import { isEligibleField } from "../type-extractor/converter/field-eligibility.js";
+import { isTypenameFieldName } from "./typename-types.js";
 import {
   createReferenceType,
   type Diagnostic,
@@ -488,20 +489,23 @@ function generateAutoType(
   const diagnostics: Diagnostic[] = [];
 
   for (const prop of inlineObj.properties) {
+    // Typename discrimination fields are silently excluded from the schema
+    if (isTypenameFieldName(prop.name)) {
+      continue;
+    }
+
     const eligibility = isEligibleField({
       fieldName: prop.name,
       kind: isInput ? "input" : "object",
     });
 
     if (!eligibility.eligible) {
-      if (eligibility.skipReason.code !== "TYPENAME_FIELD") {
-        diagnostics.push({
-          code: "SKIPPED_FIELD",
-          message: eligibility.skipReason.message,
-          severity: "warning",
-          location: prop.sourceLocation ?? inlineObj.sourceLocation,
-        });
-      }
+      diagnostics.push({
+        code: "SKIPPED_FIELD",
+        message: eligibility.skipReason.message,
+        severity: "warning",
+        location: prop.sourceLocation ?? inlineObj.sourceLocation,
+      });
       continue;
     }
 

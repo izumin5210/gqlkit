@@ -297,18 +297,16 @@ function convertDefineApiToFields(
       kind: "object",
     });
     if (!eligibility.eligible) {
-      if (eligibility.skipReason.code !== "TYPENAME_FIELD") {
-        diagnostics.push({
-          code: "SKIPPED_FIELD",
-          message: eligibility.skipReason.message,
-          severity: "warning",
-          location: {
-            file: resolver.sourceLocation.file,
-            line: resolver.sourceLocation.line,
-            column: resolver.sourceLocation.column,
-          },
-        });
-      }
+      diagnostics.push({
+        code: "SKIPPED_FIELD",
+        message: eligibility.skipReason.message,
+        severity: "warning",
+        location: {
+          file: resolver.sourceLocation.file,
+          line: resolver.sourceLocation.line,
+          column: resolver.sourceLocation.column,
+        },
+      });
       continue;
     }
 

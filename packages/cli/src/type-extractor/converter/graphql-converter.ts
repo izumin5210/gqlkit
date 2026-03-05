@@ -20,6 +20,7 @@ import type {
   InlineObjectProperty,
   SourceLocation,
 } from "../types/index.js";
+import { isTypenameFieldName } from "../../auto-type-generator/typename-types.js";
 import { isEligibleAsEnumValue, isEligibleField } from "./field-eligibility.js";
 
 export interface ConversionResult {
@@ -152,24 +153,27 @@ function convertFields(
   const diagnostics: Diagnostic[] = [];
 
   for (const field of extracted.fields) {
+    // Typename discrimination fields are silently excluded from the schema
+    if (isTypenameFieldName(field.name)) {
+      continue;
+    }
+
     const eligibility = isEligibleField({
       fieldName: field.name,
       kind: isInput ? "input" : "object",
     });
 
     if (!eligibility.eligible) {
-      if (eligibility.skipReason!.code !== "TYPENAME_FIELD") {
-        diagnostics.push({
-          code: "SKIPPED_FIELD",
-          message: eligibility.skipReason!.message,
-          severity: "warning",
-          location: field.sourceLocation ?? {
-            file: extracted.metadata.sourceFile,
-            line: 1,
-            column: 1,
-          },
-        });
-      }
+      diagnostics.push({
+        code: "SKIPPED_FIELD",
+        message: eligibility.skipReason!.message,
+        severity: "warning",
+        location: field.sourceLocation ?? {
+          file: extracted.metadata.sourceFile,
+          line: 1,
+          column: 1,
+        },
+      });
       continue;
     }
 
