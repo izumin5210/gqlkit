@@ -119,6 +119,10 @@ export function createScalarType(
   });
 }
 
+export function createNeverType(): TSTypeReference {
+  return createTSTypeReference({ kind: "never", overrides: {} });
+}
+
 export function createLiteralType(name: string): TSTypeReference {
   return createTSTypeReference({ kind: "literal", overrides: { name } });
 }

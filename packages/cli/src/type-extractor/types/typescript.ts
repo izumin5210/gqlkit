@@ -48,7 +48,8 @@ export type TSTypeReferenceKind =
   | "literal"
   | "scalar"
   | "inlineObject"
-  | "inlineEnum";
+  | "inlineEnum"
+  | "never";
 
 /**
  * Information about an inline enum member (string literal union value).
