@@ -227,12 +227,15 @@ function resolveFieldTypeInternal(
       // If the result is an unresolvable reference and the original type is an
       // object type with properties, try to expand it as an inline object.
       // This handles external library types used as union members.
+      // When type discovery is active, discovered types are kept as references
+      // so they can be registered with their original names later.
       if (
         result.kind === "reference" &&
         result.name !== null &&
         !ctx.knownTypeNames.has(result.name) &&
         t.flags & ts.TypeFlags.Object &&
-        t.getProperties().length > 0
+        t.getProperties().length > 0 &&
+        !ctx.discoveredTypes?.has(result.name)
       ) {
         return tryExtractAsInlineObject(t, ctx);
       }
