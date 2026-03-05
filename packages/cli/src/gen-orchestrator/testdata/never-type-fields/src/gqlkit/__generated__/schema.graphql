@@ -3,8 +3,18 @@
 """Defined in: src/gqlkit/schema/types.ts"""
 type PartBase {
   label: String!
+  """
+  Inline object with never property — never should be excluded from generated type
+  """
+  metadata: PartBaseMetadata!
   text: String!
   type: String!
+}
+
+"""Defined in: src/gqlkit/schema/types.ts"""
+type PartBaseMetadata {
+  description: String!
+  name: String!
 }
 
 type Query

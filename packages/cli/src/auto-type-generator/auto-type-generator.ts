@@ -510,6 +510,12 @@ function generateAutoType(
       unionTypeNames,
       parentContext: inlineObj.context,
     });
+
+    // Skip fields with never type — they represent impossible values
+    if (fieldType.typeName === "__NEVER__") {
+      continue;
+    }
+
     fields.push({
       name: prop.name,
       type: fieldType,
@@ -1290,6 +1296,9 @@ function generateOneOfFields(
           prop.tsType,
           prop.optional,
         );
+        if (fieldType.typeName === "__NEVER__") {
+          continue;
+        }
         fields.push({
           name: prop.name,
           type: {
@@ -1424,11 +1433,14 @@ function resolveMemberNames(params: ResolveMemberNamesParams): string[] {
             parentContext.kind !== "resolverPayload" ||
             prop.name !== typenameFieldToFilter,
         )
-        .map((prop) => {
+        .flatMap((prop) => {
           const fieldType = convertTsTypeToGraphQLType(
             prop.tsType,
             prop.optional,
           );
+          if (fieldType.typeName === "__NEVER__") {
+            return [];
+          }
           return {
             name: prop.name,
             type: fieldType,
