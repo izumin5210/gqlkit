@@ -119,8 +119,15 @@ export function createScalarType(
   });
 }
 
-export function createLiteralType(name: string): TSTypeReference {
-  return createTSTypeReference({ kind: "literal", overrides: { name } });
+export function createStringLiteralType(name: string): TSTypeReference {
+  return createTSTypeReference({ kind: "stringLiteral", overrides: { name } });
+}
+
+export function createNumericLiteralType(name: string): TSTypeReference {
+  return createTSTypeReference({
+    kind: "numericLiteral",
+    overrides: { name },
+  });
 }
 
 interface CreateInlineEnumTypeParams {

@@ -6,7 +6,7 @@ type Query
 type StatusEvent {
   code: StatusEventCode!
   label: String!
-  numericCode: String!
+  numericCode: Int!
   type: String!
 }
 

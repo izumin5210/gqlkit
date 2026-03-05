@@ -45,7 +45,8 @@ export type TSTypeReferenceKind =
   | "reference"
   | "array"
   | "union"
-  | "literal"
+  | "stringLiteral"
+  | "numericLiteral"
   | "scalar"
   | "inlineObject"
   | "inlineEnum";

@@ -1358,7 +1358,7 @@ function extractTypenameFromInlineObject(
   const { property, fieldName } = found;
   const { tsType } = property;
 
-  if (tsType.kind === "literal" && tsType.name !== null) {
+  if (tsType.kind === "stringLiteral" && tsType.name !== null) {
     return { typeName: tsType.name, fieldName };
   }
 

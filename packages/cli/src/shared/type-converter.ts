@@ -20,8 +20,11 @@ function convertElementTypeName(elementType: TSTypeReference): string {
   if (elementType.kind === "inlineEnum") {
     return "__INLINE_ENUM__";
   }
-  if (elementType.kind === "literal") {
+  if (elementType.kind === "stringLiteral") {
     return "String";
+  }
+  if (elementType.kind === "numericLiteral") {
+    return "Int";
   }
   return elementType.name ?? "String";
 }
@@ -93,9 +96,18 @@ export function convertTsTypeToGraphQLType(
     };
   }
 
-  if (tsType.kind === "literal") {
+  if (tsType.kind === "stringLiteral") {
     return {
       typeName: "String",
+      nullable,
+      list: false,
+      listItemNullable: null,
+    };
+  }
+
+  if (tsType.kind === "numericLiteral") {
+    return {
+      typeName: "Int",
       nullable,
       list: false,
       listItemNullable: null,

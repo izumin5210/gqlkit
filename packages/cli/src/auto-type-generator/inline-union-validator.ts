@@ -90,7 +90,7 @@ function validateUnionMemberType(
     };
   }
 
-  if (memberType.kind === "literal") {
+  if (memberType.kind === "stringLiteral") {
     return {
       code: "INLINE_UNION_ENUM_MEMBER",
       message: `Inline union '${typeName}' contains a literal type '${memberType.name}'. GraphQL unions can only contain object types.`,
@@ -338,7 +338,7 @@ function extractTypenameFromNamedType(
   if (
     field.optional ||
     tsType.nullable ||
-    tsType.kind !== "literal" ||
+    tsType.kind !== "stringLiteral" ||
     tsType.name === null
   ) {
     return null;
@@ -445,7 +445,7 @@ export function validateUnionMemberTypenames(
       });
     }
 
-    if (typenameType.kind !== "literal" || typenameType.name === null) {
+    if (typenameType.kind !== "stringLiteral" || typenameType.name === null) {
       diagnostics.push({
         code: "INVALID_TYPENAME_TYPE",
         message: `Union '${unionTypeName}' member at index ${i} has '${selectedFieldName}' that is not a string literal type. Expected a string literal like '${selectedFieldName}: "TypeName"'.`,

@@ -50,10 +50,11 @@ import type {
 import {
   createArrayType,
   createInlineObjectType,
-  createLiteralType,
+  createNumericLiteralType,
   createPrimitiveType,
   createReferenceType,
   createScalarType,
+  createStringLiteralType,
   createUnionType,
   type Diagnostic,
   type EnumMemberInfo,
@@ -307,12 +308,12 @@ function convertTsTypeToReference(
   }
   if (type.flags & ts.TypeFlags.StringLiteral) {
     return {
-      tsType: createLiteralType(typeString.replace(/"/g, "")),
+      tsType: createStringLiteralType(typeString.replace(/"/g, "")),
     };
   }
   if (type.flags & ts.TypeFlags.NumberLiteral) {
     return {
-      tsType: createLiteralType(typeString),
+      tsType: createNumericLiteralType(typeString),
     };
   }
 
