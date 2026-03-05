@@ -1,6 +1,7 @@
-// Simulate external library types (not exported as schema types)
-// Named type aliases resolve to object types but are NOT anonymous __type symbols,
-// so isInlineObjectType returns false and they bypass inline object extraction.
+import { defineIsTypeOf } from "../gqlkit.js";
+
+// These interfaces are NOT exported from schema - they are "external" types
+// that should be transitively discovered when used as union members.
 interface ExternalPartA {
   value: string;
 }
@@ -9,7 +10,19 @@ interface ExternalPartB {
   count: number;
 }
 
-// This union's members are not in knownTypeNames
+/**
+ * Container with items as a union of external types.
+ * ExternalPartA and ExternalPartB should be discovered and registered
+ * as separate GraphQL types with their original names.
+ */
 export type Container = {
-  items: (ExternalPartA | ExternalPartB)[];
+  items: Array<ExternalPartA | ExternalPartB>;
 };
+
+export const externalPartAIsTypeOf = defineIsTypeOf<ExternalPartA>((value) => {
+  return typeof value === "object" && value !== null && "value" in value;
+});
+
+export const externalPartBIsTypeOf = defineIsTypeOf<ExternalPartB>((value) => {
+  return typeof value === "object" && value !== null && "count" in value;
+});
