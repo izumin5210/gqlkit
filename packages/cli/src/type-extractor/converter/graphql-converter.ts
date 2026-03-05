@@ -1,3 +1,4 @@
+import { isTypenameFieldName } from "../../auto-type-generator/typename-types.js";
 import {
   BUILT_IN_SCALARS,
   isBuiltInScalar,
@@ -20,7 +21,6 @@ import type {
   InlineObjectProperty,
   SourceLocation,
 } from "../types/index.js";
-import { isTypenameFieldName } from "../../auto-type-generator/typename-types.js";
 import { isEligibleAsEnumValue, isEligibleField } from "./field-eligibility.js";
 
 export interface ConversionResult {

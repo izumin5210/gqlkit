@@ -16,7 +16,6 @@ import { toScreamingSnakeCase } from "../shared/string-utils.js";
 import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
 import { convertTsTypeToGraphQLType } from "../shared/type-converter.js";
 import { isEligibleField } from "../type-extractor/converter/field-eligibility.js";
-import { isTypenameFieldName } from "./typename-types.js";
 import {
   createReferenceType,
   type Diagnostic,
@@ -60,6 +59,7 @@ import {
 import {
   createFieldNameSet,
   findTypenameProperty,
+  isTypenameFieldName,
   type TypenameFieldInfo,
   type TypenameFieldName,
 } from "./typename-types.js";
