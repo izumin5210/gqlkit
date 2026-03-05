@@ -5,20 +5,20 @@ import { processDataMixed as Mutation$processDataMixed, getDataWithInlineError a
 export function createResolvers() {
   return {
     GetDataWithInlineErrorPayload: {
-      __resolveType: (obj) => obj.__typename,
+      __resolveType: (obj: { __typename: string }) => obj.__typename,
     },
     Mutation: {
       processDataMixed: Mutation$processDataMixed,
     },
     ProcessDataMixedPayload: {
-      __resolveType: (obj) => obj.__typename ?? obj.$typeName,
+      __resolveType: (obj: { __typename: string; $typeName: string }) => obj.__typename ?? obj.$typeName,
     },
     Query: {
       getDataWithInlineError: Query$getDataWithInlineError,
       validateInput: Query$validateInput,
     },
     ValidateInputPayload: {
-      __resolveType: (obj) => obj.$typeName,
+      __resolveType: (obj: { $typeName: string }) => obj.$typeName,
     },
   };
 }

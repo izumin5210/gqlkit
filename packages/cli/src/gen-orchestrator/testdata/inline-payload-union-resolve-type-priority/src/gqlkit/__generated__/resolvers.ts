@@ -8,7 +8,7 @@ export function createResolvers() {
       __isTypeOf: CreateUserError$__isTypeOf,
     },
     CreateUserPayload: {
-      __resolveType: (obj) => obj.__typename,
+      __resolveType: (obj: { __typename: string }) => obj.__typename,
     },
     CreateUserSuccess: {
       __isTypeOf: CreateUserSuccess$__isTypeOf,
