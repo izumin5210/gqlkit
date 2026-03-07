@@ -4,14 +4,15 @@
 union ContentPayload = ImageContent | TextContent
 
 type ImageContent {
-  dimensions: __INLINE_OBJECT__!
+  height: Float!
   url: String!
+  width: Float!
 }
 
 type Query
 
 type TextContent {
-  metadata: __INLINE_OBJECT__!
+  format: String!
   text: String!
 }
 

@@ -44,7 +44,7 @@ export const typeDefs: DocumentNode = {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "dimensions"
+            "value": "height"
           },
           "type": {
             "kind": "NonNullType",
@@ -52,7 +52,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "__INLINE_OBJECT__"
+                "value": "Float"
               }
             }
           }
@@ -70,6 +70,23 @@ export const typeDefs: DocumentNode = {
               "name": {
                 "kind": "Name",
                 "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "width"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
               }
             }
           }
@@ -95,7 +112,7 @@ export const typeDefs: DocumentNode = {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
-            "value": "metadata"
+            "value": "format"
           },
           "type": {
             "kind": "NonNullType",
@@ -103,7 +120,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "__INLINE_OBJECT__"
+                "value": "String"
               }
             }
           }

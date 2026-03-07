@@ -9,15 +9,16 @@ export const content = defineQuery<
   | {
       __typename: "TextContent";
       text: string;
-      metadata: { lang: string; encoding: string };
+      format: string;
     }
   | {
       __typename: "ImageContent";
       url: string;
-      dimensions: { width: number; height: number };
+      width: number;
+      height: number;
     }
 >(() => ({
   __typename: "TextContent" as const,
   text: "hello",
-  metadata: { lang: "en", encoding: "utf-8" },
+  format: "plain",
 }));
