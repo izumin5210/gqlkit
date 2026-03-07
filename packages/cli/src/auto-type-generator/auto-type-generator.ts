@@ -59,6 +59,7 @@ import {
 import {
   createFieldNameSet,
   findTypenameProperty,
+  isTypenameFieldName,
   type TypenameFieldInfo,
   type TypenameFieldName,
 } from "./typename-types.js";
@@ -488,6 +489,11 @@ function generateAutoType(
   const diagnostics: Diagnostic[] = [];
 
   for (const prop of inlineObj.properties) {
+    // Typename discrimination fields are silently excluded from the schema
+    if (isTypenameFieldName(prop.name)) {
+      continue;
+    }
+
     const eligibility = isEligibleField({
       fieldName: prop.name,
       kind: isInput ? "input" : "object",
