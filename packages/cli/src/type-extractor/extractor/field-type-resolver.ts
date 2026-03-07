@@ -35,6 +35,7 @@ import {
   createInlineEnumType,
   createInlineObjectType,
   createLiteralType,
+  createNeverType,
   createPrimitiveType,
   createReferenceType,
   createScalarType,
@@ -262,6 +263,12 @@ function resolveFieldTypeInternal(
     return createArrayType(elementResult);
   }
 
+  // Never type — represents an impossible value, skip this field
+  // Also handles `undefined` which results from `field?: never` (never | undefined simplifies to undefined)
+  if (type.flags & ts.TypeFlags.Never || type.flags & ts.TypeFlags.Undefined) {
+    return createNeverType();
+  }
+
   // Primitive types
   const typeString = checker.typeToString(type);
 
@@ -282,6 +289,10 @@ function resolveFieldTypeInternal(
   }
   if (type.flags & ts.TypeFlags.NumberLiteral) {
     return createLiteralType(typeString);
+  }
+  // Template literal types (e.g., `prefix-${string}`) represent string subsets
+  if (type.flags & ts.TypeFlags.TemplateLiteral) {
+    return createPrimitiveType({ name: "string", nullable: false });
   }
 
   // Intersection types in field context

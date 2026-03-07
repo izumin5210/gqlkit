@@ -171,9 +171,19 @@ function convertFields(
       continue;
     }
 
+    const graphqlType = convertTsTypeToGraphQLType(
+      field.tsType,
+      field.optional,
+    );
+
+    // Skip fields with never type — they represent impossible values
+    if (graphqlType.typeName === "__NEVER__") {
+      continue;
+    }
+
     fields.push({
       name: field.name,
-      type: convertTsTypeToGraphQLType(field.tsType, field.optional),
+      type: graphqlType,
       description: field.description,
       deprecated: field.deprecated,
       directives: field.directives,
