@@ -2,4 +2,4 @@
 "@gqlkit-ts/cli": patch
 ---
 
-feat: expand external library union members as inline objects
+feat: discover and register non-exported union member types with original names
