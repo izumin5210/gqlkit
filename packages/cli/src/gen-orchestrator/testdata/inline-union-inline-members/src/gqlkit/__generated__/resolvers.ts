@@ -5,7 +5,7 @@ import { content as Query$content } from "../schema/types.js";
 export function createResolvers() {
   return {
     ContentPayload: {
-      __resolveType: (obj) => obj.__typename,
+      __resolveType: (obj: { __typename: string }) => obj.__typename,
     },
     Query: {
       content: Query$content,
