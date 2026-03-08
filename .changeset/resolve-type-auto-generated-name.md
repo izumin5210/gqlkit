@@ -2,4 +2,4 @@
 "@gqlkit-ts/cli": patch
 ---
 
-fix: map TS type alias names to auto-generated GraphQL union names in resolveType
+fix: resolve `defineResolveType` with auto-generated inline union names
