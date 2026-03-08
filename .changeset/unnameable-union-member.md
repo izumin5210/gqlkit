@@ -1,5 +1,5 @@
 ---
-"@gqlkit-ts/cli": minor
+"@gqlkit-ts/cli": patch
 ---
 
-feat: replace `member${i}` index-based naming fallback with `UNNAMEABLE_UNION_MEMBER` diagnostic error
+fix: replace `member${i}` index-based naming fallback with `UNNAMEABLE_UNION_MEMBER` diagnostic error
