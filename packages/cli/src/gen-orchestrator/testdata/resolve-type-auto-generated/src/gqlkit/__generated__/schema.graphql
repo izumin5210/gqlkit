@@ -10,12 +10,12 @@ type Container {
 union ContainerItems = ContainerItemsMember0 | ContainerItemsMember1
 
 type ContainerItemsMember0 {
-  $typeName: PartA!
+  $typeName: String!
   value: String!
 }
 
 type ContainerItemsMember1 {
-  $typeName: PartB!
+  $typeName: String!
   count: Float!
 }
 

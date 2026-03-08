@@ -34,11 +34,12 @@ import {
   createArrayType,
   createInlineEnumType,
   createInlineObjectType,
-  createLiteralType,
   createNeverType,
+  createNumericLiteralType,
   createPrimitiveType,
   createReferenceType,
   createScalarType,
+  createStringLiteralType,
   createUnionType,
 } from "../types/ts-type-reference-factory.js";
 import type {
@@ -286,10 +287,10 @@ function resolveFieldTypeInternal(
     return createPrimitiveType({ name: "boolean", nullable: false });
   }
   if (type.flags & ts.TypeFlags.StringLiteral) {
-    return createLiteralType(typeString.replace(/"/g, ""));
+    return createStringLiteralType(typeString.replace(/"/g, ""));
   }
   if (type.flags & ts.TypeFlags.NumberLiteral) {
-    return createLiteralType(typeString);
+    return createNumericLiteralType(typeString);
   }
   // Template literal types (e.g., `prefix-${string}`) represent string subsets
   if (type.flags & ts.TypeFlags.TemplateLiteral) {

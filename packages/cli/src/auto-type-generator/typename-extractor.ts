@@ -45,7 +45,11 @@ function extractTypenameFromFields(
   }
 
   const { tsType } = field;
-  if (tsType.nullable || tsType.kind !== "literal" || tsType.name === null) {
+  if (
+    tsType.nullable ||
+    tsType.kind !== "stringLiteral" ||
+    tsType.name === null
+  ) {
     return null;
   }
 
@@ -63,7 +67,11 @@ function extractTypenameFromInlineObjectProperties(
   const { property, fieldName } = found;
   const { propertyType: tsType } = property;
 
-  if (tsType.nullable || tsType.kind !== "literal" || tsType.name === null) {
+  if (
+    tsType.nullable ||
+    tsType.kind !== "stringLiteral" ||
+    tsType.name === null
+  ) {
     return null;
   }
 

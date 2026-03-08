@@ -4,6 +4,21 @@ import type {
 } from "../type-extractor/types/index.js";
 import { PRIMITIVE_TYPE_MAP } from "./constants.js";
 
+const GRAPHQL_INT_MIN = -(2 ** 31);
+const GRAPHQL_INT_MAX = 2 ** 31 - 1;
+
+function numericLiteralToGraphQLScalar(name: string | null): string {
+  const num = Number(name);
+  if (
+    Number.isInteger(num) &&
+    num >= GRAPHQL_INT_MIN &&
+    num <= GRAPHQL_INT_MAX
+  ) {
+    return "Int";
+  }
+  return "Float";
+}
+
 function convertElementTypeName(elementType: TSTypeReference): string {
   if (elementType.kind === "scalar") {
     return elementType.scalarInfo?.scalarName ?? elementType.name ?? "String";
@@ -22,6 +37,12 @@ function convertElementTypeName(elementType: TSTypeReference): string {
   }
   if (elementType.kind === "union") {
     return "__INLINE_UNION__";
+  }
+  if (elementType.kind === "stringLiteral") {
+    return "String";
+  }
+  if (elementType.kind === "numericLiteral") {
+    return numericLiteralToGraphQLScalar(elementType.name);
   }
   if (elementType.kind === "never") {
     return "__NEVER__";
@@ -99,6 +120,24 @@ export function convertTsTypeToGraphQLType(
   if (tsType.kind === "union") {
     return {
       typeName: "__INLINE_UNION__",
+      nullable,
+      list: false,
+      listItemNullable: null,
+    };
+  }
+
+  if (tsType.kind === "stringLiteral") {
+    return {
+      typeName: "String",
+      nullable,
+      list: false,
+      listItemNullable: null,
+    };
+  }
+
+  if (tsType.kind === "numericLiteral") {
+    return {
+      typeName: numericLiteralToGraphQLScalar(tsType.name),
       nullable,
       list: false,
       listItemNullable: null,
