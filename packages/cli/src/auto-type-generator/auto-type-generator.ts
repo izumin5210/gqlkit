@@ -1708,11 +1708,14 @@ function resolveMemberNames(params: ResolveMemberNamesParams): string[] {
         };
         contextKey = getContextKey(nestedContext);
       } else {
+        const memberSegment = memberType.inlineObjectHintName ?? `member${i}`;
         const nestedContext: AutoTypeNameContext = {
           ...parentContext,
-          fieldPath: [...parentContext.fieldPath, `member${i}`],
+          fieldPath: [...parentContext.fieldPath, memberSegment],
         };
-        memberTypeName = generateAutoTypeName(nestedContext);
+        memberTypeName = memberType.inlineObjectHintName
+          ? memberType.inlineObjectHintName
+          : generateAutoTypeName(nestedContext);
         contextKey = getContextKey(nestedContext);
       }
 
@@ -1765,7 +1768,9 @@ function resolveMemberNames(params: ResolveMemberNamesParams): string[] {
         ...parentContext,
         fieldPath: [
           ...parentContext.fieldPath,
-          extractedInfo?.typeName ?? `member${i}`,
+          extractedInfo?.typeName ??
+            memberType.inlineObjectHintName ??
+            `member${i}`,
         ],
       };
 

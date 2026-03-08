@@ -25,6 +25,7 @@ function createTSTypeReference(
     inlineObjectProperties: null,
     inlineObjectDescription: null,
     inlineObjectDeprecated: null,
+    inlineObjectHintName: null,
     inlineEnumMembers: null,
     externalEnumSymbol: null,
     externalEnumDescription: null,
@@ -91,6 +92,8 @@ interface CreateInlineObjectTypeParams {
   readonly description: string | null;
   /** @deprecated tag from the type alias (null for true inline objects) */
   readonly deprecated: DeprecationInfo | null;
+  /** Original type name hint for inline objects extracted from external types */
+  readonly hintName: string | null;
 }
 
 export function createInlineObjectType(
@@ -102,6 +105,7 @@ export function createInlineObjectType(
       inlineObjectProperties: params.properties,
       inlineObjectDescription: params.description,
       inlineObjectDeprecated: params.deprecated,
+      inlineObjectHintName: params.hintName,
     },
   });
 }

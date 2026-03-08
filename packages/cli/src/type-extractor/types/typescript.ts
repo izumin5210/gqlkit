@@ -78,6 +78,8 @@ export interface TSTypeReference {
   readonly inlineObjectDeprecated: DeprecationInfo | null;
   /** Inline enum members when kind is "inlineEnum" */
   readonly inlineEnumMembers: ReadonlyArray<InlineEnumMemberInfo> | null;
+  /** Original type name hint for inline objects extracted from external types */
+  readonly inlineObjectHintName: string | null;
   /** External TypeScript enum symbol for deduplication (Requirement 5.2) */
   readonly externalEnumSymbol: ts.Symbol | null;
   /** TSDoc description from the external enum type itself (Requirement 6.1) */
