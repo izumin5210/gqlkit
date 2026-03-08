@@ -239,7 +239,7 @@ function resolveFieldTypeInternal(
         t.getProperties().length > 0 &&
         !ctx.discoveredTypes?.has(result.name)
       ) {
-        return tryExtractAsInlineObject(t, ctx);
+        return tryExtractAsInlineObject(t, ctx, result.name);
       }
       return result;
     });
@@ -336,7 +336,7 @@ function resolveFieldTypeInternal(
     }
 
     // 4. Otherwise, treat as inline object
-    return tryExtractAsInlineObject(type, ctx);
+    return tryExtractAsInlineObject(type, ctx, null);
   }
 
   // Inline object type handling
@@ -353,7 +353,7 @@ function resolveFieldTypeInternal(
       }
     }
 
-    return tryExtractAsInlineObject(type, ctx);
+    return tryExtractAsInlineObject(type, ctx, null);
   }
 
   // Mapped types (utility types like Omit, Pick, user-defined utilities)
@@ -372,7 +372,7 @@ function resolveFieldTypeInternal(
         }
       }
       // Not a known type - treat as inline object
-      return tryExtractAsInlineObject(type, ctx);
+      return tryExtractAsInlineObject(type, ctx, null);
     }
   }
 
@@ -427,7 +427,7 @@ function resolveFieldTypeInternal(
           return createReferenceType({ name: aliasName, nullable: false });
         }
         // Not a known schema type and is an anonymous object - expand to generate Payload type
-        return tryExtractAsInlineObject(type, ctx);
+        return tryExtractAsInlineObject(type, ctx, null);
       }
     }
   }
@@ -489,7 +489,7 @@ function resolveFieldTypeInternal(
           return createReferenceType({ name: symbolName, nullable: false });
         }
         // Type from outside schema files - expand as inline object
-        return tryExtractAsInlineObject(type, ctx);
+        return tryExtractAsInlineObject(type, ctx, null);
       }
 
       // Check for scalar base type mapping
@@ -574,6 +574,7 @@ function resolveFieldTypeInternal(
 function tryExtractAsInlineObject(
   type: ts.Type,
   ctx: InternalFieldTypeContext,
+  hintName: string | null,
 ): TSTypeReference {
   const { visitedTypes, checker } = ctx;
   if (visitedTypes.has(type)) {
@@ -613,6 +614,7 @@ function tryExtractAsInlineObject(
     properties: inlineProperties,
     description,
     deprecated,
+    hintName,
   });
 }
 

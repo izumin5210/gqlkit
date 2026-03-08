@@ -168,6 +168,7 @@ function tryExtractAsInlineObject(
       properties: inlineProperties,
       description: null,
       deprecated: null,
+      hintName: null,
     }),
   };
 }
