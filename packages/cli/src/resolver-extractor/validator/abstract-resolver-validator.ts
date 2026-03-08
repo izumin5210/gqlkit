@@ -212,7 +212,9 @@ export function validateAbstractResolvers(
   // Remap resolver target type names using TS alias → GraphQL name mapping
   // e.g., defineResolveType<ItemPart> where ItemPart is a TS alias
   // maps to the auto-generated union name "ContainerItems"
+  // Only remap resolveType resolvers — isTypeOf targets object types, not unions
   const resolvers = options.abstractResolvers.map((resolver) => {
+    if (resolver.kind !== "resolveType") return resolver;
     const mappedName = options.tsAliasToGraphQLNameMap.get(
       resolver.targetTypeName,
     );

@@ -542,9 +542,11 @@ export function integrate(params: IntegrateParams): IntegratedResult {
   diagnostics.push(...abstractResolverValidation.diagnostics);
 
   // Remap abstract resolver target type names from TS aliases to GraphQL names
+  // Only remap resolveType resolvers — isTypeOf targets object types, not unions
   const remappedAbstractResolvers =
     aliasMap.size > 0
       ? resolversResult.abstractTypeResolvers.map((resolver) => {
+          if (resolver.kind !== "resolveType") return resolver;
           const mappedName = aliasMap.get(resolver.targetTypeName);
           return mappedName !== undefined
             ? { ...resolver, targetTypeName: mappedName }
