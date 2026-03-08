@@ -10,7 +10,7 @@
  * - Array of inline enum in union member
  * - Inline union (reference types) in union member
  */
-import { defineQuery, type NoArgs } from "../gqlkit.js";
+import { defineIsTypeOf, defineQuery, type NoArgs } from "../gqlkit.js";
 
 export type User = {
   id: string;
@@ -21,6 +21,14 @@ export type Bot = {
   id: string;
   platform: string;
 };
+
+export const userIsTypeOf = defineIsTypeOf<User>(
+  (value) => typeof value === "object" && value !== null && "name" in value,
+);
+
+export const botIsTypeOf = defineIsTypeOf<Bot>(
+  (value) => typeof value === "object" && value !== null && "platform" in value,
+);
 
 /**
  * Query returning a union where members contain various inline types.

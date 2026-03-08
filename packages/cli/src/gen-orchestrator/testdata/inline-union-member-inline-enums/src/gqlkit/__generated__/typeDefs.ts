@@ -89,7 +89,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "__INLINE_ENUM__"
+                "value": "ErrorResultSeverity"
               }
             }
           }
@@ -110,7 +110,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "__INLINE_ENUM__"
+                    "value": "ErrorResultTags"
                   }
                 }
               }
@@ -118,6 +118,76 @@ export const typeDefs: DocumentNode = {
           }
         }
       ]
+    },
+    {
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "ErrorResultSeverity"
+      },
+      "values": [
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "WARNING"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "ERROR"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "CRITICAL"
+          }
+        }
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
+    },
+    {
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "ErrorResultTags"
+      },
+      "values": [
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "BUG"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "REGRESSION"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "PERFORMANCE"
+          }
+        }
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
     },
     {
       "kind": "ObjectTypeDefinition",
@@ -138,7 +208,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "String"
+                "value": "InfoResultCreator"
               }
             }
           }
@@ -161,6 +231,34 @@ export const typeDefs: DocumentNode = {
           }
         }
       ]
+    },
+    {
+      "kind": "UnionTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "InfoResultCreator"
+      },
+      "types": [
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Bot"
+          }
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "User"
+          }
+        }
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
     },
     {
       "kind": "ObjectTypeDefinition",
@@ -241,7 +339,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "__INLINE_ENUM__"
+                "value": "SuccessResultStatus"
               }
             }
           }
@@ -284,7 +382,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "__INLINE_ENUM__"
+                "value": "SuccessResultMetadataPriority"
               }
             }
           }
@@ -304,6 +402,76 @@ export const typeDefs: DocumentNode = {
                 "value": "Float"
               }
             }
+          }
+        }
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
+    },
+    {
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "SuccessResultMetadataPriority"
+      },
+      "values": [
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "LOW"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "MEDIUM"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "HIGH"
+          }
+        }
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
+    },
+    {
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "SuccessResultStatus"
+      },
+      "values": [
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "ACTIVE"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "INACTIVE"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "PENDING"
           }
         }
       ],

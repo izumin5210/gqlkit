@@ -8,14 +8,31 @@ type Bot {
 
 type ErrorResult {
   message: String!
-  severity: __INLINE_ENUM__!
-  tags: [__INLINE_ENUM__!]!
+  severity: ErrorResultSeverity!
+  tags: [ErrorResultTags!]!
+}
+
+"""Defined in: src/gqlkit/schema/types.ts"""
+enum ErrorResultSeverity {
+  WARNING
+  ERROR
+  CRITICAL
+}
+
+"""Defined in: src/gqlkit/schema/types.ts"""
+enum ErrorResultTags {
+  BUG
+  REGRESSION
+  PERFORMANCE
 }
 
 type InfoResult {
-  creator: String!
+  creator: InfoResultCreator!
   description: String!
 }
+
+"""Defined in: src/gqlkit/schema/types.ts"""
+union InfoResultCreator = Bot | User
 
 type Query
 
@@ -24,14 +41,28 @@ union ResultPayload = ErrorResult | InfoResult | SuccessResult
 
 type SuccessResult {
   metadata: SuccessResultMetadata!
-  status: __INLINE_ENUM__!
+  status: SuccessResultStatus!
   value: String!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 type SuccessResultMetadata {
-  priority: __INLINE_ENUM__!
+  priority: SuccessResultMetadataPriority!
   score: Float!
+}
+
+"""Defined in: src/gqlkit/schema/types.ts"""
+enum SuccessResultMetadataPriority {
+  LOW
+  MEDIUM
+  HIGH
+}
+
+"""Defined in: src/gqlkit/schema/types.ts"""
+enum SuccessResultStatus {
+  ACTIVE
+  INACTIVE
+  PENDING
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
