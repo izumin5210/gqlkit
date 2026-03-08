@@ -1627,27 +1627,35 @@ function resolveInlineUnionInMember(
     }
   }
 
-  if (memberNames.length > 0) {
-    ctx.types.push({
-      name: typeName,
-      kind: "Union",
-      fields: null,
-      enumValues: null,
-      unionMembers: memberNames,
-      needsStringEnumMapping: false,
-      sourceLocation: ctx.sourceLocation,
-      generatedFrom: buildGeneratedFromInfo(context),
-      description: null,
-      resolveTypeFieldPattern: null,
+  if (memberNames.length === 0) {
+    const memberDescriptions = members
+      .map((m) => m.name ?? "(anonymous)")
+      .join(", ");
+    ctx.diagnostics.push({
+      code: "INLINE_UNION_UNRESOLVABLE_MEMBER",
+      message: `Could not resolve any members of inline union '${typeName}' in '${parentTypeName}.${fieldName}'. None of the member types [${memberDescriptions}] are known schema types.`,
+      severity: "error",
+      location: ctx.sourceLocation,
     });
-
-    ctx.generatedTypeNames.set(contextKey, typeName);
-
     return typeName;
   }
 
-  // Fallback: return first member name or "String"
-  return members[0]?.name ?? "String";
+  ctx.types.push({
+    name: typeName,
+    kind: "Union",
+    fields: null,
+    enumValues: null,
+    unionMembers: memberNames,
+    needsStringEnumMapping: false,
+    sourceLocation: ctx.sourceLocation,
+    generatedFrom: buildGeneratedFromInfo(context),
+    description: null,
+    resolveTypeFieldPattern: null,
+  });
+
+  ctx.generatedTypeNames.set(contextKey, typeName);
+
+  return typeName;
 }
 
 function resolveMemberNames(params: ResolveMemberNamesParams): string[] {
