@@ -1,12 +1,32 @@
 [
   {
-    "code": "MISSING_ABSTRACT_TYPE_RESOLVER",
-    "message": "Union type 'OrderTestItem' has no resolveType defined, and not all member types have isTypeOf defined. To prevent runtime errors, either define a resolveType for 'OrderTestItem' or define isTypeOf for each member type.",
+    "code": "UNNAMEABLE_UNION_MEMBER",
+    "message": "Inline object union member at index 0 cannot be named. Use a named type (type alias or interface) for each union member, or add a '__typename' property with a string literal type.",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 1,
-      "column": 1
+      "line": 12,
+      "column": 3
+    }
+  },
+  {
+    "code": "UNNAMEABLE_UNION_MEMBER",
+    "message": "Inline object union member at index 1 cannot be named. Use a named type (type alias or interface) for each union member, or add a '__typename' property with a string literal type.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 12,
+      "column": 3
+    }
+  },
+  {
+    "code": "UNNAMEABLE_UNION_MEMBER",
+    "message": "Inline object union member at index 2 cannot be named. Use a named type (type alias or interface) for each union member, or add a '__typename' property with a string literal type.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 12,
+      "column": 3
     }
   }
 ]
