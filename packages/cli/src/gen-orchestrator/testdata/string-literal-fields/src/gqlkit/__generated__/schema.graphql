@@ -4,9 +4,11 @@ type Query
 
 """Defined in: src/gqlkit/schema/types.ts"""
 type StatusEvent {
+  bigNumber: Float!
   code: StatusEventCode!
   label: String!
   numericCode: Int!
+  ratio: Float!
   type: String!
 }
 

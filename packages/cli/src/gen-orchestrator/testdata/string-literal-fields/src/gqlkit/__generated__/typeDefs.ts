@@ -24,6 +24,23 @@ export const typeDefs: DocumentNode = {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
+            "value": "bigNumber"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
             "value": "code"
           },
           "type": {
@@ -67,6 +84,23 @@ export const typeDefs: DocumentNode = {
               "name": {
                 "kind": "Name",
                 "value": "Int"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "ratio"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
               }
             }
           }
