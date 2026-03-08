@@ -171,7 +171,8 @@ export function validateTypenames(
 
     const { typeName, fieldName } = member.typenameInfo;
     const memberTypeName =
-      member.memberTypeName ?? `member${member.memberIndex}`;
+      member.memberTypeName ??
+      `(anonymous member at index ${member.memberIndex})`;
 
     const existing = typenameValueToMembers.get(typeName) ?? [];
     existing.push({ memberTypeName, fieldName });

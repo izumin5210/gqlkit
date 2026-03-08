@@ -1707,16 +1707,24 @@ function resolveMemberNames(params: ResolveMemberNamesParams): string[] {
           fieldPath: [...parentContext.fieldPath, extractedInfo.typeName],
         };
         contextKey = getContextKey(nestedContext);
-      } else {
-        const memberSegment = memberType.inlineObjectHintName ?? `member${i}`;
+      } else if (memberType.inlineObjectHintName !== null) {
         const nestedContext: AutoTypeNameContext = {
           ...parentContext,
-          fieldPath: [...parentContext.fieldPath, memberSegment],
+          fieldPath: [
+            ...parentContext.fieldPath,
+            memberType.inlineObjectHintName,
+          ],
         };
-        memberTypeName = memberType.inlineObjectHintName
-          ? memberType.inlineObjectHintName
-          : generateAutoTypeName(nestedContext);
+        memberTypeName = memberType.inlineObjectHintName;
         contextKey = getContextKey(nestedContext);
+      } else {
+        diagnostics.push({
+          code: "UNNAMEABLE_UNION_MEMBER",
+          message: `Inline object union member at index ${i} cannot be named. Use a named type (type alias or interface) for each union member, or add a '__typename' property with a string literal type.`,
+          severity: "error",
+          location: sourceLocation,
+        });
+        continue;
       }
 
       // Only filter out __typename or $typeName for resolverPayload context
@@ -1768,9 +1776,7 @@ function resolveMemberNames(params: ResolveMemberNamesParams): string[] {
         ...parentContext,
         fieldPath: [
           ...parentContext.fieldPath,
-          extractedInfo?.typeName ??
-            memberType.inlineObjectHintName ??
-            `member${i}`,
+          extractedInfo?.typeName ?? memberType.inlineObjectHintName!,
         ],
       };
 
