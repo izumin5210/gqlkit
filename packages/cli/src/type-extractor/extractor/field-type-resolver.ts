@@ -392,6 +392,40 @@ function resolveFieldTypeInternal(
         ((type as ts.ObjectType).objectFlags & ts.ObjectFlags.Anonymous) !== 0;
 
       if (isAnonymousObject) {
+        // Check if this type alias qualifies for transitive discovery.
+        // Type aliases to object literals used as union members should be
+        // discovered with their original alias name, not expanded as inline
+        // objects with auto-generated names. (#202)
+        if (ctx.discoveredTypes && !ctx.discoveredTypes.has(aliasName)) {
+          const resolvedAliasSymbol = resolveOriginalSymbol(
+            type.aliasSymbol,
+            checker,
+          );
+          const declarations = resolvedAliasSymbol.getDeclarations();
+          const decl = declarations?.[0];
+          if (decl && !decl.getSourceFile().isDeclarationFile) {
+            const properties = type.getProperties();
+            if (properties.length > 0) {
+              const declSourceFile = decl.getSourceFile();
+              const location = getSourceLocationFromNode(decl) ?? {
+                file: declSourceFile.fileName,
+                line: 1,
+                column: 1,
+              };
+              ctx.discoveredTypes.set(aliasName, {
+                name: aliasName,
+                tsType: type,
+                tsSymbol: resolvedAliasSymbol,
+                sourceFile: relative(process.cwd(), declSourceFile.fileName),
+                sourceLocation: location,
+              });
+              return createReferenceType({ name: aliasName, nullable: false });
+            }
+          }
+        }
+        if (ctx.discoveredTypes?.has(aliasName)) {
+          return createReferenceType({ name: aliasName, nullable: false });
+        }
         // Not a known schema type and is an anonymous object - expand to generate Payload type
         return tryExtractAsInlineObject(type, ctx);
       }
