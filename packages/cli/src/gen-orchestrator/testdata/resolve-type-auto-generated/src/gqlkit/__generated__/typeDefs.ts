@@ -70,14 +70,14 @@ export const typeDefs: DocumentNode = {
           "kind": "NamedType",
           "name": {
             "kind": "Name",
-            "value": "ContainerItemsMember0"
+            "value": "PartA"
           }
         },
         {
           "kind": "NamedType",
           "name": {
             "kind": "Name",
-            "value": "ContainerItemsMember1"
+            "value": "PartB"
           }
         }
       ],
@@ -91,26 +91,9 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerItemsMember0"
+        "value": "PartA"
       },
       "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "$typeName"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        },
         {
           "kind": "FieldDefinition",
           "name": {
@@ -128,32 +111,20 @@ export const typeDefs: DocumentNode = {
             }
           }
         }
-      ]
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/lib/types.ts",
+        "block": true
+      }
     },
     {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerItemsMember1"
+        "value": "PartB"
       },
       "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "$typeName"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        },
         {
           "kind": "FieldDefinition",
           "name": {
@@ -171,7 +142,12 @@ export const typeDefs: DocumentNode = {
             }
           }
         }
-      ]
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/lib/types.ts",
+        "block": true
+      }
     },
     {
       "kind": "ObjectTypeDefinition",

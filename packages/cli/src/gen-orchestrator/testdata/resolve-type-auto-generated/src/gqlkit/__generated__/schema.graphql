@@ -7,15 +7,15 @@ type Container {
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-union ContainerItems = ContainerItemsMember0 | ContainerItemsMember1
+union ContainerItems = PartA | PartB
 
-type ContainerItemsMember0 {
-  $typeName: String!
+"""Defined in: src/lib/types.ts"""
+type PartA {
   value: String!
 }
 
-type ContainerItemsMember1 {
-  $typeName: String!
+"""Defined in: src/lib/types.ts"""
+type PartB {
   count: Float!
 }
 
