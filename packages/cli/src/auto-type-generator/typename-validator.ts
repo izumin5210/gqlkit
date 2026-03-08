@@ -74,7 +74,7 @@ function analyzeInlineObjectTypename(
   return {
     exists: true,
     fieldName,
-    isStringLiteral: tsType.kind === "literal" && tsType.name !== null,
+    isStringLiteral: tsType.kind === "stringLiteral" && tsType.name !== null,
     isNullable: tsType.nullable,
   };
 }
@@ -238,7 +238,7 @@ function extractTypenameFromObjectType(
   if (
     field.optional ||
     tsType.nullable ||
-    tsType.kind !== "literal" ||
+    tsType.kind !== "stringLiteral" ||
     tsType.name === null
   ) {
     return null;
