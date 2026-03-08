@@ -68,6 +68,8 @@ export function createArrayType(elementType: TSTypeReference): TSTypeReference {
 interface CreateUnionTypeParams {
   readonly members: ReadonlyArray<TSTypeReference>;
   readonly nullable: boolean;
+  /** The TypeScript type alias name for this union (e.g., "ItemPart" for `type ItemPart = A | B`) */
+  readonly aliasName: string | null;
 }
 
 export function createUnionType(
@@ -75,7 +77,11 @@ export function createUnionType(
 ): TSTypeReference {
   return createTSTypeReference({
     kind: "union",
-    overrides: { members: params.members, nullable: params.nullable },
+    overrides: {
+      members: params.members,
+      nullable: params.nullable,
+      name: params.aliasName,
+    },
   });
 }
 

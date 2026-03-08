@@ -13,6 +13,7 @@ export interface ValidateTypesOptions {
 const PLACEHOLDER_TYPES = new Set([
   "__INLINE_OBJECT__",
   "__INLINE_ENUM__",
+  "__INLINE_UNION__",
   "__NEVER__",
 ]);
 

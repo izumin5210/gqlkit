@@ -244,7 +244,8 @@ function resolveFieldTypeInternal(
       return result;
     });
 
-    return createUnionType({ members: memberResults, nullable });
+    const aliasName = type.aliasSymbol?.getName() ?? null;
+    return createUnionType({ members: memberResults, nullable, aliasName });
   }
 
   // Array type handling

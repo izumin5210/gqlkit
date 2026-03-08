@@ -17,6 +17,8 @@ export interface ValidateAbstractResolversOptions {
   readonly abstractResolvers: ReadonlyArray<AbstractResolverInfo>;
   readonly baseTypes: ReadonlyArray<BaseType>;
   readonly typenameAutoResolveTypeNames?: ReadonlySet<string>;
+  /** Mapping from TypeScript type alias names to auto-generated GraphQL union names */
+  readonly tsAliasToGraphQLNameMap: ReadonlyMap<string, string>;
 }
 
 export interface ValidateAbstractResolversResult {
@@ -207,7 +209,22 @@ export function validateAbstractResolvers(
     typeMap.set(baseType.name, baseType);
   }
 
-  for (const resolver of options.abstractResolvers) {
+  // Remap resolver target type names using TS alias → GraphQL name mapping
+  // e.g., defineResolveType<ItemPart> where ItemPart is a TS alias
+  // maps to the auto-generated union name "ContainerItems"
+  // Only remap resolveType resolvers — isTypeOf targets object types, not unions
+  const resolvers = options.abstractResolvers.map((resolver) => {
+    if (resolver.kind !== "resolveType") return resolver;
+    const mappedName = options.tsAliasToGraphQLNameMap.get(
+      resolver.targetTypeName,
+    );
+    if (mappedName !== undefined) {
+      return { ...resolver, targetTypeName: mappedName };
+    }
+    return resolver;
+  });
+
+  for (const resolver of resolvers) {
     const targetType = typeMap.get(resolver.targetTypeName);
 
     if (!targetType) {
@@ -241,14 +258,11 @@ export function validateAbstractResolvers(
     }
   }
 
-  const duplicateDiagnostics = detectDuplicateResolvers(
-    options.abstractResolvers,
-    typeMap,
-  );
+  const duplicateDiagnostics = detectDuplicateResolvers(resolvers, typeMap);
   diagnostics.push(...duplicateDiagnostics);
 
   const missingResolverWarnings = detectMissingAbstractTypeResolvers({
-    resolvers: options.abstractResolvers,
+    resolvers,
     typeMap,
     typenameAutoResolveTypeNames:
       options.typenameAutoResolveTypeNames ?? new Set(),

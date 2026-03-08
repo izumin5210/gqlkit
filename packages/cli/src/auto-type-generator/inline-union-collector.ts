@@ -116,6 +116,7 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
       ),
       nullable: tsType.nullable,
       isInputContext: isInput,
+      unionAliasName: tsType.name,
     });
   }
 
@@ -137,6 +138,7 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
       ),
       nullable: tsType.elementType.nullable,
       isInputContext: isInput,
+      unionAliasName: tsType.elementType.name,
     });
   }
 
@@ -159,6 +161,7 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
             ),
             nullable: propTsType.nullable,
             isInputContext: isInput,
+            unionAliasName: propTsType.name,
           });
         }
       },
@@ -224,6 +227,7 @@ function collectInlineUnionsFromResolverArgs(
         sourceLocation: field.sourceLocation,
         nullable: arg.type.nullable,
         isInputContext: true,
+        unionAliasName: null,
       });
     }
 
@@ -322,6 +326,7 @@ function collectInlineUnionsFromResolverProperties(
           sourceLocation: prop.sourceLocation ?? sourceLocation,
           nullable: tsType.nullable,
           isInputContext: params.contextKind === "resolverArg",
+          unionAliasName: tsType.name,
         });
       }
     },
@@ -383,6 +388,7 @@ function collectInlineUnionsFromPayloadReturnType(
       sourceLocation: field.sourceLocation,
       nullable: field.type.nullable,
       isInputContext: false,
+      unionAliasName: null,
     });
   }
 

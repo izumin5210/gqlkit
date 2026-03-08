@@ -30,4 +30,6 @@ export interface InlineUnionWithContext {
   readonly nullable: boolean;
   /** True if this union is in input context (should become @oneOf Input Object) */
   readonly isInputContext: boolean;
+  /** The TypeScript type alias name for this union (for mapping to auto-generated names) */
+  readonly unionAliasName: string | null;
 }
