@@ -26,6 +26,9 @@ function convertElementTypeName(elementType: TSTypeReference): string {
   if (elementType.kind === "numericLiteral") {
     return "Int";
   }
+  if (elementType.kind === "never") {
+    return "__NEVER__";
+  }
   return elementType.name ?? "String";
 }
 
@@ -108,6 +111,15 @@ export function convertTsTypeToGraphQLType(
   if (tsType.kind === "numericLiteral") {
     return {
       typeName: "Int",
+      nullable,
+      list: false,
+      listItemNullable: null,
+    };
+  }
+
+  if (tsType.kind === "never") {
+    return {
+      typeName: "__NEVER__",
       nullable,
       list: false,
       listItemNullable: null,

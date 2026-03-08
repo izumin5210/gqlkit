@@ -1,0 +1,12 @@
+[
+  {
+    "code": "INLINE_UNION_UNRESOLVABLE_MEMBER",
+    "message": "Could not resolve any members of inline union 'SuccessMarker' in 'Success.marker'. None of the member types [MarkerA, MarkerB] are known schema types.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 12,
+      "column": 14
+    }
+  }
+]

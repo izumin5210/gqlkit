@@ -82,6 +82,7 @@ interface TypesResult {
   detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
   collectedScalars: ReadonlyArray<CollectedScalarType>;
   scalarMappingTable: ScalarBaseTypeMappingTable | null;
+  discoveredTypeNames: ReadonlySet<string>;
 }
 
 interface ResolversResult {
@@ -251,6 +252,7 @@ function extractTypesCore(params: ExtractTypesCoreParams): TypesResult {
     detectedScalars: extractionResult.detectedScalars,
     collectedScalars,
     scalarMappingTable,
+    discoveredTypeNames: extractionResult.discoveredTypeNames,
   };
 }
 
@@ -632,6 +634,18 @@ function extractTypesStep(ctx: PipelineContext): PipelineContext {
   return { ...ctx, typesResult };
 }
 
+function augmentKnownTypeNamesStep(ctx: PipelineContext): PipelineContext {
+  if (ctx.aborted || !ctx.typesResult || !ctx.knownTypeNames) return ctx;
+
+  if (ctx.typesResult.discoveredTypeNames.size === 0) return ctx;
+
+  const augmented = new Set(ctx.knownTypeNames);
+  for (const name of ctx.typesResult.discoveredTypeNames) {
+    augmented.add(name);
+  }
+  return { ...ctx, knownTypeNames: augmented };
+}
+
 function extractResolversStep(ctx: PipelineContext): PipelineContext {
   if (
     ctx.aborted ||
@@ -796,6 +810,7 @@ export async function executeGeneration(
   ctx = collectTypeNamesStep(ctx);
   ctx = prepareScalarConfigStep(ctx);
   ctx = extractTypesStep(ctx);
+  ctx = augmentKnownTypeNamesStep(ctx);
   ctx = extractResolversStep(ctx);
   ctx = extractDirectivesStep(ctx);
   ctx = validateExtractionStep(ctx);

@@ -1,3 +1,4 @@
+import { isTypenameFieldName } from "../../auto-type-generator/typename-types.js";
 import {
   BUILT_IN_SCALARS,
   isBuiltInScalar,
@@ -152,6 +153,11 @@ function convertFields(
   const diagnostics: Diagnostic[] = [];
 
   for (const field of extracted.fields) {
+    // Typename discrimination fields are silently excluded from the schema
+    if (isTypenameFieldName(field.name)) {
+      continue;
+    }
+
     const eligibility = isEligibleField({
       fieldName: field.name,
       kind: isInput ? "input" : "object",
@@ -171,9 +177,19 @@ function convertFields(
       continue;
     }
 
+    const graphqlType = convertTsTypeToGraphQLType(
+      field.tsType,
+      field.optional,
+    );
+
+    // Skip fields with never type — they represent impossible values
+    if (graphqlType.typeName === "__NEVER__") {
+      continue;
+    }
+
     fields.push({
       name: field.name,
-      type: convertTsTypeToGraphQLType(field.tsType, field.optional),
+      type: graphqlType,
       description: field.description,
       deprecated: field.deprecated,
       directives: field.directives,

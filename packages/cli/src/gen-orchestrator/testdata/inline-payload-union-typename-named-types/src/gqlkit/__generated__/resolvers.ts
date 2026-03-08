@@ -5,10 +5,10 @@ import { createUser as Mutation$createUser, getUser as Query$getUser } from "../
 export function createResolvers() {
   return {
     CreateUserPayload: {
-      __resolveType: (obj) => obj.__typename,
+      __resolveType: (obj: { __typename: string }) => obj.__typename,
     },
     GetUserPayload: {
-      __resolveType: (obj) => obj.__typename,
+      __resolveType: (obj: { __typename: string }) => obj.__typename,
     },
     Mutation: {
       createUser: Mutation$createUser,
