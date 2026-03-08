@@ -23,6 +23,9 @@ function convertElementTypeName(elementType: TSTypeReference): string {
   if (elementType.kind === "union") {
     return "__INLINE_UNION__";
   }
+  if (elementType.kind === "never") {
+    return "__NEVER__";
+  }
   return elementType.name ?? "String";
 }
 
@@ -96,6 +99,15 @@ export function convertTsTypeToGraphQLType(
   if (tsType.kind === "union") {
     return {
       typeName: "__INLINE_UNION__",
+      nullable,
+      list: false,
+      listItemNullable: null,
+    };
+  }
+
+  if (tsType.kind === "never") {
+    return {
+      typeName: "__NEVER__",
       nullable,
       list: false,
       listItemNullable: null,

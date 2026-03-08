@@ -1,25 +1,5 @@
 [
   {
-    "code": "SKIPPED_FIELD",
-    "message": "Field '__typename' starts with '__' which is reserved for GraphQL introspection",
-    "severity": "warning",
-    "location": {
-      "file": "src/gqlkit/schema/types.ts",
-      "line": 2,
-      "column": 3
-    }
-  },
-  {
-    "code": "SKIPPED_FIELD",
-    "message": "Field '__typename' starts with '__' which is reserved for GraphQL introspection",
-    "severity": "warning",
-    "location": {
-      "file": "src/gqlkit/schema/types.ts",
-      "line": 8,
-      "column": 3
-    }
-  },
-  {
     "code": "MISSING_TYPENAME_PROPERTY",
     "message": "Union 'SearchResult' member at index 2 is missing '__typename' or '$typeName' property. When a union contains inline objects, all members must have a typename property.",
     "severity": "error",

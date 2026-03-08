@@ -16,6 +16,13 @@
 export const TYPENAME_FIELD_NAMES = ["__typename", "$typeName"] as const;
 
 /**
+ * Check if a field name is a typename discrimination field.
+ */
+export function isTypenameFieldName(name: string): boolean {
+  return (TYPENAME_FIELD_NAMES as readonly string[]).includes(name);
+}
+
+/**
  * The field name used for type discrimination.
  */
 export type TypenameFieldName = (typeof TYPENAME_FIELD_NAMES)[number];

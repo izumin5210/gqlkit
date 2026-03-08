@@ -5,7 +5,7 @@ import { nodeQuery as Query$nodeQuery } from "../schema/query.js";
 export function createResolvers() {
   return {
     Node: {
-      __resolveType: (obj) => obj.$typeName,
+      __resolveType: (obj: { $typeName: string }) => obj.$typeName,
     },
     Query: {
       nodeQuery: Query$nodeQuery,

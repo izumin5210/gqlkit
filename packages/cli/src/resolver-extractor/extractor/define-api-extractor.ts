@@ -620,6 +620,7 @@ export function extractDefineApiResolvers(
     sourceFiles,
     scalarMappingTable,
     scalarMappingContext: "input",
+    discoveredTypes: null,
   };
   const outputContext: FieldTypeResolverContext = {
     checker,
@@ -630,6 +631,7 @@ export function extractDefineApiResolvers(
     sourceFiles,
     scalarMappingTable,
     scalarMappingContext: "output",
+    discoveredTypes: null,
   };
 
   for (const filePath of files) {
