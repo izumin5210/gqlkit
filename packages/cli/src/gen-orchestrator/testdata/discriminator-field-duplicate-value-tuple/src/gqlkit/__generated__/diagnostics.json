@@ -1,0 +1,12 @@
+[
+  {
+    "code": "DISCRIMINATOR_DUPLICATE_VALUE_TUPLE",
+    "message": "Union 'Content' has duplicate discriminator value tuple [\"text\",\"plain\"] for members 'TextA', 'TextB'.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 26,
+      "column": 1
+    }
+  }
+]
