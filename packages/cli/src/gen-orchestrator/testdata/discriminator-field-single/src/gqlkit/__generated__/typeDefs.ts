@@ -37,47 +37,6 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContentQueryPayload"
-      },
-      "fields": [],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/query.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "EnumTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "ContentQueryTypeInput"
-      },
-      "values": [
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "TEXT"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "IMAGE"
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/query.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
         "value": "ImagePart"
       },
       "fields": [
@@ -208,32 +167,13 @@ export const typeDefs: DocumentNode = {
             "kind": "Name",
             "value": "contentQuery"
           },
-          "arguments": [
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "type"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "ContentQueryTypeInput"
-                  }
-                }
-              }
-            }
-          ],
           "type": {
             "kind": "NonNullType",
             "type": {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "ContentQueryPayload"
+                "value": "ContentPart"
               }
             }
           },

@@ -9,17 +9,6 @@ type Audio {
 """Defined in: src/gqlkit/schema/types.ts"""
 union ContentPart = ImagePart | TextPart
 
-"""Defined in: src/gqlkit/schema/query.ts"""
-type ContentQueryPayload {
-  id: String!
-}
-
-"""Defined in: src/gqlkit/schema/query.ts"""
-enum ContentQueryTypeInput {
-  TEXT
-  IMAGE
-}
-
 """Defined in: src/gqlkit/schema/types.ts"""
 type ImagePart {
   alt: String!
@@ -29,17 +18,6 @@ type ImagePart {
 
 """Defined in: src/gqlkit/schema/types.ts"""
 union Media = Audio | Video
-
-"""Defined in: src/gqlkit/schema/query.ts"""
-enum MediaQueryKindInput {
-  AUDIO
-  VIDEO
-}
-
-"""Defined in: src/gqlkit/schema/query.ts"""
-type MediaQueryPayload {
-  id: String!
-}
 
 type Query
 
@@ -57,7 +35,7 @@ type Video {
 
 extend type Query {
   """Defined in: src/gqlkit/schema/query.ts"""
-  contentQuery(type: ContentQueryTypeInput!): ContentQueryPayload!
+  contentQuery(id: String!): ContentPart!
   """Defined in: src/gqlkit/schema/query.ts"""
-  mediaQuery(kind: MediaQueryKindInput!, url: String!): MediaQueryPayload!
+  mediaQuery(id: String!): Media!
 }

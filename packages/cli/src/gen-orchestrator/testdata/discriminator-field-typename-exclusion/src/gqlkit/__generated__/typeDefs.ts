@@ -37,75 +37,6 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContentQueryPayload"
-      },
-      "fields": [],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/query.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "EnumTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "ContentQueryTypeInput"
-      },
-      "values": [
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "TEXT"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "IMAGE"
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/query.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "EnumTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "ContentQueryTypenameInput"
-      },
-      "values": [
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "TEXT_PART"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "IMAGE_PART"
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/query.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
         "value": "ImagePart"
       },
       "fields": [
@@ -222,65 +153,6 @@ export const typeDefs: DocumentNode = {
         "value": "Query"
       },
       "fields": []
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "SearchQueryPayload"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "query"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/query.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "EnumTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "SearchQueryTypenameInput"
-      },
-      "values": [
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "USER"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "POST"
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/query.ts",
-        "block": true
-      }
     },
     {
       "kind": "UnionTypeDefinition",
@@ -419,49 +291,13 @@ export const typeDefs: DocumentNode = {
             "kind": "Name",
             "value": "contentQuery"
           },
-          "arguments": [
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "__typename"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "ContentQueryTypenameInput"
-                  }
-                }
-              }
-            },
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "type"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "ContentQueryTypeInput"
-                  }
-                }
-              }
-            }
-          ],
           "type": {
             "kind": "NonNullType",
             "type": {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "ContentQueryPayload"
+                "value": "ContentPart"
               }
             }
           },
@@ -482,24 +318,7 @@ export const typeDefs: DocumentNode = {
               "kind": "InputValueDefinition",
               "name": {
                 "kind": "Name",
-                "value": "__typename"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "SearchQueryTypenameInput"
-                  }
-                }
-              }
-            },
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "id"
+                "value": "query"
               },
               "type": {
                 "kind": "NonNullType",
@@ -519,7 +338,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "SearchQueryPayload"
+                "value": "SearchResult"
               }
             }
           },

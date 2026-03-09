@@ -4,25 +4,13 @@ import { contentQuery as Query$contentQuery, searchQuery as Query$searchQuery } 
 
 export function createResolvers() {
   return {
-    ContentQueryTypenameInput: {
-      TEXT_PART: "TextPart",
-      IMAGE_PART: "ImagePart",
-    },
-    ContentQueryTypeInput: {
-      TEXT: "text",
-      IMAGE: "image",
-    },
-    SearchQueryTypenameInput: {
-      USER: "User",
-      POST: "Post",
-    },
     ContentPart: {
       __resolveType: (obj: { type: string }) => {
-      switch (obj.type) {
-        case "image": return "ImagePart";
-        case "text": return "TextPart";
-        default: return undefined;
-      }
+        switch (obj.type) {
+          case "image": return "ImagePart";
+          case "text": return "TextPart";
+          default: return undefined;
+        }
       },
     },
     Query: {

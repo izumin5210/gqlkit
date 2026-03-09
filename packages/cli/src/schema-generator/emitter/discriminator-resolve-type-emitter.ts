@@ -116,13 +116,8 @@ export function buildDiscriminatorResolveTypeEntry(
 ): string {
   const { unionTypeName, fieldNames, valueMappings } = info;
   const objType = buildObjTypeAnnotation(fieldNames);
-  const baseIndent = "      ";
+  const baseIndent = "        ";
 
-  // Handle null-valued mappings at level 0 differently:
-  // They should be returned directly without needing a switch at the current level.
-  // But for the first field, null doesn't make sense (primary field is always present).
-
-  // Build the switch body for the first field
   const switchLines = buildSwitchBody(valueMappings, fieldNames, 0, baseIndent);
   const switchBody = switchLines.join("\n");
 

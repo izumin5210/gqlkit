@@ -85,65 +85,6 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContentQueryPayload"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/query.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "EnumTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "ContentQueryTypeInput"
-      },
-      "values": [
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "TEXT"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "IMAGE"
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/query.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
         "value": "ImagePart"
       },
       "fields": [
@@ -230,65 +171,6 @@ export const typeDefs: DocumentNode = {
       "description": {
         "kind": "StringValue",
         "value": "Defined in: src/gqlkit/schema/types.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "EnumTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "MediaQueryKindInput"
-      },
-      "values": [
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "AUDIO"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "VIDEO"
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/query.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "MediaQueryPayload"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/query.ts",
         "block": true
       }
     },
@@ -414,7 +296,7 @@ export const typeDefs: DocumentNode = {
               "kind": "InputValueDefinition",
               "name": {
                 "kind": "Name",
-                "value": "type"
+                "value": "id"
               },
               "type": {
                 "kind": "NonNullType",
@@ -422,7 +304,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "ContentQueryTypeInput"
+                    "value": "String"
                   }
                 }
               }
@@ -434,7 +316,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "ContentQueryPayload"
+                "value": "ContentPart"
               }
             }
           },
@@ -455,24 +337,7 @@ export const typeDefs: DocumentNode = {
               "kind": "InputValueDefinition",
               "name": {
                 "kind": "Name",
-                "value": "kind"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "MediaQueryKindInput"
-                  }
-                }
-              }
-            },
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "url"
+                "value": "id"
               },
               "type": {
                 "kind": "NonNullType",
@@ -492,7 +357,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "MediaQueryPayload"
+                "value": "Media"
               }
             }
           },

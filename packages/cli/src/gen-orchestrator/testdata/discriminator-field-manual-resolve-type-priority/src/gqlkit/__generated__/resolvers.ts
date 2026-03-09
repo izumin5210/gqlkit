@@ -5,24 +5,16 @@ import { contentPartResolveType as ContentPart$__resolveType } from "../schema/t
 
 export function createResolvers() {
   return {
-    ContentQueryTypeInput: {
-      TEXT: "text",
-      IMAGE: "image",
-    },
-    MediaQueryKindInput: {
-      AUDIO: "audio",
-      VIDEO: "video",
-    },
     ContentPart: {
       __resolveType: ContentPart$__resolveType,
     },
     Media: {
       __resolveType: (obj: { kind: string }) => {
-      switch (obj.kind) {
-        case "audio": return "Audio";
-        case "video": return "Video";
-        default: return undefined;
-      }
+        switch (obj.kind) {
+          case "audio": return "Audio";
+          case "video": return "Video";
+          default: return undefined;
+        }
       },
     },
     Query: {

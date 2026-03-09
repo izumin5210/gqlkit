@@ -3,21 +3,6 @@
 """Defined in: src/gqlkit/schema/types.ts"""
 union ContentPart = ImagePart | TextPart
 
-"""Defined in: src/gqlkit/schema/query.ts"""
-type ContentQueryPayload
-
-"""Defined in: src/gqlkit/schema/query.ts"""
-enum ContentQueryTypeInput {
-  TEXT
-  IMAGE
-}
-
-"""Defined in: src/gqlkit/schema/query.ts"""
-enum ContentQueryTypenameInput {
-  TEXT_PART
-  IMAGE_PART
-}
-
 """Defined in: src/gqlkit/schema/types.ts"""
 type ImagePart {
   alt: String!
@@ -32,17 +17,6 @@ type Post {
 }
 
 type Query
-
-"""Defined in: src/gqlkit/schema/query.ts"""
-type SearchQueryPayload {
-  query: String!
-}
-
-"""Defined in: src/gqlkit/schema/query.ts"""
-enum SearchQueryTypenameInput {
-  USER
-  POST
-}
 
 """Defined in: src/gqlkit/schema/types.ts"""
 union SearchResult = Post | User
@@ -71,7 +45,7 @@ type User {
 
 extend type Query {
   """Defined in: src/gqlkit/schema/query.ts"""
-  contentQuery(__typename: ContentQueryTypenameInput!, type: ContentQueryTypeInput!): ContentQueryPayload!
+  contentQuery: ContentPart!
   """Defined in: src/gqlkit/schema/query.ts"""
-  searchQuery(__typename: SearchQueryTypenameInput!, id: String!): SearchQueryPayload!
+  searchQuery(query: String!): SearchResult!
 }

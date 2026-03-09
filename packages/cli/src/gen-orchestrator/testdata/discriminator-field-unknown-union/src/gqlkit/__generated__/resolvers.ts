@@ -4,17 +4,13 @@ import { contentQuery as Query$contentQuery } from "../schema/query.js";
 
 export function createResolvers() {
   return {
-    ContentQueryTypeInput: {
-      TEXT: "text",
-      IMAGE: "image",
-    },
     ContentPart: {
       __resolveType: (obj: { type: string }) => {
-      switch (obj.type) {
-        case "image": return "ImagePart";
-        case "text": return "TextPart";
-        default: return undefined;
-      }
+        switch (obj.type) {
+          case "image": return "ImagePart";
+          case "text": return "TextPart";
+          default: return undefined;
+        }
       },
     },
     Query: {
