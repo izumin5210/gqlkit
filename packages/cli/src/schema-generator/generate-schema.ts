@@ -2,6 +2,7 @@ import {
   collectDiscriminatorResolveTypes,
   collectTypenameExtractions,
   collectTypenameResolveTypes,
+  flattenIntersectionMembers,
   generateAutoTypes,
   validateDiscriminatorFields,
   validateNameCollisions,
@@ -109,19 +110,25 @@ export function generateSchema(
     };
   }
 
+  // Flatten intersection-expanded inline object members for discriminator unions.
+  // TypeScript distributes intersections over unions, creating duplicate members
+  // that must be merged before discriminator field validation.
+  const flattenedExtractedTypes = flattenIntersectionMembers({
+    extractedTypes: autoTypeResult.updatedExtractedTypes,
+    discriminatorFields: input.discriminatorFields,
+  });
+
   // Re-convert to GraphQL types using updated extracted types
   // This resolves __INLINE_OBJECT__ references to auto-generated type names
-  const updatedConversionResult = convertToGraphQL(
-    autoTypeResult.updatedExtractedTypes,
-  );
+  const updatedConversionResult = convertToGraphQL(flattenedExtractedTypes);
   const typeMap = new Map(
-    autoTypeResult.updatedExtractedTypes.map((t) => [t.metadata.name, t]),
+    flattenedExtractedTypes.map((t) => [t.metadata.name, t]),
   );
 
   // Validate discriminator fields against extracted types
   const discriminatorValidationResult = validateDiscriminatorFields({
     discriminatorFields: input.discriminatorFields,
-    extractedTypes: autoTypeResult.updatedExtractedTypes,
+    extractedTypes: flattenedExtractedTypes,
     typeMap,
   });
   const discriminatorErrors = discriminatorValidationResult.diagnostics.filter(
@@ -174,7 +181,7 @@ export function generateSchema(
   const discriminatorResolveTypesResult = collectDiscriminatorResolveTypes({
     validatedEntries: discriminatorValidationResult.validatedEntries,
     manualResolveTypeNames,
-    extractedTypes: autoTypeResult.updatedExtractedTypes,
+    extractedTypes: flattenedExtractedTypes,
     typeMap,
   });
 
@@ -183,14 +190,14 @@ export function generateSchema(
   );
 
   const typenameResolveTypesResult = collectTypenameResolveTypes({
-    extractedTypes: autoTypeResult.updatedExtractedTypes,
+    extractedTypes: flattenedExtractedTypes,
     typeMap,
     manualResolveTypeNames,
     discriminatorFieldUnionNames,
   });
 
   const typenameExtractions = collectTypenameExtractions({
-    extractedTypes: autoTypeResult.updatedExtractedTypes,
+    extractedTypes: flattenedExtractedTypes,
     typeMap,
     discriminatorFieldUnionNames,
   });
@@ -211,7 +218,7 @@ export function generateSchema(
   }
 
   const schemaTypenameValidationResult = validateSchemaTypenames({
-    objectTypes: autoTypeResult.updatedExtractedTypes,
+    objectTypes: flattenedExtractedTypes,
     typeMap,
   });
   typenameValidationDiagnostics.push(
