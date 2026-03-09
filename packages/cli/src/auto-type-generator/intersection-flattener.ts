@@ -3,9 +3,19 @@ import type {
   ExtractedTypeInfo,
   InlineObjectMember,
   InlineObjectProperty,
+  InlineObjectPropertyDef,
   TSTypeReference,
 } from "../type-extractor/types/index.js";
-import { createPrimitiveType } from "../type-extractor/types/ts-type-reference-factory.js";
+import {
+  createInlineObjectType,
+  createPrimitiveType,
+} from "../type-extractor/types/ts-type-reference-factory.js";
+import { generateDiscriminatorMemberName } from "./discriminator-naming.js";
+import type {
+  InlineUnionMemberInfo,
+  InlineUnionWithContext,
+} from "./inline-union-types.js";
+import { generateAutoTypeName } from "./naming-convention.js";
 
 interface PropertyContribution {
   readonly property: InlineObjectProperty;
@@ -263,4 +273,282 @@ export function flattenIntersectionMembers(
       inlineObjectMembers: flattenedMembers,
     };
   });
+}
+
+// --- Inline union member flattening ---
+
+/**
+ * Extracts a string literal discriminator value from an InlineObjectPropertyDef.
+ */
+function getDiscriminatorValueFromPropertyDef(
+  properties: ReadonlyArray<InlineObjectPropertyDef>,
+  fieldName: string,
+): string | null {
+  for (const prop of properties) {
+    if (prop.name === fieldName) {
+      if (prop.tsType.kind === "stringLiteral" && prop.tsType.name !== null) {
+        return prop.tsType.name;
+      }
+      return null;
+    }
+  }
+  return null;
+}
+
+interface PropertyDefContribution {
+  readonly property: InlineObjectPropertyDef;
+  readonly isNever: boolean;
+}
+
+/**
+ * Merges InlineObjectPropertyDef arrays from a group of inline object members.
+ */
+function mergeGroupPropertyDefs(
+  groups: ReadonlyArray<ReadonlyArray<InlineObjectPropertyDef>>,
+  discriminatorFieldNames: ReadonlyArray<string>,
+): ReadonlyArray<InlineObjectPropertyDef> {
+  const discriminatorFieldSet = new Set(discriminatorFieldNames);
+
+  const allPropertyNames = new Set<string>();
+  for (const properties of groups) {
+    for (const prop of properties) {
+      allPropertyNames.add(prop.name);
+    }
+  }
+
+  const merged: InlineObjectPropertyDef[] = [];
+
+  for (const propName of allPropertyNames) {
+    const contributions: PropertyDefContribution[] = [];
+    for (const properties of groups) {
+      const prop = properties.find((p) => p.name === propName);
+      if (prop !== undefined) {
+        contributions.push({
+          property: prop,
+          isNever: isAbsentType(prop.tsType),
+        });
+      }
+    }
+
+    const nonNeverContributions = contributions.filter((c) => !c.isNever);
+    if (nonNeverContributions.length === 0) {
+      continue;
+    }
+
+    const presentInAllMembers = nonNeverContributions.length === groups.length;
+    const firstContribution = nonNeverContributions[0]!;
+
+    let allSameType = true;
+    for (let i = 1; i < nonNeverContributions.length; i++) {
+      if (
+        !isSameTypeIgnoringNullability(
+          firstContribution.property.tsType,
+          nonNeverContributions[i]!.property.tsType,
+        )
+      ) {
+        allSameType = false;
+        break;
+      }
+    }
+
+    // Discriminator fields: keep original value
+    if (discriminatorFieldSet.has(propName)) {
+      merged.push(firstContribution.property);
+      continue;
+    }
+
+    if (allSameType) {
+      const anyNullable = nonNeverContributions.some(
+        (c) => c.property.tsType.nullable,
+      );
+      const anyOptional = nonNeverContributions.some(
+        (c) => c.property.optional,
+      );
+      const needsNullable = !presentInAllMembers || anyNullable || anyOptional;
+      const baseType = firstContribution.property.tsType;
+      merged.push({
+        ...firstContribution.property,
+        optional: !presentInAllMembers || anyOptional,
+        tsType:
+          needsNullable && !baseType.nullable
+            ? { ...baseType, nullable: true }
+            : baseType,
+      });
+    } else {
+      // Different types → widen to String
+      const needsNullable = !presentInAllMembers;
+      merged.push({
+        ...firstContribution.property,
+        optional: !presentInAllMembers,
+        tsType: createPrimitiveType({
+          name: "string",
+          nullable: needsNullable,
+        }),
+        description: null,
+        deprecated: null,
+      });
+    }
+  }
+
+  return merged;
+}
+
+export interface InlineDiscriminatorResolveType {
+  readonly unionTypeName: string;
+  readonly fieldNames: ReadonlyArray<string>;
+  readonly valueMappings: ReadonlyArray<{
+    readonly memberGraphQLTypeName: string;
+    readonly values: ReadonlyArray<string | null>;
+  }>;
+}
+
+export interface FlattenInlineUnionMembersParams {
+  readonly inlineUnions: ReadonlyArray<InlineUnionWithContext>;
+  readonly discriminatorFields: ResolvedDiscriminatorFieldsMap;
+}
+
+export interface FlattenInlineUnionMembersResult {
+  readonly inlineUnions: ReadonlyArray<InlineUnionWithContext>;
+  readonly inlineDiscriminatorResolveTypes: ReadonlyArray<InlineDiscriminatorResolveType>;
+}
+
+/**
+ * Pre-processes inline unions that match discriminatorFields config.
+ * Groups inline object members by discriminator value and merges them,
+ * producing flattened members with inlineObjectHintName set for naming.
+ * Also returns discriminator resolveType info for generating __resolveType functions.
+ *
+ * This handles the case where TypeScript distributes intersections over unions
+ * within field types (e.g., `parts: UIMessagePart<...>[]`), creating many
+ * anonymous inline objects that would otherwise cause UNNAMEABLE_UNION_MEMBER errors.
+ */
+export function flattenInlineUnionMembers(
+  params: FlattenInlineUnionMembersParams,
+): FlattenInlineUnionMembersResult {
+  const { inlineUnions, discriminatorFields } = params;
+
+  if (discriminatorFields.size === 0) {
+    return { inlineUnions, inlineDiscriminatorResolveTypes: [] };
+  }
+
+  const inlineDiscriminatorResolveTypes: InlineDiscriminatorResolveType[] = [];
+  const resultUnions: InlineUnionWithContext[] = [];
+
+  for (const inlineUnion of inlineUnions) {
+    const unionTypeName = generateAutoTypeName(inlineUnion.context);
+    const fieldNames = discriminatorFields.get(unionTypeName);
+    if (fieldNames === undefined) {
+      resultUnions.push(inlineUnion);
+      continue;
+    }
+
+    const primaryFieldName = fieldNames[0];
+    if (primaryFieldName === undefined) {
+      resultUnions.push(inlineUnion);
+      continue;
+    }
+
+    // Only process inline object members
+    const inlineObjectMembers: Array<{
+      member: InlineUnionMemberInfo;
+      properties: ReadonlyArray<InlineObjectPropertyDef>;
+    }> = [];
+    const nonInlineMembers: InlineUnionMemberInfo[] = [];
+
+    for (const member of inlineUnion.members) {
+      if (
+        member.memberType.kind === "inlineObject" &&
+        member.memberType.inlineObjectProperties
+      ) {
+        inlineObjectMembers.push({
+          member,
+          properties: member.memberType.inlineObjectProperties,
+        });
+      } else {
+        nonInlineMembers.push(member);
+      }
+    }
+
+    if (inlineObjectMembers.length === 0) {
+      resultUnions.push(inlineUnion);
+      continue;
+    }
+
+    // Group by discriminator value tuple
+    const groups = new Map<
+      string,
+      Array<ReadonlyArray<InlineObjectPropertyDef>>
+    >();
+    const groupValues = new Map<string, ReadonlyArray<string | null>>();
+
+    for (const { properties } of inlineObjectMembers) {
+      const primaryValue = getDiscriminatorValueFromPropertyDef(
+        properties,
+        primaryFieldName,
+      );
+      if (primaryValue === null) {
+        continue;
+      }
+
+      const secondaryValues = fieldNames
+        .slice(1)
+        .map((fn) => getDiscriminatorValueFromPropertyDef(properties, fn));
+      const tupleKey = JSON.stringify([primaryValue, ...secondaryValues]);
+
+      let group = groups.get(tupleKey);
+      if (group === undefined) {
+        group = [];
+        groups.set(tupleKey, group);
+        groupValues.set(tupleKey, [primaryValue, ...secondaryValues]);
+      }
+      group.push(properties);
+    }
+
+    if (groups.size === 0) {
+      resultUnions.push(inlineUnion);
+      continue;
+    }
+
+    // Flatten each group into a single member with hint name
+    const flattenedMembers: InlineUnionMemberInfo[] = [];
+    const valueMappings: InlineDiscriminatorResolveType["valueMappings"][number][] =
+      [];
+
+    for (const [tupleKey, group] of groups) {
+      const values = groupValues.get(tupleKey)!;
+      const mergedProperties = mergeGroupPropertyDefs(group, [...fieldNames]);
+      const hintName = generateDiscriminatorMemberName({
+        unionTypeName,
+        values,
+      });
+
+      flattenedMembers.push({
+        memberType: createInlineObjectType({
+          properties: mergedProperties,
+          description: null,
+          deprecated: null,
+          hintName,
+        }),
+        needsAutoGeneration: true,
+      });
+
+      valueMappings.push({
+        memberGraphQLTypeName: hintName,
+        values,
+      });
+    }
+
+    resultUnions.push({
+      ...inlineUnion,
+      members: [...nonInlineMembers, ...flattenedMembers],
+    });
+
+    inlineDiscriminatorResolveTypes.push({
+      unionTypeName,
+      fieldNames: [...fieldNames],
+      valueMappings,
+    });
+  }
+
+  return { inlineUnions: resultUnions, inlineDiscriminatorResolveTypes };
 }
