@@ -279,6 +279,123 @@ export type SearchResult = User | Post;
 // resolveType is automatically generated - no manual definition needed
 ```
 
+### Custom Discriminator Fields
+
+When union member types use a field other than `__typename` or `$typeName` for discrimination (e.g., external library types like AI SDK's `UIMessagePart`), you can configure custom discriminator fields via `gqlkit.config.ts`. gqlkit will automatically generate `__resolveType` based on the specified fields.
+
+```ts
+// gqlkit.config.ts
+import { defineConfig } from "@gqlkit-ts/cli";
+
+export default defineConfig({
+  discriminatorFields: {
+    ContentPart: "type",
+  },
+});
+```
+
+```typescript
+// src/gqlkit/schema/types.ts
+export interface TextPart {
+  type: "text";
+  text: string;
+}
+
+export interface ImagePart {
+  type: "image";
+  url: string;
+  alt: string;
+}
+
+export type ContentPart = TextPart | ImagePart;
+```
+
+Generates a `switch`-based `__resolveType`:
+
+```typescript
+ContentPart: {
+  __resolveType: (obj) => {
+    switch (obj.type) {
+      case "text": return "TextPart";
+      case "image": return "ImagePart";
+      default: return undefined;
+    }
+  },
+},
+```
+
+Unlike `__typename` or `$typeName`, custom discriminator fields remain as regular GraphQL fields in the generated schema:
+
+```graphql
+union ContentPart = ImagePart | TextPart
+
+type TextPart {
+  type: String!
+  text: String!
+}
+
+type ImagePart {
+  type: String!
+  url: String!
+  alt: String!
+}
+```
+
+#### Multiple Discriminator Fields
+
+When a single field is not enough to uniquely identify each member, you can specify multiple discriminator fields as an array. The first field must exist on all members with a string literal type. Secondary fields do not need to exist on every member.
+
+```ts
+// gqlkit.config.ts
+import { defineConfig } from "@gqlkit-ts/cli";
+
+export default defineConfig({
+  discriminatorFields: {
+    Content: ["type", "mediaType"],
+  },
+});
+```
+
+```typescript
+export type Content =
+  | { type: "text"; mediaType: "plain"; body: string }
+  | { type: "text"; mediaType: "html"; html: string }
+  | { type: "image"; url: string; alt: string };
+```
+
+Generates nested `switch` statements and type names derived from the discriminator values:
+
+```graphql
+union Content = ContentImage | ContentTextHtml | ContentTextPlain
+
+type ContentTextPlain {
+  type: String!
+  mediaType: String!
+  body: String!
+}
+
+type ContentTextHtml {
+  type: String!
+  mediaType: String!
+  html: String!
+}
+
+type ContentImage {
+  type: String!
+  url: String!
+  alt: String!
+}
+```
+
+#### Validation Rules
+
+- The **first** discriminator field must exist on **all** union members and have a string literal type
+- Secondary fields do not need to exist on every member, but the combination of values must be unique across all members
+- If a `defineResolveType` is manually defined for the same union, the manual definition takes priority
+- If `discriminatorFields` is configured for a union that also has `$typeName` or `__typename`, the `discriminatorFields` configuration takes priority
+
+See [Configuration](../configuration.md#custom-discriminator-fields) for the full config reference.
+
 ### Manual Resolution
 
 For types without `__typename` or `$typeName`, use `defineResolveType`:

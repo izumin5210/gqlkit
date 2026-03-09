@@ -155,6 +155,25 @@ export default defineConfig({
 |------|-------------|
 | `afterAllFileWrite` | Runs after all generated files are written. Receives the list of written file paths. |
 
+## Custom Discriminator Fields
+
+Specify custom TypeScript fields for union type resolution. This is useful when union members use a discriminator field other than `__typename` or `$typeName` (e.g., external library types).
+
+```ts
+export default defineConfig({
+  discriminatorFields: {
+    // Single field
+    ContentPart: "type",
+    // Multiple fields for tuple-based discrimination
+    Content: ["type", "mediaType"],
+  },
+});
+```
+
+Keys are GraphQL union type names, and values are either a single field name or an array of field names. gqlkit automatically generates `__resolveType` functions based on these fields.
+
+See [Union Types - Custom Discriminator Fields](./schema/unions.md#custom-discriminator-fields) for detailed usage and validation rules.
+
 ## Source Directory
 
 By default, gqlkit scans `src/gqlkit/schema` for types and resolvers.
