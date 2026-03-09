@@ -1,0 +1,130 @@
+import type {
+  DiscriminatorResolveTypeInfo,
+  DiscriminatorValueMapping,
+} from "../../auto-type-generator/discriminator-resolve-type-generator.js";
+
+/**
+ * Groups value mappings by their value at a given field index.
+ * Null values at the field index mean the member doesn't have that field,
+ * so the member should be resolved directly at the current switch level.
+ */
+function groupMappingsByFieldValue(
+  mappings: ReadonlyArray<DiscriminatorValueMapping>,
+  fieldIndex: number,
+): Map<string | null, DiscriminatorValueMapping[]> {
+  const groups = new Map<string | null, DiscriminatorValueMapping[]>();
+  for (const mapping of mappings) {
+    const value = mapping.values[fieldIndex] ?? null;
+    const group = groups.get(value) ?? [];
+    group.push(mapping);
+    groups.set(value, group);
+  }
+  return groups;
+}
+
+/**
+ * Builds a switch statement body for a given field level, recursing for nested fields.
+ * Returns an array of code lines (without leading indentation for the switch itself).
+ */
+function buildSwitchBody(
+  mappings: ReadonlyArray<DiscriminatorValueMapping>,
+  fieldNames: ReadonlyArray<string>,
+  fieldIndex: number,
+  indent: string,
+): string[] {
+  const fieldName = fieldNames[fieldIndex]!;
+  const groups = groupMappingsByFieldValue(mappings, fieldIndex);
+  const lines: string[] = [];
+
+  lines.push(`${indent}switch (obj.${fieldName}) {`);
+
+  for (const [value, groupMappings] of groups) {
+    // Null value means the member doesn't have this field — resolved at the parent level
+    if (value === null) {
+      for (const mapping of groupMappings) {
+        lines.push(
+          `${indent}  case "${mapping.values[fieldIndex - 1]!}": return "${mapping.memberGraphQLTypeName}";`,
+        );
+      }
+      continue;
+    }
+
+    const nextFieldIndex = fieldIndex + 1;
+    const hasMoreFields = nextFieldIndex < fieldNames.length;
+
+    // Check if all mappings in this group can be resolved directly
+    // (either no more fields, or only one mapping, or all remaining values are null)
+    const canResolveDirectly =
+      groupMappings.length === 1 &&
+      (!hasMoreFields || groupMappings[0]!.values[nextFieldIndex] === null);
+
+    if (!hasMoreFields || canResolveDirectly) {
+      // Single mapping or no more fields: emit direct return
+      if (groupMappings.length === 1) {
+        lines.push(
+          `${indent}  case "${value}": return "${groupMappings[0]!.memberGraphQLTypeName}";`,
+        );
+      } else {
+        // Multiple mappings at the leaf level — shouldn't happen with unique tuples
+        for (const mapping of groupMappings) {
+          lines.push(
+            `${indent}  case "${value}": return "${mapping.memberGraphQLTypeName}";`,
+          );
+        }
+      }
+    } else {
+      // Need nested switch for remaining fields
+      lines.push(`${indent}  case "${value}":`);
+      const nestedLines = buildSwitchBody(
+        groupMappings,
+        fieldNames,
+        nextFieldIndex,
+        `${indent}    `,
+      );
+      lines.push(...nestedLines);
+    }
+  }
+
+  lines.push(`${indent}  default: return undefined;`);
+  lines.push(`${indent}}`);
+
+  return lines;
+}
+
+function buildObjTypeAnnotation(fieldNames: ReadonlyArray<string>): string {
+  const fields = fieldNames.map((name) => `${name}: string`);
+  return `{ ${fields.join("; ")} }`;
+}
+
+/**
+ * Builds a resolver map entry for a discriminator-based __resolveType.
+ *
+ * For single discriminator field:
+ *   TypeName: {
+ *     __resolveType: (obj: { field: string }) => {
+ *       switch (obj.field) {
+ *         case "val": return "MemberType";
+ *         default: return undefined;
+ *       }
+ *     },
+ *   },
+ *
+ * For multiple discriminator fields, generates nested switch statements.
+ */
+export function buildDiscriminatorResolveTypeEntry(
+  info: DiscriminatorResolveTypeInfo,
+): string {
+  const { unionTypeName, fieldNames, valueMappings } = info;
+  const objType = buildObjTypeAnnotation(fieldNames);
+  const baseIndent = "      ";
+
+  // Handle null-valued mappings at level 0 differently:
+  // They should be returned directly without needing a switch at the current level.
+  // But for the first field, null doesn't make sense (primary field is always present).
+
+  // Build the switch body for the first field
+  const switchLines = buildSwitchBody(valueMappings, fieldNames, 0, baseIndent);
+  const switchBody = switchLines.join("\n");
+
+  return `    ${unionTypeName}: {\n      __resolveType: (obj: ${objType}) => {\n${switchBody}\n      },\n    },`;
+}
