@@ -5,7 +5,11 @@ import type { ContentPart, SearchResult } from "./types.js";
 export const contentQuery = defineQuery<NoArgs, ContentPart>(
   "content",
   (_args, _ctx) => {
-    return { $typeName: "TextPart" as const, type: "text" as const, text: "hello" };
+    return {
+      $typeName: "TextPart" as const,
+      type: "text" as const,
+      text: "hello",
+    };
   },
 );
 

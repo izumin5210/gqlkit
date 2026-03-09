@@ -169,6 +169,9 @@ function collectSecondaryValuesForInlineMember(
  * Checks that all member value tuples are unique. Reports DISCRIMINATOR_DUPLICATE_VALUE_TUPLE
  * for any duplicates found.
  */
+/**
+ * Returns true if duplicates were found (diagnostics were added).
+ */
 function validateValueTupleUniqueness(
   memberTuples: ReadonlyArray<{
     readonly id: MemberIdentifier;
@@ -177,7 +180,7 @@ function validateValueTupleUniqueness(
   unionTypeName: string,
   sourceLocation: SourceLocation,
   diagnostics: Diagnostic[],
-): void {
+): boolean {
   // Group members by their serialized value tuple
   const tupleGroups = new Map<string, string[]>();
   for (const { id, values } of memberTuples) {
@@ -190,8 +193,10 @@ function validateValueTupleUniqueness(
     group.push(id.label);
   }
 
+  let hasDuplicates = false;
   for (const [tupleKey, members] of tupleGroups) {
     if (members.length > 1) {
+      hasDuplicates = true;
       const tupleDisplay = tupleKey;
       diagnostics.push({
         code: "DISCRIMINATOR_DUPLICATE_VALUE_TUPLE",
@@ -201,6 +206,7 @@ function validateValueTupleUniqueness(
       });
     }
   }
+  return hasDuplicates;
 }
 
 /**
@@ -329,7 +335,7 @@ export function validateDiscriminatorFields(
 
     // Only check uniqueness when all primary fields are valid
     if (!hasPrimaryErrors && memberTuples.length > 0) {
-      validateValueTupleUniqueness(
+      const hasDuplicateErrors = validateValueTupleUniqueness(
         memberTuples,
         unionTypeName,
         sourceLocation,
@@ -337,11 +343,6 @@ export function validateDiscriminatorFields(
       );
 
       // Only produce validated entries when validation passed (no primary errors, no duplicates)
-      const hasDuplicateErrors = diagnostics.some(
-        (d) =>
-          d.code === "DISCRIMINATOR_DUPLICATE_VALUE_TUPLE" &&
-          d.message.includes(`'${unionTypeName}'`),
-      );
       if (!hasDuplicateErrors) {
         validatedEntries.push({
           unionTypeName,
