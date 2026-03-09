@@ -59,7 +59,7 @@ export interface ResolverPayloadContext {
  * Convert a string to PascalCase.
  * Handles camelCase, snake_case, and kebab-case inputs.
  */
-function toPascalCase(str: string): string {
+export function toPascalCase(str: string): string {
   if (str.length === 0) return str;
 
   return str

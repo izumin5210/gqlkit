@@ -39,6 +39,8 @@ export interface CollectTypenameResolveTypesParams {
   readonly extractedTypes: ReadonlyArray<ExtractedTypeInfo>;
   readonly typeMap: ReadonlyMap<string, ExtractedTypeInfo>;
   readonly manualResolveTypeNames: ReadonlySet<string>;
+  /** Union names that have discriminatorFields configured; these are excluded from typename processing. */
+  readonly discriminatorFieldUnionNames: ReadonlySet<string>;
 }
 
 export interface CollectTypenameResolveTypesResult {
@@ -230,11 +232,17 @@ function collectGeneratedObjectTypes(
 export function collectTypenameResolveTypes(
   params: CollectTypenameResolveTypesParams,
 ): CollectTypenameResolveTypesResult {
-  const { extractedTypes, typeMap, manualResolveTypeNames } = params;
+  const {
+    extractedTypes,
+    typeMap,
+    manualResolveTypeNames,
+    discriminatorFieldUnionNames,
+  } = params;
 
   const extractions = collectTypenameExtractions({
     extractedTypes,
     typeMap,
+    discriminatorFieldUnionNames,
   });
 
   const autoResolveTypes: TypenameAutoResolveTypeInfo[] = [];
