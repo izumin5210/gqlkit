@@ -18,7 +18,7 @@
     "@biomejs/biome": "2.4.6",
     "@changesets/changelog-github": "0.6.0",
     "@changesets/cli": "2.30.0",
-    "@types/node": "24.11.0",
+    "@types/node": "24.11.2",
     "@vitest/coverage-v8": "4.0.18",
     "graphql": "catalog:",
     "knip": "5.85.0",
