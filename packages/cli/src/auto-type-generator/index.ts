@@ -7,6 +7,16 @@ export {
   type GeneratedFromInfo,
   generateAutoTypes,
 } from "./auto-type-generator.js";
+export {
+  type ValidateDiscriminatorFieldsParams,
+  type ValidateDiscriminatorFieldsResult,
+  validateDiscriminatorFields,
+} from "./discriminator-field-validator.js";
+export {
+  type CollectDiscriminatorResolveTypesParams,
+  type CollectDiscriminatorResolveTypesResult,
+  collectDiscriminatorResolveTypes,
+} from "./discriminator-resolve-type-generator.js";
 export type {
   InlineUnionMemberInfo,
   InlineUnionWithContext,

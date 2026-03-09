@@ -1,0 +1,6 @@
+{
+  "discriminatorFields": {
+    "ContentPart": "type",
+    "Media": "kind"
+  }
+}

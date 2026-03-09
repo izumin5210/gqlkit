@@ -1,0 +1,5 @@
+{
+  "discriminatorFields": {
+    "Content": ["type", "mediaType"]
+  }
+}

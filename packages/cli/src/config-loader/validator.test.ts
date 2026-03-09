@@ -992,5 +992,183 @@ describe("ConfigValidator", () => {
         expect(result.diagnostics[0]?.message).toContain("empty");
       });
     });
+
+    describe("discriminatorFields options", () => {
+      it("should resolve default empty discriminatorFields when not provided", () => {
+        const result = validateConfig({
+          config: {},
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.discriminatorFields).toEqual(new Map());
+      });
+
+      it("should resolve discriminatorFields with string value to single-element array", () => {
+        const result = validateConfig({
+          config: {
+            discriminatorFields: {
+              ContentPart: "type",
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.discriminatorFields).toEqual(
+          new Map([["ContentPart", ["type"]]]),
+        );
+      });
+
+      it("should resolve discriminatorFields with array value as-is", () => {
+        const result = validateConfig({
+          config: {
+            discriminatorFields: {
+              Content: ["type", "mediaType"],
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.discriminatorFields).toEqual(
+          new Map([["Content", ["type", "mediaType"]]]),
+        );
+      });
+
+      it("should handle multiple union entries", () => {
+        const result = validateConfig({
+          config: {
+            discriminatorFields: {
+              ContentPart: "type",
+              Content: ["type", "mediaType"],
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig).toBeTruthy();
+        expect(result.resolvedConfig!.discriminatorFields).toEqual(
+          new Map([
+            ["ContentPart", ["type"]],
+            ["Content", ["type", "mediaType"]],
+          ]),
+        );
+      });
+
+      it("should report error when discriminatorFields is not an object", () => {
+        const result = validateConfig({
+          config: {
+            discriminatorFields: "invalid" as unknown as Record<string, string>,
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe(
+          "CONFIG_INVALID_DISCRIMINATOR_FIELDS",
+        );
+        expect(result.diagnostics[0]?.message).toContain("must be an object");
+      });
+
+      it("should report error when entry value is neither string nor array", () => {
+        const result = validateConfig({
+          config: {
+            discriminatorFields: {
+              ContentPart: 42 as unknown as string,
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe(
+          "CONFIG_INVALID_DISCRIMINATOR_ENTRY",
+        );
+        expect(result.diagnostics[0]?.message).toContain(
+          'discriminatorFields["ContentPart"]',
+        );
+      });
+
+      it("should report error when entry value is an empty string", () => {
+        const result = validateConfig({
+          config: {
+            discriminatorFields: {
+              ContentPart: "",
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe(
+          "CONFIG_EMPTY_DISCRIMINATOR_FIELDS",
+        );
+        expect(result.diagnostics[0]?.message).toContain("empty string");
+      });
+
+      it("should report error when entry value is an empty array", () => {
+        const result = validateConfig({
+          config: {
+            discriminatorFields: {
+              ContentPart: [],
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe(
+          "CONFIG_EMPTY_DISCRIMINATOR_FIELDS",
+        );
+        expect(result.diagnostics[0]?.message).toContain("empty array");
+      });
+
+      it("should report error when array contains non-string items", () => {
+        const result = validateConfig({
+          config: {
+            discriminatorFields: {
+              ContentPart: [42] as unknown as string[],
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe(
+          "CONFIG_INVALID_DISCRIMINATOR_ENTRY",
+        );
+        expect(result.diagnostics[0]?.message).toContain("only strings");
+      });
+
+      it("should report error when array contains an empty string", () => {
+        const result = validateConfig({
+          config: {
+            discriminatorFields: {
+              ContentPart: ["type", ""],
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe(
+          "CONFIG_EMPTY_DISCRIMINATOR_FIELDS",
+        );
+        expect(result.diagnostics[0]?.message).toContain(
+          "contains an empty string",
+        );
+      });
+    });
   });
 });

@@ -1,0 +1,6 @@
+{
+  "discriminatorFields": {
+    "ContentPart": "type",
+    "NonExistentUnion": "kind"
+  }
+}

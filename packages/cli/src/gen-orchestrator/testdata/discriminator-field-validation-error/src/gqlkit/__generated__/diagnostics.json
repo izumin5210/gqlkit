@@ -1,0 +1,22 @@
+[
+  {
+    "code": "DISCRIMINATOR_FIELD_NOT_FOUND",
+    "message": "Union 'ContentPart' member 'ImagePart' does not have discriminator field 'type'.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 18,
+      "column": 1
+    }
+  },
+  {
+    "code": "DISCRIMINATOR_FIELD_NOT_STRING_LITERAL",
+    "message": "Union 'Media' member 'Video' has discriminator field 'kind' but its type is not a string literal.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 30,
+      "column": 1
+    }
+  }
+]

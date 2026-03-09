@@ -99,6 +99,16 @@ describe("Golden File Tests", async () => {
 
       const sourceDir = config?.sourceDir ?? "src/gqlkit/schema";
 
+      const discriminatorFields = new Map<string, ReadonlyArray<string>>();
+      if (config?.discriminatorFields) {
+        for (const [key, value] of Object.entries(config.discriminatorFields)) {
+          discriminatorFields.set(
+            key,
+            typeof value === "string" ? [value] : value,
+          );
+        }
+      }
+
       const result = await executeGeneration({
         cwd: caseDir,
         sourceDir,
@@ -112,6 +122,7 @@ describe("Golden File Tests", async () => {
         configDir: null,
         customScalars,
         tsconfigPath: join(caseDir, "tsconfig.json"),
+        discriminatorFields,
       });
 
       const expectedDir = join(caseDir, "src/gqlkit/__generated__");

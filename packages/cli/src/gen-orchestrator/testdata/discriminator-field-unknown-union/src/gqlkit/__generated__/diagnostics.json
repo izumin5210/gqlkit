@@ -1,0 +1,8 @@
+[
+  {
+    "code": "DISCRIMINATOR_UNKNOWN_UNION",
+    "message": "Union type 'NonExistentUnion' specified in discriminatorFields does not exist.",
+    "severity": "warning",
+    "location": null
+  }
+]

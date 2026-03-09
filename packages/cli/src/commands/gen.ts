@@ -45,8 +45,14 @@ export async function runGenCommand(
     ? dirname(configResult.configPath)
     : options.cwd;
 
-  const { sourceDir, sourceIgnoreGlobs, output, scalars, tsconfigPath } =
-    configResult.config;
+  const {
+    sourceDir,
+    sourceIgnoreGlobs,
+    output,
+    scalars,
+    tsconfigPath,
+    discriminatorFields,
+  } = configResult.config;
 
   const config: GenerationConfig = {
     cwd: options.cwd,
@@ -56,6 +62,7 @@ export async function runGenCommand(
     configDir,
     customScalars: scalars,
     tsconfigPath,
+    discriminatorFields,
   };
 
   progressReporter.startPhase("Extracting types");

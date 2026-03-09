@@ -1,12 +1,15 @@
 import {
+  collectDiscriminatorResolveTypes,
   collectTypenameExtractions,
   collectTypenameResolveTypes,
   generateAutoTypes,
+  validateDiscriminatorFields,
   validateNameCollisions,
   validateSchemaTypenames,
   validateTypenames,
 } from "../auto-type-generator/index.js";
 import type { ImportExtension } from "../config/types.js";
+import type { ResolvedDiscriminatorFieldsMap } from "../config-loader/index.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import type { DirectiveDefinitionInfo } from "../shared/directive-definition-extractor.js";
 import type { CollectedScalarType } from "../type-extractor/collector/scalar-collector.js";
@@ -35,6 +38,7 @@ export interface GenerateSchemaInput {
   readonly sourceRoot: string | null;
   readonly knownTypeNames: ReadonlySet<string> | null;
   readonly importExtension: ImportExtension;
+  readonly discriminatorFields: ResolvedDiscriminatorFieldsMap;
 }
 
 export interface GenerateSchemaResult {
@@ -110,6 +114,35 @@ export function generateSchema(
   const updatedConversionResult = convertToGraphQL(
     autoTypeResult.updatedExtractedTypes,
   );
+  const typeMap = new Map(
+    autoTypeResult.updatedExtractedTypes.map((t) => [t.metadata.name, t]),
+  );
+
+  // Validate discriminator fields against extracted types
+  const discriminatorValidationResult = validateDiscriminatorFields({
+    discriminatorFields: input.discriminatorFields,
+    extractedTypes: autoTypeResult.updatedExtractedTypes,
+    typeMap,
+  });
+  const discriminatorErrors = discriminatorValidationResult.diagnostics.filter(
+    (d) => d.severity === "error",
+  );
+  if (discriminatorErrors.length > 0) {
+    return {
+      typeDefsCode: "",
+      sdlContent: "",
+      resolversCode: "",
+      diagnostics: discriminatorValidationResult.diagnostics,
+      hasErrors: true,
+      prunedTypes: null,
+    };
+  }
+
+  const discriminatorWarnings =
+    discriminatorValidationResult.diagnostics.filter(
+      (d) => d.severity === "warning",
+    );
+
   const updatedTypesResult: ExtractTypesResult = {
     types: updatedConversionResult.types,
     diagnostics: {
@@ -126,13 +159,10 @@ export function generateSchema(
           (d) => d.severity === "warning",
         ),
         ...autoTypeResult.diagnostics.filter((d) => d.severity === "warning"),
+        ...discriminatorWarnings,
       ],
     },
   };
-
-  const typeMap = new Map(
-    autoTypeResult.updatedExtractedTypes.map((t) => [t.metadata.name, t]),
-  );
 
   const manualResolveTypeNames = new Set(
     autoTypeResult.updatedResolversResult.abstractTypeResolvers
@@ -140,15 +170,29 @@ export function generateSchema(
       .map((r) => r.targetTypeName),
   );
 
+  // Collect discriminator resolve types from validated entries
+  const discriminatorResolveTypesResult = collectDiscriminatorResolveTypes({
+    validatedEntries: discriminatorValidationResult.validatedEntries,
+    manualResolveTypeNames,
+    extractedTypes: autoTypeResult.updatedExtractedTypes,
+    typeMap,
+  });
+
+  const discriminatorFieldUnionNames = new Set(
+    input.discriminatorFields.keys(),
+  );
+
   const typenameResolveTypesResult = collectTypenameResolveTypes({
     extractedTypes: autoTypeResult.updatedExtractedTypes,
     typeMap,
     manualResolveTypeNames,
+    discriminatorFieldUnionNames,
   });
 
   const typenameExtractions = collectTypenameExtractions({
     extractedTypes: autoTypeResult.updatedExtractedTypes,
     typeMap,
+    discriminatorFieldUnionNames,
   });
 
   const typenameValidationDiagnostics: Diagnostic[] = [];
@@ -188,20 +232,38 @@ export function generateSchema(
   const generatedInlineObjectTypes =
     typenameResolveTypesResult.generatedInlineObjectTypes;
 
+  // Collect all generated object types that need to be added as union members
+  // (both typename-based and discriminator-based inline objects)
+  const discriminatorGeneratedObjectTypes =
+    discriminatorResolveTypesResult.generatedObjectTypes;
+
   const updatedTypesForIntegration: ExtractTypesResult =
-    generatedInlineObjectTypes.length > 0
+    generatedInlineObjectTypes.length > 0 ||
+    discriminatorGeneratedObjectTypes.length > 0
       ? {
           types: updatedTypesResult.types.map((type) => {
             if (type.kind !== "Union") {
               return type;
             }
-            const inlineTypes = generatedInlineObjectTypes.filter(
+            const typenameInlineTypes = generatedInlineObjectTypes.filter(
               (g) => g.abstractTypeName === type.name,
             );
-            if (inlineTypes.length === 0) {
+            const discriminatorInlineTypes =
+              discriminatorGeneratedObjectTypes.filter(
+                (g) =>
+                  g.generatedFrom !== null &&
+                  g.generatedFrom.parentTypeName === type.name,
+              );
+            if (
+              typenameInlineTypes.length === 0 &&
+              discriminatorInlineTypes.length === 0
+            ) {
               return type;
             }
-            const newMembers = inlineTypes.map((g) => g.typeName);
+            const newMembers = [
+              ...typenameInlineTypes.map((g) => g.typeName),
+              ...discriminatorInlineTypes.map((g) => g.name),
+            ];
             return {
               ...type,
               unionMembers: [
@@ -217,6 +279,7 @@ export function generateSchema(
   const allAutoGeneratedTypes = [
     ...autoTypeResult.autoGeneratedTypes,
     ...typenameResolveTypesResult.generatedObjectTypes,
+    ...discriminatorGeneratedObjectTypes,
   ];
 
   const integratedResult = integrate({
@@ -227,6 +290,8 @@ export function generateSchema(
     directiveDefinitions,
     autoGeneratedTypes: allAutoGeneratedTypes,
     typenameAutoResolveTypes: typenameResolveTypesResult.autoResolveTypes,
+    discriminatorResolveTypes:
+      discriminatorResolveTypesResult.discriminatorResolveTypes,
     tsAliasToGraphQLNameMap: autoTypeResult.tsAliasToGraphQLNameMap,
   });
 

@@ -100,6 +100,16 @@ export interface GqlkitConfig {
    * Hook configuration for lifecycle events.
    */
   readonly hooks?: HooksConfig;
+
+  /**
+   * Custom discriminator field mappings for union types.
+   * Maps GraphQL union type names to TypeScript discriminator field names.
+   * When specified, gqlkit generates __resolveType functions based on these fields
+   * instead of requiring $typeName or __typename.
+   */
+  readonly discriminatorFields?: Readonly<
+    Record<string, string | ReadonlyArray<string>>
+  >;
 }
 
 /**

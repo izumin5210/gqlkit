@@ -1,0 +1,10 @@
+import type { NoArgs } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit.js";
+import type { Content } from "./types.js";
+
+export const contentQuery = defineQuery<NoArgs, Content>(
+  "content",
+  (_args, _ctx) => {
+    return { type: "text", mediaType: "plain", body: "hello" };
+  },
+);

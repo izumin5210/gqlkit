@@ -214,12 +214,14 @@ function extractTypenames(
 export interface CollectTypenameExtractionsParams {
   readonly extractedTypes: ReadonlyArray<ExtractedTypeInfo>;
   readonly typeMap: ReadonlyMap<string, ExtractedTypeInfo>;
+  /** Union names that have discriminatorFields configured; these are excluded from typename extraction. */
+  readonly discriminatorFieldUnionNames: ReadonlySet<string>;
 }
 
 export function collectTypenameExtractions(
   params: CollectTypenameExtractionsParams,
 ): ReadonlyArray<TypenameExtractionResult> {
-  const { extractedTypes, typeMap } = params;
+  const { extractedTypes, typeMap, discriminatorFieldUnionNames } = params;
   const results: TypenameExtractionResult[] = [];
 
   for (const typeInfo of extractedTypes) {
@@ -227,6 +229,10 @@ export function collectTypenameExtractions(
       typeInfo.metadata.kind === "union" ||
       typeInfo.metadata.kind === "graphqlInterface"
     ) {
+      // Skip unions that have discriminatorFields configured; they use the discriminator pipeline instead
+      if (discriminatorFieldUnionNames.has(typeInfo.metadata.name)) {
+        continue;
+      }
       const result = extractTypenames({ abstractType: typeInfo, typeMap });
       if (result !== null) {
         results.push(result);
