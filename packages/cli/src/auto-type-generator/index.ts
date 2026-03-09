@@ -27,6 +27,10 @@ export type {
   ValidateUnionResult,
 } from "./inline-union-validator.js";
 export {
+  type FlattenIntersectionMembersParams,
+  flattenIntersectionMembers,
+} from "./intersection-flattener.js";
+export {
   type NameCollisionValidatorInput,
   type NameCollisionValidatorResult,
   type UserDefinedTypeInfo,
