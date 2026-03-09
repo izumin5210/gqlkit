@@ -3,6 +3,7 @@ export {
   type LoadConfigResult,
   loadConfig,
   type ResolvedConfig,
+  type ResolvedDiscriminatorFieldsMap,
   type ResolvedHooksConfig,
   type ResolvedOutputConfig,
   type ResolvedScalarMapping,

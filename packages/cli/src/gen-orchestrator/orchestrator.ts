@@ -1,6 +1,7 @@
 import { dirname, relative, resolve } from "node:path";
 import type ts from "typescript";
 import type {
+  ResolvedDiscriminatorFieldsMap,
   ResolvedOutputConfig,
   ResolvedScalarMapping,
 } from "../config-loader/index.js";
@@ -61,6 +62,7 @@ export interface GenerationConfig {
   readonly configDir: string | null;
   readonly customScalars: ReadonlyArray<ResolvedScalarMapping> | null;
   readonly tsconfigPath: string | null;
+  readonly discriminatorFields: ResolvedDiscriminatorFieldsMap;
 }
 
 export interface GeneratedFile {
@@ -756,6 +758,7 @@ function generateSchemaStep(ctx: PipelineContext): {
     sourceRoot: ctx.config.cwd,
     knownTypeNames: ctx.knownTypeNames,
     importExtension: ctx.config.output.importExtension,
+    discriminatorFields: ctx.config.discriminatorFields,
   });
 
   const newDiagnostics = [...ctx.diagnostics, ...schemaResult.diagnostics];

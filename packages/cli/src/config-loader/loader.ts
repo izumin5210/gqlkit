@@ -42,6 +42,15 @@ export interface ResolvedHooksConfig {
   readonly afterAllFileWrite: ReadonlyArray<string>;
 }
 
+/**
+ * Normalized discriminator fields mapping.
+ * All values are normalized to arrays (single strings are wrapped in arrays).
+ */
+export type ResolvedDiscriminatorFieldsMap = ReadonlyMap<
+  string,
+  ReadonlyArray<string>
+>;
+
 export interface ResolvedConfig {
   readonly sourceDir: string;
   readonly sourceIgnoreGlobs: ReadonlyArray<string>;
@@ -49,6 +58,7 @@ export interface ResolvedConfig {
   readonly scalars: ReadonlyArray<ResolvedScalarMapping>;
   readonly tsconfigPath: string | null;
   readonly hooks: ResolvedHooksConfig;
+  readonly discriminatorFields: ResolvedDiscriminatorFieldsMap;
 }
 
 export interface LoadConfigResult {
@@ -82,6 +92,7 @@ const DEFAULT_RESOLVED_CONFIG: ResolvedConfig = {
   scalars: [],
   tsconfigPath: null,
   hooks: DEFAULT_HOOKS_CONFIG,
+  discriminatorFields: new Map(),
 };
 
 export async function loadConfig(

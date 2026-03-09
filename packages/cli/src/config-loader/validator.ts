@@ -6,6 +6,7 @@ import {
   DEFAULT_SOURCE_DIR,
   DEFAULT_TYPEDEFS_PATH,
   type ResolvedConfig,
+  type ResolvedDiscriminatorFieldsMap,
   type ResolvedHooksConfig,
   type ResolvedOutputConfig,
   type ResolvedScalarMapping,
@@ -584,6 +585,96 @@ function validateHooksConfig(
   return { resolved: undefined, diagnostics };
 }
 
+function validateDiscriminatorFieldsConfig(
+  value: unknown,
+  configPath: string,
+): {
+  resolved: ResolvedDiscriminatorFieldsMap | undefined;
+  diagnostics: Diagnostic[];
+} {
+  const diagnostics: Diagnostic[] = [];
+
+  if (value === undefined) {
+    return { resolved: new Map(), diagnostics: [] };
+  }
+
+  if (!isRecord(value)) {
+    diagnostics.push({
+      code: "CONFIG_INVALID_DISCRIMINATOR_FIELDS",
+      message: "discriminatorFields must be an object",
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+    return { resolved: undefined, diagnostics };
+  }
+
+  const result = new Map<string, ReadonlyArray<string>>();
+
+  for (const [key, entry] of Object.entries(value)) {
+    if (typeof entry === "string") {
+      if (entry === "") {
+        diagnostics.push({
+          code: "CONFIG_EMPTY_DISCRIMINATOR_FIELDS",
+          message: `discriminatorFields["${key}"] cannot be an empty string`,
+          severity: "error",
+          location: { file: configPath, line: 1, column: 1 },
+        });
+        continue;
+      }
+      result.set(key, [entry]);
+    } else if (Array.isArray(entry)) {
+      if (entry.length === 0) {
+        diagnostics.push({
+          code: "CONFIG_EMPTY_DISCRIMINATOR_FIELDS",
+          message: `discriminatorFields["${key}"] cannot be an empty array`,
+          severity: "error",
+          location: { file: configPath, line: 1, column: 1 },
+        });
+        continue;
+      }
+      let hasError = false;
+      for (const item of entry) {
+        if (typeof item !== "string") {
+          diagnostics.push({
+            code: "CONFIG_INVALID_DISCRIMINATOR_ENTRY",
+            message: `discriminatorFields["${key}"] array must contain only strings`,
+            severity: "error",
+            location: { file: configPath, line: 1, column: 1 },
+          });
+          hasError = true;
+          break;
+        }
+        if (item === "") {
+          diagnostics.push({
+            code: "CONFIG_EMPTY_DISCRIMINATOR_FIELDS",
+            message: `discriminatorFields["${key}"] array contains an empty string`,
+            severity: "error",
+            location: { file: configPath, line: 1, column: 1 },
+          });
+          hasError = true;
+          break;
+        }
+      }
+      if (!hasError) {
+        result.set(key, entry as string[]);
+      }
+    } else {
+      diagnostics.push({
+        code: "CONFIG_INVALID_DISCRIMINATOR_ENTRY",
+        message: `discriminatorFields["${key}"] must be a string or array of strings`,
+        severity: "error",
+        location: { file: configPath, line: 1, column: 1 },
+      });
+    }
+  }
+
+  if (diagnostics.length > 0) {
+    return { resolved: undefined, diagnostics };
+  }
+
+  return { resolved: result, diagnostics: [] };
+}
+
 export function validateConfig(
   options: ValidateConfigOptions,
 ): ValidateConfigResult {
@@ -620,6 +711,12 @@ export function validateConfig(
 
   const hooksResult = validateHooksConfig(config["hooks"], configPath);
   diagnostics.push(...hooksResult.diagnostics);
+
+  const discriminatorFieldsResult = validateDiscriminatorFieldsConfig(
+    config["discriminatorFields"],
+    configPath,
+  );
+  diagnostics.push(...discriminatorFieldsResult.diagnostics);
 
   if (config["scalars"] !== undefined && !Array.isArray(config["scalars"])) {
     diagnostics.push({
@@ -685,7 +782,8 @@ export function validateConfig(
     !sourceDirResult.resolved ||
     !sourceIgnoreGlobsResult.resolved ||
     !outputResult.resolved ||
-    !hooksResult.resolved
+    !hooksResult.resolved ||
+    !discriminatorFieldsResult.resolved
   ) {
     return { valid: false, resolvedConfig: undefined, diagnostics };
   }
@@ -699,6 +797,7 @@ export function validateConfig(
       scalars: resolvedScalars,
       tsconfigPath: tsconfigPathResult.resolved,
       hooks: hooksResult.resolved,
+      discriminatorFields: discriminatorFieldsResult.resolved,
     },
     diagnostics: [],
   };

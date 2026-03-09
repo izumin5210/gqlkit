@@ -34,6 +34,7 @@ describe("ConfigLoader", () => {
         hooks: {
           afterAllFileWrite: [],
         },
+        discriminatorFields: new Map(),
       });
       expect(result.diagnostics.length).toBe(0);
     });
@@ -137,6 +138,7 @@ export default {};
         hooks: {
           afterAllFileWrite: [],
         },
+        discriminatorFields: new Map(),
       });
       expect(result.diagnostics.length).toBe(0);
     });
