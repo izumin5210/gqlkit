@@ -12,7 +12,7 @@ export function isInlineObjectType(type: ts.Type): boolean {
     return false;
   }
   const symbolName = type.symbol.getName();
-  if (symbolName !== "__type") {
+  if (symbolName !== "__type" && symbolName !== "__object") {
     return false;
   }
   if (!(type.flags & ts.TypeFlags.Object)) {
