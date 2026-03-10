@@ -47,7 +47,10 @@ import {
   validateUnionMembers,
   validateUnionMemberTypenames,
 } from "./inline-union-validator.js";
-import { flattenInlineUnionMembers } from "./intersection-flattener.js";
+import {
+  flattenInlineUnionMembers,
+  type InlineDiscriminatorResolveType,
+} from "./intersection-flattener.js";
 import {
   type AutoTypeNameContext,
   buildFieldContext,
@@ -145,9 +148,7 @@ export interface AutoTypeGeneratorResult {
   /** Mapping from TypeScript type alias names to auto-generated GraphQL union names */
   readonly tsAliasToGraphQLNameMap: ReadonlyMap<string, string>;
   /** Discriminator resolveType info for inline unions that were flattened by discriminator fields */
-  readonly inlineDiscriminatorResolveTypes: ReadonlyArray<
-    import("./intersection-flattener.js").InlineDiscriminatorResolveType
-  >;
+  readonly inlineDiscriminatorResolveTypes: ReadonlyArray<InlineDiscriminatorResolveType>;
 }
 
 interface InlineObjectWithContext {
