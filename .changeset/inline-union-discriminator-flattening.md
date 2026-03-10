@@ -1,5 +1,5 @@
 ---
-"@gqlkit-ts/cli": minor
+"@gqlkit-ts/cli": patch
 ---
 
-feat: support discriminator-aware flattening for inline unions
+fix: apply discriminator-aware flattening to inline unions
