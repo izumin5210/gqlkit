@@ -13,6 +13,8 @@ export interface ValidateDiscriminatorFieldsParams {
   readonly discriminatorFields: ResolvedDiscriminatorFieldsMap;
   readonly extractedTypes: ReadonlyArray<ExtractedTypeInfo>;
   readonly typeMap: ReadonlyMap<string, ExtractedTypeInfo>;
+  /** Union names already handled by inline union flattening (skip DISCRIMINATOR_UNKNOWN_UNION) */
+  readonly inlineDiscriminatorUnionNames: ReadonlySet<string>;
 }
 
 export interface ValidateDiscriminatorFieldsResult {
@@ -222,19 +224,23 @@ function validateValueTupleUniqueness(
 export function validateDiscriminatorFields(
   params: ValidateDiscriminatorFieldsParams,
 ): ValidateDiscriminatorFieldsResult {
-  const { discriminatorFields, typeMap } = params;
+  const { discriminatorFields, typeMap, inlineDiscriminatorUnionNames } =
+    params;
   const diagnostics: Diagnostic[] = [];
   const validatedEntries: ValidatedDiscriminatorEntry[] = [];
 
   for (const [unionTypeName, fieldNames] of discriminatorFields) {
     const unionType = typeMap.get(unionTypeName);
     if (unionType === undefined) {
-      diagnostics.push({
-        code: "DISCRIMINATOR_UNKNOWN_UNION",
-        message: `Union type '${unionTypeName}' specified in discriminatorFields does not exist.`,
-        severity: "warning",
-        location: null,
-      });
+      // Skip warning for unions already handled by inline union flattening
+      if (!inlineDiscriminatorUnionNames.has(unionTypeName)) {
+        diagnostics.push({
+          code: "DISCRIMINATOR_UNKNOWN_UNION",
+          message: `Union type '${unionTypeName}' specified in discriminatorFields does not exist.`,
+          severity: "warning",
+          location: null,
+        });
+      }
       continue;
     }
 
