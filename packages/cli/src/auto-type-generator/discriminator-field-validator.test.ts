@@ -146,6 +146,7 @@ describe("validateDiscriminatorFields", () => {
       ]);
 
       const result = validateDiscriminatorFields({
+        inlineDiscriminatorUnionNames: new Set(),
         discriminatorFields: new Map([["ContentPart", ["type"]]]),
         extractedTypes: [contentPart, textPart, imagePart],
         typeMap,
@@ -199,6 +200,7 @@ describe("validateDiscriminatorFields", () => {
       ]);
 
       const result = validateDiscriminatorFields({
+        inlineDiscriminatorUnionNames: new Set(),
         discriminatorFields: new Map([["Content", ["type", "mediaType"]]]),
         extractedTypes: [content, textContent, jpegContent, pngContent],
         typeMap,
@@ -250,6 +252,7 @@ describe("validateDiscriminatorFields", () => {
       ]);
 
       const result = validateDiscriminatorFields({
+        inlineDiscriminatorUnionNames: new Set(),
         discriminatorFields: new Map([["ContentPart", ["type"]]]),
         extractedTypes: [contentPart],
         typeMap,
@@ -287,6 +290,7 @@ describe("validateDiscriminatorFields", () => {
       ]);
 
       const result = validateDiscriminatorFields({
+        inlineDiscriminatorUnionNames: new Set(),
         discriminatorFields: new Map([["ContentPart", ["type"]]]),
         extractedTypes: [contentPart, textPart],
         typeMap,
@@ -299,6 +303,7 @@ describe("validateDiscriminatorFields", () => {
 
     it("excludes entries for unknown unions from validatedEntries", () => {
       const result = validateDiscriminatorFields({
+        inlineDiscriminatorUnionNames: new Set(),
         discriminatorFields: new Map([["NonExistent", ["type"]]]),
         extractedTypes: [],
         typeMap: new Map(),
@@ -315,6 +320,7 @@ describe("validateDiscriminatorFields", () => {
       ]);
 
       const result = validateDiscriminatorFields({
+        inlineDiscriminatorUnionNames: new Set(),
         discriminatorFields,
         extractedTypes: [],
         typeMap: new Map(),
@@ -355,6 +361,7 @@ describe("validateDiscriminatorFields", () => {
       ]);
 
       const result = validateDiscriminatorFields({
+        inlineDiscriminatorUnionNames: new Set(),
         discriminatorFields,
         extractedTypes: [contentPart, textPart, imagePart],
         typeMap,
@@ -401,6 +408,7 @@ describe("validateDiscriminatorFields", () => {
       ]);
 
       const result = validateDiscriminatorFields({
+        inlineDiscriminatorUnionNames: new Set(),
         discriminatorFields,
         extractedTypes: [contentPart, textPart, imagePart],
         typeMap,

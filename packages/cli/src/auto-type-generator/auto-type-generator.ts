@@ -1,4 +1,5 @@
 import type ts from "typescript";
+import type { ResolvedDiscriminatorFieldsMap } from "../config-loader/index.js";
 import type {
   ExtractResolversResult,
   GraphQLFieldDefinition,
@@ -46,6 +47,10 @@ import {
   validateUnionMembers,
   validateUnionMemberTypenames,
 } from "./inline-union-validator.js";
+import {
+  flattenInlineUnionMembers,
+  type InlineDiscriminatorResolveType,
+} from "./intersection-flattener.js";
 import {
   type AutoTypeNameContext,
   buildFieldContext,
@@ -132,6 +137,7 @@ export interface AutoTypeGeneratorInput {
   readonly extractedTypes: ReadonlyArray<ExtractedTypeInfo>;
   readonly resolversResult: ExtractResolversResult;
   readonly knownTypeNames: ReadonlySet<string>;
+  readonly discriminatorFields: ResolvedDiscriminatorFieldsMap;
 }
 
 export interface AutoTypeGeneratorResult {
@@ -141,6 +147,8 @@ export interface AutoTypeGeneratorResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
   /** Mapping from TypeScript type alias names to auto-generated GraphQL union names */
   readonly tsAliasToGraphQLNameMap: ReadonlyMap<string, string>;
+  /** Discriminator resolveType info for inline unions that were flattened by discriminator fields */
+  readonly inlineDiscriminatorResolveTypes: ReadonlyArray<InlineDiscriminatorResolveType>;
 }
 
 interface InlineObjectWithContext {
@@ -1916,11 +1924,20 @@ export function generateAutoTypes(
     resolversResult: input.resolversResult,
     knownTypeNames: input.knownTypeNames,
   });
-  const allInlineUnions = [
+  const allInlineUnionsRaw = [
     ...inlineUnionsFromTypes,
     ...inlineUnionsFromResolvers,
     ...inlineUnionsFromPayloads,
   ];
+
+  // Apply discriminator-aware flattening to inline unions before processing.
+  // This resolves the case where TypeScript distributes intersections over unions
+  // within field types, creating many anonymous inline objects.
+  const flattenResult = flattenInlineUnionMembers({
+    inlineUnions: allInlineUnionsRaw,
+    discriminatorFields: input.discriminatorFields,
+  });
+  const allInlineUnions = [...flattenResult.inlineUnions];
 
   // Build union type names map before generating auto types
   const unionTypeNames = buildUnionTypeNamesMap(allInlineUnions);
@@ -1988,6 +2005,8 @@ export function generateAutoTypes(
     updatedResolversResult,
     diagnostics,
     tsAliasToGraphQLNameMap,
+    inlineDiscriminatorResolveTypes:
+      flattenResult.inlineDiscriminatorResolveTypes,
   };
 }
 
