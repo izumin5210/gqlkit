@@ -1,0 +1,22 @@
+{
+  "name": "@gqlkit-examples/with-ai-sdk",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "gen": "node --import tsx ../../packages/cli/src/cli.ts gen",
+    "start": "node --import tsx src/server.ts",
+    "dev": "pnpm gen && pnpm start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@gqlkit-ts/runtime": "workspace:*",
+    "@graphql-tools/schema": "^10.0.0",
+    "ai": "^6.0.0",
+    "graphql": "catalog:",
+    "graphql-yoga": "^5.0.0",
+    "zod": "^3.0.0"
+  },
+  "devDependencies": {
+    "@gqlkit-ts/cli": "workspace:*"
+  }
+}
