@@ -1,6 +1,9 @@
 import { resolve } from "node:path";
 import ts from "typescript";
-import { isInternalTypeSymbol } from "../../shared/constants.js";
+import {
+  isBuiltInScalar,
+  isInternalTypeSymbol,
+} from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   type DirectiveArgumentValue,
@@ -1701,6 +1704,13 @@ export function extractTypesFromProgram(
     }
   }
 
+  // Collect scalar names from field types (e.g., unknown → Unknown scalar)
+  for (const typeInfo of types) {
+    for (const field of typeInfo.fields) {
+      collectScalarNamesFromType(field.tsType, detectedScalarNames);
+    }
+  }
+
   return {
     types,
     diagnostics,
@@ -1708,4 +1718,25 @@ export function extractTypesFromProgram(
     detectedScalars,
     discoveredTypeNames: new Set(discoveredTypes.keys()),
   };
+}
+
+function collectScalarNamesFromType(
+  tsType: TSTypeReference,
+  scalarNames: Set<string>,
+): void {
+  if (
+    tsType.kind === "scalar" &&
+    tsType.scalarInfo?.isCustom &&
+    !isBuiltInScalar(tsType.scalarInfo.scalarName)
+  ) {
+    scalarNames.add(tsType.scalarInfo.scalarName);
+  }
+  if (tsType.elementType) {
+    collectScalarNamesFromType(tsType.elementType, scalarNames);
+  }
+  if (tsType.members) {
+    for (const member of tsType.members) {
+      collectScalarNamesFromType(member, scalarNames);
+    }
+  }
 }

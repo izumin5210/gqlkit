@@ -739,8 +739,7 @@ function generateSchemaStep(ctx: PipelineContext): {
 
   const { customScalarNames } = ctx.scalarConfig;
   const allCustomScalarNames = [
-    ...customScalarNames,
-    ...ctx.typesResult.detectedScalarNames,
+    ...new Set([...customScalarNames, ...ctx.typesResult.detectedScalarNames]),
   ];
 
   const schemaResult = generateSchema({

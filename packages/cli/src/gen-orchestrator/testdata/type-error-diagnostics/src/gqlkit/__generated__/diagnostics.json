@@ -1,16 +1,6 @@
 [
   {
     "code": "UNRESOLVED_REFERENCE",
-    "message": "Field 'id' references unresolved type 'unknown'",
-    "severity": "error",
-    "location": {
-      "file": "src/gqlkit/schema/bad.ts",
-      "line": 1,
-      "column": 1
-    }
-  },
-  {
-    "code": "UNRESOLVED_REFERENCE",
     "message": "Field 'data' references unresolved type 'object'",
     "severity": "error",
     "location": {

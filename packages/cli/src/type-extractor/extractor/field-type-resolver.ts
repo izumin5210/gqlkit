@@ -271,6 +271,21 @@ function resolveFieldTypeInternal(
     return createNeverType();
   }
 
+  // Unknown type — represents arbitrary values, map to JSON scalar (graphql-scalars)
+  if (type.flags & ts.TypeFlags.Unknown) {
+    return createScalarType({
+      name: "JSON",
+      scalarInfo: {
+        scalarName: "JSON",
+        typeName: "unknown",
+        baseType: undefined,
+        isCustom: true,
+        only: null,
+      },
+      nullable: false,
+    });
+  }
+
   // Primitive types
   const typeString = checker.typeToString(type);
 
@@ -341,6 +356,24 @@ function resolveFieldTypeInternal(
 
   // Inline object type handling
   if (isInlineObjectType(type)) {
+    // Index signature types (Record<string, T>, { [key: string]: T })
+    // These have no named properties, only index signatures — map to JSONObject (graphql-scalars)
+    const hasStringIndex =
+      checker.getIndexTypeOfType(type, ts.IndexKind.String) !== undefined;
+    if (hasStringIndex && type.getProperties().length === 0) {
+      return createScalarType({
+        name: "JSONObject",
+        scalarInfo: {
+          scalarName: "JSONObject",
+          typeName: "Record",
+          baseType: undefined,
+          isCustom: true,
+          only: null,
+        },
+        nullable: false,
+      });
+    }
+
     // Check if typeNode references a known type
     if (typeNode && ts.isTypeReferenceNode(typeNode)) {
       const typeName = getTypeNameFromNode(typeNode);
@@ -360,6 +393,23 @@ function resolveFieldTypeInternal(
   if (type.flags & ts.TypeFlags.Object) {
     const objectType = type as ts.ObjectType;
     if (objectType.objectFlags & ts.ObjectFlags.Mapped) {
+      // Index signature mapped types (Record<string, T>) — map to JSONObject (graphql-scalars)
+      const hasMappedStringIndex =
+        checker.getIndexTypeOfType(type, ts.IndexKind.String) !== undefined;
+      if (hasMappedStringIndex && type.getProperties().length === 0) {
+        return createScalarType({
+          name: "JSONObject",
+          scalarInfo: {
+            scalarName: "JSONObject",
+            typeName: "Record",
+            baseType: undefined,
+            isCustom: true,
+            only: null,
+          },
+          nullable: false,
+        });
+      }
+
       // Check if typeNode references a known type (schema-defined type)
       if (typeNode && ts.isTypeReferenceNode(typeNode)) {
         const typeName = getTypeNameFromNode(typeNode);
