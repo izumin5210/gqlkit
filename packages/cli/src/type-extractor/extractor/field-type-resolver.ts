@@ -30,6 +30,7 @@ import type {
   ScalarMappingContext,
 } from "../mapper/scalar-base-type-mapper.js";
 import { lookupScalarMapping } from "../mapper/scalar-base-type-mapper.js";
+import type { DiagnosticCode } from "../types/diagnostics.js";
 import {
   createArrayType,
   createInlineEnumType,
@@ -56,6 +57,12 @@ export interface DiscoveredTypeEntry {
   readonly sourceLocation: SourceLocation;
 }
 
+export interface FieldTypeResolverDiagnostic {
+  readonly code: DiagnosticCode;
+  readonly message: string;
+  readonly severity: "error" | "warning";
+}
+
 export interface FieldTypeResolverContext {
   readonly checker: ts.TypeChecker;
   readonly knownTypeNames: ReadonlySet<string>;
@@ -69,6 +76,8 @@ export interface FieldTypeResolverContext {
   readonly scalarMappingContext: ScalarMappingContext;
   /** Mutable map for collecting transitively discovered types */
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
+  /** Mutable array for collecting diagnostics during field type resolution */
+  readonly diagnostics: FieldTypeResolverDiagnostic[];
 }
 
 /**
@@ -628,14 +637,18 @@ function tryExtractAsInlineObject(
 ): TSTypeReference {
   const { visitedTypes, checker } = ctx;
   if (visitedTypes.has(type)) {
-    // Cycle detected, return a placeholder reference
-    // Guard against internal symbol names leaking into the schema
     const symbolName = type.symbol?.getName();
-    const typeName =
-      symbolName && !isInternalTypeSymbol(symbolName)
-        ? symbolName
-        : "Unknown";
-    return createReferenceType({ name: typeName, nullable: false });
+    if (symbolName && !isInternalTypeSymbol(symbolName)) {
+      // Known named type — safe to use as a reference placeholder
+      return createReferenceType({ name: symbolName, nullable: false });
+    }
+    // Anonymous/internal type cycle — emit warning and skip field
+    ctx.diagnostics.push({
+      code: "CYCLE_DETECTED",
+      message: `Cycle detected in anonymous type resolution; field will be skipped`,
+      severity: "warning",
+    });
+    return createNeverType();
   }
 
   visitedTypes.add(type);

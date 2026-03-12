@@ -621,6 +621,7 @@ export function extractDefineApiResolvers(
     scalarMappingTable,
     scalarMappingContext: "input",
     discoveredTypes: null,
+    diagnostics: [],
   };
   const outputContext: FieldTypeResolverContext = {
     checker,
@@ -632,6 +633,7 @@ export function extractDefineApiResolvers(
     scalarMappingTable,
     scalarMappingContext: "output",
     discoveredTypes: null,
+    diagnostics: [],
   };
 
   for (const filePath of files) {
