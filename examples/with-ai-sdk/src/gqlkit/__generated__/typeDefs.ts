@@ -6,68 +6,17 @@ export const typeDefs: DocumentNode = {
   kind: "Document",
   definitions: [
     {
-      kind: "ObjectTypeDefinition",
+      kind: "ScalarTypeDefinition",
       name: {
         kind: "Name",
-        value: "__object",
+        value: "JSON",
       },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "condition",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "location",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "temperature",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Float",
-              },
-            },
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value: "Defined in: src/agent.ts",
-        block: true,
+    },
+    {
+      kind: "ScalarTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "JSONObject",
       },
     },
     {
@@ -438,7 +387,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -556,7 +505,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -662,7 +611,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -700,7 +649,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
         },
@@ -716,7 +665,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "unknown",
+                value: "JSON",
               },
             },
           },
@@ -862,7 +811,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -900,7 +849,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
         },
@@ -916,7 +865,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "unknown",
+                value: "JSON",
               },
             },
           },
@@ -1093,7 +1042,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -1114,7 +1063,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
         },
@@ -1130,7 +1079,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "unknown",
+                value: "JSON",
               },
             },
           },
@@ -1265,7 +1214,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
         },
@@ -1281,7 +1230,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "unknown",
+                value: "JSON",
               },
             },
           },
@@ -1430,7 +1379,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
         },
@@ -1446,7 +1395,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "unknown",
+                value: "JSON",
               },
             },
           },
@@ -1463,7 +1412,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "unknown",
+                value: "JSON",
               },
             },
           },
@@ -1654,7 +1603,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -1692,7 +1641,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
         },
@@ -1708,7 +1657,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "unknown",
+                value: "JSON",
               },
             },
           },
@@ -1885,7 +1834,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -1920,7 +1869,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
         },
@@ -1953,7 +1902,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "unknown",
+                value: "JSON",
               },
             },
           },
@@ -2130,7 +2079,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -2192,7 +2141,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
           description: {
@@ -2260,7 +2209,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
           description: {
@@ -2354,7 +2303,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -2406,7 +2355,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
         },
@@ -2480,7 +2429,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
         },
@@ -2594,7 +2543,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "MessagePartsTextProviderMetadata",
+              value: "JSONObject",
             },
           },
           description: {
@@ -2664,20 +2613,6 @@ export const typeDefs: DocumentNode = {
       ],
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsTextProviderMetadata",
-      },
-      fields: [],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
-    },
-    {
       kind: "EnumTypeDefinition",
       name: {
         kind: "Name",
@@ -2702,7 +2637,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -2717,47 +2652,13 @@ export const typeDefs: DocumentNode = {
           kind: "FieldDefinition",
           name: {
             kind: "Name",
-            value: "approval",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "__type",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
             value: "callProviderMetadata",
           },
           type: {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "__type",
-              },
+              value: "JSONObject",
             },
           },
         },
@@ -2863,47 +2764,13 @@ export const typeDefs: DocumentNode = {
           kind: "FieldDefinition",
           name: {
             kind: "Name",
-            value: "approval",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "__type",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
             value: "callProviderMetadata",
           },
           type: {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "__type",
-              },
+              value: "JSONObject",
             },
           },
         },
@@ -3015,7 +2882,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
         },
@@ -3155,7 +3022,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -3176,7 +3043,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
         },
@@ -3310,7 +3177,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -3325,44 +3192,13 @@ export const typeDefs: DocumentNode = {
           kind: "FieldDefinition",
           name: {
             kind: "Name",
-            value: "approval",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "__type",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
             value: "callProviderMetadata",
           },
           type: {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "__type",
-              },
+              value: "JSONObject",
             },
           },
         },
@@ -3378,7 +3214,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "__object",
+                value: "MessagePartsToolCalculateOutputAvailableOutput",
               },
             },
           },
@@ -3492,14 +3328,14 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateOutputDenied",
+        value: "MessagePartsToolCalculateOutputAvailableOutput",
       },
       fields: [
         {
           kind: "FieldDefinition",
           name: {
             kind: "Name",
-            value: "approval",
+            value: "expression",
           },
           type: {
             kind: "NonNullType",
@@ -3507,11 +3343,43 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "__type",
+                value: "String",
               },
             },
           },
         },
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "result",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "Float",
+              },
+            },
+          },
+        },
+      ],
+      description: {
+        kind: "StringValue",
+        value:
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        block: true,
+      },
+    },
+    {
+      kind: "ObjectTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "MessagePartsToolCalculateOutputDenied",
+      },
+      fields: [
         {
           kind: "FieldDefinition",
           name: {
@@ -3522,24 +3390,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "__type",
-              },
+              value: "JSONObject",
             },
           },
         },
@@ -3645,27 +3496,13 @@ export const typeDefs: DocumentNode = {
           kind: "FieldDefinition",
           name: {
             kind: "Name",
-            value: "approval",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "__type",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
             value: "callProviderMetadata",
           },
           type: {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
         },
@@ -3683,20 +3520,6 @@ export const typeDefs: DocumentNode = {
                 kind: "Name",
                 value: "String",
               },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "__type",
             },
           },
         },
@@ -3731,7 +3554,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "unknown",
+                value: "JSON",
               },
             },
           },
@@ -3842,24 +3665,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "__type",
-              },
+              value: "JSONObject",
             },
           },
         },
@@ -3982,7 +3788,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -4020,24 +3826,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "__type",
-              },
+              value: "JSONObject",
             },
           },
         },
@@ -4191,7 +3980,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -4212,7 +4001,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
         },
@@ -4352,7 +4141,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -4373,7 +4162,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
         },
@@ -4507,7 +4296,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -4542,24 +4331,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "__type",
-              },
+              value: "JSONObject",
             },
           },
         },
@@ -4575,7 +4347,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "__object",
+                value: "MessagePartsToolWeatherOutputAvailableOutput",
               },
             },
           },
@@ -4744,7 +4516,73 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        block: true,
+      },
+    },
+    {
+      kind: "ObjectTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "MessagePartsToolWeatherOutputAvailableOutput",
+      },
+      fields: [
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "condition",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "String",
+              },
+            },
+          },
+        },
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "location",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "String",
+              },
+            },
+          },
+        },
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "temperature",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "Float",
+              },
+            },
+          },
+        },
+      ],
+      description: {
+        kind: "StringValue",
+        value:
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -4782,24 +4620,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "__type",
-              },
+              value: "JSONObject",
             },
           },
         },
@@ -4953,7 +4774,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -4988,7 +4809,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "__type",
+              value: "JSONObject",
             },
           },
         },
@@ -5006,20 +4827,6 @@ export const typeDefs: DocumentNode = {
                 kind: "Name",
                 value: "String",
               },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "__type",
             },
           },
         },
@@ -5054,7 +4861,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "unknown",
+                value: "JSON",
               },
             },
           },
@@ -5190,7 +4997,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
@@ -5226,7 +5033,7 @@ export const typeDefs: DocumentNode = {
       description: {
         kind: "StringValue",
         value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.111_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
         block: true,
       },
     },
