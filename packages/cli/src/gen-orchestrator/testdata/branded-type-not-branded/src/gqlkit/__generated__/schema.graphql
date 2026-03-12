@@ -2,18 +2,18 @@
 
 """Defined in: src/gqlkit/schema/types.ts"""
 type Container {
-  mixed: ContainerMixed!
-  person: ContainerPerson!
+  mixed: NotBranded!
+  person: PersonWithContact!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-type ContainerMixed {
+type NotBranded {
   name: String!
   value: Float!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-type ContainerPerson {
+type PersonWithContact {
   age: Float!
   email: String!
   name: String!

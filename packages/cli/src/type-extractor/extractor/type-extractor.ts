@@ -71,6 +71,7 @@ import {
 } from "../types/index.js";
 import {
   type DiscoveredTypeEntry,
+  type FieldTypeResolverDiagnostic,
   resolveFieldType,
 } from "./field-type-resolver.js";
 
@@ -540,6 +541,7 @@ function extractFieldsFromType(
       propTypeNode = declaration.type;
     }
 
+    const fieldDiagnostics: FieldTypeResolverDiagnostic[] = [];
     const resolvedType = resolveFieldType(actualPropType, propTypeNode, {
       checker,
       knownTypeNames,
@@ -550,7 +552,16 @@ function extractFieldsFromType(
       scalarMappingTable,
       scalarMappingContext,
       discoveredTypes,
+      diagnostics: fieldDiagnostics,
     });
+    for (const d of fieldDiagnostics) {
+      diagnostics.push({
+        code: d.code,
+        message: `Field '${propName}': ${d.message}`,
+        severity: d.severity,
+        location: getSourceLocationFromNode(declaration),
+      });
+    }
 
     // Skip fields with never type — they have no GraphQL representation
     if (resolvedType.kind === "never") {

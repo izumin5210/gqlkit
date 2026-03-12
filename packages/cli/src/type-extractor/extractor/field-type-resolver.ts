@@ -30,6 +30,7 @@ import type {
   ScalarMappingContext,
 } from "../mapper/scalar-base-type-mapper.js";
 import { lookupScalarMapping } from "../mapper/scalar-base-type-mapper.js";
+import type { DiagnosticCode } from "../types/diagnostics.js";
 import {
   createArrayType,
   createInlineEnumType,
@@ -56,6 +57,12 @@ export interface DiscoveredTypeEntry {
   readonly sourceLocation: SourceLocation;
 }
 
+export interface FieldTypeResolverDiagnostic {
+  readonly code: DiagnosticCode;
+  readonly message: string;
+  readonly severity: "error" | "warning";
+}
+
 export interface FieldTypeResolverContext {
   readonly checker: ts.TypeChecker;
   readonly knownTypeNames: ReadonlySet<string>;
@@ -69,6 +76,8 @@ export interface FieldTypeResolverContext {
   readonly scalarMappingContext: ScalarMappingContext;
   /** Mutable map for collecting transitively discovered types */
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
+  /** Mutable array for collecting diagnostics during field type resolution */
+  readonly diagnostics: FieldTypeResolverDiagnostic[];
 }
 
 /**
@@ -350,7 +359,46 @@ function resolveFieldTypeInternal(
       });
     }
 
-    // 4. Otherwise, treat as inline object
+    // 4. Register in discoveredTypes if applicable (same logic as alias expansion)
+    //    This handles non-exported recursive intersection types that would otherwise
+    //    cause cycle detection failures in tryExtractAsInlineObject.
+    if (type.aliasSymbol) {
+      const aliasName = type.aliasSymbol.getName();
+      if (!knownTypeNames.has(aliasName)) {
+        if (ctx.discoveredTypes && !ctx.discoveredTypes.has(aliasName)) {
+          const resolvedAliasSymbol = resolveOriginalSymbol(
+            type.aliasSymbol,
+            checker,
+          );
+          const declarations = resolvedAliasSymbol.getDeclarations();
+          const decl = declarations?.[0];
+          if (decl && !decl.getSourceFile().isDeclarationFile) {
+            const properties = type.getProperties();
+            if (properties.length > 0) {
+              const declSourceFile = decl.getSourceFile();
+              const location = getSourceLocationFromNode(decl) ?? {
+                file: declSourceFile.fileName,
+                line: 1,
+                column: 1,
+              };
+              ctx.discoveredTypes.set(aliasName, {
+                name: aliasName,
+                tsType: type,
+                tsSymbol: resolvedAliasSymbol,
+                sourceFile: relative(process.cwd(), declSourceFile.fileName),
+                sourceLocation: location,
+              });
+              return createReferenceType({ name: aliasName, nullable: false });
+            }
+          }
+        }
+        if (ctx.discoveredTypes?.has(aliasName)) {
+          return createReferenceType({ name: aliasName, nullable: false });
+        }
+      }
+    }
+
+    // 5. Otherwise, treat as inline object
     return tryExtractAsInlineObject(type, ctx, null);
   }
 
@@ -628,9 +676,24 @@ function tryExtractAsInlineObject(
 ): TSTypeReference {
   const { visitedTypes, checker } = ctx;
   if (visitedTypes.has(type)) {
-    // Cycle detected, return a placeholder reference
-    const typeName = type.symbol?.getName() ?? "Unknown";
-    return createReferenceType({ name: typeName, nullable: false });
+    // Prefer aliasSymbol (type alias name) over type.symbol (which may be __type for anonymous objects)
+    const candidateName = type.aliasSymbol?.getName() ?? type.symbol?.getName();
+    if (
+      candidateName &&
+      !isInternalTypeSymbol(candidateName) &&
+      (ctx.knownTypeNames.has(candidateName) ||
+        ctx.discoveredTypes?.has(candidateName))
+    ) {
+      // Valid reference target exists in the schema
+      return createReferenceType({ name: candidateName, nullable: false });
+    }
+    // No valid reference target — emit warning and skip field
+    ctx.diagnostics.push({
+      code: "CYCLE_DETECTED",
+      message: "Cycle detected in type resolution; field will be skipped",
+      severity: "warning",
+    });
+    return createNeverType();
   }
 
   visitedTypes.add(type);

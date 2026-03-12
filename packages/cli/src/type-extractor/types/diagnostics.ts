@@ -105,7 +105,8 @@ export type DiagnosticCode =
   | "DISCRIMINATOR_FIELD_NOT_FOUND"
   | "DISCRIMINATOR_FIELD_NOT_STRING_LITERAL"
   | "DISCRIMINATOR_DUPLICATE_VALUE_TUPLE"
-  | "DISCRIMINATOR_UNKNOWN_UNION";
+  | "DISCRIMINATOR_UNKNOWN_UNION"
+  | "CYCLE_DETECTED";
 
 export interface Diagnostic {
   readonly code: DiagnosticCode;
