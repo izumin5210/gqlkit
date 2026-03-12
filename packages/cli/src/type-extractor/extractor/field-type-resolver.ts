@@ -271,6 +271,21 @@ function resolveFieldTypeInternal(
     return createNeverType();
   }
 
+  // Unknown type — represents arbitrary values, map to Unknown scalar
+  if (type.flags & ts.TypeFlags.Unknown) {
+    return createScalarType({
+      name: "Unknown",
+      scalarInfo: {
+        scalarName: "Unknown",
+        typeName: "unknown",
+        baseType: undefined,
+        isCustom: true,
+        only: null,
+      },
+      nullable: false,
+    });
+  }
+
   // Primitive types
   const typeString = checker.typeToString(type);
 
