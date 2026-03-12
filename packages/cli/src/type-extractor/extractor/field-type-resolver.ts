@@ -704,6 +704,14 @@ function tryExtractAsInlineObject(
     (propType) => resolveFieldTypeInternal(propType, undefined, ctx),
   );
 
+  // Allow this type to be visited again in sibling union members.
+  // Cycle detection still works because real cycles are caught during the
+  // recursive extractInlineObjectPropertiesShared call above (while the
+  // type is still in visitedTypes). Removing it afterward prevents
+  // false-positive cycle detection when TypeScript shares the same type
+  // object across multiple union members (common with generic .d.ts types).
+  visitedTypes.delete(type);
+
   // Extract type-level TSDoc from the alias symbol if present (Requirement 7.2)
   // Only extract from user-defined types, not built-in TypeScript utility types
   let description: string | null = null;

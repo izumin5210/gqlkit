@@ -294,6 +294,23 @@ export const typeDefs: DocumentNode = {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
+            "value": "input"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ContainerPartsToolSearchOutputAvailableInput"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
             "value": "output"
           },
           "type": {
@@ -356,6 +373,37 @@ export const typeDefs: DocumentNode = {
           }
         }
       ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "ContainerPartsToolSearchOutputAvailableInput"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "query"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
     },
     {
       "kind": "ObjectTypeDefinition",
@@ -439,6 +487,23 @@ export const typeDefs: DocumentNode = {
           "kind": "FieldDefinition",
           "name": {
             "kind": "Name",
+            "value": "input"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "ContainerPartsToolSearchOutputErrorInput"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
             "value": "state"
           },
           "type": {
@@ -481,6 +546,76 @@ export const typeDefs: DocumentNode = {
                 "value": "String"
               }
             }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "ContainerPartsToolSearchOutputErrorInput"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "query"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
+      },
+      "fields": []
+    },
+    {
+      "kind": "ObjectTypeExtension",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "container"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Container"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Defined in: src/gqlkit/schema/types.ts",
+            "block": true
           }
         }
       ]

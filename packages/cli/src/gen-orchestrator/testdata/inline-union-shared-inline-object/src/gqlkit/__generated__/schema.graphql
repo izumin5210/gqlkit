@@ -44,10 +44,16 @@ type ContainerPartsToolSearchInputAvailableInput {
 
 type ContainerPartsToolSearchOutputAvailable {
   callId: String!
+  input: ContainerPartsToolSearchOutputAvailableInput!
   output: ContainerPartsToolSearchOutputAvailableOutput!
   state: String!
   title: String
   type: String!
+}
+
+"""Defined in: src/gqlkit/schema/types.ts"""
+type ContainerPartsToolSearchOutputAvailableInput {
+  query: String!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
@@ -58,7 +64,20 @@ type ContainerPartsToolSearchOutputAvailableOutput {
 type ContainerPartsToolSearchOutputError {
   callId: String!
   errorText: String!
+  input: ContainerPartsToolSearchOutputErrorInput!
   state: String!
   title: String
   type: String!
+}
+
+"""Defined in: src/gqlkit/schema/types.ts"""
+type ContainerPartsToolSearchOutputErrorInput {
+  query: String!
+}
+
+type Query
+
+extend type Query {
+  """Defined in: src/gqlkit/schema/types.ts"""
+  container: Container!
 }
