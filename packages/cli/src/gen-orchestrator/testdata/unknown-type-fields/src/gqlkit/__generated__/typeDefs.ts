@@ -9,7 +9,14 @@ export const typeDefs: DocumentNode = {
       "kind": "ScalarTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "Unknown"
+        "value": "JSON"
+      }
+    },
+    {
+      "kind": "ScalarTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "JSONObject"
       }
     },
     {
@@ -35,7 +42,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "Unknown"
+                    "value": "JSON"
                   }
                 }
               }
@@ -71,7 +78,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "Unknown"
+                "value": "JSON"
               }
             }
           }
@@ -79,7 +86,72 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Type with unknown fields that should map to Unknown scalar.\n\nDefined in: src/gqlkit/schema/types.ts",
+        "value": "Type with unknown fields that should map to JSON scalar.\n\nDefined in: src/gqlkit/schema/types.ts",
+        "block": true
+      }
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MetadataContainer"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "config"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "JSONObject"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "label"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "metadata"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "JSONObject"
+              }
+            }
+          }
+        }
+      ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Type with index signature fields that should map to JSONObject scalar.\n\nDefined in: src/gqlkit/schema/types.ts",
         "block": true
       }
     }
