@@ -638,8 +638,7 @@ function tryExtractAsInlineObject(
   const { visitedTypes, checker } = ctx;
   if (visitedTypes.has(type)) {
     // Prefer aliasSymbol (type alias name) over type.symbol (which may be __type for anonymous objects)
-    const candidateName =
-      type.aliasSymbol?.getName() ?? type.symbol?.getName();
+    const candidateName = type.aliasSymbol?.getName() ?? type.symbol?.getName();
     if (
       candidateName &&
       !isInternalTypeSymbol(candidateName) &&
