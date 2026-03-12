@@ -1,6 +1,6 @@
 import { openai } from "@ai-sdk/openai";
 import type { InferUIMessageChunk } from "ai";
-import { readUIMessageStream, streamText, ToolLoopAgent } from "ai";
+import { readUIMessageStream, streamText } from "ai";
 import type { AppMessage } from "../../agent.js";
 import { tools } from "../../agent.js";
 import { defineSubscription } from "../gqlkit.js";
