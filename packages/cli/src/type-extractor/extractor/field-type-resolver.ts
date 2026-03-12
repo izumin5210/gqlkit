@@ -629,7 +629,12 @@ function tryExtractAsInlineObject(
   const { visitedTypes, checker } = ctx;
   if (visitedTypes.has(type)) {
     // Cycle detected, return a placeholder reference
-    const typeName = type.symbol?.getName() ?? "Unknown";
+    // Guard against internal symbol names leaking into the schema
+    const symbolName = type.symbol?.getName();
+    const typeName =
+      symbolName && !isInternalTypeSymbol(symbolName)
+        ? symbolName
+        : "Unknown";
     return createReferenceType({ name: typeName, nullable: false });
   }
 
