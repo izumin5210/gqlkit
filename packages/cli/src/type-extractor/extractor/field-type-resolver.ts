@@ -637,15 +637,22 @@ function tryExtractAsInlineObject(
 ): TSTypeReference {
   const { visitedTypes, checker } = ctx;
   if (visitedTypes.has(type)) {
-    const symbolName = type.symbol?.getName();
-    if (symbolName && !isInternalTypeSymbol(symbolName)) {
-      // Known named type — safe to use as a reference placeholder
-      return createReferenceType({ name: symbolName, nullable: false });
+    // Prefer aliasSymbol (type alias name) over type.symbol (which may be __type for anonymous objects)
+    const candidateName =
+      type.aliasSymbol?.getName() ?? type.symbol?.getName();
+    if (
+      candidateName &&
+      !isInternalTypeSymbol(candidateName) &&
+      (ctx.knownTypeNames.has(candidateName) ||
+        ctx.discoveredTypes?.has(candidateName))
+    ) {
+      // Valid reference target exists in the schema
+      return createReferenceType({ name: candidateName, nullable: false });
     }
-    // Anonymous/internal type cycle — emit warning and skip field
+    // No valid reference target — emit warning and skip field
     ctx.diagnostics.push({
       code: "CYCLE_DETECTED",
-      message: `Cycle detected in anonymous type resolution; field will be skipped`,
+      message: "Cycle detected in type resolution; field will be skipped",
       severity: "warning",
     });
     return createNeverType();
