@@ -21,21 +21,17 @@ function callStreamText(prompt: string) {
 export const chatStream = defineSubscription<
   { prompt: string },
   ChatStreamChunk
->(async function* (_root, args) {
+>(async (_root, args) => {
   const result = callStreamText(args.prompt);
-  for await (const chunk of result.toUIMessageStream<AppMessage>()) {
-    yield chunk;
-  }
+  return result.toUIMessageStream<AppMessage>();
 });
 
 // Assembled UIMessage: yields the progressively-built Message on each update
 export const chat = defineSubscription<{ prompt: string }, Message>(
-  async function* (_root, args) {
+  async (_root, args) => {
     const result = callStreamText(args.prompt);
-    for await (const message of readUIMessageStream<AppMessage>({
+    return readUIMessageStream<AppMessage>({
       stream: result.toUIMessageStream(),
-    })) {
-      yield message;
-    }
+    });
   },
 );
