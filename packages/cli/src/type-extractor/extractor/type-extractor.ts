@@ -1750,9 +1750,4 @@ function collectScalarNamesFromType(
       collectScalarNamesFromType(member, scalarNames);
     }
   }
-  if (tsType.inlineObjectProperties) {
-    for (const prop of tsType.inlineObjectProperties) {
-      collectScalarNamesFromType(prop.tsType, scalarNames);
-    }
-  }
 }
