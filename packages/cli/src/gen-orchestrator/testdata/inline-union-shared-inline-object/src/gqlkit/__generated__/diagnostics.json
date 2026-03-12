@@ -1,0 +1,12 @@
+[
+  {
+    "code": "CYCLE_DETECTED",
+    "message": "Field 'parts': Cycle detected in type resolution; field will be skipped",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 22,
+      "column": 3
+    }
+  }
+]
