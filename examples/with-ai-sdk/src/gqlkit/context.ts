@@ -1,1 +1,5 @@
-export type Context = unknown;
+import type { LanguageModel } from "ai";
+
+export type Context = {
+  model: LanguageModel;
+};
