@@ -40,6 +40,19 @@ const TS_ANONYMOUS_TYPE_SYMBOL = "__type";
 const TS_ARRAY_TYPE_SYMBOL = "Array";
 
 /**
+ * Object literal type symbol name.
+ *
+ * TypeScript uses `__object` as the internal symbol name for object literal
+ * expressions (value-space). This differs from `__type` which is used for
+ * anonymous object types in type-space.
+ *
+ * This commonly occurs when a type is derived via `typeof` from a variable
+ * initialized with an object literal, especially when the value comes from
+ * an external library.
+ */
+const TS_OBJECT_LITERAL_TYPE_SYMBOL = "__object";
+
+/**
  * Checks if a symbol name represents a TypeScript internal/anonymous type
  * that should not be used directly as a GraphQL type name.
  *
@@ -49,7 +62,8 @@ const TS_ARRAY_TYPE_SYMBOL = "Array";
 export function isInternalTypeSymbol(symbolName: string): boolean {
   return (
     symbolName === TS_ANONYMOUS_TYPE_SYMBOL ||
-    symbolName === TS_ARRAY_TYPE_SYMBOL
+    symbolName === TS_ARRAY_TYPE_SYMBOL ||
+    symbolName === TS_OBJECT_LITERAL_TYPE_SYMBOL
   );
 }
 
