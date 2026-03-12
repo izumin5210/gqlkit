@@ -14,4 +14,7 @@ export type MetadataContainer = {
   label: string;
   metadata: Record<string, unknown>;
   config: { [key: string]: string };
+  tags: Record<string, unknown>[];
+  history: { [key: string]: string }[];
+  optionalMeta: Record<string, unknown> | null;
 };

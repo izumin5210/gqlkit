@@ -22,6 +22,9 @@ Defined in: src/gqlkit/schema/types.ts
 """
 type MetadataContainer {
   config: JSONObject!
+  history: [JSONObject!]!
   label: String!
   metadata: JSONObject!
+  optionalMeta: JSONObject
+  tags: [JSONObject!]!
 }
