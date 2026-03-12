@@ -4,37 +4,363 @@ scalar JSON
 
 scalar JSONObject
 
-"""Defined in: src/agent.ts"""
+"""
+Defined in: src/agent.ts
+"""
 type AppMetadata {
   model: String!
   timestamp: Float!
 }
 
-"""Defined in: src/gqlkit/schema/message.ts"""
-type Message {
-  """A unique identifier for the message."""
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+union ChatStreamChunk =
+  | ChatStreamChunkAbort
+  | ChatStreamChunkDataChart
+  | ChatStreamChunkDataSuggestion
+  | ChatStreamChunkError
+  | ChatStreamChunkFile
+  | ChatStreamChunkFinish
+  | ChatStreamChunkFinishStep
+  | ChatStreamChunkMessageMetadata
+  | ChatStreamChunkReasoningDelta
+  | ChatStreamChunkReasoningEnd
+  | ChatStreamChunkReasoningStart
+  | ChatStreamChunkSourceDocument
+  | ChatStreamChunkSourceUrl
+  | ChatStreamChunkStart
+  | ChatStreamChunkStartStep
+  | ChatStreamChunkTextDelta
+  | ChatStreamChunkTextEnd
+  | ChatStreamChunkTextStart
+  | ChatStreamChunkToolApprovalRequest
+  | ChatStreamChunkToolInputAvailable
+  | ChatStreamChunkToolInputDelta
+  | ChatStreamChunkToolInputError
+  | ChatStreamChunkToolInputStart
+  | ChatStreamChunkToolOutputAvailable
+  | ChatStreamChunkToolOutputDenied
+  | ChatStreamChunkToolOutputError
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkAbort {
+  reason: String
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkDataChart {
+  data: String!
+  id: String
+  transient: Boolean
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkDataSuggestion {
+  data: String!
+  id: String
+  transient: Boolean
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkError {
+  errorText: String!
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkFile {
+  mediaType: String!
+  providerMetadata: Object
+  type: String!
+  url: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkFinish {
+  finishReason: String
+  messageMetadata: AppMetadata
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkFinishStep {
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkMessageMetadata {
+  messageMetadata: AppMetadata!
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkReasoningDelta {
+  delta: String!
   id: String!
-  """The metadata of the message."""
+  providerMetadata: Object
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkReasoningEnd {
+  id: String!
+  providerMetadata: Object
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkReasoningStart {
+  id: String!
+  providerMetadata: Object
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkSourceDocument {
+  filename: String
+  mediaType: String!
+  providerMetadata: Object
+  sourceId: String!
+  title: String!
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkSourceUrl {
+  providerMetadata: Object
+  sourceId: String!
+  title: String
+  type: String!
+  url: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkStart {
+  messageId: String
+  messageMetadata: AppMetadata
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkStartStep {
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkTextDelta {
+  delta: String!
+  id: String!
+  providerMetadata: Object
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkTextEnd {
+  id: String!
+  providerMetadata: Object
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkTextStart {
+  id: String!
+  providerMetadata: String
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkToolApprovalRequest {
+  approvalId: String!
+  toolCallId: String!
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkToolInputAvailable {
+  dynamic: Boolean
+  input: unknown!
+  providerExecuted: Boolean
+  providerMetadata: Object
+  title: String
+  toolCallId: String!
+  toolName: String!
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkToolInputDelta {
+  inputTextDelta: String!
+  toolCallId: String!
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkToolInputError {
+  dynamic: Boolean
+  errorText: String!
+  input: unknown!
+  providerExecuted: Boolean
+  providerMetadata: Object
+  title: String
+  toolCallId: String!
+  toolName: String!
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkToolInputStart {
+  dynamic: Boolean
+  providerExecuted: Boolean
+  providerMetadata: Object
+  title: String
+  toolCallId: String!
+  toolName: String!
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkToolOutputAvailable {
+  dynamic: Boolean
+  output: unknown!
+  preliminary: Boolean
+  providerExecuted: Boolean
+  toolCallId: String!
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkToolOutputDenied {
+  toolCallId: String!
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/subscription.ts
+"""
+type ChatStreamChunkToolOutputError {
+  dynamic: Boolean
+  errorText: String!
+  providerExecuted: Boolean
+  toolCallId: String!
+  type: String!
+}
+
+"""
+Defined in: src/gqlkit/schema/message.ts
+"""
+type Message {
+  """
+  A unique identifier for the message.
+  """
+  id: String!
+  """
+  The metadata of the message.
+  """
   metadata: AppMetadata
   """
   The parts of the message. Use this for rendering the message in the UI.
-  
+
   System messages should be avoided (set the system prompt on the server instead).
   They can have text parts.
-  
+
   User messages can have text parts and file parts.
-  
+
   Assistant messages can have text, reasoning, tool invocation, and file parts.
   """
   parts: [MessageParts!]!
-  """The role of the message."""
+  """
+  The role of the message.
+  """
   role: MessageRole!
 }
 
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-union MessageParts = MessagePartsDataChart | MessagePartsDataSuggestion | MessagePartsDynamicToolApprovalRequested | MessagePartsDynamicToolApprovalResponded | MessagePartsDynamicToolInputAvailable | MessagePartsDynamicToolInputStreaming | MessagePartsDynamicToolOutputAvailable | MessagePartsDynamicToolOutputDenied | MessagePartsDynamicToolOutputError | MessagePartsFile | MessagePartsReasoning | MessagePartsSourceDocument | MessagePartsSourceUrl | MessagePartsStepStart | MessagePartsText | MessagePartsToolCalculateApprovalRequested | MessagePartsToolCalculateApprovalResponded | MessagePartsToolCalculateInputAvailable | MessagePartsToolCalculateInputStreaming | MessagePartsToolCalculateOutputAvailable | MessagePartsToolCalculateOutputDenied | MessagePartsToolCalculateOutputError | MessagePartsToolWeatherApprovalRequested | MessagePartsToolWeatherApprovalResponded | MessagePartsToolWeatherInputAvailable | MessagePartsToolWeatherInputStreaming | MessagePartsToolWeatherOutputAvailable | MessagePartsToolWeatherOutputDenied | MessagePartsToolWeatherOutputError
+union MessageParts =
+  | MessagePartsDataChart
+  | MessagePartsDataSuggestion
+  | MessagePartsDynamicToolApprovalRequested
+  | MessagePartsDynamicToolApprovalResponded
+  | MessagePartsDynamicToolInputAvailable
+  | MessagePartsDynamicToolInputStreaming
+  | MessagePartsDynamicToolOutputAvailable
+  | MessagePartsDynamicToolOutputDenied
+  | MessagePartsDynamicToolOutputError
+  | MessagePartsFile
+  | MessagePartsReasoning
+  | MessagePartsSourceDocument
+  | MessagePartsSourceUrl
+  | MessagePartsStepStart
+  | MessagePartsText
+  | MessagePartsToolCalculateApprovalRequested
+  | MessagePartsToolCalculateApprovalResponded
+  | MessagePartsToolCalculateInputAvailable
+  | MessagePartsToolCalculateInputStreaming
+  | MessagePartsToolCalculateOutputAvailable
+  | MessagePartsToolCalculateOutputDenied
+  | MessagePartsToolCalculateOutputError
+  | MessagePartsToolWeatherApprovalRequested
+  | MessagePartsToolWeatherApprovalResponded
+  | MessagePartsToolWeatherInputAvailable
+  | MessagePartsToolWeatherInputStreaming
+  | MessagePartsToolWeatherOutputAvailable
+  | MessagePartsToolWeatherOutputDenied
+  | MessagePartsToolWeatherOutputError
 
 type MessagePartsDataChart {
   data: MessagePartsDataChartData!
@@ -68,13 +394,19 @@ type MessagePartsDynamicToolApprovalRequested {
   approval: MessagePartsDynamicToolApprovalRequestedApproval!
   callProviderMetadata: JSONObject
   input: JSON!
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
-  """Name of the tool that is being called."""
+  """
+  Name of the tool that is being called.
+  """
   toolName: String!
   type: String!
 }
@@ -90,13 +422,19 @@ type MessagePartsDynamicToolApprovalResponded {
   approval: MessagePartsDynamicToolApprovalRespondedApproval!
   callProviderMetadata: JSONObject
   input: JSON!
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
-  """Name of the tool that is being called."""
+  """
+  Name of the tool that is being called.
+  """
   toolName: String!
   type: String!
 }
@@ -113,13 +451,19 @@ type MessagePartsDynamicToolApprovalRespondedApproval {
 type MessagePartsDynamicToolInputAvailable {
   callProviderMetadata: JSONObject
   input: JSON!
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
-  """Name of the tool that is being called."""
+  """
+  Name of the tool that is being called.
+  """
   toolName: String!
   type: String!
 }
@@ -127,13 +471,19 @@ type MessagePartsDynamicToolInputAvailable {
 type MessagePartsDynamicToolInputStreaming {
   callProviderMetadata: JSONObject
   input: JSON!
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
-  """Name of the tool that is being called."""
+  """
+  Name of the tool that is being called.
+  """
   toolName: String!
   type: String!
 }
@@ -144,13 +494,19 @@ type MessagePartsDynamicToolOutputAvailable {
   input: JSON!
   output: JSON!
   preliminary: Boolean
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
-  """Name of the tool that is being called."""
+  """
+  Name of the tool that is being called.
+  """
   toolName: String!
   type: String!
 }
@@ -168,13 +524,19 @@ type MessagePartsDynamicToolOutputDenied {
   approval: MessagePartsDynamicToolOutputDeniedApproval!
   callProviderMetadata: JSONObject
   input: JSON!
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
-  """Name of the tool that is being called."""
+  """
+  Name of the tool that is being called.
+  """
   toolName: String!
   type: String!
 }
@@ -193,13 +555,19 @@ type MessagePartsDynamicToolOutputError {
   callProviderMetadata: JSONObject
   errorText: String!
   input: JSON!
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
-  """Name of the tool that is being called."""
+  """
+  Name of the tool that is being called.
+  """
   toolName: String!
   type: String!
 }
@@ -214,11 +582,17 @@ type MessagePartsDynamicToolOutputErrorApproval {
 }
 
 type MessagePartsFile {
-  """Optional filename of the file."""
+  """
+  Optional filename of the file.
+  """
   filename: String
-  """IANA media type of the file."""
+  """
+  IANA media type of the file.
+  """
   mediaType: String!
-  """The provider metadata."""
+  """
+  The provider metadata.
+  """
   providerMetadata: JSONObject
   type: String!
   """
@@ -229,11 +603,17 @@ type MessagePartsFile {
 }
 
 type MessagePartsReasoning {
-  """The provider metadata."""
+  """
+  The provider metadata.
+  """
   providerMetadata: JSONObject
-  """The state of the reasoning part."""
+  """
+  The state of the reasoning part.
+  """
   state: MessagePartsReasoningState
-  """The reasoning text."""
+  """
+  The reasoning text.
+  """
   text: String!
   type: String!
 }
@@ -268,11 +648,17 @@ type MessagePartsStepStart {
 }
 
 type MessagePartsText {
-  """The provider metadata."""
+  """
+  The provider metadata.
+  """
   providerMetadata: JSONObject
-  """The state of the text part."""
+  """
+  The state of the text part.
+  """
   state: MessagePartsTextState
-  """The text content."""
+  """
+  The text content.
+  """
   text: String!
   type: String!
 }
@@ -289,11 +675,15 @@ type MessagePartsToolCalculateApprovalRequested {
   approval: MessagePartsToolCalculateApprovalRequestedApproval!
   callProviderMetadata: JSONObject
   input: MessagePartsToolCalculateApprovalRequestedInput!
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
   type: String!
 }
@@ -316,11 +706,15 @@ type MessagePartsToolCalculateApprovalResponded {
   approval: MessagePartsToolCalculateApprovalRespondedApproval!
   callProviderMetadata: JSONObject
   input: MessagePartsToolCalculateApprovalRespondedInput!
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
   type: String!
 }
@@ -344,11 +738,15 @@ type MessagePartsToolCalculateApprovalRespondedInput {
 type MessagePartsToolCalculateInputAvailable {
   callProviderMetadata: JSONObject
   input: MessagePartsToolCalculateInputAvailableInput!
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
   type: String!
 }
@@ -363,11 +761,15 @@ type MessagePartsToolCalculateInputAvailableInput {
 type MessagePartsToolCalculateInputStreaming {
   callProviderMetadata: JSONObject
   input: MessagePartsToolCalculateInputStreamingInput
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
   type: String!
 }
@@ -385,11 +787,15 @@ type MessagePartsToolCalculateOutputAvailable {
   input: MessagePartsToolCalculateOutputAvailableInput!
   output: MessagePartsToolCalculateOutputAvailableOutput!
   preliminary: Boolean
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
   type: String!
 }
@@ -422,11 +828,15 @@ type MessagePartsToolCalculateOutputDenied {
   approval: MessagePartsToolCalculateOutputDeniedApproval!
   callProviderMetadata: JSONObject
   input: MessagePartsToolCalculateOutputDeniedInput!
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
   type: String!
 }
@@ -452,12 +862,16 @@ type MessagePartsToolCalculateOutputError {
   callProviderMetadata: JSONObject
   errorText: String!
   input: MessagePartsToolCalculateOutputErrorInput
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   rawInput: JSON!
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
   type: String!
 }
@@ -482,11 +896,15 @@ type MessagePartsToolWeatherApprovalRequested {
   approval: MessagePartsToolWeatherApprovalRequestedApproval!
   callProviderMetadata: JSONObject
   input: MessagePartsToolWeatherApprovalRequestedInput!
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
   type: String!
 }
@@ -509,11 +927,15 @@ type MessagePartsToolWeatherApprovalResponded {
   approval: MessagePartsToolWeatherApprovalRespondedApproval!
   callProviderMetadata: JSONObject
   input: MessagePartsToolWeatherApprovalRespondedInput!
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
   type: String!
 }
@@ -537,11 +959,15 @@ type MessagePartsToolWeatherApprovalRespondedInput {
 type MessagePartsToolWeatherInputAvailable {
   callProviderMetadata: JSONObject
   input: MessagePartsToolWeatherInputAvailableInput!
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
   type: String!
 }
@@ -556,11 +982,15 @@ type MessagePartsToolWeatherInputAvailableInput {
 type MessagePartsToolWeatherInputStreaming {
   callProviderMetadata: JSONObject
   input: MessagePartsToolWeatherInputStreamingInput
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
   type: String!
 }
@@ -578,11 +1008,15 @@ type MessagePartsToolWeatherOutputAvailable {
   input: MessagePartsToolWeatherOutputAvailableInput!
   output: MessagePartsToolWeatherOutputAvailableOutput!
   preliminary: Boolean
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
   type: String!
 }
@@ -616,11 +1050,15 @@ type MessagePartsToolWeatherOutputDenied {
   approval: MessagePartsToolWeatherOutputDeniedApproval!
   callProviderMetadata: JSONObject
   input: MessagePartsToolWeatherOutputDeniedInput!
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
   type: String!
 }
@@ -646,12 +1084,16 @@ type MessagePartsToolWeatherOutputError {
   callProviderMetadata: JSONObject
   errorText: String!
   input: MessagePartsToolWeatherOutputErrorInput
-  """Whether the tool call was executed by the provider."""
+  """
+  Whether the tool call was executed by the provider.
+  """
   providerExecuted: Boolean
   rawInput: JSON!
   state: String!
   title: String
-  """ID of the tool call."""
+  """
+  ID of the tool call.
+  """
   toolCallId: String!
   type: String!
 }
@@ -683,9 +1125,26 @@ enum MessageRole {
 
 type Query
 
+type Subscription
+
 extend type Query {
-  """Defined in: src/gqlkit/schema/message.ts"""
+  """
+  Defined in: src/gqlkit/schema/message.ts
+  """
   message(id: String!): Message
-  """Defined in: src/gqlkit/schema/message.ts"""
+  """
+  Defined in: src/gqlkit/schema/message.ts
+  """
   messages: [Message!]!
+}
+
+extend type Subscription {
+  """
+  Defined in: src/gqlkit/schema/subscription.ts
+  """
+  chat(prompt: String!): Message!
+  """
+  Defined in: src/gqlkit/schema/subscription.ts
+  """
+  chatStream(prompt: String!): ChatStreamChunk!
 }

@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
+    "@ai-sdk/openai": "^3.0.41",
     "@gqlkit-ts/runtime": "workspace:*",
     "@graphql-tools/schema": "^10.0.0",
     "ai": "^6.0.0",
