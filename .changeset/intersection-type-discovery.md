@@ -1,5 +1,5 @@
 ---
-"@gqlkit-ts/cli": minor
+"@gqlkit-ts/cli": patch
 ---
 
-feat: register intersection type aliases in discoveredTypes for recursive resolution
+fix: register intersection type aliases in discoveredTypes for recursive resolution
