@@ -145,6 +145,29 @@ export default defineConfig({
           },
         },
       },
+      {
+        resolve: {
+          alias: {
+            graphql: graphqlPath,
+          },
+          dedupe: ["graphql"],
+        },
+        test: {
+          name: "examples/with-ai-sdk",
+          root: "./examples/with-ai-sdk",
+          include: ["src/**/*.test.ts"],
+          server: {
+            deps: {
+              inline: [
+                "graphql",
+                "@graphql-tools/utils",
+                "@graphql-tools/schema",
+                "@envelop/core",
+              ],
+            },
+          },
+        },
+      },
     ],
   },
 });
