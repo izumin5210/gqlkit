@@ -3,5122 +3,5930 @@
 import type { DocumentNode } from "graphql";
 
 export const typeDefs: DocumentNode = {
-  kind: "Document",
-  definitions: [
+  "kind": "Document",
+  "definitions": [
     {
-      kind: "ScalarTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "JSON",
-      },
+      "kind": "ScalarTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "JSON"
+      }
     },
     {
-      kind: "ScalarTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "JSONObject",
-      },
+      "kind": "ScalarTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "JSONObject"
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "AppMetadata",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "AppMetadata"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "model",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "model"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "timestamp",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "timestamp"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Float",
-              },
-            },
-          },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value: "Defined in: src/agent.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/agent.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "Message",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Message"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "A unique identifier for the message.",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "A unique identifier for the message.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "metadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "metadata"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "AppMetadata",
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "AppMetadata"
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "The metadata of the message.",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "The metadata of the message.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "parts",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "parts"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "ListType",
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "MessageParts",
-                  },
-                },
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "MessageParts"
+                  }
+                }
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value:
-              "The parts of the message. Use this for rendering the message in the UI.\n\nSystem messages should be avoided (set the system prompt on the server instead).\nThey can have text parts.\n\nUser messages can have text parts and file parts.\n\nAssistant messages can have text, reasoning, tool invocation, and file parts.",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "The parts of the message. Use this for rendering the message in the UI.\n\nSystem messages should be avoided (set the system prompt on the server instead).\nThey can have text parts.\n\nUser messages can have text parts and file parts.\n\nAssistant messages can have text, reasoning, tool invocation, and file parts.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "role",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "role"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "MessageRole",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessageRole"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "The role of the message.",
-            block: true,
-          },
-        },
+          "description": {
+            "kind": "StringValue",
+            "value": "The role of the message.",
+            "block": true
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value: "Defined in: src/gqlkit/schema/message.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: src/gqlkit/schema/message.ts",
+        "block": true
+      }
     },
     {
-      kind: "UnionTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessageParts",
+      "kind": "UnionTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessageParts"
       },
-      types: [
+      "types": [
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsDataChart",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsDataChart"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsDataSuggestion",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsDataSuggestion"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsDynamicToolApprovalRequested",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsDynamicToolApprovalRequested"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsDynamicToolApprovalResponded",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsDynamicToolApprovalResponded"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsDynamicToolInputAvailable",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsDynamicToolInputAvailable"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsDynamicToolInputStreaming",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsDynamicToolInputStreaming"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsDynamicToolOutputAvailable",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsDynamicToolOutputAvailable"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsDynamicToolOutputDenied",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsDynamicToolOutputDenied"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsDynamicToolOutputError",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsDynamicToolOutputError"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsFile",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsFile"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsReasoning",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsReasoning"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsSourceDocument",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsSourceDocument"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsSourceUrl",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsSourceUrl"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsStepStart",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsStepStart"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsText",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsText"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsToolCalculateApprovalRequested",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsToolCalculateApprovalRequested"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsToolCalculateApprovalResponded",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsToolCalculateApprovalResponded"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsToolCalculateInputAvailable",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsToolCalculateInputAvailable"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsToolCalculateInputStreaming",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsToolCalculateInputStreaming"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsToolCalculateOutputAvailable",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsToolCalculateOutputAvailable"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsToolCalculateOutputDenied",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsToolCalculateOutputDenied"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsToolCalculateOutputError",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsToolCalculateOutputError"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsToolWeatherApprovalRequested",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsToolWeatherApprovalRequested"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsToolWeatherApprovalResponded",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsToolWeatherApprovalResponded"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsToolWeatherInputAvailable",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsToolWeatherInputAvailable"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsToolWeatherInputStreaming",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsToolWeatherInputStreaming"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsToolWeatherOutputAvailable",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsToolWeatherOutputAvailable"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsToolWeatherOutputDenied",
-          },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsToolWeatherOutputDenied"
+          }
         },
         {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "MessagePartsToolWeatherOutputError",
-          },
-        },
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "MessagePartsToolWeatherOutputError"
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDataChart",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDataChart"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "data",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "data"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "MessagePartsDataChartData",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsDataChartData"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDataChartData"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "labels"
           },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
+                }
+              }
+            }
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "values"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Float"
+                  }
+                }
+              }
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDataChartData",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDataSuggestion"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "labels",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "data"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "ListType",
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "String",
-                  },
-                },
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsDataSuggestionData"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "values",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "ListType",
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "Float",
-                  },
-                },
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDataSuggestionData"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "confidence"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "text"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDataSuggestion",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDynamicToolApprovalRequested"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "data",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approval"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "MessagePartsDataSuggestionData",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsDynamicToolApprovalRequestedApproval"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "JSON"
+              }
+            }
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolName"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Name of the tool that is being called.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDynamicToolApprovalRequestedApproval"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDataSuggestionData",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDynamicToolApprovalResponded"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "confidence",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approval"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Float",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsDynamicToolApprovalRespondedApproval"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "text",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "JSON"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolName"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Name of the tool that is being called.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDynamicToolApprovalRespondedApproval"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approved"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "reason"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDynamicToolApprovalRequested",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDynamicToolInputAvailable"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approval",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "MessagePartsDynamicToolApprovalRequestedApproval",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "JSON"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "JSON",
-              },
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
           },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolName"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Name of the tool that is being called.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolName",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDynamicToolInputStreaming"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          description: {
-            kind: "StringValue",
-            value: "Name of the tool that is being called.",
-            block: true,
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "JSON"
+              }
+            }
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolName"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Name of the tool that is being called.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDynamicToolOutputAvailable"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approval"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "MessagePartsDynamicToolOutputAvailableApproval"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "JSON"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "output"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "JSON"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "preliminary"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolName"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Name of the tool that is being called.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDynamicToolOutputAvailableApproval"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approved"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "reason"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDynamicToolApprovalRequestedApproval",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDynamicToolOutputDenied"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approval"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsDynamicToolOutputDeniedApproval"
+              }
+            }
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "JSON"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolName"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Name of the tool that is being called.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDynamicToolOutputDeniedApproval"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approved"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "reason"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDynamicToolApprovalResponded",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDynamicToolOutputError"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approval",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approval"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "MessagePartsDynamicToolApprovalRespondedApproval",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "MessagePartsDynamicToolOutputErrorApproval"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "errorText"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "JSON",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "JSON"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
           },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolName",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Name of the tool that is being called.",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolName"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
+          "description": {
+            "kind": "StringValue",
+            "value": "Name of the tool that is being called.",
+            "block": true
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsDynamicToolOutputErrorApproval"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approved"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "reason"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDynamicToolApprovalRespondedApproval",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsFile"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approved",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "filename"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Boolean",
-              },
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
           },
+          "description": {
+            "kind": "StringValue",
+            "value": "Optional filename of the file.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "mediaType"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
+          "description": {
+            "kind": "StringValue",
+            "value": "IANA media type of the file.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "reason",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerMetadata"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
           },
+          "description": {
+            "kind": "StringValue",
+            "value": "The provider metadata.",
+            "block": true
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "url"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "The URL of the file.\nIt can either be a URL to a hosted file or a [Data URL](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URLs).",
+            "block": true
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsReasoning"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerMetadata"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "The provider metadata.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "MessagePartsReasoningState"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "The state of the reasoning part.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "text"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "The reasoning text.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsReasoningState"
+      },
+      "values": [
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "STREAMING"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "DONE"
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDynamicToolInputAvailable",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsSourceDocument"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "filename"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "mediaType"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "JSON",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerMetadata"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "sourceId"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsSourceUrl"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerMetadata"
           },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolName",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "sourceId"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Name of the tool that is being called.",
-            block: true,
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "url"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsStepStart"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsText"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerMetadata"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "The provider metadata.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "MessagePartsTextState"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "The state of the text part.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "text"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "The text content.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsTextState"
+      },
+      "values": [
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "STREAMING"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "DONE"
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDynamicToolInputStreaming",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateApprovalRequested"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approval"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolCalculateApprovalRequestedApproval"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "JSON",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolCalculateApprovalRequestedInput"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
           },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolName",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Name of the tool that is being called.",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateApprovalRequestedApproval"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
           },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDynamicToolOutputAvailable",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateApprovalRequestedInput"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approval",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "expression"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "MessagePartsDynamicToolOutputAvailableApproval",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "JSON",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "output",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "JSON",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "preliminary",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolName",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Name of the tool that is being called.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDynamicToolOutputAvailableApproval",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateApprovalResponded"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approved",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approval"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Boolean",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolCalculateApprovalRespondedApproval"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "reason",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolCalculateApprovalRespondedInput"
+              }
+            }
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateApprovalRespondedApproval"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approved"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "reason"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDynamicToolOutputDenied",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateApprovalRespondedInput"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approval",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "expression"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "MessagePartsDynamicToolOutputDeniedApproval",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "JSON",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolName",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Name of the tool that is being called.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDynamicToolOutputDeniedApproval",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateInputAvailable"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approved",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Boolean",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolCalculateInputAvailableInput"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "reason",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
           },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateInputAvailableInput"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "expression"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDynamicToolOutputError",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateInputStreaming"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approval",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "MessagePartsDynamicToolOutputErrorApproval",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "MessagePartsToolCalculateInputStreamingInput"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "errorText",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
           },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "JSON",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateInputStreamingInput"
+      },
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "expression"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolName",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Name of the tool that is being called.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsDynamicToolOutputErrorApproval",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateOutputAvailable"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approved",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approval"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Boolean",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "MessagePartsToolCalculateOutputAvailableApproval"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "reason",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolCalculateOutputAvailableInput"
+              }
+            }
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "output"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolCalculateOutputAvailableOutput"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "preliminary"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateOutputAvailableApproval"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approved"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "reason"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsFile",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateOutputAvailableInput"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "filename",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "expression"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Optional filename of the file.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "mediaType",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "IANA media type of the file.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerMetadata",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "The provider metadata.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "url",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value:
-              "The URL of the file.\nIt can either be a URL to a hosted file or a [Data URL](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/Data_URLs).",
-            block: true,
-          },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsReasoning",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateOutputAvailableOutput"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerMetadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "expression"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "The provider metadata.",
-            block: true,
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "result"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "MessagePartsReasoningState",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "The state of the reasoning part.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "text",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "The reasoning text.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "EnumTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsReasoningState",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateOutputDenied"
       },
-      values: [
+      "fields": [
         {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "STREAMING",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approval"
           },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolCalculateOutputDeniedApproval"
+              }
+            }
+          }
         },
         {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "DONE",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolCalculateOutputDeniedInput"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateOutputDeniedApproval"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approved"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "reason"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsSourceDocument",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateOutputDeniedInput"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "filename",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "expression"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "mediaType",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerMetadata",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "sourceId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsSourceUrl",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateOutputError"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerMetadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approval"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "MessagePartsToolCalculateOutputErrorApproval"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "sourceId",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "errorText"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "MessagePartsToolCalculateOutputErrorInput"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "url",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
           },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "rawInput"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "JSON"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateOutputErrorApproval"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approved"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "reason"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsStepStart",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolCalculateOutputErrorInput"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "expression"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsText",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherApprovalRequested"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerMetadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approval"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "The provider metadata.",
-            block: true,
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolWeatherApprovalRequestedApproval"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "MessagePartsTextState",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "The state of the text part.",
-            block: true,
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "text",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "The text content.",
-            block: true,
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolWeatherApprovalRequestedInput"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
           },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherApprovalRequestedApproval"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "EnumTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsTextState",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherApprovalRequestedInput"
       },
-      values: [
+      "fields": [
         {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "STREAMING",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "location"
           },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "DONE",
-          },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolCalculateApprovalRequested",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherApprovalResponded"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approval"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolWeatherApprovalRespondedApproval"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolWeatherApprovalRespondedInput"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
           },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherApprovalRespondedApproval"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approved"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "reason"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolCalculateApprovalResponded",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherApprovalRespondedInput"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "location"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolCalculateInputAvailable",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherInputAvailable"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "MessagePartsToolCalculateInputAvailableInput",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolWeatherInputAvailableInput"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherInputAvailableInput"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "location"
           },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolCalculateInputAvailableInput",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherInputStreaming"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "expression",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "MessagePartsToolWeatherInputStreamingInput"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherInputStreamingInput"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "location"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolCalculateInputStreaming",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherOutputAvailable"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approval"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "MessagePartsToolWeatherOutputAvailableApproval"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "MessagePartsToolCalculateInputStreamingInput",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolWeatherOutputAvailableInput"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "output"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolWeatherOutputAvailableOutput"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "preliminary"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherOutputAvailableApproval"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approved"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "reason"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolCalculateInputStreamingInput",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherOutputAvailableInput"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "expression",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "location"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolCalculateOutputAvailable",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherOutputAvailableOutput"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "condition"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "output",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "location"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "MessagePartsToolCalculateOutputAvailableOutput",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "preliminary",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "temperature"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Float"
+              }
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolCalculateOutputAvailableOutput",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherOutputDenied"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "expression",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approval"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolWeatherOutputDeniedApproval"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "result",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Float",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "MessagePartsToolWeatherOutputDeniedInput"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherOutputDeniedApproval"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approved"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "reason"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolCalculateOutputDenied",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherOutputDeniedInput"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "location"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolCalculateOutputError",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherOutputError"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approval"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "MessagePartsToolWeatherOutputErrorApproval"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "errorText",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "callProviderMetadata"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "JSONObject"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "errorText"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "rawInput",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "input"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "JSON",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "MessagePartsToolWeatherOutputErrorInput"
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "providerExecuted"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
+            }
           },
+          "description": {
+            "kind": "StringValue",
+            "value": "Whether the tool call was executed by the provider.",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "rawInput"
           },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "JSON"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "state"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "title"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
         },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "toolCallId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "ID of the tool call.",
+            "block": true
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "type"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherOutputErrorApproval"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "approved"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "Boolean"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "id"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        },
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "reason"
+          },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "String"
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolWeatherApprovalRequested",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessagePartsToolWeatherOutputErrorInput"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approval",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "location"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "MessagePartsToolWeatherApprovalRequestedApproval",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          }
+        }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolWeatherApprovalRequestedApproval",
+      "kind": "EnumTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "MessageRole"
       },
-      fields: [
+      "values": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "SYSTEM"
+          }
         },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "USER"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "ASSISTANT"
+          }
+        }
       ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
+      "description": {
+        "kind": "StringValue",
+        "value": "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
+        "block": true
+      }
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolWeatherApprovalResponded",
+      "kind": "ObjectTypeDefinition",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
       },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approval",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "MessagePartsToolWeatherApprovalRespondedApproval",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-      ],
+      "fields": []
     },
     {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolWeatherApprovalRespondedApproval",
+      "kind": "ObjectTypeExtension",
+      "name": {
+        "kind": "Name",
+        "value": "Query"
       },
-      fields: [
+      "fields": [
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approved",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Boolean",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "reason",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
-    },
-    {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolWeatherInputAvailable",
-      },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "MessagePartsToolWeatherInputAvailableInput",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-      ],
-    },
-    {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolWeatherInputAvailableInput",
-      },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "location",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
-    },
-    {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolWeatherInputStreaming",
-      },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "input",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "MessagePartsToolWeatherInputStreamingInput",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-      ],
-    },
-    {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolWeatherInputStreamingInput",
-      },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "location",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
-    },
-    {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolWeatherOutputAvailable",
-      },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approval",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "MessagePartsToolWeatherOutputAvailableApproval",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "output",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "MessagePartsToolWeatherOutputAvailableOutput",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "preliminary",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-      ],
-    },
-    {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolWeatherOutputAvailableApproval",
-      },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approved",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Boolean",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "reason",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
-    },
-    {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolWeatherOutputAvailableOutput",
-      },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "condition",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "location",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "temperature",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Float",
-              },
-            },
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
-    },
-    {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolWeatherOutputDenied",
-      },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approval",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "MessagePartsToolWeatherOutputDeniedApproval",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-      ],
-    },
-    {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolWeatherOutputDeniedApproval",
-      },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approved",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Boolean",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "reason",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
-    },
-    {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolWeatherOutputError",
-      },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approval",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "MessagePartsToolWeatherOutputErrorApproval",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "callProviderMetadata",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "JSONObject",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "errorText",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "providerExecuted",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Boolean",
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "Whether the tool call was executed by the provider.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "rawInput",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "JSON",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "state",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "title",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "toolCallId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-          description: {
-            kind: "StringValue",
-            value: "ID of the tool call.",
-            block: true,
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "type",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-      ],
-    },
-    {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessagePartsToolWeatherOutputErrorApproval",
-      },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "approved",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "Boolean",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "id",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "String",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "reason",
-          },
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "String",
-            },
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
-    },
-    {
-      kind: "EnumTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "MessageRole",
-      },
-      values: [
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "SYSTEM",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "USER",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "ASSISTANT",
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts",
-        block: true,
-      },
-    },
-    {
-      kind: "ObjectTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "Query",
-      },
-      fields: [],
-    },
-    {
-      kind: "ObjectTypeExtension",
-      name: {
-        kind: "Name",
-        value: "Query",
-      },
-      fields: [
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "message",
-          },
-          arguments: [
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "message"
+          },
+          "arguments": [
             {
-              kind: "InputValueDefinition",
-              name: {
-                kind: "Name",
-                value: "id",
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "id"
               },
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "String",
-                  },
-                },
-              },
-            },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "String"
+                  }
+                }
+              }
+            }
           ],
-          type: {
-            kind: "NamedType",
-            name: {
-              kind: "Name",
-              value: "Message",
-            },
+          "type": {
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Message"
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Defined in: src/gqlkit/schema/message.ts",
-            block: true,
-          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Defined in: src/gqlkit/schema/message.ts",
+            "block": true
+          }
         },
         {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
-            value: "messages",
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "messages"
           },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "ListType",
-              type: {
-                kind: "NonNullType",
-                type: {
-                  kind: "NamedType",
-                  name: {
-                    kind: "Name",
-                    value: "Message",
-                  },
-                },
-              },
-            },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Message"
+                  }
+                }
+              }
+            }
           },
-          description: {
-            kind: "StringValue",
-            value: "Defined in: src/gqlkit/schema/message.ts",
-            block: true,
-          },
-        },
-      ],
-    },
-  ],
+          "description": {
+            "kind": "StringValue",
+            "value": "Defined in: src/gqlkit/schema/message.ts",
+            "block": true
+          }
+        }
+      ]
+    }
+  ]
 } as DocumentNode;
