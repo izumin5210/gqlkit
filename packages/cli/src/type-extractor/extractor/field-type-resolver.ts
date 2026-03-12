@@ -359,7 +359,46 @@ function resolveFieldTypeInternal(
       });
     }
 
-    // 4. Otherwise, treat as inline object
+    // 4. Register in discoveredTypes if applicable (same logic as alias expansion)
+    //    This handles non-exported recursive intersection types that would otherwise
+    //    cause cycle detection failures in tryExtractAsInlineObject.
+    if (type.aliasSymbol) {
+      const aliasName = type.aliasSymbol.getName();
+      if (!knownTypeNames.has(aliasName)) {
+        if (ctx.discoveredTypes && !ctx.discoveredTypes.has(aliasName)) {
+          const resolvedAliasSymbol = resolveOriginalSymbol(
+            type.aliasSymbol,
+            checker,
+          );
+          const declarations = resolvedAliasSymbol.getDeclarations();
+          const decl = declarations?.[0];
+          if (decl && !decl.getSourceFile().isDeclarationFile) {
+            const properties = type.getProperties();
+            if (properties.length > 0) {
+              const declSourceFile = decl.getSourceFile();
+              const location = getSourceLocationFromNode(decl) ?? {
+                file: declSourceFile.fileName,
+                line: 1,
+                column: 1,
+              };
+              ctx.discoveredTypes.set(aliasName, {
+                name: aliasName,
+                tsType: type,
+                tsSymbol: resolvedAliasSymbol,
+                sourceFile: relative(process.cwd(), declSourceFile.fileName),
+                sourceLocation: location,
+              });
+              return createReferenceType({ name: aliasName, nullable: false });
+            }
+          }
+        }
+        if (ctx.discoveredTypes?.has(aliasName)) {
+          return createReferenceType({ name: aliasName, nullable: false });
+        }
+      }
+    }
+
+    // 5. Otherwise, treat as inline object
     return tryExtractAsInlineObject(type, ctx, null);
   }
 

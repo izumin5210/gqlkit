@@ -41,7 +41,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "ForestRoot"
+                "value": "RecursiveNode"
               }
             }
           }
@@ -57,9 +57,32 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ForestRoot"
+        "value": "RecursiveNode"
       },
       "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "children"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "ListType",
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "RecursiveNode"
+                  }
+                }
+              }
+            }
+          }
+        },
         {
           "kind": "FieldDefinition",
           "name": {
@@ -80,7 +103,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Non-exported recursive intersection type.\nWhen resolving `children`, the cycle cannot be resolved because\nRecursiveNode is not a known schema type, so the field is skipped\nwith a CYCLE_DETECTED warning.\n\nDefined in: src/gqlkit/schema/types.ts",
+        "value": "Defined in: src/gqlkit/schema/types.ts",
         "block": true
       }
     }

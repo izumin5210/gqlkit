@@ -24,7 +24,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "ContainerMixed"
+                "value": "NotBranded"
               }
             }
           }
@@ -41,7 +41,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "ContainerPerson"
+                "value": "PersonWithContact"
               }
             }
           }
@@ -57,7 +57,7 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerMixed"
+        "value": "NotBranded"
       },
       "fields": [
         {
@@ -105,7 +105,7 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerPerson"
+        "value": "PersonWithContact"
       },
       "fields": [
         {
