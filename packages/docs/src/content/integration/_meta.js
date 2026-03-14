@@ -11,4 +11,5 @@ export default {
   },
   drizzle: "Drizzle ORM",
   prisma: "Prisma",
+  "ai-sdk": "Vercel AI SDK",
 };
