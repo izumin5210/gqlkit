@@ -17,6 +17,12 @@ describe("singularizeFieldName", () => {
     expect(singularizeFieldName("statuses")).toBe("status");
   });
 
+  it("handles irregular plural field names through the local dictionary", () => {
+    expect(singularizeFieldName("people")).toBe("person");
+    expect(singularizeFieldName("children")).toBe("child");
+    expect(singularizeFieldName("women")).toBe("woman");
+  });
+
   it("preserves ambiguous or non-inflecting names", () => {
     expect(singularizeFieldName("news")).toBe("news");
     expect(singularizeFieldName("series")).toBe("series");

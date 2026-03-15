@@ -55,6 +55,17 @@ export interface ResolverPayloadContext {
   readonly fieldPath: ReadonlyArray<string>;
 }
 
+const IRREGULAR_SINGULAR_FIELD_NAMES = new Map([
+  ["children", "child"],
+  ["feet", "foot"],
+  ["geese", "goose"],
+  ["men", "man"],
+  ["mice", "mouse"],
+  ["people", "person"],
+  ["teeth", "tooth"],
+  ["women", "woman"],
+]);
+
 const NON_INFLECTING_FIELD_NAMES = new Set(["news", "series", "species"]);
 
 /**
@@ -88,6 +99,11 @@ function isConsonant(char: string): boolean {
  */
 export function singularizeFieldName(name: string): string {
   const lowerName = name.toLowerCase();
+
+  const irregularSingular = IRREGULAR_SINGULAR_FIELD_NAMES.get(lowerName);
+  if (irregularSingular) {
+    return irregularSingular;
+  }
 
   if (name.length <= 3 || NON_INFLECTING_FIELD_NAMES.has(lowerName)) {
     return name;
