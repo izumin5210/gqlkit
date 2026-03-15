@@ -11,8 +11,8 @@ import type {
 } from "../type-extractor/types/index.js";
 import { traverseInlineObjectProperties } from "./inline-object-traverser.js";
 import {
-  appendFieldPath,
   type AutoTypeNameContext,
+  appendFieldPath,
   buildFieldContext,
   isInputTypeName,
 } from "./naming-convention.js";

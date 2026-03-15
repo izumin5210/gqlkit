@@ -13,8 +13,8 @@ import type {
   InlineUnionWithContext,
 } from "./inline-union-types.js";
 import {
-  appendFieldPath,
   type AutoTypeNameContext,
+  appendFieldPath,
   buildFieldContext,
   isInputTypeName,
 } from "./naming-convention.js";
@@ -104,7 +104,8 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
   const fieldPath = appendFieldPath({
     parentPath,
     fieldName: field.name,
-    singularize: tsType.kind === "array" && tsType.elementType?.kind === "union",
+    singularize:
+      tsType.kind === "array" && tsType.elementType?.kind === "union",
   });
 
   if (tsType.kind === "union" && tsType.members) {

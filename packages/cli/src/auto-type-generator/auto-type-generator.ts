@@ -52,8 +52,8 @@ import {
   type InlineDiscriminatorResolveType,
 } from "./intersection-flattener.js";
 import {
-  appendFieldPath,
   type AutoTypeNameContext,
+  appendFieldPath,
   buildFieldContext,
   generateAutoTypeName,
   isInputTypeName,
