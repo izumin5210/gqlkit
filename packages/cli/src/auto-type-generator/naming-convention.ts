@@ -56,13 +56,20 @@ export interface ResolverPayloadContext {
 }
 
 const IRREGULAR_SINGULAR_FIELD_NAMES = new Map([
+  ["aliases", "alias"],
+  ["analyses", "analysis"],
   ["children", "child"],
+  ["cookies", "cookie"],
+  ["crises", "crisis"],
+  ["diagnoses", "diagnosis"],
   ["feet", "foot"],
   ["geese", "goose"],
   ["men", "man"],
   ["mice", "mouse"],
+  ["movies", "movie"],
   ["people", "person"],
   ["teeth", "tooth"],
+  ["theses", "thesis"],
   ["women", "woman"],
 ]);
 
@@ -117,6 +124,17 @@ export function singularizeFieldName(name: string): string {
     return `${name.slice(0, -3)}y`;
   }
 
+  if (lowerName.endsWith("ses")) {
+    const candidate = name.slice(0, -2);
+    if (
+      candidate.toLowerCase().endsWith("s") &&
+      !lowerName.endsWith("yses") &&
+      !lowerName.endsWith("oses")
+    ) {
+      return candidate;
+    }
+  }
+
   if (
     lowerName.endsWith("sses") ||
     lowerName.endsWith("shes") ||
@@ -150,16 +168,39 @@ interface AppendFieldPathParams {
   readonly parentPath: ReadonlyArray<string>;
   readonly fieldName: string;
   readonly singularize: boolean;
+  readonly siblingFieldNames: ReadonlySet<string> | null;
+}
+
+function resolveFieldPathSegment(params: {
+  readonly fieldName: string;
+  readonly singularize: boolean;
+  readonly siblingFieldNames: ReadonlySet<string> | null;
+}): string {
+  const { fieldName, singularize, siblingFieldNames } = params;
+
+  if (!singularize) {
+    return fieldName;
+  }
+
+  const singularFieldName = singularizeFieldName(fieldName);
+  if (
+    singularFieldName !== fieldName &&
+    siblingFieldNames?.has(singularFieldName)
+  ) {
+    return fieldName;
+  }
+
+  return singularFieldName;
 }
 
 /**
  * Append a field name to an auto-type field path.
  */
 export function appendFieldPath(params: AppendFieldPathParams): string[] {
-  const { parentPath, fieldName, singularize } = params;
+  const { parentPath, fieldName, singularize, siblingFieldNames } = params;
   return [
     ...parentPath,
-    singularize ? singularizeFieldName(fieldName) : fieldName,
+    resolveFieldPathSegment({ fieldName, singularize, siblingFieldNames }),
   ];
 }
 

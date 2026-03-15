@@ -7,7 +7,10 @@ import type {
   SourceLocation,
   TSTypeReference,
 } from "../type-extractor/types/index.js";
-import { traverseInlineObjectProperties } from "./inline-object-traverser.js";
+import {
+  getInlineObjectPropertiesFromType,
+  traverseInlineObjectProperties,
+} from "./inline-object-traverser.js";
 import type {
   InlineUnionMemberInfo,
   InlineUnionWithContext,
@@ -60,6 +63,9 @@ export function collectInlineUnionsFromTypes(
 
   for (const typeInfo of extractedTypes) {
     const isInput = isInputTypeName(typeInfo.metadata.name);
+    const siblingFieldNames = new Set(
+      typeInfo.fields.map((field) => field.name),
+    );
 
     for (const field of typeInfo.fields) {
       collectInlineUnionsFromField({
@@ -69,6 +75,7 @@ export function collectInlineUnionsFromTypes(
         isInput,
         sourceFile: typeInfo.metadata.sourceFile,
         knownTypeNames,
+        siblingFieldNames,
         results,
       });
     }
@@ -83,6 +90,7 @@ interface CollectInlineUnionBaseParams {
   readonly isInput: boolean;
   readonly sourceFile: string;
   readonly knownTypeNames: ReadonlySet<string>;
+  readonly siblingFieldNames: ReadonlySet<string>;
   readonly results: InlineUnionWithContext[];
 }
 
@@ -98,14 +106,15 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
     isInput,
     sourceFile,
     knownTypeNames,
+    siblingFieldNames,
     results,
   } = params;
   const tsType = field.tsType;
   const fieldPath = appendFieldPath({
     parentPath,
     fieldName: field.name,
-    singularize:
-      tsType.kind === "array" && tsType.elementType?.kind === "union",
+    singularize: tsType.kind === "array",
+    siblingFieldNames,
   });
 
   if (tsType.kind === "union" && tsType.members) {
@@ -148,9 +157,10 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
     });
   }
 
-  if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
+  const inlineObjectProperties = getInlineObjectPropertiesFromType(tsType);
+  if (inlineObjectProperties) {
     traverseInlineObjectProperties(
-      { properties: tsType.inlineObjectProperties, parentPath: fieldPath },
+      { properties: inlineObjectProperties, parentPath: fieldPath },
       (prop, propPath) => {
         const propTsType = prop.tsType;
         if (propTsType.kind === "union" && propTsType.members) {

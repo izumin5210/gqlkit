@@ -1,4 +1,7 @@
-import type { InlineObjectPropertyDef } from "../type-extractor/types/index.js";
+import type {
+  InlineObjectPropertyDef,
+  TSTypeReference,
+} from "../type-extractor/types/index.js";
 import { appendFieldPath } from "./naming-convention.js";
 
 /**
@@ -16,22 +19,19 @@ export interface TraverseInlineObjectPropertiesParams {
   readonly parentPath: ReadonlyArray<string>;
 }
 
-function getNestedInlineObjectProperties(
-  prop: InlineObjectPropertyDef,
+export function getInlineObjectPropertiesFromType(
+  tsType: TSTypeReference,
 ): ReadonlyArray<InlineObjectPropertyDef> | null {
-  if (
-    prop.tsType.kind === "inlineObject" &&
-    prop.tsType.inlineObjectProperties
-  ) {
-    return prop.tsType.inlineObjectProperties;
+  if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
+    return tsType.inlineObjectProperties;
   }
 
   if (
-    prop.tsType.kind === "array" &&
-    prop.tsType.elementType?.kind === "inlineObject" &&
-    prop.tsType.elementType.inlineObjectProperties
+    tsType.kind === "array" &&
+    tsType.elementType?.kind === "inlineObject" &&
+    tsType.elementType.inlineObjectProperties
   ) {
-    return prop.tsType.elementType.inlineObjectProperties;
+    return tsType.elementType.inlineObjectProperties;
   }
 
   return null;
@@ -49,17 +49,19 @@ export function traverseInlineObjectProperties(
   visitor: PropertyVisitor,
 ): void {
   const { properties, parentPath } = params;
+  const siblingFieldNames = new Set(properties.map((prop) => prop.name));
 
   for (const prop of properties) {
     const propPath = appendFieldPath({
       parentPath,
       fieldName: prop.name,
       singularize: prop.tsType.kind === "array",
+      siblingFieldNames,
     });
 
     visitor(prop, propPath);
 
-    const nestedProperties = getNestedInlineObjectProperties(prop);
+    const nestedProperties = getInlineObjectPropertiesFromType(prop.tsType);
     if (nestedProperties) {
       traverseInlineObjectProperties(
         {

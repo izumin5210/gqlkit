@@ -13,7 +13,10 @@ describe("singularizeFieldName", () => {
 
   it("handles common plural suffixes conservatively", () => {
     expect(singularizeFieldName("categories")).toBe("category");
+    expect(singularizeFieldName("aliases")).toBe("alias");
     expect(singularizeFieldName("boxes")).toBe("box");
+    expect(singularizeFieldName("cookies")).toBe("cookie");
+    expect(singularizeFieldName("movies")).toBe("movie");
     expect(singularizeFieldName("statuses")).toBe("status");
   });
 
@@ -37,6 +40,7 @@ describe("appendFieldPath", () => {
         parentPath: ["message"],
         fieldName: "parts",
         singularize: true,
+        siblingFieldNames: null,
       }),
     ).toEqual(["message", "part"]);
     expect(
@@ -44,8 +48,20 @@ describe("appendFieldPath", () => {
         parentPath: ["message"],
         fieldName: "metadata",
         singularize: false,
+        siblingFieldNames: null,
       }),
     ).toEqual(["message", "metadata"]);
+  });
+
+  it("preserves plural array segment when singularized name collides with a sibling", () => {
+    expect(
+      appendFieldPath({
+        parentPath: ["message"],
+        fieldName: "parts",
+        singularize: true,
+        siblingFieldNames: new Set(["part", "parts"]),
+      }),
+    ).toEqual(["message", "parts"]);
   });
 });
 
