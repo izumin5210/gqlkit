@@ -55,6 +55,8 @@ export interface ResolverPayloadContext {
   readonly fieldPath: ReadonlyArray<string>;
 }
 
+const NON_INFLECTING_FIELD_NAMES = new Set(["news", "series", "species"]);
+
 /**
  * Convert a string to PascalCase.
  * Handles camelCase, snake_case, and kebab-case inputs.
@@ -74,6 +76,75 @@ export function toPascalCase(str: string): string {
         .join(""),
     )
     .join("");
+}
+
+function isConsonant(char: string): boolean {
+  return /^[bcdfghjklmnpqrstvwxyz]$/i.test(char);
+}
+
+/**
+ * Singularize a plural field name conservatively for array element type naming.
+ * Falls back to the original name when the plural form is ambiguous.
+ */
+export function singularizeFieldName(name: string): string {
+  const lowerName = name.toLowerCase();
+
+  if (name.length <= 3 || NON_INFLECTING_FIELD_NAMES.has(lowerName)) {
+    return name;
+  }
+
+  if (
+    lowerName.endsWith("ies") &&
+    name.length > 3 &&
+    isConsonant(lowerName.at(-4) ?? "")
+  ) {
+    return `${name.slice(0, -3)}y`;
+  }
+
+  if (
+    lowerName.endsWith("sses") ||
+    lowerName.endsWith("shes") ||
+    lowerName.endsWith("ches") ||
+    lowerName.endsWith("xes") ||
+    lowerName.endsWith("zes")
+  ) {
+    return name.slice(0, -2);
+  }
+
+  if (lowerName.endsWith("uses")) {
+    const candidate = name.slice(0, -2);
+    if (candidate.toLowerCase().endsWith("us")) {
+      return candidate;
+    }
+  }
+
+  if (
+    lowerName.endsWith("s") &&
+    !lowerName.endsWith("ss") &&
+    !lowerName.endsWith("is") &&
+    !lowerName.endsWith("us")
+  ) {
+    return name.slice(0, -1);
+  }
+
+  return name;
+}
+
+interface AppendFieldPathParams {
+  readonly parentPath: ReadonlyArray<string>;
+  readonly fieldName: string;
+  readonly singularize: boolean;
+}
+
+/**
+ * Append a field name to an auto-type field path.
+ */
+export function appendFieldPath(params: AppendFieldPathParams): string[] {
+  const { parentPath, fieldName, singularize } = params;
+  return [
+    ...parentPath,
+    singularize ? singularizeFieldName(fieldName) : fieldName,
+  ];
 }
 
 /**

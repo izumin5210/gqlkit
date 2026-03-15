@@ -28,7 +28,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "ContainerParts"
+                    "value": "ContainerPart"
                   }
                 }
               }
@@ -46,28 +46,28 @@ export const typeDefs: DocumentNode = {
       "kind": "UnionTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerParts"
+        "value": "ContainerPart"
       },
       "types": [
         {
           "kind": "NamedType",
           "name": {
             "kind": "Name",
-            "value": "ContainerPartsText"
+            "value": "ContainerPartText"
           }
         },
         {
           "kind": "NamedType",
           "name": {
             "kind": "Name",
-            "value": "ContainerPartsToolA"
+            "value": "ContainerPartToolA"
           }
         },
         {
           "kind": "NamedType",
           "name": {
             "kind": "Name",
-            "value": "ContainerPartsToolB"
+            "value": "ContainerPartToolB"
           }
         }
       ],
@@ -81,7 +81,7 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerPartsText"
+        "value": "ContainerPartText"
       },
       "fields": [
         {
@@ -124,7 +124,7 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerPartsToolA"
+        "value": "ContainerPartToolA"
       },
       "fields": [
         {
@@ -240,7 +240,7 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerPartsToolB"
+        "value": "ContainerPartToolB"
       },
       "fields": [
         {

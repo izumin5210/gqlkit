@@ -16,11 +16,11 @@ export function createResolvers() {
       USER: "user",
       ASSISTANT: "assistant",
     },
-    MessagePartsTextState: {
+    MessagePartTextState: {
       STREAMING: "streaming",
       DONE: "done",
     },
-    MessagePartsReasoningState: {
+    MessagePartReasoningState: {
       STREAMING: "streaming",
       DONE: "done",
     },
@@ -84,79 +84,79 @@ export function createResolvers() {
         }
       },
     },
-    MessageParts: {
+    MessagePart: {
       __resolveType: (obj: { type: string; state: string }) => {
         switch (obj.type) {
           case "text":
-            return "MessagePartsText";
+            return "MessagePartText";
           case "reasoning":
-            return "MessagePartsReasoning";
+            return "MessagePartReasoning";
           case "dynamic-tool":
             switch (obj.state) {
               case "input-streaming":
-                return "MessagePartsDynamicToolInputStreaming";
+                return "MessagePartDynamicToolInputStreaming";
               case "input-available":
-                return "MessagePartsDynamicToolInputAvailable";
+                return "MessagePartDynamicToolInputAvailable";
               case "approval-requested":
-                return "MessagePartsDynamicToolApprovalRequested";
+                return "MessagePartDynamicToolApprovalRequested";
               case "approval-responded":
-                return "MessagePartsDynamicToolApprovalResponded";
+                return "MessagePartDynamicToolApprovalResponded";
               case "output-available":
-                return "MessagePartsDynamicToolOutputAvailable";
+                return "MessagePartDynamicToolOutputAvailable";
               case "output-error":
-                return "MessagePartsDynamicToolOutputError";
+                return "MessagePartDynamicToolOutputError";
               case "output-denied":
-                return "MessagePartsDynamicToolOutputDenied";
+                return "MessagePartDynamicToolOutputDenied";
               default:
                 return undefined;
             }
           case "source-url":
-            return "MessagePartsSourceUrl";
+            return "MessagePartSourceUrl";
           case "source-document":
-            return "MessagePartsSourceDocument";
+            return "MessagePartSourceDocument";
           case "file":
-            return "MessagePartsFile";
+            return "MessagePartFile";
           case "step-start":
-            return "MessagePartsStepStart";
+            return "MessagePartStepStart";
           case "data-chart":
-            return "MessagePartsDataChart";
+            return "MessagePartDataChart";
           case "data-suggestion":
-            return "MessagePartsDataSuggestion";
+            return "MessagePartDataSuggestion";
           case "tool-weather":
             switch (obj.state) {
               case "input-streaming":
-                return "MessagePartsToolWeatherInputStreaming";
+                return "MessagePartToolWeatherInputStreaming";
               case "input-available":
-                return "MessagePartsToolWeatherInputAvailable";
+                return "MessagePartToolWeatherInputAvailable";
               case "approval-requested":
-                return "MessagePartsToolWeatherApprovalRequested";
+                return "MessagePartToolWeatherApprovalRequested";
               case "approval-responded":
-                return "MessagePartsToolWeatherApprovalResponded";
+                return "MessagePartToolWeatherApprovalResponded";
               case "output-available":
-                return "MessagePartsToolWeatherOutputAvailable";
+                return "MessagePartToolWeatherOutputAvailable";
               case "output-error":
-                return "MessagePartsToolWeatherOutputError";
+                return "MessagePartToolWeatherOutputError";
               case "output-denied":
-                return "MessagePartsToolWeatherOutputDenied";
+                return "MessagePartToolWeatherOutputDenied";
               default:
                 return undefined;
             }
           case "tool-calculate":
             switch (obj.state) {
               case "input-streaming":
-                return "MessagePartsToolCalculateInputStreaming";
+                return "MessagePartToolCalculateInputStreaming";
               case "input-available":
-                return "MessagePartsToolCalculateInputAvailable";
+                return "MessagePartToolCalculateInputAvailable";
               case "approval-requested":
-                return "MessagePartsToolCalculateApprovalRequested";
+                return "MessagePartToolCalculateApprovalRequested";
               case "approval-responded":
-                return "MessagePartsToolCalculateApprovalResponded";
+                return "MessagePartToolCalculateApprovalResponded";
               case "output-available":
-                return "MessagePartsToolCalculateOutputAvailable";
+                return "MessagePartToolCalculateOutputAvailable";
               case "output-error":
-                return "MessagePartsToolCalculateOutputError";
+                return "MessagePartToolCalculateOutputError";
               case "output-denied":
-                return "MessagePartsToolCalculateOutputDenied";
+                return "MessagePartToolCalculateOutputDenied";
               default:
                 return undefined;
             }

@@ -118,7 +118,7 @@ describe("with-ai-sdk scenario tests", () => {
               role
               parts {
                 __typename
-                ... on MessagePartsText {
+                ... on MessagePartText {
                   text
                 }
               }
@@ -135,7 +135,7 @@ describe("with-ai-sdk scenario tests", () => {
             role: "USER",
             parts: [
               {
-                __typename: "MessagePartsText",
+                __typename: "MessagePartText",
                 text: "What is the weather in Tokyo?",
               },
             ],
@@ -145,10 +145,10 @@ describe("with-ai-sdk scenario tests", () => {
             role: "ASSISTANT",
             parts: [
               {
-                __typename: "MessagePartsText",
+                __typename: "MessagePartText",
                 text: "Let me check the weather for you.",
               },
-              { __typename: "MessagePartsStepStart" },
+              { __typename: "MessagePartStepStart" },
             ],
           },
         ],
@@ -241,7 +241,7 @@ describe("with-ai-sdk scenario tests", () => {
               role
               parts {
                 __typename
-                ... on MessagePartsText {
+                ... on MessagePartText {
                   text
                 }
               }
@@ -261,7 +261,7 @@ describe("with-ai-sdk scenario tests", () => {
         role: "ASSISTANT",
         parts: expect.arrayContaining([
           expect.objectContaining({
-            __typename: "MessagePartsText",
+            __typename: "MessagePartText",
             text: "Hello world",
           }),
         ]),

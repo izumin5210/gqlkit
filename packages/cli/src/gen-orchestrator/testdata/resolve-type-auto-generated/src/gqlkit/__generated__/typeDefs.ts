@@ -45,7 +45,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "ContainerItems"
+                    "value": "ContainerItem"
                   }
                 }
               }
@@ -63,7 +63,7 @@ export const typeDefs: DocumentNode = {
       "kind": "UnionTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerItems"
+        "value": "ContainerItem"
       },
       "types": [
         {

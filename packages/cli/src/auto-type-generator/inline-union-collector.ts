@@ -13,6 +13,7 @@ import type {
   InlineUnionWithContext,
 } from "./inline-union-types.js";
 import {
+  appendFieldPath,
   type AutoTypeNameContext,
   buildFieldContext,
   isInputTypeName,
@@ -100,7 +101,11 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
     results,
   } = params;
   const tsType = field.tsType;
-  const fieldPath = [...parentPath, field.name];
+  const fieldPath = appendFieldPath({
+    parentPath,
+    fieldName: field.name,
+    singularize: tsType.kind === "array" && tsType.elementType?.kind === "union",
+  });
 
   if (tsType.kind === "union" && tsType.members) {
     const members = tsType.members.map((m) =>

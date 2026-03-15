@@ -18,60 +18,60 @@ Defined in: src/gqlkit/schema/types.ts
 """
 type Container {
   id: String!
-  parts: [ContainerParts!]!
+  parts: [ContainerPart!]!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-union ContainerParts = ContainerPartsText | ContainerPartsToolSearchInputAvailable | ContainerPartsToolSearchOutputAvailable | ContainerPartsToolSearchOutputError
+union ContainerPart = ContainerPartText | ContainerPartToolSearchInputAvailable | ContainerPartToolSearchOutputAvailable | ContainerPartToolSearchOutputError
 
-type ContainerPartsText {
+type ContainerPartText {
   content: String!
   type: String!
 }
 
-type ContainerPartsToolSearchInputAvailable {
+type ContainerPartToolSearchInputAvailable {
   callId: String!
-  input: ContainerPartsToolSearchInputAvailableInput!
+  input: ContainerPartToolSearchInputAvailableInput!
   state: String!
   title: String
   type: String!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-type ContainerPartsToolSearchInputAvailableInput {
+type ContainerPartToolSearchInputAvailableInput {
   query: String!
 }
 
-type ContainerPartsToolSearchOutputAvailable {
+type ContainerPartToolSearchOutputAvailable {
   callId: String!
-  input: ContainerPartsToolSearchOutputAvailableInput!
-  output: ContainerPartsToolSearchOutputAvailableOutput!
+  input: ContainerPartToolSearchOutputAvailableInput!
+  output: ContainerPartToolSearchOutputAvailableOutput!
   state: String!
   title: String
   type: String!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-type ContainerPartsToolSearchOutputAvailableInput {
+type ContainerPartToolSearchOutputAvailableInput {
   query: String!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-type ContainerPartsToolSearchOutputAvailableOutput {
+type ContainerPartToolSearchOutputAvailableOutput {
   results: [String!]!
 }
 
-type ContainerPartsToolSearchOutputError {
+type ContainerPartToolSearchOutputError {
   callId: String!
   errorText: String!
-  input: ContainerPartsToolSearchOutputErrorInput!
+  input: ContainerPartToolSearchOutputErrorInput!
   state: String!
   title: String
   type: String!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-type ContainerPartsToolSearchOutputErrorInput {
+type ContainerPartToolSearchOutputErrorInput {
   query: String!
 }
 

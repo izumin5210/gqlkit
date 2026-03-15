@@ -11,6 +11,7 @@ import type {
 } from "../type-extractor/types/index.js";
 import { traverseInlineObjectProperties } from "./inline-object-traverser.js";
 import {
+  appendFieldPath,
   type AutoTypeNameContext,
   buildFieldContext,
   isInputTypeName,
@@ -72,7 +73,12 @@ function collectInlineEnumsFromField(
   results: InlineEnumWithContext[],
 ): void {
   const tsType = field.tsType;
-  const fieldPath = [...parentPath, field.name];
+  const fieldPath = appendFieldPath({
+    parentPath,
+    fieldName: field.name,
+    singularize:
+      tsType.kind === "array" && tsType.elementType?.kind === "inlineEnum",
+  });
 
   if (tsType.kind === "inlineEnum" && tsType.inlineEnumMembers) {
     results.push({
