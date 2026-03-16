@@ -4,12 +4,12 @@ import { containerQuery as Query$containerQuery } from "../schema/query.js";
 
 export function createResolvers() {
   return {
-    ContainerParts: {
+    ContainerPart: {
       __resolveType: (obj: { type: string }) => {
         switch (obj.type) {
-          case "text": return "ContainerPartsText";
-          case "tool-a": return "ContainerPartsToolA";
-          case "tool-b": return "ContainerPartsToolB";
+          case "text": return "ContainerPartText";
+          case "tool-a": return "ContainerPartToolA";
+          case "tool-b": return "ContainerPartToolB";
           default: return undefined;
         }
       },

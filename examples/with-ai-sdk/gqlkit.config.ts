@@ -6,7 +6,7 @@ const config: GqlkitConfig = {
   },
   discriminatorFields: {
     // Auto-generated union name from Message.parts field → discriminator is "type"
-    MessageParts: ["type", "state"],
+    MessagePart: ["type", "state"],
     // UIMessageChunk variants are discriminated by "type"
     ChatStreamChunk: ["type"],
   },

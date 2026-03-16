@@ -3,11 +3,11 @@
 """Defined in: src/gqlkit/schema/types.ts"""
 type Container {
   id: String!
-  items: [ContainerItems!]!
+  items: [ContainerItem!]!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-union ContainerItems = PartA | PartB
+union ContainerItem = PartA | PartB
 
 """Defined in: src/lib/types.ts"""
 type PartA {

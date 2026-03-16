@@ -9,9 +9,13 @@ import type {
   InlineObjectPropertyDef,
   SourceLocation,
 } from "../type-extractor/types/index.js";
-import { traverseInlineObjectProperties } from "./inline-object-traverser.js";
+import {
+  getInlineObjectPropertiesFromType,
+  traverseInlineObjectProperties,
+} from "./inline-object-traverser.js";
 import {
   type AutoTypeNameContext,
+  appendFieldPath,
   buildFieldContext,
   isInputTypeName,
 } from "./naming-convention.js";
@@ -47,6 +51,9 @@ export function collectInlineEnumsFromTypes(
 
   for (const typeInfo of extractedTypes) {
     const isInput = isInputTypeName(typeInfo.metadata.name);
+    const siblingFieldNames = new Set(
+      typeInfo.fields.map((field) => field.name),
+    );
 
     for (const field of typeInfo.fields) {
       collectInlineEnumsFromField(
@@ -55,6 +62,7 @@ export function collectInlineEnumsFromTypes(
         [],
         isInput,
         typeInfo.metadata.sourceFile,
+        siblingFieldNames,
         results,
       );
     }
@@ -69,10 +77,16 @@ function collectInlineEnumsFromField(
   parentPath: ReadonlyArray<string>,
   isInput: boolean,
   sourceFile: string,
+  siblingFieldNames: ReadonlySet<string>,
   results: InlineEnumWithContext[],
 ): void {
   const tsType = field.tsType;
-  const fieldPath = [...parentPath, field.name];
+  const fieldPath = appendFieldPath({
+    parentPath,
+    fieldName: field.name,
+    singularize: tsType.kind === "array",
+    siblingFieldNames,
+  });
 
   if (tsType.kind === "inlineEnum" && tsType.inlineEnumMembers) {
     results.push({
@@ -108,9 +122,10 @@ function collectInlineEnumsFromField(
     });
   }
 
-  if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
+  const inlineObjectProperties = getInlineObjectPropertiesFromType(tsType);
+  if (inlineObjectProperties) {
     traverseInlineObjectProperties(
-      { properties: tsType.inlineObjectProperties, parentPath: fieldPath },
+      { properties: inlineObjectProperties, parentPath: fieldPath },
       (prop, propPath) => {
         const propTsType = prop.tsType;
         if (propTsType.kind === "inlineEnum" && propTsType.inlineEnumMembers) {

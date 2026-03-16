@@ -1,0 +1,148 @@
+import { describe, expect, it } from "vitest";
+import {
+  appendFieldPath,
+  generateAutoTypeName,
+  singularizeFieldName,
+} from "./naming-convention.js";
+
+describe("singularizeFieldName", () => {
+  it("singularizes simple plural field names", () => {
+    expect(singularizeFieldName("parts")).toBe("part");
+    expect(singularizeFieldName("toolCalls")).toBe("toolCall");
+  });
+
+  it("handles common plural suffixes conservatively", () => {
+    expect(singularizeFieldName("categories")).toBe("category");
+    expect(singularizeFieldName("aliases")).toBe("alias");
+    expect(singularizeFieldName("bases")).toBe("base");
+    expect(singularizeFieldName("boxes")).toBe("box");
+    expect(singularizeFieldName("buses")).toBe("bus");
+    expect(singularizeFieldName("cases")).toBe("case");
+    expect(singularizeFieldName("causes")).toBe("cause");
+    expect(singularizeFieldName("cookies")).toBe("cookie");
+    expect(singularizeFieldName("houses")).toBe("house");
+    expect(singularizeFieldName("movies")).toBe("movie");
+    expect(singularizeFieldName("pies")).toBe("pie");
+    expect(singularizeFieldName("selfies")).toBe("selfie");
+    expect(singularizeFieldName("statuses")).toBe("status");
+    expect(singularizeFieldName("zombies")).toBe("zombie");
+  });
+
+  it("handles irregular plural field names through the local dictionary", () => {
+    expect(singularizeFieldName("people")).toBe("person");
+    expect(singularizeFieldName("children")).toBe("child");
+    expect(singularizeFieldName("women")).toBe("woman");
+  });
+
+  it("singularizes irregular plural suffixes within compound field names", () => {
+    expect(singularizeFieldName("userAliases")).toBe("userAlias");
+    expect(singularizeFieldName("userAnalyses")).toBe("userAnalysis");
+    expect(singularizeFieldName("userMovies")).toBe("userMovie");
+    expect(singularizeFieldName("userSelfies")).toBe("userSelfie");
+  });
+
+  it("preserves ambiguous or non-inflecting names", () => {
+    expect(singularizeFieldName("axes")).toBe("axes");
+    expect(singularizeFieldName("news")).toBe("news");
+    expect(singularizeFieldName("series")).toBe("series");
+    expect(singularizeFieldName("status")).toBe("status");
+  });
+});
+
+describe("appendFieldPath", () => {
+  it("singularizes only array-backed path segments", () => {
+    expect(
+      appendFieldPath({
+        parentPath: ["message"],
+        fieldName: "parts",
+        singularize: true,
+        siblingFieldNames: null,
+      }),
+    ).toEqual(["message", "part"]);
+    expect(
+      appendFieldPath({
+        parentPath: ["message"],
+        fieldName: "metadata",
+        singularize: false,
+        siblingFieldNames: null,
+      }),
+    ).toEqual(["message", "metadata"]);
+  });
+
+  it("preserves plural array segment when singularized name collides with a sibling", () => {
+    expect(
+      appendFieldPath({
+        parentPath: ["message"],
+        fieldName: "parts",
+        singularize: true,
+        siblingFieldNames: new Set(["part", "parts"]),
+      }),
+    ).toEqual(["message", "parts"]);
+  });
+
+  it("preserves plural array segments when sibling plurals collapse to the same singular name", () => {
+    expect(
+      appendFieldPath({
+        parentPath: ["directory"],
+        fieldName: "people",
+        singularize: true,
+        siblingFieldNames: new Set(["people", "persons"]),
+      }),
+    ).toEqual(["directory", "people"]);
+    expect(
+      appendFieldPath({
+        parentPath: ["directory"],
+        fieldName: "persons",
+        singularize: true,
+        siblingFieldNames: new Set(["people", "persons"]),
+      }),
+    ).toEqual(["directory", "persons"]);
+  });
+});
+
+describe("generateAutoTypeName", () => {
+  it("uses singularized names for object field array elements", () => {
+    expect(
+      generateAutoTypeName({
+        kind: "objectField",
+        parentTypeName: "Message",
+        fieldPath: ["part"],
+      }),
+    ).toBe("MessagePart");
+  });
+
+  it("uses singularized names for input field array elements", () => {
+    expect(
+      generateAutoTypeName({
+        kind: "inputField",
+        parentTypeName: "MessageInput",
+        fieldPath: ["part"],
+      }),
+    ).toBe("MessagePartInput");
+  });
+
+  it("uses singularized names for resolver argument array elements", () => {
+    expect(
+      generateAutoTypeName({
+        kind: "resolverArg",
+        resolverType: "query",
+        fieldName: "search",
+        argName: "filters",
+        parentTypeName: null,
+        fieldPath: ["part"],
+      }),
+    ).toBe("SearchFiltersPartInput");
+  });
+
+  it("uses singularized names for resolver payload array elements", () => {
+    expect(
+      generateAutoTypeName({
+        kind: "resolverPayload",
+        resolverType: "query",
+        fieldName: "search",
+        parentTypeName: null,
+        fieldPath: ["part"],
+      }),
+    ).toBe("SearchPayloadPart");
+  });
+});

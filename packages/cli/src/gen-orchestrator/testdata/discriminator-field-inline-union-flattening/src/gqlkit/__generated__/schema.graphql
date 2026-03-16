@@ -2,18 +2,18 @@
 
 """Defined in: src/gqlkit/schema/types.ts"""
 type Container {
-  parts: [ContainerParts!]!
+  parts: [ContainerPart!]!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-union ContainerParts = ContainerPartsText | ContainerPartsToolA | ContainerPartsToolB
+union ContainerPart = ContainerPartText | ContainerPartToolA | ContainerPartToolB
 
-type ContainerPartsText {
+type ContainerPartText {
   content: String!
   type: String!
 }
 
-type ContainerPartsToolA {
+type ContainerPartToolA {
   callId: String!
   errorText: String
   input: String
@@ -23,7 +23,7 @@ type ContainerPartsToolA {
   type: String!
 }
 
-type ContainerPartsToolB {
+type ContainerPartToolB {
   callId: String!
   errorText: String
   input: String

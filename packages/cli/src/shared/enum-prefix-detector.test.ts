@@ -133,6 +133,57 @@ describe("detectEnumPrefix", () => {
         prefix: "ACCOUNT_TYPE_",
       });
     });
+
+    it("supports pluralized array element enum names", () => {
+      const result = detectEnumPrefix({
+        enumName: "PostTag",
+        memberValues: [
+          "POST_TAGS_TECH",
+          "POST_TAGS_LIFESTYLE",
+          "POST_TAGS_NEWS",
+        ],
+      });
+      expect(result).toEqual({
+        shouldStrip: true,
+        prefix: "POST_TAGS_",
+      });
+    });
+
+    it("supports pluralized names ending with category", () => {
+      const result = detectEnumPrefix({
+        enumName: "PostCategory",
+        memberValues: ["POST_CATEGORIES_BLOG", "POST_CATEGORIES_REVIEW"],
+      });
+      expect(result).toEqual({
+        shouldStrip: true,
+        prefix: "POST_CATEGORIES_",
+      });
+    });
+
+    it("supports pluralized prefixes on non-final path segments", () => {
+      const result = detectEnumPrefix({
+        enumName: "PostTagStatus",
+        memberValues: ["POST_TAGS_STATUS_OPEN", "POST_TAGS_STATUS_CLOSED"],
+      });
+      expect(result).toEqual({
+        shouldStrip: true,
+        prefix: "POST_TAGS_STATUS_",
+      });
+    });
+
+    it("supports pluralized prefixes across multiple path segments", () => {
+      const result = detectEnumPrefix({
+        enumName: "PostTagCategoryStatus",
+        memberValues: [
+          "POST_TAGS_CATEGORIES_STATUS_OPEN",
+          "POST_TAGS_CATEGORIES_STATUS_CLOSED",
+        ],
+      });
+      expect(result).toEqual({
+        shouldStrip: true,
+        prefix: "POST_TAGS_CATEGORIES_STATUS_",
+      });
+    });
   });
 
   describe("when some values do not have the prefix", () => {

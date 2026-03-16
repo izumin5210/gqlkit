@@ -2280,7 +2280,7 @@ export const typeDefs: DocumentNode = {
                   kind: "NamedType",
                   name: {
                     kind: "Name",
-                    value: "MessageParts",
+                    value: "MessagePart",
                   },
                 },
               },
@@ -2326,210 +2326,210 @@ export const typeDefs: DocumentNode = {
       kind: "UnionTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessageParts",
+        value: "MessagePart",
       },
       types: [
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsDataChart",
+            value: "MessagePartDataChart",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsDataSuggestion",
+            value: "MessagePartDataSuggestion",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsDynamicToolApprovalRequested",
+            value: "MessagePartDynamicToolApprovalRequested",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsDynamicToolApprovalResponded",
+            value: "MessagePartDynamicToolApprovalResponded",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsDynamicToolInputAvailable",
+            value: "MessagePartDynamicToolInputAvailable",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsDynamicToolInputStreaming",
+            value: "MessagePartDynamicToolInputStreaming",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsDynamicToolOutputAvailable",
+            value: "MessagePartDynamicToolOutputAvailable",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsDynamicToolOutputDenied",
+            value: "MessagePartDynamicToolOutputDenied",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsDynamicToolOutputError",
+            value: "MessagePartDynamicToolOutputError",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsFile",
+            value: "MessagePartFile",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsReasoning",
+            value: "MessagePartReasoning",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsSourceDocument",
+            value: "MessagePartSourceDocument",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsSourceUrl",
+            value: "MessagePartSourceUrl",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsStepStart",
+            value: "MessagePartStepStart",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsText",
+            value: "MessagePartText",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsToolCalculateApprovalRequested",
+            value: "MessagePartToolCalculateApprovalRequested",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsToolCalculateApprovalResponded",
+            value: "MessagePartToolCalculateApprovalResponded",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsToolCalculateInputAvailable",
+            value: "MessagePartToolCalculateInputAvailable",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsToolCalculateInputStreaming",
+            value: "MessagePartToolCalculateInputStreaming",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsToolCalculateOutputAvailable",
+            value: "MessagePartToolCalculateOutputAvailable",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsToolCalculateOutputDenied",
+            value: "MessagePartToolCalculateOutputDenied",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsToolCalculateOutputError",
+            value: "MessagePartToolCalculateOutputError",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsToolWeatherApprovalRequested",
+            value: "MessagePartToolWeatherApprovalRequested",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsToolWeatherApprovalResponded",
+            value: "MessagePartToolWeatherApprovalResponded",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsToolWeatherInputAvailable",
+            value: "MessagePartToolWeatherInputAvailable",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsToolWeatherInputStreaming",
+            value: "MessagePartToolWeatherInputStreaming",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsToolWeatherOutputAvailable",
+            value: "MessagePartToolWeatherOutputAvailable",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsToolWeatherOutputDenied",
+            value: "MessagePartToolWeatherOutputDenied",
           },
         },
         {
           kind: "NamedType",
           name: {
             kind: "Name",
-            value: "MessagePartsToolWeatherOutputError",
+            value: "MessagePartToolWeatherOutputError",
           },
         },
       ],
@@ -2544,7 +2544,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDataChart",
+        value: "MessagePartDataChart",
       },
       fields: [
         {
@@ -2559,7 +2559,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsDataChartData",
+                value: "MessagePartDataChartData",
               },
             },
           },
@@ -2601,7 +2601,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDataChartData",
+        value: "MessagePartDataChartData",
       },
       fields: [
         {
@@ -2662,7 +2662,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDataSuggestion",
+        value: "MessagePartDataSuggestion",
       },
       fields: [
         {
@@ -2677,7 +2677,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsDataSuggestionData",
+                value: "MessagePartDataSuggestionData",
               },
             },
           },
@@ -2719,7 +2719,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDataSuggestionData",
+        value: "MessagePartDataSuggestionData",
       },
       fields: [
         {
@@ -2768,7 +2768,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDynamicToolApprovalRequested",
+        value: "MessagePartDynamicToolApprovalRequested",
       },
       fields: [
         {
@@ -2783,7 +2783,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsDynamicToolApprovalRequestedApproval",
+                value: "MessagePartDynamicToolApprovalRequestedApproval",
               },
             },
           },
@@ -2936,7 +2936,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDynamicToolApprovalRequestedApproval",
+        value: "MessagePartDynamicToolApprovalRequestedApproval",
       },
       fields: [
         {
@@ -2968,7 +2968,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDynamicToolApprovalResponded",
+        value: "MessagePartDynamicToolApprovalResponded",
       },
       fields: [
         {
@@ -2983,7 +2983,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsDynamicToolApprovalRespondedApproval",
+                value: "MessagePartDynamicToolApprovalRespondedApproval",
               },
             },
           },
@@ -3136,7 +3136,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDynamicToolApprovalRespondedApproval",
+        value: "MessagePartDynamicToolApprovalRespondedApproval",
       },
       fields: [
         {
@@ -3199,7 +3199,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDynamicToolInputAvailable",
+        value: "MessagePartDynamicToolInputAvailable",
       },
       fields: [
         {
@@ -3350,7 +3350,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDynamicToolInputStreaming",
+        value: "MessagePartDynamicToolInputStreaming",
       },
       fields: [
         {
@@ -3501,7 +3501,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDynamicToolOutputAvailable",
+        value: "MessagePartDynamicToolOutputAvailable",
       },
       fields: [
         {
@@ -3514,7 +3514,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "MessagePartsDynamicToolOutputAvailableApproval",
+              value: "MessagePartDynamicToolOutputAvailableApproval",
             },
           },
         },
@@ -3697,7 +3697,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDynamicToolOutputAvailableApproval",
+        value: "MessagePartDynamicToolOutputAvailableApproval",
       },
       fields: [
         {
@@ -3760,7 +3760,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDynamicToolOutputDenied",
+        value: "MessagePartDynamicToolOutputDenied",
       },
       fields: [
         {
@@ -3775,7 +3775,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsDynamicToolOutputDeniedApproval",
+                value: "MessagePartDynamicToolOutputDeniedApproval",
               },
             },
           },
@@ -3928,7 +3928,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDynamicToolOutputDeniedApproval",
+        value: "MessagePartDynamicToolOutputDeniedApproval",
       },
       fields: [
         {
@@ -3991,7 +3991,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDynamicToolOutputError",
+        value: "MessagePartDynamicToolOutputError",
       },
       fields: [
         {
@@ -4004,7 +4004,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "MessagePartsDynamicToolOutputErrorApproval",
+              value: "MessagePartDynamicToolOutputErrorApproval",
             },
           },
         },
@@ -4173,7 +4173,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsDynamicToolOutputErrorApproval",
+        value: "MessagePartDynamicToolOutputErrorApproval",
       },
       fields: [
         {
@@ -4236,7 +4236,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsFile",
+        value: "MessagePartFile",
       },
       fields: [
         {
@@ -4345,7 +4345,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsReasoning",
+        value: "MessagePartReasoning",
       },
       fields: [
         {
@@ -4377,7 +4377,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "MessagePartsReasoningState",
+              value: "MessagePartReasoningState",
             },
           },
           description: {
@@ -4431,7 +4431,7 @@ export const typeDefs: DocumentNode = {
       kind: "EnumTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsReasoningState",
+        value: "MessagePartReasoningState",
       },
       values: [
         {
@@ -4460,7 +4460,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsSourceDocument",
+        value: "MessagePartSourceDocument",
       },
       fields: [
         {
@@ -4565,7 +4565,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsSourceUrl",
+        value: "MessagePartSourceUrl",
       },
       fields: [
         {
@@ -4653,7 +4653,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsStepStart",
+        value: "MessagePartStepStart",
       },
       fields: [
         {
@@ -4679,7 +4679,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsText",
+        value: "MessagePartText",
       },
       fields: [
         {
@@ -4711,7 +4711,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "MessagePartsTextState",
+              value: "MessagePartTextState",
             },
           },
           description: {
@@ -4765,7 +4765,7 @@ export const typeDefs: DocumentNode = {
       kind: "EnumTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsTextState",
+        value: "MessagePartTextState",
       },
       values: [
         {
@@ -4794,7 +4794,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateApprovalRequested",
+        value: "MessagePartToolCalculateApprovalRequested",
       },
       fields: [
         {
@@ -4809,7 +4809,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolCalculateApprovalRequestedApproval",
+                value: "MessagePartToolCalculateApprovalRequestedApproval",
               },
             },
           },
@@ -4840,7 +4840,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolCalculateApprovalRequestedInput",
+                value: "MessagePartToolCalculateApprovalRequestedInput",
               },
             },
           },
@@ -4940,7 +4940,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateApprovalRequestedApproval",
+        value: "MessagePartToolCalculateApprovalRequestedApproval",
       },
       fields: [
         {
@@ -4972,7 +4972,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateApprovalRequestedInput",
+        value: "MessagePartToolCalculateApprovalRequestedInput",
       },
       fields: [
         {
@@ -5004,7 +5004,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateApprovalResponded",
+        value: "MessagePartToolCalculateApprovalResponded",
       },
       fields: [
         {
@@ -5019,7 +5019,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolCalculateApprovalRespondedApproval",
+                value: "MessagePartToolCalculateApprovalRespondedApproval",
               },
             },
           },
@@ -5050,7 +5050,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolCalculateApprovalRespondedInput",
+                value: "MessagePartToolCalculateApprovalRespondedInput",
               },
             },
           },
@@ -5150,7 +5150,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateApprovalRespondedApproval",
+        value: "MessagePartToolCalculateApprovalRespondedApproval",
       },
       fields: [
         {
@@ -5213,7 +5213,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateApprovalRespondedInput",
+        value: "MessagePartToolCalculateApprovalRespondedInput",
       },
       fields: [
         {
@@ -5245,7 +5245,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateInputAvailable",
+        value: "MessagePartToolCalculateInputAvailable",
       },
       fields: [
         {
@@ -5274,7 +5274,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolCalculateInputAvailableInput",
+                value: "MessagePartToolCalculateInputAvailableInput",
               },
             },
           },
@@ -5374,7 +5374,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateInputAvailableInput",
+        value: "MessagePartToolCalculateInputAvailableInput",
       },
       fields: [
         {
@@ -5406,7 +5406,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateInputStreaming",
+        value: "MessagePartToolCalculateInputStreaming",
       },
       fields: [
         {
@@ -5433,7 +5433,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "MessagePartsToolCalculateInputStreamingInput",
+              value: "MessagePartToolCalculateInputStreamingInput",
             },
           },
         },
@@ -5532,7 +5532,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateInputStreamingInput",
+        value: "MessagePartToolCalculateInputStreamingInput",
       },
       fields: [
         {
@@ -5561,7 +5561,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateOutputAvailable",
+        value: "MessagePartToolCalculateOutputAvailable",
       },
       fields: [
         {
@@ -5574,7 +5574,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "MessagePartsToolCalculateOutputAvailableApproval",
+              value: "MessagePartToolCalculateOutputAvailableApproval",
             },
           },
         },
@@ -5604,7 +5604,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolCalculateOutputAvailableInput",
+                value: "MessagePartToolCalculateOutputAvailableInput",
               },
             },
           },
@@ -5621,7 +5621,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolCalculateOutputAvailableOutput",
+                value: "MessagePartToolCalculateOutputAvailableOutput",
               },
             },
           },
@@ -5735,7 +5735,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateOutputAvailableApproval",
+        value: "MessagePartToolCalculateOutputAvailableApproval",
       },
       fields: [
         {
@@ -5798,7 +5798,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateOutputAvailableInput",
+        value: "MessagePartToolCalculateOutputAvailableInput",
       },
       fields: [
         {
@@ -5830,7 +5830,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateOutputAvailableOutput",
+        value: "MessagePartToolCalculateOutputAvailableOutput",
       },
       fields: [
         {
@@ -5879,7 +5879,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateOutputDenied",
+        value: "MessagePartToolCalculateOutputDenied",
       },
       fields: [
         {
@@ -5894,7 +5894,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolCalculateOutputDeniedApproval",
+                value: "MessagePartToolCalculateOutputDeniedApproval",
               },
             },
           },
@@ -5925,7 +5925,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolCalculateOutputDeniedInput",
+                value: "MessagePartToolCalculateOutputDeniedInput",
               },
             },
           },
@@ -6025,7 +6025,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateOutputDeniedApproval",
+        value: "MessagePartToolCalculateOutputDeniedApproval",
       },
       fields: [
         {
@@ -6088,7 +6088,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateOutputDeniedInput",
+        value: "MessagePartToolCalculateOutputDeniedInput",
       },
       fields: [
         {
@@ -6120,7 +6120,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateOutputError",
+        value: "MessagePartToolCalculateOutputError",
       },
       fields: [
         {
@@ -6133,7 +6133,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "MessagePartsToolCalculateOutputErrorApproval",
+              value: "MessagePartToolCalculateOutputErrorApproval",
             },
           },
         },
@@ -6178,7 +6178,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "MessagePartsToolCalculateOutputErrorInput",
+              value: "MessagePartToolCalculateOutputErrorInput",
             },
           },
         },
@@ -6294,7 +6294,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateOutputErrorApproval",
+        value: "MessagePartToolCalculateOutputErrorApproval",
       },
       fields: [
         {
@@ -6357,7 +6357,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolCalculateOutputErrorInput",
+        value: "MessagePartToolCalculateOutputErrorInput",
       },
       fields: [
         {
@@ -6389,7 +6389,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherApprovalRequested",
+        value: "MessagePartToolWeatherApprovalRequested",
       },
       fields: [
         {
@@ -6404,7 +6404,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolWeatherApprovalRequestedApproval",
+                value: "MessagePartToolWeatherApprovalRequestedApproval",
               },
             },
           },
@@ -6435,7 +6435,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolWeatherApprovalRequestedInput",
+                value: "MessagePartToolWeatherApprovalRequestedInput",
               },
             },
           },
@@ -6535,7 +6535,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherApprovalRequestedApproval",
+        value: "MessagePartToolWeatherApprovalRequestedApproval",
       },
       fields: [
         {
@@ -6567,7 +6567,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherApprovalRequestedInput",
+        value: "MessagePartToolWeatherApprovalRequestedInput",
       },
       fields: [
         {
@@ -6599,7 +6599,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherApprovalResponded",
+        value: "MessagePartToolWeatherApprovalResponded",
       },
       fields: [
         {
@@ -6614,7 +6614,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolWeatherApprovalRespondedApproval",
+                value: "MessagePartToolWeatherApprovalRespondedApproval",
               },
             },
           },
@@ -6645,7 +6645,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolWeatherApprovalRespondedInput",
+                value: "MessagePartToolWeatherApprovalRespondedInput",
               },
             },
           },
@@ -6745,7 +6745,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherApprovalRespondedApproval",
+        value: "MessagePartToolWeatherApprovalRespondedApproval",
       },
       fields: [
         {
@@ -6808,7 +6808,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherApprovalRespondedInput",
+        value: "MessagePartToolWeatherApprovalRespondedInput",
       },
       fields: [
         {
@@ -6840,7 +6840,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherInputAvailable",
+        value: "MessagePartToolWeatherInputAvailable",
       },
       fields: [
         {
@@ -6869,7 +6869,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolWeatherInputAvailableInput",
+                value: "MessagePartToolWeatherInputAvailableInput",
               },
             },
           },
@@ -6969,7 +6969,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherInputAvailableInput",
+        value: "MessagePartToolWeatherInputAvailableInput",
       },
       fields: [
         {
@@ -7001,7 +7001,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherInputStreaming",
+        value: "MessagePartToolWeatherInputStreaming",
       },
       fields: [
         {
@@ -7028,7 +7028,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "MessagePartsToolWeatherInputStreamingInput",
+              value: "MessagePartToolWeatherInputStreamingInput",
             },
           },
         },
@@ -7127,7 +7127,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherInputStreamingInput",
+        value: "MessagePartToolWeatherInputStreamingInput",
       },
       fields: [
         {
@@ -7156,7 +7156,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherOutputAvailable",
+        value: "MessagePartToolWeatherOutputAvailable",
       },
       fields: [
         {
@@ -7169,7 +7169,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "MessagePartsToolWeatherOutputAvailableApproval",
+              value: "MessagePartToolWeatherOutputAvailableApproval",
             },
           },
         },
@@ -7199,7 +7199,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolWeatherOutputAvailableInput",
+                value: "MessagePartToolWeatherOutputAvailableInput",
               },
             },
           },
@@ -7216,7 +7216,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolWeatherOutputAvailableOutput",
+                value: "MessagePartToolWeatherOutputAvailableOutput",
               },
             },
           },
@@ -7330,7 +7330,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherOutputAvailableApproval",
+        value: "MessagePartToolWeatherOutputAvailableApproval",
       },
       fields: [
         {
@@ -7393,7 +7393,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherOutputAvailableInput",
+        value: "MessagePartToolWeatherOutputAvailableInput",
       },
       fields: [
         {
@@ -7425,7 +7425,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherOutputAvailableOutput",
+        value: "MessagePartToolWeatherOutputAvailableOutput",
       },
       fields: [
         {
@@ -7491,7 +7491,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherOutputDenied",
+        value: "MessagePartToolWeatherOutputDenied",
       },
       fields: [
         {
@@ -7506,7 +7506,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolWeatherOutputDeniedApproval",
+                value: "MessagePartToolWeatherOutputDeniedApproval",
               },
             },
           },
@@ -7537,7 +7537,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "MessagePartsToolWeatherOutputDeniedInput",
+                value: "MessagePartToolWeatherOutputDeniedInput",
               },
             },
           },
@@ -7637,7 +7637,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherOutputDeniedApproval",
+        value: "MessagePartToolWeatherOutputDeniedApproval",
       },
       fields: [
         {
@@ -7700,7 +7700,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherOutputDeniedInput",
+        value: "MessagePartToolWeatherOutputDeniedInput",
       },
       fields: [
         {
@@ -7732,7 +7732,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherOutputError",
+        value: "MessagePartToolWeatherOutputError",
       },
       fields: [
         {
@@ -7745,7 +7745,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "MessagePartsToolWeatherOutputErrorApproval",
+              value: "MessagePartToolWeatherOutputErrorApproval",
             },
           },
         },
@@ -7790,7 +7790,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "MessagePartsToolWeatherOutputErrorInput",
+              value: "MessagePartToolWeatherOutputErrorInput",
             },
           },
         },
@@ -7906,7 +7906,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherOutputErrorApproval",
+        value: "MessagePartToolWeatherOutputErrorApproval",
       },
       fields: [
         {
@@ -7969,7 +7969,7 @@ export const typeDefs: DocumentNode = {
       kind: "ObjectTypeDefinition",
       name: {
         kind: "Name",
-        value: "MessagePartsToolWeatherOutputErrorInput",
+        value: "MessagePartToolWeatherOutputErrorInput",
       },
       fields: [
         {

@@ -26,7 +26,7 @@ export const typeDefs: DocumentNode = {
                 "kind": "NamedType",
                 "name": {
                   "kind": "Name",
-                  "value": "PostCategories"
+                  "value": "PostCategory"
                 }
               }
             }
@@ -89,7 +89,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "PostTags"
+                    "value": "PostTag"
                   }
                 }
               }
@@ -151,7 +151,7 @@ export const typeDefs: DocumentNode = {
       "kind": "EnumTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "PostCategories"
+        "value": "PostCategory"
       },
       "values": [
         {
@@ -221,7 +221,7 @@ export const typeDefs: DocumentNode = {
       "kind": "EnumTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "PostTags"
+        "value": "PostTag"
       },
       "values": [
         {

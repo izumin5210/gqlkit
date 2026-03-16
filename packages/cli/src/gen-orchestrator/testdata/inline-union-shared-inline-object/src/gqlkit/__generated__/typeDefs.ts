@@ -45,7 +45,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "ContainerParts"
+                    "value": "ContainerPart"
                   }
                 }
               }
@@ -63,35 +63,35 @@ export const typeDefs: DocumentNode = {
       "kind": "UnionTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerParts"
+        "value": "ContainerPart"
       },
       "types": [
         {
           "kind": "NamedType",
           "name": {
             "kind": "Name",
-            "value": "ContainerPartsText"
+            "value": "ContainerPartText"
           }
         },
         {
           "kind": "NamedType",
           "name": {
             "kind": "Name",
-            "value": "ContainerPartsToolSearchInputAvailable"
+            "value": "ContainerPartToolSearchInputAvailable"
           }
         },
         {
           "kind": "NamedType",
           "name": {
             "kind": "Name",
-            "value": "ContainerPartsToolSearchOutputAvailable"
+            "value": "ContainerPartToolSearchOutputAvailable"
           }
         },
         {
           "kind": "NamedType",
           "name": {
             "kind": "Name",
-            "value": "ContainerPartsToolSearchOutputError"
+            "value": "ContainerPartToolSearchOutputError"
           }
         }
       ],
@@ -105,7 +105,7 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerPartsText"
+        "value": "ContainerPartText"
       },
       "fields": [
         {
@@ -148,7 +148,7 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerPartsToolSearchInputAvailable"
+        "value": "ContainerPartToolSearchInputAvailable"
       },
       "fields": [
         {
@@ -180,7 +180,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "ContainerPartsToolSearchInputAvailableInput"
+                "value": "ContainerPartToolSearchInputAvailableInput"
               }
             }
           }
@@ -239,7 +239,7 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerPartsToolSearchInputAvailableInput"
+        "value": "ContainerPartToolSearchInputAvailableInput"
       },
       "fields": [
         {
@@ -270,7 +270,7 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerPartsToolSearchOutputAvailable"
+        "value": "ContainerPartToolSearchOutputAvailable"
       },
       "fields": [
         {
@@ -302,7 +302,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "ContainerPartsToolSearchOutputAvailableInput"
+                "value": "ContainerPartToolSearchOutputAvailableInput"
               }
             }
           }
@@ -319,7 +319,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "ContainerPartsToolSearchOutputAvailableOutput"
+                "value": "ContainerPartToolSearchOutputAvailableOutput"
               }
             }
           }
@@ -378,7 +378,7 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerPartsToolSearchOutputAvailableInput"
+        "value": "ContainerPartToolSearchOutputAvailableInput"
       },
       "fields": [
         {
@@ -409,7 +409,7 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerPartsToolSearchOutputAvailableOutput"
+        "value": "ContainerPartToolSearchOutputAvailableOutput"
       },
       "fields": [
         {
@@ -446,7 +446,7 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerPartsToolSearchOutputError"
+        "value": "ContainerPartToolSearchOutputError"
       },
       "fields": [
         {
@@ -495,7 +495,7 @@ export const typeDefs: DocumentNode = {
               "kind": "NamedType",
               "name": {
                 "kind": "Name",
-                "value": "ContainerPartsToolSearchOutputErrorInput"
+                "value": "ContainerPartToolSearchOutputErrorInput"
               }
             }
           }
@@ -554,7 +554,7 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ContainerPartsToolSearchOutputErrorInput"
+        "value": "ContainerPartToolSearchOutputErrorInput"
       },
       "fields": [
         {

@@ -321,7 +321,7 @@ type Message {
 
   Assistant messages can have text, reasoning, tool invocation, and file parts.
   """
-  parts: [MessageParts!]!
+  parts: [MessagePart!]!
   """
   The role of the message.
   """
@@ -331,39 +331,39 @@ type Message {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-union MessageParts =
-  | MessagePartsDataChart
-  | MessagePartsDataSuggestion
-  | MessagePartsDynamicToolApprovalRequested
-  | MessagePartsDynamicToolApprovalResponded
-  | MessagePartsDynamicToolInputAvailable
-  | MessagePartsDynamicToolInputStreaming
-  | MessagePartsDynamicToolOutputAvailable
-  | MessagePartsDynamicToolOutputDenied
-  | MessagePartsDynamicToolOutputError
-  | MessagePartsFile
-  | MessagePartsReasoning
-  | MessagePartsSourceDocument
-  | MessagePartsSourceUrl
-  | MessagePartsStepStart
-  | MessagePartsText
-  | MessagePartsToolCalculateApprovalRequested
-  | MessagePartsToolCalculateApprovalResponded
-  | MessagePartsToolCalculateInputAvailable
-  | MessagePartsToolCalculateInputStreaming
-  | MessagePartsToolCalculateOutputAvailable
-  | MessagePartsToolCalculateOutputDenied
-  | MessagePartsToolCalculateOutputError
-  | MessagePartsToolWeatherApprovalRequested
-  | MessagePartsToolWeatherApprovalResponded
-  | MessagePartsToolWeatherInputAvailable
-  | MessagePartsToolWeatherInputStreaming
-  | MessagePartsToolWeatherOutputAvailable
-  | MessagePartsToolWeatherOutputDenied
-  | MessagePartsToolWeatherOutputError
+union MessagePart =
+  | MessagePartDataChart
+  | MessagePartDataSuggestion
+  | MessagePartDynamicToolApprovalRequested
+  | MessagePartDynamicToolApprovalResponded
+  | MessagePartDynamicToolInputAvailable
+  | MessagePartDynamicToolInputStreaming
+  | MessagePartDynamicToolOutputAvailable
+  | MessagePartDynamicToolOutputDenied
+  | MessagePartDynamicToolOutputError
+  | MessagePartFile
+  | MessagePartReasoning
+  | MessagePartSourceDocument
+  | MessagePartSourceUrl
+  | MessagePartStepStart
+  | MessagePartText
+  | MessagePartToolCalculateApprovalRequested
+  | MessagePartToolCalculateApprovalResponded
+  | MessagePartToolCalculateInputAvailable
+  | MessagePartToolCalculateInputStreaming
+  | MessagePartToolCalculateOutputAvailable
+  | MessagePartToolCalculateOutputDenied
+  | MessagePartToolCalculateOutputError
+  | MessagePartToolWeatherApprovalRequested
+  | MessagePartToolWeatherApprovalResponded
+  | MessagePartToolWeatherInputAvailable
+  | MessagePartToolWeatherInputStreaming
+  | MessagePartToolWeatherOutputAvailable
+  | MessagePartToolWeatherOutputDenied
+  | MessagePartToolWeatherOutputError
 
-type MessagePartsDataChart {
-  data: MessagePartsDataChartData!
+type MessagePartDataChart {
+  data: MessagePartDataChartData!
   id: String
   type: String!
 }
@@ -371,13 +371,13 @@ type MessagePartsDataChart {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsDataChartData {
+type MessagePartDataChartData {
   labels: [String!]!
   values: [Float!]!
 }
 
-type MessagePartsDataSuggestion {
-  data: MessagePartsDataSuggestionData!
+type MessagePartDataSuggestion {
+  data: MessagePartDataSuggestionData!
   id: String
   type: String!
 }
@@ -385,13 +385,13 @@ type MessagePartsDataSuggestion {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsDataSuggestionData {
+type MessagePartDataSuggestionData {
   confidence: Float!
   text: String!
 }
 
-type MessagePartsDynamicToolApprovalRequested {
-  approval: MessagePartsDynamicToolApprovalRequestedApproval!
+type MessagePartDynamicToolApprovalRequested {
+  approval: MessagePartDynamicToolApprovalRequestedApproval!
   callProviderMetadata: JSONObject
   input: JSON!
   """
@@ -414,12 +414,12 @@ type MessagePartsDynamicToolApprovalRequested {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsDynamicToolApprovalRequestedApproval {
+type MessagePartDynamicToolApprovalRequestedApproval {
   id: String!
 }
 
-type MessagePartsDynamicToolApprovalResponded {
-  approval: MessagePartsDynamicToolApprovalRespondedApproval!
+type MessagePartDynamicToolApprovalResponded {
+  approval: MessagePartDynamicToolApprovalRespondedApproval!
   callProviderMetadata: JSONObject
   input: JSON!
   """
@@ -442,13 +442,13 @@ type MessagePartsDynamicToolApprovalResponded {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsDynamicToolApprovalRespondedApproval {
+type MessagePartDynamicToolApprovalRespondedApproval {
   approved: Boolean!
   id: String!
   reason: String
 }
 
-type MessagePartsDynamicToolInputAvailable {
+type MessagePartDynamicToolInputAvailable {
   callProviderMetadata: JSONObject
   input: JSON!
   """
@@ -468,7 +468,7 @@ type MessagePartsDynamicToolInputAvailable {
   type: String!
 }
 
-type MessagePartsDynamicToolInputStreaming {
+type MessagePartDynamicToolInputStreaming {
   callProviderMetadata: JSONObject
   input: JSON!
   """
@@ -488,8 +488,8 @@ type MessagePartsDynamicToolInputStreaming {
   type: String!
 }
 
-type MessagePartsDynamicToolOutputAvailable {
-  approval: MessagePartsDynamicToolOutputAvailableApproval
+type MessagePartDynamicToolOutputAvailable {
+  approval: MessagePartDynamicToolOutputAvailableApproval
   callProviderMetadata: JSONObject
   input: JSON!
   output: JSON!
@@ -514,14 +514,14 @@ type MessagePartsDynamicToolOutputAvailable {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsDynamicToolOutputAvailableApproval {
+type MessagePartDynamicToolOutputAvailableApproval {
   approved: Boolean!
   id: String!
   reason: String
 }
 
-type MessagePartsDynamicToolOutputDenied {
-  approval: MessagePartsDynamicToolOutputDeniedApproval!
+type MessagePartDynamicToolOutputDenied {
+  approval: MessagePartDynamicToolOutputDeniedApproval!
   callProviderMetadata: JSONObject
   input: JSON!
   """
@@ -544,14 +544,14 @@ type MessagePartsDynamicToolOutputDenied {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsDynamicToolOutputDeniedApproval {
+type MessagePartDynamicToolOutputDeniedApproval {
   approved: Boolean!
   id: String!
   reason: String
 }
 
-type MessagePartsDynamicToolOutputError {
-  approval: MessagePartsDynamicToolOutputErrorApproval
+type MessagePartDynamicToolOutputError {
+  approval: MessagePartDynamicToolOutputErrorApproval
   callProviderMetadata: JSONObject
   errorText: String!
   input: JSON!
@@ -575,13 +575,13 @@ type MessagePartsDynamicToolOutputError {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsDynamicToolOutputErrorApproval {
+type MessagePartDynamicToolOutputErrorApproval {
   approved: Boolean!
   id: String!
   reason: String
 }
 
-type MessagePartsFile {
+type MessagePartFile {
   """
   Optional filename of the file.
   """
@@ -602,7 +602,7 @@ type MessagePartsFile {
   url: String!
 }
 
-type MessagePartsReasoning {
+type MessagePartReasoning {
   """
   The provider metadata.
   """
@@ -610,7 +610,7 @@ type MessagePartsReasoning {
   """
   The state of the reasoning part.
   """
-  state: MessagePartsReasoningState
+  state: MessagePartReasoningState
   """
   The reasoning text.
   """
@@ -621,12 +621,12 @@ type MessagePartsReasoning {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-enum MessagePartsReasoningState {
+enum MessagePartReasoningState {
   STREAMING
   DONE
 }
 
-type MessagePartsSourceDocument {
+type MessagePartSourceDocument {
   filename: String
   mediaType: String!
   providerMetadata: JSONObject
@@ -635,7 +635,7 @@ type MessagePartsSourceDocument {
   type: String!
 }
 
-type MessagePartsSourceUrl {
+type MessagePartSourceUrl {
   providerMetadata: JSONObject
   sourceId: String!
   title: String
@@ -643,11 +643,11 @@ type MessagePartsSourceUrl {
   url: String!
 }
 
-type MessagePartsStepStart {
+type MessagePartStepStart {
   type: String!
 }
 
-type MessagePartsText {
+type MessagePartText {
   """
   The provider metadata.
   """
@@ -655,7 +655,7 @@ type MessagePartsText {
   """
   The state of the text part.
   """
-  state: MessagePartsTextState
+  state: MessagePartTextState
   """
   The text content.
   """
@@ -666,15 +666,15 @@ type MessagePartsText {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-enum MessagePartsTextState {
+enum MessagePartTextState {
   STREAMING
   DONE
 }
 
-type MessagePartsToolCalculateApprovalRequested {
-  approval: MessagePartsToolCalculateApprovalRequestedApproval!
+type MessagePartToolCalculateApprovalRequested {
+  approval: MessagePartToolCalculateApprovalRequestedApproval!
   callProviderMetadata: JSONObject
-  input: MessagePartsToolCalculateApprovalRequestedInput!
+  input: MessagePartToolCalculateApprovalRequestedInput!
   """
   Whether the tool call was executed by the provider.
   """
@@ -691,21 +691,21 @@ type MessagePartsToolCalculateApprovalRequested {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolCalculateApprovalRequestedApproval {
+type MessagePartToolCalculateApprovalRequestedApproval {
   id: String!
 }
 
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolCalculateApprovalRequestedInput {
+type MessagePartToolCalculateApprovalRequestedInput {
   expression: String!
 }
 
-type MessagePartsToolCalculateApprovalResponded {
-  approval: MessagePartsToolCalculateApprovalRespondedApproval!
+type MessagePartToolCalculateApprovalResponded {
+  approval: MessagePartToolCalculateApprovalRespondedApproval!
   callProviderMetadata: JSONObject
-  input: MessagePartsToolCalculateApprovalRespondedInput!
+  input: MessagePartToolCalculateApprovalRespondedInput!
   """
   Whether the tool call was executed by the provider.
   """
@@ -722,7 +722,7 @@ type MessagePartsToolCalculateApprovalResponded {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolCalculateApprovalRespondedApproval {
+type MessagePartToolCalculateApprovalRespondedApproval {
   approved: Boolean!
   id: String!
   reason: String
@@ -731,13 +731,13 @@ type MessagePartsToolCalculateApprovalRespondedApproval {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolCalculateApprovalRespondedInput {
+type MessagePartToolCalculateApprovalRespondedInput {
   expression: String!
 }
 
-type MessagePartsToolCalculateInputAvailable {
+type MessagePartToolCalculateInputAvailable {
   callProviderMetadata: JSONObject
-  input: MessagePartsToolCalculateInputAvailableInput!
+  input: MessagePartToolCalculateInputAvailableInput!
   """
   Whether the tool call was executed by the provider.
   """
@@ -754,13 +754,13 @@ type MessagePartsToolCalculateInputAvailable {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolCalculateInputAvailableInput {
+type MessagePartToolCalculateInputAvailableInput {
   expression: String!
 }
 
-type MessagePartsToolCalculateInputStreaming {
+type MessagePartToolCalculateInputStreaming {
   callProviderMetadata: JSONObject
-  input: MessagePartsToolCalculateInputStreamingInput
+  input: MessagePartToolCalculateInputStreamingInput
   """
   Whether the tool call was executed by the provider.
   """
@@ -777,15 +777,15 @@ type MessagePartsToolCalculateInputStreaming {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolCalculateInputStreamingInput {
+type MessagePartToolCalculateInputStreamingInput {
   expression: String
 }
 
-type MessagePartsToolCalculateOutputAvailable {
-  approval: MessagePartsToolCalculateOutputAvailableApproval
+type MessagePartToolCalculateOutputAvailable {
+  approval: MessagePartToolCalculateOutputAvailableApproval
   callProviderMetadata: JSONObject
-  input: MessagePartsToolCalculateOutputAvailableInput!
-  output: MessagePartsToolCalculateOutputAvailableOutput!
+  input: MessagePartToolCalculateOutputAvailableInput!
+  output: MessagePartToolCalculateOutputAvailableOutput!
   preliminary: Boolean
   """
   Whether the tool call was executed by the provider.
@@ -803,7 +803,7 @@ type MessagePartsToolCalculateOutputAvailable {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolCalculateOutputAvailableApproval {
+type MessagePartToolCalculateOutputAvailableApproval {
   approved: Boolean!
   id: String!
   reason: String
@@ -812,22 +812,22 @@ type MessagePartsToolCalculateOutputAvailableApproval {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolCalculateOutputAvailableInput {
+type MessagePartToolCalculateOutputAvailableInput {
   expression: String!
 }
 
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolCalculateOutputAvailableOutput {
+type MessagePartToolCalculateOutputAvailableOutput {
   expression: String!
   result: Float!
 }
 
-type MessagePartsToolCalculateOutputDenied {
-  approval: MessagePartsToolCalculateOutputDeniedApproval!
+type MessagePartToolCalculateOutputDenied {
+  approval: MessagePartToolCalculateOutputDeniedApproval!
   callProviderMetadata: JSONObject
-  input: MessagePartsToolCalculateOutputDeniedInput!
+  input: MessagePartToolCalculateOutputDeniedInput!
   """
   Whether the tool call was executed by the provider.
   """
@@ -844,7 +844,7 @@ type MessagePartsToolCalculateOutputDenied {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolCalculateOutputDeniedApproval {
+type MessagePartToolCalculateOutputDeniedApproval {
   approved: Boolean!
   id: String!
   reason: String
@@ -853,15 +853,15 @@ type MessagePartsToolCalculateOutputDeniedApproval {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolCalculateOutputDeniedInput {
+type MessagePartToolCalculateOutputDeniedInput {
   expression: String!
 }
 
-type MessagePartsToolCalculateOutputError {
-  approval: MessagePartsToolCalculateOutputErrorApproval
+type MessagePartToolCalculateOutputError {
+  approval: MessagePartToolCalculateOutputErrorApproval
   callProviderMetadata: JSONObject
   errorText: String!
-  input: MessagePartsToolCalculateOutputErrorInput
+  input: MessagePartToolCalculateOutputErrorInput
   """
   Whether the tool call was executed by the provider.
   """
@@ -879,7 +879,7 @@ type MessagePartsToolCalculateOutputError {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolCalculateOutputErrorApproval {
+type MessagePartToolCalculateOutputErrorApproval {
   approved: Boolean!
   id: String!
   reason: String
@@ -888,14 +888,14 @@ type MessagePartsToolCalculateOutputErrorApproval {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolCalculateOutputErrorInput {
+type MessagePartToolCalculateOutputErrorInput {
   expression: String!
 }
 
-type MessagePartsToolWeatherApprovalRequested {
-  approval: MessagePartsToolWeatherApprovalRequestedApproval!
+type MessagePartToolWeatherApprovalRequested {
+  approval: MessagePartToolWeatherApprovalRequestedApproval!
   callProviderMetadata: JSONObject
-  input: MessagePartsToolWeatherApprovalRequestedInput!
+  input: MessagePartToolWeatherApprovalRequestedInput!
   """
   Whether the tool call was executed by the provider.
   """
@@ -912,21 +912,21 @@ type MessagePartsToolWeatherApprovalRequested {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolWeatherApprovalRequestedApproval {
+type MessagePartToolWeatherApprovalRequestedApproval {
   id: String!
 }
 
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolWeatherApprovalRequestedInput {
+type MessagePartToolWeatherApprovalRequestedInput {
   location: String!
 }
 
-type MessagePartsToolWeatherApprovalResponded {
-  approval: MessagePartsToolWeatherApprovalRespondedApproval!
+type MessagePartToolWeatherApprovalResponded {
+  approval: MessagePartToolWeatherApprovalRespondedApproval!
   callProviderMetadata: JSONObject
-  input: MessagePartsToolWeatherApprovalRespondedInput!
+  input: MessagePartToolWeatherApprovalRespondedInput!
   """
   Whether the tool call was executed by the provider.
   """
@@ -943,7 +943,7 @@ type MessagePartsToolWeatherApprovalResponded {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolWeatherApprovalRespondedApproval {
+type MessagePartToolWeatherApprovalRespondedApproval {
   approved: Boolean!
   id: String!
   reason: String
@@ -952,13 +952,13 @@ type MessagePartsToolWeatherApprovalRespondedApproval {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolWeatherApprovalRespondedInput {
+type MessagePartToolWeatherApprovalRespondedInput {
   location: String!
 }
 
-type MessagePartsToolWeatherInputAvailable {
+type MessagePartToolWeatherInputAvailable {
   callProviderMetadata: JSONObject
-  input: MessagePartsToolWeatherInputAvailableInput!
+  input: MessagePartToolWeatherInputAvailableInput!
   """
   Whether the tool call was executed by the provider.
   """
@@ -975,13 +975,13 @@ type MessagePartsToolWeatherInputAvailable {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolWeatherInputAvailableInput {
+type MessagePartToolWeatherInputAvailableInput {
   location: String!
 }
 
-type MessagePartsToolWeatherInputStreaming {
+type MessagePartToolWeatherInputStreaming {
   callProviderMetadata: JSONObject
-  input: MessagePartsToolWeatherInputStreamingInput
+  input: MessagePartToolWeatherInputStreamingInput
   """
   Whether the tool call was executed by the provider.
   """
@@ -998,15 +998,15 @@ type MessagePartsToolWeatherInputStreaming {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolWeatherInputStreamingInput {
+type MessagePartToolWeatherInputStreamingInput {
   location: String
 }
 
-type MessagePartsToolWeatherOutputAvailable {
-  approval: MessagePartsToolWeatherOutputAvailableApproval
+type MessagePartToolWeatherOutputAvailable {
+  approval: MessagePartToolWeatherOutputAvailableApproval
   callProviderMetadata: JSONObject
-  input: MessagePartsToolWeatherOutputAvailableInput!
-  output: MessagePartsToolWeatherOutputAvailableOutput!
+  input: MessagePartToolWeatherOutputAvailableInput!
+  output: MessagePartToolWeatherOutputAvailableOutput!
   preliminary: Boolean
   """
   Whether the tool call was executed by the provider.
@@ -1024,7 +1024,7 @@ type MessagePartsToolWeatherOutputAvailable {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolWeatherOutputAvailableApproval {
+type MessagePartToolWeatherOutputAvailableApproval {
   approved: Boolean!
   id: String!
   reason: String
@@ -1033,23 +1033,23 @@ type MessagePartsToolWeatherOutputAvailableApproval {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolWeatherOutputAvailableInput {
+type MessagePartToolWeatherOutputAvailableInput {
   location: String!
 }
 
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolWeatherOutputAvailableOutput {
+type MessagePartToolWeatherOutputAvailableOutput {
   condition: String!
   location: String!
   temperature: Float!
 }
 
-type MessagePartsToolWeatherOutputDenied {
-  approval: MessagePartsToolWeatherOutputDeniedApproval!
+type MessagePartToolWeatherOutputDenied {
+  approval: MessagePartToolWeatherOutputDeniedApproval!
   callProviderMetadata: JSONObject
-  input: MessagePartsToolWeatherOutputDeniedInput!
+  input: MessagePartToolWeatherOutputDeniedInput!
   """
   Whether the tool call was executed by the provider.
   """
@@ -1066,7 +1066,7 @@ type MessagePartsToolWeatherOutputDenied {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolWeatherOutputDeniedApproval {
+type MessagePartToolWeatherOutputDeniedApproval {
   approved: Boolean!
   id: String!
   reason: String
@@ -1075,15 +1075,15 @@ type MessagePartsToolWeatherOutputDeniedApproval {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolWeatherOutputDeniedInput {
+type MessagePartToolWeatherOutputDeniedInput {
   location: String!
 }
 
-type MessagePartsToolWeatherOutputError {
-  approval: MessagePartsToolWeatherOutputErrorApproval
+type MessagePartToolWeatherOutputError {
+  approval: MessagePartToolWeatherOutputErrorApproval
   callProviderMetadata: JSONObject
   errorText: String!
-  input: MessagePartsToolWeatherOutputErrorInput
+  input: MessagePartToolWeatherOutputErrorInput
   """
   Whether the tool call was executed by the provider.
   """
@@ -1101,7 +1101,7 @@ type MessagePartsToolWeatherOutputError {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolWeatherOutputErrorApproval {
+type MessagePartToolWeatherOutputErrorApproval {
   approved: Boolean!
   id: String!
   reason: String
@@ -1110,7 +1110,7 @@ type MessagePartsToolWeatherOutputErrorApproval {
 """
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
-type MessagePartsToolWeatherOutputErrorInput {
+type MessagePartToolWeatherOutputErrorInput {
   location: String!
 }
 

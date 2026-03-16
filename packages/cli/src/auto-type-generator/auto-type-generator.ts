@@ -53,6 +53,7 @@ import {
 } from "./intersection-flattener.js";
 import {
   type AutoTypeNameContext,
+  appendFieldPath,
   buildFieldContext,
   generateAutoTypeName,
   isInputTypeName,
@@ -175,6 +176,41 @@ interface ExtractNestedInlineObjectsParams {
   readonly results: InlineObjectWithContext[];
 }
 
+interface InlineObjectTypeInfo {
+  readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
+  readonly nullable: boolean;
+  readonly description: string | null;
+  readonly deprecated: DeprecationInfo | null;
+}
+
+function getInlineObjectTypeInfo(
+  tsType: TSTypeReference,
+): InlineObjectTypeInfo | null {
+  if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
+    return {
+      properties: tsType.inlineObjectProperties,
+      nullable: tsType.nullable,
+      description: tsType.inlineObjectDescription,
+      deprecated: tsType.inlineObjectDeprecated,
+    };
+  }
+
+  if (
+    tsType.kind === "array" &&
+    tsType.elementType?.kind === "inlineObject" &&
+    tsType.elementType.inlineObjectProperties
+  ) {
+    return {
+      properties: tsType.elementType.inlineObjectProperties,
+      nullable: tsType.elementType.nullable,
+      description: tsType.elementType.inlineObjectDescription,
+      deprecated: tsType.elementType.inlineObjectDeprecated,
+    };
+  }
+
+  return null;
+}
+
 function extractNestedInlineObjectsRecursively(
   params: ExtractNestedInlineObjectsParams,
 ): void {
@@ -186,32 +222,37 @@ function extractNestedInlineObjectsRecursively(
     preserveDocumentation,
     results,
   } = params;
+  const siblingFieldNames = new Set(properties.map((prop) => prop.name));
 
   for (const prop of properties) {
-    if (
-      prop.tsType.kind === "inlineObject" &&
-      prop.tsType.inlineObjectProperties
-    ) {
-      const nestedPath = [...currentPath, prop.name];
+    const inlineObjectTypeInfo = getInlineObjectTypeInfo(prop.tsType);
+
+    if (inlineObjectTypeInfo) {
+      const nestedPath = appendFieldPath({
+        parentPath: currentPath,
+        fieldName: prop.name,
+        singularize: prop.tsType.kind === "array",
+        siblingFieldNames,
+      });
       const nestedContext = buildContext(nestedPath);
       // Use property's source location if available for more accurate diagnostics
       const nestedSourceLocation = prop.sourceLocation ?? sourceLocation;
 
       results.push({
-        properties: prop.tsType.inlineObjectProperties,
+        properties: inlineObjectTypeInfo.properties,
         context: nestedContext,
         sourceLocation: nestedSourceLocation,
-        nullable: prop.tsType.nullable,
+        nullable: inlineObjectTypeInfo.nullable,
         description: preserveDocumentation
-          ? prop.tsType.inlineObjectDescription
+          ? inlineObjectTypeInfo.description
           : null,
         deprecated: preserveDocumentation
-          ? prop.tsType.inlineObjectDeprecated
+          ? inlineObjectTypeInfo.deprecated
           : null,
       });
 
       extractNestedInlineObjectsRecursively({
-        properties: prop.tsType.inlineObjectProperties,
+        properties: inlineObjectTypeInfo.properties,
         currentPath: nestedPath,
         sourceLocation: nestedSourceLocation,
         buildContext,
@@ -270,6 +311,7 @@ function collectInlineObjectsFromType(
 ): InlineObjectWithContext[] {
   const results: InlineObjectWithContext[] = [];
   const isInput = isInputTypeName(typeInfo.metadata.name);
+  const siblingFieldNames = new Set(typeInfo.fields.map((field) => field.name));
 
   for (const field of typeInfo.fields) {
     collectInlineObjectsFromField({
@@ -278,6 +320,7 @@ function collectInlineObjectsFromType(
       parentPath: [],
       isInput,
       sourceFile: typeInfo.metadata.sourceFile,
+      siblingFieldNames,
       results,
     });
   }
@@ -291,21 +334,34 @@ interface CollectInlineObjectsFromFieldParams {
   readonly parentPath: ReadonlyArray<string>;
   readonly isInput: boolean;
   readonly sourceFile: string;
+  readonly siblingFieldNames: ReadonlySet<string>;
   readonly results: InlineObjectWithContext[];
 }
 
 function collectInlineObjectsFromField(
   params: CollectInlineObjectsFromFieldParams,
 ): void {
-  const { field, parentTypeName, parentPath, isInput, sourceFile, results } =
-    params;
-  const tsType = field.tsType;
+  const {
+    field,
+    parentTypeName,
+    parentPath,
+    isInput,
+    sourceFile,
+    siblingFieldNames,
+    results,
+  } = params;
+  const inlineObjectTypeInfo = getInlineObjectTypeInfo(field.tsType);
 
-  if (tsType.kind !== "inlineObject" || !tsType.inlineObjectProperties) {
+  if (!inlineObjectTypeInfo) {
     return;
   }
 
-  const fieldPath = [...parentPath, field.name];
+  const fieldPath = appendFieldPath({
+    parentPath,
+    fieldName: field.name,
+    singularize: field.tsType.kind === "array",
+    siblingFieldNames,
+  });
 
   const context: AutoTypeNameContext = isInput
     ? {
@@ -325,16 +381,16 @@ function collectInlineObjectsFromField(
   );
 
   results.push({
-    properties: tsType.inlineObjectProperties,
+    properties: inlineObjectTypeInfo.properties,
     context,
     sourceLocation,
-    nullable: tsType.nullable,
-    description: tsType.inlineObjectDescription,
-    deprecated: tsType.inlineObjectDeprecated,
+    nullable: inlineObjectTypeInfo.nullable,
+    description: inlineObjectTypeInfo.description,
+    deprecated: inlineObjectTypeInfo.deprecated,
   });
 
   extractNestedInlineObjectsRecursively({
-    properties: tsType.inlineObjectProperties,
+    properties: inlineObjectTypeInfo.properties,
     currentPath: fieldPath,
     sourceLocation,
     buildContext: (nestedPath) =>
@@ -498,6 +554,9 @@ function generateAutoType(
 
   const fields: AutoGeneratedField[] = [];
   const diagnostics: Diagnostic[] = [];
+  const siblingFieldNames = new Set(
+    inlineObj.properties.map((prop) => prop.name),
+  );
 
   for (const prop of inlineObj.properties) {
     // Typename discrimination fields are silently excluded from the schema
@@ -526,6 +585,7 @@ function generateAutoType(
       enumTypeNames,
       unionTypeNames,
       parentContext: inlineObj.context,
+      siblingFieldNames,
     });
 
     // Skip fields with never type — they represent impossible values
@@ -566,14 +626,21 @@ interface ResolveFieldTypeParams {
   readonly enumTypeNames: Map<string, string>;
   readonly unionTypeNames: Map<string, string>;
   readonly parentContext: AutoTypeNameContext;
+  readonly siblingFieldNames: ReadonlySet<string>;
 }
 
 function tryResolveNestedType(
   prop: InlineObjectPropertyDef,
   parentContext: AutoTypeNameContext,
   typeNamesMap: ReadonlyMap<string, string>,
+  siblingFieldNames: ReadonlySet<string>,
 ): GraphQLFieldType | null {
-  const nestedPath = [...parentContext.fieldPath, prop.name];
+  const nestedPath = appendFieldPath({
+    parentPath: parentContext.fieldPath,
+    fieldName: prop.name,
+    singularize: prop.tsType.kind === "array",
+    siblingFieldNames,
+  });
   const nestedContext: AutoTypeNameContext = {
     ...parentContext,
     fieldPath: nestedPath,
@@ -583,10 +650,8 @@ function tryResolveNestedType(
 
   if (resolvedTypeName) {
     return {
+      ...convertTsTypeToGraphQLType(prop.tsType, prop.optional),
       typeName: resolvedTypeName,
-      nullable: prop.tsType.nullable || prop.optional,
-      list: false,
-      listItemNullable: null,
     };
   }
   return null;
@@ -599,27 +664,52 @@ function resolveFieldType(params: ResolveFieldTypeParams): GraphQLFieldType {
     enumTypeNames,
     unionTypeNames,
     parentContext,
+    siblingFieldNames,
   } = params;
 
   if (
-    prop.tsType.kind === "inlineObject" &&
-    prop.tsType.inlineObjectProperties
+    (prop.tsType.kind === "inlineObject" &&
+      prop.tsType.inlineObjectProperties) ||
+    (prop.tsType.kind === "array" &&
+      prop.tsType.elementType?.kind === "inlineObject" &&
+      prop.tsType.elementType.inlineObjectProperties)
   ) {
     const result = tryResolveNestedType(
       prop,
       parentContext,
       generatedTypeNames,
+      siblingFieldNames,
     );
     if (result) return result;
   }
 
-  if (prop.tsType.kind === "inlineEnum" && prop.tsType.inlineEnumMembers) {
-    const result = tryResolveNestedType(prop, parentContext, enumTypeNames);
+  if (
+    (prop.tsType.kind === "inlineEnum" && prop.tsType.inlineEnumMembers) ||
+    (prop.tsType.kind === "array" &&
+      prop.tsType.elementType?.kind === "inlineEnum" &&
+      prop.tsType.elementType.inlineEnumMembers)
+  ) {
+    const result = tryResolveNestedType(
+      prop,
+      parentContext,
+      enumTypeNames,
+      siblingFieldNames,
+    );
     if (result) return result;
   }
 
-  if (prop.tsType.kind === "union" && prop.tsType.members) {
-    const result = tryResolveNestedType(prop, parentContext, unionTypeNames);
+  if (
+    (prop.tsType.kind === "union" && prop.tsType.members) ||
+    (prop.tsType.kind === "array" &&
+      prop.tsType.elementType?.kind === "union" &&
+      prop.tsType.elementType.members)
+  ) {
+    const result = tryResolveNestedType(
+      prop,
+      parentContext,
+      unionTypeNames,
+      siblingFieldNames,
+    );
     if (result) return result;
   }
 
@@ -638,10 +728,19 @@ function updateExtractedTypes(
 ): ExtractedTypeInfo[] {
   return extractedTypes.map((typeInfo) => {
     const isInput = isInputTypeName(typeInfo.metadata.name);
+    const siblingFieldNames = new Set(
+      typeInfo.fields.map((field) => field.name),
+    );
     return {
       ...typeInfo,
       fields: typeInfo.fields.map((field) =>
-        updateField(field, params, typeInfo.metadata.name, isInput),
+        updateField(
+          field,
+          params,
+          typeInfo.metadata.name,
+          isInput,
+          siblingFieldNames,
+        ),
       ),
     };
   });
@@ -652,9 +751,19 @@ function updateField(
   params: UpdateTypeNamesParams,
   parentTypeName: string,
   isInput: boolean,
+  siblingFieldNames: ReadonlySet<string>,
 ): FieldDefinition {
   const { generatedTypeNames, enumTypeNames, unionTypeNames } = params;
-  const context = buildFieldContext(parentTypeName, [field.name], isInput);
+  const context = buildFieldContext(
+    parentTypeName,
+    appendFieldPath({
+      parentPath: [],
+      fieldName: field.name,
+      singularize: field.tsType.kind === "array",
+      siblingFieldNames,
+    }),
+    isInput,
+  );
   const contextKey = getContextKey(context);
 
   // Handle inline objects
@@ -670,6 +779,27 @@ function updateField(
           name: resolvedTypeName,
           nullable: field.tsType.nullable,
         }),
+      };
+    }
+  }
+
+  // Handle array of inline objects
+  if (
+    field.tsType.kind === "array" &&
+    field.tsType.elementType?.kind === "inlineObject" &&
+    field.tsType.elementType.inlineObjectProperties
+  ) {
+    const resolvedTypeName = generatedTypeNames.get(contextKey);
+    if (resolvedTypeName) {
+      return {
+        ...field,
+        tsType: {
+          ...field.tsType,
+          elementType: createReferenceType({
+            name: resolvedTypeName,
+            nullable: field.tsType.elementType.nullable,
+          }),
+        },
       };
     }
   }
@@ -1433,6 +1563,7 @@ function convertMemberPropertiesToFields(
   parentTypeName: string,
   ctx: MemberFieldResolutionContext,
 ): AutoGeneratedField[] {
+  const siblingFieldNames = new Set(properties.map((prop) => prop.name));
   return properties.flatMap((prop) => {
     const fieldType = convertTsTypeToGraphQLType(prop.tsType, prop.optional);
     if (fieldType.typeName === "__NEVER__") {
@@ -1443,6 +1574,7 @@ function convertMemberPropertiesToFields(
       prop,
       fieldType,
       parentTypeName,
+      siblingFieldNames,
       ctx,
     );
 
@@ -1467,11 +1599,13 @@ function resolveInlineTypeInMember(
   prop: InlineObjectPropertyDef,
   fieldType: GraphQLFieldType,
   parentTypeName: string,
+  siblingFieldNames: ReadonlySet<string>,
   ctx: MemberFieldResolutionContext,
 ): string | null {
   // Determine the inline TS type (direct or array element)
   const inlineTsType =
     prop.tsType.kind === "array" ? prop.tsType.elementType : prop.tsType;
+  const singularizeArrayFieldName = prop.tsType.kind === "array";
   if (!inlineTsType) return null;
 
   // Resolve nested inline objects
@@ -1483,7 +1617,9 @@ function resolveInlineTypeInMember(
     return resolveNestedInlineObjectInMember(
       inlineTsType.inlineObjectProperties,
       prop.name,
+      singularizeArrayFieldName,
       parentTypeName,
+      siblingFieldNames,
       ctx,
       inlineTsType.inlineObjectDescription,
     );
@@ -1498,7 +1634,9 @@ function resolveInlineTypeInMember(
     return resolveInlineEnumInMember(
       inlineTsType.inlineEnumMembers,
       prop.name,
+      singularizeArrayFieldName,
       parentTypeName,
+      siblingFieldNames,
       ctx,
       inlineTsType.externalEnumDescription,
     );
@@ -1509,7 +1647,9 @@ function resolveInlineTypeInMember(
     return resolveInlineUnionInMember(
       inlineTsType.members,
       prop.name,
+      singularizeArrayFieldName,
       parentTypeName,
+      siblingFieldNames,
       ctx,
     );
   }
@@ -1525,14 +1665,21 @@ function resolveInlineTypeInMember(
 function resolveNestedInlineObjectInMember(
   properties: ReadonlyArray<InlineObjectPropertyDef>,
   fieldName: string,
+  singularizeArrayFieldName: boolean,
   parentTypeName: string,
+  siblingFieldNames: ReadonlySet<string>,
   ctx: MemberFieldResolutionContext,
   description: string | null,
 ): string {
   const context: AutoTypeNameContext = {
     kind: "objectField",
     parentTypeName,
-    fieldPath: [fieldName],
+    fieldPath: appendFieldPath({
+      parentPath: [],
+      fieldName,
+      singularize: singularizeArrayFieldName,
+      siblingFieldNames,
+    }),
   };
   const typeName = generateAutoTypeName(context);
   const contextKey = getContextKey(context);
@@ -1567,14 +1714,21 @@ function resolveNestedInlineObjectInMember(
 function resolveInlineEnumInMember(
   members: ReadonlyArray<InlineEnumMemberInfo>,
   fieldName: string,
+  singularizeArrayFieldName: boolean,
   parentTypeName: string,
+  siblingFieldNames: ReadonlySet<string>,
   ctx: MemberFieldResolutionContext,
   description: string | null,
 ): string {
   const context: AutoTypeNameContext = {
     kind: "objectField",
     parentTypeName,
-    fieldPath: [fieldName],
+    fieldPath: appendFieldPath({
+      parentPath: [],
+      fieldName,
+      singularize: singularizeArrayFieldName,
+      siblingFieldNames,
+    }),
   };
   const typeName = generateAutoTypeName(context);
   const contextKey = getContextKey(context);
@@ -1619,13 +1773,20 @@ function resolveInlineEnumInMember(
 function resolveInlineUnionInMember(
   members: ReadonlyArray<TSTypeReference>,
   fieldName: string,
+  singularizeArrayFieldName: boolean,
   parentTypeName: string,
+  siblingFieldNames: ReadonlySet<string>,
   ctx: MemberFieldResolutionContext,
 ): string {
   const context: AutoTypeNameContext = {
     kind: "objectField",
     parentTypeName,
-    fieldPath: [fieldName],
+    fieldPath: appendFieldPath({
+      parentPath: [],
+      fieldName,
+      singularize: singularizeArrayFieldName,
+      siblingFieldNames,
+    }),
   };
   const typeName = generateAutoTypeName(context);
   const contextKey = getContextKey(context);

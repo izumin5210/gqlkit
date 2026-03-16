@@ -4,15 +4,15 @@ import { container as Query$container } from "../schema/types.js";
 
 export function createResolvers() {
   return {
-    ContainerParts: {
+    ContainerPart: {
       __resolveType: (obj: { type: string; state: string }) => {
         switch (obj.type) {
-          case "text": return "ContainerPartsText";
+          case "text": return "ContainerPartText";
           case "tool-search":
             switch (obj.state) {
-              case "input-available": return "ContainerPartsToolSearchInputAvailable";
-              case "output-available": return "ContainerPartsToolSearchOutputAvailable";
-              case "output-error": return "ContainerPartsToolSearchOutputError";
+              case "input-available": return "ContainerPartToolSearchInputAvailable";
+              case "output-available": return "ContainerPartToolSearchOutputAvailable";
+              case "output-error": return "ContainerPartToolSearchOutputError";
               default: return undefined;
             }
           default: return undefined;

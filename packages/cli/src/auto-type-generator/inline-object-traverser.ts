@@ -1,4 +1,8 @@
-import type { InlineObjectPropertyDef } from "../type-extractor/types/index.js";
+import type {
+  InlineObjectPropertyDef,
+  TSTypeReference,
+} from "../type-extractor/types/index.js";
+import { appendFieldPath } from "./naming-convention.js";
 
 /**
  * Visitor callback for each property in an inline object hierarchy.
@@ -15,6 +19,24 @@ export interface TraverseInlineObjectPropertiesParams {
   readonly parentPath: ReadonlyArray<string>;
 }
 
+export function getInlineObjectPropertiesFromType(
+  tsType: TSTypeReference,
+): ReadonlyArray<InlineObjectPropertyDef> | null {
+  if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
+    return tsType.inlineObjectProperties;
+  }
+
+  if (
+    tsType.kind === "array" &&
+    tsType.elementType?.kind === "inlineObject" &&
+    tsType.elementType.inlineObjectProperties
+  ) {
+    return tsType.elementType.inlineObjectProperties;
+  }
+
+  return null;
+}
+
 /**
  * Traverses inline object properties recursively, calling the visitor for each property.
  * Handles nested inlineObject properties automatically.
@@ -27,19 +49,23 @@ export function traverseInlineObjectProperties(
   visitor: PropertyVisitor,
 ): void {
   const { properties, parentPath } = params;
+  const siblingFieldNames = new Set(properties.map((prop) => prop.name));
 
   for (const prop of properties) {
-    const propPath = [...parentPath, prop.name];
+    const propPath = appendFieldPath({
+      parentPath,
+      fieldName: prop.name,
+      singularize: prop.tsType.kind === "array",
+      siblingFieldNames,
+    });
 
     visitor(prop, propPath);
 
-    if (
-      prop.tsType.kind === "inlineObject" &&
-      prop.tsType.inlineObjectProperties
-    ) {
+    const nestedProperties = getInlineObjectPropertiesFromType(prop.tsType);
+    if (nestedProperties) {
       traverseInlineObjectProperties(
         {
-          properties: prop.tsType.inlineObjectProperties,
+          properties: nestedProperties,
           parentPath: propPath,
         },
         visitor,

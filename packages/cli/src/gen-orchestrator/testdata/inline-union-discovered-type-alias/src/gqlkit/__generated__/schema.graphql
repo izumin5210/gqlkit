@@ -8,11 +8,11 @@ as separate GraphQL types with their original alias names.
 Defined in: src/gqlkit/schema/types.ts
 """
 type Container {
-  items: [ContainerItems!]!
+  items: [ContainerItem!]!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-union ContainerItems = PartA | PartB
+union ContainerItem = PartA | PartB
 
 """Defined in: src/gqlkit/schema/types.ts"""
 type PartA {
