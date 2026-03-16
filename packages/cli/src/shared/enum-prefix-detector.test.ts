@@ -159,6 +159,31 @@ describe("detectEnumPrefix", () => {
         prefix: "POST_CATEGORIES_",
       });
     });
+
+    it("supports pluralized prefixes on non-final path segments", () => {
+      const result = detectEnumPrefix({
+        enumName: "PostTagStatus",
+        memberValues: ["POST_TAGS_STATUS_OPEN", "POST_TAGS_STATUS_CLOSED"],
+      });
+      expect(result).toEqual({
+        shouldStrip: true,
+        prefix: "POST_TAGS_STATUS_",
+      });
+    });
+
+    it("supports pluralized prefixes across multiple path segments", () => {
+      const result = detectEnumPrefix({
+        enumName: "PostTagCategoryStatus",
+        memberValues: [
+          "POST_TAGS_CATEGORIES_STATUS_OPEN",
+          "POST_TAGS_CATEGORIES_STATUS_CLOSED",
+        ],
+      });
+      expect(result).toEqual({
+        shouldStrip: true,
+        prefix: "POST_TAGS_CATEGORIES_STATUS_",
+      });
+    });
   });
 
   describe("when some values do not have the prefix", () => {

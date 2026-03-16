@@ -68,9 +68,11 @@ const IRREGULAR_SINGULAR_FIELD_NAMES = new Map([
   ["mice", "mouse"],
   ["movies", "movie"],
   ["people", "person"],
+  ["selfies", "selfie"],
   ["teeth", "tooth"],
   ["theses", "thesis"],
   ["women", "woman"],
+  ["zombies", "zombie"],
 ]);
 
 const NON_INFLECTING_FIELD_NAMES = new Set(["news", "series", "species"]);
@@ -122,17 +124,6 @@ export function singularizeFieldName(name: string): string {
     isConsonant(lowerName.at(-4) ?? "")
   ) {
     return `${name.slice(0, -3)}y`;
-  }
-
-  if (lowerName.endsWith("ses")) {
-    const candidate = name.slice(0, -2);
-    if (
-      candidate.toLowerCase().endsWith("s") &&
-      !lowerName.endsWith("yses") &&
-      !lowerName.endsWith("oses")
-    ) {
-      return candidate;
-    }
   }
 
   if (

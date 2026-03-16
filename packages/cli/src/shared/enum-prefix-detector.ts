@@ -85,23 +85,31 @@ function buildEnumPrefixCandidates(enumName: string): string[] {
   const upperSnakeName = toUpperSnakeCase(enumName);
   const baseCandidate = `${upperSnakeName}_`;
   const segments = upperSnakeName.split("_");
-  const lastSegment = segments.at(-1);
+  const candidateSegmentSets: string[][] = [segments];
 
-  if (!lastSegment) {
+  if (segments.length === 0) {
     return [baseCandidate];
   }
 
-  const pluralizedLastSegment = pluralizeUpperSnakeSegment(lastSegment);
-  if (pluralizedLastSegment === lastSegment) {
-    return [baseCandidate];
+  for (const [index, segment] of segments.entries()) {
+    const pluralizedSegment = pluralizeUpperSnakeSegment(segment);
+    if (pluralizedSegment === segment) {
+      continue;
+    }
+
+    const existingCandidates = [...candidateSegmentSets];
+    for (const candidateSegments of existingCandidates) {
+      const nextCandidateSegments = [...candidateSegments];
+      nextCandidateSegments[index] = pluralizedSegment;
+      candidateSegmentSets.push(nextCandidateSegments);
+    }
   }
 
-  const pluralCandidate = `${[...segments.slice(0, -1), pluralizedLastSegment].join("_")}_`;
-  if (pluralCandidate === baseCandidate) {
-    return [baseCandidate];
-  }
-
-  return [baseCandidate, pluralCandidate];
+  return [
+    ...new Set(
+      candidateSegmentSets.map((candidate) => `${candidate.join("_")}_`),
+    ),
+  ];
 }
 
 export interface DetectEnumPrefixParams {

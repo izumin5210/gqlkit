@@ -14,10 +14,14 @@ describe("singularizeFieldName", () => {
   it("handles common plural suffixes conservatively", () => {
     expect(singularizeFieldName("categories")).toBe("category");
     expect(singularizeFieldName("aliases")).toBe("alias");
+    expect(singularizeFieldName("bases")).toBe("base");
     expect(singularizeFieldName("boxes")).toBe("box");
+    expect(singularizeFieldName("cases")).toBe("case");
     expect(singularizeFieldName("cookies")).toBe("cookie");
     expect(singularizeFieldName("movies")).toBe("movie");
+    expect(singularizeFieldName("selfies")).toBe("selfie");
     expect(singularizeFieldName("statuses")).toBe("status");
+    expect(singularizeFieldName("zombies")).toBe("zombie");
   });
 
   it("handles irregular plural field names through the local dictionary", () => {
