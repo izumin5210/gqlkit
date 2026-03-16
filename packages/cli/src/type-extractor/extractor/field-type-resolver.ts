@@ -17,6 +17,7 @@ import {
   extractTsDocFromSymbol,
 } from "../../shared/tsdoc-parser.js";
 import {
+  filterNonNullTypeNodes,
   findEnumParentSymbol,
   findNonNullTypeNode,
   getNonNullableTypes,
@@ -164,6 +165,30 @@ function resolveFieldTypeInternal(
         isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx)
       ) {
         return createReferenceType({ name: typeName, nullable });
+      }
+    }
+
+    // Handle `T | null` where T is a known union type alias.
+    // TypeScript flattens `T | null` when T is itself a union, losing aliasSymbol.
+    // Recover the alias by inspecting the UnionTypeNode children for a TypeReferenceNode.
+    // Only applies when there is exactly one non-null type node (e.g., `Item | null`),
+    // not when there are multiple (e.g., `User | Post | null` which is an inline union).
+    if (nullable && typeNode && ts.isUnionTypeNode(typeNode)) {
+      const nonNullTypeNodes = filterNonNullTypeNodes(typeNode);
+      if (nonNullTypeNodes.length === 1) {
+        const singleTypeNode = nonNullTypeNodes[0]!;
+        if (ts.isTypeReferenceNode(singleTypeNode)) {
+          const typeName = getTypeNameFromNode(singleTypeNode);
+          const nodeSymbol = checker.getSymbolAtLocation(
+            singleTypeNode.typeName,
+          );
+          if (
+            typeName &&
+            isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx)
+          ) {
+            return createReferenceType({ name: typeName, nullable });
+          }
+        }
       }
     }
 
