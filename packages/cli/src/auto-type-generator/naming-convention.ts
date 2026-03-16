@@ -76,6 +76,7 @@ const IRREGULAR_SINGULAR_FIELD_NAMES = new Map([
 ]);
 
 const NON_INFLECTING_FIELD_NAMES = new Set(["news", "series", "species"]);
+const AMBIGUOUS_PLURAL_FIELD_NAMES = new Set(["axes"]);
 
 /**
  * Convert a string to PascalCase.
@@ -118,12 +119,18 @@ export function singularizeFieldName(name: string): string {
     return name;
   }
 
-  if (
-    lowerName.endsWith("ies") &&
-    name.length > 3 &&
-    isConsonant(lowerName.at(-4) ?? "")
-  ) {
-    return `${name.slice(0, -3)}y`;
+  if (AMBIGUOUS_PLURAL_FIELD_NAMES.has(lowerName)) {
+    return name;
+  }
+
+  if (lowerName.endsWith("ies")) {
+    if (name.length <= 4) {
+      return name.slice(0, -1);
+    }
+
+    if (isConsonant(lowerName.at(-4) ?? "")) {
+      return `${name.slice(0, -3)}y`;
+    }
   }
 
   if (

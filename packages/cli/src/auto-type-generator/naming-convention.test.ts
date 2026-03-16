@@ -19,6 +19,7 @@ describe("singularizeFieldName", () => {
     expect(singularizeFieldName("cases")).toBe("case");
     expect(singularizeFieldName("cookies")).toBe("cookie");
     expect(singularizeFieldName("movies")).toBe("movie");
+    expect(singularizeFieldName("pies")).toBe("pie");
     expect(singularizeFieldName("selfies")).toBe("selfie");
     expect(singularizeFieldName("statuses")).toBe("status");
     expect(singularizeFieldName("zombies")).toBe("zombie");
@@ -31,6 +32,7 @@ describe("singularizeFieldName", () => {
   });
 
   it("preserves ambiguous or non-inflecting names", () => {
+    expect(singularizeFieldName("axes")).toBe("axes");
     expect(singularizeFieldName("news")).toBe("news");
     expect(singularizeFieldName("series")).toBe("series");
     expect(singularizeFieldName("status")).toBe("status");
