@@ -7,7 +7,7 @@ export function createResolvers() {
       PUBLISHED: "POST_STATUS_PUBLISHED",
       ARCHIVED: "POST_STATUS_ARCHIVED",
     },
-    PostTags: {
+    PostTag: {
       TECH: "POST_TAGS_TECH",
       LIFESTYLE: "POST_TAGS_LIFESTYLE",
       NEWS: "POST_TAGS_NEWS",

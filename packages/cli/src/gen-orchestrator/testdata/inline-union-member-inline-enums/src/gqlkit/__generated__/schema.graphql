@@ -9,7 +9,7 @@ type Bot {
 type ErrorResult {
   message: String!
   severity: ErrorResultSeverity!
-  tags: [ErrorResultTags!]!
+  tags: [ErrorResultTag!]!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
@@ -20,7 +20,7 @@ enum ErrorResultSeverity {
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-enum ErrorResultTags {
+enum ErrorResultTag {
   BUG
   REGRESSION
   PERFORMANCE

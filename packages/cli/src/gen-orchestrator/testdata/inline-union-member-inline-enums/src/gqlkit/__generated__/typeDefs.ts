@@ -110,7 +110,7 @@ export const typeDefs: DocumentNode = {
                   "kind": "NamedType",
                   "name": {
                     "kind": "Name",
-                    "value": "ErrorResultTags"
+                    "value": "ErrorResultTag"
                   }
                 }
               }
@@ -158,7 +158,7 @@ export const typeDefs: DocumentNode = {
       "kind": "EnumTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "ErrorResultTags"
+        "value": "ErrorResultTag"
       },
       "values": [
         {

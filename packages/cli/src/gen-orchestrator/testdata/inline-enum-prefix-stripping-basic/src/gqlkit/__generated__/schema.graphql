@@ -6,7 +6,7 @@ type Post {
   """Post status with prefix matching field context"""
   status: PostStatus!
   """Array of tags with prefix"""
-  tags: [PostTags!]!
+  tags: [PostTag!]!
   title: String!
 }
 
@@ -18,7 +18,7 @@ enum PostStatus {
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-enum PostTags {
+enum PostTag {
   TECH
   LIFESTYLE
   NEWS

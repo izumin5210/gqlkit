@@ -19,7 +19,7 @@ export function createResolvers() {
       ERROR: "error",
       CRITICAL: "critical",
     },
-    ErrorResultTags: {
+    ErrorResultTag: {
       BUG: "bug",
       REGRESSION: "regression",
       PERFORMANCE: "performance",

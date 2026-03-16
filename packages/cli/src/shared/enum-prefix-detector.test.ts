@@ -133,6 +133,32 @@ describe("detectEnumPrefix", () => {
         prefix: "ACCOUNT_TYPE_",
       });
     });
+
+    it("supports pluralized array element enum names", () => {
+      const result = detectEnumPrefix({
+        enumName: "PostTag",
+        memberValues: [
+          "POST_TAGS_TECH",
+          "POST_TAGS_LIFESTYLE",
+          "POST_TAGS_NEWS",
+        ],
+      });
+      expect(result).toEqual({
+        shouldStrip: true,
+        prefix: "POST_TAGS_",
+      });
+    });
+
+    it("supports pluralized names ending with category", () => {
+      const result = detectEnumPrefix({
+        enumName: "PostCategory",
+        memberValues: ["POST_CATEGORIES_BLOG", "POST_CATEGORIES_REVIEW"],
+      });
+      expect(result).toEqual({
+        shouldStrip: true,
+        prefix: "POST_CATEGORIES_",
+      });
+    });
   });
 
   describe("when some values do not have the prefix", () => {

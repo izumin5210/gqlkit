@@ -7,12 +7,12 @@ export function createResolvers() {
       PRIVATE: "private",
       UNLISTED: "unlisted",
     },
-    PostTags: {
+    PostTag: {
       TECH: "tech",
       LIFESTYLE: "lifestyle",
       NEWS: "news",
     },
-    PostCategories: {
+    PostCategory: {
       BLOG: "blog",
       TUTORIAL: "tutorial",
       REVIEW: "review",

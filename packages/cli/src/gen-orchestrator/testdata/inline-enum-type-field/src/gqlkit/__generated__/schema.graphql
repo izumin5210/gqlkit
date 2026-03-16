@@ -3,19 +3,19 @@
 """Defined in: src/gqlkit/schema/types.ts"""
 type Post {
   """Categories with nullable elements"""
-  categories: [PostCategories]!
+  categories: [PostCategory]!
   id: String!
   """Optional status that can be null"""
   status: PostStatus
   """Tags for the post (array of string literal union)"""
-  tags: [PostTags!]!
+  tags: [PostTag!]!
   title: String!
   """Visibility level"""
   visibility: PostVisibility!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-enum PostCategories {
+enum PostCategory {
   BLOG
   TUTORIAL
   REVIEW
@@ -29,7 +29,7 @@ enum PostStatus {
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
-enum PostTags {
+enum PostTag {
   TECH
   LIFESTYLE
   NEWS
