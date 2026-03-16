@@ -31,6 +31,13 @@ describe("singularizeFieldName", () => {
     expect(singularizeFieldName("women")).toBe("woman");
   });
 
+  it("singularizes irregular plural suffixes within compound field names", () => {
+    expect(singularizeFieldName("userAliases")).toBe("userAlias");
+    expect(singularizeFieldName("userAnalyses")).toBe("userAnalysis");
+    expect(singularizeFieldName("userMovies")).toBe("userMovie");
+    expect(singularizeFieldName("userSelfies")).toBe("userSelfie");
+  });
+
   it("preserves ambiguous or non-inflecting names", () => {
     expect(singularizeFieldName("axes")).toBe("axes");
     expect(singularizeFieldName("news")).toBe("news");

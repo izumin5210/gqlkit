@@ -103,17 +103,69 @@ function isConsonant(char: string): boolean {
   return /^[bcdfghjklmnpqrstvwxyz]$/i.test(char);
 }
 
+function isUppercaseLetter(char: string): boolean {
+  return char.toLowerCase() !== char && char.toUpperCase() === char;
+}
+
+function applyReplacementCase(params: {
+  readonly replacement: string;
+  readonly template: string;
+}): string {
+  const { replacement, template } = params;
+
+  if (template.toUpperCase() === template) {
+    return replacement.toUpperCase();
+  }
+
+  if (isUppercaseLetter(template.charAt(0))) {
+    return `${replacement.charAt(0).toUpperCase()}${replacement.slice(1)}`;
+  }
+
+  return replacement;
+}
+
+function singularizeIrregularFieldName(name: string): string | null {
+  const lowerName = name.toLowerCase();
+
+  for (const [plural, singular] of IRREGULAR_SINGULAR_FIELD_NAMES) {
+    if (!lowerName.endsWith(plural)) {
+      continue;
+    }
+
+    const suffixStart = name.length - plural.length;
+    if (suffixStart > 0) {
+      const previousChar = name.charAt(suffixStart - 1);
+      const suffixFirstChar = name.charAt(suffixStart);
+      const hasWordBoundary =
+        previousChar === "_" ||
+        previousChar === "-" ||
+        isUppercaseLetter(suffixFirstChar);
+
+      if (!hasWordBoundary) {
+        continue;
+      }
+    }
+
+    return `${name.slice(0, suffixStart)}${applyReplacementCase({
+      replacement: singular,
+      template: name.slice(suffixStart),
+    })}`;
+  }
+
+  return null;
+}
+
 /**
  * Singularize a plural field name conservatively for array element type naming.
  * Falls back to the original name when the plural form is ambiguous.
  */
 export function singularizeFieldName(name: string): string {
-  const lowerName = name.toLowerCase();
-
-  const irregularSingular = IRREGULAR_SINGULAR_FIELD_NAMES.get(lowerName);
+  const irregularSingular = singularizeIrregularFieldName(name);
   if (irregularSingular) {
     return irregularSingular;
   }
+
+  const lowerName = name.toLowerCase();
 
   if (name.length <= 3 || NON_INFLECTING_FIELD_NAMES.has(lowerName)) {
     return name;
