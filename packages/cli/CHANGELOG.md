@@ -1,5 +1,51 @@
 # @gqlkit-ts/cli
 
+## 0.7.0
+
+### Minor Changes
+
+- [#207](https://github.com/izumin5210/gqlkit/pull/207) [`b6fb6c1`](https://github.com/izumin5210/gqlkit/commit/b6fb6c138d9cc6f6ecba09dbc828a3c30e208a19) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: support custom discriminator fields for union type resolution
+
+- [#209](https://github.com/izumin5210/gqlkit/pull/209) [`42a5fff`](https://github.com/izumin5210/gqlkit/commit/42a5fff9d8c29d0b5d107c63e2dc6129b779c65b) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: flatten intersection-expanded union members for discriminator fields
+
+- [#218](https://github.com/izumin5210/gqlkit/pull/218) [`9ed4962`](https://github.com/izumin5210/gqlkit/commit/9ed49626424b0870709e7076265f3641b0328ca6) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: map `unknown` to `JSON` and index signatures to `JSONObject` scalar
+
+### Patch Changes
+
+- [#213](https://github.com/izumin5210/gqlkit/pull/213) [`21fa614`](https://github.com/izumin5210/gqlkit/commit/21fa61402971dd251ae2d160075b91471da706a8) Thanks [@izumin5210](https://github.com/izumin5210)! - docs: add Vercel AI SDK integration guide
+
+- [#204](https://github.com/izumin5210/gqlkit/pull/204) [`d462e79`](https://github.com/izumin5210/gqlkit/commit/d462e7926b9405a4d6854fa34ecf906131316d36) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: preserve original type names for external .d.ts types used as union members
+
+- [#192](https://github.com/izumin5210/gqlkit/pull/192) [`eed52d2`](https://github.com/izumin5210/gqlkit/commit/eed52d2ce527d955abc94d607cde1b06d597c9ac) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: discover and register non-exported union member types with original names
+
+- [#194](https://github.com/izumin5210/gqlkit/pull/194) [`ee06751`](https://github.com/izumin5210/gqlkit/commit/ee06751fb1941212e3c31f7df6166edea4666e71) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: add type annotation to auto-generated resolveType parameter
+
+- [#223](https://github.com/izumin5210/gqlkit/pull/223) [`61af8ef`](https://github.com/izumin5210/gqlkit/commit/61af8effd73c2fc1f82e5949f83d7af646d65843) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: detect custom scalars inside inline object properties
+
+- [#212](https://github.com/izumin5210/gqlkit/pull/212) [`0d102f2`](https://github.com/izumin5210/gqlkit/commit/0d102f2e885fdf3284f6b52ead5ef27a1a40953e) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: apply discriminator-aware flattening to inline unions
+
+- [#219](https://github.com/izumin5210/gqlkit/pull/219) [`1281654`](https://github.com/izumin5210/gqlkit/commit/1281654592f2b2b90680e0034822f65dc00a3f55) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: register intersection type aliases in discoveredTypes for recursive resolution
+
+- [#189](https://github.com/izumin5210/gqlkit/pull/189) [`28b6214`](https://github.com/izumin5210/gqlkit/commit/28b6214b0592d58961e35ec70238a8ebb82499b4) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: skip fields with `never` type during schema generation
+
+- [#216](https://github.com/izumin5210/gqlkit/pull/216) [`248a06e`](https://github.com/izumin5210/gqlkit/commit/248a06e1f1d2841012793eec9ac8a3c1a65b946e) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: filter `__object` internal symbol from generated schema
+
+- [#193](https://github.com/izumin5210/gqlkit/pull/193) [`d53a940`](https://github.com/izumin5210/gqlkit/commit/d53a94014c8fb5158e6db0c6bb7a37e456af9968) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: resolve `defineResolveType` with auto-generated inline union names
+
+- [#220](https://github.com/izumin5210/gqlkit/pull/220) [`55e096a`](https://github.com/izumin5210/gqlkit/commit/55e096a1e7ea19732850a955800b2571675f5111) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: prevent false-positive cycle detection for shared inline types
+
+- [#225](https://github.com/izumin5210/gqlkit/pull/225) [`4c8a3cc`](https://github.com/izumin5210/gqlkit/commit/4c8a3cccbf645ecc85686c5bbc2522f754fd9dbb) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: preserve enum prefix stripping for singularized arrays
+
+- [#190](https://github.com/izumin5210/gqlkit/pull/190) [`01c09ee`](https://github.com/izumin5210/gqlkit/commit/01c09ee46fbd1d55572742ebe34b42c8ecc47378) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: map string/number literal fields to GraphQL scalar types
+
+- [#191](https://github.com/izumin5210/gqlkit/pull/191) [`507ce4b`](https://github.com/izumin5210/gqlkit/commit/507ce4bc297e5b615b6eb9bbf2f9e10b8357daaa) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: map template literal types to String! in GraphQL schema
+
+- [#203](https://github.com/izumin5210/gqlkit/pull/203) [`958d4b0`](https://github.com/izumin5210/gqlkit/commit/958d4b0a5b0692d0a404ac19c204273d930cb14a) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: discover type aliases transitively in union members
+
+- [#195](https://github.com/izumin5210/gqlkit/pull/195) [`2b11608`](https://github.com/izumin5210/gqlkit/commit/2b11608d26cca9816e8379662af9c9c24da27e6e) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: suppress warnings for typename discrimination fields
+
+- [#205](https://github.com/izumin5210/gqlkit/pull/205) [`38f3875`](https://github.com/izumin5210/gqlkit/commit/38f3875e9c3b3aeee4ef13ea8bd36d920e6722fa) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: replace `member${i}` index-based naming fallback with `UNNAMEABLE_UNION_MEMBER` diagnostic error
+
 ## 0.6.0
 
 ### Minor Changes
