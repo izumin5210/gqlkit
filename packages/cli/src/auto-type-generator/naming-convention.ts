@@ -58,6 +58,7 @@ export interface ResolverPayloadContext {
 const IRREGULAR_SINGULAR_FIELD_NAMES = new Map([
   ["aliases", "alias"],
   ["analyses", "analysis"],
+  ["buses", "bus"],
   ["children", "child"],
   ["cookies", "cookie"],
   ["crises", "crisis"],
@@ -69,6 +70,7 @@ const IRREGULAR_SINGULAR_FIELD_NAMES = new Map([
   ["movies", "movie"],
   ["people", "person"],
   ["selfies", "selfie"],
+  ["statuses", "status"],
   ["teeth", "tooth"],
   ["theses", "thesis"],
   ["women", "woman"],
@@ -195,13 +197,6 @@ export function singularizeFieldName(name: string): string {
     return name.slice(0, -2);
   }
 
-  if (lowerName.endsWith("uses")) {
-    const candidate = name.slice(0, -2);
-    if (candidate.toLowerCase().endsWith("us")) {
-      return candidate;
-    }
-  }
-
   if (
     lowerName.endsWith("s") &&
     !lowerName.endsWith("ss") &&
@@ -221,6 +216,33 @@ interface AppendFieldPathParams {
   readonly siblingFieldNames: ReadonlySet<string> | null;
 }
 
+function hasSiblingFieldPathCollision(params: {
+  readonly fieldName: string;
+  readonly singularFieldName: string;
+  readonly siblingFieldNames: ReadonlySet<string> | null;
+}): boolean {
+  const { fieldName, singularFieldName, siblingFieldNames } = params;
+
+  if (!siblingFieldNames) {
+    return false;
+  }
+
+  for (const siblingFieldName of siblingFieldNames) {
+    if (siblingFieldName === fieldName) {
+      continue;
+    }
+
+    if (
+      siblingFieldName === singularFieldName ||
+      singularizeFieldName(siblingFieldName) === singularFieldName
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
 function resolveFieldPathSegment(params: {
   readonly fieldName: string;
   readonly singularize: boolean;
@@ -235,7 +257,11 @@ function resolveFieldPathSegment(params: {
   const singularFieldName = singularizeFieldName(fieldName);
   if (
     singularFieldName !== fieldName &&
-    siblingFieldNames?.has(singularFieldName)
+    hasSiblingFieldPathCollision({
+      fieldName,
+      singularFieldName,
+      siblingFieldNames,
+    })
   ) {
     return fieldName;
   }

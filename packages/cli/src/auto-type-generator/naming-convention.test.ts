@@ -16,8 +16,11 @@ describe("singularizeFieldName", () => {
     expect(singularizeFieldName("aliases")).toBe("alias");
     expect(singularizeFieldName("bases")).toBe("base");
     expect(singularizeFieldName("boxes")).toBe("box");
+    expect(singularizeFieldName("buses")).toBe("bus");
     expect(singularizeFieldName("cases")).toBe("case");
+    expect(singularizeFieldName("causes")).toBe("cause");
     expect(singularizeFieldName("cookies")).toBe("cookie");
+    expect(singularizeFieldName("houses")).toBe("house");
     expect(singularizeFieldName("movies")).toBe("movie");
     expect(singularizeFieldName("pies")).toBe("pie");
     expect(singularizeFieldName("selfies")).toBe("selfie");
@@ -75,6 +78,25 @@ describe("appendFieldPath", () => {
         siblingFieldNames: new Set(["part", "parts"]),
       }),
     ).toEqual(["message", "parts"]);
+  });
+
+  it("preserves plural array segments when sibling plurals collapse to the same singular name", () => {
+    expect(
+      appendFieldPath({
+        parentPath: ["directory"],
+        fieldName: "people",
+        singularize: true,
+        siblingFieldNames: new Set(["people", "persons"]),
+      }),
+    ).toEqual(["directory", "people"]);
+    expect(
+      appendFieldPath({
+        parentPath: ["directory"],
+        fieldName: "persons",
+        singularize: true,
+        siblingFieldNames: new Set(["people", "persons"]),
+      }),
+    ).toEqual(["directory", "persons"]);
   });
 });
 
