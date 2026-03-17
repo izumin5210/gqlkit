@@ -1075,10 +1075,6 @@ function processExportDeclaration(
   const detectedScalarNames: string[] = [];
   const detectedScalars: ScalarMetadataInfo[] = [];
 
-  if (!node.isTypeOnly) {
-    return { types, diagnostics, detectedScalarNames, detectedScalars };
-  }
-
   const exportClause = node.exportClause;
 
   const symbolsToProcess: Array<{
@@ -1087,7 +1083,8 @@ function processExportDeclaration(
     type: ts.Type;
   }> = [];
 
-  if (exportClause && ts.isNamedExports(exportClause)) {
+  if (node.isTypeOnly && exportClause && ts.isNamedExports(exportClause)) {
+    // Declaration-level type-only: `export type { Foo, Bar } from "..."`
     for (const specifier of exportClause.elements) {
       const exportedName = specifier.name.text;
       const localTargetSymbol =
@@ -1107,7 +1104,33 @@ function processExportDeclaration(
         type,
       });
     }
-  } else if (!exportClause && node.moduleSpecifier) {
+  } else if (
+    !node.isTypeOnly &&
+    exportClause &&
+    ts.isNamedExports(exportClause)
+  ) {
+    // Specifier-level type-only: `export { type Foo, type Bar } from "..."`
+    for (const specifier of exportClause.elements) {
+      if (!specifier.isTypeOnly) continue;
+      const exportedName = specifier.name.text;
+      const localTargetSymbol =
+        checker.getExportSpecifierLocalTargetSymbol(specifier);
+      if (!localTargetSymbol) continue;
+
+      const originalSymbol =
+        localTargetSymbol.flags & ts.SymbolFlags.Alias
+          ? checker.getAliasedSymbol(localTargetSymbol)
+          : localTargetSymbol;
+      if (!originalSymbol) continue;
+
+      const type = checker.getDeclaredTypeOfSymbol(originalSymbol);
+      symbolsToProcess.push({
+        exportedName,
+        resolvedSymbol: originalSymbol,
+        type,
+      });
+    }
+  } else if (node.isTypeOnly && !exportClause && node.moduleSpecifier) {
     const moduleSymbol = checker.getSymbolAtLocation(node.moduleSpecifier);
     if (!moduleSymbol) {
       const location = getSourceLocationFromNode(node)!;
