@@ -137,6 +137,23 @@ function resolveFieldTypeInternal(
     });
   }
 
+  // Early typeNode-based known type check.
+  // When resolving property types from inline objects, checker.getTypeOfSymbol()
+  // can lose the original type alias (e.g., GqlObject<T> intersection flattened to T).
+  // The typeNode from the property declaration preserves the original type reference,
+  // so check it before any structural analysis.
+  if (typeNode && ts.isTypeReferenceNode(typeNode)) {
+    const typeNodeName = getTypeNameFromNode(typeNode);
+    const typeNodeSymbol = checker.getSymbolAtLocation(typeNode.typeName);
+    if (
+      typeNodeName &&
+      isKnownSchemaType(typeNodeName, typeNodeSymbol ?? undefined, ctx)
+    ) {
+      const nullable = isNullableUnion(type);
+      return createReferenceType({ name: typeNodeName, nullable });
+    }
+  }
+
   // Boolean union handling
   if (isBooleanUnion(type)) {
     const nullable = isNullableUnion(type);
@@ -726,7 +743,8 @@ function tryExtractAsInlineObject(
   const inlineProperties = extractInlineObjectPropertiesShared(
     type,
     checker,
-    (propType) => resolveFieldTypeInternal(propType, undefined, ctx),
+    (propType, _checker, typeNode) =>
+      resolveFieldTypeInternal(propType, typeNode, ctx),
   );
 
   // Allow this type to be visited again in sibling union members.
