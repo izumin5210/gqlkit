@@ -1,4 +1,4 @@
-import type ts from "typescript";
+import ts from "typescript";
 import type {
   InlineObjectPropertyDef,
   TSTypeReference,
@@ -22,6 +22,7 @@ import {
 export type TypeConverter = (
   type: ts.Type,
   checker: ts.TypeChecker,
+  typeNode: ts.TypeNode | undefined,
 ) => TSTypeReference;
 
 /**
@@ -80,7 +81,21 @@ export function extractInlineObjectProperties(
       }
     }
 
-    const tsType = convertType(actualPropType, checker);
+    // Extract typeNode from property declaration to preserve type alias information.
+    // checker.getTypeOfSymbol() can lose aliasSymbol for intersection types
+    // (e.g., GqlObject<T, Meta> = T & { ... } may flatten to just T),
+    // so passing the typeNode allows resolveFieldTypeInternal to recover
+    // the original type reference via TypeReferenceNode.
+    let propTypeNode: ts.TypeNode | undefined;
+    if (
+      declaration &&
+      ts.isPropertySignature(declaration) &&
+      declaration.type
+    ) {
+      propTypeNode = declaration.type;
+    }
+
+    const tsType = convertType(actualPropType, checker, propTypeNode);
     const finalTsType =
       directiveNullable && !tsType.nullable
         ? { ...tsType, nullable: true }

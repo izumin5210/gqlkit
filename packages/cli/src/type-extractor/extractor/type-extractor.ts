@@ -165,7 +165,7 @@ function tryExtractAsInlineObject(
   const inlineProperties = extractInlineObjectPropertiesShared(
     type,
     checker,
-    (t) => convertTsTypeToReference(t, ctx).tsType,
+    (t, _checker, _typeNode) => convertTsTypeToReference(t, ctx).tsType,
   );
   return {
     tsType: createInlineObjectType({
