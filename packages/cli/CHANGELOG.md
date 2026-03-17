@@ -1,5 +1,11 @@
 # @gqlkit-ts/cli
 
+## 0.7.2
+
+### Patch Changes
+
+- [#233](https://github.com/izumin5210/gqlkit/pull/233) [`a61bfe5`](https://github.com/izumin5210/gqlkit/commit/a61bfe5efa77e5014f72966870dbae14e8cbba68) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: resolve GqlObject property types in inline payloads as references
+
 ## 0.7.1
 
 ### Patch Changes
