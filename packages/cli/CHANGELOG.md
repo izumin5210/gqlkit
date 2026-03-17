@@ -1,5 +1,13 @@
 # @gqlkit-ts/cli
 
+## 0.7.1
+
+### Patch Changes
+
+- [#227](https://github.com/izumin5210/gqlkit/pull/227) [`1656c9e`](https://github.com/izumin5210/gqlkit/commit/1656c9e709d01bdbfbaf7fe717a3ed3510f32b1e) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: resolve nullable union type alias (`T | null` where T is a union) as a reference instead of an inline union
+
+- [#230](https://github.com/izumin5210/gqlkit/pull/230) [`f4a9695`](https://github.com/izumin5210/gqlkit/commit/f4a96955ed578fb2d59592b4d63c8b0d34ee6d19) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: collect types from specifier-level type-only re-exports (`export { type Foo } from "..."`)
+
 ## 0.7.0
 
 ### Minor Changes
