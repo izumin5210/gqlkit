@@ -142,9 +142,9 @@ export function collectDeclaredTypeNames(
       }
 
       // Re-exports: `export type { ... } from "..."` or `export type * from "..."`
-      if (ts.isExportDeclaration(node) && node.isTypeOnly) {
-        if (node.exportClause) {
-          // Named re-exports: `export type { Foo, Bar } from "..."`
+      if (ts.isExportDeclaration(node)) {
+        if (node.isTypeOnly && node.exportClause) {
+          // Declaration-level type-only named re-exports: `export type { Foo, Bar } from "..."`
           if (ts.isNamedExports(node.exportClause)) {
             for (const element of node.exportClause.elements) {
               // Use the exported name (element.name), not the property name
@@ -154,7 +154,22 @@ export function collectDeclaredTypeNames(
               registerTypeName(name, location, symbol);
             }
           }
-        } else if (node.moduleSpecifier) {
+        } else if (!node.isTypeOnly && node.exportClause) {
+          // Specifier-level type-only re-exports: `export { type Foo, type Bar } from "..."`
+          if (ts.isNamedExports(node.exportClause)) {
+            for (const element of node.exportClause.elements) {
+              if (!element.isTypeOnly) continue;
+              const name = element.name.getText(sourceFile);
+              const location = getSourceLocationFromNode(element)!;
+              const symbol = checker.getSymbolAtLocation(element.name);
+              registerTypeName(name, location, symbol);
+            }
+          }
+        } else if (
+          node.isTypeOnly &&
+          !node.exportClause &&
+          node.moduleSpecifier
+        ) {
           // Wildcard re-exports: `export type * from "..."`
           const moduleSymbol = checker.getSymbolAtLocation(
             node.moduleSpecifier,
