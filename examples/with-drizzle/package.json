@@ -4,15 +4,16 @@
   "private": true,
   "scripts": {
     "gen": "node --import tsx ../../packages/cli/src/cli.ts gen",
+    "db:generate": "drizzle-kit generate --config drizzle.config.ts",
     "start": "node --import tsx src/server.ts",
     "dev": "pnpm gen && pnpm start",
     "test": "pnpm -w test -- --project examples/with-drizzle",
     "typecheck": "tsc --noEmit"
   },
   "dependencies": {
-    "@electric-sql/pglite": "^0.3.0",
     "@gqlkit-ts/runtime": "workspace:*",
     "@graphql-tools/schema": "^10.0.0",
+    "better-sqlite3": "^12.6.2",
     "drizzle-orm": "^0.44.0",
     "graphql": "catalog:",
     "graphql-scalars": "^1.24.0",
@@ -20,6 +21,7 @@
   },
   "devDependencies": {
     "@gqlkit-ts/cli": "workspace:*",
+    "@types/better-sqlite3": "^7.6.11",
     "drizzle-kit": "^0.31.0"
   }
 }

@@ -116,15 +116,15 @@ importers:
 
   examples/with-drizzle:
     dependencies:
-      '@electric-sql/pglite':
-        specifier: ^0.3.0
-        version: 0.3.15
       '@gqlkit-ts/runtime':
         specifier: workspace:*
         version: link:../../packages/runtime
       '@graphql-tools/schema':
         specifier: ^10.0.0
         version: 10.0.30(graphql@16.13.1)
+      better-sqlite3:
+        specifier: ^12.6.2
+        version: 12.6.2
       drizzle-orm:
         specifier: ^0.44.0
         version: 0.44.7(@electric-sql/pglite@0.3.15)(@opentelemetry/api@1.9.0)(@prisma/client@7.3.0(prisma@7.3.0(@types/react@19.2.14)(better-sqlite3@12.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))(typescript@5.9.3))(@types/better-sqlite3@7.6.13)(better-sqlite3@12.6.2)(mysql2@3.15.3)(postgres@3.4.7)(prisma@7.3.0(@types/react@19.2.14)(better-sqlite3@12.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))
@@ -141,6 +141,9 @@ importers:
       '@gqlkit-ts/cli':
         specifier: workspace:*
         version: link:../../packages/cli
+      '@types/better-sqlite3':
+        specifier: ^7.6.11
+        version: 7.6.13
       drizzle-kit:
         specifier: ^0.31.0
         version: 0.31.8
@@ -158,10 +161,10 @@ importers:
         version: 7.3.0
       '@prisma/client':
         specifier: ^7.2.0
-        version: 7.3.0(prisma@7.3.0(@types/react@19.2.14)(better-sqlite3@11.10.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))(typescript@5.9.3)
+        version: 7.3.0(prisma@7.3.0(@types/react@19.2.14)(better-sqlite3@12.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))(typescript@5.9.3)
       better-sqlite3:
-        specifier: ^11.0.0
-        version: 11.10.0
+        specifier: ^12.6.2
+        version: 12.6.2
       graphql:
         specifier: 'catalog:'
         version: 16.13.1
@@ -180,7 +183,7 @@ importers:
         version: 7.6.13
       prisma:
         specifier: ^7.2.0
-        version: 7.3.0(@types/react@19.2.14)(better-sqlite3@11.10.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)
+        version: 7.3.0(@types/react@19.2.14)(better-sqlite3@12.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)
 
   packages/cli:
     dependencies:
@@ -2365,9 +2368,6 @@ packages:
     resolution: {integrity: sha512-K0ceQC+jQmB+NLDogO5HCpqmYf18AU2FxDbLdduYgkHYWZApFggkHE4dIaXCV1NqeoscESYXXo1GSkY6fA295w==}
     peerDependencies:
       react: '>=16.8'
-
-  better-sqlite3@11.10.0:
-    resolution: {integrity: sha512-EwhOpyXiOEL/lKzHz9AW1msWFNzGc/z+LzeB3/jnFJpxu+th2yqvzsSWas1v9jgs9+xiXJcD5A8CJxAG2TaghQ==}
 
   better-sqlite3@12.6.2:
     resolution: {integrity: sha512-8VYKM3MjCa9WcaSAI3hzwhmyHVlH8tiGFwf0RlTsZPWJ1I5MkzjiudCo4KC4DxOaL/53A5B1sI/IbldNFDbsKA==}
@@ -5851,20 +5851,12 @@ snapshots:
 
   '@prisma/client-runtime-utils@7.3.0': {}
 
-  '@prisma/client@7.3.0(prisma@7.3.0(@types/react@19.2.14)(better-sqlite3@11.10.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))(typescript@5.9.3)':
-    dependencies:
-      '@prisma/client-runtime-utils': 7.3.0
-    optionalDependencies:
-      prisma: 7.3.0(@types/react@19.2.14)(better-sqlite3@11.10.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)
-      typescript: 5.9.3
-
   '@prisma/client@7.3.0(prisma@7.3.0(@types/react@19.2.14)(better-sqlite3@12.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3))(typescript@5.9.3)':
     dependencies:
       '@prisma/client-runtime-utils': 7.3.0
     optionalDependencies:
       prisma: 7.3.0(@types/react@19.2.14)(better-sqlite3@12.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3)
       typescript: 5.9.3
-    optional: true
 
   '@prisma/config@7.3.0':
     dependencies:
@@ -6498,11 +6490,6 @@ snapshots:
     dependencies:
       mathjax-full: 3.2.2
       react: 19.2.3
-
-  better-sqlite3@11.10.0:
-    dependencies:
-      bindings: 1.5.0
-      prebuild-install: 7.1.3
 
   better-sqlite3@12.6.2:
     dependencies:
@@ -8442,23 +8429,6 @@ snapshots:
 
   prettier@2.8.8: {}
 
-  prisma@7.3.0(@types/react@19.2.14)(better-sqlite3@11.10.0)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3):
-    dependencies:
-      '@prisma/config': 7.3.0
-      '@prisma/dev': 0.20.0(typescript@5.9.3)
-      '@prisma/engines': 7.3.0
-      '@prisma/studio-core': 0.13.1(@types/react@19.2.14)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)
-      mysql2: 3.15.3
-      postgres: 3.4.7
-    optionalDependencies:
-      better-sqlite3: 11.10.0
-      typescript: 5.9.3
-    transitivePeerDependencies:
-      - '@types/react'
-      - magicast
-      - react
-      - react-dom
-
   prisma@7.3.0(@types/react@19.2.14)(better-sqlite3@12.6.2)(react-dom@19.2.3(react@19.2.3))(react@19.2.3)(typescript@5.9.3):
     dependencies:
       '@prisma/config': 7.3.0
@@ -8475,7 +8445,6 @@ snapshots:
       - magicast
       - react
       - react-dom
-    optional: true
 
   proper-lockfile@4.1.2:
     dependencies:
