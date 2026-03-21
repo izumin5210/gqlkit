@@ -1,27 +1,31 @@
-import { createRequire } from "node:module";
-import { PGlite } from "@electric-sql/pglite";
-import type * as DrizzleKit from "drizzle-kit/api";
-import { drizzle } from "drizzle-orm/pglite";
+import { fileURLToPath } from "node:url";
+import BetterSqlite3 from "better-sqlite3";
+import { drizzle } from "drizzle-orm/better-sqlite3";
+import { migrate } from "drizzle-orm/better-sqlite3/migrator";
 import * as schema from "./schema.js";
 
-const require = createRequire(import.meta.url);
-const { generateDrizzleJson, generateMigration } =
-  require("drizzle-kit/api") as typeof DrizzleKit;
+function getDatabasePath(): string {
+  const envPath = process.env["DATABASE_URL"];
+  if (envPath) {
+    return envPath;
+  }
 
-const client = new PGlite();
+  return fileURLToPath(new URL("../../dev.db", import.meta.url));
+}
+
+const client = new BetterSqlite3(getDatabasePath());
+client.pragma("foreign_keys = ON");
+const migrationsFolder = fileURLToPath(
+  new URL("../../drizzle", import.meta.url),
+);
+
 export const db = drizzle(client, { schema, casing: "snake_case" });
 export type Database = typeof db;
 
 export async function pushSchema(): Promise<void> {
-  const prevJson = generateDrizzleJson({});
-  const curJson = generateDrizzleJson(
-    schema,
-    prevJson.id,
-    undefined,
-    "snake_case",
-  );
-  const statements = await generateMigration(prevJson, curJson);
-  for (const statement of statements) {
-    await db.execute(statement);
-  }
+  migrate(db, { migrationsFolder });
+}
+
+export function closeDatabase(): void {
+  client.close();
 }

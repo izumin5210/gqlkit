@@ -1,28 +1,35 @@
-import { pgEnum, pgTable, text, timestamp, uuid } from "drizzle-orm/pg-core";
+import { randomUUID } from "node:crypto";
+import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core";
 
-export const userStatusEnum = pgEnum("user_status", [
-  "active",
-  "inactive",
-  "suspended",
-]);
-
-export const users = pgTable("users", {
-  id: uuid().primaryKey().defaultRandom(),
+export const users = sqliteTable("users", {
+  id: text()
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
   name: text().notNull(),
   email: text().notNull().unique(),
-  status: userStatusEnum().notNull().default("active"),
-  createdAt: timestamp().notNull().defaultNow(),
+  status: text({
+    enum: ["active", "inactive", "suspended"],
+  })
+    .notNull()
+    .default("active"),
+  createdAt: integer({ mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
 });
 
-export const posts = pgTable("posts", {
-  id: uuid().primaryKey().defaultRandom(),
+export const posts = sqliteTable("posts", {
+  id: text()
+    .primaryKey()
+    .$defaultFn(() => randomUUID()),
   title: text().notNull(),
   content: text(),
   priority: text({ enum: ["low", "medium", "high"] })
     .notNull()
     .default("medium"),
-  authorId: uuid()
+  authorId: text()
     .notNull()
     .references(() => users.id),
-  createdAt: timestamp().notNull().defaultNow(),
+  createdAt: integer({ mode: "timestamp_ms" })
+    .notNull()
+    .$defaultFn(() => new Date()),
 });

@@ -1,14 +1,12 @@
-import { execFileSync } from "node:child_process";
 import { existsSync, mkdirSync, unlinkSync } from "node:fs";
 import { tmpdir } from "node:os";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
-import { afterAll, beforeAll } from "vitest";
+import { afterAll } from "vitest";
 
 const __dirname = dirname(fileURLToPath(import.meta.url));
-const testDbDir = join(tmpdir(), "gqlkit-prisma-test");
+const testDbDir = join(tmpdir(), "gqlkit-drizzle-test");
 const testDbPath = join(testDbDir, "test.db");
-const testDbUrl = `file:${testDbPath}`;
 
 mkdirSync(testDbDir, { recursive: true });
 
@@ -16,18 +14,16 @@ if (existsSync(testDbPath)) {
   unlinkSync(testDbPath);
 }
 
-process.env["DATABASE_URL"] = testDbUrl;
+process.env["DATABASE_URL"] = testDbPath;
 
-beforeAll(() => {
-  execFileSync("pnpm", ["prisma", "db", "push", "--accept-data-loss"], {
-    cwd: __dirname,
-    env: { ...process.env, DATABASE_URL: testDbUrl },
-    stdio: "inherit",
-    shell: process.platform === "win32",
-  });
-});
+afterAll(async () => {
+  try {
+    const { closeDatabase } = await import("./src/db/db.js");
+    closeDatabase();
+  } catch {
+    // Ignore cleanup errors if the database was never initialized.
+  }
 
-afterAll(() => {
   try {
     if (existsSync(testDbPath)) {
       unlinkSync(testDbPath);

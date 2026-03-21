@@ -78,6 +78,9 @@ export default defineConfig({
           name: "examples/with-drizzle",
           root: "./examples/with-drizzle",
           include: ["src/**/*.test.ts"],
+          setupFiles: [
+            resolve(__dirname, "examples/with-drizzle/vitest.setup.ts"),
+          ],
           server: {
             deps: {
               inline: [

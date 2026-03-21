@@ -1,15 +1,17 @@
-import { tmpdir } from "node:os";
-import { join } from "node:path";
+import { fileURLToPath } from "node:url";
 import { PrismaBetterSqlite3 } from "@prisma/adapter-better-sqlite3";
 import { PrismaClient } from "../__generated__/prisma/client.js";
+
+const defaultDatabaseUrl = `file:${fileURLToPath(
+  new URL("../../dev.db", import.meta.url),
+)}`;
 
 function getDatabaseUrl(): string {
   const envUrl = process.env["DATABASE_URL"];
   if (envUrl) {
     return envUrl;
   }
-  const testDbPath = join(tmpdir(), "gqlkit-prisma-test", "test.db");
-  return `file:${testDbPath}`;
+  return defaultDatabaseUrl;
 }
 
 const dbUrl = getDatabaseUrl();
