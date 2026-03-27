@@ -3,7 +3,7 @@ packages:
   - "examples/*"
 
 catalog:
-  graphql: "16.13.1"
+  graphql: "16.13.2"
 onlyBuiltDependencies:
   - "@prisma/engines"
   - "better-sqlite3"
