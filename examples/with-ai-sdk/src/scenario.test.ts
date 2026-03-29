@@ -18,19 +18,15 @@ import type { Context } from "./gqlkit/context.js";
 // Identity scalars — pass through any value as-is
 const GraphQLJSON = new GraphQLScalarType({ name: "JSON" });
 const GraphQLJSONObject = new GraphQLScalarType({ name: "JSONObject" });
-const GraphQLObject = new GraphQLScalarType({ name: "Object" });
-const GraphQLUnknown = new GraphQLScalarType({ name: "unknown" });
 
 function createTestSchema(): GraphQLSchema {
   return makeExecutableSchema({
-    typeDefs: [typeDefs, "scalar Object", "scalar unknown"],
+    typeDefs,
     resolvers: [
       createResolvers(),
       {
         JSON: GraphQLJSON,
         JSONObject: GraphQLJSONObject,
-        Object: GraphQLObject,
-        unknown: GraphQLUnknown,
       },
     ],
   });

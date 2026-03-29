@@ -84,7 +84,7 @@ Defined in: src/gqlkit/schema/subscription.ts
 """
 type ChatStreamChunkFile {
   mediaType: String!
-  providerMetadata: Object
+  providerMetadata: JSONObject
   type: String!
   url: String!
 }
@@ -119,7 +119,7 @@ Defined in: src/gqlkit/schema/subscription.ts
 type ChatStreamChunkReasoningDelta {
   delta: String!
   id: String!
-  providerMetadata: Object
+  providerMetadata: JSONObject
   type: String!
 }
 
@@ -128,7 +128,7 @@ Defined in: src/gqlkit/schema/subscription.ts
 """
 type ChatStreamChunkReasoningEnd {
   id: String!
-  providerMetadata: Object
+  providerMetadata: JSONObject
   type: String!
 }
 
@@ -137,7 +137,7 @@ Defined in: src/gqlkit/schema/subscription.ts
 """
 type ChatStreamChunkReasoningStart {
   id: String!
-  providerMetadata: Object
+  providerMetadata: JSONObject
   type: String!
 }
 
@@ -147,7 +147,7 @@ Defined in: src/gqlkit/schema/subscription.ts
 type ChatStreamChunkSourceDocument {
   filename: String
   mediaType: String!
-  providerMetadata: Object
+  providerMetadata: JSONObject
   sourceId: String!
   title: String!
   type: String!
@@ -157,7 +157,7 @@ type ChatStreamChunkSourceDocument {
 Defined in: src/gqlkit/schema/subscription.ts
 """
 type ChatStreamChunkSourceUrl {
-  providerMetadata: Object
+  providerMetadata: JSONObject
   sourceId: String!
   title: String
   type: String!
@@ -186,7 +186,7 @@ Defined in: src/gqlkit/schema/subscription.ts
 type ChatStreamChunkTextDelta {
   delta: String!
   id: String!
-  providerMetadata: Object
+  providerMetadata: JSONObject
   type: String!
 }
 
@@ -195,7 +195,7 @@ Defined in: src/gqlkit/schema/subscription.ts
 """
 type ChatStreamChunkTextEnd {
   id: String!
-  providerMetadata: Object
+  providerMetadata: JSONObject
   type: String!
 }
 
@@ -204,7 +204,7 @@ Defined in: src/gqlkit/schema/subscription.ts
 """
 type ChatStreamChunkTextStart {
   id: String!
-  providerMetadata: String
+  providerMetadata: JSONObject
   type: String!
 }
 
@@ -222,9 +222,9 @@ Defined in: src/gqlkit/schema/subscription.ts
 """
 type ChatStreamChunkToolInputAvailable {
   dynamic: Boolean
-  input: unknown!
+  input: JSON!
   providerExecuted: Boolean
-  providerMetadata: Object
+  providerMetadata: JSONObject
   title: String
   toolCallId: String!
   toolName: String!
@@ -246,9 +246,9 @@ Defined in: src/gqlkit/schema/subscription.ts
 type ChatStreamChunkToolInputError {
   dynamic: Boolean
   errorText: String!
-  input: unknown!
+  input: JSON!
   providerExecuted: Boolean
-  providerMetadata: Object
+  providerMetadata: JSONObject
   title: String
   toolCallId: String!
   toolName: String!
@@ -261,7 +261,7 @@ Defined in: src/gqlkit/schema/subscription.ts
 type ChatStreamChunkToolInputStart {
   dynamic: Boolean
   providerExecuted: Boolean
-  providerMetadata: Object
+  providerMetadata: JSONObject
   title: String
   toolCallId: String!
   toolName: String!
@@ -273,7 +273,7 @@ Defined in: src/gqlkit/schema/subscription.ts
 """
 type ChatStreamChunkToolOutputAvailable {
   dynamic: Boolean
-  output: unknown!
+  output: JSON!
   preliminary: Boolean
   providerExecuted: Boolean
   toolCallId: String!
