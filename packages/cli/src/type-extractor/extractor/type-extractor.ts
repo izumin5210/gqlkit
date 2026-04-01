@@ -1221,6 +1221,7 @@ interface InlineObjectExtractionResult {
   readonly members: InlineObjectMember[];
   readonly hasInlineObjects: boolean;
   readonly hasNamedTypes: boolean;
+  readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
 interface ExtractInlineObjectMembersParams {
@@ -1276,6 +1277,7 @@ function extractInlineObjectMembers(
   let hasInlineObjects = false;
   let hasNamedTypes = false;
   const members: InlineObjectMember[] = [];
+  const diagnostics: Diagnostic[] = [];
 
   if (memberTypeNodes.length > 0) {
     for (const memberNode of memberTypeNodes) {
@@ -1329,6 +1331,14 @@ function extractInlineObjectMembers(
             discoveredTypes,
             diagnostics: fieldDiagnostics,
           });
+          for (const diagnostic of fieldDiagnostics) {
+            diagnostics.push({
+              code: diagnostic.code,
+              message: `Field '${prop.getName()}': ${diagnostic.message}`,
+              severity: diagnostic.severity,
+              location: getSourceLocationFromNode(declaration),
+            });
+          }
 
           memberProperties.push({
             propertyName: prop.getName(),
@@ -1343,7 +1353,7 @@ function extractInlineObjectMembers(
     }
   }
 
-  return { members, hasInlineObjects, hasNamedTypes };
+  return { members, hasInlineObjects, hasNamedTypes, diagnostics };
 }
 
 function extractUnionMembers(
@@ -1579,6 +1589,7 @@ export function extractTypesFromProgram(
           discoveredTypes,
           typeNode: typeAliasTypeNode,
         });
+        diagnostics.push(...(inlineObjectResult?.diagnostics ?? []));
         const tsdocInfo = extractTsDocInfo(node, checker);
 
         let implementedInterfaces: ReadonlyArray<string> | null = null;
