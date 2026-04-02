@@ -13,13 +13,11 @@ union StreamEvent = StreamEventEnd | StreamEventStart
 
 """Defined in: src/gqlkit/schema/types.ts"""
 type StreamEventEnd {
-  meta: String!
   type: String!
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 type StreamEventStart {
-  meta: String!
   type: String!
 }
 

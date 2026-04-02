@@ -1,0 +1,22 @@
+[
+  {
+    "code": "ONEOF_INVALID_FIELD_TYPE",
+    "message": "OneOf input 'EventSelectorInput' field 'payload' has invalid type 'JSON'. Only scalar types and Input Object types are allowed.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "ONEOF_INVALID_FIELD_TYPE",
+    "message": "OneOf input 'EventSelectorInput' field 'providerMetadata' has invalid type 'JSONObject'. Only scalar types and Input Object types are allowed.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

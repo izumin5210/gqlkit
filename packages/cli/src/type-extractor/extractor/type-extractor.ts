@@ -1340,6 +1340,17 @@ function extractInlineObjectMembers(
             });
           }
 
+          // Field resolution diagnostics for inline union members currently mean
+          // the outer property itself has no GraphQL representation.
+          if (fieldDiagnostics.length > 0) {
+            continue;
+          }
+
+          // Skip fields with never type — they have no GraphQL representation.
+          if (resolvedType.kind === "never") {
+            continue;
+          }
+
           memberProperties.push({
             propertyName: prop.getName(),
             propertyType: resolvedType,
