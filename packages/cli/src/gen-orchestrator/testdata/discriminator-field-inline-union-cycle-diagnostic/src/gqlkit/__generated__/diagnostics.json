@@ -1,0 +1,22 @@
+[
+  {
+    "code": "CYCLE_DETECTED",
+    "message": "Field 'meta': Cycle detected in type resolution; field will be skipped",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 11,
+      "column": 7
+    }
+  },
+  {
+    "code": "CYCLE_DETECTED",
+    "message": "Field 'meta': Cycle detected in type resolution; field will be skipped",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 15,
+      "column": 7
+    }
+  }
+]

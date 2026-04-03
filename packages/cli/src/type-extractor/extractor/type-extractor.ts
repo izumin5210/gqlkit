@@ -1221,6 +1221,7 @@ interface InlineObjectExtractionResult {
   readonly members: InlineObjectMember[];
   readonly hasInlineObjects: boolean;
   readonly hasNamedTypes: boolean;
+  readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
 interface ExtractInlineObjectMembersParams {
@@ -1228,14 +1229,31 @@ interface ExtractInlineObjectMembersParams {
   readonly checker: ts.TypeChecker;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
+  readonly sourceFiles: ReadonlySet<string>;
+  readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
+  readonly scalarMappingContext: ScalarMappingContext;
+  readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
   readonly typeNode: ts.TypeNode | undefined;
 }
 
 function extractInlineObjectMembers(
   params: ExtractInlineObjectMembersParams,
 ): InlineObjectExtractionResult | null {
-  const { type, checker, globalTypeMappings, knownTypeNames, typeNode } =
-    params;
+  const {
+    type,
+    checker,
+    globalTypeMappings,
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
+    sourceFiles,
+    scalarMappingTable,
+    scalarMappingContext,
+    discoveredTypes,
+    typeNode,
+  } = params;
   if (!type.isUnion()) {
     return null;
   }
@@ -1259,13 +1277,7 @@ function extractInlineObjectMembers(
   let hasInlineObjects = false;
   let hasNamedTypes = false;
   const members: InlineObjectMember[] = [];
-
-  const ctx: TypeDeclarationContext = {
-    checker,
-    globalTypeMappings,
-    knownTypeNames,
-    visitedTypes: new WeakSet(),
-  };
+  const diagnostics: Diagnostic[] = [];
 
   if (memberTypeNodes.length > 0) {
     for (const memberNode of memberTypeNodes) {
@@ -1294,11 +1306,54 @@ function extractInlineObjectMembers(
         for (const prop of properties) {
           const propType = checker.getTypeOfSymbol(prop);
           const tsdocInfo = extractTsDocFromSymbol(prop, checker);
-          const typeResult = convertTsTypeToReference(propType, ctx);
+          const declarations = prop.getDeclarations();
+          const declaration = declarations?.[0];
+
+          let propTypeNode: ts.TypeNode | undefined;
+          if (
+            declaration &&
+            (ts.isPropertySignature(declaration) ||
+              ts.isPropertyDeclaration(declaration))
+          ) {
+            propTypeNode = declaration.type;
+          }
+
+          const fieldDiagnostics: FieldTypeResolverDiagnostic[] = [];
+          const resolvedType = resolveFieldType(propType, propTypeNode, {
+            checker,
+            knownTypeNames,
+            knownTypeSymbols,
+            underlyingSymbolToTypeName,
+            globalTypeMappings,
+            sourceFiles,
+            scalarMappingTable,
+            scalarMappingContext,
+            discoveredTypes,
+            diagnostics: fieldDiagnostics,
+          });
+          for (const diagnostic of fieldDiagnostics) {
+            diagnostics.push({
+              code: diagnostic.code,
+              message: `Field '${prop.getName()}': ${diagnostic.message}`,
+              severity: diagnostic.severity,
+              location: getSourceLocationFromNode(declaration),
+            });
+          }
+
+          // Field resolution diagnostics for inline union members currently mean
+          // the outer property itself has no GraphQL representation.
+          if (fieldDiagnostics.length > 0) {
+            continue;
+          }
+
+          // Skip fields with never type — they have no GraphQL representation.
+          if (resolvedType.kind === "never") {
+            continue;
+          }
 
           memberProperties.push({
             propertyName: prop.getName(),
-            propertyType: typeResult.tsType,
+            propertyType: resolvedType,
             description: tsdocInfo.description ?? null,
             deprecated: tsdocInfo.deprecated ?? null,
           });
@@ -1309,7 +1364,7 @@ function extractInlineObjectMembers(
     }
   }
 
-  return { members, hasInlineObjects, hasNamedTypes };
+  return { members, hasInlineObjects, hasNamedTypes, diagnostics };
 }
 
 function extractUnionMembers(
@@ -1537,8 +1592,15 @@ export function extractTypesFromProgram(
           checker,
           globalTypeMappings,
           knownTypeNames,
+          knownTypeSymbols,
+          underlyingSymbolToTypeName,
+          sourceFiles: scannedSourceFilesSet,
+          scalarMappingTable,
+          scalarMappingContext: name.endsWith("Input") ? "input" : "output",
+          discoveredTypes,
           typeNode: typeAliasTypeNode,
         });
+        diagnostics.push(...(inlineObjectResult?.diagnostics ?? []));
         const tsdocInfo = extractTsDocInfo(node, checker);
 
         let implementedInterfaces: ReadonlyArray<string> | null = null;
@@ -1742,6 +1804,11 @@ export function extractTypesFromProgram(
   for (const typeInfo of types) {
     for (const field of typeInfo.fields) {
       collectScalarNamesFromType(field.tsType, detectedScalarNames);
+    }
+    for (const member of typeInfo.inlineObjectMembers ?? []) {
+      for (const property of member.properties) {
+        collectScalarNamesFromType(property.propertyType, detectedScalarNames);
+      }
     }
   }
 

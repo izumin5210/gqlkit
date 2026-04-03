@@ -542,7 +542,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "Object",
+              value: "JSONObject",
             },
           },
         },
@@ -776,7 +776,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "Object",
+              value: "JSONObject",
             },
           },
         },
@@ -838,7 +838,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "Object",
+              value: "JSONObject",
             },
           },
         },
@@ -900,7 +900,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "Object",
+              value: "JSONObject",
             },
           },
         },
@@ -976,7 +976,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "Object",
+              value: "JSONObject",
             },
           },
         },
@@ -1055,7 +1055,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "Object",
+              value: "JSONObject",
             },
           },
         },
@@ -1272,7 +1272,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "Object",
+              value: "JSONObject",
             },
           },
         },
@@ -1334,7 +1334,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "Object",
+              value: "JSONObject",
             },
           },
         },
@@ -1396,7 +1396,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "String",
+              value: "JSONObject",
             },
           },
         },
@@ -1522,7 +1522,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "unknown",
+                value: "JSON",
               },
             },
           },
@@ -1551,7 +1551,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "Object",
+              value: "JSONObject",
             },
           },
         },
@@ -1742,7 +1742,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "unknown",
+                value: "JSON",
               },
             },
           },
@@ -1771,7 +1771,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "Object",
+              value: "JSONObject",
             },
           },
         },
@@ -1892,7 +1892,7 @@ export const typeDefs: DocumentNode = {
             kind: "NamedType",
             name: {
               kind: "Name",
-              value: "Object",
+              value: "JSONObject",
             },
           },
         },
@@ -2001,7 +2001,7 @@ export const typeDefs: DocumentNode = {
               kind: "NamedType",
               name: {
                 kind: "Name",
-                value: "unknown",
+                value: "JSON",
               },
             },
           },
