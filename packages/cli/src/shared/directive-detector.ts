@@ -240,7 +240,7 @@ function extractDirectiveFromType(
 
   const rawNameType = checker.getTypeOfSymbol(nameProp);
   const nameType = getActualMetadataType(rawNameType);
-  if (!nameType || !nameType.isStringLiteral()) {
+  if (!nameType?.isStringLiteral()) {
     return { directive: null, errors: [] };
   }
 

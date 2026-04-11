@@ -43,7 +43,7 @@ export const searchUsers = defineQuery<
     };
   },
   User[]
->((_root, args) => []);
+>((_root, _args) => []);
 
 export const posts = defineField<
   User,
@@ -55,4 +55,4 @@ export const posts = defineField<
     } | null;
   },
   Post[]
->((parent, args) => []);
+>((_parent, _args) => []);

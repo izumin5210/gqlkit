@@ -12,7 +12,7 @@ export interface Post {
 
 export type SearchResult = User | Post;
 
-const searchResultResolveType = defineResolveType<SearchResult>((value) => {
+const _searchResultResolveType = defineResolveType<SearchResult>((value) => {
   if ("name" in value) {
     return "User";
   }

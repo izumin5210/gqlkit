@@ -7,7 +7,7 @@ export type MultiplePropertiesInput =
   | { id: string; name: string }
   | { code: string };
 
-export type EmptyObjectInput = {} | { id: string };
+export type EmptyObjectInput = Record<string, never> | { id: string };
 
 export type DuplicatePropertyInput = { id: string } | { id: number };
 

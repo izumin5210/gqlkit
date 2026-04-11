@@ -20,4 +20,4 @@ export const updateSettings = defineMutation<
     };
   },
   Result
->((_root, args) => ({ success: true }));
+>((_root, _args) => ({ success: true }));

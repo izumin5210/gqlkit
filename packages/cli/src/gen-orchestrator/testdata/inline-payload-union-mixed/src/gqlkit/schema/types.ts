@@ -3,7 +3,6 @@ import {
   defineIsTypeOf,
   defineMutation,
   defineQuery,
-  defineResolveType,
   type NoArgs,
 } from "../gqlkit.js";
 

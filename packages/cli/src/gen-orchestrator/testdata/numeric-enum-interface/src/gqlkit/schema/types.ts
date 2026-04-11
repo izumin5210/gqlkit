@@ -1,7 +1,7 @@
 import type { GqlInterface, GqlObject } from "@gqlkit-ts/runtime";
-import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+import { createGqlkitApis } from "@gqlkit-ts/runtime";
 
-const { defineResolveType } = createGqlkitApis<{}>();
+const { defineResolveType } = createGqlkitApis<Record<string, never>>();
 
 /**
  * User status enum with numeric values.
@@ -32,4 +32,4 @@ export type User = GqlObject<
   { implements: [Node] }
 >;
 
-export const resolveNodeType = defineResolveType<Node>((obj) => "User");
+export const resolveNodeType = defineResolveType<Node>((_obj) => "User");
