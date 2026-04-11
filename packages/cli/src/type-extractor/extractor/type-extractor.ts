@@ -1003,6 +1003,20 @@ function processReexportedSymbol(
       ? reexportDeclaration.type
       : undefined;
   const unionMembers = extractUnionMembers(type, reexportTypeNode);
+  const inlineObjectResult = extractInlineObjectMembers({
+    type,
+    checker,
+    globalTypeMappings,
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
+    sourceFiles: scannedSourceFiles,
+    scalarMappingTable,
+    scalarMappingContext,
+    discoveredTypes,
+    typeNode: reexportTypeNode,
+  });
+  diagnostics.push(...(inlineObjectResult?.diagnostics ?? []));
   const ignoreFields = detectIgnoreFieldsMetadata({ type, checker });
 
   if (ignoreFields !== null && kind !== "union") {
@@ -1034,12 +1048,46 @@ function processReexportedSymbol(
         });
   diagnostics.push(...fieldResult.diagnostics);
 
+  if (exportedName.endsWith("Input") && kind === "union") {
+    if (
+      inlineObjectResult?.hasInlineObjects &&
+      inlineObjectResult.hasNamedTypes
+    ) {
+      diagnostics.push({
+        code: "ONEOF_MIXED_MEMBERS",
+        message: `Input union type '${exportedName}' mixes inline object literals with named type references. Use only inline object literals for oneOf input types.`,
+        severity: "error",
+        location: {
+          ...location,
+          column: 1,
+        },
+      });
+    } else if (
+      inlineObjectResult?.hasNamedTypes &&
+      !inlineObjectResult.hasInlineObjects
+    ) {
+      diagnostics.push({
+        code: "ONEOF_NAMED_TYPE_UNION",
+        message: `Input union type '${exportedName}' uses named type references instead of inline object literals. Use inline object pattern: type ${exportedName} = { field1: Type1 } | { field2: Type2 }`,
+        severity: "error",
+        location: {
+          ...location,
+          column: 1,
+        },
+      });
+    }
+  }
+
+  const inlineObjectMembers = inlineObjectResult?.hasInlineObjects
+    ? inlineObjectResult.members
+    : null;
+
   return {
     typeInfo: {
       metadata,
       fields: fieldResult.fields,
       unionMembers: unionMembers ?? null,
-      inlineObjectMembers: null,
+      inlineObjectMembers,
       enumMembers: null,
       implementedInterfaces: null,
     },
