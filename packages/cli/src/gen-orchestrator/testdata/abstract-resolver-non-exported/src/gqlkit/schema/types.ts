@@ -12,7 +12,8 @@ export interface Post {
 
 export type SearchResult = User | Post;
 
-const _searchResultResolveType = defineResolveType<SearchResult>((value) => {
+// biome-ignore lint/correctness/noUnusedVariables: This non-exported resolver exists to verify the generator ignores it.
+const searchResultResolveType = defineResolveType<SearchResult>((value) => {
   if ("name" in value) {
     return "User";
   }
