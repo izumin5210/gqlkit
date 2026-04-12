@@ -50,8 +50,20 @@ function createTextStreamModel(): MockLanguageModelV3 {
           { type: "text-end", id: "t1" },
           {
             type: "finish",
-            finishReason: "stop",
-            usage: { inputTokens: {}, outputTokens: {} },
+            finishReason: { unified: "stop", raw: undefined },
+            usage: {
+              inputTokens: {
+                total: 0,
+                noCache: 0,
+                cacheRead: undefined,
+                cacheWrite: undefined,
+              },
+              outputTokens: {
+                total: 0,
+                text: 0,
+                reasoning: undefined,
+              },
+            },
           },
         ] satisfies StreamChunk[],
       }),
