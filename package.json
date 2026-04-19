@@ -23,7 +23,7 @@
     "@vitest/coverage-v8": "4.1.4",
     "graphql": "catalog:",
     "knip": "6.4.1",
-    "lefthook": "2.1.5",
+    "lefthook": "2.1.6",
     "tsx": "4.21.0",
     "typescript": "5.9.3",
     "vitest": "4.1.4"
