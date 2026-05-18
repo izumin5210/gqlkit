@@ -22,7 +22,7 @@
     "@types/node": "24.12.4",
     "@vitest/coverage-v8": "4.1.6",
     "graphql": "catalog:",
-    "knip": "6.13.1",
+    "knip": "6.14.0",
     "lefthook": "2.1.6",
     "tsx": "4.22.0",
     "typescript": "5.9.3",
