@@ -1,0 +1,23 @@
+{
+  "name": "eval-01-crud-codegen",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "codegen": "graphql-codegen",
+    "print-schema": "tsx scripts/print-schema.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "graphql": "16.14.0"
+  },
+  "devDependencies": {
+    "@eddeee888/gcg-typescript-resolver-files": "^0.13.0",
+    "@graphql-codegen/cli": "^5.0.0",
+    "@graphql-codegen/typescript": "^4.0.0",
+    "@graphql-codegen/typescript-resolvers": "^4.0.0",
+    "@types/node": "^24.0.0",
+    "tsx": "^4.22.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.6"
+  }
+}

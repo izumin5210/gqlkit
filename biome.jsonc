@@ -6,11 +6,7 @@
     "useIgnoreFile": true
   },
   "files": {
-    "includes": [
-      "**",
-      "!**/testdata/**/__generated__",
-      "!**/__generated__/prisma"
-    ],
+    "includes": ["**", "!**/testdata", "!**/__generated__/prisma", "!**/*.md"],
     "ignoreUnknown": false
   },
   "formatter": {

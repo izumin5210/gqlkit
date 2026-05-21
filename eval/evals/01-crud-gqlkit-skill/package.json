@@ -1,0 +1,21 @@
+{
+  "name": "eval-01-crud-gqlkit-skill",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "gen": "gqlkit gen",
+    "print-schema": "tsx scripts/print-schema.ts",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@gqlkit-ts/runtime": "^0.3.0",
+    "graphql": "16.14.0"
+  },
+  "devDependencies": {
+    "@gqlkit-ts/cli": "^0.7.2",
+    "@types/node": "^24.0.0",
+    "tsx": "^4.22.1",
+    "typescript": "^5.9.3",
+    "vitest": "^4.1.6"
+  }
+}
