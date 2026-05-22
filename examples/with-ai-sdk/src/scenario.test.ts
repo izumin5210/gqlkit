@@ -47,6 +47,7 @@ function createTextStreamModel(): MockLanguageModelV3 {
             finishReason: "stop",
             usage: { inputTokens: {}, outputTokens: {} },
           },
+          // biome-ignore lint/suspicious/noExplicitAny: minimal mock of LanguageModelV3 stream chunks
         ] as any[],
       }),
     }),

@@ -191,7 +191,7 @@ function findCircularReference(
   path.push(typeName);
 
   const type = typeMap.get(typeName);
-  if (!type || !type.implementedInterfaces) {
+  if (!type?.implementedInterfaces) {
     return null;
   }
 

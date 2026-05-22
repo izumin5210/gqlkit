@@ -1,0 +1,20 @@
+{
+  "name": "@gqlkit-ts/eval",
+  "version": "0.0.1",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "sync": "tsx shared/sync-fixtures.ts",
+    "sonnet:dry": "agent-eval sonnet --dry",
+    "sonnet": "agent-eval sonnet"
+  },
+  "devDependencies": {
+    "@gqlkit-ts/cli": "workspace:*",
+    "@types/node": "24.12.4",
+    "@vercel/agent-eval": "0.14.1",
+    "graphql": "catalog:",
+    "tsx": "4.22.1",
+    "typescript": "5.9.3",
+    "vitest": "4.1.6"
+  }
+}

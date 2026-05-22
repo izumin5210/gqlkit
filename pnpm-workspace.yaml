@@ -1,6 +1,7 @@
 packages:
   - "packages/*"
   - "examples/*"
+  - "eval"
 
 catalog:
   graphql: "16.14.0"
