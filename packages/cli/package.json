@@ -52,7 +52,7 @@
   },
   "peerDependencies": {
     "graphql": "^16.12.0",
-    "typescript": "^5.9.3"
+    "typescript": "^5.9.3 || ^6.0.0"
   },
   "peerDependenciesMeta": {
     "graphql": {
