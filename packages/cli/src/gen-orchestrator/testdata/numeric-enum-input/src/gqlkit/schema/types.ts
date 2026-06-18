@@ -1,6 +1,6 @@
 import { createGqlkitApis } from "@gqlkit-ts/runtime";
 
-const { defineMutation } = createGqlkitApis<{}>();
+const { defineMutation } = createGqlkitApis<Record<string, never>>();
 
 /**
  * User status enum with numeric values.

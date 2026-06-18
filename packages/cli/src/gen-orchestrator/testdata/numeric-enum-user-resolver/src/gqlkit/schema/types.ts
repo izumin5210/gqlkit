@@ -1,6 +1,6 @@
 import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
 
-const { defineField } = createGqlkitApis<{}>();
+const { defineField } = createGqlkitApis<Record<string, never>>();
 
 /**
  * User status enum with numeric values.

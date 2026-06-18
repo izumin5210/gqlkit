@@ -1,9 +1,4 @@
-import {
-  defineIsTypeOf,
-  defineMutation,
-  defineQuery,
-  type NoArgs,
-} from "../gqlkit.js";
+import { defineIsTypeOf, defineMutation, defineQuery } from "../gqlkit.js";
 
 /**
  * User type - named type for success case.

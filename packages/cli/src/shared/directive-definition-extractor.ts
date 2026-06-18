@@ -106,7 +106,7 @@ function extractDirectiveName(
 
   const rawNameType = checker.getTypeOfSymbol(nameProp);
   const nameType = getActualMetadataType(rawNameType);
-  if (!nameType || !nameType.isStringLiteral()) {
+  if (!nameType?.isStringLiteral()) {
     return null;
   }
 

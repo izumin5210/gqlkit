@@ -1,4 +1,3 @@
-import type { NoArgs } from "@gqlkit-ts/runtime";
 import { defineQuery } from "../gqlkit.js";
 
 type SearchResult = { id: string; name?: string; title?: string };

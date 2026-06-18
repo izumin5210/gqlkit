@@ -1,4 +1,4 @@
-import type { GqlField, Int, NoArgs } from "@gqlkit-ts/runtime";
+import type { GqlField, Int } from "@gqlkit-ts/runtime";
 import { defineQuery } from "../gqlkit.js";
 
 export type PaginationInput = {

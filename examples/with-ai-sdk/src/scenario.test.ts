@@ -15,6 +15,13 @@ import { createResolvers } from "./gqlkit/__generated__/resolvers.js";
 import { typeDefs } from "./gqlkit/__generated__/typeDefs.js";
 import type { Context } from "./gqlkit/context.js";
 
+type StreamChunk =
+  Awaited<
+    ReturnType<MockLanguageModelV3["doStream"]>
+  >["stream"] extends ReadableStream<infer T>
+    ? T
+    : never;
+
 // Identity scalars — pass through any value as-is
 const GraphQLJSON = new GraphQLScalarType({ name: "JSON" });
 const GraphQLJSONObject = new GraphQLScalarType({ name: "JSONObject" });
@@ -36,7 +43,6 @@ function createTextStreamModel(): MockLanguageModelV3 {
   return new MockLanguageModelV3({
     doStream: async () => ({
       stream: simulateReadableStream({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- AI SDK V3 stream part types are complex; cast to avoid deep structural mismatch
         chunks: [
           { type: "text-start", id: "t1" },
           { type: "text-delta", id: "t1", delta: "Hello" },
@@ -44,10 +50,22 @@ function createTextStreamModel(): MockLanguageModelV3 {
           { type: "text-end", id: "t1" },
           {
             type: "finish",
-            finishReason: "stop",
-            usage: { inputTokens: {}, outputTokens: {} },
+            finishReason: { unified: "stop", raw: undefined },
+            usage: {
+              inputTokens: {
+                total: 0,
+                noCache: 0,
+                cacheRead: undefined,
+                cacheWrite: undefined,
+              },
+              outputTokens: {
+                total: 0,
+                text: 0,
+                reasoning: undefined,
+              },
+            },
           },
-        ] as any[],
+        ] satisfies StreamChunk[],
       }),
     }),
   });

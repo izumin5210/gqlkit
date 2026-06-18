@@ -1,4 +1,3 @@
-import type { NoArgs } from "@gqlkit-ts/runtime";
 import { defineQuery } from "../gqlkit.js";
 
 interface User {
@@ -11,5 +10,5 @@ interface User {
  * Fetch a user by ID.
  */
 export const user = defineQuery<{ id: string }, User | null>(
-  (_root, args) => null,
+  (_root, _args) => null,
 );

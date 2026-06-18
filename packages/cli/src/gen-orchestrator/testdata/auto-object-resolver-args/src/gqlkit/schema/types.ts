@@ -57,7 +57,7 @@ export const searchUsers = defineQuery<
     };
   },
   User[]
->((_root, args) => []);
+>((_root, _args) => []);
 
 /**
  * Field resolver with inline args for User.posts
@@ -72,4 +72,4 @@ export const posts = defineField<
     } | null;
   },
   Post[]
->((parent, args) => []);
+>((_parent, _args) => []);

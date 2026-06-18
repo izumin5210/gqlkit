@@ -1,4 +1,4 @@
-import type { GqlField, Int, NoArgs } from "@gqlkit-ts/runtime";
+import type { GqlField, Int } from "@gqlkit-ts/runtime";
 import { defineQuery } from "../gqlkit.js";
 
 // Bug 1: Type reference (NestedConfig) should resolve to actual type name, not __type

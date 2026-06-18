@@ -12,4 +12,4 @@ export interface Post {
   authorId: string;
 }
 
-export const posts = defineField<User, NoArgs, Post[]>((parent) => []);
+export const posts = defineField<User, NoArgs, Post[]>((_parent) => []);
