@@ -7,22 +7,43 @@
  */
 
 import type { Diagnostic, DiagnosticCode } from "../../core/index.js";
-import type { BaseType } from "../../schema-generator/integrator/result-integrator.js";
-import type { AbstractResolverInfo } from "../extractor/define-api-extractor.js";
+import type { AbstractResolverInfo } from "../../resolver-extractor/index.js";
+
+/**
+ * The subset of `BaseType` (schema-generator/integrator/result-integrator.ts)
+ * needed to validate abstract resolvers.
+ *
+ * Declared locally instead of importing `BaseType` to avoid a
+ * result-integrator ↔ abstract-resolver-validator import cycle: result-integrator
+ * calls `validateAbstractResolvers`, so it must not also be a type dependency of
+ * this module. TypeScript's structural typing means the `BaseType` values
+ * result-integrator passes in still satisfy this shape without any cast.
+ */
+export interface AbstractResolverTargetType {
+  readonly name: string;
+  readonly kind: "Object" | "Interface" | "Union" | "Enum";
+  readonly unionMembers: ReadonlyArray<string> | null;
+  readonly implementedInterfaces: ReadonlyArray<string> | null;
+  readonly sourceFile: string | null;
+}
 
 export interface ValidateAbstractResolversOptions {
+  /**
+   * Abstract resolvers with target type names already remapped from TS
+   * aliases to GraphQL names (see result-integrator.ts's `remappedAbstractResolvers`).
+   */
   readonly abstractResolvers: ReadonlyArray<AbstractResolverInfo>;
-  readonly baseTypes: ReadonlyArray<BaseType>;
+  readonly baseTypes: ReadonlyArray<AbstractResolverTargetType>;
   readonly typenameAutoResolveTypeNames?: ReadonlySet<string>;
-  /** Mapping from TypeScript type alias names to auto-generated GraphQL union names */
-  readonly tsAliasToGraphQLNameMap: ReadonlyMap<string, string>;
 }
 
 export interface ValidateAbstractResolversResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
-function formatTypeKindForDisplay(kind: BaseType["kind"]): string {
+function formatTypeKindForDisplay(
+  kind: AbstractResolverTargetType["kind"],
+): string {
   return kind.toLowerCase();
 }
 
@@ -72,7 +93,7 @@ function reportDuplicates(
  */
 function detectDuplicateResolvers(
   resolvers: ReadonlyArray<AbstractResolverInfo>,
-  typeMap: Map<string, BaseType>,
+  typeMap: Map<string, AbstractResolverTargetType>,
 ): Diagnostic[] {
   const resolveTypeMap = new Map<string, AbstractResolverInfo[]>();
   const isTypeOfMap = new Map<string, AbstractResolverInfo[]>();
@@ -115,7 +136,7 @@ function createMissingResolverDiagnostic(
 
 interface DetectMissingAbstractTypeResolversParams {
   readonly resolvers: ReadonlyArray<AbstractResolverInfo>;
-  readonly typeMap: Map<string, BaseType>;
+  readonly typeMap: Map<string, AbstractResolverTargetType>;
   readonly typenameAutoResolveTypeNames: ReadonlySet<string>;
 }
 
@@ -200,26 +221,15 @@ export function validateAbstractResolvers(
   options: ValidateAbstractResolversOptions,
 ): ValidateAbstractResolversResult {
   const diagnostics: Diagnostic[] = [];
-  const typeMap = new Map<string, BaseType>();
+  const typeMap = new Map<string, AbstractResolverTargetType>();
 
   for (const baseType of options.baseTypes) {
     typeMap.set(baseType.name, baseType);
   }
 
-  // Remap resolver target type names using TS alias → GraphQL name mapping
-  // e.g., defineResolveType<ItemPart> where ItemPart is a TS alias
-  // maps to the auto-generated union name "ContainerItems"
-  // Only remap resolveType resolvers — isTypeOf targets object types, not unions
-  const resolvers = options.abstractResolvers.map((resolver) => {
-    if (resolver.kind !== "resolveType") return resolver;
-    const mappedName = options.tsAliasToGraphQLNameMap.get(
-      resolver.targetTypeName,
-    );
-    if (mappedName !== undefined) {
-      return { ...resolver, targetTypeName: mappedName };
-    }
-    return resolver;
-  });
+  // Target type names have already been remapped from TS aliases to GraphQL
+  // names by the caller (see result-integrator.ts's `remappedAbstractResolvers`).
+  const resolvers = options.abstractResolvers;
 
   for (const resolver of resolvers) {
     const targetType = typeMap.get(resolver.targetTypeName);
