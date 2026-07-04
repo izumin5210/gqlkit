@@ -6,7 +6,12 @@
  */
 
 import ts from "typescript";
-import { METADATA_PROPERTIES } from "./constants.js";
+import {
+  type DirectiveArgument,
+  type DirectiveArgumentValue,
+  type DirectiveInfo,
+  METADATA_PROPERTIES,
+} from "../core/index.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 
 const FIELD_META_PROPERTY = METADATA_PROPERTIES.FIELD_META;
@@ -23,40 +28,6 @@ function getMetaProperty(type: ts.Type): ts.Symbol | undefined {
     type.getProperty(FIELD_META_PROPERTY) ??
     type.getProperty(TYPE_META_PROPERTY)
   );
-}
-
-/**
- * Represents a single directive argument value.
- */
-export type DirectiveArgumentValue =
-  | { readonly kind: "string"; readonly value: string }
-  | { readonly kind: "number"; readonly value: number }
-  | { readonly kind: "boolean"; readonly value: boolean }
-  | { readonly kind: "null"; readonly value: null }
-  | { readonly kind: "enum"; readonly value: string }
-  | {
-      readonly kind: "list";
-      readonly values: ReadonlyArray<DirectiveArgumentValue>;
-    }
-  | {
-      readonly kind: "object";
-      readonly fields: ReadonlyArray<DirectiveArgument>;
-    };
-
-/**
- * Represents a directive argument (name-value pair).
- */
-export interface DirectiveArgument {
-  readonly name: string;
-  readonly value: DirectiveArgumentValue;
-}
-
-/**
- * Represents a detected directive with its name and arguments.
- */
-export interface DirectiveInfo {
-  readonly name: string;
-  readonly args: ReadonlyArray<DirectiveArgument>;
 }
 
 /**

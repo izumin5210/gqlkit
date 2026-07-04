@@ -1,10 +1,10 @@
-import { deduplicateDiagnostics } from "../../shared/index.js";
 import type {
   Diagnostic,
   Diagnostics,
   FieldInfo,
   GraphQLTypeInfo,
-} from "../types/index.js";
+} from "../../core/index.js";
+import { deduplicateDiagnostics } from "../../shared/index.js";
 
 export interface ExtractTypesResult {
   readonly types: ReadonlyArray<GraphQLTypeInfo>;

@@ -1,7 +1,7 @@
 import type {
   InlineObjectPropertyDef,
   TSTypeReference,
-} from "../type-extractor/types/index.js";
+} from "../core/index.js";
 import { appendFieldPath } from "./naming-convention.js";
 
 /**

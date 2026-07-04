@@ -1,8 +1,8 @@
 import type {
+  DeprecationInfo,
   DirectiveArgumentValue,
   DirectiveInfo,
-} from "../../shared/directive-detector.js";
-import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
+} from "./metadata.js";
 
 export type GraphQLTypeKind =
   | "Object"

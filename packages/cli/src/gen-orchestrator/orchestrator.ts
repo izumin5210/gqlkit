@@ -6,6 +6,11 @@ import type {
   ResolvedScalarMapping,
 } from "../config-loader/index.js";
 import {
+  type Diagnostic,
+  type Diagnostics,
+  isEligibleField,
+} from "../core/index.js";
+import {
   type AbstractResolverInfo,
   type ArgumentDefinition,
   type DefineApiResolverInfo,
@@ -35,18 +40,13 @@ import {
   collectScalars,
   type ScalarMetadataInfo,
 } from "../type-extractor/collector/scalar-collector.js";
-import { isEligibleField } from "../type-extractor/converter/field-eligibility.js";
 import { convertToGraphQL } from "../type-extractor/converter/graphql-converter.js";
 import {
   extractTypesFromProgram,
   type GlobalTypeMapping,
 } from "../type-extractor/extractor/type-extractor.js";
 import { collectDeclaredTypeNames } from "../type-extractor/extractor/type-name-collector.js";
-import type {
-  Diagnostic,
-  Diagnostics,
-  ExtractedTypeInfo,
-} from "../type-extractor/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import {
   buildScalarMappingTable,
   type ScalarBaseTypeMappingTable,

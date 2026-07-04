@@ -1,13 +1,15 @@
 import type ts from "typescript";
-import type { ExtractResolversResult } from "../resolver-extractor/index.js";
-import { getSourceLocationOrDefault } from "../shared/source-location.js";
-import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
 import type {
-  ExtractedTypeInfo,
-  FieldDefinition,
+  DeprecationInfo,
   InlineEnumMemberInfo,
   InlineObjectPropertyDef,
   SourceLocation,
+} from "../core/index.js";
+import type { ExtractResolversResult } from "../resolver-extractor/index.js";
+import { getSourceLocationOrDefault } from "../shared/source-location.js";
+import type {
+  ExtractedTypeInfo,
+  FieldDefinition,
 } from "../type-extractor/types/index.js";
 import {
   getInlineObjectPropertiesFromType,
@@ -37,7 +39,7 @@ export interface InlineEnumWithContext {
   readonly externalEnumSymbol: ts.Symbol | null;
   /** TSDoc description from the external enum type itself (null for string literal unions) */
   readonly externalEnumDescription: string | null;
-  /** @deprecated tag from the external enum type itself (null for string literal unions) */
+  /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself (null for string literal unions) */
   readonly externalEnumDeprecated: DeprecationInfo | null;
 }
 

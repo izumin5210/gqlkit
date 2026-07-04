@@ -6,8 +6,10 @@
  */
 
 import ts from "typescript";
-import { METADATA_PROPERTIES } from "./constants.js";
-import type { DirectiveArgumentValue } from "./directive-detector.js";
+import {
+  type DirectiveArgumentValue,
+  METADATA_PROPERTIES,
+} from "../core/index.js";
 import { resolveArgumentValue } from "./directive-detector.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 

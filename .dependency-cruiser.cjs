@@ -48,6 +48,18 @@ module.exports = {
       to: { path: `^packages/cli/src/${stage}/(?!index\\.ts$).+` },
     })),
     {
+      name: "core-no-internal-dependencies",
+      comment:
+        "core/ is the innermost layer of the target dependency direction " +
+        "(refactor-plan.md §3.1: core ← shared ← stages ← gen-orchestrator ← commands; enforced per " +
+        "§3.4). It owns the pipeline-wide IR and vocabulary and must depend on nothing else in this " +
+        "package — external packages (e.g. typescript) are unaffected by this rule. Unlike the other " +
+        "boundary rules above, this one starts unbaselined: core/ is clean by construction.",
+      severity: "error",
+      from: { path: "^packages/cli/src/core/" },
+      to: { path: "^packages/cli/src/(?!core/)" },
+    },
+    {
       name: "shared-no-upward-imports",
       comment:
         "shared/ is meant to be a leaf utility layer that stages depend on, never the reverse " +

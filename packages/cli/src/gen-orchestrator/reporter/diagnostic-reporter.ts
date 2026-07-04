@@ -1,4 +1,4 @@
-import type { Diagnostic } from "../../type-extractor/index.js";
+import type { Diagnostic } from "../../core/index.js";
 import type { OutputWriter } from "./progress-reporter.js";
 
 export interface DiagnosticReporter {

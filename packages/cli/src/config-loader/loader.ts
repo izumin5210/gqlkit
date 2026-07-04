@@ -2,7 +2,7 @@ import { existsSync } from "node:fs";
 import { isAbsolute, join } from "node:path";
 import { createJiti } from "jiti";
 import type { ImportExtension } from "../config/types.js";
-import type { Diagnostic } from "../type-extractor/types/index.js";
+import type { Diagnostic } from "../core/index.js";
 import { validateConfig } from "./validator.js";
 
 export interface LoadConfigOptions {

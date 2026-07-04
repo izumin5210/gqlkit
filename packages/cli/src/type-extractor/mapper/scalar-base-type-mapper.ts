@@ -11,7 +11,7 @@
  */
 
 import ts from "typescript";
-import { METADATA_PROPERTIES } from "../../shared/constants.js";
+import { METADATA_PROPERTIES } from "../../core/index.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 
 /**

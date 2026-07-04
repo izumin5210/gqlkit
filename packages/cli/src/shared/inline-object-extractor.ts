@@ -1,12 +1,12 @@
 import ts from "typescript";
 import type {
+  DirectiveArgumentValue,
+  DirectiveInfo,
   InlineObjectPropertyDef,
   TSTypeReference,
-} from "../type-extractor/types/index.js";
+} from "../core/index.js";
 import { detectDefaultValueMetadata } from "./default-value-detector.js";
 import {
-  type DirectiveArgumentValue,
-  type DirectiveInfo,
   detectDirectiveMetadata,
   hasDirectiveMetadata,
   unwrapDirectiveType,

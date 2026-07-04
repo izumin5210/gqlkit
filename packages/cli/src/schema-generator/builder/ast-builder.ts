@@ -25,26 +25,24 @@ import {
   type TypeNode,
   type UnionTypeDefinitionNode,
 } from "graphql";
-import type { GraphQLInputValue } from "../../resolver-extractor/index.js";
-import type { DirectiveDefinitionInfo } from "../../shared/directive-definition-extractor.js";
 import type {
+  DeprecationInfo,
   DirectiveArgument,
   DirectiveArgumentValue,
   DirectiveInfo,
-} from "../../shared/directive-detector.js";
-import { toPosixPath } from "../../shared/index.js";
-import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
-import type {
   EnumValueInfo,
+  FieldInfo,
   GraphQLFieldType,
-} from "../../type-extractor/types/index.js";
+} from "../../core/index.js";
+import type { GraphQLInputValue } from "../../resolver-extractor/index.js";
+import type { DirectiveDefinitionInfo } from "../../shared/directive-definition-extractor.js";
+import { toPosixPath } from "../../shared/index.js";
 import type {
-  BaseField,
   BaseType,
   ExtensionField,
   InputType,
   IntegratedResult,
-  TypeExtension,
+  IntegratedTypeExtension,
 } from "../integrator/result-integrator.js";
 
 export interface BuildDocumentOptions {
@@ -294,7 +292,7 @@ function sortByName<T extends { name: string }>(items: ReadonlyArray<T>): T[] {
 }
 
 function buildBaseFieldDefinitionNode(
-  field: BaseField,
+  field: FieldInfo,
   directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): FieldDefinitionNode {
   const directives = buildDirectives(
@@ -455,7 +453,7 @@ function buildScalarTypeDefinitionNode(
 }
 
 function buildInputFieldDefinitionNode(
-  field: BaseField,
+  field: FieldInfo,
   directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): InputValueDefinitionNode {
   const directives = buildDirectives(
@@ -508,7 +506,7 @@ function buildInputObjectTypeDefinitionNode(
 }
 
 function buildObjectTypeExtensionNode(
-  typeExtension: TypeExtension,
+  typeExtension: IntegratedTypeExtension,
   sourceRoot: string | null,
   directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): ObjectTypeExtensionNode {
@@ -523,7 +521,7 @@ function buildObjectTypeExtensionNode(
 }
 
 function buildInterfaceTypeExtensionNode(
-  typeExtension: TypeExtension,
+  typeExtension: IntegratedTypeExtension,
   sourceRoot: string | null,
   directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): InterfaceTypeExtensionNode {

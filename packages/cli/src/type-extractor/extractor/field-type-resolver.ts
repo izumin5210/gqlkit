@@ -1,6 +1,23 @@
 import { relative } from "node:path";
 import ts from "typescript";
 import {
+  createArrayType,
+  createInlineEnumType,
+  createInlineObjectType,
+  createNeverType,
+  createNumericLiteralType,
+  createPrimitiveType,
+  createReferenceType,
+  createScalarType,
+  createStringLiteralType,
+  createUnionType,
+  type DeprecationInfo,
+  type DiagnosticCode,
+  type InlineEnumMemberInfo,
+  type SourceLocation,
+  type TSTypeReference,
+} from "../../core/index.js";
+import {
   detectBrandedType,
   detectUniformBrandedType,
 } from "../../shared/branded-type-detector.js";
@@ -8,14 +25,8 @@ import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } from "../../shared/inline-object-extractor.js";
 import { isInlineObjectType } from "../../shared/inline-object-utils.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
-import {
-  getSourceLocationFromNode,
-  type SourceLocation,
-} from "../../shared/source-location.js";
-import {
-  type DeprecationInfo,
-  extractTsDocFromSymbol,
-} from "../../shared/tsdoc-parser.js";
+import { getSourceLocationFromNode } from "../../shared/source-location.js";
+import { extractTsDocFromSymbol } from "../../shared/tsdoc-parser.js";
 import {
   filterNonNullTypeNodes,
   findEnumParentSymbol,
@@ -31,23 +42,6 @@ import type {
   ScalarMappingContext,
 } from "../mapper/scalar-base-type-mapper.js";
 import { lookupScalarMapping } from "../mapper/scalar-base-type-mapper.js";
-import type { DiagnosticCode } from "../types/diagnostics.js";
-import {
-  createArrayType,
-  createInlineEnumType,
-  createInlineObjectType,
-  createNeverType,
-  createNumericLiteralType,
-  createPrimitiveType,
-  createReferenceType,
-  createScalarType,
-  createStringLiteralType,
-  createUnionType,
-} from "../types/ts-type-reference-factory.js";
-import type {
-  InlineEnumMemberInfo,
-  TSTypeReference,
-} from "../types/typescript.js";
 import type { GlobalTypeMapping } from "./type-extractor.js";
 
 export interface DiscoveredTypeEntry {
@@ -821,7 +815,7 @@ interface ExternalEnumExtractionResult {
   readonly members: ReadonlyArray<InlineEnumMemberInfo>;
   /** TSDoc description from the enum type itself */
   readonly description: string | null;
-  /** @deprecated tag from the enum type itself */
+  /** Deprecation info from the `@deprecated` TSDoc tag on the enum type itself */
   readonly deprecated: DeprecationInfo | null;
 }
 

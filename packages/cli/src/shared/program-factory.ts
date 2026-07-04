@@ -1,5 +1,5 @@
 import ts from "typescript";
-import type { Diagnostic } from "../type-extractor/types/index.js";
+import type { Diagnostic } from "../core/index.js";
 import { loadTsconfig } from "./tsconfig-loader.js";
 
 const DEFAULT_COMPILER_OPTIONS: ts.CompilerOptions = {

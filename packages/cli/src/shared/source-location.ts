@@ -1,10 +1,5 @@
 import type ts from "typescript";
-
-export interface SourceLocation {
-  readonly file: string;
-  readonly line: number;
-  readonly column: number;
-}
+import type { SourceLocation } from "../core/index.js";
 
 /**
  * Extracts source location from a TypeScript AST node.

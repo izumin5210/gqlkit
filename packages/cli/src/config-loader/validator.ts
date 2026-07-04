@@ -1,5 +1,5 @@
 import type { ImportExtension } from "../config/types.js";
-import type { Diagnostic } from "../type-extractor/types/index.js";
+import type { Diagnostic } from "../core/index.js";
 import {
   DEFAULT_RESOLVERS_PATH,
   DEFAULT_SCHEMA_PATH,

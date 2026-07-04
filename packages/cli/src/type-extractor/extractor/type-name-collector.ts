@@ -1,13 +1,10 @@
 import ts from "typescript";
-import {
-  getSourceLocationFromNode,
-  type SourceLocation,
-} from "../../shared/source-location.js";
+import type { Diagnostic, SourceLocation } from "../../core/index.js";
+import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
   isExported,
   resolveOriginalSymbol,
 } from "../../shared/typescript-utils.js";
-import type { Diagnostic } from "../types/index.js";
 
 /**
  * Tracks location and symbol of a type declaration for duplicate detection.

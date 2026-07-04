@@ -1,10 +1,17 @@
 import { resolve } from "node:path";
 import ts from "typescript";
-import { isBuiltInScalar } from "../../shared/constants.js";
-import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
+  type Diagnostic,
   type DirectiveArgumentValue,
   type DirectiveInfo,
+  type InlineObjectMember,
+  type InlineObjectProperty,
+  isBuiltInScalar,
+  type SourceLocation,
+  type TSTypeReference,
+} from "../../core/index.js";
+import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
+import {
   detectDirectiveMetadata,
   hasDirectiveMetadata,
   unwrapDirectiveType,
@@ -17,10 +24,7 @@ import {
   isDefineInterfaceTypeAlias,
 } from "../../shared/interface-detector.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
-import {
-  getSourceLocationFromNode,
-  type SourceLocation,
-} from "../../shared/source-location.js";
+import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
   extractTsDocFromSymbol,
   extractTsDocInfo,
@@ -42,13 +46,9 @@ import type {
   ScalarMappingContext,
 } from "../mapper/scalar-base-type-mapper.js";
 import type {
-  Diagnostic,
   EnumMemberInfo,
   ExtractedTypeInfo,
   FieldDefinition,
-  InlineObjectMember,
-  InlineObjectProperty,
-  TSTypeReference,
   TypeKind,
   TypeMetadata,
 } from "../types/index.js";

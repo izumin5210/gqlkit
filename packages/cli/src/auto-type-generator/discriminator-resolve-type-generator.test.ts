@@ -1,9 +1,6 @@
 import { describe, expect, it } from "vitest";
-import type {
-  ExtractedTypeInfo,
-  InlineObjectProperty,
-  TSTypeReference,
-} from "../type-extractor/types/index.js";
+import type { InlineObjectProperty, TSTypeReference } from "../core/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/types/index.js";
 import {
   collectDiscriminatorResolveTypes,
   type ValidatedDiscriminatorEntry,

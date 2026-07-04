@@ -6,7 +6,7 @@
  */
 
 import ts from "typescript";
-import { METADATA_PROPERTIES } from "./constants.js";
+import { METADATA_PROPERTIES } from "../core/index.js";
 import { isNullOrUndefined } from "./typescript-utils.js";
 
 const SCALAR_METADATA_PROPERTY = METADATA_PROPERTIES.SCALAR;

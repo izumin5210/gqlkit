@@ -18,7 +18,7 @@ import fs from "node:fs";
 import path from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
-import { METADATA_PROPERTIES } from "./constants.js";
+import { METADATA_PROPERTIES } from "./metadata-contract.js";
 
 const RUNTIME_INDEX_PATH = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),

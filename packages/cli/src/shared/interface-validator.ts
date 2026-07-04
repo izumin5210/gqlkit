@@ -1,5 +1,4 @@
-import type { GraphQLTypeInfo } from "../type-extractor/types/graphql.js";
-import type { Diagnostic } from "../type-extractor/types/index.js";
+import type { Diagnostic, GraphQLTypeInfo } from "../core/index.js";
 
 export interface InterfaceValidationResult {
   readonly isValid: boolean;

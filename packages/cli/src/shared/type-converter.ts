@@ -1,8 +1,8 @@
-import type {
-  GraphQLFieldType,
-  TSTypeReference,
-} from "../type-extractor/types/index.js";
-import { PRIMITIVE_TYPE_MAP } from "./constants.js";
+import {
+  type GraphQLFieldType,
+  PRIMITIVE_TYPE_MAP,
+  type TSTypeReference,
+} from "../core/index.js";
 
 const GRAPHQL_INT_MIN = -(2 ** 31);
 const GRAPHQL_INT_MAX = 2 ** 31 - 1;

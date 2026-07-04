@@ -1,5 +1,8 @@
-import { BUILT_IN_SCALARS } from "../../shared/constants.js";
-import type { Diagnostic, GraphQLTypeInfo } from "../types/index.js";
+import {
+  BUILT_IN_SCALARS,
+  type Diagnostic,
+  type GraphQLTypeInfo,
+} from "../../core/index.js";
 
 export interface ValidationResult {
   readonly valid: boolean;
