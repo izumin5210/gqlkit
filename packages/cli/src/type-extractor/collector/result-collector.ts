@@ -6,7 +6,7 @@ import type {
 } from "../../core/index.js";
 import { deduplicateDiagnostics } from "../../shared/index.js";
 
-export interface ExtractTypesResult {
+export interface CollectedTypesResult {
   readonly types: ReadonlyArray<GraphQLTypeInfo>;
   readonly diagnostics: Diagnostics;
 }
@@ -40,7 +40,7 @@ function sortType(type: GraphQLTypeInfo): GraphQLTypeInfo {
 export function collectResults(
   types: ReadonlyArray<GraphQLTypeInfo>,
   diagnostics: ReadonlyArray<Diagnostic>,
-): ExtractTypesResult {
+): CollectedTypesResult {
   const sortedTypes = [...types]
     .sort((a, b) => a.name.localeCompare(b.name))
     .map(sortType);

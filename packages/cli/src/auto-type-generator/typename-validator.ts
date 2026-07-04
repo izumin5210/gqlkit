@@ -4,7 +4,7 @@ import type {
   SourceLocation,
   TypenameFieldName,
 } from "../core/index.js";
-import type { ExtractedTypeInfo } from "../type-extractor/types/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import type { TypenameExtractionResult } from "./typename-extractor.js";
 import { findTypenameProperty } from "./typename-types.js";
 

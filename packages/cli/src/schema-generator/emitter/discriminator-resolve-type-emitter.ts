@@ -1,7 +1,7 @@
 import type {
   DiscriminatorResolveTypeInfo,
   DiscriminatorValueMapping,
-} from "../../auto-type-generator/discriminator-resolve-type-generator.js";
+} from "../../auto-type-generator/index.js";
 
 /**
  * Groups value mappings by their value at a given field index.

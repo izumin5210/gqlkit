@@ -28,7 +28,7 @@ import { convertTsTypeToGraphQLType } from "../shared/type-converter.js";
 import type {
   ExtractedTypeInfo,
   FieldDefinition,
-} from "../type-extractor/types/index.js";
+} from "../type-extractor/index.js";
 import {
   collectInlineEnumsFromPayloads,
   collectInlineEnumsFromResolvers,

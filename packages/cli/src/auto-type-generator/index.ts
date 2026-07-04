@@ -8,14 +8,18 @@ export {
   generateAutoTypes,
 } from "./auto-type-generator.js";
 export {
+  type CollectResolveTypesParams,
+  type CollectResolveTypesResult,
+  collectResolveTypes,
+} from "./collect-resolve-types.js";
+export {
   type ValidateDiscriminatorFieldsParams,
   type ValidateDiscriminatorFieldsResult,
   validateDiscriminatorFields,
 } from "./discriminator-field-validator.js";
-export {
-  type CollectDiscriminatorResolveTypesParams,
-  type CollectDiscriminatorResolveTypesResult,
-  collectDiscriminatorResolveTypes,
+export type {
+  DiscriminatorResolveTypeInfo,
+  DiscriminatorValueMapping,
 } from "./discriminator-resolve-type-generator.js";
 export type {
   InlineUnionMemberInfo,
@@ -57,17 +61,15 @@ export {
   type MemberTypenameInfo,
   type TypenameExtractionResult,
 } from "./typename-extractor.js";
-export {
-  type CollectTypenameResolveTypesParams,
-  type CollectTypenameResolveTypesResult,
-  collectTypenameResolveTypes,
-  type GeneratedInlineObjectType,
-  type ResolveTypePattern,
-  type TypenameAutoResolveTypeInfo,
-} from "./typename-resolve-type-generator.js";
 export type {
-  TypenameFieldInfo,
-  TypenameFieldNameSet,
+  GeneratedInlineObjectType,
+  ResolveTypePattern,
+  TypenameAutoResolveTypeInfo,
+} from "./typename-resolve-type-generator.js";
+export {
+  createFieldNameSet,
+  type TypenameFieldInfo,
+  type TypenameFieldNameSet,
 } from "./typename-types.js";
 export {
   type ValidateSchemaTypenamesParams,

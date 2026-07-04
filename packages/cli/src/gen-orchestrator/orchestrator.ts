@@ -5,51 +5,26 @@ import type {
   ResolvedOutputConfig,
   ResolvedScalarMapping,
 } from "../config-loader/index.js";
+import type { Diagnostic, Diagnostics } from "../core/index.js";
 import {
-  type Diagnostic,
-  type Diagnostics,
-  isEligibleField,
-} from "../core/index.js";
-import {
-  type AbstractResolverInfo,
-  type ArgumentDefinition,
-  type DefineApiResolverInfo,
-  extractDefineApiResolvers,
-} from "../resolver-extractor/extractor/define-api-extractor.js";
-import type {
-  GraphQLFieldDefinition,
-  GraphQLInputValue,
-  TypeExtension,
+  type ExtractResolversResult,
+  extractResolvers,
 } from "../resolver-extractor/index.js";
 import { generateSchema } from "../schema-generator/index.js";
 
 import {
-  collectDiagnostics,
-  convertTsTypeToGraphQLType,
   type DirectiveDefinitionInfo,
   deduplicateDiagnostics,
   extractDirectiveDefinitions,
   toPosixPath,
 } from "../shared/index.js";
-import { collectResults } from "../type-extractor/collector/result-collector.js";
 import {
-  type CollectedScalarType,
   type ConfigScalarMapping,
-  collectScalars,
-  type ScalarMetadataInfo,
-} from "../type-extractor/collector/scalar-collector.js";
-import { convertToGraphQL } from "../type-extractor/converter/graphql-converter.js";
-import {
-  extractTypesFromProgram,
+  collectDeclaredTypeNames,
+  type ExtractTypesResult,
+  extractTypes,
   type GlobalTypeMapping,
-} from "../type-extractor/extractor/type-extractor.js";
-import { collectDeclaredTypeNames } from "../type-extractor/extractor/type-name-collector.js";
-import type { ExtractedTypeInfo } from "../type-extractor/index.js";
-import {
-  buildScalarMappingTable,
-  type ScalarBaseTypeMappingTable,
-} from "../type-extractor/mapper/scalar-base-type-mapper.js";
-import { validateTypes } from "../type-extractor/validator/type-validator.js";
+} from "../type-extractor/index.js";
 import { scanDirectory } from "./infra/file-scanner.js";
 import { createSharedProgram } from "./infra/program-factory.js";
 import { writeFiles } from "./writer/file-writer.js";
@@ -76,26 +51,6 @@ export interface GenerationResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
-interface TypesResult {
-  types: ReturnType<typeof collectResults>["types"];
-  extractedTypes: ReadonlyArray<ExtractedTypeInfo>;
-  diagnostics: Diagnostics;
-  detectedScalarNames: ReadonlyArray<string>;
-  detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
-  collectedScalars: ReadonlyArray<CollectedScalarType>;
-  scalarMappingTable: ScalarBaseTypeMappingTable | null;
-  discoveredTypeNames: ReadonlySet<string>;
-}
-
-interface ResolversResult {
-  queryFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
-  mutationFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
-  subscriptionFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
-  typeExtensions: ReadonlyArray<TypeExtension>;
-  abstractTypeResolvers: ReadonlyArray<AbstractResolverInfo>;
-  diagnostics: Diagnostics;
-}
-
 interface ScalarConfig {
   readonly customScalarNames: string[];
   readonly globalTypeMappings: GlobalTypeMapping[];
@@ -109,8 +64,8 @@ interface PipelineContext {
   readonly knownTypeNames: ReadonlySet<string> | null;
   readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol> | null;
   readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string> | null;
-  readonly typesResult: TypesResult | null;
-  readonly resolversResult: ResolversResult | null;
+  readonly typesResult: ExtractTypesResult | null;
+  readonly resolversResult: ExtractResolversResult | null;
   readonly directiveDefinitions: DirectiveDefinitionInfo[] | null;
   readonly scalarConfig: ScalarConfig | null;
   readonly diagnostics: Diagnostic[];
@@ -137,234 +92,6 @@ function hasErrors(
     typesResult.diagnostics.errors.length > 0 ||
     resolversResult.diagnostics.errors.length > 0
   );
-}
-
-interface ExtractTypesCoreParams {
-  readonly program: ts.Program;
-  readonly sourceFiles: ReadonlyArray<string>;
-  readonly customScalarNames: ReadonlyArray<string>;
-  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
-  readonly configScalars: ReadonlyArray<ConfigScalarMapping>;
-  readonly sourceRoot: string | null;
-  readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
-}
-
-function extractTypesCore(params: ExtractTypesCoreParams): TypesResult {
-  const {
-    program,
-    sourceFiles,
-    customScalarNames,
-    globalTypeMappings,
-    configScalars,
-    sourceRoot,
-    knownTypeNames,
-    knownTypeSymbols,
-    underlyingSymbolToTypeName,
-  } = params;
-  const allDiagnostics: Diagnostic[] = [];
-
-  // Pass 1: Extract types and detect scalars (without scalar mapping table)
-  const pass1Result = extractTypesFromProgram(program, sourceFiles, {
-    globalTypeMappings,
-    knownTypeNames,
-    knownTypeSymbols,
-    underlyingSymbolToTypeName,
-    scalarMappingTable: null,
-  });
-
-  // Build scalar mapping table from detected scalars
-  const scalarMappingTable =
-    pass1Result.detectedScalars.length > 0
-      ? buildScalarMappingTable({
-          detectedScalars: pass1Result.detectedScalars,
-          checker: program.getTypeChecker(),
-          program,
-        })
-      : null;
-
-  // Report scalar mapping conflicts as diagnostics
-  if (scalarMappingTable) {
-    for (const [, conflict] of scalarMappingTable.conflicts) {
-      const baseTypeName = conflict.baseTypeSymbol.getName();
-      const scalarNames = conflict.conflictingScalars
-        .map((s) => s.scalarName)
-        .join(", ");
-      allDiagnostics.push({
-        code: conflict.code,
-        message: `Base type '${baseTypeName}' maps to multiple scalars: ${scalarNames}. Use explicit scalar type instead of the base type.`,
-        severity: "error",
-        location: null,
-      });
-    }
-  }
-
-  // Pass 2: Re-extract types with scalar mapping table (if we have detected scalars)
-  const extractionResult = scalarMappingTable
-    ? extractTypesFromProgram(program, sourceFiles, {
-        globalTypeMappings,
-        knownTypeNames,
-        knownTypeSymbols,
-        underlyingSymbolToTypeName,
-        scalarMappingTable,
-      })
-    : pass1Result;
-
-  allDiagnostics.push(...extractionResult.diagnostics);
-
-  const allCustomScalarNames = [
-    ...customScalarNames,
-    ...extractionResult.detectedScalarNames,
-  ];
-
-  const scalarValidationResult = collectScalars(
-    extractionResult.detectedScalars,
-    configScalars,
-    { sourceRoot },
-  );
-  const collectedScalars: CollectedScalarType[] = scalarValidationResult.success
-    ? [...scalarValidationResult.data]
-    : [];
-  if (!scalarValidationResult.success) {
-    for (const error of scalarValidationResult.errors) {
-      allDiagnostics.push({
-        code: error.code,
-        message: error.message,
-        severity: error.severity,
-        location: null,
-      });
-    }
-  }
-
-  const conversionResult = convertToGraphQL(extractionResult.types);
-  allDiagnostics.push(...conversionResult.diagnostics);
-
-  const validationResult = validateTypes({
-    types: conversionResult.types,
-    customScalarNames: allCustomScalarNames,
-  });
-  allDiagnostics.push(...validationResult.diagnostics);
-
-  const result = collectResults(conversionResult.types, allDiagnostics);
-  return {
-    ...result,
-    extractedTypes: extractionResult.types,
-    detectedScalarNames: extractionResult.detectedScalarNames,
-    detectedScalars: extractionResult.detectedScalars,
-    collectedScalars,
-    scalarMappingTable,
-    discoveredTypeNames: extractionResult.discoveredTypeNames,
-  };
-}
-
-function convertArgsToInputValues(
-  args: ReadonlyArray<ArgumentDefinition>,
-): GraphQLInputValue[] {
-  return args.map((arg) => ({
-    name: arg.name,
-    type: {
-      ...convertTsTypeToGraphQLType(arg.tsType),
-      nullable: arg.tsType.nullable || arg.optional,
-    },
-    description: arg.description,
-    deprecated: arg.deprecated,
-    defaultValue: arg.defaultValue,
-    inlineObjectProperties: arg.tsType.inlineObjectProperties ?? null,
-    inlineEnumMembers: arg.tsType.inlineEnumMembers ?? null,
-    externalEnumSymbol: arg.tsType.externalEnumSymbol ?? null,
-    externalEnumDescription: arg.tsType.externalEnumDescription ?? null,
-    externalEnumDeprecated: arg.tsType.externalEnumDeprecated ?? null,
-    inlineUnionMembers:
-      arg.tsType.kind === "union" ? (arg.tsType.members ?? null) : null,
-  }));
-}
-
-function convertDefineApiToFields(
-  resolvers: ReadonlyArray<DefineApiResolverInfo>,
-): {
-  queryFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
-  mutationFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
-  subscriptionFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
-  typeExtensions: ReadonlyArray<TypeExtension>;
-  diagnostics: ReadonlyArray<Diagnostic>;
-} {
-  const queryFields: GraphQLFieldDefinition[] = [];
-  const mutationFields: GraphQLFieldDefinition[] = [];
-  const subscriptionFields: GraphQLFieldDefinition[] = [];
-  const typeExtensionMap = new Map<string, GraphQLFieldDefinition[]>();
-  const diagnostics: Diagnostic[] = [];
-
-  for (const resolver of resolvers) {
-    const eligibility = isEligibleField({
-      fieldName: resolver.fieldName,
-      kind: "object",
-    });
-    if (!eligibility.eligible) {
-      diagnostics.push({
-        code: "SKIPPED_FIELD",
-        message: eligibility.skipReason.message,
-        severity: "warning",
-        location: {
-          file: resolver.sourceLocation.file,
-          line: resolver.sourceLocation.line,
-          column: resolver.sourceLocation.column,
-        },
-      });
-      continue;
-    }
-
-    const returnType = resolver.returnType;
-    const fieldDef: GraphQLFieldDefinition = {
-      name: resolver.fieldName,
-      type: convertTsTypeToGraphQLType(returnType),
-      args: resolver.args ? convertArgsToInputValues(resolver.args) : null,
-      sourceLocation: resolver.sourceLocation,
-      resolverExportName: resolver.resolverExportName,
-      description: resolver.description,
-      deprecated: resolver.deprecated,
-      directives: resolver.directives,
-      returnTypeInlineObjectProperties:
-        returnType.inlineObjectProperties ?? null,
-      returnTypeInlineObjectDescription:
-        returnType.inlineObjectDescription ?? null,
-      returnTypeInlineObjectDeprecated:
-        returnType.inlineObjectDeprecated ?? null,
-      returnTypeInlineEnumMembers: returnType.inlineEnumMembers ?? null,
-      returnTypeInlineUnionMembers:
-        returnType.kind === "union" ? (returnType.members ?? null) : null,
-      returnTypeExternalEnumSymbol: returnType.externalEnumSymbol ?? null,
-      returnTypeExternalEnumDescription:
-        returnType.externalEnumDescription ?? null,
-      returnTypeExternalEnumDeprecated:
-        returnType.externalEnumDeprecated ?? null,
-    };
-
-    if (resolver.resolverType === "query") {
-      queryFields.push(fieldDef);
-    } else if (resolver.resolverType === "mutation") {
-      mutationFields.push(fieldDef);
-    } else if (resolver.resolverType === "subscription") {
-      subscriptionFields.push(fieldDef);
-    } else if (resolver.resolverType === "field" && resolver.parentTypeName) {
-      const existing = typeExtensionMap.get(resolver.parentTypeName) ?? [];
-      existing.push(fieldDef);
-      typeExtensionMap.set(resolver.parentTypeName, existing);
-    }
-  }
-
-  const typeExtensions: TypeExtension[] = [];
-  for (const [targetTypeName, fields] of typeExtensionMap) {
-    typeExtensions.push({ targetTypeName, fields });
-  }
-
-  return {
-    queryFields: { fields: queryFields },
-    mutationFields: { fields: mutationFields },
-    subscriptionFields: { fields: subscriptionFields },
-    typeExtensions,
-    diagnostics,
-  };
 }
 
 function normalizePathInMessage(message: string, sourceRoot: string): string {
@@ -401,57 +128,6 @@ function normalizeDiagnosticPaths(
     };
   });
   return deduplicateDiagnostics(normalized);
-}
-
-interface ExtractResolversCoreParams {
-  readonly program: ts.Program;
-  readonly sourceFiles: ReadonlyArray<string>;
-  readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
-  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
-  readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
-}
-
-function extractResolversCore(
-  params: ExtractResolversCoreParams,
-): ResolversResult {
-  const {
-    program,
-    sourceFiles,
-    knownTypeNames,
-    knownTypeSymbols,
-    underlyingSymbolToTypeName,
-    globalTypeMappings,
-    scalarMappingTable,
-  } = params;
-  const allDiagnostics: Diagnostic[] = [];
-
-  const sourceFilesSet = new Set(sourceFiles);
-  const defineApiExtractionResult = extractDefineApiResolvers(
-    program,
-    sourceFiles,
-    {
-      knownTypeNames,
-      knownTypeSymbols,
-      underlyingSymbolToTypeName,
-      globalTypeMappings,
-      sourceFiles: sourceFilesSet,
-      scalarMappingTable,
-    },
-  );
-  allDiagnostics.push(...defineApiExtractionResult.diagnostics);
-
-  const result = convertDefineApiToFields(defineApiExtractionResult.resolvers);
-  allDiagnostics.push(...result.diagnostics);
-  return {
-    queryFields: result.queryFields,
-    mutationFields: result.mutationFields,
-    subscriptionFields: result.subscriptionFields,
-    typeExtensions: result.typeExtensions,
-    abstractTypeResolvers: defineApiExtractionResult.abstractTypeResolvers,
-    diagnostics: collectDiagnostics(allDiagnostics),
-  };
 }
 
 function buildExcludePaths(
@@ -621,7 +297,7 @@ function extractTypesStep(ctx: PipelineContext): PipelineContext {
   const { customScalarNames, globalTypeMappings, configScalars } =
     ctx.scalarConfig;
 
-  const typesResult = extractTypesCore({
+  const typesResult = extractTypes({
     program: ctx.program,
     sourceFiles: ctx.sourceFiles,
     customScalarNames,
@@ -662,7 +338,7 @@ function extractResolversStep(ctx: PipelineContext): PipelineContext {
 
   const { globalTypeMappings } = ctx.scalarConfig;
 
-  const resolversResult = extractResolversCore({
+  const resolversResult = extractResolvers({
     program: ctx.program,
     sourceFiles: ctx.sourceFiles,
     knownTypeNames: ctx.knownTypeNames,

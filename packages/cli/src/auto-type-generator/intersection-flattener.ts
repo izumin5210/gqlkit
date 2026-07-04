@@ -7,7 +7,7 @@ import {
   type InlineObjectPropertyDef,
   type TSTypeReference,
 } from "../core/index.js";
-import type { ExtractedTypeInfo } from "../type-extractor/types/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import { generateDiscriminatorMemberName } from "./discriminator-naming.js";
 import type {
   InlineUnionMemberInfo,

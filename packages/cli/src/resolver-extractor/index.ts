@@ -1,3 +1,11 @@
+export {
+  type ExtractResolversParams,
+  extractResolvers,
+} from "./extract-resolvers.js";
+export type {
+  AbstractResolverInfo,
+  AbstractResolverKind,
+} from "./extractor/define-api-extractor.js";
 export type {
   ExtractResolversResult,
   GraphQLFieldDefinition,
@@ -6,8 +14,4 @@ export type {
   QueryFieldDefinitions,
   SubscriptionFieldDefinitions,
   TypeExtension,
-} from "./extract-resolvers.js";
-export type {
-  AbstractResolverInfo,
-  AbstractResolverKind,
-} from "./extractor/define-api-extractor.js";
+} from "./types.js";

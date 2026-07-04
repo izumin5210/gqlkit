@@ -250,7 +250,7 @@ Rules for every phase: independently mergeable PR(s); `pnpm check && pnpm typech
 1. Move `extractTypesCore` → `type-extractor/extract-types.ts` as `extractTypes()`; move `convertDefineApiToFields`/`convertArgsToInputValues` → `resolver-extractor/converter/`; export entry functions from each `index.ts`.
 2. Rewrite `orchestrator.ts` to consume only stage `index.ts` exports; delete its local `TypesResult`/`ResolversResult` duplicates in favor of stage-exported result types.
 3. Absorb `generate-schema.ts`'s auto-type sequencing behind `auto-type-generator`'s facade: one `collectResolveTypes()` merging the discriminator and typename pipelines; `generate-schema.ts` shrinks accordingly. Enforce facade imports in schema-generator (today it deep-imports 4 auto-type-generator files).
-- **Acceptance**: goldens byte-identical; `orchestrator.ts` has zero non-`index.ts` stage imports; `gen-orchestrator` shrinks to wiring + IO.
+- **Acceptance**: goldens byte-identical; `orchestrator.ts` has zero non-`index.ts` stage imports; `gen-orchestrator` shrinks to wiring + IO. Note (recorded during execution): all achieved; baseline shrank 26→2 (every `stage-boundary-*` rule now at zero; the 2 remaining entries are the intra-module `no-circular` cycles owned by Phases 8-9). `collectResolveTypes()` deliberately did NOT absorb `collectTypenameExtractions` (out of the named-pipeline scope; Phase 8 owns the real merge redesign). resolver-extractor gained a `types.ts` split because moving the converter next to the type declarations would otherwise have created a new file cycle — caught live by the depcruise ratchet.
 
 ### Phase 4 — Small bug-fix batch *(user-visible; changesets required)*
 

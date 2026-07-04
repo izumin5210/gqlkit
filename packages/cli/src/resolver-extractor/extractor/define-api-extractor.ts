@@ -29,10 +29,10 @@ import {
 } from "../../shared/typescript-utils.js";
 import {
   type FieldTypeResolverContext,
+  type GlobalTypeMapping,
   resolveFieldType,
-} from "../../type-extractor/extractor/field-type-resolver.js";
-import type { GlobalTypeMapping } from "../../type-extractor/extractor/type-extractor.js";
-import type { ScalarBaseTypeMappingTable } from "../../type-extractor/mapper/scalar-base-type-mapper.js";
+  type ScalarBaseTypeMappingTable,
+} from "../../type-extractor/index.js";
 
 export type DefineApiResolverType =
   | "query"

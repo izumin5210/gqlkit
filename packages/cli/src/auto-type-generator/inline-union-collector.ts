@@ -8,7 +8,7 @@ import { getSourceLocationOrDefault } from "../shared/source-location.js";
 import type {
   ExtractedTypeInfo,
   FieldDefinition,
-} from "../type-extractor/types/index.js";
+} from "../type-extractor/index.js";
 import {
   getInlineObjectPropertiesFromType,
   traverseInlineObjectProperties,
