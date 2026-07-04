@@ -19,6 +19,8 @@ jobs:
             run: pnpm build && pnpm -r gen
           - name: knip
             run: pnpm knip
+          - name: depcruise
+            run: pnpm depcruise
       fail-fast: false
     runs-on: ubuntu-latest
     permissions:
