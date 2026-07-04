@@ -1,7 +1,7 @@
 {
   "name": "gqlkit",
   "private": true,
-  "packageManager": "pnpm@10.34.1",
+  "packageManager": "pnpm@11.9.0",
   "scripts": {
     "prepare": "lefthook install",
     "build": "pnpm -r build",
