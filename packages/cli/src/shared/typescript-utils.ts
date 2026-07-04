@@ -1,5 +1,4 @@
 import ts from "typescript";
-import { isInlineObjectType } from "./inline-object-utils.js";
 
 /**
  * Extracts type name from a TypeNode.
@@ -115,22 +114,6 @@ export function isAnonymousObjectType(type: ts.Type): boolean {
 }
 
 /**
- * Checks if a type is an object-like type (interface, anonymous object, or mapped type).
- * Used to determine if an intersection of object types should be treated as inline.
- */
-function isObjectLikeType(type: ts.Type): boolean {
-  if (!(type.flags & ts.TypeFlags.Object)) {
-    return false;
-  }
-  const objectType = type as ts.ObjectType;
-  return (
-    (objectType.objectFlags & ts.ObjectFlags.Interface) !== 0 ||
-    (objectType.objectFlags & ts.ObjectFlags.Anonymous) !== 0 ||
-    (objectType.objectFlags & ts.ObjectFlags.Mapped) !== 0
-  );
-}
-
-/**
  * Extracts property symbols from a type, handling intersection types
  * and falling back to getApparentType when getProperties() returns empty.
  */
@@ -163,30 +146,6 @@ export function extractPropertySymbols(
   }
 
   return [];
-}
-
-/**
- * Determines if an intersection type should be treated as an inline object.
- * Returns true when:
- * - Case 1: Has at least one anonymous/inline member
- * - Case 2: All members are object-like types that should be merged
- */
-export function shouldTreatIntersectionAsInline(
-  type: ts.IntersectionType,
-): boolean {
-  const hasResolvableMember = type.types.some(
-    (t) => isInlineObjectType(t) || isAnonymousObjectType(t),
-  );
-  if (hasResolvableMember) {
-    return true;
-  }
-
-  const allObjectLike = type.types.every((t) => isObjectLikeType(t));
-  if (allObjectLike) {
-    return true;
-  }
-
-  return false;
 }
 
 /**
