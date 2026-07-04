@@ -55,6 +55,70 @@ export function findNonNullTypeNode(
 }
 
 /**
+ * Parameters for {@link findMetadataProperty}.
+ */
+export interface FindMetadataPropertyParams {
+  readonly type: ts.Type;
+  readonly propertyNames: ReadonlyArray<string>;
+  readonly recurseUnion: boolean;
+}
+
+/**
+ * Finds a metadata property symbol on a type by walking the "own property ->
+ * each intersection member -> non-null union members" shape shared by
+ * gqlkit's metadata detectors (field meta, type meta, interface meta, etc).
+ *
+ * At each tier, `propertyNames` are tried in order and the first match wins.
+ * This reproduces call sites that fall back between multiple marker property
+ * names (e.g. field-meta or type-meta) without changing tier-priority: every
+ * name is checked against the current tier before moving to the next tier.
+ *
+ * Set `recurseUnion` to `false` to reproduce call sites that never handle
+ * union types (own + intersection tiers only).
+ */
+export function findMetadataProperty(
+  params: FindMetadataPropertyParams,
+): ts.Symbol | undefined {
+  const { type, propertyNames, recurseUnion } = params;
+
+  for (const name of propertyNames) {
+    const prop = type.getProperty(name);
+    if (prop) {
+      return prop;
+    }
+  }
+
+  if (type.isIntersection()) {
+    for (const member of type.types) {
+      for (const name of propertyNames) {
+        const memberProp = member.getProperty(name);
+        if (memberProp) {
+          return memberProp;
+        }
+      }
+    }
+  }
+
+  if (recurseUnion && type.isUnion()) {
+    for (const member of type.types) {
+      if (isNullOrUndefined(member)) {
+        continue;
+      }
+      const result = findMetadataProperty({
+        type: member,
+        propertyNames,
+        recurseUnion,
+      });
+      if (result) {
+        return result;
+      }
+    }
+  }
+
+  return undefined;
+}
+
+/**
  * Checks if a union type contains null or undefined.
  */
 export function isNullableUnion(type: ts.Type): boolean {
