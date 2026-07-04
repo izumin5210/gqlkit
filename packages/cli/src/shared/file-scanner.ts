@@ -20,12 +20,6 @@ export interface ScanOptions {
    * Each path is individually excluded from scanning.
    */
   readonly excludePaths?: ReadonlyArray<string>;
-
-  /**
-   * Simple suffix patterns to exclude (existing behavior).
-   * @deprecated Use excludeGlobs instead
-   */
-  readonly excludePatterns?: ReadonlyArray<string>;
 }
 
 const TS_SOURCE_EXTENSIONS = [".ts", ".cts", ".mts"];
@@ -36,19 +30,6 @@ export function isTypeScriptSourceFile(fileName: string): boolean {
     return false;
   }
   return TS_SOURCE_EXTENSIONS.some((ext) => fileName.endsWith(ext));
-}
-
-function matchesSuffixPattern(fileName: string, pattern: string): boolean {
-  return fileName.endsWith(pattern);
-}
-
-function shouldExcludeBySuffix(
-  fileName: string,
-  excludePatterns: ReadonlyArray<string>,
-): boolean {
-  return excludePatterns.some((pattern) =>
-    matchesSuffixPattern(fileName, pattern),
-  );
 }
 
 function shouldExcludeByGlobs(
@@ -76,7 +57,6 @@ function shouldExcludeByPaths(
 
 interface CollectFilesContext {
   readonly rootDir: string;
-  readonly excludePatterns: ReadonlyArray<string>;
   readonly excludeGlobs: ReadonlyArray<string>;
   readonly excludePaths: ReadonlyArray<string>;
 }
@@ -98,9 +78,6 @@ async function collectFiles(
       await collectFiles(fullPath, files, context);
     } else if (entry.isFile()) {
       if (!isTypeScriptSourceFile(entry.name)) {
-        continue;
-      }
-      if (shouldExcludeBySuffix(entry.name, context.excludePatterns)) {
         continue;
       }
       if (
@@ -153,7 +130,6 @@ export async function scanDirectory(
 
   const context: CollectFilesContext = {
     rootDir: absolutePath,
-    excludePatterns: options.excludePatterns ?? [],
     excludeGlobs: options.excludeGlobs ?? [],
     excludePaths: options.excludePaths ?? [],
   };
