@@ -27,5 +27,4 @@ export {
   scanDirectory,
 } from "./file-scanner.js";
 export { toPosixPath } from "./path-utils.js";
-export type { SourceLocation } from "./source-location.js";
 export { convertTsTypeToGraphQLType } from "./type-converter.js";

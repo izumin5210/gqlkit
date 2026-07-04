@@ -5,6 +5,7 @@ import type {
   ResolvedOutputConfig,
   ResolvedScalarMapping,
 } from "../config-loader/index.js";
+import type { Diagnostic, Diagnostics } from "../core/index.js";
 import {
   type AbstractResolverInfo,
   type ArgumentDefinition,
@@ -42,11 +43,7 @@ import {
   type GlobalTypeMapping,
 } from "../type-extractor/extractor/type-extractor.js";
 import { collectDeclaredTypeNames } from "../type-extractor/extractor/type-name-collector.js";
-import type {
-  Diagnostic,
-  Diagnostics,
-  ExtractedTypeInfo,
-} from "../type-extractor/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import {
   buildScalarMappingTable,
   type ScalarBaseTypeMappingTable,

@@ -1,6 +1,6 @@
 import { readdir, stat } from "node:fs/promises";
 import { join, matchesGlob, relative, resolve } from "node:path";
-import type { Diagnostic } from "../type-extractor/types/index.js";
+import type { Diagnostic } from "../core/index.js";
 import { toPosixPath } from "./path-utils.js";
 
 export interface ScanResult {

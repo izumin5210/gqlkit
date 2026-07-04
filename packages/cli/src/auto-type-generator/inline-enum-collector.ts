@@ -1,4 +1,5 @@
 import type ts from "typescript";
+import type { SourceLocation } from "../core/index.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import { getSourceLocationOrDefault } from "../shared/source-location.js";
 import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
@@ -7,7 +8,6 @@ import type {
   FieldDefinition,
   InlineEnumMemberInfo,
   InlineObjectPropertyDef,
-  SourceLocation,
 } from "../type-extractor/types/index.js";
 import {
   getInlineObjectPropertiesFromType,

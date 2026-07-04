@@ -1,5 +1,6 @@
 import { resolve } from "node:path";
 import ts from "typescript";
+import type { Diagnostic, SourceLocation } from "../../core/index.js";
 import { isBuiltInScalar } from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
@@ -17,10 +18,7 @@ import {
   isDefineInterfaceTypeAlias,
 } from "../../shared/interface-detector.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
-import {
-  getSourceLocationFromNode,
-  type SourceLocation,
-} from "../../shared/source-location.js";
+import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
   extractTsDocFromSymbol,
   extractTsDocInfo,
@@ -42,7 +40,6 @@ import type {
   ScalarMappingContext,
 } from "../mapper/scalar-base-type-mapper.js";
 import type {
-  Diagnostic,
   EnumMemberInfo,
   ExtractedTypeInfo,
   FieldDefinition,

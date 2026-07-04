@@ -1,4 +1,5 @@
 import ts from "typescript";
+import type { Diagnostic, SourceLocation } from "../../core/index.js";
 import {
   isInternalTypeSymbol,
   METADATA_PROPERTIES,
@@ -30,10 +31,7 @@ import {
 } from "../../type-extractor/extractor/field-type-resolver.js";
 import type { GlobalTypeMapping } from "../../type-extractor/extractor/type-extractor.js";
 import type { ScalarBaseTypeMappingTable } from "../../type-extractor/mapper/scalar-base-type-mapper.js";
-import type {
-  Diagnostic,
-  TSTypeReference,
-} from "../../type-extractor/types/index.js";
+import type { TSTypeReference } from "../../type-extractor/types/index.js";
 
 export type DefineApiResolverType =
   | "query"
@@ -67,11 +65,7 @@ export interface DefineApiResolverInfo {
   readonly args: ReadonlyArray<ArgumentDefinition> | null;
   readonly returnType: TSTypeReference;
   readonly sourceFile: string;
-  readonly sourceLocation: {
-    readonly file: string;
-    readonly line: number;
-    readonly column: number;
-  };
+  readonly sourceLocation: SourceLocation;
   readonly exportedInputTypes: ReadonlyArray<ExportedInputType>;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
@@ -83,11 +77,7 @@ export interface AbstractResolverInfo {
   readonly targetTypeName: string;
   readonly exportName: string;
   readonly sourceFile: string;
-  readonly sourceLocation: {
-    readonly file: string;
-    readonly line: number;
-    readonly column: number;
-  };
+  readonly sourceLocation: SourceLocation;
 }
 
 export interface ExtractDefineApiResult {

@@ -1,4 +1,5 @@
 import { describe, expect, it } from "vitest";
+import type { SourceLocation } from "../core/index.js";
 import {
   createArrayType,
   createInlineObjectType,
@@ -8,7 +9,6 @@ import {
   type FieldDefinition,
   type InlineEnumMemberInfo,
   type InlineObjectPropertyDef,
-  type SourceLocation,
   type TSTypeReference,
 } from "../type-extractor/types/index.js";
 import { createInlineEnumType } from "../type-extractor/types/ts-type-reference-factory.js";

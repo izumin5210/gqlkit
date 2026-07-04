@@ -1,4 +1,5 @@
 import { isTypenameFieldName } from "../../auto-type-generator/typename-types.js";
+import type { Diagnostic, SourceLocation } from "../../core/index.js";
 import {
   BUILT_IN_SCALARS,
   isBuiltInScalar,
@@ -11,7 +12,6 @@ import {
 import { toScreamingSnakeCase } from "../../shared/string-utils.js";
 import { convertTsTypeToGraphQLType } from "../../shared/type-converter.js";
 import type {
-  Diagnostic,
   EnumMemberInfo,
   EnumValueInfo,
   ExtractedTypeInfo,
@@ -19,7 +19,6 @@ import type {
   GraphQLTypeInfo,
   InlineObjectMember,
   InlineObjectProperty,
-  SourceLocation,
 } from "../types/index.js";
 import { isEligibleAsEnumValue, isEligibleField } from "./field-eligibility.js";
 

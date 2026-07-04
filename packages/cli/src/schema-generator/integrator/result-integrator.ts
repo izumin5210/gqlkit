@@ -5,6 +5,7 @@ import type {
 } from "../../auto-type-generator/index.js";
 import type { TypenameAutoResolveTypeInfo } from "../../auto-type-generator/typename-resolve-type-generator.js";
 import { createFieldNameSet } from "../../auto-type-generator/typename-types.js";
+import type { Diagnostic } from "../../core/index.js";
 import type {
   AbstractResolverInfo,
   ExtractResolversResult,
@@ -30,7 +31,6 @@ import type { CollectedScalarType } from "../../type-extractor/collector/scalar-
 import { mergeDescriptions } from "../../type-extractor/collector/scalar-collector.js";
 import type { ExtractTypesResult } from "../../type-extractor/index.js";
 import type {
-  Diagnostic,
   EnumValueInfo,
   GraphQLFieldType,
 } from "../../type-extractor/types/index.js";

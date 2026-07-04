@@ -1,10 +1,10 @@
 import type ts from "typescript";
+import type { SourceLocation } from "../../core/index.js";
 import type {
   DirectiveArgumentValue,
   DirectiveInfo,
 } from "../../shared/directive-detector.js";
 import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
-import type { SourceLocation } from "./diagnostics.js";
 
 export type TypeKind =
   | "object"

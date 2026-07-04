@@ -1,4 +1,4 @@
-import type { Diagnostic, Diagnostics } from "../type-extractor/types/index.js";
+import type { Diagnostic, Diagnostics } from "../core/index.js";
 
 function getDiagnosticKey(d: Diagnostic): string {
   const locationKey = d.location

@@ -1,8 +1,7 @@
+import type { Diagnostic, SourceLocation } from "../core/index.js";
 import type {
-  Diagnostic,
   ExtractedTypeInfo,
   InlineObjectMember,
-  SourceLocation,
 } from "../type-extractor/types/index.js";
 import type { TypenameExtractionResult } from "./typename-extractor.js";
 import {

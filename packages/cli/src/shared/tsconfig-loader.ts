@@ -1,7 +1,7 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
 import ts from "typescript";
-import type { Diagnostic } from "../type-extractor/types/index.js";
+import type { Diagnostic } from "../core/index.js";
 
 export interface LoadTsconfigOptions {
   readonly cwd: string;

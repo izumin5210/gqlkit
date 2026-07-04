@@ -1,5 +1,6 @@
 import { relative } from "node:path";
 import ts from "typescript";
+import type { DiagnosticCode, SourceLocation } from "../../core/index.js";
 import {
   detectBrandedType,
   detectUniformBrandedType,
@@ -8,10 +9,7 @@ import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } from "../../shared/inline-object-extractor.js";
 import { isInlineObjectType } from "../../shared/inline-object-utils.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
-import {
-  getSourceLocationFromNode,
-  type SourceLocation,
-} from "../../shared/source-location.js";
+import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
   type DeprecationInfo,
   extractTsDocFromSymbol,
@@ -31,7 +29,6 @@ import type {
   ScalarMappingContext,
 } from "../mapper/scalar-base-type-mapper.js";
 import { lookupScalarMapping } from "../mapper/scalar-base-type-mapper.js";
-import type { DiagnosticCode } from "../types/diagnostics.js";
 import {
   createArrayType,
   createInlineEnumType,

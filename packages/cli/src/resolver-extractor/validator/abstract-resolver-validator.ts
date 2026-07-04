@@ -6,11 +6,8 @@
  * - isTypeOf must reference object types
  */
 
+import type { Diagnostic, DiagnosticCode } from "../../core/index.js";
 import type { BaseType } from "../../schema-generator/integrator/result-integrator.js";
-import type {
-  Diagnostic,
-  DiagnosticCode,
-} from "../../type-extractor/types/index.js";
 import type { AbstractResolverInfo } from "../extractor/define-api-extractor.js";
 
 export interface ValidateAbstractResolversOptions {

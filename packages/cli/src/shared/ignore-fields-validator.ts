@@ -6,10 +6,7 @@
  * all fields are excluded.
  */
 
-import type {
-  Diagnostic,
-  SourceLocation,
-} from "../type-extractor/types/diagnostics.js";
+import type { Diagnostic, SourceLocation } from "../core/index.js";
 
 /**
  * Parameters for validateIgnoreFields function.

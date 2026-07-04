@@ -64,42 +64,9 @@
   },
   {
     "type": "dependency",
-    "from": "packages/cli/src/shared/diagnostics.ts",
-    "to": "packages/cli/src/type-extractor/types/index.ts",
-    "unresolvedTo": "../type-extractor/types/index.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "shared-no-upward-imports"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "packages/cli/src/shared/directive-definition-extractor.ts",
     "to": "packages/cli/src/type-extractor/types/graphql.ts",
     "unresolvedTo": "../type-extractor/types/graphql.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "shared-no-upward-imports"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/cli/src/shared/file-scanner.ts",
-    "to": "packages/cli/src/type-extractor/types/index.ts",
-    "unresolvedTo": "../type-extractor/types/index.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "shared-no-upward-imports"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/cli/src/shared/ignore-fields-validator.ts",
-    "to": "packages/cli/src/type-extractor/types/diagnostics.ts",
-    "unresolvedTo": "../type-extractor/types/diagnostics.js",
     "dependencyTypes": ["local", "type-only", "import"],
     "rule": {
       "severity": "error",
@@ -122,39 +89,6 @@
     "from": "packages/cli/src/shared/interface-validator.ts",
     "to": "packages/cli/src/type-extractor/types/graphql.ts",
     "unresolvedTo": "../type-extractor/types/graphql.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "shared-no-upward-imports"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/cli/src/shared/interface-validator.ts",
-    "to": "packages/cli/src/type-extractor/types/index.ts",
-    "unresolvedTo": "../type-extractor/types/index.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "shared-no-upward-imports"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/cli/src/shared/program-factory.ts",
-    "to": "packages/cli/src/type-extractor/types/index.ts",
-    "unresolvedTo": "../type-extractor/types/index.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "shared-no-upward-imports"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/cli/src/shared/tsconfig-loader.ts",
-    "to": "packages/cli/src/type-extractor/types/index.ts",
-    "unresolvedTo": "../type-extractor/types/index.js",
     "dependencyTypes": ["local", "type-only", "import"],
     "rule": {
       "severity": "error",
@@ -460,17 +394,6 @@
   },
   {
     "type": "dependency",
-    "from": "packages/cli/src/auto-type-generator/name-collision-validator.ts",
-    "to": "packages/cli/src/type-extractor/types/index.ts",
-    "unresolvedTo": "../type-extractor/types/index.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "stage-boundary-type-extractor"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "packages/cli/src/auto-type-generator/typename-extractor.ts",
     "to": "packages/cli/src/type-extractor/types/index.ts",
     "unresolvedTo": "../type-extractor/types/index.js",
@@ -494,28 +417,6 @@
   {
     "type": "dependency",
     "from": "packages/cli/src/auto-type-generator/typename-validator.ts",
-    "to": "packages/cli/src/type-extractor/types/index.ts",
-    "unresolvedTo": "../type-extractor/types/index.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "stage-boundary-type-extractor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/cli/src/config-loader/loader.ts",
-    "to": "packages/cli/src/type-extractor/types/index.ts",
-    "unresolvedTo": "../type-extractor/types/index.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "stage-boundary-type-extractor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/cli/src/config-loader/validator.ts",
     "to": "packages/cli/src/type-extractor/types/index.ts",
     "unresolvedTo": "../type-extractor/types/index.js",
     "dependencyTypes": ["local", "type-only", "import"],
@@ -669,17 +570,6 @@
   },
   {
     "type": "dependency",
-    "from": "packages/cli/src/resolver-extractor/validator/abstract-resolver-validator.ts",
-    "to": "packages/cli/src/type-extractor/types/index.ts",
-    "unresolvedTo": "../../type-extractor/types/index.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "stage-boundary-type-extractor"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "packages/cli/src/schema-generator/builder/ast-builder.ts",
     "to": "packages/cli/src/type-extractor/types/index.ts",
     "unresolvedTo": "../../type-extractor/types/index.js",
@@ -757,42 +647,9 @@
   },
   {
     "type": "dependency",
-    "from": "packages/cli/src/shared/diagnostics.ts",
-    "to": "packages/cli/src/type-extractor/types/index.ts",
-    "unresolvedTo": "../type-extractor/types/index.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "stage-boundary-type-extractor"
-    }
-  },
-  {
-    "type": "dependency",
     "from": "packages/cli/src/shared/directive-definition-extractor.ts",
     "to": "packages/cli/src/type-extractor/types/graphql.ts",
     "unresolvedTo": "../type-extractor/types/graphql.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "stage-boundary-type-extractor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/cli/src/shared/file-scanner.ts",
-    "to": "packages/cli/src/type-extractor/types/index.ts",
-    "unresolvedTo": "../type-extractor/types/index.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "stage-boundary-type-extractor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/cli/src/shared/ignore-fields-validator.ts",
-    "to": "packages/cli/src/type-extractor/types/diagnostics.ts",
-    "unresolvedTo": "../type-extractor/types/diagnostics.js",
     "dependencyTypes": ["local", "type-only", "import"],
     "rule": {
       "severity": "error",
@@ -815,39 +672,6 @@
     "from": "packages/cli/src/shared/interface-validator.ts",
     "to": "packages/cli/src/type-extractor/types/graphql.ts",
     "unresolvedTo": "../type-extractor/types/graphql.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "stage-boundary-type-extractor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/cli/src/shared/interface-validator.ts",
-    "to": "packages/cli/src/type-extractor/types/index.ts",
-    "unresolvedTo": "../type-extractor/types/index.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "stage-boundary-type-extractor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/cli/src/shared/program-factory.ts",
-    "to": "packages/cli/src/type-extractor/types/index.ts",
-    "unresolvedTo": "../type-extractor/types/index.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "stage-boundary-type-extractor"
-    }
-  },
-  {
-    "type": "dependency",
-    "from": "packages/cli/src/shared/tsconfig-loader.ts",
-    "to": "packages/cli/src/type-extractor/types/index.ts",
-    "unresolvedTo": "../type-extractor/types/index.js",
     "dependencyTypes": ["local", "type-only", "import"],
     "rule": {
       "severity": "error",

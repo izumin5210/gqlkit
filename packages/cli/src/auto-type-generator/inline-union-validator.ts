@@ -1,7 +1,6 @@
+import type { Diagnostic, SourceLocation } from "../core/index.js";
 import type {
-  Diagnostic,
   ExtractedTypeInfo,
-  SourceLocation,
   TSTypeReference,
 } from "../type-extractor/types/index.js";
 import type { InlineUnionMemberInfo } from "./inline-union-types.js";

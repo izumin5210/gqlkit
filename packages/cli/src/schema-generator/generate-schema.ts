@@ -11,15 +11,13 @@ import {
 } from "../auto-type-generator/index.js";
 import type { ImportExtension } from "../config/types.js";
 import type { ResolvedDiscriminatorFieldsMap } from "../config-loader/index.js";
+import type { Diagnostic } from "../core/index.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import type { DirectiveDefinitionInfo } from "../shared/directive-definition-extractor.js";
 import type { CollectedScalarType } from "../type-extractor/collector/scalar-collector.js";
 import { convertToGraphQL } from "../type-extractor/converter/graphql-converter.js";
 import type { ExtractTypesResult } from "../type-extractor/index.js";
-import type {
-  Diagnostic,
-  ExtractedTypeInfo,
-} from "../type-extractor/types/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/types/index.js";
 import { buildDocumentNode } from "./builder/ast-builder.js";
 import { emitResolversCode, emitTypeDefsCode } from "./emitter/code-emitter.js";
 import { emitSdlContent } from "./emitter/sdl-emitter.js";

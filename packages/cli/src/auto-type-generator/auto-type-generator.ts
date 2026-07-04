@@ -1,5 +1,6 @@
 import type ts from "typescript";
 import type { ResolvedDiscriminatorFieldsMap } from "../config-loader/index.js";
+import type { Diagnostic, SourceLocation } from "../core/index.js";
 import type {
   ExtractResolversResult,
   GraphQLFieldDefinition,
@@ -19,13 +20,11 @@ import { convertTsTypeToGraphQLType } from "../shared/type-converter.js";
 import { isEligibleField } from "../type-extractor/converter/field-eligibility.js";
 import {
   createReferenceType,
-  type Diagnostic,
   type ExtractedTypeInfo,
   type FieldDefinition,
   type GraphQLFieldType,
   type InlineEnumMemberInfo,
   type InlineObjectPropertyDef,
-  type SourceLocation,
   type TSTypeReference,
 } from "../type-extractor/types/index.js";
 import {

@@ -1,10 +1,10 @@
+import type { SourceLocation } from "../core/index.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import { getSourceLocationOrDefault } from "../shared/source-location.js";
 import type {
   ExtractedTypeInfo,
   FieldDefinition,
   InlineObjectPropertyDef,
-  SourceLocation,
   TSTypeReference,
 } from "../type-extractor/types/index.js";
 import {
