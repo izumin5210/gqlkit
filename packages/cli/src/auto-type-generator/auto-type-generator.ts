@@ -146,7 +146,7 @@ interface InlineObjectWithContext {
   readonly nullable: boolean;
   /** TSDoc description from the inline object type alias (Requirement 7.2) */
   readonly description: string | null;
-  /** @deprecated tag from the inline object type alias (Requirement 7.3) */
+  /** Deprecation info from the `@deprecated` TSDoc tag on the inline object type alias (Requirement 7.3) */
   readonly deprecated: DeprecationInfo | null;
 }
 

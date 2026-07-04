@@ -56,7 +56,7 @@ export interface TSTypeReference {
   readonly inlineObjectProperties: ReadonlyArray<InlineObjectPropertyDef> | null;
   /** TSDoc description from the inline object type alias (Requirement 7.2) */
   readonly inlineObjectDescription: string | null;
-  /** @deprecated tag from the inline object type alias (Requirement 7.3) */
+  /** Deprecation info from the `@deprecated` TSDoc tag on the inline object type alias (Requirement 7.3) */
   readonly inlineObjectDeprecated: DeprecationInfo | null;
   /** Inline enum members when kind is "inlineEnum" */
   readonly inlineEnumMembers: ReadonlyArray<InlineEnumMemberInfo> | null;
@@ -66,7 +66,7 @@ export interface TSTypeReference {
   readonly externalEnumSymbol: ts.Symbol | null;
   /** TSDoc description from the external enum type itself (Requirement 6.1) */
   readonly externalEnumDescription: string | null;
-  /** @deprecated tag from the external enum type itself (Requirement 6.3) */
+  /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself (Requirement 6.3) */
   readonly externalEnumDeprecated: DeprecationInfo | null;
 }
 

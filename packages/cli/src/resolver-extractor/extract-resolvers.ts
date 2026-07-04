@@ -25,7 +25,7 @@ export interface GraphQLInputValue {
   readonly externalEnumSymbol: ts.Symbol | null;
   /** TSDoc description from the external enum type itself (null for string literal unions) */
   readonly externalEnumDescription: string | null;
-  /** @deprecated tag from the external enum type itself (null for string literal unions) */
+  /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself (null for string literal unions) */
   readonly externalEnumDeprecated: DeprecationInfo | null;
   /** Inline union members when arg type is a union type (for @oneOf input objects) */
   readonly inlineUnionMembers: ReadonlyArray<TSTypeReference> | null;
@@ -44,7 +44,7 @@ export interface GraphQLFieldDefinition {
   readonly returnTypeInlineObjectProperties: ReadonlyArray<InlineObjectPropertyDef> | null;
   /** TSDoc description from the inline object type alias (Requirement 7.2) */
   readonly returnTypeInlineObjectDescription: string | null;
-  /** @deprecated tag from the inline object type alias (Requirement 7.3) */
+  /** Deprecation info from the `@deprecated` TSDoc tag on the inline object type alias (Requirement 7.3) */
   readonly returnTypeInlineObjectDeprecated: DeprecationInfo | null;
   /** Inline enum members when return type is an inline enum (string literal union or external TypeScript enum) */
   readonly returnTypeInlineEnumMembers: ReadonlyArray<InlineEnumMemberInfo> | null;
@@ -54,7 +54,7 @@ export interface GraphQLFieldDefinition {
   readonly returnTypeExternalEnumSymbol: ts.Symbol | null;
   /** TSDoc description from the external enum type itself (null for string literal unions) */
   readonly returnTypeExternalEnumDescription: string | null;
-  /** @deprecated tag from the external enum type itself (null for string literal unions) */
+  /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself (null for string literal unions) */
   readonly returnTypeExternalEnumDeprecated: DeprecationInfo | null;
 }
 

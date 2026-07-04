@@ -815,7 +815,7 @@ interface ExternalEnumExtractionResult {
   readonly members: ReadonlyArray<InlineEnumMemberInfo>;
   /** TSDoc description from the enum type itself */
   readonly description: string | null;
-  /** @deprecated tag from the enum type itself */
+  /** Deprecation info from the `@deprecated` TSDoc tag on the enum type itself */
   readonly deprecated: DeprecationInfo | null;
 }
 

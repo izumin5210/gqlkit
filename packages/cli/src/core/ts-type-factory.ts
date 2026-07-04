@@ -90,7 +90,7 @@ interface CreateInlineObjectTypeParams {
   readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
   /** TSDoc description from the type alias (null for true inline objects) */
   readonly description: string | null;
-  /** @deprecated tag from the type alias (null for true inline objects) */
+  /** Deprecation info from the `@deprecated` TSDoc tag on the type alias (null for true inline objects) */
   readonly deprecated: DeprecationInfo | null;
   /** Original type name hint for inline objects extracted from external types */
   readonly hintName: string | null;
@@ -151,7 +151,7 @@ interface CreateInlineEnumTypeParams {
   readonly externalEnumSymbol: ts.Symbol | null;
   /** TSDoc description from the external enum type itself (null for string literal unions) */
   readonly externalEnumDescription: string | null;
-  /** @deprecated tag from the external enum type itself (null for string literal unions) */
+  /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself (null for string literal unions) */
   readonly externalEnumDeprecated: DeprecationInfo | null;
 }
 

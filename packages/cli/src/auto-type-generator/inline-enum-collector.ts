@@ -39,7 +39,7 @@ export interface InlineEnumWithContext {
   readonly externalEnumSymbol: ts.Symbol | null;
   /** TSDoc description from the external enum type itself (null for string literal unions) */
   readonly externalEnumDescription: string | null;
-  /** @deprecated tag from the external enum type itself (null for string literal unions) */
+  /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself (null for string literal unions) */
   readonly externalEnumDeprecated: DeprecationInfo | null;
 }
 
