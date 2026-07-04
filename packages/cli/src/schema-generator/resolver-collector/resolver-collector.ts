@@ -4,7 +4,7 @@ import type { AbstractResolverInfo } from "../../resolver-extractor/extractor/de
 import type {
   ExtensionField,
   IntegratedResult,
-  TypeExtension,
+  IntegratedTypeExtension,
 } from "../integrator/result-integrator.js";
 
 export interface FieldResolver {
@@ -55,7 +55,7 @@ function collectFieldResolver(
   };
 }
 
-function collectFieldResolvers(ext: TypeExtension): FieldResolver[] {
+function collectFieldResolvers(ext: IntegratedTypeExtension): FieldResolver[] {
   const fallbackResolverValueName = getResolverValueName(ext.targetTypeName);
 
   return ext.fields.map((field) =>

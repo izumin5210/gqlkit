@@ -4,12 +4,11 @@ export {
   generateSchema,
 } from "./generate-schema.js";
 export type {
-  BaseField,
   BaseType,
   CustomScalarInfo,
   ExtensionField,
   IntegratedResult,
-  TypeExtension,
+  IntegratedTypeExtension,
 } from "./integrator/result-integrator.js";
 export type {
   AbstractTypeResolverInfo,
