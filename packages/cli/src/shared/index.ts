@@ -18,10 +18,5 @@ export type {
   DirectiveDetectionErrorCode,
   DirectiveDetectionResult,
 } from "./directive-detector.js";
-export {
-  type ScanOptions,
-  type ScanResult,
-  scanDirectory,
-} from "./file-scanner.js";
 export { toPosixPath } from "./path-utils.js";
 export { convertTsTypeToGraphQLType } from "./type-converter.js";

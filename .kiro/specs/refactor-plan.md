@@ -243,7 +243,7 @@ Rules for every phase: independently mergeable PR(s); `pnpm check && pnpm typech
 2. Extract `findMetadataProperty({type, propertyName, checker})` into `shared/typescript-utils.ts` and rewire the 5 hand-rolled walks; replace the 3 copy-pasted `isNullOrUndefined` bodies with imports.
 3. Unify the pluralization dictionaries into `shared/pluralization.ts`.
 4. Move `abstract-resolver-validator.ts` into schema-generator (it consumes `BaseType` and is invoked from `result-integrator`), deleting the resolver-extractor→schema-generator back-edge and the duplicated alias-remapping (`result-integrator.ts:549-560` vs `abstract-resolver-validator.ts:216-225`).
-- **Acceptance**: goldens byte-identical; boundary check enforcing for all stages.
+- **Acceptance**: goldens byte-identical; boundary check enforcing for all stages. Note (recorded during execution): of the 5 hand-rolled metadata walks, 3 were rewired to `findMetadataProperty`; `ignore-fields-detector.ts` and the scalar classifier's intersection walk were intentionally left — their walks gate on extraction success / skip the own-property tier, semantics a find-first-property helper cannot reproduce. The pluralization dictionaries merged cleanly into one (no divergent words, verified empirically). The validator move avoided re-importing `BaseType` by declaring the structural subset it reads (`AbstractResolverTargetType`), which is what actually removed the `no-circular` entry.
 
 ### Phase 3 — Real stage facades *(mechanical)*
 

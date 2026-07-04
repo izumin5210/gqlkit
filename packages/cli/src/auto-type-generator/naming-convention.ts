@@ -1,3 +1,5 @@
+import { singularize } from "../shared/pluralization.js";
+
 /**
  * Context for generating auto type names based on different scenarios.
  */
@@ -55,31 +57,6 @@ export interface ResolverPayloadContext {
   readonly fieldPath: ReadonlyArray<string>;
 }
 
-const IRREGULAR_SINGULAR_FIELD_NAMES = new Map([
-  ["aliases", "alias"],
-  ["analyses", "analysis"],
-  ["buses", "bus"],
-  ["children", "child"],
-  ["cookies", "cookie"],
-  ["crises", "crisis"],
-  ["diagnoses", "diagnosis"],
-  ["feet", "foot"],
-  ["geese", "goose"],
-  ["men", "man"],
-  ["mice", "mouse"],
-  ["movies", "movie"],
-  ["people", "person"],
-  ["selfies", "selfie"],
-  ["statuses", "status"],
-  ["teeth", "tooth"],
-  ["theses", "thesis"],
-  ["women", "woman"],
-  ["zombies", "zombie"],
-]);
-
-const NON_INFLECTING_FIELD_NAMES = new Set(["news", "series", "species"]);
-const AMBIGUOUS_PLURAL_FIELD_NAMES = new Set(["axes"]);
-
 /**
  * Convert a string to PascalCase.
  * Handles camelCase, snake_case, and kebab-case inputs.
@@ -101,112 +78,12 @@ export function toPascalCase(str: string): string {
     .join("");
 }
 
-function isConsonant(char: string): boolean {
-  return /^[bcdfghjklmnpqrstvwxyz]$/i.test(char);
-}
-
-function isUppercaseLetter(char: string): boolean {
-  return char.toLowerCase() !== char && char.toUpperCase() === char;
-}
-
-function applyReplacementCase(params: {
-  readonly replacement: string;
-  readonly template: string;
-}): string {
-  const { replacement, template } = params;
-
-  if (template.toUpperCase() === template) {
-    return replacement.toUpperCase();
-  }
-
-  if (isUppercaseLetter(template.charAt(0))) {
-    return `${replacement.charAt(0).toUpperCase()}${replacement.slice(1)}`;
-  }
-
-  return replacement;
-}
-
-function singularizeIrregularFieldName(name: string): string | null {
-  const lowerName = name.toLowerCase();
-
-  for (const [plural, singular] of IRREGULAR_SINGULAR_FIELD_NAMES) {
-    if (!lowerName.endsWith(plural)) {
-      continue;
-    }
-
-    const suffixStart = name.length - plural.length;
-    if (suffixStart > 0) {
-      const previousChar = name.charAt(suffixStart - 1);
-      const suffixFirstChar = name.charAt(suffixStart);
-      const hasWordBoundary =
-        previousChar === "_" ||
-        previousChar === "-" ||
-        isUppercaseLetter(suffixFirstChar);
-
-      if (!hasWordBoundary) {
-        continue;
-      }
-    }
-
-    return `${name.slice(0, suffixStart)}${applyReplacementCase({
-      replacement: singular,
-      template: name.slice(suffixStart),
-    })}`;
-  }
-
-  return null;
-}
-
 /**
  * Singularize a plural field name conservatively for array element type naming.
  * Falls back to the original name when the plural form is ambiguous.
  */
 export function singularizeFieldName(name: string): string {
-  const irregularSingular = singularizeIrregularFieldName(name);
-  if (irregularSingular) {
-    return irregularSingular;
-  }
-
-  const lowerName = name.toLowerCase();
-
-  if (name.length <= 3 || NON_INFLECTING_FIELD_NAMES.has(lowerName)) {
-    return name;
-  }
-
-  if (AMBIGUOUS_PLURAL_FIELD_NAMES.has(lowerName)) {
-    return name;
-  }
-
-  if (lowerName.endsWith("ies")) {
-    if (name.length <= 4) {
-      return name.slice(0, -1);
-    }
-
-    if (isConsonant(lowerName.at(-4) ?? "")) {
-      return `${name.slice(0, -3)}y`;
-    }
-  }
-
-  if (
-    lowerName.endsWith("sses") ||
-    lowerName.endsWith("shes") ||
-    lowerName.endsWith("ches") ||
-    lowerName.endsWith("xes") ||
-    lowerName.endsWith("zes")
-  ) {
-    return name.slice(0, -2);
-  }
-
-  if (
-    lowerName.endsWith("s") &&
-    !lowerName.endsWith("ss") &&
-    !lowerName.endsWith("is") &&
-    !lowerName.endsWith("us")
-  ) {
-    return name.slice(0, -1);
-  }
-
-  return name;
+  return singularize(name);
 }
 
 interface AppendFieldPathParams {

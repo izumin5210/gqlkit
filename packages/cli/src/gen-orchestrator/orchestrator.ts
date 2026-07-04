@@ -29,10 +29,8 @@ import {
   type DirectiveDefinitionInfo,
   deduplicateDiagnostics,
   extractDirectiveDefinitions,
-  scanDirectory,
   toPosixPath,
 } from "../shared/index.js";
-import { createSharedProgram } from "../shared/program-factory.js";
 import { collectResults } from "../type-extractor/collector/result-collector.js";
 import {
   type CollectedScalarType,
@@ -52,6 +50,8 @@ import {
   type ScalarBaseTypeMappingTable,
 } from "../type-extractor/mapper/scalar-base-type-mapper.js";
 import { validateTypes } from "../type-extractor/validator/type-validator.js";
+import { scanDirectory } from "./infra/file-scanner.js";
+import { createSharedProgram } from "./infra/program-factory.js";
 import { writeFiles } from "./writer/file-writer.js";
 
 export interface GenerationConfig {

@@ -20,18 +20,18 @@ import type {
   GraphQLInputValue,
   TypeExtension,
 } from "../../resolver-extractor/index.js";
-import { validateAbstractResolvers } from "../../resolver-extractor/validator/abstract-resolver-validator.js";
 import type {
   DirectiveDefinitionInfo,
   DirectiveLocation,
 } from "../../shared/directive-definition-extractor.js";
-import {
-  detectCircularInterfaceReferences,
-  validateInterfaceImplementations,
-} from "../../shared/interface-validator.js";
 import type { CollectedScalarType } from "../../type-extractor/collector/scalar-collector.js";
 import { mergeDescriptions } from "../../type-extractor/collector/scalar-collector.js";
 import type { ExtractTypesResult } from "../../type-extractor/index.js";
+import { validateAbstractResolvers } from "../validator/abstract-resolver-validator.js";
+import {
+  detectCircularInterfaceReferences,
+  validateInterfaceImplementations,
+} from "../validator/interface-validator.js";
 
 export interface BaseType {
   readonly name: string;
@@ -516,14 +516,6 @@ export function integrate(params: IntegrateParams): IntegratedResult {
 
   const aliasMap = tsAliasToGraphQLNameMap ?? new Map<string, string>();
 
-  const abstractResolverValidation = validateAbstractResolvers({
-    abstractResolvers: resolversResult.abstractTypeResolvers,
-    baseTypes,
-    typenameAutoResolveTypeNames,
-    tsAliasToGraphQLNameMap: aliasMap,
-  });
-  diagnostics.push(...abstractResolverValidation.diagnostics);
-
   // Remap abstract resolver target type names from TS aliases to GraphQL names
   // Only remap resolveType resolvers — isTypeOf targets object types, not unions
   const remappedAbstractResolvers =
@@ -536,6 +528,13 @@ export function integrate(params: IntegrateParams): IntegratedResult {
             : resolver;
         })
       : resolversResult.abstractTypeResolvers;
+
+  const abstractResolverValidation = validateAbstractResolvers({
+    abstractResolvers: remappedAbstractResolvers,
+    baseTypes,
+    typenameAutoResolveTypeNames,
+  });
+  diagnostics.push(...abstractResolverValidation.diagnostics);
 
   const knownTypeNames = new Set([
     ...baseTypes.map((t) => t.name),

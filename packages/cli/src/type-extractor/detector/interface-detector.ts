@@ -7,7 +7,8 @@
  */
 
 import ts from "typescript";
-import { METADATA_PROPERTIES } from "../core/index.js";
+import { METADATA_PROPERTIES } from "../../core/index.js";
+import { findMetadataProperty } from "../../shared/typescript-utils.js";
 
 const INTERFACE_META_PROPERTY = METADATA_PROPERTIES.INTERFACE_META;
 const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
@@ -33,42 +34,26 @@ export function isDefineInterfaceTypeAlias(
  * Checks if a type has the $gqlkitInterfaceMeta property.
  */
 function hasInterfaceMetadata(type: ts.Type): boolean {
-  const metaProp = type.getProperty(INTERFACE_META_PROPERTY);
-  if (metaProp) {
-    return true;
-  }
-
-  if (type.isIntersection()) {
-    for (const member of type.types) {
-      const prop = member.getProperty(INTERFACE_META_PROPERTY);
-      if (prop) {
-        return true;
-      }
-    }
-  }
-
-  return false;
+  return (
+    findMetadataProperty({
+      type,
+      propertyNames: [INTERFACE_META_PROPERTY],
+      recurseUnion: false,
+    }) !== undefined
+  );
 }
 
 /**
  * Checks if a type has the $gqlkitTypeMeta property (GqlObject).
  */
 function hasTypeMetadata(type: ts.Type): boolean {
-  const metaProp = type.getProperty(TYPE_META_PROPERTY);
-  if (metaProp) {
-    return true;
-  }
-
-  if (type.isIntersection()) {
-    for (const member of type.types) {
-      const prop = member.getProperty(TYPE_META_PROPERTY);
-      if (prop) {
-        return true;
-      }
-    }
-  }
-
-  return false;
+  return (
+    findMetadataProperty({
+      type,
+      propertyNames: [TYPE_META_PROPERTY],
+      recurseUnion: false,
+    }) !== undefined
+  );
 }
 
 /**

@@ -16,14 +16,6 @@ import {
   hasDirectiveMetadata,
   unwrapDirectiveType,
 } from "../../shared/directive-detector.js";
-import { detectIgnoreFieldsMetadata } from "../../shared/ignore-fields-detector.js";
-import { validateIgnoreFields } from "../../shared/ignore-fields-validator.js";
-import {
-  extractImplementsFromDefineInterface,
-  extractImplementsFromGqlTypeDef,
-  isDefineInterfaceTypeAlias,
-} from "../../shared/interface-detector.js";
-import { detectScalarMetadata } from "../../shared/metadata-detector.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
   extractTsDocFromSymbol,
@@ -41,6 +33,13 @@ import {
   isNullOrUndefined,
 } from "../../shared/typescript-utils.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
+import { detectIgnoreFieldsMetadata } from "../detector/ignore-fields-detector.js";
+import { validateIgnoreFields } from "../detector/ignore-fields-validator.js";
+import {
+  extractImplementsFromDefineInterface,
+  extractImplementsFromGqlTypeDef,
+  isDefineInterfaceTypeAlias,
+} from "../detector/interface-detector.js";
 import type {
   ScalarBaseTypeMappingTable,
   ScalarMappingContext,
@@ -57,6 +56,7 @@ import {
   type FieldTypeResolverDiagnostic,
   resolveFieldType,
 } from "./field-type-resolver.js";
+import { detectScalarMetadata } from "./scalar-metadata-detector.js";
 
 /**
  * Global type mapping configuration.

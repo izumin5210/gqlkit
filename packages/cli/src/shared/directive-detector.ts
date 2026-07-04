@@ -13,6 +13,7 @@ import {
   METADATA_PROPERTIES,
 } from "../core/index.js";
 import { getActualMetadataType } from "./metadata-detector.js";
+import { findMetadataProperty, isNullOrUndefined } from "./typescript-utils.js";
 
 const FIELD_META_PROPERTY = METADATA_PROPERTIES.FIELD_META;
 const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
@@ -265,36 +266,35 @@ export function detectDirectiveMetadata(
   type: ts.Type,
   checker: ts.TypeChecker,
 ): DirectiveDetectionResult {
-  const metaProp = getMetaProperty(type);
-  if (!metaProp) {
-    if (type.isIntersection()) {
-      for (const member of type.types) {
-        const memberProp = getMetaProperty(member);
-        if (memberProp) {
-          return detectDirectiveMetadataFromProperty(memberProp, checker);
-        }
-      }
-    }
-    // Handle union types: (T & Directive) | null
-    if (type.isUnion()) {
-      for (const member of type.types) {
-        // Skip null/undefined members
-        if (
-          member.flags & ts.TypeFlags.Null ||
-          member.flags & ts.TypeFlags.Undefined
-        ) {
-          continue;
-        }
-        const result = detectDirectiveMetadata(member, checker);
-        if (result.directives.length > 0) {
-          return result;
-        }
-      }
-    }
-    return createEmptyResult();
+  // Own + intersection tiers: stop at the first metadata property found,
+  // regardless of what it extracts to (matches the pre-unification behavior
+  // of the inlined own/intersection checks this replaces).
+  const metaProp = findMetadataProperty({
+    type,
+    propertyNames: [FIELD_META_PROPERTY, TYPE_META_PROPERTY],
+    recurseUnion: false,
+  });
+  if (metaProp) {
+    return detectDirectiveMetadataFromProperty(metaProp, checker);
   }
 
-  return detectDirectiveMetadataFromProperty(metaProp, checker);
+  // Handle union types: (T & Directive) | null
+  // Unlike the tiers above, a union member's metadata property can
+  // legitimately extract to zero directives; we keep trying subsequent
+  // members in that case instead of stopping at the first property found,
+  // so this tier is intentionally not delegated to findMetadataProperty.
+  if (type.isUnion()) {
+    for (const member of type.types) {
+      if (isNullOrUndefined(member)) {
+        continue;
+      }
+      const result = detectDirectiveMetadata(member, checker);
+      if (result.directives.length > 0) {
+        return result;
+      }
+    }
+  }
+  return createEmptyResult();
 }
 
 function detectDirectiveMetadataFromProperty(
@@ -509,10 +509,7 @@ export function unwrapDirectiveType(
   if (type.isUnion()) {
     for (const member of type.types) {
       // Skip null/undefined members
-      if (
-        member.flags & ts.TypeFlags.Null ||
-        member.flags & ts.TypeFlags.Undefined
-      ) {
+      if (isNullOrUndefined(member)) {
         continue;
       }
       // Recursively unwrap if this member has metadata

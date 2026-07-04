@@ -12,6 +12,7 @@ import {
 } from "../core/index.js";
 import { resolveArgumentValue } from "./directive-detector.js";
 import { getActualMetadataType } from "./metadata-detector.js";
+import { findMetadataProperty } from "./typescript-utils.js";
 
 const FIELD_META_PROPERTY = METADATA_PROPERTIES.FIELD_META;
 const DEFAULT_VALUE_PROPERTY = "defaultValue";
@@ -48,36 +49,11 @@ function createEmptyResult(): DefaultValueDetectionResult {
  * Gets the field meta property from a type, checking various type structures.
  */
 function getFieldMetaProperty(type: ts.Type): ts.Symbol | undefined {
-  const prop = type.getProperty(FIELD_META_PROPERTY);
-  if (prop) {
-    return prop;
-  }
-
-  if (type.isIntersection()) {
-    for (const member of type.types) {
-      const memberProp = member.getProperty(FIELD_META_PROPERTY);
-      if (memberProp) {
-        return memberProp;
-      }
-    }
-  }
-
-  if (type.isUnion()) {
-    for (const member of type.types) {
-      if (
-        member.flags & ts.TypeFlags.Null ||
-        member.flags & ts.TypeFlags.Undefined
-      ) {
-        continue;
-      }
-      const result = getFieldMetaProperty(member);
-      if (result) {
-        return result;
-      }
-    }
-  }
-
-  return undefined;
+  return findMetadataProperty({
+    type,
+    propertyNames: [FIELD_META_PROPERTY],
+    recurseUnion: true,
+  });
 }
 
 /**

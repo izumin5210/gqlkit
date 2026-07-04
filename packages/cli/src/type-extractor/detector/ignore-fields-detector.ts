@@ -6,8 +6,8 @@
  */
 
 import ts from "typescript";
-import { METADATA_PROPERTIES } from "../core/index.js";
-import { getActualMetadataType } from "./metadata-detector.js";
+import { METADATA_PROPERTIES } from "../../core/index.js";
+import { getActualMetadataType } from "../../shared/metadata-detector.js";
 
 const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
 

@@ -2,8 +2,8 @@ import fs from "node:fs";
 import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { toPosixPath } from "../../shared/path-utils.js";
 import { isTypeScriptSourceFile, scanDirectory } from "./file-scanner.js";
-import { toPosixPath } from "./path-utils.js";
 
 describe("FileScanner", () => {
   let tempDir: string;
