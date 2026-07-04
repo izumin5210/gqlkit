@@ -1,7 +1,6 @@
 import {
-  collectDiscriminatorResolveTypes,
+  collectResolveTypes,
   collectTypenameExtractions,
-  collectTypenameResolveTypes,
   flattenIntersectionMembers,
   generateAutoTypes,
   validateDiscriminatorFields,
@@ -178,36 +177,22 @@ export function generateSchema(
     },
   };
 
-  const manualResolveTypeNames = new Set(
-    autoTypeResult.updatedResolversResult.abstractTypeResolvers
-      .filter((r) => r.kind === "resolveType")
-      .map((r) => r.targetTypeName),
-  );
-
-  // Collect discriminator resolve types from validated entries
-  const discriminatorResolveTypesResult = collectDiscriminatorResolveTypes({
-    validatedEntries: discriminatorValidationResult.validatedEntries,
-    manualResolveTypeNames,
-    extractedTypes: flattenedExtractedTypes,
-    typeMap,
-  });
-
-  // Merge inline discriminator resolveTypes from auto-type generation
-  // (for inline unions flattened by discriminator fields, e.g. UIMessagePart<...>[])
-  const mergedDiscriminatorResolveTypes = [
-    ...discriminatorResolveTypesResult.discriminatorResolveTypes,
-    ...autoTypeResult.inlineDiscriminatorResolveTypes,
-  ];
-  // discriminatorResolveTypeNames are derived by integrate() from the merged list
-
   const discriminatorFieldUnionNames = new Set(
     input.discriminatorFields.keys(),
   );
 
-  const typenameResolveTypesResult = collectTypenameResolveTypes({
+  const {
+    discriminatorResolveTypesResult,
+    mergedDiscriminatorResolveTypes,
+    typenameResolveTypesResult,
+  } = collectResolveTypes({
+    validatedEntries: discriminatorValidationResult.validatedEntries,
+    abstractTypeResolvers:
+      autoTypeResult.updatedResolversResult.abstractTypeResolvers,
     extractedTypes: flattenedExtractedTypes,
     typeMap,
-    manualResolveTypeNames,
+    inlineDiscriminatorResolveTypes:
+      autoTypeResult.inlineDiscriminatorResolveTypes,
     discriminatorFieldUnionNames,
   });
 
