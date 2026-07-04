@@ -7,7 +7,7 @@
  */
 
 import ts from "typescript";
-import { METADATA_PROPERTIES } from "../core/index.js";
+import { METADATA_PROPERTIES } from "../../core/index.js";
 
 const INTERFACE_META_PROPERTY = METADATA_PROPERTIES.INTERFACE_META;
 const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;

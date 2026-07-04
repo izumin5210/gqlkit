@@ -4,20 +4,20 @@ import type {
   DirectiveInfo,
   InlineObjectPropertyDef,
   TSTypeReference,
-} from "../core/index.js";
-import { detectDefaultValueMetadata } from "./default-value-detector.js";
+} from "../../core/index.js";
+import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   detectDirectiveMetadata,
   hasDirectiveMetadata,
   unwrapDirectiveType,
-} from "./directive-detector.js";
-import { getSourceLocationFromNode } from "./source-location.js";
-import { extractTsDocFromSymbol } from "./tsdoc-parser.js";
+} from "../../shared/directive-detector.js";
+import { getSourceLocationFromNode } from "../../shared/source-location.js";
+import { extractTsDocFromSymbol } from "../../shared/tsdoc-parser.js";
 import {
   extractPropertySymbols,
   hasUndefinedInType,
   isNullableUnion,
-} from "./typescript-utils.js";
+} from "../../shared/typescript-utils.js";
 
 export type TypeConverter = (
   type: ts.Type,

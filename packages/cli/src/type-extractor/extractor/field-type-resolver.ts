@@ -17,14 +17,7 @@ import {
   type SourceLocation,
   type TSTypeReference,
 } from "../../core/index.js";
-import {
-  detectBrandedType,
-  detectUniformBrandedType,
-} from "../../shared/branded-type-detector.js";
 import { isInternalTypeSymbol } from "../../shared/constants.js";
-import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } from "../../shared/inline-object-extractor.js";
-import { isInlineObjectType } from "../../shared/inline-object-utils.js";
-import { detectScalarMetadata } from "../../shared/metadata-detector.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import { extractTsDocFromSymbol } from "../../shared/tsdoc-parser.js";
 import {
@@ -37,11 +30,18 @@ import {
   isNullableUnion,
   resolveOriginalSymbol,
 } from "../../shared/typescript-utils.js";
+import {
+  detectBrandedType,
+  detectUniformBrandedType,
+} from "../detector/branded-type-detector.js";
+import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } from "../detector/inline-object-extractor.js";
+import { isInlineObjectType } from "../detector/inline-object-utils.js";
 import type {
   ScalarBaseTypeMappingTable,
   ScalarMappingContext,
 } from "../mapper/scalar-base-type-mapper.js";
 import { lookupScalarMapping } from "../mapper/scalar-base-type-mapper.js";
+import { detectScalarMetadata } from "./scalar-metadata-detector.js";
 import type { GlobalTypeMapping } from "./type-extractor.js";
 
 export interface DiscoveredTypeEntry {
