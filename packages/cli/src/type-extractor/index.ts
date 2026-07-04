@@ -18,6 +18,12 @@ export {
   type ExtractTypesResult,
   extractTypes,
 } from "./extract-types.js";
+// Shared type-resolution engine (refactor-plan.md §3.2): resolver-extractor
+// consumes this as a declared dependency of the facade, not a deep import.
+export {
+  type FieldTypeResolverContext,
+  resolveFieldType,
+} from "./extractor/field-type-resolver.js";
 export type { GlobalTypeMapping } from "./extractor/type-extractor.js";
 export {
   collectDeclaredTypeNames,

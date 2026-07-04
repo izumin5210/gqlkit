@@ -5,27 +5,14 @@ import type {
   ResolvedOutputConfig,
   ResolvedScalarMapping,
 } from "../config-loader/index.js";
+import type { Diagnostic, Diagnostics } from "../core/index.js";
 import {
-  type Diagnostic,
-  type Diagnostics,
-  isEligibleField,
-} from "../core/index.js";
-import {
-  type AbstractResolverInfo,
-  type ArgumentDefinition,
-  type DefineApiResolverInfo,
-  extractDefineApiResolvers,
-} from "../resolver-extractor/extractor/define-api-extractor.js";
-import type {
-  GraphQLFieldDefinition,
-  GraphQLInputValue,
-  TypeExtension,
+  type ExtractResolversResult,
+  extractResolvers,
 } from "../resolver-extractor/index.js";
 import { generateSchema } from "../schema-generator/index.js";
 
 import {
-  collectDiagnostics,
-  convertTsTypeToGraphQLType,
   type DirectiveDefinitionInfo,
   deduplicateDiagnostics,
   extractDirectiveDefinitions,
@@ -37,7 +24,6 @@ import {
   type ExtractTypesResult,
   extractTypes,
   type GlobalTypeMapping,
-  type ScalarBaseTypeMappingTable,
 } from "../type-extractor/index.js";
 import { scanDirectory } from "./infra/file-scanner.js";
 import { createSharedProgram } from "./infra/program-factory.js";
@@ -65,15 +51,6 @@ export interface GenerationResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
-interface ResolversResult {
-  queryFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
-  mutationFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
-  subscriptionFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
-  typeExtensions: ReadonlyArray<TypeExtension>;
-  abstractTypeResolvers: ReadonlyArray<AbstractResolverInfo>;
-  diagnostics: Diagnostics;
-}
-
 interface ScalarConfig {
   readonly customScalarNames: string[];
   readonly globalTypeMappings: GlobalTypeMapping[];
@@ -88,7 +65,7 @@ interface PipelineContext {
   readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol> | null;
   readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string> | null;
   readonly typesResult: ExtractTypesResult | null;
-  readonly resolversResult: ResolversResult | null;
+  readonly resolversResult: ExtractResolversResult | null;
   readonly directiveDefinitions: DirectiveDefinitionInfo[] | null;
   readonly scalarConfig: ScalarConfig | null;
   readonly diagnostics: Diagnostic[];
@@ -115,115 +92,6 @@ function hasErrors(
     typesResult.diagnostics.errors.length > 0 ||
     resolversResult.diagnostics.errors.length > 0
   );
-}
-
-function convertArgsToInputValues(
-  args: ReadonlyArray<ArgumentDefinition>,
-): GraphQLInputValue[] {
-  return args.map((arg) => ({
-    name: arg.name,
-    type: {
-      ...convertTsTypeToGraphQLType(arg.tsType),
-      nullable: arg.tsType.nullable || arg.optional,
-    },
-    description: arg.description,
-    deprecated: arg.deprecated,
-    defaultValue: arg.defaultValue,
-    inlineObjectProperties: arg.tsType.inlineObjectProperties ?? null,
-    inlineEnumMembers: arg.tsType.inlineEnumMembers ?? null,
-    externalEnumSymbol: arg.tsType.externalEnumSymbol ?? null,
-    externalEnumDescription: arg.tsType.externalEnumDescription ?? null,
-    externalEnumDeprecated: arg.tsType.externalEnumDeprecated ?? null,
-    inlineUnionMembers:
-      arg.tsType.kind === "union" ? (arg.tsType.members ?? null) : null,
-  }));
-}
-
-function convertDefineApiToFields(
-  resolvers: ReadonlyArray<DefineApiResolverInfo>,
-): {
-  queryFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
-  mutationFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
-  subscriptionFields: { fields: ReadonlyArray<GraphQLFieldDefinition> };
-  typeExtensions: ReadonlyArray<TypeExtension>;
-  diagnostics: ReadonlyArray<Diagnostic>;
-} {
-  const queryFields: GraphQLFieldDefinition[] = [];
-  const mutationFields: GraphQLFieldDefinition[] = [];
-  const subscriptionFields: GraphQLFieldDefinition[] = [];
-  const typeExtensionMap = new Map<string, GraphQLFieldDefinition[]>();
-  const diagnostics: Diagnostic[] = [];
-
-  for (const resolver of resolvers) {
-    const eligibility = isEligibleField({
-      fieldName: resolver.fieldName,
-      kind: "object",
-    });
-    if (!eligibility.eligible) {
-      diagnostics.push({
-        code: "SKIPPED_FIELD",
-        message: eligibility.skipReason.message,
-        severity: "warning",
-        location: {
-          file: resolver.sourceLocation.file,
-          line: resolver.sourceLocation.line,
-          column: resolver.sourceLocation.column,
-        },
-      });
-      continue;
-    }
-
-    const returnType = resolver.returnType;
-    const fieldDef: GraphQLFieldDefinition = {
-      name: resolver.fieldName,
-      type: convertTsTypeToGraphQLType(returnType),
-      args: resolver.args ? convertArgsToInputValues(resolver.args) : null,
-      sourceLocation: resolver.sourceLocation,
-      resolverExportName: resolver.resolverExportName,
-      description: resolver.description,
-      deprecated: resolver.deprecated,
-      directives: resolver.directives,
-      returnTypeInlineObjectProperties:
-        returnType.inlineObjectProperties ?? null,
-      returnTypeInlineObjectDescription:
-        returnType.inlineObjectDescription ?? null,
-      returnTypeInlineObjectDeprecated:
-        returnType.inlineObjectDeprecated ?? null,
-      returnTypeInlineEnumMembers: returnType.inlineEnumMembers ?? null,
-      returnTypeInlineUnionMembers:
-        returnType.kind === "union" ? (returnType.members ?? null) : null,
-      returnTypeExternalEnumSymbol: returnType.externalEnumSymbol ?? null,
-      returnTypeExternalEnumDescription:
-        returnType.externalEnumDescription ?? null,
-      returnTypeExternalEnumDeprecated:
-        returnType.externalEnumDeprecated ?? null,
-    };
-
-    if (resolver.resolverType === "query") {
-      queryFields.push(fieldDef);
-    } else if (resolver.resolverType === "mutation") {
-      mutationFields.push(fieldDef);
-    } else if (resolver.resolverType === "subscription") {
-      subscriptionFields.push(fieldDef);
-    } else if (resolver.resolverType === "field" && resolver.parentTypeName) {
-      const existing = typeExtensionMap.get(resolver.parentTypeName) ?? [];
-      existing.push(fieldDef);
-      typeExtensionMap.set(resolver.parentTypeName, existing);
-    }
-  }
-
-  const typeExtensions: TypeExtension[] = [];
-  for (const [targetTypeName, fields] of typeExtensionMap) {
-    typeExtensions.push({ targetTypeName, fields });
-  }
-
-  return {
-    queryFields: { fields: queryFields },
-    mutationFields: { fields: mutationFields },
-    subscriptionFields: { fields: subscriptionFields },
-    typeExtensions,
-    diagnostics,
-  };
 }
 
 function normalizePathInMessage(message: string, sourceRoot: string): string {
@@ -260,57 +128,6 @@ function normalizeDiagnosticPaths(
     };
   });
   return deduplicateDiagnostics(normalized);
-}
-
-interface ExtractResolversCoreParams {
-  readonly program: ts.Program;
-  readonly sourceFiles: ReadonlyArray<string>;
-  readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
-  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
-  readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
-}
-
-function extractResolversCore(
-  params: ExtractResolversCoreParams,
-): ResolversResult {
-  const {
-    program,
-    sourceFiles,
-    knownTypeNames,
-    knownTypeSymbols,
-    underlyingSymbolToTypeName,
-    globalTypeMappings,
-    scalarMappingTable,
-  } = params;
-  const allDiagnostics: Diagnostic[] = [];
-
-  const sourceFilesSet = new Set(sourceFiles);
-  const defineApiExtractionResult = extractDefineApiResolvers(
-    program,
-    sourceFiles,
-    {
-      knownTypeNames,
-      knownTypeSymbols,
-      underlyingSymbolToTypeName,
-      globalTypeMappings,
-      sourceFiles: sourceFilesSet,
-      scalarMappingTable,
-    },
-  );
-  allDiagnostics.push(...defineApiExtractionResult.diagnostics);
-
-  const result = convertDefineApiToFields(defineApiExtractionResult.resolvers);
-  allDiagnostics.push(...result.diagnostics);
-  return {
-    queryFields: result.queryFields,
-    mutationFields: result.mutationFields,
-    subscriptionFields: result.subscriptionFields,
-    typeExtensions: result.typeExtensions,
-    abstractTypeResolvers: defineApiExtractionResult.abstractTypeResolvers,
-    diagnostics: collectDiagnostics(allDiagnostics),
-  };
 }
 
 function buildExcludePaths(
@@ -521,7 +338,7 @@ function extractResolversStep(ctx: PipelineContext): PipelineContext {
 
   const { globalTypeMappings } = ctx.scalarConfig;
 
-  const resolversResult = extractResolversCore({
+  const resolversResult = extractResolvers({
     program: ctx.program,
     sourceFiles: ctx.sourceFiles,
     knownTypeNames: ctx.knownTypeNames,
