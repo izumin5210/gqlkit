@@ -2,14 +2,12 @@ import type {
   Diagnostic,
   SourceLocation,
   TSTypeReference,
+  TypenameFieldName,
 } from "../core/index.js";
 import type { ExtractedTypeInfo } from "../type-extractor/types/index.js";
 import type { InlineUnionMemberInfo } from "./inline-union-types.js";
 import { isInputTypeName } from "./naming-convention.js";
-import {
-  findTypenameProperty,
-  type TypenameFieldName,
-} from "./typename-types.js";
+import { findTypenameProperty } from "./typename-types.js";
 
 export interface ValidateUnionResult {
   readonly valid: boolean;

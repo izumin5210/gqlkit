@@ -2,13 +2,11 @@ import type {
   Diagnostic,
   InlineObjectMember,
   SourceLocation,
+  TypenameFieldName,
 } from "../core/index.js";
 import type { ExtractedTypeInfo } from "../type-extractor/types/index.js";
 import type { TypenameExtractionResult } from "./typename-extractor.js";
-import {
-  findTypenameProperty,
-  type TypenameFieldName,
-} from "./typename-types.js";
+import { findTypenameProperty } from "./typename-types.js";
 
 export interface ValidateTypenamesParams {
   readonly extractionResult: TypenameExtractionResult;

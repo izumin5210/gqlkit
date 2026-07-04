@@ -1,16 +1,14 @@
 import ts from "typescript";
-import type {
-  DeprecationInfo,
-  Diagnostic,
-  DirectiveArgumentValue,
-  DirectiveInfo,
-  SourceLocation,
-  TSTypeReference,
-} from "../../core/index.js";
 import {
-  isInternalTypeSymbol,
+  type DeprecationInfo,
+  type Diagnostic,
+  type DirectiveArgumentValue,
+  type DirectiveInfo,
   METADATA_PROPERTIES,
-} from "../../shared/constants.js";
+  type SourceLocation,
+  type TSTypeReference,
+} from "../../core/index.js";
+import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   extractDirectivesFromType,

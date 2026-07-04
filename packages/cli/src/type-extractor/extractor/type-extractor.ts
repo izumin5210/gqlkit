@@ -1,15 +1,15 @@
 import { resolve } from "node:path";
 import ts from "typescript";
-import type {
-  Diagnostic,
-  DirectiveArgumentValue,
-  DirectiveInfo,
-  InlineObjectMember,
-  InlineObjectProperty,
-  SourceLocation,
-  TSTypeReference,
+import {
+  type Diagnostic,
+  type DirectiveArgumentValue,
+  type DirectiveInfo,
+  type InlineObjectMember,
+  type InlineObjectProperty,
+  isBuiltInScalar,
+  type SourceLocation,
+  type TSTypeReference,
 } from "../../core/index.js";
-import { isBuiltInScalar } from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   detectDirectiveMetadata,

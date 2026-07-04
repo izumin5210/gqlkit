@@ -2,7 +2,7 @@
  * ScalarCollector collects scalar definitions from types and config,
  * validates input/output type constraints, and builds type parameters.
  */
-import { isBuiltInScalar } from "../../shared/constants.js";
+import { isBuiltInScalar } from "../../core/index.js";
 
 /**
  * Information about a detected scalar type from metadata detection.

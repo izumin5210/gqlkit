@@ -4,6 +4,14 @@ export type {
   Diagnostics,
   SourceLocation,
 } from "./diagnostics.js";
+export {
+  type EligibilityResult,
+  type FieldEligibilityKind,
+  type IsEligibleFieldParams,
+  isEligibleAsEnumValue,
+  isEligibleField,
+  type SkipReason,
+} from "./field-eligibility.js";
 export type {
   EnumValueInfo,
   FieldInfo,
@@ -17,6 +25,15 @@ export type {
   DirectiveArgumentValue,
   DirectiveInfo,
 } from "./metadata.js";
+export {
+  BUILT_IN_SCALARS,
+  isBuiltInScalar,
+  isTypenameFieldName,
+  METADATA_PROPERTIES,
+  PRIMITIVE_TYPE_MAP,
+  TYPENAME_FIELD_NAMES,
+  type TypenameFieldName,
+} from "./metadata-contract.js";
 export {
   createArrayType,
   createInlineEnumType,

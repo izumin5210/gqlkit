@@ -1,18 +1,18 @@
-import { isTypenameFieldName } from "../../auto-type-generator/typename-types.js";
-import type {
-  Diagnostic,
-  EnumValueInfo,
-  FieldInfo,
-  GraphQLTypeInfo,
-  InlineObjectMember,
-  InlineObjectProperty,
-  SourceLocation,
-} from "../../core/index.js";
 import {
   BUILT_IN_SCALARS,
+  type Diagnostic,
+  type EnumValueInfo,
+  type FieldInfo,
+  type GraphQLTypeInfo,
+  type InlineObjectMember,
+  type InlineObjectProperty,
   isBuiltInScalar,
+  isEligibleAsEnumValue,
+  isEligibleField,
+  isTypenameFieldName,
   PRIMITIVE_TYPE_MAP,
-} from "../../shared/constants.js";
+  type SourceLocation,
+} from "../../core/index.js";
 import {
   detectEnumPrefix,
   stripEnumPrefix,
@@ -20,7 +20,6 @@ import {
 import { toScreamingSnakeCase } from "../../shared/string-utils.js";
 import { convertTsTypeToGraphQLType } from "../../shared/type-converter.js";
 import type { EnumMemberInfo, ExtractedTypeInfo } from "../types/index.js";
-import { isEligibleAsEnumValue, isEligibleField } from "./field-eligibility.js";
 
 export interface ConversionResult {
   readonly types: ReadonlyArray<GraphQLTypeInfo>;

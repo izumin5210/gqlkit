@@ -5,7 +5,11 @@ import type {
   ResolvedOutputConfig,
   ResolvedScalarMapping,
 } from "../config-loader/index.js";
-import type { Diagnostic, Diagnostics } from "../core/index.js";
+import {
+  type Diagnostic,
+  type Diagnostics,
+  isEligibleField,
+} from "../core/index.js";
 import {
   type AbstractResolverInfo,
   type ArgumentDefinition,
@@ -36,7 +40,6 @@ import {
   collectScalars,
   type ScalarMetadataInfo,
 } from "../type-extractor/collector/scalar-collector.js";
-import { isEligibleField } from "../type-extractor/converter/field-eligibility.js";
 import { convertToGraphQL } from "../type-extractor/converter/graphql-converter.js";
 import {
   extractTypesFromProgram,

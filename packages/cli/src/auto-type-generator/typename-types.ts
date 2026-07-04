@@ -1,31 +1,15 @@
 /**
- * Common types for typename-related functionality.
- * These types are shared across typename-extractor, typename-validator,
+ * Stage-specific typename helpers for auto-type-generator.
+ * These are shared across typename-extractor, typename-validator,
  * typename-resolve-type-generator, and inline-union-validator.
- */
-
-/**
- * All recognized field names for type discrimination.
- * - "__typename" is the standard GraphQL introspection field
- * - "$typeName" is a gqlkit-specific alternative that won't appear in the schema
  *
- * To add a new typename field:
- * 1. Add the field name to this array
- * 2. Update findTypenameProperty priority if needed
+ * The core typename vocabulary (`TYPENAME_FIELD_NAMES`, `isTypenameFieldName`,
+ * `TypenameFieldName`) lives in `core/metadata-contract.ts` since it is
+ * consumed outside this stage (e.g. type-extractor); only the
+ * stage-specific helpers below stay here.
  */
-export const TYPENAME_FIELD_NAMES = ["__typename", "$typeName"] as const;
 
-/**
- * Check if a field name is a typename discrimination field.
- */
-export function isTypenameFieldName(name: string): boolean {
-  return (TYPENAME_FIELD_NAMES as readonly string[]).includes(name);
-}
-
-/**
- * The field name used for type discrimination.
- */
-export type TypenameFieldName = (typeof TYPENAME_FIELD_NAMES)[number];
+import type { TypenameFieldName } from "../core/index.js";
 
 /**
  * A set of typename field names used in a resolve type pattern.

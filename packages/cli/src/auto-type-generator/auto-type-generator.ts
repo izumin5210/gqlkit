@@ -8,8 +8,11 @@ import {
   type GraphQLFieldType,
   type InlineEnumMemberInfo,
   type InlineObjectPropertyDef,
+  isEligibleField,
+  isTypenameFieldName,
   type SourceLocation,
   type TSTypeReference,
+  type TypenameFieldName,
 } from "../core/index.js";
 import type {
   ExtractResolversResult,
@@ -22,7 +25,6 @@ import {
 import { getSourceLocationOrDefault } from "../shared/source-location.js";
 import { toScreamingSnakeCase } from "../shared/string-utils.js";
 import { convertTsTypeToGraphQLType } from "../shared/type-converter.js";
-import { isEligibleField } from "../type-extractor/converter/field-eligibility.js";
 import type {
   ExtractedTypeInfo,
   FieldDefinition,
@@ -65,9 +67,7 @@ import {
 import {
   createFieldNameSet,
   findTypenameProperty,
-  isTypenameFieldName,
   type TypenameFieldInfo,
-  type TypenameFieldName,
 } from "./typename-types.js";
 
 /**

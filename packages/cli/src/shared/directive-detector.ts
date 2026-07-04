@@ -6,12 +6,12 @@
  */
 
 import ts from "typescript";
-import type {
-  DirectiveArgument,
-  DirectiveArgumentValue,
-  DirectiveInfo,
+import {
+  type DirectiveArgument,
+  type DirectiveArgumentValue,
+  type DirectiveInfo,
+  METADATA_PROPERTIES,
 } from "../core/index.js";
-import { METADATA_PROPERTIES } from "./constants.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 
 const FIELD_META_PROPERTY = METADATA_PROPERTIES.FIELD_META;
