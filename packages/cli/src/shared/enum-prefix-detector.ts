@@ -1,3 +1,5 @@
+import { pluralize } from "./pluralization.js";
+
 /**
  * Converts an enum name from any naming convention to UPPER_SNAKE_CASE.
  *
@@ -32,55 +34,6 @@ export function buildEnumPrefixCandidate(enumName: string): string {
   return `${toUpperSnakeCase(enumName)}_`;
 }
 
-const IRREGULAR_PLURAL_SEGMENTS = new Map([
-  ["ALIAS", "ALIASES"],
-  ["ANALYSIS", "ANALYSES"],
-  ["CHILD", "CHILDREN"],
-  ["COOKIE", "COOKIES"],
-  ["CRISIS", "CRISES"],
-  ["DIAGNOSIS", "DIAGNOSES"],
-  ["FOOT", "FEET"],
-  ["GOOSE", "GEESE"],
-  ["MAN", "MEN"],
-  ["MOUSE", "MICE"],
-  ["MOVIE", "MOVIES"],
-  ["PERSON", "PEOPLE"],
-  ["THESIS", "THESES"],
-  ["TOOTH", "TEETH"],
-  ["WOMAN", "WOMEN"],
-]);
-
-function isConsonant(char: string): boolean {
-  return /^[BCDFGHJKLMNPQRSTVWXYZ]$/.test(char);
-}
-
-function pluralizeUpperSnakeSegment(segment: string): string {
-  const irregularPlural = IRREGULAR_PLURAL_SEGMENTS.get(segment);
-  if (irregularPlural) {
-    return irregularPlural;
-  }
-
-  if (
-    segment.endsWith("Y") &&
-    segment.length > 1 &&
-    isConsonant(segment.at(-2) ?? "")
-  ) {
-    return `${segment.slice(0, -1)}IES`;
-  }
-
-  if (
-    segment.endsWith("S") ||
-    segment.endsWith("SH") ||
-    segment.endsWith("CH") ||
-    segment.endsWith("X") ||
-    segment.endsWith("Z")
-  ) {
-    return `${segment}ES`;
-  }
-
-  return `${segment}S`;
-}
-
 function buildEnumPrefixCandidates(enumName: string): string[] {
   const upperSnakeName = toUpperSnakeCase(enumName);
   const baseCandidate = `${upperSnakeName}_`;
@@ -92,7 +45,7 @@ function buildEnumPrefixCandidates(enumName: string): string[] {
   }
 
   for (const [index, segment] of segments.entries()) {
-    const pluralizedSegment = pluralizeUpperSnakeSegment(segment);
+    const pluralizedSegment = pluralize(segment);
     if (pluralizedSegment === segment) {
       continue;
     }
