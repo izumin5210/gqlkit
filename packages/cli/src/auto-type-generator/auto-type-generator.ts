@@ -1,31 +1,32 @@
 import type ts from "typescript";
 import type { ResolvedDiscriminatorFieldsMap } from "../config-loader/index.js";
-import type { Diagnostic, SourceLocation } from "../core/index.js";
+import {
+  createReferenceType,
+  type DeprecationInfo,
+  type Diagnostic,
+  type DirectiveArgumentValue,
+  type DirectiveInfo,
+  type GraphQLFieldType,
+  type InlineEnumMemberInfo,
+  type InlineObjectPropertyDef,
+  type SourceLocation,
+  type TSTypeReference,
+} from "../core/index.js";
 import type {
   ExtractResolversResult,
   GraphQLFieldDefinition,
 } from "../resolver-extractor/index.js";
-import type {
-  DirectiveArgumentValue,
-  DirectiveInfo,
-} from "../shared/directive-detector.js";
 import {
   detectEnumPrefix,
   stripEnumPrefix,
 } from "../shared/enum-prefix-detector.js";
 import { getSourceLocationOrDefault } from "../shared/source-location.js";
 import { toScreamingSnakeCase } from "../shared/string-utils.js";
-import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
 import { convertTsTypeToGraphQLType } from "../shared/type-converter.js";
 import { isEligibleField } from "../type-extractor/converter/field-eligibility.js";
-import {
-  createReferenceType,
-  type ExtractedTypeInfo,
-  type FieldDefinition,
-  type GraphQLFieldType,
-  type InlineEnumMemberInfo,
-  type InlineObjectPropertyDef,
-  type TSTypeReference,
+import type {
+  ExtractedTypeInfo,
+  FieldDefinition,
 } from "../type-extractor/types/index.js";
 import {
   collectInlineEnumsFromPayloads,

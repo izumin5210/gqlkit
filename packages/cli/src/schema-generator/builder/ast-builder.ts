@@ -25,19 +25,17 @@ import {
   type TypeNode,
   type UnionTypeDefinitionNode,
 } from "graphql";
-import type { GraphQLInputValue } from "../../resolver-extractor/index.js";
-import type { DirectiveDefinitionInfo } from "../../shared/directive-definition-extractor.js";
 import type {
+  DeprecationInfo,
   DirectiveArgument,
   DirectiveArgumentValue,
   DirectiveInfo,
-} from "../../shared/directive-detector.js";
-import { toPosixPath } from "../../shared/index.js";
-import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
-import type {
   EnumValueInfo,
   GraphQLFieldType,
-} from "../../type-extractor/types/index.js";
+} from "../../core/index.js";
+import type { GraphQLInputValue } from "../../resolver-extractor/index.js";
+import type { DirectiveDefinitionInfo } from "../../shared/directive-definition-extractor.js";
+import { toPosixPath } from "../../shared/index.js";
 import type {
   BaseField,
   BaseType,

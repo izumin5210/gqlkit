@@ -1,10 +1,13 @@
 import type { ResolvedDiscriminatorFieldsMap } from "../config-loader/index.js";
-import type { Diagnostic, SourceLocation } from "../core/index.js";
+import type {
+  Diagnostic,
+  InlineObjectMember,
+  SourceLocation,
+  TSTypeReference,
+} from "../core/index.js";
 import type {
   ExtractedTypeInfo,
   FieldDefinition,
-  InlineObjectMember,
-  TSTypeReference,
 } from "../type-extractor/types/index.js";
 import type { ValidatedDiscriminatorEntry } from "./discriminator-resolve-type-generator.js";
 

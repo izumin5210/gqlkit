@@ -1,13 +1,18 @@
 import ts from "typescript";
-import type { Diagnostic, SourceLocation } from "../../core/index.js";
+import type {
+  DeprecationInfo,
+  Diagnostic,
+  DirectiveArgumentValue,
+  DirectiveInfo,
+  SourceLocation,
+  TSTypeReference,
+} from "../../core/index.js";
 import {
   isInternalTypeSymbol,
   METADATA_PROPERTIES,
 } from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
-  type DirectiveArgumentValue,
-  type DirectiveInfo,
   extractDirectivesFromType,
   hasDirectiveMetadata,
   unwrapDirectiveType,
@@ -15,7 +20,6 @@ import {
 import { getActualMetadataType } from "../../shared/metadata-detector.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
-  type DeprecationInfo,
   extractTsDocFromSymbol,
   extractTsDocInfo,
 } from "../../shared/tsdoc-parser.js";
@@ -31,7 +35,6 @@ import {
 } from "../../type-extractor/extractor/field-type-resolver.js";
 import type { GlobalTypeMapping } from "../../type-extractor/extractor/type-extractor.js";
 import type { ScalarBaseTypeMappingTable } from "../../type-extractor/mapper/scalar-base-type-mapper.js";
-import type { TSTypeReference } from "../../type-extractor/types/index.js";
 
 export type DefineApiResolverType =
   | "query"

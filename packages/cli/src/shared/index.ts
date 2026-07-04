@@ -14,12 +14,9 @@ export {
   extractDirectiveDefinitions,
 } from "./directive-definition-extractor.js";
 export type {
-  DirectiveArgument,
-  DirectiveArgumentValue,
   DirectiveDetectionError,
   DirectiveDetectionErrorCode,
   DirectiveDetectionResult,
-  DirectiveInfo,
 } from "./directive-detector.js";
 export {
   type ScanOptions,

@@ -1,5 +1,4 @@
-import type { SourceLocation } from "../core/index.js";
-import type { TSTypeReference } from "../type-extractor/types/index.js";
+import type { SourceLocation, TSTypeReference } from "../core/index.js";
 import type { AutoTypeNameContext } from "./naming-convention.js";
 
 /**

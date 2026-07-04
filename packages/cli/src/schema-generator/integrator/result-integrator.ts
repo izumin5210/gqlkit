@@ -5,7 +5,14 @@ import type {
 } from "../../auto-type-generator/index.js";
 import type { TypenameAutoResolveTypeInfo } from "../../auto-type-generator/typename-resolve-type-generator.js";
 import { createFieldNameSet } from "../../auto-type-generator/typename-types.js";
-import type { Diagnostic } from "../../core/index.js";
+import type {
+  DeprecationInfo,
+  Diagnostic,
+  DirectiveArgumentValue,
+  DirectiveInfo,
+  EnumValueInfo,
+  GraphQLFieldType,
+} from "../../core/index.js";
 import type {
   AbstractResolverInfo,
   ExtractResolversResult,
@@ -18,22 +25,13 @@ import type {
   DirectiveDefinitionInfo,
   DirectiveLocation,
 } from "../../shared/directive-definition-extractor.js";
-import type {
-  DirectiveArgumentValue,
-  DirectiveInfo,
-} from "../../shared/directive-detector.js";
 import {
   detectCircularInterfaceReferences,
   validateInterfaceImplementations,
 } from "../../shared/interface-validator.js";
-import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
 import type { CollectedScalarType } from "../../type-extractor/collector/scalar-collector.js";
 import { mergeDescriptions } from "../../type-extractor/collector/scalar-collector.js";
 import type { ExtractTypesResult } from "../../type-extractor/index.js";
-import type {
-  EnumValueInfo,
-  GraphQLFieldType,
-} from "../../type-extractor/types/index.js";
 
 export interface BaseField {
   readonly name: string;

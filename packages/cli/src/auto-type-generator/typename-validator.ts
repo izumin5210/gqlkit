@@ -1,8 +1,9 @@
-import type { Diagnostic, SourceLocation } from "../core/index.js";
 import type {
-  ExtractedTypeInfo,
+  Diagnostic,
   InlineObjectMember,
-} from "../type-extractor/types/index.js";
+  SourceLocation,
+} from "../core/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/types/index.js";
 import type { TypenameExtractionResult } from "./typename-extractor.js";
 import {
   findTypenameProperty,

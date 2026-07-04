@@ -1,11 +1,11 @@
 import type ts from "typescript";
-import type { DeprecationInfo } from "../../shared/tsdoc-parser.js";
+import type { DeprecationInfo } from "./metadata.js";
 import type {
   InlineEnumMemberInfo,
   InlineObjectPropertyDef,
   ScalarTypeInfo,
   TSTypeReference,
-} from "./typescript.js";
+} from "./ts-types.js";
 
 interface CreateTSTypeReferenceParams {
   readonly kind: TSTypeReference["kind"];

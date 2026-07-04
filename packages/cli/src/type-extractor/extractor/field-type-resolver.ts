@@ -1,6 +1,22 @@
 import { relative } from "node:path";
 import ts from "typescript";
-import type { DiagnosticCode, SourceLocation } from "../../core/index.js";
+import {
+  createArrayType,
+  createInlineEnumType,
+  createInlineObjectType,
+  createNeverType,
+  createNumericLiteralType,
+  createPrimitiveType,
+  createReferenceType,
+  createScalarType,
+  createStringLiteralType,
+  createUnionType,
+  type DeprecationInfo,
+  type DiagnosticCode,
+  type InlineEnumMemberInfo,
+  type SourceLocation,
+  type TSTypeReference,
+} from "../../core/index.js";
 import {
   detectBrandedType,
   detectUniformBrandedType,
@@ -10,10 +26,7 @@ import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } 
 import { isInlineObjectType } from "../../shared/inline-object-utils.js";
 import { detectScalarMetadata } from "../../shared/metadata-detector.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
-import {
-  type DeprecationInfo,
-  extractTsDocFromSymbol,
-} from "../../shared/tsdoc-parser.js";
+import { extractTsDocFromSymbol } from "../../shared/tsdoc-parser.js";
 import {
   filterNonNullTypeNodes,
   findEnumParentSymbol,
@@ -29,22 +42,6 @@ import type {
   ScalarMappingContext,
 } from "../mapper/scalar-base-type-mapper.js";
 import { lookupScalarMapping } from "../mapper/scalar-base-type-mapper.js";
-import {
-  createArrayType,
-  createInlineEnumType,
-  createInlineObjectType,
-  createNeverType,
-  createNumericLiteralType,
-  createPrimitiveType,
-  createReferenceType,
-  createScalarType,
-  createStringLiteralType,
-  createUnionType,
-} from "../types/ts-type-reference-factory.js";
-import type {
-  InlineEnumMemberInfo,
-  TSTypeReference,
-} from "../types/typescript.js";
 import type { GlobalTypeMapping } from "./type-extractor.js";
 
 export interface DiscoveredTypeEntry {

@@ -1,9 +1,8 @@
 import { describe, expect, it } from "vitest";
+import type { InlineObjectMember, TSTypeReference } from "../core/index.js";
 import type {
   ExtractedTypeInfo,
   FieldDefinition,
-  InlineObjectMember,
-  TSTypeReference,
 } from "../type-extractor/types/index.js";
 import { validateDiscriminatorFields } from "./discriminator-field-validator.js";
 

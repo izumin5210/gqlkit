@@ -6,7 +6,7 @@
  */
 
 import ts from "typescript";
-import type { GraphQLFieldType } from "../type-extractor/types/graphql.js";
+import type { GraphQLFieldType } from "../core/index.js";
 import { METADATA_PROPERTIES } from "./constants.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 import {

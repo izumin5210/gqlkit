@@ -1,9 +1,5 @@
 import ts from "typescript";
-
-export interface DeprecationInfo {
-  readonly isDeprecated: true;
-  readonly reason: string | null;
-}
+import type { DeprecationInfo } from "../core/index.js";
 
 export interface TSDocInfo {
   readonly description: string | null;

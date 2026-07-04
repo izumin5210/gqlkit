@@ -1,16 +1,15 @@
 import type ts from "typescript";
-import type { Diagnostics, SourceLocation } from "../core/index.js";
 import type {
+  DeprecationInfo,
+  Diagnostics,
   DirectiveArgumentValue,
   DirectiveInfo,
-} from "../shared/directive-detector.js";
-import type { DeprecationInfo } from "../shared/tsdoc-parser.js";
-import type {
   GraphQLFieldType,
   InlineEnumMemberInfo,
   InlineObjectPropertyDef,
+  SourceLocation,
   TSTypeReference,
-} from "../type-extractor/types/index.js";
+} from "../core/index.js";
 import type { AbstractResolverInfo } from "./extractor/define-api-extractor.js";
 
 export interface GraphQLInputValue {

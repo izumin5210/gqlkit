@@ -1,17 +1,19 @@
 import { describe, expect, it } from "vitest";
-import type { SourceLocation } from "../core/index.js";
 import {
   createArrayType,
+  createInlineEnumType,
   createInlineObjectType,
   createReferenceType,
   createUnionType,
-  type ExtractedTypeInfo,
-  type FieldDefinition,
   type InlineEnumMemberInfo,
   type InlineObjectPropertyDef,
+  type SourceLocation,
   type TSTypeReference,
+} from "../core/index.js";
+import type {
+  ExtractedTypeInfo,
+  FieldDefinition,
 } from "../type-extractor/types/index.js";
-import { createInlineEnumType } from "../type-extractor/types/ts-type-reference-factory.js";
 import { collectInlineEnumsFromTypes } from "./inline-enum-collector.js";
 import { collectInlineUnionsFromTypes } from "./inline-union-collector.js";
 

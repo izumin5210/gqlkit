@@ -1,15 +1,13 @@
 import type { ResolvedDiscriminatorFieldsMap } from "../config-loader/index.js";
-import type {
-  ExtractedTypeInfo,
-  InlineObjectMember,
-  InlineObjectProperty,
-  InlineObjectPropertyDef,
-  TSTypeReference,
-} from "../type-extractor/types/index.js";
 import {
   createInlineObjectType,
   createPrimitiveType,
-} from "../type-extractor/types/ts-type-reference-factory.js";
+  type InlineObjectMember,
+  type InlineObjectProperty,
+  type InlineObjectPropertyDef,
+  type TSTypeReference,
+} from "../core/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/types/index.js";
 import { generateDiscriminatorMemberName } from "./discriminator-naming.js";
 import type {
   InlineUnionMemberInfo,

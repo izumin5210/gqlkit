@@ -1,11 +1,17 @@
 import { resolve } from "node:path";
 import ts from "typescript";
-import type { Diagnostic, SourceLocation } from "../../core/index.js";
+import type {
+  Diagnostic,
+  DirectiveArgumentValue,
+  DirectiveInfo,
+  InlineObjectMember,
+  InlineObjectProperty,
+  SourceLocation,
+  TSTypeReference,
+} from "../../core/index.js";
 import { isBuiltInScalar } from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
-  type DirectiveArgumentValue,
-  type DirectiveInfo,
   detectDirectiveMetadata,
   hasDirectiveMetadata,
   unwrapDirectiveType,
@@ -43,9 +49,6 @@ import type {
   EnumMemberInfo,
   ExtractedTypeInfo,
   FieldDefinition,
-  InlineObjectMember,
-  InlineObjectProperty,
-  TSTypeReference,
   TypeKind,
   TypeMetadata,
 } from "../types/index.js";
