@@ -364,13 +364,13 @@ function getTypeNameForDiagnostic(
 function extractArgsFromType(
   argsType: ts.Type,
   ctx: FieldTypeResolverContext,
-  argsTypeNode?: ts.TypeNode,
+  argsTypeNode: ts.TypeNode,
 ): ArgumentDefinition[] {
   const args: ArgumentDefinition[] = [];
   const properties = extractPropertySymbols(argsType, ctx.checker);
 
   const memberTypeNodes = new Map<string, ts.TypeNode>();
-  if (argsTypeNode && ts.isTypeLiteralNode(argsTypeNode)) {
+  if (ts.isTypeLiteralNode(argsTypeNode)) {
     for (const member of argsTypeNode.members) {
       if (ts.isPropertySignature(member) && member.name && member.type) {
         const name = ts.isIdentifier(member.name)

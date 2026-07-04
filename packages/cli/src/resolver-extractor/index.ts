@@ -1,4 +1,3 @@
-export type { ScanResult } from "../shared/index.js";
 export type {
   ExtractResolversResult,
   GraphQLFieldDefinition,
