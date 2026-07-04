@@ -2,7 +2,7 @@ import type { InlineObjectProperty } from "../core/index.js";
 import type {
   ExtractedTypeInfo,
   FieldDefinition,
-} from "../type-extractor/types/index.js";
+} from "../type-extractor/index.js";
 import {
   findTypenameProperty,
   type TypenameFieldInfo,

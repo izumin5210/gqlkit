@@ -18,6 +18,10 @@ export {
   validateDiscriminatorFields,
 } from "./discriminator-field-validator.js";
 export type {
+  DiscriminatorResolveTypeInfo,
+  DiscriminatorValueMapping,
+} from "./discriminator-resolve-type-generator.js";
+export type {
   InlineUnionMemberInfo,
   InlineUnionWithContext,
 } from "./inline-union-types.js";
@@ -62,9 +66,10 @@ export type {
   ResolveTypePattern,
   TypenameAutoResolveTypeInfo,
 } from "./typename-resolve-type-generator.js";
-export type {
-  TypenameFieldInfo,
-  TypenameFieldNameSet,
+export {
+  createFieldNameSet,
+  type TypenameFieldInfo,
+  type TypenameFieldNameSet,
 } from "./typename-types.js";
 export {
   type ValidateSchemaTypenamesParams,

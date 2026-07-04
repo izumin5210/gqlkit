@@ -13,7 +13,7 @@ import {
 import type {
   ExtractedTypeInfo,
   FieldDefinition,
-} from "../type-extractor/types/index.js";
+} from "../type-extractor/index.js";
 import { collectInlineEnumsFromTypes } from "./inline-enum-collector.js";
 import { collectInlineUnionsFromTypes } from "./inline-union-collector.js";
 

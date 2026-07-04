@@ -3,7 +3,7 @@ import type { InlineObjectMember, TSTypeReference } from "../core/index.js";
 import type {
   ExtractedTypeInfo,
   FieldDefinition,
-} from "../type-extractor/types/index.js";
+} from "../type-extractor/index.js";
 import { validateDiscriminatorFields } from "./discriminator-field-validator.js";
 
 function createStringLiteralTsType(value: string): TSTypeReference {

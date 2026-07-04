@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { DiscriminatorResolveTypeInfo } from "../../auto-type-generator/discriminator-resolve-type-generator.js";
+import type { DiscriminatorResolveTypeInfo } from "../../auto-type-generator/index.js";
 import { buildDiscriminatorResolveTypeEntry } from "./discriminator-resolve-type-emitter.js";
 
 describe("buildDiscriminatorResolveTypeEntry", () => {
