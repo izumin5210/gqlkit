@@ -31,9 +31,12 @@ Pipeline-based architecture for code generation:
 - **Auto-Type Generation**: `src/auto-type-generator/` - Generates named types from inline definitions (objects, unions, enums)
 - **Schema Generation**: `src/schema-generator/` - Builds GraphQL AST and resolver maps
 - **Orchestration**: `src/gen-orchestrator/` - Coordinates pipeline stages (reporter, writer)
+- **Core Vocabulary**: `src/core/` - Pipeline-wide IR and vocabulary with no dependencies on the rest of `src/`: IR types (diagnostics, TypeScript/GraphQL type references), the CLI↔runtime metadata/marker contract, and naming-convention predicates (field eligibility, typename discrimination)
 - **Shared Utilities**: `src/shared/` - Cross-cutting utilities used by multiple pipeline stages (e.g., TSDoc parsing, type conversion, TypeScript AST helpers)
 
 **Pattern**: Each pipeline stage has internal modules (scanner, extractor, collector, validator, mapper, etc.). Stages may use 2-phase processing where needed (e.g., type-extractor collects names first, then resolves types with scalar base type mapping).
+
+**Dependency direction** (enforced via `dependency-cruiser`, `pnpm depcruise`): `core` ← `shared` ← pipeline stages ← `gen-orchestrator` ← `commands`. Each layer may only depend on layers to its left; no stage imports another stage's internals (only its `index.ts` facade).
 
 ### @gqlkit-ts/runtime (`packages/runtime/`)
 
@@ -91,3 +94,4 @@ import { extractTypes } from "../type-extractor/index.js";
 ---
 _Document patterns, not file trees. New files following patterns shouldn't require updates_
 _Updated: 2026-01-21 - Updated auto-type-generator scope (unions, enums), added mapper pattern_
+_Updated: 2026-07-04 - Documented the new `core/` layer and its enforced dependency direction (refactor-plan.md Phase 1, Decision D4)_
