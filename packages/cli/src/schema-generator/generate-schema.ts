@@ -14,10 +14,12 @@ import type { ResolvedDiscriminatorFieldsMap } from "../config-loader/index.js";
 import type { Diagnostic } from "../core/index.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import type { DirectiveDefinitionInfo } from "../shared/directive-definition-extractor.js";
-import type { CollectedScalarType } from "../type-extractor/collector/scalar-collector.js";
-import { convertToGraphQL } from "../type-extractor/converter/graphql-converter.js";
-import type { ExtractTypesResult } from "../type-extractor/index.js";
-import type { ExtractedTypeInfo } from "../type-extractor/types/index.js";
+import {
+  type CollectedScalarType,
+  type CollectedTypesResult,
+  convertToGraphQL,
+  type ExtractedTypeInfo,
+} from "../type-extractor/index.js";
 import { buildDocumentNode } from "./builder/ast-builder.js";
 import { emitResolversCode, emitTypeDefsCode } from "./emitter/code-emitter.js";
 import { emitSdlContent } from "./emitter/sdl-emitter.js";
@@ -26,7 +28,7 @@ import { pruneDocumentNode } from "./pruner/schema-pruner.js";
 import { collectResolverInfo } from "./resolver-collector/resolver-collector.js";
 
 export interface GenerateSchemaInput {
-  readonly typesResult: ExtractTypesResult;
+  readonly typesResult: CollectedTypesResult;
   readonly extractedTypes: ReadonlyArray<ExtractedTypeInfo>;
   readonly resolversResult: ExtractResolversResult;
   readonly outputDir: string;
@@ -155,7 +157,7 @@ export function generateSchema(
       (d) => d.severity === "warning",
     );
 
-  const updatedTypesResult: ExtractTypesResult = {
+  const updatedTypesResult: CollectedTypesResult = {
     types: updatedConversionResult.types,
     diagnostics: {
       errors: [
@@ -257,7 +259,7 @@ export function generateSchema(
   const discriminatorGeneratedObjectTypes =
     discriminatorResolveTypesResult.generatedObjectTypes;
 
-  const updatedTypesForIntegration: ExtractTypesResult =
+  const updatedTypesForIntegration: CollectedTypesResult =
     generatedInlineObjectTypes.length > 0 ||
     discriminatorGeneratedObjectTypes.length > 0
       ? {

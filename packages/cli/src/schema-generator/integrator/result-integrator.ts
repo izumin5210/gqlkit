@@ -24,9 +24,11 @@ import type {
   DirectiveDefinitionInfo,
   DirectiveLocation,
 } from "../../shared/directive-definition-extractor.js";
-import type { CollectedScalarType } from "../../type-extractor/collector/scalar-collector.js";
-import { mergeDescriptions } from "../../type-extractor/collector/scalar-collector.js";
-import type { ExtractTypesResult } from "../../type-extractor/index.js";
+import {
+  type CollectedScalarType,
+  type CollectedTypesResult,
+  mergeDescriptions,
+} from "../../type-extractor/index.js";
 import { validateAbstractResolvers } from "../validator/abstract-resolver-validator.js";
 import {
   detectCircularInterfaceReferences,
@@ -249,7 +251,7 @@ function getCompatibleLocations(
 }
 
 export interface IntegrateParams {
-  readonly typesResult: ExtractTypesResult;
+  readonly typesResult: CollectedTypesResult;
   readonly resolversResult: ExtractResolversResult;
   readonly customScalarNames: ReadonlyArray<string> | null;
   readonly collectedScalars: ReadonlyArray<CollectedScalarType> | null;
