@@ -42,7 +42,7 @@ export interface InlineEnumMemberInfo {
   readonly value: string;
   /** Description from TSDoc (if available) */
   readonly description: string | null;
-  /** Deprecation info from @deprecated tag */
+  /** Deprecation info from the `@deprecated` TSDoc tag */
   readonly deprecated: DeprecationInfo | null;
 }
 
