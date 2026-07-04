@@ -1,9 +1,6 @@
 import { resolve } from "node:path";
 import ts from "typescript";
-import {
-  isBuiltInScalar,
-  isInternalTypeSymbol,
-} from "../../shared/constants.js";
+import { isBuiltInScalar } from "../../shared/constants.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   type DirectiveArgumentValue,
@@ -14,8 +11,6 @@ import {
 } from "../../shared/directive-detector.js";
 import { detectIgnoreFieldsMetadata } from "../../shared/ignore-fields-detector.js";
 import { validateIgnoreFields } from "../../shared/ignore-fields-validator.js";
-import { extractInlineObjectProperties as extractInlineObjectPropertiesShared } from "../../shared/inline-object-extractor.js";
-import { isInlineObjectType } from "../../shared/inline-object-utils.js";
 import {
   extractImplementsFromDefineInterface,
   extractImplementsFromGqlTypeDef,
@@ -33,41 +28,29 @@ import {
 import {
   extractPropertySymbols,
   filterNonNullTypeNodes,
-  findEnumParentSymbol,
-  findNonNullTypeNode,
   getNonNullableTypes,
   getTypeNameFromNode,
   hasUndefinedInType,
   isAnonymousObjectType,
-  isBooleanUnion,
   isExported,
   isNullableUnion,
   isNullOrUndefined,
-  shouldTreatIntersectionAsInline,
 } from "../../shared/typescript-utils.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 import type {
   ScalarBaseTypeMappingTable,
   ScalarMappingContext,
 } from "../mapper/scalar-base-type-mapper.js";
-import {
-  createArrayType,
-  createInlineObjectType,
-  createNumericLiteralType,
-  createPrimitiveType,
-  createReferenceType,
-  createScalarType,
-  createStringLiteralType,
-  createUnionType,
-  type Diagnostic,
-  type EnumMemberInfo,
-  type ExtractedTypeInfo,
-  type FieldDefinition,
-  type InlineObjectMember,
-  type InlineObjectProperty,
-  type TSTypeReference,
-  type TypeKind,
-  type TypeMetadata,
+import type {
+  Diagnostic,
+  EnumMemberInfo,
+  ExtractedTypeInfo,
+  FieldDefinition,
+  InlineObjectMember,
+  InlineObjectProperty,
+  TSTypeReference,
+  TypeKind,
+  TypeMetadata,
 } from "../types/index.js";
 import {
   type DiscoveredTypeEntry,
@@ -126,294 +109,6 @@ function isDefaultExport(node: ts.Node, sourceFile: ts.SourceFile): boolean {
   });
 
   return hasDefaultExport;
-}
-
-interface TypeReferenceResult {
-  readonly tsType: TSTypeReference;
-}
-
-/**
- * Context for type declaration resolution.
- * Used when processing type declarations (not field types).
- */
-interface TypeDeclarationContext {
-  readonly checker: ts.TypeChecker;
-  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
-  readonly knownTypeNames: ReadonlySet<string>;
-  readonly visitedTypes: WeakSet<ts.Type>;
-}
-
-/**
- * Attempts to extract a type as an inline object, with cycle detection.
- * Returns a reference type if a cycle is detected, otherwise returns an inline object.
- */
-function tryExtractAsInlineObject(
-  type: ts.Type,
-  ctx: TypeDeclarationContext,
-): TypeReferenceResult {
-  const { checker, visitedTypes } = ctx;
-  if (visitedTypes.has(type)) {
-    const typeName = type.symbol?.getName() ?? "Object";
-    return {
-      tsType: createReferenceType({
-        name: typeName === "__type" ? "Object" : typeName,
-        nullable: false,
-      }),
-    };
-  }
-  visitedTypes.add(type);
-  const inlineProperties = extractInlineObjectPropertiesShared(
-    type,
-    checker,
-    (t, _checker, _typeNode) => convertTsTypeToReference(t, ctx).tsType,
-  );
-  return {
-    tsType: createInlineObjectType({
-      properties: inlineProperties,
-      description: null,
-      deprecated: null,
-      hintName: null,
-    }),
-  };
-}
-
-function findGlobalTypeMapping(
-  typeName: string,
-  globalTypeMappings: ReadonlyArray<GlobalTypeMapping>,
-): GlobalTypeMapping | undefined {
-  return globalTypeMappings.find((m) => m.typeName === typeName);
-}
-
-function convertTsTypeToReference(
-  type: ts.Type,
-  ctx: TypeDeclarationContext,
-  typeNode?: ts.TypeNode,
-): TypeReferenceResult {
-  const { checker, globalTypeMappings, knownTypeNames } = ctx;
-  const metadataResult = detectScalarMetadata(type, checker);
-  // Skip scalar detection if it's an array of scalars (e.g., Int[])
-  // Array types should be handled by the array handling logic below
-  if (
-    metadataResult.scalarName &&
-    !metadataResult.isPrimitive &&
-    !metadataResult.isList
-  ) {
-    return {
-      tsType: createScalarType({
-        name: metadataResult.scalarName,
-        scalarInfo: {
-          scalarName: metadataResult.scalarName,
-          typeName: metadataResult.scalarName,
-          baseType: undefined,
-          isCustom: true,
-          only: metadataResult.only,
-        },
-        nullable: metadataResult.nullable,
-      }),
-    };
-  }
-
-  if (isBooleanUnion(type)) {
-    const nullable = isNullableUnion(type);
-    return {
-      tsType: createPrimitiveType({ name: "boolean", nullable }),
-    };
-  }
-
-  if (type.isUnion()) {
-    const nullable = isNullableUnion(type);
-
-    // Preserve type alias name for enum types (string literal unions)
-    const aliasSymbol = type.aliasSymbol;
-    if (aliasSymbol) {
-      const name = aliasSymbol.getName();
-      return {
-        tsType: createReferenceType({ name, nullable }),
-      };
-    }
-
-    const nonNullTypes = getNonNullableTypes(type);
-
-    // Check if all non-null types belong to the same enum (for numeric enums)
-    const enumParentSymbol = findEnumParentSymbol(nonNullTypes);
-    if (enumParentSymbol) {
-      return {
-        tsType: createReferenceType({
-          name: enumParentSymbol.getName(),
-          nullable,
-        }),
-      };
-    }
-
-    if (nonNullTypes.length === 1) {
-      // For nullable types like User | null, extract the non-null type node
-      const nonNullTypeNode =
-        typeNode && ts.isUnionTypeNode(typeNode)
-          ? findNonNullTypeNode(typeNode)
-          : undefined;
-
-      const innerResult = convertTsTypeToReference(
-        nonNullTypes[0]!,
-        ctx,
-        nonNullTypeNode,
-      );
-      return {
-        tsType: { ...innerResult.tsType, nullable },
-      };
-    }
-
-    const memberResults = nonNullTypes.map((t) =>
-      convertTsTypeToReference(t, ctx),
-    );
-
-    return {
-      tsType: createUnionType({
-        members: memberResults.map((r) => r.tsType),
-        nullable,
-        aliasName: type.aliasSymbol?.getName() ?? null,
-      }),
-    };
-  }
-
-  if (checker.isArrayType(type)) {
-    const typeArgs = (type as ts.TypeReference).typeArguments;
-    const elementType = typeArgs?.[0];
-
-    // Extract element type node from array type node (e.g., User[] -> User)
-    let elementTypeNode: ts.TypeNode | undefined;
-    if (typeNode && ts.isArrayTypeNode(typeNode)) {
-      elementTypeNode = typeNode.elementType;
-    }
-
-    const elementResult = elementType
-      ? convertTsTypeToReference(elementType, ctx, elementTypeNode)
-      : {
-          tsType: createPrimitiveType({ name: "unknown", nullable: false }),
-        };
-
-    return {
-      tsType: createArrayType(elementResult.tsType),
-    };
-  }
-
-  const typeString = checker.typeToString(type);
-
-  if (type.flags & ts.TypeFlags.String) {
-    return {
-      tsType: createPrimitiveType({ name: "string", nullable: false }),
-    };
-  }
-  if (type.flags & ts.TypeFlags.Number) {
-    return {
-      tsType: createPrimitiveType({ name: "number", nullable: false }),
-    };
-  }
-  if (
-    type.flags & ts.TypeFlags.Boolean ||
-    type.flags & ts.TypeFlags.BooleanLiteral
-  ) {
-    return {
-      tsType: createPrimitiveType({ name: "boolean", nullable: false }),
-    };
-  }
-  if (type.flags & ts.TypeFlags.StringLiteral) {
-    return {
-      tsType: createStringLiteralType(typeString.replace(/"/g, "")),
-    };
-  }
-  if (type.flags & ts.TypeFlags.NumberLiteral) {
-    return {
-      tsType: createNumericLiteralType(typeString),
-    };
-  }
-
-  // Handle intersection types that should be treated as inline objects
-  // This includes intersections with anonymous members OR intersections of
-  // named object types (interfaces) that are not exported as GraphQL types
-  if (type.isIntersection()) {
-    // If the intersection type has an alias symbol (e.g., Comment = GqlObject<...>),
-    // treat it as a named reference to avoid infinite recursion with self-referential types
-    if (type.aliasSymbol) {
-      const aliasName = type.aliasSymbol.getName();
-      return {
-        tsType: createReferenceType({ name: aliasName, nullable: false }),
-      };
-    }
-
-    const shouldTreatAsInline = shouldTreatIntersectionAsInline(type);
-    if (shouldTreatAsInline) {
-      return tryExtractAsInlineObject(type, ctx);
-    }
-  }
-
-  if (isInlineObjectType(type)) {
-    // Check if typeNode references a known type (schema-defined type)
-    if (typeNode && ts.isTypeReferenceNode(typeNode)) {
-      const typeName = getTypeNameFromNode(typeNode);
-      if (typeName && knownTypeNames.has(typeName)) {
-        return {
-          tsType: createReferenceType({ name: typeName, nullable: false }),
-        };
-      }
-    }
-
-    return tryExtractAsInlineObject(type, ctx);
-  }
-
-  // Check for utility types (Omit, Pick, Partial, Required, etc.)
-  // These create mapped types that should be treated as inline objects
-  if (type.flags & ts.TypeFlags.Object) {
-    const objectType = type as ts.ObjectType;
-    if (objectType.objectFlags & ts.ObjectFlags.Mapped) {
-      // Check if typeNode references a known type (schema-defined type).
-      // This handles Simplify<T> = { [K in keyof T]: T[K] } & {} pattern.
-      if (typeNode && ts.isTypeReferenceNode(typeNode)) {
-        const typeName = getTypeNameFromNode(typeNode);
-        // Only use typeNode name if it's in knownTypeNames (schema-defined type)
-        if (typeName && knownTypeNames.has(typeName)) {
-          return {
-            tsType: createReferenceType({ name: typeName, nullable: false }),
-          };
-        }
-      }
-      return tryExtractAsInlineObject(type, ctx);
-    }
-  }
-
-  if (type.symbol) {
-    const symbolName = type.symbol.getName();
-
-    // Skip internal TypeScript symbols (see constants.ts for details)
-    if (!isInternalTypeSymbol(symbolName)) {
-      const globalMapping = findGlobalTypeMapping(
-        symbolName,
-        globalTypeMappings,
-      );
-      if (globalMapping) {
-        return {
-          tsType: createScalarType({
-            name: globalMapping.scalarName,
-            scalarInfo: {
-              scalarName: globalMapping.scalarName,
-              typeName: globalMapping.typeName,
-              baseType: undefined,
-              isCustom: true,
-              only: globalMapping.only,
-            },
-            nullable: false,
-          }),
-        };
-      }
-
-      return {
-        tsType: createReferenceType({ name: symbolName, nullable: false }),
-      };
-    }
-  }
-
-  return {
-    tsType: createReferenceType({ name: typeString, nullable: false }),
-  };
 }
 
 interface FieldExtractionResult {

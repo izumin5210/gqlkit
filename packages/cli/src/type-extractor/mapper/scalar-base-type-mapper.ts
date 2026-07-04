@@ -11,6 +11,7 @@
  */
 
 import ts from "typescript";
+import { METADATA_PROPERTIES } from "../../shared/constants.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 
 /**
@@ -99,7 +100,7 @@ function extractBaseTypeSymbol(
           if (type.isIntersection()) {
             for (const member of type.types) {
               // Skip the metadata object type
-              if (member.getProperty(" $gqlkitScalar")) {
+              if (member.getProperty(METADATA_PROPERTIES.SCALAR)) {
                 continue;
               }
               // This should be the base type

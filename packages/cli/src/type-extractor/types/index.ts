@@ -15,11 +15,7 @@ export type {
 export {
   createArrayType,
   createInlineObjectType,
-  createNumericLiteralType,
-  createPrimitiveType,
   createReferenceType,
-  createScalarType,
-  createStringLiteralType,
   createUnionType,
 } from "./ts-type-reference-factory.js";
 export type {

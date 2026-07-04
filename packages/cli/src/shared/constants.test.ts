@@ -1,0 +1,109 @@
+/**
+ * Contract test between `METADATA_PROPERTIES` (this package) and the
+ * space-prefixed marker properties embedded in `@gqlkit-ts/runtime`'s type
+ * definitions.
+ *
+ * WHY this test exists: the CLI detects gqlkit runtime types by shape,
+ * not by name, via these marker properties (e.g. `" $gqlkitScalar"`).
+ * The runtime package embeds the very same string literals directly in its
+ * exported type definitions (`packages/runtime/src/index.ts`). There is no
+ * compile-time link between the two packages for this contract -- it is
+ * purely string-based -- so renaming a marker on either side silently
+ * breaks type detection at generation time without any type error. This
+ * test reads the runtime source as plain text and cross-checks both
+ * directions so such a drift fails loudly in CI instead of at runtime.
+ */
+
+import fs from "node:fs";
+import path from "node:path";
+import { fileURLToPath } from "node:url";
+import { describe, expect, it } from "vitest";
+import { METADATA_PROPERTIES } from "./constants.js";
+
+const RUNTIME_INDEX_PATH = path.resolve(
+  path.dirname(fileURLToPath(import.meta.url)),
+  "../../../runtime/src/index.ts",
+);
+
+/**
+ * Marker-looking literals that exist in the runtime source but are
+ * intentionally NOT registered in `METADATA_PROPERTIES`.
+ *
+ * `METADATA_PROPERTIES` must only contain markers the CLI actually reads,
+ * so known one-sided runtime literals are allowlisted here instead of
+ * being registered.
+ *
+ * - `" $gqlkitInterface"`: a required inner property of
+ *   `GqlInterfaceMetaShape` introduced in PR #27, never read by the CLI
+ *   (grep-verified: zero matches in packages/cli/src) -- likely a
+ *   nominal-typing artifact. Removing it would change the runtime
+ *   package's published type surface, which is out of scope for a
+ *   no-behavior-change task and unguarded because the runtime package has
+ *   no type-level tests for GqlInterface yet. Its fate (delete vs
+ *   register) is deferred to the runtime-cleanup phase of
+ *   .kiro/specs/refactor-plan.md (Phase 9, item 3).
+ */
+const KNOWN_UNREGISTERED_RUNTIME_MARKERS: ReadonlySet<string> = new Set([
+  " $gqlkitInterface",
+]);
+
+function readRuntimeSource(): string {
+  return fs.readFileSync(RUNTIME_INDEX_PATH, "utf-8");
+}
+
+/** Matches space-prefixed marker-looking property literals, e.g. `" $gqlkitScalar"`. */
+const MARKER_LITERAL_PATTERN = /"( \$[A-Za-z]+)"/g;
+
+function extractMarkerLiteralsFromSource(source: string): ReadonlySet<string> {
+  const markers = new Set<string>();
+  for (const match of source.matchAll(MARKER_LITERAL_PATTERN)) {
+    markers.add(match[1]!);
+  }
+  return markers;
+}
+
+describe("METADATA_PROPERTIES <-> runtime marker contract", () => {
+  it("every METADATA_PROPERTIES value appears verbatim in the runtime source", () => {
+    const runtimeSource = readRuntimeSource();
+
+    for (const [key, value] of Object.entries(METADATA_PROPERTIES)) {
+      expect(
+        runtimeSource.includes(`"${value}"`),
+        `METADATA_PROPERTIES.${key} (${JSON.stringify(value)}) was not found as a quoted literal in ${RUNTIME_INDEX_PATH}`,
+      ).toBe(true);
+    }
+  });
+
+  it("every space-prefixed marker literal in the runtime source is registered in METADATA_PROPERTIES", () => {
+    const runtimeSource = readRuntimeSource();
+    const runtimeMarkers = extractMarkerLiteralsFromSource(runtimeSource);
+    const registeredMarkers = new Set<string>(
+      Object.values(METADATA_PROPERTIES),
+    );
+
+    for (const marker of runtimeMarkers) {
+      if (KNOWN_UNREGISTERED_RUNTIME_MARKERS.has(marker)) {
+        continue;
+      }
+      expect(
+        registeredMarkers.has(marker),
+        `Found marker-like property ${JSON.stringify(marker)} in ${RUNTIME_INDEX_PATH} that is not registered in METADATA_PROPERTIES. Either it's a new gqlkit marker missing a CLI-side entry, or it's dead runtime code that must be explicitly allowlisted in KNOWN_UNREGISTERED_RUNTIME_MARKERS.`,
+      ).toBe(true);
+    }
+  });
+
+  it("every allowlisted unregistered marker still exists in the runtime source", () => {
+    // Self-cleaning check: when the runtime-cleanup phase removes an
+    // allowlisted property, this fails and prompts deleting the stale
+    // allowlist entry instead of letting it linger forever.
+    const runtimeSource = readRuntimeSource();
+    const runtimeMarkers = extractMarkerLiteralsFromSource(runtimeSource);
+
+    for (const marker of KNOWN_UNREGISTERED_RUNTIME_MARKERS) {
+      expect(
+        runtimeMarkers.has(marker),
+        `Allowlisted marker ${JSON.stringify(marker)} no longer exists in ${RUNTIME_INDEX_PATH}. Remove it from KNOWN_UNREGISTERED_RUNTIME_MARKERS.`,
+      ).toBe(true);
+    }
+  });
+});
