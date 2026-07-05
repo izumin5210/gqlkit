@@ -308,7 +308,7 @@ export function validateSchemaTypenames(
         message = `Duplicate typename value '${typenameValue}' in schema: types ${typeDescriptions} have the same value.`;
       }
 
-      const firstType = sortedTypes[1]!;
+      const firstType = sortedTypes[0]!;
       diagnostics.push({
         code: "DUPLICATE_TYPENAME_VALUE",
         message,

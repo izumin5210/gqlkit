@@ -15,7 +15,7 @@
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 13,
+      "line": 22,
       "column": 1
     }
   }

@@ -5,7 +5,7 @@
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/types.ts",
-      "line": 8,
+      "line": 14,
       "column": 1
     }
   }
