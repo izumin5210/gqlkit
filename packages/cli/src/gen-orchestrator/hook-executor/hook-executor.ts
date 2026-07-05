@@ -19,7 +19,12 @@ export interface HookExecutorOptions {
 export interface SingleHookResult {
   readonly command: string;
   readonly success: boolean;
-  readonly exitCode: number | null;
+  /**
+   * The process exit code, or an errno string (e.g. "ENOENT") when the
+   * underlying process failed to spawn at all (Node reports those failures
+   * via a string code rather than a numeric exit status).
+   */
+  readonly exitCode: number | string | null;
   readonly stdout: string;
   readonly stderr: string;
 }
@@ -75,7 +80,7 @@ async function executeSingleHook(
     };
   } catch (error) {
     const execError = error as {
-      code?: number;
+      code?: number | string;
       stdout?: string;
       stderr?: string;
     };

@@ -31,6 +31,17 @@ describe("ProgressReporter", () => {
       expect(writer.stderrCalls.join("\n")).toContain("1");
     });
 
+    it("should report hookFailed with a string errno code (e.g. spawn failure)", () => {
+      const writer = createMockWriter();
+      const reporter = createProgressReporter(writer);
+
+      reporter.hookFailed("eslint --fix", "ENOENT", "");
+
+      expect(writer.stderrCalls.length).toBeGreaterThan(0);
+      expect(writer.stderrCalls.join("\n")).toContain("eslint --fix");
+      expect(writer.stderrCalls.join("\n")).toContain("ENOENT");
+    });
+
     it("should report hookPhaseSummary for all success", () => {
       const writer = createMockWriter();
       const reporter = createProgressReporter(writer);
