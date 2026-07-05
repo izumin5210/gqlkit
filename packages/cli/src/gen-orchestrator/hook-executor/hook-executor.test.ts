@@ -140,12 +140,16 @@ describe("HookExecutor", () => {
         cwd: tempDir,
       });
 
-      // The shell (/bin/sh) starts successfully and reports the unknown
-      // command itself, so Node surfaces this as a numeric shell exit code.
+      // The shell starts successfully and reports the unknown command
+      // itself, so Node surfaces this as a NUMERIC shell exit code — in
+      // contrast to spawn failures, which yield string errno codes (see the
+      // next test). The exact value is shell-specific (127 on POSIX sh, 1 or
+      // 9009 on Windows cmd.exe), so only the number-ness and non-zero-ness
+      // are asserted.
       expect(result.success).toBe(false);
       expect(result.results[0]?.success).toBe(false);
-      expect(result.results[0]?.exitCode).toBe(127);
       expect(typeof result.results[0]?.exitCode).toBe("number");
+      expect(result.results[0]?.exitCode).not.toBe(0);
     });
 
     it("should surface a string error code when the shell itself fails to spawn", async () => {
