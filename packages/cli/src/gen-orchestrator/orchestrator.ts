@@ -537,6 +537,7 @@ export interface WriteFilesConfig {
 export interface WriteFilesResult {
   readonly success: boolean;
   readonly filesWritten: ReadonlyArray<string>;
+  readonly error: Error | null;
 }
 
 export async function writeGeneratedFiles(
@@ -552,5 +553,6 @@ export async function writeGeneratedFiles(
   return {
     success: result.success,
     filesWritten: result.writtenPaths,
+    error: result.error,
   };
 }

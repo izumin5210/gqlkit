@@ -85,7 +85,8 @@ export async function runGenCommand(
   });
 
   if (!writeResult.success) {
-    diagnosticReporter.reportError("Failed to write output files");
+    const cause = writeResult.error ? `: ${writeResult.error.message}` : "";
+    diagnosticReporter.reportError(`Failed to write output files${cause}`);
     return { exitCode: 1 };
   }
 
