@@ -29,6 +29,7 @@ import {
 } from "../../shared/typescript-utils.js";
 import {
   type FieldTypeResolverContext,
+  type FieldTypeResolverDiagnostic,
   type GlobalTypeMapping,
   resolveFieldType,
   type ScalarBaseTypeMappingTable,
@@ -352,12 +353,39 @@ function getTypeNameForDiagnostic(
   return checker.typeToString(type);
 }
 
+/**
+ * Converts diagnostics collected by a single `resolveFieldType` call into
+ * located `Diagnostic`s, mirroring `type-extractor`'s per-field conversion
+ * (fresh diagnostics array per declaration, immediately converted with that
+ * declaration's location). This is what makes CYCLE_DETECTED (and other
+ * warnings raised inside `resolveFieldType`) visible for resolver args and
+ * return types instead of vanishing into a context array that nobody reads.
+ */
+function convertFieldDiagnostics(
+  fieldDiagnostics: ReadonlyArray<FieldTypeResolverDiagnostic>,
+  label: string,
+  location: SourceLocation | null,
+): Diagnostic[] {
+  return fieldDiagnostics.map((d) => ({
+    code: d.code,
+    message: `${label}: ${d.message}`,
+    severity: d.severity,
+    location,
+  }));
+}
+
+interface ExtractArgsResult {
+  readonly args: ArgumentDefinition[];
+  readonly diagnostics: Diagnostic[];
+}
+
 function extractArgsFromType(
   argsType: ts.Type,
   ctx: FieldTypeResolverContext,
   argsTypeNode: ts.TypeNode,
-): ArgumentDefinition[] {
+): ExtractArgsResult {
   const args: ArgumentDefinition[] = [];
+  const diagnostics: Diagnostic[] = [];
   const properties = extractPropertySymbols(argsType, ctx.checker);
 
   const memberTypeNodes = new Map<string, ts.TypeNode>();
@@ -393,9 +421,23 @@ function extractArgsFromType(
     }
 
     const propTypeNode = memberTypeNodes.get(prop.getName());
+    const argName = prop.getName();
+    const fieldDiagnostics: FieldTypeResolverDiagnostic[] = [];
+    const tsType = resolveFieldType(actualPropType, propTypeNode, {
+      ...ctx,
+      diagnostics: fieldDiagnostics,
+    });
+    diagnostics.push(
+      ...convertFieldDiagnostics(
+        fieldDiagnostics,
+        `Argument '${argName}'`,
+        getSourceLocationFromNode(prop.getDeclarations()?.[0]),
+      ),
+    );
+
     args.push({
-      name: prop.getName(),
-      tsType: resolveFieldType(actualPropType, propTypeNode, ctx),
+      name: argName,
+      tsType,
       optional,
       description: tsdocInfo.description,
       deprecated: tsdocInfo.deprecated,
@@ -403,7 +445,7 @@ function extractArgsFromType(
     });
   }
 
-  return args;
+  return { args, diagnostics };
 }
 
 function extractDirectivesFromTypeNode(
@@ -501,20 +543,36 @@ function extractTypeArgumentsFromCall(
       diagnostics.push(...validateArgsType(argsType, argsTypeNode, checker));
     }
 
-    const args = isNoArgs
+    const argsResult = isNoArgs
       ? null
       : extractArgsFromType(argsType, inputContext, argsTypeNode);
+    if (argsResult) {
+      diagnostics.push(...argsResult.diagnostics);
+    }
 
     const directives = extractDirectivesFromTypeNode(
       directiveTypeNode,
       checker,
     );
 
+    const returnTypeDiagnostics: FieldTypeResolverDiagnostic[] = [];
+    const returnTypeRef = resolveFieldType(returnType, returnTypeNode, {
+      ...outputContext,
+      diagnostics: returnTypeDiagnostics,
+    });
+    diagnostics.push(
+      ...convertFieldDiagnostics(
+        returnTypeDiagnostics,
+        "Return type",
+        getSourceLocationFromNode(returnTypeNode),
+      ),
+    );
+
     return {
       parentTypeName: parentTypeName ?? null,
       argsType: isNoArgs ? null : argsTypeRef,
-      args: args && args.length > 0 ? args : null,
-      returnType: resolveFieldType(returnType, returnTypeNode, outputContext),
+      args: argsResult && argsResult.args.length > 0 ? argsResult.args : null,
+      returnType: returnTypeRef,
       directives,
       diagnostics,
     };
@@ -545,17 +603,33 @@ function extractTypeArgumentsFromCall(
     diagnostics.push(...validateArgsType(argsType, argsTypeNode, checker));
   }
 
-  const args = isNoArgs
+  const argsResult = isNoArgs
     ? null
     : extractArgsFromType(argsType, inputContext, argsTypeNode);
+  if (argsResult) {
+    diagnostics.push(...argsResult.diagnostics);
+  }
 
   const directives = extractDirectivesFromTypeNode(directiveTypeNode, checker);
+
+  const returnTypeDiagnostics: FieldTypeResolverDiagnostic[] = [];
+  const returnTypeRef = resolveFieldType(returnType, returnTypeNode, {
+    ...outputContext,
+    diagnostics: returnTypeDiagnostics,
+  });
+  diagnostics.push(
+    ...convertFieldDiagnostics(
+      returnTypeDiagnostics,
+      "Return type",
+      getSourceLocationFromNode(returnTypeNode),
+    ),
+  );
 
   return {
     parentTypeName: null,
     argsType: isNoArgs ? null : argsTypeRef,
-    args: args && args.length > 0 ? args : null,
-    returnType: resolveFieldType(returnType, returnTypeNode, outputContext),
+    args: argsResult && argsResult.args.length > 0 ? argsResult.args : null,
+    returnType: returnTypeRef,
     directives,
     diagnostics,
   };
@@ -602,6 +676,20 @@ export function extractDefineApiResolvers(
     sourceFiles,
     scalarMappingTable,
   } = options;
+  // `inputContext.diagnostics` / `outputContext.diagnostics` below are shared
+  // scratch arrays reused across every resolver processed in this function.
+  // They are intentionally never read back in bulk: doing so would attribute
+  // every collected diagnostic to whichever resolver happens to be current
+  // when the array is inspected, with no usable location. Call sites that
+  // need located diagnostics (extractArgsFromType per argument, and the
+  // return-type resolution below) instead pass their own fresh diagnostics
+  // array via `{ ...ctx, diagnostics: [...] }` and convert it immediately
+  // (see convertFieldDiagnostics), mirroring type-extractor's per-field
+  // pattern. The remaining direct uses of inputContext/outputContext (the
+  // whole-args-object reference used for the `isNoArgs`/argsType bookkeeping,
+  // and extractExportedInputTypes) deliberately keep the old swallow-diagnostics
+  // behavior, since they would otherwise re-report the same cycle a second
+  // time for the same argument.
   const inputContext: FieldTypeResolverContext = {
     checker,
     knownTypeNames,
