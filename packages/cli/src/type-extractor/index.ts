@@ -25,7 +25,15 @@ export {
   type FieldTypeResolverDiagnostic,
   resolveFieldType,
 } from "./extractor/field-type-resolver.js";
-export type { GlobalTypeMapping } from "./extractor/type-extractor.js";
+// Shared field/argument-extraction engine (refactor-plan.md §1.2-D, Phase 5):
+// resolver-extractor consumes this the same way it consumes `resolveFieldType`
+// above, instead of maintaining its own diverged property-walking copy.
+export {
+  type ExtractFieldsParams,
+  extractFieldsFromType,
+  type FieldExtractionResult,
+  type GlobalTypeMapping,
+} from "./extractor/type-extractor.js";
 export {
   collectDeclaredTypeNames,
   type TypeNameCollectionResult,

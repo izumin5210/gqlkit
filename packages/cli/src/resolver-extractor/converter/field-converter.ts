@@ -15,12 +15,10 @@ function convertArgsToInputValues(
 ): GraphQLInputValue[] {
   return args.map((arg) => ({
     name: arg.name,
-    type: {
-      ...convertTsTypeToGraphQLType(arg.tsType),
-      nullable: arg.tsType.nullable || arg.optional,
-    },
+    type: convertTsTypeToGraphQLType(arg.tsType, arg.optional),
     description: arg.description,
     deprecated: arg.deprecated,
+    directives: arg.directives,
     defaultValue: arg.defaultValue,
     inlineObjectProperties: arg.tsType.inlineObjectProperties ?? null,
     inlineEnumMembers: arg.tsType.inlineEnumMembers ?? null,

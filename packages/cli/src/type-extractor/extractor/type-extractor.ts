@@ -111,7 +111,7 @@ function isDefaultExport(node: ts.Node, sourceFile: ts.SourceFile): boolean {
   return hasDefaultExport;
 }
 
-interface FieldExtractionResult {
+export interface FieldExtractionResult {
   fields: FieldDefinition[];
   diagnostics: Diagnostic[];
 }
@@ -131,7 +131,27 @@ function collectAllFieldNames(
   return fieldNames;
 }
 
-interface ExtractFieldsParams {
+/**
+ * Shared field/argument-extraction engine (refactor-plan.md §1.2-D, Phase 5).
+ *
+ * This is the single implementation for walking property symbols of a
+ * TypeScript object type and turning them into `FieldDefinition`s — used both
+ * for declared GraphQL type fields (type-extractor) and for flattened
+ * resolver arguments (resolver-extractor's define-api-extractor, via this
+ * module's re-export). Two params capture the only intentional differences
+ * between the two call sites:
+ * - `diagnosticLabel` prefixes per-property diagnostic messages
+ *   ("Field '<name>': ..." vs "Argument '<name>': ...").
+ * - `reportDefaultValueErrors` preserves a pre-existing behavior split
+ *   (found while unifying, not part of the audited directive divergence):
+ *   declared-type fields already surfaced `UNRESOLVABLE_DEFAULT_VALUE`
+ *   warnings, but the old `extractArgsFromType` silently dropped them (it
+ *   read `defaultValueResult.defaultValue` but never `.errors`). Reporting
+ *   them for arguments too looks like a reasonable follow-up bug fix, but
+ *   it's outside this phase's directive-only scope, so it's preserved as
+ *   `false` for the resolver-argument call site.
+ */
+export interface ExtractFieldsParams {
   readonly type: ts.Type;
   readonly checker: ts.TypeChecker;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
@@ -143,9 +163,13 @@ interface ExtractFieldsParams {
   readonly scalarMappingContext: ScalarMappingContext;
   readonly ignoreFields: ReadonlySet<string> | null;
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
+  /** Diagnostic message prefix: "Field" for declared-type properties, "Argument" for resolver arguments. */
+  readonly diagnosticLabel: string;
+  /** Whether to surface `UNRESOLVABLE_DEFAULT_VALUE` diagnostics (see class doc). */
+  readonly reportDefaultValueErrors: boolean;
 }
 
-function extractFieldsFromType(
+export function extractFieldsFromType(
   params: ExtractFieldsParams,
 ): FieldExtractionResult {
   const {
@@ -160,6 +184,8 @@ function extractFieldsFromType(
     scalarMappingContext,
     ignoreFields,
     discoveredTypes,
+    diagnosticLabel,
+    reportDefaultValueErrors,
   } = params;
   const fields: FieldDefinition[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -200,11 +226,11 @@ function extractFieldsFromType(
       if (defaultValueResult.defaultValue) {
         defaultValue = defaultValueResult.defaultValue;
       }
-      if (defaultValueResult.errors.length > 0) {
+      if (reportDefaultValueErrors && defaultValueResult.errors.length > 0) {
         for (const error of defaultValueResult.errors) {
           diagnostics.push({
             code: error.code,
-            message: `Field '${propName}': ${error.message}`,
+            message: `${diagnosticLabel} '${propName}': ${error.message}`,
             severity: "warning",
             location: getSourceLocationFromNode(declaration),
           });
@@ -252,7 +278,7 @@ function extractFieldsFromType(
     for (const d of fieldDiagnostics) {
       diagnostics.push({
         code: d.code,
-        message: `Field '${propName}': ${d.message}`,
+        message: `${diagnosticLabel} '${propName}': ${d.message}`,
         severity: d.severity,
         location: getSourceLocationFromNode(declaration),
       });
@@ -769,6 +795,8 @@ function processReexportedSymbol(
           scalarMappingContext,
           ignoreFields,
           discoveredTypes,
+          diagnosticLabel: "Field",
+          reportDefaultValueErrors: true,
         });
   diagnostics.push(...fieldResult.diagnostics);
 
@@ -1455,6 +1483,8 @@ export function extractTypesFromProgram(
                   : "output",
                 ignoreFields,
                 discoveredTypes,
+                diagnosticLabel: "Field",
+                reportDefaultValueErrors: true,
               });
         const fields = fieldResult.fields;
         diagnostics.push(...fieldResult.diagnostics);
@@ -1549,6 +1579,8 @@ export function extractTypesFromProgram(
         scalarMappingContext: "output",
         ignoreFields: null,
         discoveredTypes,
+        diagnosticLabel: "Field",
+        reportDefaultValueErrors: true,
       });
       if (fields.length === 0) continue;
 

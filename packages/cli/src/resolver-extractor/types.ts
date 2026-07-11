@@ -17,6 +17,7 @@ export interface GraphQLInputValue {
   readonly type: GraphQLFieldType;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
   readonly defaultValue: DirectiveArgumentValue | null;
   readonly inlineObjectProperties: ReadonlyArray<InlineObjectPropertyDef> | null;
   /** Inline enum members when arg type is an inline enum (string literal union or external TypeScript enum) */
