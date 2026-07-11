@@ -581,6 +581,210 @@ function extractExportedInputTypes(
   return exportedTypes;
 }
 
+const DEFINE_CALL_FUNCTION_NAMES: ReadonlySet<string> = new Set([
+  "defineQuery",
+  "defineMutation",
+  "defineField",
+  "defineSubscription",
+]);
+
+/**
+ * Recursively searches an expression's subtree for a call to one of the
+ * `define*` resolver functions. Used to detect (and reject) `define*()`
+ * calls hidden behind a conditional/binary expression, e.g.
+ * `cond ? defineQuery(...) : defineQuery(...)` — only a direct
+ * `export const x = defineXxx(...)` is supported. Replaces a former
+ * text-regex heuristic on `initializer.getText()` (refactor-plan.md
+ * §1.2-E/Phase 8 item 4) with an AST walk; verified equivalent for every
+ * golden case that exercises this path (`subscription-error-complex-expression`
+ * is the only one in the suite).
+ */
+function containsDefineCall(node: ts.Node): boolean {
+  if (
+    ts.isCallExpression(node) &&
+    ts.isIdentifier(node.expression) &&
+    DEFINE_CALL_FUNCTION_NAMES.has(node.expression.text)
+  ) {
+    return true;
+  }
+
+  return ts.forEachChild(node, containsDefineCall) ?? false;
+}
+
+interface ProcessResolverDeclarationParams {
+  readonly declaration: ts.VariableDeclaration;
+  readonly statement: ts.VariableStatement;
+  readonly sourceFile: ts.SourceFile;
+  readonly filePath: string;
+  readonly checker: ts.TypeChecker;
+  readonly inputContext: FieldTypeResolverContext;
+  readonly outputContext: FieldTypeResolverContext;
+  readonly exportedInputTypes: ReadonlyArray<ExportedInputType>;
+}
+
+interface ProcessResolverDeclarationResult {
+  readonly resolver: DefineApiResolverInfo | null;
+  readonly abstractResolver: AbstractResolverInfo | null;
+  readonly diagnostics: ReadonlyArray<Diagnostic>;
+}
+
+/**
+ * Processes a single `export const x = ...` declaration, classifying it as a
+ * resolver, an abstract-type resolver, a diagnostic-only error, or nothing
+ * (non-`define*` declarations are common — e.g. plain constants — and are
+ * silently skipped, matching pre-decomposition behavior). Guard order is
+ * unchanged from the original inline loop body (refactor-plan.md §1.2-E).
+ */
+function processResolverDeclaration(
+  params: ProcessResolverDeclarationParams,
+): ProcessResolverDeclarationResult | null {
+  const {
+    declaration,
+    statement,
+    sourceFile,
+    filePath,
+    checker,
+    inputContext,
+    outputContext,
+    exportedInputTypes,
+  } = params;
+
+  if (!ts.isIdentifier(declaration.name)) {
+    return null;
+  }
+
+  const exportName = declaration.name.getText(sourceFile);
+  const initializer = declaration.initializer;
+
+  if (!initializer) {
+    return null;
+  }
+
+  if (!ts.isCallExpression(initializer)) {
+    if (
+      (ts.isConditionalExpression(initializer) ||
+        ts.isBinaryExpression(initializer)) &&
+      containsDefineCall(initializer)
+    ) {
+      return {
+        resolver: null,
+        abstractResolver: null,
+        diagnostics: [
+          {
+            code: "INVALID_DEFINE_CALL",
+            message: `Complex expressions with define* functions are not supported. Use a simple 'export const ${exportName} = defineXxx(...)' pattern.`,
+            severity: "error",
+            location: getSourceLocationFromNode(declaration.name),
+          },
+        ],
+      };
+    }
+    return null;
+  }
+
+  // Computed once and offered to both detectors below (they previously
+  // each called getTypeAtLocation on this same node independently).
+  const returnType = checker.getTypeAtLocation(initializer);
+
+  const abstractResolverInfo = detectAbstractResolverFromMetadataType(
+    returnType,
+    checker,
+  );
+
+  if (abstractResolverInfo) {
+    const sourceLocation = getSourceLocationFromNode(declaration.name);
+    if (!sourceLocation) {
+      return null;
+    }
+    return {
+      resolver: null,
+      abstractResolver: {
+        kind: abstractResolverInfo.kind,
+        targetTypeName: abstractResolverInfo.targetTypeName,
+        exportName,
+        sourceFile: filePath,
+        sourceLocation,
+      },
+      diagnostics: [],
+    };
+  }
+
+  const resolverType = detectResolverFromMetadataType(returnType, checker);
+
+  if (!resolverType) {
+    return null;
+  }
+
+  const fieldName = resolveFieldNameFromExportName(exportName);
+  if (fieldName === null) {
+    return {
+      resolver: null,
+      abstractResolver: null,
+      diagnostics: [
+        {
+          code: "INVALID_DEFINE_CALL",
+          message: `Resolver export '${exportName}' must have a non-empty field name after '$'.`,
+          severity: "error",
+          location: getSourceLocationFromNode(declaration.name),
+        },
+      ],
+    };
+  }
+
+  const funcName = ts.isIdentifier(initializer.expression)
+    ? initializer.expression.text
+    : undefined;
+
+  const typeInfo = extractTypeArgumentsFromCall({
+    node: initializer,
+    inputContext,
+    outputContext,
+    resolverType,
+  });
+
+  if (!typeInfo) {
+    return {
+      resolver: null,
+      abstractResolver: null,
+      diagnostics: [
+        {
+          code: "INVALID_DEFINE_CALL",
+          message: `Failed to extract type arguments from ${funcName ?? "define*"} call for '${exportName}'`,
+          severity: "error",
+          location: getSourceLocationFromNode(declaration.name),
+        },
+      ],
+    };
+  }
+
+  const tsdocInfo = extractTsDocInfo(statement, checker);
+  const sourceLocation = getSourceLocationFromNode(declaration.name) ?? {
+    file: filePath,
+    line: 1,
+    column: 1,
+  };
+
+  return {
+    resolver: {
+      fieldName,
+      resolverExportName: exportName,
+      resolverType,
+      parentTypeName: typeInfo.parentTypeName,
+      argsType: typeInfo.argsType,
+      args: typeInfo.args,
+      returnType: typeInfo.returnType,
+      sourceFile: filePath,
+      sourceLocation,
+      exportedInputTypes,
+      description: tsdocInfo.description,
+      deprecated: tsdocInfo.deprecated,
+      directives: typeInfo.directives,
+    },
+    abstractResolver: null,
+    diagnostics: typeInfo.diagnostics,
+  };
+}
+
 export function extractDefineApiResolvers(
   program: ts.Program,
   files: ReadonlyArray<string>,
@@ -659,125 +863,28 @@ export function extractDefineApiResolvers(
       }
 
       for (const declaration of node.declarationList.declarations) {
-        if (!ts.isIdentifier(declaration.name)) {
-          continue;
-        }
-
-        const exportName = declaration.name.getText(sourceFile);
-        const initializer = declaration.initializer;
-
-        if (!initializer) {
-          continue;
-        }
-
-        if (!ts.isCallExpression(initializer)) {
-          if (
-            ts.isConditionalExpression(initializer) ||
-            ts.isBinaryExpression(initializer)
-          ) {
-            const hasDefineCall = initializer
-              .getText(sourceFile)
-              .match(/define(Query|Mutation|Field|Subscription)/);
-            if (hasDefineCall) {
-              diagnostics.push({
-                code: "INVALID_DEFINE_CALL",
-                message: `Complex expressions with define* functions are not supported. Use a simple 'export const ${exportName} = defineXxx(...)' pattern.`,
-                severity: "error",
-                location: getSourceLocationFromNode(declaration.name),
-              });
-            }
-          }
-          continue;
-        }
-
-        // Computed once and offered to both detectors below (they previously
-        // each called getTypeAtLocation on this same node independently).
-        const returnType = checker.getTypeAtLocation(initializer);
-
-        const abstractResolverInfo = detectAbstractResolverFromMetadataType(
-          returnType,
+        const result = processResolverDeclaration({
+          declaration,
+          statement: node,
+          sourceFile,
+          filePath,
           checker,
-        );
-
-        if (abstractResolverInfo) {
-          const sourceLocation = getSourceLocationFromNode(declaration.name);
-          if (sourceLocation) {
-            abstractTypeResolvers.push({
-              kind: abstractResolverInfo.kind,
-              targetTypeName: abstractResolverInfo.targetTypeName,
-              exportName,
-              sourceFile: filePath,
-              sourceLocation,
-            });
-          }
-          continue;
-        }
-
-        const resolverType = detectResolverFromMetadataType(
-          returnType,
-          checker,
-        );
-
-        if (!resolverType) {
-          continue;
-        }
-
-        const fieldName = resolveFieldNameFromExportName(exportName);
-        if (fieldName === null) {
-          diagnostics.push({
-            code: "INVALID_DEFINE_CALL",
-            message: `Resolver export '${exportName}' must have a non-empty field name after '$'.`,
-            severity: "error",
-            location: getSourceLocationFromNode(declaration.name),
-          });
-          continue;
-        }
-
-        const funcName = ts.isIdentifier(initializer.expression)
-          ? initializer.expression.text
-          : undefined;
-
-        const typeInfo = extractTypeArgumentsFromCall({
-          node: initializer,
           inputContext,
           outputContext,
-          resolverType,
+          exportedInputTypes,
         });
 
-        if (!typeInfo) {
-          diagnostics.push({
-            code: "INVALID_DEFINE_CALL",
-            message: `Failed to extract type arguments from ${funcName ?? "define*"} call for '${exportName}'`,
-            severity: "error",
-            location: getSourceLocationFromNode(declaration.name),
-          });
+        if (!result) {
           continue;
         }
 
-        diagnostics.push(...typeInfo.diagnostics);
-
-        const tsdocInfo = extractTsDocInfo(node, checker);
-        const sourceLocation = getSourceLocationFromNode(declaration.name) ?? {
-          file: filePath,
-          line: 1,
-          column: 1,
-        };
-
-        resolvers.push({
-          fieldName,
-          resolverExportName: exportName,
-          resolverType,
-          parentTypeName: typeInfo.parentTypeName,
-          argsType: typeInfo.argsType,
-          args: typeInfo.args,
-          returnType: typeInfo.returnType,
-          sourceFile: filePath,
-          sourceLocation,
-          exportedInputTypes,
-          description: tsdocInfo.description,
-          deprecated: tsdocInfo.deprecated,
-          directives: typeInfo.directives,
-        });
+        diagnostics.push(...result.diagnostics);
+        if (result.abstractResolver) {
+          abstractTypeResolvers.push(result.abstractResolver);
+        }
+        if (result.resolver) {
+          resolvers.push(result.resolver);
+        }
       }
     });
   }
