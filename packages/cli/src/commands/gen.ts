@@ -1,14 +1,25 @@
 import { dirname } from "node:path";
 import { define } from "gunshi";
-import { loadConfig } from "../config-loader/index.js";
+import {
+  loadConfig,
+  type ResolvedHooksConfig,
+} from "../config-loader/index.js";
 import { executeHooks } from "../gen-orchestrator/hook-executor/hook-executor.js";
 import {
   executeGeneration,
   type GenerationConfig,
+  type GenerationResult,
+  type WriteFilesResult,
   writeGeneratedFiles,
 } from "../gen-orchestrator/orchestrator.js";
-import { createDiagnosticReporter } from "../gen-orchestrator/reporter/diagnostic-reporter.js";
-import { createProgressReporter } from "../gen-orchestrator/reporter/progress-reporter.js";
+import {
+  createDiagnosticReporter,
+  type DiagnosticReporter,
+} from "../gen-orchestrator/reporter/diagnostic-reporter.js";
+import {
+  createProgressReporter,
+  type ProgressReporter,
+} from "../gen-orchestrator/reporter/progress-reporter.js";
 
 export interface RunGenCommandOptions {
   readonly cwd: string;
@@ -17,6 +28,205 @@ export interface RunGenCommandOptions {
 
 export interface RunGenCommandResult {
   readonly exitCode: number;
+}
+
+/**
+ * Outcome of a pipeline step: either the pipeline continues with `value`,
+ * or it terminates early with the given exit code.
+ */
+type StepResult<T> =
+  | { readonly ok: true; readonly value: T }
+  | { readonly ok: false; readonly exitCode: number };
+
+interface AdaptedConfig {
+  readonly generationConfig: GenerationConfig;
+  readonly hooks: ResolvedHooksConfig;
+}
+
+interface LoadAndAdaptConfigParams {
+  readonly cwd: string;
+  readonly configPath: string | null;
+  readonly diagnosticReporter: DiagnosticReporter;
+}
+
+/** Loads the config file and adapts it into the orchestrator's `GenerationConfig` shape. */
+async function loadAndAdaptConfig(
+  params: LoadAndAdaptConfigParams,
+): Promise<StepResult<AdaptedConfig>> {
+  const { cwd, configPath, diagnosticReporter } = params;
+
+  const configResult = await loadConfig({ cwd, configPath });
+
+  if (configResult.diagnostics.length > 0) {
+    diagnosticReporter.reportDiagnostics(configResult.diagnostics);
+    diagnosticReporter.reportError("Config load failed");
+    return { ok: false, exitCode: 1 };
+  }
+
+  const configDir = configResult.configPath
+    ? dirname(configResult.configPath)
+    : cwd;
+
+  const {
+    sourceDir,
+    sourceIgnoreGlobs,
+    output,
+    scalars,
+    tsconfigPath,
+    discriminatorFields,
+    hooks,
+  } = configResult.config;
+
+  const generationConfig: GenerationConfig = {
+    cwd,
+    sourceDir,
+    sourceIgnoreGlobs,
+    output,
+    configDir,
+    customScalars: scalars,
+    tsconfigPath,
+    discriminatorFields,
+  };
+
+  return { ok: true, value: { generationConfig, hooks } };
+}
+
+interface RunGenerationParams {
+  readonly generationConfig: GenerationConfig;
+  readonly progressReporter: ProgressReporter;
+}
+
+/** Announces the pipeline phases and runs type/resolver/schema generation. */
+async function runGeneration(
+  params: RunGenerationParams,
+): Promise<GenerationResult> {
+  const { generationConfig, progressReporter } = params;
+
+  progressReporter.startPhase("Extracting types");
+  progressReporter.startPhase("Extracting resolvers");
+  progressReporter.startPhase("Generating schema");
+
+  return executeGeneration(generationConfig);
+}
+
+interface ReportGenerationDiagnosticsParams {
+  readonly result: GenerationResult;
+  readonly progressReporter: ProgressReporter;
+  readonly diagnosticReporter: DiagnosticReporter;
+}
+
+/** Reports generation diagnostics/pruned types and gates on generation success. */
+function reportGenerationDiagnostics(
+  params: ReportGenerationDiagnosticsParams,
+): StepResult<GenerationResult> {
+  const { result, progressReporter, diagnosticReporter } = params;
+
+  if (result.diagnostics.length > 0) {
+    diagnosticReporter.reportDiagnostics(result.diagnostics);
+  }
+
+  if (!result.success) {
+    diagnosticReporter.reportError("Generation failed");
+    return { ok: false, exitCode: 1 };
+  }
+
+  if (result.prunedTypes.length > 0) {
+    progressReporter.typesPruned(result.prunedTypes);
+  }
+
+  return { ok: true, value: result };
+}
+
+interface WriteOutputFilesParams {
+  readonly files: GenerationResult["files"];
+  readonly progressReporter: ProgressReporter;
+  readonly diagnosticReporter: DiagnosticReporter;
+}
+
+/** Writes generated files to disk and gates on write success. */
+async function writeOutputFiles(
+  params: WriteOutputFilesParams,
+): Promise<StepResult<WriteFilesResult>> {
+  const { files, progressReporter, diagnosticReporter } = params;
+
+  const writeResult = await writeGeneratedFiles({ files });
+
+  if (!writeResult.success) {
+    const cause = writeResult.error ? `: ${writeResult.error.message}` : "";
+    diagnosticReporter.reportError(`Failed to write output files${cause}`);
+    return { ok: false, exitCode: 1 };
+  }
+
+  for (const filePath of writeResult.filesWritten) {
+    progressReporter.fileWritten(filePath);
+  }
+  progressReporter.complete();
+
+  return { ok: true, value: writeResult };
+}
+
+interface RunAfterWriteHooksParams {
+  readonly hooks: ResolvedHooksConfig;
+  readonly filesWritten: ReadonlyArray<string>;
+  readonly cwd: string;
+  readonly progressReporter: ProgressReporter;
+}
+
+interface RunAfterWriteHooksResult {
+  readonly hookFailed: boolean;
+}
+
+/** Runs `afterAllFileWrite` hooks, if any are configured and files were written. */
+async function runAfterWriteHooks(
+  params: RunAfterWriteHooksParams,
+): Promise<RunAfterWriteHooksResult> {
+  const { hooks, filesWritten, cwd, progressReporter } = params;
+
+  if (filesWritten.length === 0 || hooks.afterAllFileWrite.length === 0) {
+    return { hookFailed: false };
+  }
+
+  progressReporter.startHookPhase();
+
+  const hookResult = await executeHooks({
+    commands: hooks.afterAllFileWrite,
+    filePaths: filesWritten,
+    cwd,
+    onHookComplete: (result) => {
+      if (result.success) {
+        progressReporter.hookCompleted(result.command);
+      } else {
+        progressReporter.hookFailed(
+          result.command,
+          result.exitCode,
+          result.stderr,
+        );
+      }
+    },
+  });
+
+  const failedCount = hookResult.results.filter((r) => !r.success).length;
+  progressReporter.hookPhaseSummary(hookResult.results.length, failedCount);
+
+  return { hookFailed: !hookResult.success };
+}
+
+interface ReportOutcomeParams {
+  readonly hookFailed: boolean;
+  readonly diagnosticReporter: DiagnosticReporter;
+}
+
+/** Reports the final outcome and determines the process exit code. */
+function reportOutcome(params: ReportOutcomeParams): RunGenCommandResult {
+  const { hookFailed, diagnosticReporter } = params;
+
+  if (hookFailed) {
+    diagnosticReporter.reportError("Hook execution failed");
+    return { exitCode: 1 };
+  }
+
+  diagnosticReporter.reportSuccess("Generation complete!");
+  return { exitCode: 0 };
 }
 
 export async function runGenCommand(
@@ -30,113 +240,47 @@ export async function runGenCommand(
   const progressReporter = createProgressReporter(writer);
   const diagnosticReporter = createDiagnosticReporter(writer);
 
-  const configResult = await loadConfig({
+  const configStep = await loadAndAdaptConfig({
     cwd: options.cwd,
     configPath: options.configPath,
+    diagnosticReporter,
+  });
+  if (!configStep.ok) {
+    return { exitCode: configStep.exitCode };
+  }
+  const { generationConfig, hooks } = configStep.value;
+
+  const generationResult = await runGeneration({
+    generationConfig,
+    progressReporter,
   });
 
-  if (configResult.diagnostics.length > 0) {
-    diagnosticReporter.reportDiagnostics(configResult.diagnostics);
-    diagnosticReporter.reportError("Config load failed");
-    return { exitCode: 1 };
+  const diagnosticsStep = reportGenerationDiagnostics({
+    result: generationResult,
+    progressReporter,
+    diagnosticReporter,
+  });
+  if (!diagnosticsStep.ok) {
+    return { exitCode: diagnosticsStep.exitCode };
   }
 
-  const configDir = configResult.configPath
-    ? dirname(configResult.configPath)
-    : options.cwd;
+  const writeStep = await writeOutputFiles({
+    files: diagnosticsStep.value.files,
+    progressReporter,
+    diagnosticReporter,
+  });
+  if (!writeStep.ok) {
+    return { exitCode: writeStep.exitCode };
+  }
 
-  const {
-    sourceDir,
-    sourceIgnoreGlobs,
-    output,
-    scalars,
-    tsconfigPath,
-    discriminatorFields,
-  } = configResult.config;
-
-  const config: GenerationConfig = {
+  const { hookFailed } = await runAfterWriteHooks({
+    hooks,
+    filesWritten: writeStep.value.filesWritten,
     cwd: options.cwd,
-    sourceDir,
-    sourceIgnoreGlobs,
-    output,
-    configDir,
-    customScalars: scalars,
-    tsconfigPath,
-    discriminatorFields,
-  };
-
-  progressReporter.startPhase("Extracting types");
-  progressReporter.startPhase("Extracting resolvers");
-  progressReporter.startPhase("Generating schema");
-
-  const result = await executeGeneration(config);
-
-  if (result.diagnostics.length > 0) {
-    diagnosticReporter.reportDiagnostics(result.diagnostics);
-  }
-
-  if (!result.success) {
-    diagnosticReporter.reportError("Generation failed");
-    return { exitCode: 1 };
-  }
-
-  if (result.prunedTypes.length > 0) {
-    progressReporter.typesPruned(result.prunedTypes);
-  }
-
-  const writeResult = await writeGeneratedFiles({
-    files: result.files,
+    progressReporter,
   });
 
-  if (!writeResult.success) {
-    const cause = writeResult.error ? `: ${writeResult.error.message}` : "";
-    diagnosticReporter.reportError(`Failed to write output files${cause}`);
-    return { exitCode: 1 };
-  }
-
-  for (const filePath of writeResult.filesWritten) {
-    progressReporter.fileWritten(filePath);
-  }
-  progressReporter.complete();
-
-  const { hooks } = configResult.config;
-  let hookFailed = false;
-
-  if (
-    writeResult.filesWritten.length > 0 &&
-    hooks.afterAllFileWrite.length > 0
-  ) {
-    progressReporter.startHookPhase();
-
-    const hookResult = await executeHooks({
-      commands: hooks.afterAllFileWrite,
-      filePaths: writeResult.filesWritten,
-      cwd: options.cwd,
-      onHookComplete: (result) => {
-        if (result.success) {
-          progressReporter.hookCompleted(result.command);
-        } else {
-          progressReporter.hookFailed(
-            result.command,
-            result.exitCode,
-            result.stderr,
-          );
-        }
-      },
-    });
-
-    hookFailed = !hookResult.success;
-    const failedCount = hookResult.results.filter((r) => !r.success).length;
-    progressReporter.hookPhaseSummary(hookResult.results.length, failedCount);
-  }
-
-  if (hookFailed) {
-    diagnosticReporter.reportError("Hook execution failed");
-    return { exitCode: 1 };
-  }
-
-  diagnosticReporter.reportSuccess("Generation complete!");
-  return { exitCode: 0 };
+  return reportOutcome({ hookFailed, diagnosticReporter });
 }
 
 export const genCommand = define({
