@@ -313,7 +313,7 @@ export function generateSchema(
     prunedTypes = pruneResult.removedTypes;
   }
 
-  const typeDefsCode = emitTypeDefsCode(integratedResult, { sourceRoot });
+  const typeDefsCode = emitTypeDefsCode(documentNode);
   const sdlContent = emitSdlContent(documentNode);
 
   const resolverInfo = collectResolverInfo(integratedResult);
