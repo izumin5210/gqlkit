@@ -93,19 +93,28 @@ const RESOLVER_METADATA_PROPERTY = METADATA_PROPERTIES.RESOLVER;
 const ABSTRACT_RESOLVER_METADATA_PROPERTY =
   METADATA_PROPERTIES.ABSTRACT_RESOLVER;
 
-/**
- * Detects abstract resolver kind and target type from metadata embedded in the type.
- * Returns null if no abstract resolver metadata is found.
- */
-function detectAbstractResolverFromMetadataType(
-  callExpr: ts.CallExpression,
-  checker: ts.TypeChecker,
-): { kind: AbstractResolverKind; targetTypeName: string } | null {
-  const returnType = checker.getTypeAtLocation(callExpr);
+interface MetadataKindResult {
+  readonly kind: string;
+  readonly actualType: ts.Type;
+}
 
-  const metadataProp = returnType.getProperty(
-    ABSTRACT_RESOLVER_METADATA_PROPERTY,
-  );
+/**
+ * Reads the `kind` discriminant off a metadata property (e.g. the resolver or
+ * abstract-resolver marker) embedded in a `define*()` call's return type.
+ * Shared skeleton for resolver-type detection and abstract-resolver-kind
+ * detection (refactor-plan.md §1.2-D): both walk
+ * `metadataProp -> getActualMetadataType -> "kind" string literal`, differing
+ * only in which marker property they read and which kind strings are valid.
+ * Returns null if the metadata property, its actual type, or `kind` are
+ * absent, or `kind` isn't a string literal — callers narrow/validate the
+ * returned `kind` themselves.
+ */
+function detectKindFromMetadataType(
+  returnType: ts.Type,
+  checker: ts.TypeChecker,
+  metadataProperty: string,
+): MetadataKindResult | null {
+  const metadataProp = returnType.getProperty(metadataProperty);
   if (!metadataProp) {
     return null;
   }
@@ -126,7 +135,27 @@ function detectAbstractResolverFromMetadataType(
     return null;
   }
 
-  const kind = kindType.value;
+  return { kind: kindType.value, actualType };
+}
+
+/**
+ * Detects abstract resolver kind and target type from metadata embedded in the type.
+ * Returns null if no abstract resolver metadata is found.
+ */
+function detectAbstractResolverFromMetadataType(
+  returnType: ts.Type,
+  checker: ts.TypeChecker,
+): { kind: AbstractResolverKind; targetTypeName: string } | null {
+  const result = detectKindFromMetadataType(
+    returnType,
+    checker,
+    ABSTRACT_RESOLVER_METADATA_PROPERTY,
+  );
+  if (!result) {
+    return null;
+  }
+
+  const { kind, actualType } = result;
   if (kind !== "resolveType" && kind !== "isTypeOf") {
     return null;
   }
@@ -187,38 +216,26 @@ function extractTypeNameFromType(
  * Follows the same pattern as scalar metadata detection.
  */
 function detectResolverFromMetadataType(
-  callExpr: ts.CallExpression,
+  returnType: ts.Type,
   checker: ts.TypeChecker,
 ): DefineApiResolverType | null {
-  const returnType = checker.getTypeAtLocation(callExpr);
-
-  const metadataProp = returnType.getProperty(RESOLVER_METADATA_PROPERTY);
-  if (!metadataProp) {
+  const result = detectKindFromMetadataType(
+    returnType,
+    checker,
+    RESOLVER_METADATA_PROPERTY,
+  );
+  if (!result) {
     return null;
   }
 
-  const metadataType = checker.getTypeOfSymbol(metadataProp);
-  const actualType = getActualMetadataType(metadataType);
-  if (!actualType) {
-    return null;
-  }
-
-  const kindProp = actualType.getProperty("kind");
-  if (!kindProp) {
-    return null;
-  }
-
-  const kindType = checker.getTypeOfSymbol(kindProp);
-  if (kindType.isStringLiteral()) {
-    const kind = kindType.value;
-    if (
-      kind === "query" ||
-      kind === "mutation" ||
-      kind === "field" ||
-      kind === "subscription"
-    ) {
-      return kind;
-    }
+  const { kind } = result;
+  if (
+    kind === "query" ||
+    kind === "mutation" ||
+    kind === "field" ||
+    kind === "subscription"
+  ) {
+    return kind;
   }
 
   return null;
@@ -418,6 +435,60 @@ function validateArgsType(
   return diagnostics;
 }
 
+interface CallTypeNodes {
+  readonly parentTypeName: string | null;
+  readonly argsTypeNode: ts.TypeNode;
+  readonly returnTypeNode: ts.TypeNode;
+  readonly directiveTypeNode: ts.TypeNode | undefined;
+}
+
+/**
+ * Locates the args/return/directive type-argument nodes on a `define*()`
+ * call. `defineField` carries an extra leading parent-type argument that the
+ * other `define*` functions don't (`<Parent, Args, Return, Directives>` vs
+ * `<Args, Return, Directives>`) — this is the only difference between the
+ * two index layouts (refactor-plan.md §1.2-D).
+ */
+function resolveCallTypeNodes(
+  typeArgs: ts.NodeArray<ts.TypeNode>,
+  resolverType: DefineApiResolverType,
+): CallTypeNodes | null {
+  if (resolverType === "field") {
+    if (typeArgs.length < 3) {
+      return null;
+    }
+    const [parentTypeNode, argsTypeNode, returnTypeNode, directiveTypeNode] =
+      typeArgs;
+
+    if (!parentTypeNode || !argsTypeNode || !returnTypeNode) {
+      return null;
+    }
+
+    return {
+      parentTypeName: getTypeNameFromNode(parentTypeNode) ?? null,
+      argsTypeNode,
+      returnTypeNode,
+      directiveTypeNode,
+    };
+  }
+
+  if (typeArgs.length < 2) {
+    return null;
+  }
+  const [argsTypeNode, returnTypeNode, directiveTypeNode] = typeArgs;
+
+  if (!argsTypeNode || !returnTypeNode) {
+    return null;
+  }
+
+  return {
+    parentTypeName: null,
+    argsTypeNode,
+    returnTypeNode,
+    directiveTypeNode,
+  };
+}
+
 interface ExtractTypeArgumentsFromCallParams {
   readonly node: ts.CallExpression;
   readonly inputContext: FieldTypeResolverContext;
@@ -435,80 +506,12 @@ function extractTypeArgumentsFromCall(
     return null;
   }
 
-  if (resolverType === "field") {
-    if (typeArgs.length < 3) {
-      return null;
-    }
-    const parentTypeNode = typeArgs[0];
-    const argsTypeNode = typeArgs[1];
-    const returnTypeNode = typeArgs[2];
-    const directiveTypeNode = typeArgs[3];
-
-    if (!parentTypeNode || !argsTypeNode || !returnTypeNode) {
-      return null;
-    }
-
-    const argsType = checker.getTypeFromTypeNode(argsTypeNode);
-    const returnType = checker.getTypeFromTypeNode(returnTypeNode);
-
-    const parentTypeName = getTypeNameFromNode(parentTypeNode);
-
-    const argsTypeRef = resolveFieldType(argsType, undefined, inputContext);
-    const isNoArgs =
-      argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
-
-    const diagnostics: Diagnostic[] = [];
-
-    if (!isNoArgs) {
-      diagnostics.push(...validateArgsType(argsType, argsTypeNode, checker));
-    }
-
-    const argsResult = isNoArgs
-      ? null
-      : extractArgsFromType(argsType, inputContext);
-    if (argsResult) {
-      diagnostics.push(...argsResult.diagnostics);
-    }
-
-    const directives = extractDirectivesFromTypeNode(
-      directiveTypeNode,
-      checker,
-    );
-
-    const returnTypeDiagnostics: FieldTypeResolverDiagnostic[] = [];
-    const returnTypeRef = resolveFieldType(returnType, returnTypeNode, {
-      ...outputContext,
-      diagnostics: returnTypeDiagnostics,
-    });
-    diagnostics.push(
-      ...convertFieldDiagnostics(
-        returnTypeDiagnostics,
-        "Return type",
-        getSourceLocationFromNode(returnTypeNode),
-      ),
-    );
-
-    return {
-      parentTypeName: parentTypeName ?? null,
-      argsType: isNoArgs ? null : argsTypeRef,
-      args: argsResult && argsResult.args.length > 0 ? argsResult.args : null,
-      returnType: returnTypeRef,
-      directives,
-      diagnostics,
-    };
-  }
-
-  if (typeArgs.length < 2) {
+  const callTypeNodes = resolveCallTypeNodes(typeArgs, resolverType);
+  if (!callTypeNodes) {
     return null;
   }
-
-  const argsTypeNode = typeArgs[0];
-  const returnTypeNode = typeArgs[1];
-  const directiveTypeNode = typeArgs[2];
-
-  if (!argsTypeNode || !returnTypeNode) {
-    return null;
-  }
+  const { parentTypeName, argsTypeNode, returnTypeNode, directiveTypeNode } =
+    callTypeNodes;
 
   const argsType = checker.getTypeFromTypeNode(argsTypeNode);
   const returnType = checker.getTypeFromTypeNode(returnTypeNode);
@@ -546,7 +549,7 @@ function extractTypeArgumentsFromCall(
   );
 
   return {
-    parentTypeName: null,
+    parentTypeName,
     argsType: isNoArgs ? null : argsTypeRef,
     args: argsResult && argsResult.args.length > 0 ? argsResult.args : null,
     returnType: returnTypeRef,
@@ -687,8 +690,12 @@ export function extractDefineApiResolvers(
           continue;
         }
 
+        // Computed once and offered to both detectors below (they previously
+        // each called getTypeAtLocation on this same node independently).
+        const returnType = checker.getTypeAtLocation(initializer);
+
         const abstractResolverInfo = detectAbstractResolverFromMetadataType(
-          initializer,
+          returnType,
           checker,
         );
 
@@ -707,7 +714,7 @@ export function extractDefineApiResolvers(
         }
 
         const resolverType = detectResolverFromMetadataType(
-          initializer,
+          returnType,
           checker,
         );
 
