@@ -389,7 +389,16 @@ function validateExtractionStep(ctx: PipelineContext): PipelineContext {
     ...collectAllDiagnostics(ctx.typesResult, ctx.resolversResult),
   ];
 
-  if (hasErrors(ctx.typesResult, ctx.resolversResult)) {
+  // ctx.diagnostics may already contain severity: "error" entries pushed by
+  // earlier steps that don't set `aborted` themselves — e.g.
+  // extractDirectivesStep's UNRESOLVABLE_ARG_TYPE for invalid directive
+  // definitions. Without this check those errors were only ever printed;
+  // generation continued and wrote files despite the error.
+  const hasPriorStepErrors = ctx.diagnostics.some(
+    (d) => d.severity === "error",
+  );
+
+  if (hasErrors(ctx.typesResult, ctx.resolversResult) || hasPriorStepErrors) {
     return {
       ...ctx,
       diagnostics: allDiagnostics,
@@ -528,6 +537,7 @@ export interface WriteFilesConfig {
 export interface WriteFilesResult {
   readonly success: boolean;
   readonly filesWritten: ReadonlyArray<string>;
+  readonly error: Error | null;
 }
 
 export async function writeGeneratedFiles(
@@ -543,5 +553,6 @@ export async function writeGeneratedFiles(
   return {
     success: result.success,
     filesWritten: result.writtenPaths,
+    error: result.error,
   };
 }

@@ -22,6 +22,7 @@ export {
 // consumes this as a declared dependency of the facade, not a deep import.
 export {
   type FieldTypeResolverContext,
+  type FieldTypeResolverDiagnostic,
   resolveFieldType,
 } from "./extractor/field-type-resolver.js";
 export type { GlobalTypeMapping } from "./extractor/type-extractor.js";

@@ -1,7 +1,7 @@
 import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
 import { tmpdir } from "node:os";
 import { join } from "node:path";
-import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
 import { runGenCommand } from "./gen.js";
 
 describe("gen command", () => {
@@ -55,6 +55,32 @@ describe("gen command", () => {
       const result = await runGenCommand({ cwd: testDir, configPath: null });
 
       expect(result.exitCode).toBe(1);
+    });
+
+    it("should surface the underlying error when writing output files fails", async () => {
+      await setupProject();
+
+      // Pre-create a directory at the default typeDefs output path so the
+      // write fails deterministically with a real fs error (EISDIR),
+      // instead of relying on permission bits (which root can bypass).
+      await mkdir(join(testDir, "src/gqlkit/__generated__/typeDefs.ts"), {
+        recursive: true,
+      });
+
+      const stderrSpy = vi.spyOn(console, "error").mockImplementation(() => {
+        // Suppress noisy test output.
+      });
+
+      try {
+        const result = await runGenCommand({ cwd: testDir, configPath: null });
+
+        expect(result.exitCode).toBe(1);
+        const messages = stderrSpy.mock.calls.map((call) => call[0]).join("\n");
+        expect(messages).toContain("Failed to write output files");
+        expect(messages).toMatch(/EISDIR/);
+      } finally {
+        stderrSpy.mockRestore();
+      }
     });
   });
 

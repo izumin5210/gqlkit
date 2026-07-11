@@ -1,0 +1,12 @@
+[
+  {
+    "code": "CYCLE_DETECTED",
+    "message": "Return type: Cycle detected in type resolution; field will be skipped",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/query.ts",
+      "line": 15,
+      "column": 3
+    }
+  }
+]

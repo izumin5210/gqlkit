@@ -1,0 +1,22 @@
+[
+  {
+    "code": "UNRESOLVABLE_ARG_TYPE",
+    "message": "Cannot resolve argument type for 'value'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/directives.ts",
+      "line": 11,
+      "column": 1
+    }
+  },
+  {
+    "code": "UNSUPPORTED_SYNTAX",
+    "message": "Generic type 'UnresolvableArgsDirective' is not supported. Consider using a concrete type instead.",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/directives.ts",
+      "line": 11,
+      "column": 1
+    }
+  }
+]

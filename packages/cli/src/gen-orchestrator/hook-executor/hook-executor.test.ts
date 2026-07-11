@@ -140,9 +140,36 @@ describe("HookExecutor", () => {
         cwd: tempDir,
       });
 
+      // The shell starts successfully and reports the unknown command
+      // itself, so Node surfaces this as a NUMERIC shell exit code — in
+      // contrast to spawn failures, which yield string errno codes (see the
+      // next test). The exact value is shell-specific (127 on POSIX sh, 1 or
+      // 9009 on Windows cmd.exe), so only the number-ness and non-zero-ness
+      // are asserted.
       expect(result.success).toBe(false);
       expect(result.results[0]?.success).toBe(false);
+      expect(typeof result.results[0]?.exitCode).toBe("number");
       expect(result.results[0]?.exitCode).not.toBe(0);
+    });
+
+    it("should surface a string error code when the shell itself fails to spawn", async () => {
+      // Passing a cwd that doesn't exist makes the underlying process spawn
+      // fail before a shell ever starts, which is where Node reports the
+      // failure via a string errno code (e.g. "ENOENT") rather than a
+      // numeric exit code. This is distinct from "command not found" above,
+      // where the shell starts fine and reports a numeric exit status.
+      const missingCwd = path.join(tempDir, "does-not-exist");
+
+      const result = await executeHooks({
+        commands: ["echo hi"],
+        filePaths: [],
+        cwd: missingCwd,
+      });
+
+      expect(result.success).toBe(false);
+      expect(result.results[0]?.success).toBe(false);
+      expect(result.results[0]?.exitCode).toBe("ENOENT");
+      expect(typeof result.results[0]?.exitCode).toBe("string");
     });
 
     it("should quote file paths with special characters", async () => {

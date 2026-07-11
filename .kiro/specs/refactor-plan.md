@@ -262,7 +262,7 @@ Each fix lands with a new/updated testdata case first:
 4. Surface `WriteResult.error` through `writeGeneratedFiles` to the reporter (bug #5).
 5. Hook-executor `exitCode: number | string | null` honesty fix (bug #6).
 6. Re-exported `GqlInterface` classification: add a characterization testdata case, then unify `determineTypeKind*` (bug #8; folds into the node/symbol path unification — may slip to Phase 8 if the unification is done there).
-- **Acceptance**: golden diffs are exactly the intended new diagnostics/exit codes; each fix has a covering case.
+- **Acceptance**: golden diffs are exactly the intended new diagnostics/exit codes; each fix has a covering case. Note (recorded during execution): all six fixes landed (none deferred). Bug #3 needed no new case — four existing goldens made it observable. Bug #8 turned out MORE severe than assessed: the realistic combination (re-exported interface + implementer + `defineResolveType`) was a hard generation failure (`INTERFACE_NOT_INTERFACE` + `INVALID_ABSTRACT_TYPE_KIND`), not silent degradation; the minimal symbol-path fix sufficed without the Phase 8 unification. The §3.3 implements-extraction diagnostic gap was confirmed INDEPENDENT of bug #8 (different root cause; Phase 9 item stands on its own). Operational note for future `-u` runs: `toMatchFileSnapshot` under this vitest version reliably CREATES missing goldens but was observed not to overwrite an existing mismatched one — delete the stale golden first, then run `-u`.
 
 ### Phase 5 — Unify field/argument extraction *(user-visible; changeset)*
 

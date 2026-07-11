@@ -506,6 +506,7 @@ function determineTypeKindFromUnion(type: ts.Type): TypeKind | null {
 function determineTypeKindFromType(
   type: ts.Type,
   originalSymbol: ts.Symbol,
+  checker: ts.TypeChecker,
 ): TypeKind {
   const declarations = originalSymbol.getDeclarations();
   const declaration = declarations?.[0];
@@ -516,6 +517,14 @@ function determineTypeKindFromType(
 
   if (declaration && ts.isEnumDeclaration(declaration)) {
     return "enum";
+  }
+
+  if (
+    declaration &&
+    ts.isTypeAliasDeclaration(declaration) &&
+    isDefineInterfaceTypeAlias(declaration, checker)
+  ) {
+    return "graphqlInterface";
   }
 
   const unionKind = determineTypeKindFromUnion(type);
@@ -651,8 +660,28 @@ function processReexportedSymbol(
     }
   }
 
-  const kind = determineTypeKindFromType(type, resolvedSymbol);
+  const kind = determineTypeKindFromType(type, resolvedSymbol, checker);
   const tsdocInfo = extractTsDocFromSymbol(resolvedSymbol, checker);
+
+  let implementedInterfaces: ReadonlyArray<string> | null = null;
+  if (declaration && ts.isTypeAliasDeclaration(declaration)) {
+    const declarationSourceFile = declaration.getSourceFile();
+    const interfaces =
+      kind === "graphqlInterface"
+        ? extractImplementsFromDefineInterface(
+            declaration,
+            declarationSourceFile,
+            checker,
+          )
+        : extractImplementsFromGqlTypeDef(
+            declaration,
+            declarationSourceFile,
+            checker,
+          );
+    if (interfaces.length > 0) {
+      implementedInterfaces = interfaces;
+    }
+  }
 
   const metadata: TypeMetadata = {
     name: exportedName,
@@ -784,7 +813,7 @@ function processReexportedSymbol(
       unionMembers: unionMembers ?? null,
       inlineObjectMembers,
       enumMembers: null,
-      implementedInterfaces: null,
+      implementedInterfaces,
     },
     diagnostics,
     scalarName: null,

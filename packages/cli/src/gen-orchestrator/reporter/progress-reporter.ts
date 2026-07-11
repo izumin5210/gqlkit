@@ -15,7 +15,11 @@ export interface ProgressReporter {
   hookCompleted(command: string): void;
 
   /** Display hook failure with error details */
-  hookFailed(command: string, exitCode: number | null, stderr: string): void;
+  hookFailed(
+    command: string,
+    exitCode: number | string | null,
+    stderr: string,
+  ): void;
 
   /** Display hook phase summary */
   hookPhaseSummary(totalCount: number, failedCount: number): void;
@@ -38,7 +42,11 @@ export function createProgressReporter(writer: OutputWriter): ProgressReporter {
     hookCompleted(command: string): void {
       writer.stdout(`    hook completed: ${command}`);
     },
-    hookFailed(command: string, exitCode: number | null, stderr: string): void {
+    hookFailed(
+      command: string,
+      exitCode: number | string | null,
+      stderr: string,
+    ): void {
       const exitCodeStr = exitCode !== null ? ` (exit code: ${exitCode})` : "";
       writer.stderr(`    hook failed: ${command}${exitCodeStr}`);
       const trimmedStderr = stderr.trim();
