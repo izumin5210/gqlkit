@@ -268,7 +268,7 @@ Each fix lands with a new/updated testdata case first:
 
 1. Generalize `extractFieldsFromType` and delete `extractArgsFromType` + `extractTSDocFromPropertyWithPriority`; add `directives` to `ArgumentDefinition`/`GraphQLInputValue`; wire `ARGUMENT_DEFINITION` through `UsageLocation` validation and `ast-builder`'s input-value emission.
 2. Fixes bug #1 end-to-end: `default-value-with-directives` golden updates to show `@range`/`@length` on arguments — an intentional, reviewed schema-output change.
-- **Acceptance**: only directive-bearing goldens change, and only by gaining argument directives; new testdata case for argument-directive location validation.
+- **Acceptance**: only directive-bearing goldens change, and only by gaining argument directives; new testdata case for argument-directive location validation. Note (recorded during execution): achieved exactly — one golden gained directives, two new cases added. Unification surfaced a NEW latent bug in the same family, not in the original audit: the old args path also silently dropped `UNRESOLVABLE_DEFAULT_VALUE` diagnostics (read `.defaultValue`, never `.errors`). To honor this phase's acceptance bar, the historical behavior is preserved behind a `reportDefaultValueErrors` parameter (`true` for fields, `false` for arguments) — **Phase 9 item 5's resolver-side validation work should flip it to `true` with a characterization golden first** and delete the parameter.
 
 ### Phase 6 — Schema pruning as a default-on feature *(user-visible; BREAKING changeset)*
 

@@ -179,7 +179,8 @@ type UsageLocation =
   | "OBJECT"
   | "FIELD_DEFINITION"
   | "INPUT_OBJECT"
-  | "INPUT_FIELD_DEFINITION";
+  | "INPUT_FIELD_DEFINITION"
+  | "ARGUMENT_DEFINITION";
 
 interface DirectiveUsageContext {
   readonly directiveName: string;
@@ -247,6 +248,8 @@ function getCompatibleLocations(
       return ["INPUT_OBJECT"];
     case "INPUT_FIELD_DEFINITION":
       return ["INPUT_FIELD_DEFINITION"];
+    case "ARGUMENT_DEFINITION":
+      return ["ARGUMENT_DEFINITION"];
   }
 }
 
@@ -660,6 +663,24 @@ export function integrate(params: IntegrateParams): IntegratedResult {
             directiveDefMap,
             diagnostics,
           );
+        }
+      }
+
+      for (const arg of field.args ?? []) {
+        if (arg.directives) {
+          for (const directive of arg.directives) {
+            validateDirectiveUsage(
+              {
+                directiveName: directive.name,
+                usageLocation: "ARGUMENT_DEFINITION",
+                targetName: `Argument '${ext.targetTypeName}.${field.name}(${arg.name}:)'`,
+                sourceFile: field.resolverSourceFile,
+                line: 1,
+              },
+              directiveDefMap,
+              diagnostics,
+            );
+          }
         }
       }
     }

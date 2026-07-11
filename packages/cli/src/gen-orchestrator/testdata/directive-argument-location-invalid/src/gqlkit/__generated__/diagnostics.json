@@ -1,0 +1,22 @@
+[
+  {
+    "code": "UNSUPPORTED_SYNTAX",
+    "message": "Generic type 'ShortTextDirective' is not supported. Consider using a concrete type instead.",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 9,
+      "column": 1
+    }
+  },
+  {
+    "code": "INVALID_DIRECTIVE_LOCATION",
+    "message": "Argument 'Mutation.createItem(name:)': Directive '@shortText' cannot be used on ARGUMENT_DEFINITION (allowed: INPUT_FIELD_DEFINITION)",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

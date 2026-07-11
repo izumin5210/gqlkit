@@ -9,25 +9,16 @@ import {
   type TSTypeReference,
 } from "../../core/index.js";
 import { isInternalTypeSymbol } from "../../shared/constants.js";
-import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
-import {
-  extractDirectivesFromType,
-  hasDirectiveMetadata,
-  unwrapDirectiveType,
-} from "../../shared/directive-detector.js";
+import { extractDirectivesFromType } from "../../shared/directive-detector.js";
 import { getActualMetadataType } from "../../shared/metadata-detector.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
+import { extractTsDocInfo } from "../../shared/tsdoc-parser.js";
 import {
-  extractTsDocFromSymbol,
-  extractTsDocInfo,
-} from "../../shared/tsdoc-parser.js";
-import {
-  extractPropertySymbols,
   getTypeNameFromNode,
-  hasUndefinedInType,
   isExported,
 } from "../../shared/typescript-utils.js";
 import {
+  extractFieldsFromType,
   type FieldTypeResolverContext,
   type FieldTypeResolverDiagnostic,
   type GlobalTypeMapping,
@@ -56,6 +47,7 @@ export interface ArgumentDefinition {
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
   readonly defaultValue: DirectiveArgumentValue | null;
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
 export interface DefineApiResolverInfo {
@@ -246,58 +238,6 @@ function resolveFieldNameFromExportName(exportName: string): string | null {
   return fieldName;
 }
 
-function isInlineTypeLiteralDeclaration(declaration: ts.Declaration): boolean {
-  if (!ts.isPropertySignature(declaration)) {
-    return false;
-  }
-
-  const parent = declaration.parent;
-  if (!ts.isTypeLiteralNode(parent)) {
-    return false;
-  }
-
-  const grandparent = parent.parent;
-  if (ts.isTypeAliasDeclaration(grandparent)) {
-    return false;
-  }
-  if (ts.isInterfaceDeclaration(grandparent)) {
-    return false;
-  }
-
-  return true;
-}
-
-function extractTSDocFromPropertyWithPriority(
-  prop: ts.Symbol,
-  checker: ts.TypeChecker,
-): { description: string | null; deprecated: DeprecationInfo | null } {
-  const declarations = prop.getDeclarations();
-  if (!declarations || declarations.length === 0) {
-    return { description: null, deprecated: null };
-  }
-
-  const inlineDeclaration = declarations.find(isInlineTypeLiteralDeclaration);
-
-  if (inlineDeclaration) {
-    const inlineSymbol = checker.getSymbolAtLocation(
-      (inlineDeclaration as ts.PropertySignature).name,
-    );
-    if (inlineSymbol) {
-      return extractTsDocFromSymbol(inlineSymbol, checker);
-    }
-  }
-
-  return extractTsDocFromSymbol(prop, checker);
-}
-
-/**
- * Checks if a type should be unwrapped as a GqlField type.
- * Detects by checking for metadata properties, not by type name.
- */
-function shouldUnwrapAsGqlField(type: ts.Type): boolean {
-  return hasDirectiveMetadata(type);
-}
-
 /**
  * Checks if a type has only index signatures with no named properties.
  * Types like `{ [key: string]: number }` return true.
@@ -379,71 +319,51 @@ interface ExtractArgsResult {
   readonly diagnostics: Diagnostic[];
 }
 
+/**
+ * Extracts resolver arguments from an args type by delegating to the same
+ * property-walking engine type-extractor uses for declared-type fields
+ * (`extractFieldsFromType`, refactor-plan.md §1.2-D / Phase 5). This is what
+ * makes argument directives, the `never`-kind skip, and the `directiveNullable`
+ * unwrap quirk behave identically for arguments and fields — previously this
+ * function reimplemented the same walk without directive detection, which
+ * silently dropped `@directive` usages declared on argument properties.
+ *
+ * Unlike the previous implementation, no `argsTypeNode` parameter is needed
+ * to locate per-property type nodes: `extractFieldsFromType` derives those
+ * from each property symbol's own declaration, which resolves correctly for
+ * both named args types and inline args type literals.
+ */
 function extractArgsFromType(
   argsType: ts.Type,
   ctx: FieldTypeResolverContext,
-  argsTypeNode: ts.TypeNode,
 ): ExtractArgsResult {
-  const args: ArgumentDefinition[] = [];
-  const diagnostics: Diagnostic[] = [];
-  const properties = extractPropertySymbols(argsType, ctx.checker);
+  const { fields, diagnostics } = extractFieldsFromType({
+    type: argsType,
+    checker: ctx.checker,
+    globalTypeMappings: ctx.globalTypeMappings,
+    knownTypeNames: ctx.knownTypeNames,
+    knownTypeSymbols: ctx.knownTypeSymbols,
+    underlyingSymbolToTypeName: ctx.underlyingSymbolToTypeName,
+    sourceFiles: ctx.sourceFiles,
+    scalarMappingTable: ctx.scalarMappingTable,
+    scalarMappingContext: ctx.scalarMappingContext,
+    ignoreFields: null,
+    discoveredTypes: ctx.discoveredTypes,
+    diagnosticLabel: "Argument",
+    // See extractFieldsFromType's class doc: preserves the pre-unification
+    // behavior of silently dropping UNRESOLVABLE_DEFAULT_VALUE for arguments.
+    reportDefaultValueErrors: false,
+  });
 
-  const memberTypeNodes = new Map<string, ts.TypeNode>();
-  if (ts.isTypeLiteralNode(argsTypeNode)) {
-    for (const member of argsTypeNode.members) {
-      if (ts.isPropertySignature(member) && member.name && member.type) {
-        const name = ts.isIdentifier(member.name)
-          ? member.name.text
-          : member.name.getText();
-        memberTypeNodes.set(name, member.type);
-      }
-    }
-  }
-
-  for (const prop of properties) {
-    const propType = ctx.checker.getTypeOfSymbol(prop);
-    const optional = hasUndefinedInType(propType);
-
-    const tsdocInfo = extractTSDocFromPropertyWithPriority(prop, ctx.checker);
-
-    let defaultValue: DirectiveArgumentValue | null = null;
-    let actualPropType = propType;
-
-    if (shouldUnwrapAsGqlField(propType)) {
-      const defaultValueResult = detectDefaultValueMetadata(
-        propType,
-        ctx.checker,
-      );
-      if (defaultValueResult.defaultValue) {
-        defaultValue = defaultValueResult.defaultValue;
-      }
-      actualPropType = unwrapDirectiveType(propType, ctx.checker);
-    }
-
-    const propTypeNode = memberTypeNodes.get(prop.getName());
-    const argName = prop.getName();
-    const fieldDiagnostics: FieldTypeResolverDiagnostic[] = [];
-    const tsType = resolveFieldType(actualPropType, propTypeNode, {
-      ...ctx,
-      diagnostics: fieldDiagnostics,
-    });
-    diagnostics.push(
-      ...convertFieldDiagnostics(
-        fieldDiagnostics,
-        `Argument '${argName}'`,
-        getSourceLocationFromNode(prop.getDeclarations()?.[0]),
-      ),
-    );
-
-    args.push({
-      name: argName,
-      tsType,
-      optional,
-      description: tsdocInfo.description,
-      deprecated: tsdocInfo.deprecated,
-      defaultValue,
-    });
-  }
+  const args: ArgumentDefinition[] = fields.map((field) => ({
+    name: field.name,
+    tsType: field.tsType,
+    optional: field.optional,
+    description: field.description,
+    deprecated: field.deprecated,
+    defaultValue: field.defaultValue,
+    directives: field.directives,
+  }));
 
   return { args, diagnostics };
 }
@@ -545,7 +465,7 @@ function extractTypeArgumentsFromCall(
 
     const argsResult = isNoArgs
       ? null
-      : extractArgsFromType(argsType, inputContext, argsTypeNode);
+      : extractArgsFromType(argsType, inputContext);
     if (argsResult) {
       diagnostics.push(...argsResult.diagnostics);
     }
@@ -605,7 +525,7 @@ function extractTypeArgumentsFromCall(
 
   const argsResult = isNoArgs
     ? null
-    : extractArgsFromType(argsType, inputContext, argsTypeNode);
+    : extractArgsFromType(argsType, inputContext);
   if (argsResult) {
     diagnostics.push(...argsResult.diagnostics);
   }
