@@ -839,6 +839,60 @@ describe("ConfigValidator", () => {
       });
     });
 
+    describe("output.pruning option", () => {
+      it("should default pruning to true when output is undefined", () => {
+        const result = validateConfig({
+          config: {},
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig!.output.pruning).toBe(true);
+      });
+
+      it("should default pruning to true when not provided", () => {
+        const result = validateConfig({
+          config: { output: {} },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig!.output.pruning).toBe(true);
+      });
+
+      it("should accept pruning: false", () => {
+        const result = validateConfig({
+          config: { output: { pruning: false } },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig!.output.pruning).toBe(false);
+      });
+
+      it("should accept pruning: true", () => {
+        const result = validateConfig({
+          config: { output: { pruning: true } },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig!.output.pruning).toBe(true);
+      });
+
+      it("should return error for non-boolean pruning", () => {
+        const result = validateConfig({
+          config: { output: { pruning: "yes" } },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_TYPE");
+        expect(result.diagnostics[0]?.message).toContain("output.pruning");
+      });
+    });
+
     describe("hooks options", () => {
       it("should resolve default empty hooks when not provided", () => {
         const result = validateConfig({

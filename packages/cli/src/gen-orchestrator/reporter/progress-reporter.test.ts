@@ -65,4 +65,17 @@ describe("ProgressReporter", () => {
       expect(allOutput).toContain("failed");
     });
   });
+
+  describe("typesPruned", () => {
+    it("should report the count and names of pruned types", () => {
+      const writer = createMockWriter();
+      const reporter = createProgressReporter(writer);
+
+      reporter.typesPruned(["AuditLog", "Orphan"]);
+
+      expect(writer.stdoutCalls.length).toBe(1);
+      expect(writer.stdoutCalls[0]).toContain("2");
+      expect(writer.stdoutCalls[0]).toContain("AuditLog, Orphan");
+    });
+  });
 });

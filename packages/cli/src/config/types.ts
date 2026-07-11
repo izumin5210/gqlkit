@@ -44,6 +44,16 @@ export interface OutputConfig {
    * @default "js"
    */
   readonly importExtension?: ImportExtension;
+
+  /**
+   * Whether to remove types unreachable from the root operation types
+   * (Query/Mutation/Subscription) from the generated schema.
+   * Directive definitions are never pruned. When the schema has no root
+   * operation type at all, pruning is skipped entirely.
+   * Set to false to keep every extracted type in the output.
+   * @default true
+   */
+  readonly pruning?: boolean;
 }
 
 /**

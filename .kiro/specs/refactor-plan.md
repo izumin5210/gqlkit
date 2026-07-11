@@ -282,6 +282,13 @@ Decision D1: pruning is promoted from unreachable code to a first-class, **defau
 6. Changeset with **BREAKING CHANGE**: generated output may drop types unreachable from root types; document the opt-out.
 - **Acceptance**: golden diffs are exactly the pruning-induced removals plus the two new cases; `pruning: false` reproduces pre-phase output byte-identically.
 
+Note (recorded during execution): the dry-run survey proved the inherited round-trip pruner (print→parse→`buildASTSchema`→`pruneSchema`) was unshippable — it crashed 13 cases (strict SDL validation gqlkit never enforced), ran on error paths, and its `printSchema` renormalization silently merged gqlkit's `extend type` blocks, restructuring ~88 schemas that had nothing to prune. `pruneDocumentNode` was therefore REWRITTEN as a pure reachable-set filter over the original DocumentNode (BFS from root operation types; implementers of reachable interfaces kept; ALL directive definitions kept with their arg types seeded; extensions kept iff their target is; no-root → no-op; skipped on error paths). A mandatory addition: the resolver map is filtered by the pruned set (`omitPrunedTypes`), otherwise dangling resolver entries break `makeExecutableSchema` at user runtime; custom scalars lost their old blanket exemption (pure reachability instead). Survey outcome: 19 cases pinned `pruning: false` (pruned type was the feature under test), 6 accepted incidental removals, 2 examples lost genuinely-dead demo types. `@graphql-tools/utils` became unused and was dropped from cli dependencies.
+
+**Pre-existing bugs surfaced by the survey (NOT fixed here; unscheduled follow-ups):**
+- **Subscription payload/args types referenced but never emitted**: `subscription-only`/`subscription-mixed`/`subscription-directives-tsdoc`/`import-extension-*` goldens contain fields typed `Event!`/`Message!` with no corresponding type definition — interfaces used as `defineSubscription` generics are referenced by name but never extracted. The committed schemas are rejected by `buildASTSchema`.
+- **`$` leaks into emitted type names**: `union-dollar-typename-basic`/`union-typename-priority` emit `enum SearchQuery$typeNameInput` — invalid GraphQL grammar; the committed schema.graphql is unparseable by graphql-js.
+- (Minor) argument defaults of custom-scalar/object type fail graphql-js `valueFromAST` coercion if the SDL is ever round-tripped through `buildASTSchema`.
+
 ### Phase 7 — Unify the inline-type IR *(largest internal phase; goldens unchanged)*
 
 Sequenced sub-PRs:

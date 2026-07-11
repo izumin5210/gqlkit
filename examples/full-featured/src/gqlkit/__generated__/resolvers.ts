@@ -5,7 +5,6 @@ import { addComment as Mutation$addComment } from "../schema/comment.js";
 import {
   search as Query$search,
   searchResultResolveType as SearchResult$__resolveType,
-  timelineItemResolveType as TimelineItem$__resolveType,
 } from "../schema/content.js";
 import {
   nodeResolveType as Node$__resolveType,
@@ -87,9 +86,6 @@ export function createResolvers({
         subscribe: Subscription$postCreated,
         resolve: (event: unknown) => event,
       },
-    },
-    TimelineItem: {
-      __resolveType: TimelineItem$__resolveType,
     },
     Timestamped: {
       __resolveType: Timestamped$__resolveType,

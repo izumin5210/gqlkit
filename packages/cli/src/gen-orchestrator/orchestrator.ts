@@ -49,6 +49,8 @@ export interface GenerationResult {
   readonly success: boolean;
   readonly files: ReadonlyArray<GeneratedFile>;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
+  /** Names of types removed by schema pruning (empty when disabled). */
+  readonly prunedTypes: ReadonlyArray<string>;
 }
 
 interface ScalarConfig {
@@ -438,7 +440,7 @@ function generateSchemaStep(ctx: PipelineContext): {
       ctx.directiveDefinitions && ctx.directiveDefinitions.length > 0
         ? ctx.directiveDefinitions
         : null,
-    enablePruning: null,
+    enablePruning: ctx.config.output.pruning,
     sourceRoot: ctx.config.cwd,
     knownTypeNames: ctx.knownTypeNames,
     importExtension: ctx.config.output.importExtension,
@@ -507,6 +509,7 @@ export async function executeGeneration(
       success: false,
       files: [],
       diagnostics: normalizeDiagnosticPaths(ctx.diagnostics, config.cwd),
+      prunedTypes: [],
     };
   }
 
@@ -518,6 +521,7 @@ export async function executeGeneration(
       success: false,
       files: [],
       diagnostics: normalizeDiagnosticPaths(ctx.diagnostics, config.cwd),
+      prunedTypes: [],
     };
   }
 
@@ -527,6 +531,7 @@ export async function executeGeneration(
     success: true,
     files,
     diagnostics: normalizeDiagnosticPaths(ctx.diagnostics, config.cwd),
+    prunedTypes: schemaResult.prunedTypes,
   };
 }
 

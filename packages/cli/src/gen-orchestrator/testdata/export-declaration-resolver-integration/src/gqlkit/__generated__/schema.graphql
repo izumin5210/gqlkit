@@ -28,16 +28,6 @@ type Post {
 type Query
 
 """
-Input for creating a post
-
-Defined in: src/gqlkit/schema/types.ts
-"""
-input CreatePostInput {
-  content: String!
-  title: String!
-}
-
-"""
 Input for updating a post
 
 Defined in: src/gqlkit/schema/types.ts

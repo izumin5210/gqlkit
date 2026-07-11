@@ -213,6 +213,31 @@ function validateImportExtension(
   return { resolved: value, diagnostics: [] };
 }
 
+function validatePruning(
+  value: unknown,
+  configPath: string,
+): { resolved: boolean; diagnostics: Diagnostic[] } {
+  if (value === undefined) {
+    return { resolved: true, diagnostics: [] };
+  }
+
+  if (typeof value !== "boolean") {
+    return {
+      resolved: true,
+      diagnostics: [
+        {
+          code: "CONFIG_INVALID_TYPE",
+          message: "output.pruning must be a boolean",
+          severity: "error",
+          location: { file: configPath, line: 1, column: 1 },
+        },
+      ],
+    };
+  }
+
+  return { resolved: value, diagnostics: [] };
+}
+
 function validateOutputConfig(
   output: unknown,
   configPath: string,
@@ -226,6 +251,7 @@ function validateOutputConfig(
         typeDefsPath: DEFAULT_TYPEDEFS_PATH,
         schemaPath: DEFAULT_SCHEMA_PATH,
         importExtension: "js",
+        pruning: true,
       },
       diagnostics: [],
     };
@@ -260,11 +286,13 @@ function validateOutputConfig(
     output["importExtension"],
     configPath,
   );
+  const pruningResult = validatePruning(output["pruning"], configPath);
 
   diagnostics.push(...resolversPathResult.diagnostics);
   diagnostics.push(...typeDefsPathResult.diagnostics);
   diagnostics.push(...schemaPathResult.diagnostics);
   diagnostics.push(...importExtensionResult.diagnostics);
+  diagnostics.push(...pruningResult.diagnostics);
 
   if (diagnostics.length > 0) {
     return { resolved: undefined, diagnostics };
@@ -276,6 +304,7 @@ function validateOutputConfig(
       typeDefsPath: typeDefsPathResult.resolved,
       schemaPath: schemaPathResult.resolved,
       importExtension: importExtensionResult.resolved,
+      pruning: pruningResult.resolved,
     },
     diagnostics: [],
   };

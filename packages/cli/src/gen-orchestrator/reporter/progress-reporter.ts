@@ -8,6 +8,9 @@ export interface ProgressReporter {
   fileWritten(filePath: string): void;
   complete(): void;
 
+  /** Display names of types removed by schema pruning */
+  typesPruned(typeNames: ReadonlyArray<string>): void;
+
   /** Display hook execution start message */
   startHookPhase(): void;
 
@@ -35,6 +38,11 @@ export function createProgressReporter(writer: OutputWriter): ProgressReporter {
     },
     complete(): void {
       writer.stdout("  Done!");
+    },
+    typesPruned(typeNames: ReadonlyArray<string>): void {
+      writer.stdout(
+        `  Pruned ${typeNames.length} unused type(s): ${typeNames.join(", ")}`,
+      );
     },
     startHookPhase(): void {
       writer.stdout("  Running hooks...");

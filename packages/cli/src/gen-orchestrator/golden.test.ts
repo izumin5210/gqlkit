@@ -109,16 +109,22 @@ describe("Golden File Tests", async () => {
         }
       }
 
+      // Output paths stay hardcoded to the defaults for now; only
+      // `output.pruning` (and `output.importExtension`) are threaded from
+      // config.json. Full output-config generalization is a later phase.
+      const output = {
+        resolversPath: DEFAULT_RESOLVERS_PATH,
+        typeDefsPath: DEFAULT_TYPEDEFS_PATH,
+        schemaPath: DEFAULT_SCHEMA_PATH,
+        importExtension: config?.output?.importExtension ?? "js",
+        pruning: config?.output?.pruning ?? true,
+      };
+
       const result = await executeGeneration({
         cwd: caseDir,
         sourceDir,
         sourceIgnoreGlobs: config?.sourceIgnoreGlobs ?? [],
-        output: {
-          resolversPath: DEFAULT_RESOLVERS_PATH,
-          typeDefsPath: DEFAULT_TYPEDEFS_PATH,
-          schemaPath: DEFAULT_SCHEMA_PATH,
-          importExtension: config?.output?.importExtension ?? "js",
-        },
+        output,
         configDir: null,
         customScalars,
         tsconfigPath: join(caseDir, "tsconfig.json"),
