@@ -7,7 +7,10 @@ import type {
 import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import type { InlineUnionMemberInfo } from "./inline-union-types.js";
 import { isInputTypeName } from "./naming-convention.js";
-import { findTypenameProperty } from "./typename-types.js";
+import {
+  extractTypenameValue,
+  findTypenameProperty,
+} from "./typename-types.js";
 
 export interface ValidateUnionResult {
   readonly valid: boolean;
@@ -325,24 +328,11 @@ function extractTypenameFromNamedType(
     return null;
   }
 
-  const found = findTypenameProperty(referencedType.fields, (f) => f.name);
-  if (!found) {
-    return null;
-  }
-
-  const { property: field, fieldName } = found;
-  const { tsType } = field;
-
-  if (
-    field.optional ||
-    tsType.nullable ||
-    tsType.kind !== "stringLiteral" ||
-    tsType.name === null
-  ) {
-    return null;
-  }
-
-  return { typeName: tsType.name, fieldName };
+  return extractTypenameValue({
+    properties: referencedType.fields,
+    checkOptional: true,
+    checkNullable: true,
+  });
 }
 
 export interface ValidateUnionMemberTypenamesResult {

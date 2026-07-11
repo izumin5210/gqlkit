@@ -67,11 +67,7 @@ import {
   resolveGeneratedTypeName,
 } from "./resolve-generated-type-name.js";
 import type { ResolveTypeFieldPattern } from "./resolve-type-generator.js";
-import {
-  createFieldNameSet,
-  findTypenameProperty,
-  type TypenameFieldInfo,
-} from "./typename-types.js";
+import { createFieldNameSet, extractTypenameValue } from "./typename-types.js";
 
 /**
  * Information about where an auto-generated type was generated from.
@@ -1056,29 +1052,6 @@ interface ResolveMemberNamesParams {
 }
 
 /**
- * Extract __typename or $typeName property value from inline object properties.
- * Returns null if neither is found or neither is a valid string literal.
- * __typename takes priority over $typeName if both are present.
- */
-function extractTypenameFromInlineObject(
-  properties: ReadonlyArray<PropertyDef>,
-): TypenameFieldInfo | null {
-  const found = findTypenameProperty(properties, (p) => p.name);
-  if (!found) {
-    return null;
-  }
-
-  const { property, fieldName } = found;
-  const { tsType } = property;
-
-  if (tsType.kind === "stringLiteral" && tsType.name !== null) {
-    return { typeName: tsType.name, fieldName };
-  }
-
-  return null;
-}
-
-/**
  * Shared parameters for resolving inline types within union member properties.
  */
 interface MemberFieldResolutionContext {
@@ -1401,9 +1374,17 @@ function resolveMemberNames(params: ResolveMemberNamesParams): string[] {
       // Only extract __typename or $typeName for resolverPayload context
       // For other contexts (resolverArg, objectField, inputField), these fields
       // should be treated as regular fields, not as type discriminators
+      // Neither optionality nor nullability is checked here: this mirrors
+      // the pre-consolidation embedded implementation, which relied on
+      // validateUnionMemberTypenames() having already rejected optional/
+      // nullable typename properties earlier in processUnionTypes().
       const extractedInfo =
         parentContext.kind === "resolverPayload"
-          ? extractTypenameFromInlineObject(memberType.inlineObjectProperties)
+          ? extractTypenameValue({
+              properties: memberType.inlineObjectProperties,
+              checkOptional: false,
+              checkNullable: false,
+            })
           : null;
 
       let memberTypeName: string;
