@@ -62,6 +62,10 @@ import {
   generateAutoTypeName,
   isInputTypeName,
 } from "./naming-convention.js";
+import {
+  classifyInlineTypeReference,
+  resolveGeneratedTypeName,
+} from "./resolve-generated-type-name.js";
 import type { ResolveTypeFieldPattern } from "./resolve-type-generator.js";
 import {
   createFieldNameSet,
@@ -342,12 +346,16 @@ interface ResolveFieldTypeParams {
   readonly siblingFieldNames: ReadonlySet<string>;
 }
 
-function tryResolveNestedType(
-  prop: PropertyDef,
-  parentContext: AutoTypeNameContext,
-  typeNamesMap: ReadonlyMap<string, string>,
-  siblingFieldNames: ReadonlySet<string>,
-): GraphQLFieldType | null {
+function resolveFieldType(params: ResolveFieldTypeParams): GraphQLFieldType {
+  const {
+    prop,
+    generatedTypeNames,
+    enumTypeNames,
+    unionTypeNames,
+    parentContext,
+    siblingFieldNames,
+  } = params;
+
   const nestedPath = appendFieldPath({
     parentPath: parentContext.fieldPath,
     fieldName: prop.name,
@@ -359,71 +367,18 @@ function tryResolveNestedType(
     fieldPath: nestedPath,
   };
   const contextKey = getContextKey(nestedContext);
-  const resolvedTypeName = typeNamesMap.get(contextKey);
 
-  if (resolvedTypeName) {
+  const resolved = resolveGeneratedTypeName({
+    tsType: prop.tsType,
+    contextKey,
+    maps: { generatedTypeNames, enumTypeNames, unionTypeNames },
+  });
+
+  if (resolved) {
     return {
       ...convertTsTypeToGraphQLType(prop.tsType, prop.optional),
-      typeName: resolvedTypeName,
+      typeName: resolved.name,
     };
-  }
-  return null;
-}
-
-function resolveFieldType(params: ResolveFieldTypeParams): GraphQLFieldType {
-  const {
-    prop,
-    generatedTypeNames,
-    enumTypeNames,
-    unionTypeNames,
-    parentContext,
-    siblingFieldNames,
-  } = params;
-
-  if (
-    (prop.tsType.kind === "inlineObject" &&
-      prop.tsType.inlineObjectProperties) ||
-    (prop.tsType.kind === "array" &&
-      prop.tsType.elementType?.kind === "inlineObject" &&
-      prop.tsType.elementType.inlineObjectProperties)
-  ) {
-    const result = tryResolveNestedType(
-      prop,
-      parentContext,
-      generatedTypeNames,
-      siblingFieldNames,
-    );
-    if (result) return result;
-  }
-
-  if (
-    (prop.tsType.kind === "inlineEnum" && prop.tsType.inlineEnumMembers) ||
-    (prop.tsType.kind === "array" &&
-      prop.tsType.elementType?.kind === "inlineEnum" &&
-      prop.tsType.elementType.inlineEnumMembers)
-  ) {
-    const result = tryResolveNestedType(
-      prop,
-      parentContext,
-      enumTypeNames,
-      siblingFieldNames,
-    );
-    if (result) return result;
-  }
-
-  if (
-    (prop.tsType.kind === "union" && prop.tsType.members) ||
-    (prop.tsType.kind === "array" &&
-      prop.tsType.elementType?.kind === "union" &&
-      prop.tsType.elementType.members)
-  ) {
-    const result = tryResolveNestedType(
-      prop,
-      parentContext,
-      unionTypeNames,
-      siblingFieldNames,
-    );
-    if (result) return result;
   }
 
   return convertTsTypeToGraphQLType(prop.tsType, prop.optional);
@@ -479,115 +434,35 @@ function updateField(
   );
   const contextKey = getContextKey(context);
 
-  // Handle inline objects
-  if (
-    field.tsType.kind === "inlineObject" &&
-    field.tsType.inlineObjectProperties
-  ) {
-    const resolvedTypeName = generatedTypeNames.get(contextKey);
-    if (resolvedTypeName) {
-      return {
-        ...field,
-        tsType: createReferenceType({
-          name: resolvedTypeName,
-          nullable: field.tsType.nullable,
+  const resolved = resolveGeneratedTypeName({
+    tsType: field.tsType,
+    contextKey,
+    maps: { generatedTypeNames, enumTypeNames, unionTypeNames },
+  });
+  if (!resolved) {
+    return field;
+  }
+
+  if (field.tsType.kind === "array" && field.tsType.elementType) {
+    return {
+      ...field,
+      tsType: {
+        ...field.tsType,
+        elementType: createReferenceType({
+          name: resolved.name,
+          nullable: field.tsType.elementType.nullable,
         }),
-      };
-    }
+      },
+    };
   }
 
-  // Handle array of inline objects
-  if (
-    field.tsType.kind === "array" &&
-    field.tsType.elementType?.kind === "inlineObject" &&
-    field.tsType.elementType.inlineObjectProperties
-  ) {
-    const resolvedTypeName = generatedTypeNames.get(contextKey);
-    if (resolvedTypeName) {
-      return {
-        ...field,
-        tsType: {
-          ...field.tsType,
-          elementType: createReferenceType({
-            name: resolvedTypeName,
-            nullable: field.tsType.elementType.nullable,
-          }),
-        },
-      };
-    }
-  }
-
-  // Handle inline enums
-  if (field.tsType.kind === "inlineEnum" && field.tsType.inlineEnumMembers) {
-    const resolvedTypeName = enumTypeNames.get(contextKey);
-    if (resolvedTypeName) {
-      return {
-        ...field,
-        tsType: createReferenceType({
-          name: resolvedTypeName,
-          nullable: field.tsType.nullable,
-        }),
-      };
-    }
-  }
-
-  // Handle array of inline enums
-  if (
-    field.tsType.kind === "array" &&
-    field.tsType.elementType?.kind === "inlineEnum" &&
-    field.tsType.elementType.inlineEnumMembers
-  ) {
-    const resolvedTypeName = enumTypeNames.get(contextKey);
-    if (resolvedTypeName) {
-      return {
-        ...field,
-        tsType: {
-          ...field.tsType,
-          elementType: createReferenceType({
-            name: resolvedTypeName,
-            nullable: field.tsType.elementType.nullable,
-          }),
-        },
-      };
-    }
-  }
-
-  // Handle inline union types
-  if (field.tsType.kind === "union" && field.tsType.members) {
-    const resolvedTypeName = unionTypeNames.get(contextKey);
-    if (resolvedTypeName) {
-      return {
-        ...field,
-        tsType: createReferenceType({
-          name: resolvedTypeName,
-          nullable: field.tsType.nullable,
-        }),
-      };
-    }
-  }
-
-  // Handle array of inline union types
-  if (
-    field.tsType.kind === "array" &&
-    field.tsType.elementType?.kind === "union" &&
-    field.tsType.elementType.members
-  ) {
-    const resolvedTypeName = unionTypeNames.get(contextKey);
-    if (resolvedTypeName) {
-      return {
-        ...field,
-        tsType: {
-          ...field.tsType,
-          elementType: createReferenceType({
-            name: resolvedTypeName,
-            nullable: field.tsType.elementType.nullable,
-          }),
-        },
-      };
-    }
-  }
-
-  return field;
+  return {
+    ...field,
+    tsType: createReferenceType({
+      name: resolved.name,
+      nullable: field.tsType.nullable,
+    }),
+  };
 }
 
 function updateResolversResult(
@@ -631,58 +506,24 @@ function updateResolverField(
   let updatedType = field.type;
   let updatedReturnTsType = field.returnTsType;
 
-  // Create payload context once for all inline return type checks
-  const hasInlinePayload =
-    field.returnTsType.inlineObjectProperties ||
-    field.returnTsType.inlineEnumMembers ||
-    (field.returnTsType.kind === "union" && field.returnTsType.members);
-
-  if (hasInlinePayload) {
-    const payloadContext: AutoTypeNameContext = {
-      kind: "resolverPayload",
-      resolverType,
-      fieldName: field.name,
-      parentTypeName,
-      fieldPath: [],
-    };
-    const payloadContextKey = getContextKey(payloadContext);
-
-    // These are mutually exclusive - a return type can only be one of:
-    // inline object, inline enum, or inline union
-    if (field.returnTsType.inlineObjectProperties) {
-      // Handle inline payload objects in return type
-      const resolvedTypeName = generatedTypeNames.get(payloadContextKey);
-      if (resolvedTypeName) {
-        updatedType = { ...field.type, typeName: resolvedTypeName };
-        updatedReturnTsType = createReferenceType({
-          name: resolvedTypeName,
-          nullable: field.returnTsType.nullable,
-        });
-      }
-    } else if (field.returnTsType.inlineEnumMembers) {
-      // Handle inline enum in return type
-      const resolvedTypeName = enumTypeNames.get(payloadContextKey);
-      if (resolvedTypeName) {
-        updatedType = { ...field.type, typeName: resolvedTypeName };
-        updatedReturnTsType = createReferenceType({
-          name: resolvedTypeName,
-          nullable: field.returnTsType.nullable,
-        });
-      }
-    } else if (
-      field.returnTsType.kind === "union" &&
-      field.returnTsType.members
-    ) {
-      // Handle inline union in return type
-      const resolvedTypeName = unionTypeNames.get(payloadContextKey);
-      if (resolvedTypeName) {
-        updatedType = { ...field.type, typeName: resolvedTypeName };
-        updatedReturnTsType = createReferenceType({
-          name: resolvedTypeName,
-          nullable: field.returnTsType.nullable,
-        });
-      }
-    }
+  const payloadContext: AutoTypeNameContext = {
+    kind: "resolverPayload",
+    resolverType,
+    fieldName: field.name,
+    parentTypeName,
+    fieldPath: [],
+  };
+  const resolvedPayload = resolveGeneratedTypeName({
+    tsType: field.returnTsType,
+    contextKey: getContextKey(payloadContext),
+    maps: { generatedTypeNames, enumTypeNames, unionTypeNames },
+  });
+  if (resolvedPayload) {
+    updatedType = { ...field.type, typeName: resolvedPayload.name };
+    updatedReturnTsType = createReferenceType({
+      name: resolvedPayload.name,
+      nullable: field.returnTsType.nullable,
+    });
   }
 
   if (!field.args) {
@@ -702,63 +543,23 @@ function updateResolverField(
       parentTypeName,
       fieldPath: [],
     };
-    const contextKey = getContextKey(context);
-
-    // Handle inline objects
-    if (arg.tsType.inlineObjectProperties) {
-      const resolvedTypeName = generatedTypeNames.get(contextKey);
-      if (resolvedTypeName) {
-        return {
-          ...arg,
-          type: {
-            ...arg.type,
-            typeName: resolvedTypeName,
-          },
-          tsType: createReferenceType({
-            name: resolvedTypeName,
-            nullable: arg.tsType.nullable,
-          }),
-        };
-      }
+    const resolved = resolveGeneratedTypeName({
+      tsType: arg.tsType,
+      contextKey: getContextKey(context),
+      maps: { generatedTypeNames, enumTypeNames, unionTypeNames },
+    });
+    if (!resolved) {
+      return arg;
     }
 
-    // Handle inline enums
-    if (arg.tsType.inlineEnumMembers) {
-      const resolvedTypeName = enumTypeNames.get(contextKey);
-      if (resolvedTypeName) {
-        return {
-          ...arg,
-          type: {
-            ...arg.type,
-            typeName: resolvedTypeName,
-          },
-          tsType: createReferenceType({
-            name: resolvedTypeName,
-            nullable: arg.tsType.nullable,
-          }),
-        };
-      }
-    }
-
-    // Handle inline unions (OneOf input objects)
-    if (arg.tsType.kind === "union" && arg.tsType.members) {
-      const resolvedTypeName = unionTypeNames.get(contextKey);
-      if (resolvedTypeName) {
-        return {
-          ...arg,
-          type: {
-            ...arg.type,
-            typeName: resolvedTypeName,
-          },
-          tsType: createReferenceType({
-            name: resolvedTypeName,
-            nullable: arg.tsType.nullable,
-          }),
-        };
-      }
-    }
-
-    return arg;
+    return {
+      ...arg,
+      type: { ...arg.type, typeName: resolved.name },
+      tsType: createReferenceType({
+        name: resolved.name,
+        nullable: arg.tsType.nullable,
+      }),
+    };
   });
 
   return {
@@ -1343,14 +1144,18 @@ function resolveInlineTypeInMember(
   const singularizeArrayFieldName = prop.tsType.kind === "array";
   if (!inlineTsType) return null;
 
+  // Shared classification (refactor-plan.md §1.2-D): which of object/enum/union
+  // this tsType (direct or array-wrapped) carries, if any.
+  const mapKind = classifyInlineTypeReference(prop.tsType);
+
   // Resolve nested inline objects
   if (
+    mapKind === "object" &&
     fieldType.typeName === "__INLINE_OBJECT__" &&
-    inlineTsType.kind === "inlineObject" &&
-    inlineTsType.inlineObjectProperties
+    inlineTsType.kind === "inlineObject"
   ) {
     return resolveNestedInlineObjectInMember(
-      inlineTsType.inlineObjectProperties,
+      inlineTsType.inlineObjectProperties!,
       prop.name,
       singularizeArrayFieldName,
       parentTypeName,
@@ -1362,12 +1167,12 @@ function resolveInlineTypeInMember(
 
   // Resolve inline enums (string literal unions)
   if (
+    mapKind === "enum" &&
     fieldType.typeName === "__INLINE_ENUM__" &&
-    inlineTsType.kind === "inlineEnum" &&
-    inlineTsType.inlineEnumMembers
+    inlineTsType.kind === "inlineEnum"
   ) {
     return resolveInlineEnumInMember(
-      inlineTsType.inlineEnumMembers,
+      inlineTsType.inlineEnumMembers!,
       prop.name,
       singularizeArrayFieldName,
       parentTypeName,
@@ -1378,9 +1183,9 @@ function resolveInlineTypeInMember(
   }
 
   // Resolve inline unions (reference type unions like User | Bot)
-  if (inlineTsType.kind === "union" && inlineTsType.members) {
+  if (mapKind === "union" && inlineTsType.kind === "union") {
     return resolveInlineUnionInMember(
-      inlineTsType.members,
+      inlineTsType.members!,
       prop.name,
       singularizeArrayFieldName,
       parentTypeName,
