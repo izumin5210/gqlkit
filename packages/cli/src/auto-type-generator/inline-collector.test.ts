@@ -6,14 +6,11 @@ import {
   createReferenceType,
   createUnionType,
   type InlineEnumMemberInfo,
-  type InlineObjectPropertyDef,
+  type PropertyDef,
   type SourceLocation,
   type TSTypeReference,
 } from "../core/index.js";
-import type {
-  ExtractedTypeInfo,
-  FieldDefinition,
-} from "../type-extractor/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import { collectInlineEnumsFromTypes } from "./inline-enum-collector.js";
 import { collectInlineUnionsFromTypes } from "./inline-union-collector.js";
 
@@ -23,7 +20,7 @@ const sourceLocation: SourceLocation = {
   column: 1,
 };
 
-function createField(name: string, tsType: TSTypeReference): FieldDefinition {
+function createField(name: string, tsType: TSTypeReference): PropertyDef {
   return {
     name,
     tsType,
@@ -36,10 +33,7 @@ function createField(name: string, tsType: TSTypeReference): FieldDefinition {
   };
 }
 
-function createProperty(
-  name: string,
-  tsType: TSTypeReference,
-): InlineObjectPropertyDef {
+function createProperty(name: string, tsType: TSTypeReference): PropertyDef {
   return {
     name,
     tsType,
@@ -53,7 +47,7 @@ function createProperty(
 }
 
 function createExtractedType(
-  fields: ReadonlyArray<FieldDefinition>,
+  fields: ReadonlyArray<PropertyDef>,
 ): ExtractedTypeInfo {
   return {
     metadata: {

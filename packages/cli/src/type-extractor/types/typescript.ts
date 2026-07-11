@@ -1,10 +1,9 @@
 import type {
   DeprecationInfo,
-  DirectiveArgumentValue,
   DirectiveInfo,
   InlineObjectMember,
+  PropertyDef,
   SourceLocation,
-  TSTypeReference,
 } from "../../core/index.js";
 
 export type TypeKind =
@@ -25,17 +24,6 @@ export interface TypeMetadata {
   readonly directives: ReadonlyArray<DirectiveInfo> | null;
 }
 
-export interface FieldDefinition {
-  readonly name: string;
-  readonly tsType: TSTypeReference;
-  readonly optional: boolean;
-  readonly description: string | null;
-  readonly deprecated: DeprecationInfo | null;
-  readonly directives: ReadonlyArray<DirectiveInfo> | null;
-  readonly defaultValue: DirectiveArgumentValue | null;
-  readonly sourceLocation: SourceLocation | null;
-}
-
 export interface EnumMemberInfo {
   readonly name: string;
   readonly value: string;
@@ -48,7 +36,7 @@ export interface EnumMemberInfo {
 
 export interface ExtractedTypeInfo {
   readonly metadata: TypeMetadata;
-  readonly fields: ReadonlyArray<FieldDefinition>;
+  readonly fields: ReadonlyArray<PropertyDef>;
   readonly unionMembers: ReadonlyArray<string> | null;
   readonly inlineObjectMembers: ReadonlyArray<InlineObjectMember> | null;
   readonly enumMembers: ReadonlyArray<EnumMemberInfo> | null;

@@ -7,9 +7,9 @@ import {
   type FieldInfo,
   type GraphQLFieldType,
   type InlineEnumMemberInfo,
-  type InlineObjectPropertyDef,
   isEligibleField,
   isTypenameFieldName,
+  type PropertyDef,
   type SourceLocation,
   type TSTypeReference,
   type TypenameFieldName,
@@ -25,10 +25,7 @@ import {
 import { getSourceLocationOrDefault } from "../shared/source-location.js";
 import { toScreamingSnakeCase } from "../shared/string-utils.js";
 import { convertTsTypeToGraphQLType } from "../shared/type-converter.js";
-import type {
-  ExtractedTypeInfo,
-  FieldDefinition,
-} from "../type-extractor/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import {
   collectInlineEnumsFromPayloads,
   collectInlineEnumsFromResolvers,
@@ -140,7 +137,7 @@ export interface AutoTypeGeneratorResult {
 }
 
 interface InlineObjectWithContext {
-  readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
+  readonly properties: ReadonlyArray<PropertyDef>;
   readonly context: AutoTypeNameContext;
   readonly sourceLocation: SourceLocation;
   readonly nullable: boolean;
@@ -155,7 +152,7 @@ type ContextBuilderFn = (
 ) => AutoTypeNameContext;
 
 interface ExtractNestedInlineObjectsParams {
-  readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
+  readonly properties: ReadonlyArray<PropertyDef>;
   readonly currentPath: ReadonlyArray<string>;
   readonly sourceLocation: SourceLocation;
   readonly buildContext: ContextBuilderFn;
@@ -164,7 +161,7 @@ interface ExtractNestedInlineObjectsParams {
 }
 
 interface InlineObjectTypeInfo {
-  readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
+  readonly properties: ReadonlyArray<PropertyDef>;
   readonly nullable: boolean;
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
@@ -316,7 +313,7 @@ function collectInlineObjectsFromType(
 }
 
 interface CollectInlineObjectsFromFieldParams {
-  readonly field: FieldDefinition;
+  readonly field: PropertyDef;
   readonly parentTypeName: string;
   readonly parentPath: ReadonlyArray<string>;
   readonly isInput: boolean;
@@ -608,7 +605,7 @@ function generateAutoType(
 }
 
 interface ResolveFieldTypeParams {
-  readonly prop: InlineObjectPropertyDef;
+  readonly prop: PropertyDef;
   readonly generatedTypeNames: Map<string, string>;
   readonly enumTypeNames: Map<string, string>;
   readonly unionTypeNames: Map<string, string>;
@@ -617,7 +614,7 @@ interface ResolveFieldTypeParams {
 }
 
 function tryResolveNestedType(
-  prop: InlineObjectPropertyDef,
+  prop: PropertyDef,
   parentContext: AutoTypeNameContext,
   typeNamesMap: ReadonlyMap<string, string>,
   siblingFieldNames: ReadonlySet<string>,
@@ -734,12 +731,12 @@ function updateExtractedTypes(
 }
 
 function updateField(
-  field: FieldDefinition,
+  field: PropertyDef,
   params: UpdateTypeNamesParams,
   parentTypeName: string,
   isInput: boolean,
   siblingFieldNames: ReadonlySet<string>,
-): FieldDefinition {
+): PropertyDef {
   const { generatedTypeNames, enumTypeNames, unionTypeNames } = params;
   const context = buildFieldContext(
     parentTypeName,
@@ -1504,7 +1501,7 @@ interface ResolveMemberNamesParams {
  * __typename takes priority over $typeName if both are present.
  */
 function extractTypenameFromInlineObject(
-  properties: ReadonlyArray<InlineObjectPropertyDef>,
+  properties: ReadonlyArray<PropertyDef>,
 ): TypenameFieldInfo | null {
   const found = findTypenameProperty(properties, (p) => p.name);
   if (!found) {
@@ -1538,7 +1535,7 @@ interface MemberFieldResolutionContext {
  * by generating appropriate auto types and replacing sentinel type names.
  */
 function convertMemberPropertiesToFields(
-  properties: ReadonlyArray<InlineObjectPropertyDef>,
+  properties: ReadonlyArray<PropertyDef>,
   parentTypeName: string,
   ctx: MemberFieldResolutionContext,
 ): FieldInfo[] {
@@ -1575,7 +1572,7 @@ function convertMemberPropertiesToFields(
  * Returns the generated type name if resolved, or null if no resolution is needed.
  */
 function resolveInlineTypeInMember(
-  prop: InlineObjectPropertyDef,
+  prop: PropertyDef,
   fieldType: GraphQLFieldType,
   parentTypeName: string,
   siblingFieldNames: ReadonlySet<string>,
@@ -1642,7 +1639,7 @@ function resolveInlineTypeInMember(
  * into deeper nesting levels.
  */
 function resolveNestedInlineObjectInMember(
-  properties: ReadonlyArray<InlineObjectPropertyDef>,
+  properties: ReadonlyArray<PropertyDef>,
   fieldName: string,
   singularizeArrayFieldName: boolean,
   parentTypeName: string,

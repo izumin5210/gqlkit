@@ -5,8 +5,8 @@ import {
   type DirectiveArgumentValue,
   type DirectiveInfo,
   type InlineObjectMember,
-  type InlineObjectProperty,
   isBuiltInScalar,
+  type PropertyDef,
   type SourceLocation,
   type TSTypeReference,
 } from "../../core/index.js";
@@ -47,7 +47,6 @@ import type {
 import type {
   EnumMemberInfo,
   ExtractedTypeInfo,
-  FieldDefinition,
   TypeKind,
   TypeMetadata,
 } from "../types/index.js";
@@ -112,7 +111,7 @@ function isDefaultExport(node: ts.Node, sourceFile: ts.SourceFile): boolean {
 }
 
 export interface FieldExtractionResult {
-  fields: FieldDefinition[];
+  fields: PropertyDef[];
   diagnostics: Diagnostic[];
 }
 
@@ -135,7 +134,7 @@ function collectAllFieldNames(
  * Shared field/argument-extraction engine (refactor-plan.md §1.2-D, Phase 5).
  *
  * This is the single implementation for walking property symbols of a
- * TypeScript object type and turning them into `FieldDefinition`s — used both
+ * TypeScript object type and turning them into `PropertyDef`s — used both
  * for declared GraphQL type fields (type-extractor) and for flattened
  * resolver arguments (resolver-extractor's define-api-extractor, via this
  * module's re-export). Two params capture the only intentional differences
@@ -187,7 +186,7 @@ export function extractFieldsFromType(
     diagnosticLabel,
     reportDefaultValueErrors,
   } = params;
-  const fields: FieldDefinition[] = [];
+  const fields: PropertyDef[] = [];
   const diagnostics: Diagnostic[] = [];
   const properties = extractPropertySymbols(type, checker);
 
@@ -1101,7 +1100,7 @@ function extractInlineObjectMembers(
     for (const memberType of nonNullTypes) {
       if (isAnonymousObjectType(memberType)) {
         const properties = memberType.getProperties();
-        const memberProperties: InlineObjectProperty[] = [];
+        const memberProperties: PropertyDef[] = [];
 
         for (const prop of properties) {
           const propType = checker.getTypeOfSymbol(prop);
@@ -1151,11 +1150,20 @@ function extractInlineObjectMembers(
             continue;
           }
 
+          // This path (anonymous union-member object types) has never detected
+          // optionality/directives/defaultValue/sourceLocation — unlike
+          // extractFieldsFromType/extractInlineObjectProperties above, which do.
+          // Fill with PropertyDef's "unset" values; no consumer of
+          // InlineObjectMember.properties reads these fields.
           memberProperties.push({
-            propertyName: prop.getName(),
-            propertyType: resolvedType,
+            name: prop.getName(),
+            tsType: resolvedType,
+            optional: false,
             description: tsdocInfo.description ?? null,
             deprecated: tsdocInfo.deprecated ?? null,
+            directives: null,
+            defaultValue: null,
+            sourceLocation: null,
           });
         }
 
@@ -1611,7 +1619,7 @@ export function extractTypesFromProgram(
     }
     for (const member of typeInfo.inlineObjectMembers ?? []) {
       for (const property of member.properties) {
-        collectScalarNamesFromType(property.propertyType, detectedScalarNames);
+        collectScalarNamesFromType(property.tsType, detectedScalarNames);
       }
     }
   }

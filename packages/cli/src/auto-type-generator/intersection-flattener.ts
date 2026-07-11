@@ -3,8 +3,7 @@ import {
   createInlineObjectType,
   createPrimitiveType,
   type InlineObjectMember,
-  type InlineObjectProperty,
-  type InlineObjectPropertyDef,
+  type PropertyDef,
   type TSTypeReference,
 } from "../core/index.js";
 import type { ExtractedTypeInfo } from "../type-extractor/index.js";
@@ -16,7 +15,7 @@ import type {
 import { generateAutoTypeName } from "./naming-convention.js";
 
 interface PropertyContribution {
-  readonly property: InlineObjectProperty;
+  readonly property: PropertyDef;
   readonly isNever: boolean;
 }
 
@@ -44,12 +43,9 @@ function getDiscriminatorValue(
   fieldName: string,
 ): string | null {
   for (const prop of member.properties) {
-    if (prop.propertyName === fieldName) {
-      if (
-        prop.propertyType.kind === "stringLiteral" &&
-        prop.propertyType.name !== null
-      ) {
-        return prop.propertyType.name;
+    if (prop.name === fieldName) {
+      if (prop.tsType.kind === "stringLiteral" && prop.tsType.name !== null) {
+        return prop.tsType.name;
       }
       return null;
     }
@@ -87,28 +83,28 @@ function isSameTypeIgnoringNullability(
 function mergeGroupProperties(
   group: ReadonlyArray<InlineObjectMember>,
   discriminatorFieldNames: ReadonlyArray<string>,
-): ReadonlyArray<InlineObjectProperty> {
+): ReadonlyArray<PropertyDef> {
   const discriminatorFieldSet = new Set(discriminatorFieldNames);
 
   // Collect all property names across the group
   const allPropertyNames = new Set<string>();
   for (const member of group) {
     for (const prop of member.properties) {
-      allPropertyNames.add(prop.propertyName);
+      allPropertyNames.add(prop.name);
     }
   }
 
-  const mergedProperties: InlineObjectProperty[] = [];
+  const mergedProperties: PropertyDef[] = [];
 
   for (const propName of allPropertyNames) {
     // Collect contributions from each member
     const contributions: PropertyContribution[] = [];
     for (const member of group) {
-      const prop = member.properties.find((p) => p.propertyName === propName);
+      const prop = member.properties.find((p) => p.name === propName);
       if (prop !== undefined) {
         contributions.push({
           property: prop,
-          isNever: isAbsentType(prop.propertyType),
+          isNever: isAbsentType(prop.tsType),
         });
       }
     }
@@ -127,8 +123,8 @@ function mergeGroupProperties(
     for (let i = 1; i < nonNeverContributions.length; i++) {
       if (
         !isSameTypeIgnoringNullability(
-          firstContribution.property.propertyType,
-          nonNeverContributions[i]!.property.propertyType,
+          firstContribution.property.tsType,
+          nonNeverContributions[i]!.property.tsType,
         )
       ) {
         allSameType = false;
@@ -140,10 +136,14 @@ function mergeGroupProperties(
     // share the same discriminator value since that's the grouping key)
     if (discriminatorFieldSet.has(propName)) {
       mergedProperties.push({
-        propertyName: propName,
-        propertyType: firstContribution.property.propertyType,
+        name: propName,
+        tsType: firstContribution.property.tsType,
+        optional: false,
         description: firstContribution.property.description,
         deprecated: firstContribution.property.deprecated,
+        directives: null,
+        defaultValue: null,
+        sourceLocation: null,
       });
       continue;
     }
@@ -151,30 +151,38 @@ function mergeGroupProperties(
     if (allSameType) {
       // Same type across all contributing members
       const anyNullable = nonNeverContributions.some(
-        (c) => c.property.propertyType.nullable,
+        (c) => c.property.tsType.nullable,
       );
       const needsNullable = !presentInAllMembers || anyNullable;
-      const baseType = firstContribution.property.propertyType;
+      const baseType = firstContribution.property.tsType;
       mergedProperties.push({
-        propertyName: propName,
-        propertyType:
+        name: propName,
+        tsType:
           needsNullable && !baseType.nullable
             ? { ...baseType, nullable: true }
             : baseType,
+        optional: false,
         description: firstContribution.property.description,
         deprecated: firstContribution.property.deprecated,
+        directives: null,
+        defaultValue: null,
+        sourceLocation: null,
       });
     } else {
       // Different types → widen to String
       const needsNullable = !presentInAllMembers;
       mergedProperties.push({
-        propertyName: propName,
-        propertyType: createPrimitiveType({
+        name: propName,
+        tsType: createPrimitiveType({
           name: "string",
           nullable: needsNullable,
         }),
+        optional: false,
         description: null,
         deprecated: null,
+        directives: null,
+        defaultValue: null,
+        sourceLocation: null,
       });
     }
   }
@@ -276,10 +284,10 @@ export function flattenIntersectionMembers(
 // --- Inline union member flattening ---
 
 /**
- * Extracts a string literal discriminator value from an InlineObjectPropertyDef.
+ * Extracts a string literal discriminator value from a PropertyDef.
  */
 function getDiscriminatorValueFromPropertyDef(
-  properties: ReadonlyArray<InlineObjectPropertyDef>,
+  properties: ReadonlyArray<PropertyDef>,
   fieldName: string,
 ): string | null {
   for (const prop of properties) {
@@ -294,17 +302,17 @@ function getDiscriminatorValueFromPropertyDef(
 }
 
 interface PropertyDefContribution {
-  readonly property: InlineObjectPropertyDef;
+  readonly property: PropertyDef;
   readonly isNever: boolean;
 }
 
 /**
- * Merges InlineObjectPropertyDef arrays from a group of inline object members.
+ * Merges PropertyDef arrays from a group of inline object members.
  */
 function mergeGroupPropertyDefs(
-  groups: ReadonlyArray<ReadonlyArray<InlineObjectPropertyDef>>,
+  groups: ReadonlyArray<ReadonlyArray<PropertyDef>>,
   discriminatorFieldNames: ReadonlyArray<string>,
-): ReadonlyArray<InlineObjectPropertyDef> {
+): ReadonlyArray<PropertyDef> {
   const discriminatorFieldSet = new Set(discriminatorFieldNames);
 
   const allPropertyNames = new Set<string>();
@@ -314,7 +322,7 @@ function mergeGroupPropertyDefs(
     }
   }
 
-  const merged: InlineObjectPropertyDef[] = [];
+  const merged: PropertyDef[] = [];
 
   for (const propName of allPropertyNames) {
     const contributions: PropertyDefContribution[] = [];
@@ -449,7 +457,7 @@ export function flattenInlineUnionMembers(
     // Only process inline object members
     const inlineObjectMembers: Array<{
       member: InlineUnionMemberInfo;
-      properties: ReadonlyArray<InlineObjectPropertyDef>;
+      properties: ReadonlyArray<PropertyDef>;
     }> = [];
     const nonInlineMembers: InlineUnionMemberInfo[] = [];
 
@@ -473,10 +481,7 @@ export function flattenInlineUnionMembers(
     }
 
     // Group by discriminator value tuple
-    const groups = new Map<
-      string,
-      Array<ReadonlyArray<InlineObjectPropertyDef>>
-    >();
+    const groups = new Map<string, Array<ReadonlyArray<PropertyDef>>>();
     const groupValues = new Map<string, ReadonlyArray<string | null>>();
 
     for (const { properties } of inlineObjectMembers) {

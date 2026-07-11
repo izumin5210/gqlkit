@@ -1,5 +1,5 @@
 import { describe, expect, it } from "vitest";
-import type { InlineObjectProperty, TSTypeReference } from "../core/index.js";
+import type { PropertyDef, TSTypeReference } from "../core/index.js";
 import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import {
   collectDiscriminatorResolveTypes,
@@ -45,14 +45,18 @@ function createPrimitiveTsType(name: string): TSTypeReference {
 }
 
 function createInlineProperty(
-  propertyName: string,
-  propertyType: TSTypeReference,
-): InlineObjectProperty {
+  name: string,
+  tsType: TSTypeReference,
+): PropertyDef {
   return {
-    propertyName,
-    propertyType,
+    name,
+    tsType,
+    optional: false,
     description: null,
     deprecated: null,
+    directives: null,
+    defaultValue: null,
+    sourceLocation: null,
   };
 }
 

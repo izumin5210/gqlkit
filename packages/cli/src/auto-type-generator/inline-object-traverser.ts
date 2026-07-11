@@ -1,7 +1,4 @@
-import type {
-  InlineObjectPropertyDef,
-  TSTypeReference,
-} from "../core/index.js";
+import type { PropertyDef, TSTypeReference } from "../core/index.js";
 import { appendFieldPath } from "./naming-convention.js";
 
 /**
@@ -10,18 +7,18 @@ import { appendFieldPath } from "./naming-convention.js";
  * @param propPath Full path from the root to this property (including the property name)
  */
 export type PropertyVisitor = (
-  prop: InlineObjectPropertyDef,
+  prop: PropertyDef,
   propPath: ReadonlyArray<string>,
 ) => void;
 
 export interface TraverseInlineObjectPropertiesParams {
-  readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
+  readonly properties: ReadonlyArray<PropertyDef>;
   readonly parentPath: ReadonlyArray<string>;
 }
 
 export function getInlineObjectPropertiesFromType(
   tsType: TSTypeReference,
-): ReadonlyArray<InlineObjectPropertyDef> | null {
+): ReadonlyArray<PropertyDef> | null {
   if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
     return tsType.inlineObjectProperties;
   }

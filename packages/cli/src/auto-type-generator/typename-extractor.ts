@@ -1,8 +1,5 @@
-import type { InlineObjectProperty } from "../core/index.js";
-import type {
-  ExtractedTypeInfo,
-  FieldDefinition,
-} from "../type-extractor/index.js";
+import type { PropertyDef } from "../core/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import {
   findTypenameProperty,
   type TypenameFieldInfo,
@@ -31,7 +28,7 @@ export interface ExtractTypenamesParams {
 }
 
 function extractTypenameFromFields(
-  fields: ReadonlyArray<FieldDefinition>,
+  fields: ReadonlyArray<PropertyDef>,
 ): TypenameFieldInfo | null {
   const found = findTypenameProperty(fields, (f) => f.name);
   if (!found) {
@@ -57,15 +54,15 @@ function extractTypenameFromFields(
 }
 
 function extractTypenameFromInlineObjectProperties(
-  properties: ReadonlyArray<InlineObjectProperty>,
+  properties: ReadonlyArray<PropertyDef>,
 ): TypenameFieldInfo | null {
-  const found = findTypenameProperty(properties, (p) => p.propertyName);
+  const found = findTypenameProperty(properties, (p) => p.name);
   if (!found) {
     return null;
   }
 
   const { property, fieldName } = found;
-  const { propertyType: tsType } = property;
+  const { tsType } = property;
 
   if (
     tsType.nullable ||

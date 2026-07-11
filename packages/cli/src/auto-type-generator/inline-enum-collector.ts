@@ -2,15 +2,12 @@ import type ts from "typescript";
 import type {
   DeprecationInfo,
   InlineEnumMemberInfo,
-  InlineObjectPropertyDef,
+  PropertyDef,
   SourceLocation,
 } from "../core/index.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import { getSourceLocationOrDefault } from "../shared/source-location.js";
-import type {
-  ExtractedTypeInfo,
-  FieldDefinition,
-} from "../type-extractor/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import {
   getInlineObjectPropertiesFromType,
   traverseInlineObjectProperties,
@@ -74,7 +71,7 @@ export function collectInlineEnumsFromTypes(
 }
 
 function collectInlineEnumsFromField(
-  field: FieldDefinition,
+  field: PropertyDef,
   parentTypeName: string,
   parentPath: ReadonlyArray<string>,
   isInput: boolean,
@@ -215,7 +212,7 @@ function collectInlineEnumsFromResolverArgs(
 }
 
 interface CollectInlineEnumsFromResolverPropertiesBaseParams {
-  readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
+  readonly properties: ReadonlyArray<PropertyDef>;
   readonly resolverType: ResolverType;
   readonly fieldName: string;
   readonly parentTypeName: string | null;

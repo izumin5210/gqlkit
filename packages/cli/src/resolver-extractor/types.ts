@@ -6,7 +6,7 @@ import type {
   DirectiveInfo,
   GraphQLFieldType,
   InlineEnumMemberInfo,
-  InlineObjectPropertyDef,
+  PropertyDef,
   SourceLocation,
   TSTypeReference,
 } from "../core/index.js";
@@ -19,7 +19,7 @@ export interface GraphQLInputValue {
   readonly deprecated: DeprecationInfo | null;
   readonly directives: ReadonlyArray<DirectiveInfo> | null;
   readonly defaultValue: DirectiveArgumentValue | null;
-  readonly inlineObjectProperties: ReadonlyArray<InlineObjectPropertyDef> | null;
+  readonly inlineObjectProperties: ReadonlyArray<PropertyDef> | null;
   /** Inline enum members when arg type is an inline enum (string literal union or external TypeScript enum) */
   readonly inlineEnumMembers: ReadonlyArray<InlineEnumMemberInfo> | null;
   /** External TypeScript enum symbol for deduplication across multiple references */
@@ -42,7 +42,7 @@ export interface GraphQLFieldDefinition {
   readonly deprecated: DeprecationInfo | null;
   readonly directives: ReadonlyArray<DirectiveInfo> | null;
   /** Inline object properties when return type is an inline object type */
-  readonly returnTypeInlineObjectProperties: ReadonlyArray<InlineObjectPropertyDef> | null;
+  readonly returnTypeInlineObjectProperties: ReadonlyArray<PropertyDef> | null;
   /** TSDoc description from the inline object type alias (Requirement 7.2) */
   readonly returnTypeInlineObjectDescription: string | null;
   /** Deprecation info from the `@deprecated` TSDoc tag on the inline object type alias (Requirement 7.3) */

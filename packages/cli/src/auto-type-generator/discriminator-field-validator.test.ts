@@ -1,9 +1,10 @@
 import { describe, expect, it } from "vitest";
-import type { InlineObjectMember, TSTypeReference } from "../core/index.js";
 import type {
-  ExtractedTypeInfo,
-  FieldDefinition,
-} from "../type-extractor/index.js";
+  InlineObjectMember,
+  PropertyDef,
+  TSTypeReference,
+} from "../core/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import { validateDiscriminatorFields } from "./discriminator-field-validator.js";
 
 function createStringLiteralTsType(value: string): TSTypeReference {
@@ -28,7 +29,7 @@ function createStringLiteralTsType(value: string): TSTypeReference {
 function createStringLiteralField(
   fieldName: string,
   value: string,
-): FieldDefinition {
+): PropertyDef {
   return {
     name: fieldName,
     tsType: createStringLiteralTsType(value),
@@ -66,7 +67,7 @@ function createUnionType(
 
 function createObjectType(
   name: string,
-  fields: FieldDefinition[],
+  fields: PropertyDef[],
 ): ExtractedTypeInfo {
   return {
     metadata: {
@@ -116,10 +117,14 @@ function createInlineObjectMember(
 ): InlineObjectMember {
   return {
     properties: properties.map((p) => ({
-      propertyName: p.name,
-      propertyType: p.tsType,
+      name: p.name,
+      tsType: p.tsType,
+      optional: false,
       description: null,
       deprecated: null,
+      directives: null,
+      defaultValue: null,
+      sourceLocation: null,
     })),
   };
 }

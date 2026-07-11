@@ -2,7 +2,7 @@ import ts from "typescript";
 import type {
   DirectiveArgumentValue,
   DirectiveInfo,
-  InlineObjectPropertyDef,
+  PropertyDef,
   TSTypeReference,
 } from "../../core/index.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
@@ -37,8 +37,8 @@ export function extractInlineObjectProperties(
   type: ts.Type,
   checker: ts.TypeChecker,
   convertType: TypeConverter,
-): InlineObjectPropertyDef[] {
-  const properties: InlineObjectPropertyDef[] = [];
+): PropertyDef[] {
+  const properties: PropertyDef[] = [];
   const typeProperties = extractPropertySymbols(type, checker);
 
   for (const prop of typeProperties) {

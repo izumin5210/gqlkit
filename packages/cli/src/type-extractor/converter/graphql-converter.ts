@@ -5,12 +5,12 @@ import {
   type FieldInfo,
   type GraphQLTypeInfo,
   type InlineObjectMember,
-  type InlineObjectProperty,
   isBuiltInScalar,
   isEligibleAsEnumValue,
   isEligibleField,
   isTypenameFieldName,
   PRIMITIVE_TYPE_MAP,
+  type PropertyDef,
   type SourceLocation,
 } from "../../core/index.js";
 import {
@@ -235,7 +235,7 @@ function validateAndConvertInlineObjectMembers(
   const diagnostics: Diagnostic[] = [];
   const fields: FieldInfo[] = [];
   const propertyNames = new Set<string>();
-  const allProperties: InlineObjectProperty[] = [];
+  const allProperties: PropertyDef[] = [];
 
   for (let i = 0; i < members.length; i++) {
     const member = members[i]!;
@@ -265,24 +265,24 @@ function validateAndConvertInlineObjectMembers(
   }
 
   for (const prop of allProperties) {
-    if (propertyNames.has(prop.propertyName)) {
+    if (propertyNames.has(prop.name)) {
       diagnostics.push({
         code: "ONEOF_DUPLICATE_PROPERTY",
-        message: `OneOf input '${typeName}' has duplicate property name '${prop.propertyName}'.`,
+        message: `OneOf input '${typeName}' has duplicate property name '${prop.name}'.`,
         severity: "error",
         location,
       });
       continue;
     }
-    propertyNames.add(prop.propertyName);
+    propertyNames.add(prop.name);
 
-    const graphqlType = convertTsTypeToGraphQLType(prop.propertyType, false);
+    const graphqlType = convertTsTypeToGraphQLType(prop.tsType, false);
     const referencedTypeName = graphqlType.typeName;
 
     if (!isValidOneOfFieldType(referencedTypeName, typeMap)) {
       diagnostics.push({
         code: "ONEOF_INVALID_FIELD_TYPE",
-        message: `OneOf input '${typeName}' field '${prop.propertyName}' has invalid type '${referencedTypeName}'. Only scalar types and Input Object types are allowed.`,
+        message: `OneOf input '${typeName}' field '${prop.name}' has invalid type '${referencedTypeName}'. Only scalar types and Input Object types are allowed.`,
         severity: "error",
         location,
       });
@@ -290,7 +290,7 @@ function validateAndConvertInlineObjectMembers(
     }
 
     fields.push({
-      name: prop.propertyName,
+      name: prop.name,
       type: {
         typeName: graphqlType.typeName,
         nullable: true,

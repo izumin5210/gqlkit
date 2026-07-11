@@ -2,7 +2,7 @@ import type ts from "typescript";
 import type { DeprecationInfo } from "./metadata.js";
 import type {
   InlineEnumMemberInfo,
-  InlineObjectPropertyDef,
+  PropertyDef,
   ScalarTypeInfo,
   TSTypeReference,
 } from "./ts-types.js";
@@ -87,7 +87,7 @@ export function createUnionType(
 }
 
 interface CreateInlineObjectTypeParams {
-  readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
+  readonly properties: ReadonlyArray<PropertyDef>;
   /** TSDoc description from the type alias (null for true inline objects) */
   readonly description: string | null;
   /** Deprecation info from the `@deprecated` TSDoc tag on the type alias (null for true inline objects) */

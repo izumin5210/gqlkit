@@ -40,7 +40,4 @@ export {
 } from "./extractor/type-name-collector.js";
 export type { ScalarBaseTypeMappingTable } from "./mapper/scalar-base-type-mapper.js";
 
-export type {
-  ExtractedTypeInfo,
-  FieldDefinition,
-} from "./types/index.js";
+export type { ExtractedTypeInfo } from "./types/index.js";

@@ -1,14 +1,11 @@
 import type {
-  InlineObjectPropertyDef,
+  PropertyDef,
   SourceLocation,
   TSTypeReference,
 } from "../core/index.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import { getSourceLocationOrDefault } from "../shared/source-location.js";
-import type {
-  ExtractedTypeInfo,
-  FieldDefinition,
-} from "../type-extractor/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import {
   getInlineObjectPropertiesFromType,
   traverseInlineObjectProperties,
@@ -97,7 +94,7 @@ interface CollectInlineUnionBaseParams {
 }
 
 interface CollectFromFieldParams extends CollectInlineUnionBaseParams {
-  readonly field: FieldDefinition;
+  readonly field: PropertyDef;
 }
 
 function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
@@ -267,7 +264,7 @@ function collectInlineUnionsFromResolverArgs(
 }
 
 interface CollectInlineUnionsFromResolverPropertiesBaseParams {
-  readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
+  readonly properties: ReadonlyArray<PropertyDef>;
   readonly resolverType: ResolverType;
   readonly fieldName: string;
   readonly parentTypeName: string | null;
