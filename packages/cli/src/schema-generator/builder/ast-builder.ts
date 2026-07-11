@@ -262,11 +262,13 @@ function buildFieldTypeNode(fieldType: GraphQLFieldType): TypeNode {
 
 function buildInputValueDefinitionNode(
   inputValue: GraphQLInputValue,
+  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): InputValueDefinitionNode {
-  const directives: ConstDirectiveNode[] = [];
-  if (inputValue.deprecated) {
-    directives.push(buildDeprecatedDirective(inputValue.deprecated));
-  }
+  const directives = buildDirectives(
+    inputValue.directives,
+    inputValue.deprecated,
+    directiveDefMap,
+  );
 
   return {
     kind: Kind.INPUT_VALUE_DEFINITION,
@@ -323,7 +325,9 @@ function buildFieldDefinitionNode(
     directiveDefMap,
   );
 
-  const args = field.args?.map(buildInputValueDefinitionNode);
+  const args = field.args?.map((arg) =>
+    buildInputValueDefinitionNode(arg, directiveDefMap),
+  );
 
   const description = appendSourceLocation(
     field.description,

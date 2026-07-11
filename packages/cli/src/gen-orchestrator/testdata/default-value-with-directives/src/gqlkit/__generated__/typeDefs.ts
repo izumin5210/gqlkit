@@ -413,7 +413,40 @@ export const typeDefs: DocumentNode = {
               "defaultValue": {
                 "kind": "StringValue",
                 "value": "Anonymous"
-              }
+              },
+              "directives": [
+                {
+                  "kind": "Directive",
+                  "name": {
+                    "kind": "Name",
+                    "value": "length"
+                  },
+                  "arguments": [
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "min"
+                      },
+                      "value": {
+                        "kind": "IntValue",
+                        "value": "1"
+                      }
+                    },
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "max"
+                      },
+                      "value": {
+                        "kind": "IntValue",
+                        "value": "100"
+                      }
+                    }
+                  ]
+                }
+              ]
             },
             {
               "kind": "InputValueDefinition",
@@ -434,7 +467,40 @@ export const typeDefs: DocumentNode = {
               "defaultValue": {
                 "kind": "IntValue",
                 "value": "18"
-              }
+              },
+              "directives": [
+                {
+                  "kind": "Directive",
+                  "name": {
+                    "kind": "Name",
+                    "value": "range"
+                  },
+                  "arguments": [
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "min"
+                      },
+                      "value": {
+                        "kind": "IntValue",
+                        "value": "0"
+                      }
+                    },
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "max"
+                      },
+                      "value": {
+                        "kind": "IntValue",
+                        "value": "150"
+                      }
+                    }
+                  ]
+                }
+              ]
             },
             {
               "kind": "InputValueDefinition",
@@ -451,7 +517,40 @@ export const typeDefs: DocumentNode = {
               },
               "defaultValue": {
                 "kind": "NullValue"
-              }
+              },
+              "directives": [
+                {
+                  "kind": "Directive",
+                  "name": {
+                    "kind": "Name",
+                    "value": "length"
+                  },
+                  "arguments": [
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "min"
+                      },
+                      "value": {
+                        "kind": "IntValue",
+                        "value": "5"
+                      }
+                    },
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "max"
+                      },
+                      "value": {
+                        "kind": "IntValue",
+                        "value": "255"
+                      }
+                    }
+                  ]
+                }
+              ]
             }
           ],
           "type": {
