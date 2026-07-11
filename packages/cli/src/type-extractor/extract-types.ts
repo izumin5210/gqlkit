@@ -11,15 +11,12 @@ import {
   type ScalarMetadataInfo,
 } from "./collector/scalar-collector.js";
 import { convertToGraphQL } from "./converter/graphql-converter.js";
-import {
-  extractTypesFromProgram,
-  type GlobalTypeMapping,
-} from "./extractor/type-extractor.js";
+import { extractTypesFromProgram } from "./extractor/type-extractor.js";
 import {
   buildScalarMappingTable,
   type ScalarBaseTypeMappingTable,
 } from "./mapper/scalar-base-type-mapper.js";
-import type { ExtractedTypeInfo } from "./types/index.js";
+import type { ExtractedTypeInfo, GlobalTypeMapping } from "./types/index.js";
 import { validateTypes } from "./validator/type-validator.js";
 
 export interface ExtractTypesParams {

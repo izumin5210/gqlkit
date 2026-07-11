@@ -13,6 +13,25 @@ export type TypeKind =
   | "enum"
   | "graphqlInterface";
 
+/**
+ * Global type mapping configuration.
+ * Maps TypeScript type names to GraphQL scalar names when tsType.from is omitted.
+ *
+ * Lives here (rather than in extractor/type-extractor.ts, where it originated)
+ * so that both type-extractor.ts and field-type-resolver.ts can depend on it
+ * without depending on each other — refactor-plan.md §1.4/Phase 1 note,
+ * Phase 8 item 3: this was the last file-level `no-circular` cycle owned by
+ * this stage.
+ */
+export interface GlobalTypeMapping {
+  /** TypeScript type name (e.g., "Date", "URL") */
+  readonly typeName: string;
+  /** GraphQL scalar name (e.g., "DateTime", "URL") */
+  readonly scalarName: string;
+  /** Usage constraint */
+  readonly only: "input" | "output" | null;
+}
+
 export interface TypeMetadata {
   readonly name: string;
   readonly kind: TypeKind;

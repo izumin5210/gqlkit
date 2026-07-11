@@ -19,26 +19,5 @@
         "dependencyTypes": ["local", "import"]
       }
     ]
-  },
-  {
-    "type": "cycle",
-    "from": "packages/cli/src/type-extractor/extractor/field-type-resolver.ts",
-    "to": "packages/cli/src/type-extractor/extractor/type-extractor.ts",
-    "unresolvedTo": "./type-extractor.js",
-    "dependencyTypes": ["local", "type-only", "import"],
-    "rule": {
-      "severity": "error",
-      "name": "no-circular"
-    },
-    "cycle": [
-      {
-        "name": "packages/cli/src/type-extractor/extractor/type-extractor.ts",
-        "dependencyTypes": ["local", "type-only", "import"]
-      },
-      {
-        "name": "packages/cli/src/type-extractor/extractor/field-type-resolver.ts",
-        "dependencyTypes": ["local", "import"]
-      }
-    ]
   }
 ]

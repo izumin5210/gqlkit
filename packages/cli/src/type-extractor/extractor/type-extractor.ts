@@ -47,6 +47,7 @@ import type {
 import type {
   EnumMemberInfo,
   ExtractedTypeInfo,
+  GlobalTypeMapping,
   TypeKind,
   TypeMetadata,
 } from "../types/index.js";
@@ -56,19 +57,6 @@ import {
   resolveFieldType,
 } from "./field-type-resolver.js";
 import { detectScalarMetadata } from "./scalar-metadata-detector.js";
-
-/**
- * Global type mapping configuration.
- * Maps TypeScript type names to GraphQL scalar names when tsType.from is omitted.
- */
-export interface GlobalTypeMapping {
-  /** TypeScript type name (e.g., "Date", "URL") */
-  readonly typeName: string;
-  /** GraphQL scalar name (e.g., "DateTime", "URL") */
-  readonly scalarName: string;
-  /** Usage constraint */
-  readonly only: "input" | "output" | null;
-}
 
 export interface ExtractionOptions {
   /** Global type mappings from config (scalars with tsType.from omitted) */

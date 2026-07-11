@@ -41,8 +41,8 @@ import type {
   ScalarMappingContext,
 } from "../mapper/scalar-base-type-mapper.js";
 import { lookupScalarMapping } from "../mapper/scalar-base-type-mapper.js";
+import type { GlobalTypeMapping } from "../types/index.js";
 import { detectScalarMetadata } from "./scalar-metadata-detector.js";
-import type { GlobalTypeMapping } from "./type-extractor.js";
 
 export interface DiscoveredTypeEntry {
   readonly name: string;
