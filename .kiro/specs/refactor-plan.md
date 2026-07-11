@@ -299,6 +299,8 @@ Sequenced sub-PRs:
 4. **7d**: Split `resolveMemberNames` along its three concerns; route all typename extraction through one utility (removing the 4th independent implementation).
 - **Acceptance per sub-PR**: goldens byte-identical (this is pure representation/duplication work); `auto-type-generator.ts` drops from ~2,193 lines to a target of &lt;800; line-count deltas reported in each PR description.
 
+Note (recorded during execution): all four sub-tasks landed as one PR (8 commits); goldens byte-identical throughout; **`auto-type-generator.ts` ended at 446 lines** (orchestration only). The weak-converter gap (7a) proved UNOBSERVABLE — pure improvement. 7b confirmed every flattened field was a pure projection of the held `TSTypeReference` (audit premise held). Two additional findings: (1) `ArgumentDefinition` in `define-api-extractor.ts` is a FOURTH near-duplicate of `PropertyDef` (7 fields, no sourceLocation) — left for Phase 8 item 4's decomposition to absorb; (2) `examples/with-ai-sdk` regeneration is environment-sensitive locally (`__INLINE_OBJECT__` sentinels leak when the external `ai` package's types don't resolve) while CI stays green — a robustness weakness in the same family as issue #343 (unresolved references degrade silently instead of diagnosing).
+
 ### Phase 8 — Decompose the remaining god functions *(goldens unchanged)*
 
 1. Split `integrate()` into single-responsibility modules (§3.1); the unified type mapper replaces the two duplicate conversion loops (`result-integrator.ts:322-475`).
