@@ -16,6 +16,15 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const testdataDir = join(__dirname, "testdata");
 const isUpdateMode = isSnapshotUpdateMode();
 
+/**
+ * Case-level config.json shape. `output.pruning` is declared here ahead of
+ * the public `OutputConfig` gaining the key, so pruning-sensitive cases can
+ * pin `"output": {"pruning": false}` before the default flips to enabled.
+ */
+interface GoldenCaseConfig extends Partial<GqlkitConfig> {
+  readonly output?: GqlkitConfig["output"] & { readonly pruning?: boolean };
+}
+
 async function fileExists(path: string): Promise<boolean> {
   try {
     await access(path);
@@ -84,7 +93,7 @@ describe("Golden File Tests", async () => {
     it(caseName, async () => {
       const caseDir = join(testdataDir, caseName);
 
-      const config = await readJsonIfExists<Partial<GqlkitConfig>>(
+      const config = await readJsonIfExists<GoldenCaseConfig>(
         join(caseDir, "config.json"),
       );
 
@@ -109,16 +118,22 @@ describe("Golden File Tests", async () => {
         }
       }
 
+      // Output paths stay hardcoded to the defaults for now; only
+      // `output.pruning` (and `output.importExtension`) are threaded from
+      // config.json. Full output-config generalization is a later phase.
+      const output = {
+        resolversPath: DEFAULT_RESOLVERS_PATH,
+        typeDefsPath: DEFAULT_TYPEDEFS_PATH,
+        schemaPath: DEFAULT_SCHEMA_PATH,
+        importExtension: config?.output?.importExtension ?? "js",
+        pruning: config?.output?.pruning ?? true,
+      };
+
       const result = await executeGeneration({
         cwd: caseDir,
         sourceDir,
         sourceIgnoreGlobs: config?.sourceIgnoreGlobs ?? [],
-        output: {
-          resolversPath: DEFAULT_RESOLVERS_PATH,
-          typeDefsPath: DEFAULT_TYPEDEFS_PATH,
-          schemaPath: DEFAULT_SCHEMA_PATH,
-          importExtension: config?.output?.importExtension ?? "js",
-        },
+        output,
         configDir: null,
         customScalars,
         tsconfigPath: join(caseDir, "tsconfig.json"),
