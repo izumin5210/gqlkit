@@ -49,18 +49,6 @@ type TextResult {
   text: String!
 }
 
-"""
-Input type for creating articles
-
-Defined in: src/gqlkit/schema/types.ts
-"""
-input CreateArticleInput {
-  content: String!
-  isPublished: Boolean
-  tags: [String!]!
-  title: String!
-}
-
 extend type Mutation {
   """Defined in: src/gqlkit/schema/query.ts"""
   createArticle(title: String!, content: String!, tags: [String!]!, isPublished: Boolean): Article!

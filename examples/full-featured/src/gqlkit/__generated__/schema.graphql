@@ -146,13 +146,6 @@ union SearchResult = Comment | Post
 type Subscription
 
 """
-Timeline content (posts and comments mixed)
-
-Defined in: src/gqlkit/schema/content.ts
-"""
-union TimelineItem = Comment | Post
-
-"""
 Timestamped interface - represents entities that track creation time.
 Types implementing this interface have a createdAt field.
 

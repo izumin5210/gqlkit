@@ -172,54 +172,6 @@ export const typeDefs: DocumentNode = {
       "kind": "InputObjectTypeDefinition",
       "name": {
         "kind": "Name",
-        "value": "CreatePostInput"
-      },
-      "fields": [
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "content"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        },
-        {
-          "kind": "InputValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "title"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Input for creating a post\n\nDefined in: src/gqlkit/schema/types.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "InputObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
         "value": "UpdatePostInput"
       },
       "fields": [

@@ -80,6 +80,10 @@ export async function runGenCommand(
     return { exitCode: 1 };
   }
 
+  if (result.prunedTypes.length > 0) {
+    progressReporter.typesPruned(result.prunedTypes);
+  }
+
   const writeResult = await writeGeneratedFiles({
     files: result.files,
   });

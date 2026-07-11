@@ -16,15 +16,6 @@ const __dirname = dirname(fileURLToPath(import.meta.url));
 const testdataDir = join(__dirname, "testdata");
 const isUpdateMode = isSnapshotUpdateMode();
 
-/**
- * Case-level config.json shape. `output.pruning` is declared here ahead of
- * the public `OutputConfig` gaining the key, so pruning-sensitive cases can
- * pin `"output": {"pruning": false}` before the default flips to enabled.
- */
-interface GoldenCaseConfig extends Partial<GqlkitConfig> {
-  readonly output?: GqlkitConfig["output"] & { readonly pruning?: boolean };
-}
-
 async function fileExists(path: string): Promise<boolean> {
   try {
     await access(path);
@@ -93,7 +84,7 @@ describe("Golden File Tests", async () => {
     it(caseName, async () => {
       const caseDir = join(testdataDir, caseName);
 
-      const config = await readJsonIfExists<GoldenCaseConfig>(
+      const config = await readJsonIfExists<Partial<GqlkitConfig>>(
         join(caseDir, "config.json"),
       );
 

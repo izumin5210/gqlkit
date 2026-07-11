@@ -56,37 +56,6 @@ input CreateUserWithPickInput {
   name: String!
 }
 
-"""
-Input type with required and optional fields for Partial/Required testing
-
-Defined in: src/gqlkit/schema/types.ts
-"""
-input ProfileInput {
-  """Avatar URL (required)"""
-  avatarUrl: String!
-  """Display name (required)"""
-  displayName: String!
-  """Location (optional)"""
-  location: String
-  """Website URL (optional)"""
-  website: String
-}
-
-"""
-Input type with deprecated fields for
-
-Defined in: src/gqlkit/schema/types.ts
-"""
-input SettingsInput {
-  legacyFlag: Boolean! @deprecated(reason: """No longer supported""")
-  """New notification preferences"""
-  notificationPreferences: String
-  """Legacy notification setting"""
-  notifications: Boolean! @deprecated(reason: """Use notificationPreferences instead""")
-  """Theme preference"""
-  theme: String!
-}
-
 """Defined in: src/gqlkit/schema/types.ts"""
 input UpdateProfileWithPartialInput {
   """Avatar URL (required)"""

@@ -66,6 +66,8 @@ export default defineConfig({
     // schemaPath: null,
     // Import extension in generated files (default: "js")
     // importExtension: "none", // for bundlers
+    // Keep types unreachable from root operation types (default: true)
+    // pruning: false,
   },
 
   // Hooks
@@ -116,6 +118,7 @@ export default defineConfig({
 | `resolversPath` | `string` \| `null` | `"src/gqlkit/__generated__/resolvers.ts"` | Path for the resolvers output |
 | `schemaPath` | `string` \| `null` | `"src/gqlkit/__generated__/schema.graphql"` | Path for the SDL output |
 | `importExtension` | `"js"` \| `"none"` \| `"ts"` | `"js"` | File extension for import statements |
+| `pruning` | `boolean` | `true` | Remove types unreachable from root operation types |
 
 Set any path to `null` to disable that output.
 
@@ -124,6 +127,39 @@ The `importExtension` option controls file extensions in generated import statem
 - `"js"` (default): Converts `.ts` to `.js` (compatible with ESM + Node16)
 - `"none"`: No extension (for bundlers like webpack, vite)
 - `"ts"`: Keeps `.ts` extension (for Deno)
+
+## Schema Pruning
+
+By default, gqlkit removes types that are not reachable from any root
+operation type (`Query`, `Mutation`, `Subscription`) from the generated
+schema, typeDefs, and resolver map. Reachability follows field types,
+argument types, input object fields, union members, and `implements`
+references; every type implementing a reachable interface is also kept,
+since `__resolveType` may return any implementer at runtime.
+
+Pruning never removes:
+
+- **Directive definitions** — all directive definitions (and the types
+  their arguments reference) are always kept.
+- **Anything in a schema without root operation types** — if no `Query`,
+  `Mutation`, or `Subscription` exists (a types-only project), pruning is
+  skipped entirely so the output is not emptied.
+
+When types are pruned, `gqlkit gen` reports them:
+
+```
+  Pruned 2 unused type(s): AuditLog, LegacyInput
+```
+
+To keep every extracted type in the output, opt out:
+
+```ts
+export default defineConfig({
+  output: {
+    pruning: false,
+  },
+});
+```
 
 ## Hooks
 

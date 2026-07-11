@@ -31,6 +31,8 @@ export interface ResolvedOutputConfig {
   readonly schemaPath: string | null;
   /** File extension for imports. Default: "js" */
   readonly importExtension: ImportExtension;
+  /** Prune types unreachable from root operation types. Default: true */
+  readonly pruning: boolean;
 }
 
 /**
@@ -79,6 +81,7 @@ const DEFAULT_OUTPUT_CONFIG: ResolvedOutputConfig = {
   typeDefsPath: DEFAULT_TYPEDEFS_PATH,
   schemaPath: DEFAULT_SCHEMA_PATH,
   importExtension: "js",
+  pruning: true,
 };
 
 const DEFAULT_HOOKS_CONFIG: ResolvedHooksConfig = {

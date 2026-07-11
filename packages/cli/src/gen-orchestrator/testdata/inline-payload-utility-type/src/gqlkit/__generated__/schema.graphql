@@ -85,17 +85,6 @@ type UpdateUserEmailPayload {
   name: String!
 }
 
-"""
-User type - exported and in knownTypeNames.
-When used directly, should be preserved as reference.
-
-Defined in: src/gqlkit/schema/types.ts
-"""
-type User {
-  id: String!
-  name: String!
-}
-
 extend type Mutation {
   """
   Mutation returning Omit with intersection.

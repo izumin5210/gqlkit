@@ -632,35 +632,6 @@ export const typeDefs: DocumentNode = {
       fields: [],
     },
     {
-      kind: "UnionTypeDefinition",
-      name: {
-        kind: "Name",
-        value: "TimelineItem",
-      },
-      types: [
-        {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "Comment",
-          },
-        },
-        {
-          kind: "NamedType",
-          name: {
-            kind: "Name",
-            value: "Post",
-          },
-        },
-      ],
-      description: {
-        kind: "StringValue",
-        value:
-          "Timeline content (posts and comments mixed)\n\nDefined in: src/gqlkit/schema/content.ts",
-        block: true,
-      },
-    },
-    {
       kind: "InterfaceTypeDefinition",
       name: {
         kind: "Name",

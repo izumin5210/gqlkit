@@ -632,54 +632,6 @@ export const typeDefs: DocumentNode = {
       }
     },
     {
-      "kind": "ObjectTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "User"
-      },
-      "fields": [
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "id"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        },
-        {
-          "kind": "FieldDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "name"
-          },
-          "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "String"
-              }
-            }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "User type - exported and in knownTypeNames.\nWhen used directly, should be preserved as reference.\n\nDefined in: src/gqlkit/schema/types.ts",
-        "block": true
-      }
-    },
-    {
       "kind": "ObjectTypeExtension",
       "name": {
         "kind": "Name",
