@@ -21,6 +21,7 @@ import {
   isInputTypeName,
 } from "./naming-convention.js";
 import {
+  forEachResolverArg,
   forEachResolverField,
   type ResolverFieldInfo,
   type ResolverType,
@@ -159,8 +160,12 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
   const inlineObjectProperties = getInlineObjectPropertiesFromType(tsType);
   if (inlineObjectProperties) {
     traverseInlineObjectProperties(
-      { properties: inlineObjectProperties, parentPath: fieldPath },
-      (prop, propPath) => {
+      {
+        properties: inlineObjectProperties,
+        parentPath: fieldPath,
+        defaultSourceLocation: { file: sourceFile, line: 1, column: 1 },
+      },
+      ({ prop, propPath }) => {
         const propTsType = prop.tsType;
         if (propTsType.kind === "union" && propTsType.members) {
           const members = propTsType.members.map((m) =>
@@ -219,9 +224,8 @@ function collectInlineUnionsFromResolverArgs(
 ): void {
   const { field, resolverType, parentTypeName, knownTypeNames, results } =
     params;
-  if (!field.args) return;
 
-  for (const arg of field.args) {
+  forEachResolverArg(field, (arg) => {
     if (arg.tsType.kind === "union" && arg.tsType.members) {
       const members = arg.tsType.members.map((m: TSTypeReference) =>
         createMemberInfo(m, knownTypeNames),
@@ -260,7 +264,7 @@ function collectInlineUnionsFromResolverArgs(
         results,
       });
     }
-  }
+  });
 }
 
 interface CollectInlineUnionsFromResolverPropertiesBaseParams {
@@ -308,8 +312,8 @@ function collectInlineUnionsFromResolverProperties(
   } = params;
 
   traverseInlineObjectProperties(
-    { properties, parentPath },
-    (prop, propPath) => {
+    { properties, parentPath, defaultSourceLocation: sourceLocation },
+    ({ prop, propPath }) => {
       const tsType = prop.tsType;
 
       if (tsType.kind === "union" && tsType.members) {

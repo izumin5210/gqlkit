@@ -23,7 +23,6 @@ import {
   detectEnumPrefix,
   stripEnumPrefix,
 } from "../shared/enum-prefix-detector.js";
-import { getSourceLocationOrDefault } from "../shared/source-location.js";
 import { toScreamingSnakeCase } from "../shared/string-utils.js";
 import { convertTsTypeToGraphQLType } from "../shared/type-converter.js";
 import type { ExtractedTypeInfo } from "../type-extractor/index.js";
@@ -33,6 +32,12 @@ import {
   collectInlineEnumsFromTypes,
   type InlineEnumWithContext,
 } from "./inline-enum-collector.js";
+import {
+  collectInlineObjectsFromPayloads,
+  collectInlineObjectsFromResolvers,
+  collectInlineObjectsFromTypes,
+  type InlineObjectWithContext,
+} from "./inline-object-collector.js";
 import {
   collectInlineUnionsFromPayloads,
   collectInlineUnionsFromResolvers,
@@ -58,10 +63,6 @@ import {
   isInputTypeName,
 } from "./naming-convention.js";
 import type { ResolveTypeFieldPattern } from "./resolve-type-generator.js";
-import {
-  forEachResolverField,
-  type ResolverType,
-} from "./resolver-field-iterator.js";
 import {
   createFieldNameSet,
   findTypenameProperty,
@@ -199,117 +200,6 @@ export function generateObjectTypeFromInlineObject(
   };
 }
 
-interface InlineObjectWithContext {
-  readonly properties: ReadonlyArray<PropertyDef>;
-  readonly context: AutoTypeNameContext;
-  readonly sourceLocation: SourceLocation;
-  readonly nullable: boolean;
-  /** TSDoc description from the inline object type alias (Requirement 7.2) */
-  readonly description: string | null;
-  /** Deprecation info from the `@deprecated` TSDoc tag on the inline object type alias (Requirement 7.3) */
-  readonly deprecated: DeprecationInfo | null;
-}
-
-type ContextBuilderFn = (
-  nestedPath: ReadonlyArray<string>,
-) => AutoTypeNameContext;
-
-interface ExtractNestedInlineObjectsParams {
-  readonly properties: ReadonlyArray<PropertyDef>;
-  readonly currentPath: ReadonlyArray<string>;
-  readonly sourceLocation: SourceLocation;
-  readonly buildContext: ContextBuilderFn;
-  readonly preserveDocumentation: boolean;
-  readonly results: InlineObjectWithContext[];
-}
-
-interface InlineObjectTypeInfo {
-  readonly properties: ReadonlyArray<PropertyDef>;
-  readonly nullable: boolean;
-  readonly description: string | null;
-  readonly deprecated: DeprecationInfo | null;
-}
-
-function getInlineObjectTypeInfo(
-  tsType: TSTypeReference,
-): InlineObjectTypeInfo | null {
-  if (tsType.kind === "inlineObject" && tsType.inlineObjectProperties) {
-    return {
-      properties: tsType.inlineObjectProperties,
-      nullable: tsType.nullable,
-      description: tsType.inlineObjectDescription,
-      deprecated: tsType.inlineObjectDeprecated,
-    };
-  }
-
-  if (
-    tsType.kind === "array" &&
-    tsType.elementType?.kind === "inlineObject" &&
-    tsType.elementType.inlineObjectProperties
-  ) {
-    return {
-      properties: tsType.elementType.inlineObjectProperties,
-      nullable: tsType.elementType.nullable,
-      description: tsType.elementType.inlineObjectDescription,
-      deprecated: tsType.elementType.inlineObjectDeprecated,
-    };
-  }
-
-  return null;
-}
-
-function extractNestedInlineObjectsRecursively(
-  params: ExtractNestedInlineObjectsParams,
-): void {
-  const {
-    properties,
-    currentPath,
-    sourceLocation,
-    buildContext,
-    preserveDocumentation,
-    results,
-  } = params;
-  const siblingFieldNames = new Set(properties.map((prop) => prop.name));
-
-  for (const prop of properties) {
-    const inlineObjectTypeInfo = getInlineObjectTypeInfo(prop.tsType);
-
-    if (inlineObjectTypeInfo) {
-      const nestedPath = appendFieldPath({
-        parentPath: currentPath,
-        fieldName: prop.name,
-        singularize: prop.tsType.kind === "array",
-        siblingFieldNames,
-      });
-      const nestedContext = buildContext(nestedPath);
-      // Use property's source location if available for more accurate diagnostics
-      const nestedSourceLocation = prop.sourceLocation ?? sourceLocation;
-
-      results.push({
-        properties: inlineObjectTypeInfo.properties,
-        context: nestedContext,
-        sourceLocation: nestedSourceLocation,
-        nullable: inlineObjectTypeInfo.nullable,
-        description: preserveDocumentation
-          ? inlineObjectTypeInfo.description
-          : null,
-        deprecated: preserveDocumentation
-          ? inlineObjectTypeInfo.deprecated
-          : null,
-      });
-
-      extractNestedInlineObjectsRecursively({
-        properties: inlineObjectTypeInfo.properties,
-        currentPath: nestedPath,
-        sourceLocation: nestedSourceLocation,
-        buildContext,
-        preserveDocumentation,
-        results,
-      });
-    }
-  }
-}
-
 function getContextKey(context: AutoTypeNameContext): string {
   switch (context.kind) {
     case "objectField":
@@ -351,230 +241,6 @@ function buildGeneratedFromInfo(
     fieldPath,
     context: mapContextKindToGeneratedFromContext(context.kind),
   };
-}
-
-function collectInlineObjectsFromType(
-  typeInfo: ExtractedTypeInfo,
-): InlineObjectWithContext[] {
-  const results: InlineObjectWithContext[] = [];
-  const isInput = isInputTypeName(typeInfo.metadata.name);
-  const siblingFieldNames = new Set(typeInfo.fields.map((field) => field.name));
-
-  for (const field of typeInfo.fields) {
-    collectInlineObjectsFromField({
-      field,
-      parentTypeName: typeInfo.metadata.name,
-      parentPath: [],
-      isInput,
-      sourceFile: typeInfo.metadata.sourceFile,
-      siblingFieldNames,
-      results,
-    });
-  }
-
-  return results;
-}
-
-interface CollectInlineObjectsFromFieldParams {
-  readonly field: PropertyDef;
-  readonly parentTypeName: string;
-  readonly parentPath: ReadonlyArray<string>;
-  readonly isInput: boolean;
-  readonly sourceFile: string;
-  readonly siblingFieldNames: ReadonlySet<string>;
-  readonly results: InlineObjectWithContext[];
-}
-
-function collectInlineObjectsFromField(
-  params: CollectInlineObjectsFromFieldParams,
-): void {
-  const {
-    field,
-    parentTypeName,
-    parentPath,
-    isInput,
-    sourceFile,
-    siblingFieldNames,
-    results,
-  } = params;
-  const inlineObjectTypeInfo = getInlineObjectTypeInfo(field.tsType);
-
-  if (!inlineObjectTypeInfo) {
-    return;
-  }
-
-  const fieldPath = appendFieldPath({
-    parentPath,
-    fieldName: field.name,
-    singularize: field.tsType.kind === "array",
-    siblingFieldNames,
-  });
-
-  const context: AutoTypeNameContext = isInput
-    ? {
-        kind: "inputField",
-        parentTypeName,
-        fieldPath,
-      }
-    : {
-        kind: "objectField",
-        parentTypeName,
-        fieldPath,
-      };
-
-  const sourceLocation = getSourceLocationOrDefault(
-    field.sourceLocation,
-    sourceFile,
-  );
-
-  results.push({
-    properties: inlineObjectTypeInfo.properties,
-    context,
-    sourceLocation,
-    nullable: inlineObjectTypeInfo.nullable,
-    description: inlineObjectTypeInfo.description,
-    deprecated: inlineObjectTypeInfo.deprecated,
-  });
-
-  extractNestedInlineObjectsRecursively({
-    properties: inlineObjectTypeInfo.properties,
-    currentPath: fieldPath,
-    sourceLocation,
-    buildContext: (nestedPath) =>
-      isInput
-        ? { kind: "inputField", parentTypeName, fieldPath: nestedPath }
-        : { kind: "objectField", parentTypeName, fieldPath: nestedPath },
-    preserveDocumentation: true,
-    results,
-  });
-}
-
-function collectInlineObjectsFromResolvers(
-  resolversResult: ExtractResolversResult,
-): InlineObjectWithContext[] {
-  const results: InlineObjectWithContext[] = [];
-
-  forEachResolverField(
-    resolversResult,
-    ({ field, resolverType, parentTypeName }) => {
-      collectInlineObjectsFromResolverArgs(
-        field,
-        resolverType,
-        parentTypeName,
-        results,
-      );
-    },
-  );
-
-  return results;
-}
-
-function collectInlineObjectsFromResolverArgs(
-  field: GraphQLFieldDefinition,
-  resolverType: ResolverType,
-  parentTypeName: string | null,
-  results: InlineObjectWithContext[],
-): void {
-  if (!field.args) return;
-
-  for (const arg of field.args) {
-    if (!arg.tsType.inlineObjectProperties) continue;
-
-    const context: AutoTypeNameContext = {
-      kind: "resolverArg",
-      resolverType,
-      fieldName: field.name,
-      argName: arg.name,
-      parentTypeName,
-      fieldPath: [],
-    };
-
-    results.push({
-      properties: arg.tsType.inlineObjectProperties,
-      context,
-      sourceLocation: field.sourceLocation,
-      nullable: arg.type.nullable,
-      description: null,
-      deprecated: null,
-    });
-
-    extractNestedInlineObjectsRecursively({
-      properties: arg.tsType.inlineObjectProperties,
-      currentPath: [],
-      sourceLocation: field.sourceLocation,
-      buildContext: (nestedPath) => ({
-        kind: "resolverArg",
-        resolverType,
-        fieldName: field.name,
-        argName: arg.name,
-        parentTypeName,
-        fieldPath: nestedPath,
-      }),
-      preserveDocumentation: false,
-      results,
-    });
-  }
-}
-
-function collectInlinePayloadsFromResolvers(
-  resolversResult: ExtractResolversResult,
-): InlineObjectWithContext[] {
-  const results: InlineObjectWithContext[] = [];
-
-  forEachResolverField(
-    resolversResult,
-    ({ field, resolverType, parentTypeName }) => {
-      collectInlinePayloadFromReturnType(
-        field,
-        resolverType,
-        parentTypeName,
-        results,
-      );
-    },
-  );
-
-  return results;
-}
-
-function collectInlinePayloadFromReturnType(
-  field: GraphQLFieldDefinition,
-  resolverType: ResolverType,
-  parentTypeName: string | null,
-  results: InlineObjectWithContext[],
-): void {
-  if (!field.returnTsType.inlineObjectProperties) return;
-
-  const context: AutoTypeNameContext = {
-    kind: "resolverPayload",
-    resolverType,
-    fieldName: field.name,
-    parentTypeName,
-    fieldPath: [],
-  };
-
-  results.push({
-    properties: field.returnTsType.inlineObjectProperties,
-    context,
-    sourceLocation: field.sourceLocation,
-    nullable: field.type.nullable,
-    description: field.returnTsType.inlineObjectDescription,
-    deprecated: field.returnTsType.inlineObjectDeprecated,
-  });
-
-  extractNestedInlineObjectsRecursively({
-    properties: field.returnTsType.inlineObjectProperties,
-    currentPath: [],
-    sourceLocation: field.sourceLocation,
-    buildContext: (nestedPath) => ({
-      kind: "resolverPayload",
-      resolverType,
-      fieldName: field.name,
-      parentTypeName,
-      fieldPath: nestedPath,
-    }),
-    preserveDocumentation: true,
-    results,
-  });
 }
 
 interface GenerateAutoTypeResult {
@@ -2102,16 +1768,14 @@ function areGraphQLTypesEqual(
 export function generateAutoTypes(
   input: AutoTypeGeneratorInput,
 ): AutoTypeGeneratorResult {
-  const inlineObjectsFromTypes: InlineObjectWithContext[] = [];
-  for (const typeInfo of input.extractedTypes) {
-    inlineObjectsFromTypes.push(...collectInlineObjectsFromType(typeInfo));
-  }
+  const inlineObjectsFromTypes: ReadonlyArray<InlineObjectWithContext> =
+    collectInlineObjectsFromTypes(input.extractedTypes);
 
   const inlineObjectsFromResolvers = collectInlineObjectsFromResolvers(
     input.resolversResult,
   );
 
-  const inlinePayloadsFromResolvers = collectInlinePayloadsFromResolvers(
+  const inlinePayloadsFromResolvers = collectInlineObjectsFromPayloads(
     input.resolversResult,
   );
 
