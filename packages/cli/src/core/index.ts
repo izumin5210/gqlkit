@@ -49,8 +49,7 @@ export {
 export type {
   InlineEnumMemberInfo,
   InlineObjectMember,
-  InlineObjectProperty,
-  InlineObjectPropertyDef,
+  PropertyDef,
   ScalarTypeInfo,
   TSTypeReference,
   TSTypeReferenceKind,

@@ -54,7 +54,7 @@ function analyzeInlineObjectTypename(
 ): InlineObjectTypenameAnalysis {
   const found = findTypenameProperty(
     inlineObjectMember.properties,
-    (p) => p.propertyName,
+    (p) => p.name,
   );
 
   if (!found) {
@@ -67,7 +67,7 @@ function analyzeInlineObjectTypename(
   }
 
   const { property, fieldName } = found;
-  const { propertyType: tsType } = property;
+  const { tsType } = property;
 
   return {
     exists: true,

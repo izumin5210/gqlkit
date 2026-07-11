@@ -1,10 +1,6 @@
-import type { InlineObjectProperty } from "../core/index.js";
-import type {
-  ExtractedTypeInfo,
-  FieldDefinition,
-} from "../type-extractor/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import {
-  findTypenameProperty,
+  extractTypenameValue,
   type TypenameFieldInfo,
 } from "./typename-types.js";
 
@@ -28,54 +24,6 @@ export interface TypenameExtractionResult {
 export interface ExtractTypenamesParams {
   readonly abstractType: ExtractedTypeInfo;
   readonly typeMap: ReadonlyMap<string, ExtractedTypeInfo>;
-}
-
-function extractTypenameFromFields(
-  fields: ReadonlyArray<FieldDefinition>,
-): TypenameFieldInfo | null {
-  const found = findTypenameProperty(fields, (f) => f.name);
-  if (!found) {
-    return null;
-  }
-
-  const { property: field, fieldName } = found;
-
-  if (field.optional) {
-    return null;
-  }
-
-  const { tsType } = field;
-  if (
-    tsType.nullable ||
-    tsType.kind !== "stringLiteral" ||
-    tsType.name === null
-  ) {
-    return null;
-  }
-
-  return { typeName: tsType.name, fieldName };
-}
-
-function extractTypenameFromInlineObjectProperties(
-  properties: ReadonlyArray<InlineObjectProperty>,
-): TypenameFieldInfo | null {
-  const found = findTypenameProperty(properties, (p) => p.propertyName);
-  if (!found) {
-    return null;
-  }
-
-  const { property, fieldName } = found;
-  const { propertyType: tsType } = property;
-
-  if (
-    tsType.nullable ||
-    tsType.kind !== "stringLiteral" ||
-    tsType.name === null
-  ) {
-    return null;
-  }
-
-  return { typeName: tsType.name, fieldName };
 }
 
 function extractUnionMemberTypenames(
@@ -106,7 +54,11 @@ function extractUnionMemberTypenames(
       continue;
     }
 
-    const typenameInfo = extractTypenameFromFields(memberType.fields);
+    const typenameInfo = extractTypenameValue({
+      properties: memberType.fields,
+      checkOptional: true,
+      checkNullable: true,
+    });
 
     if (typenameInfo === null) {
       allMembersHaveTypename = false;
@@ -122,9 +74,14 @@ function extractUnionMemberTypenames(
   }
 
   for (const inlineObjectMember of inlineObjectMembers) {
-    const typenameInfo = extractTypenameFromInlineObjectProperties(
-      inlineObjectMember.properties,
-    );
+    // Unlike declared fields, inline object member properties are not
+    // checked for optionality here — this mirrors the pre-consolidation
+    // behavior of `extractTypenameFromInlineObjectProperties`.
+    const typenameInfo = extractTypenameValue({
+      properties: inlineObjectMember.properties,
+      checkOptional: false,
+      checkNullable: true,
+    });
 
     if (typenameInfo === null) {
       allMembersHaveTypename = false;
@@ -159,7 +116,11 @@ function extractInterfaceImplementerTypenames(
 
   for (let i = 0; i < implementers.length; i++) {
     const implementer = implementers[i]!;
-    const typenameInfo = extractTypenameFromFields(implementer.fields);
+    const typenameInfo = extractTypenameValue({
+      properties: implementer.fields,
+      checkOptional: true,
+      checkNullable: true,
+    });
 
     if (typenameInfo === null) {
       allMembersHaveTypename = false;

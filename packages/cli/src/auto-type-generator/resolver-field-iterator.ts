@@ -1,6 +1,7 @@
 import type {
   ExtractResolversResult,
   GraphQLFieldDefinition,
+  GraphQLInputValue,
 } from "../resolver-extractor/index.js";
 
 export type ResolverType = "query" | "mutation" | "field" | "subscription";
@@ -39,5 +40,20 @@ export function forEachResolverField(
         parentTypeName: ext.targetTypeName,
       });
     }
+  }
+}
+
+/**
+ * Iterates over a resolver field's arguments, if it has any. Eliminates the
+ * repeated `if (!field.args) return; for (const arg of field.args)` pattern
+ * across the inline-object/enum/union collectors.
+ */
+export function forEachResolverArg(
+  field: GraphQLFieldDefinition,
+  visitor: (arg: GraphQLInputValue) => void,
+): void {
+  if (!field.args) return;
+  for (const arg of field.args) {
+    visitor(arg);
   }
 }

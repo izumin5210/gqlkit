@@ -53,7 +53,7 @@ export interface TSTypeReference {
   readonly members: ReadonlyArray<TSTypeReference> | null;
   readonly nullable: boolean;
   readonly scalarInfo: ScalarTypeInfo | null;
-  readonly inlineObjectProperties: ReadonlyArray<InlineObjectPropertyDef> | null;
+  readonly inlineObjectProperties: ReadonlyArray<PropertyDef> | null;
   /** TSDoc description from the inline object type alias (Requirement 7.2) */
   readonly inlineObjectDescription: string | null;
   /** Deprecation info from the `@deprecated` TSDoc tag on the inline object type alias (Requirement 7.3) */
@@ -70,7 +70,16 @@ export interface TSTypeReference {
   readonly externalEnumDeprecated: DeprecationInfo | null;
 }
 
-export interface InlineObjectPropertyDef {
+/**
+ * Canonical shape for "a typed property" across the codebase: declared-type
+ * fields (`type-extractor`), inline-object properties (`TSTypeReference.inlineObjectProperties`),
+ * and union-member properties (`InlineObjectMember.properties`) all share this
+ * shape (refactor-plan.md §1.2-C). Producers that historically didn't compute
+ * some of these fields (e.g. union-member extraction never detected
+ * directives/defaultValue/sourceLocation) fill them with their "unset" value
+ * (`false`/`null`) rather than omitting them.
+ */
+export interface PropertyDef {
   readonly name: string;
   readonly tsType: TSTypeReference;
   readonly optional: boolean;
@@ -81,13 +90,6 @@ export interface InlineObjectPropertyDef {
   readonly sourceLocation: SourceLocation | null;
 }
 
-export interface InlineObjectProperty {
-  readonly propertyName: string;
-  readonly propertyType: TSTypeReference;
-  readonly description: string | null;
-  readonly deprecated: DeprecationInfo | null;
-}
-
 export interface InlineObjectMember {
-  readonly properties: ReadonlyArray<InlineObjectProperty>;
+  readonly properties: ReadonlyArray<PropertyDef>;
 }

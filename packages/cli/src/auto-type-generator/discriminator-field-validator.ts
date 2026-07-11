@@ -2,13 +2,11 @@ import type { ResolvedDiscriminatorFieldsMap } from "../config-loader/index.js";
 import type {
   Diagnostic,
   InlineObjectMember,
+  PropertyDef,
   SourceLocation,
   TSTypeReference,
 } from "../core/index.js";
-import type {
-  ExtractedTypeInfo,
-  FieldDefinition,
-} from "../type-extractor/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import type { ValidatedDiscriminatorEntry } from "./discriminator-resolve-type-generator.js";
 
 export interface ValidateDiscriminatorFieldsParams {
@@ -32,7 +30,7 @@ interface MemberIdentifier {
 function findFieldInNamedMember(
   memberType: ExtractedTypeInfo,
   fieldName: string,
-): FieldDefinition | null {
+): PropertyDef | null {
   for (const field of memberType.fields) {
     if (field.name === fieldName) {
       return field;
@@ -46,8 +44,8 @@ function findFieldInInlineMember(
   fieldName: string,
 ): TSTypeReference | null {
   for (const prop of inlineMember.properties) {
-    if (prop.propertyName === fieldName) {
-      return prop.propertyType;
+    if (prop.name === fieldName) {
+      return prop.tsType;
     }
   }
   return null;

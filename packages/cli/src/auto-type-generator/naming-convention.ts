@@ -188,6 +188,24 @@ export function buildFieldContext(
 }
 
 /**
+ * Serialize an AutoTypeNameContext into the string key used by the
+ * per-context generated-name maps (generatedTypeNames/enumTypeNames/
+ * unionTypeNames).
+ */
+export function getContextKey(context: AutoTypeNameContext): string {
+  switch (context.kind) {
+    case "objectField":
+      return `objectField:${context.parentTypeName}:${context.fieldPath.join(".")}`;
+    case "inputField":
+      return `inputField:${context.parentTypeName}:${context.fieldPath.join(".")}`;
+    case "resolverArg":
+      return `resolverArg:${context.resolverType}:${context.parentTypeName ?? ""}:${context.fieldName}:${context.argName}:${context.fieldPath.join(".")}`;
+    case "resolverPayload":
+      return `resolverPayload:${context.resolverType}:${context.parentTypeName ?? ""}:${context.fieldName}:${context.fieldPath.join(".")}`;
+  }
+}
+
+/**
  * Generate auto type name based on context.
  */
 export function generateAutoTypeName(context: AutoTypeNameContext): string {

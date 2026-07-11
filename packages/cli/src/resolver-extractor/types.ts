@@ -1,12 +1,9 @@
-import type ts from "typescript";
 import type {
   DeprecationInfo,
   Diagnostics,
   DirectiveArgumentValue,
   DirectiveInfo,
   GraphQLFieldType,
-  InlineEnumMemberInfo,
-  InlineObjectPropertyDef,
   SourceLocation,
   TSTypeReference,
 } from "../core/index.js";
@@ -19,17 +16,8 @@ export interface GraphQLInputValue {
   readonly deprecated: DeprecationInfo | null;
   readonly directives: ReadonlyArray<DirectiveInfo> | null;
   readonly defaultValue: DirectiveArgumentValue | null;
-  readonly inlineObjectProperties: ReadonlyArray<InlineObjectPropertyDef> | null;
-  /** Inline enum members when arg type is an inline enum (string literal union or external TypeScript enum) */
-  readonly inlineEnumMembers: ReadonlyArray<InlineEnumMemberInfo> | null;
-  /** External TypeScript enum symbol for deduplication across multiple references */
-  readonly externalEnumSymbol: ts.Symbol | null;
-  /** TSDoc description from the external enum type itself (null for string literal unions) */
-  readonly externalEnumDescription: string | null;
-  /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself (null for string literal unions) */
-  readonly externalEnumDeprecated: DeprecationInfo | null;
-  /** Inline union members when arg type is a union type (for @oneOf input objects) */
-  readonly inlineUnionMembers: ReadonlyArray<TSTypeReference> | null;
+  /** The nested TypeScript type this argument was converted from; carries inline-object/enum/union detail for auto-type generation. */
+  readonly tsType: TSTypeReference;
 }
 
 export interface GraphQLFieldDefinition {
@@ -41,22 +29,8 @@ export interface GraphQLFieldDefinition {
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
   readonly directives: ReadonlyArray<DirectiveInfo> | null;
-  /** Inline object properties when return type is an inline object type */
-  readonly returnTypeInlineObjectProperties: ReadonlyArray<InlineObjectPropertyDef> | null;
-  /** TSDoc description from the inline object type alias (Requirement 7.2) */
-  readonly returnTypeInlineObjectDescription: string | null;
-  /** Deprecation info from the `@deprecated` TSDoc tag on the inline object type alias (Requirement 7.3) */
-  readonly returnTypeInlineObjectDeprecated: DeprecationInfo | null;
-  /** Inline enum members when return type is an inline enum (string literal union or external TypeScript enum) */
-  readonly returnTypeInlineEnumMembers: ReadonlyArray<InlineEnumMemberInfo> | null;
-  /** Inline union members when return type is a union type (for Payload union types) */
-  readonly returnTypeInlineUnionMembers: ReadonlyArray<TSTypeReference> | null;
-  /** External TypeScript enum symbol for deduplication across multiple references */
-  readonly returnTypeExternalEnumSymbol: ts.Symbol | null;
-  /** TSDoc description from the external enum type itself (null for string literal unions) */
-  readonly returnTypeExternalEnumDescription: string | null;
-  /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself (null for string literal unions) */
-  readonly returnTypeExternalEnumDeprecated: DeprecationInfo | null;
+  /** The nested TypeScript return type this field was converted from; carries inline-object/enum/union detail for auto-type generation. */
+  readonly returnTsType: TSTypeReference;
 }
 
 export interface QueryFieldDefinitions {

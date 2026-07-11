@@ -1,14 +1,11 @@
 import type {
-  InlineObjectPropertyDef,
+  PropertyDef,
   SourceLocation,
   TSTypeReference,
 } from "../core/index.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import { getSourceLocationOrDefault } from "../shared/source-location.js";
-import type {
-  ExtractedTypeInfo,
-  FieldDefinition,
-} from "../type-extractor/index.js";
+import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import {
   getInlineObjectPropertiesFromType,
   traverseInlineObjectProperties,
@@ -24,6 +21,7 @@ import {
   isInputTypeName,
 } from "./naming-convention.js";
 import {
+  forEachResolverArg,
   forEachResolverField,
   type ResolverFieldInfo,
   type ResolverType,
@@ -97,7 +95,7 @@ interface CollectInlineUnionBaseParams {
 }
 
 interface CollectFromFieldParams extends CollectInlineUnionBaseParams {
-  readonly field: FieldDefinition;
+  readonly field: PropertyDef;
 }
 
 function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
@@ -162,8 +160,12 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
   const inlineObjectProperties = getInlineObjectPropertiesFromType(tsType);
   if (inlineObjectProperties) {
     traverseInlineObjectProperties(
-      { properties: inlineObjectProperties, parentPath: fieldPath },
-      (prop, propPath) => {
+      {
+        properties: inlineObjectProperties,
+        parentPath: fieldPath,
+        defaultSourceLocation: { file: sourceFile, line: 1, column: 1 },
+      },
+      ({ prop, propPath }) => {
         const propTsType = prop.tsType;
         if (propTsType.kind === "union" && propTsType.members) {
           const members = propTsType.members.map((m) =>
@@ -222,11 +224,10 @@ function collectInlineUnionsFromResolverArgs(
 ): void {
   const { field, resolverType, parentTypeName, knownTypeNames, results } =
     params;
-  if (!field.args) return;
 
-  for (const arg of field.args) {
-    if (arg.inlineUnionMembers) {
-      const members = arg.inlineUnionMembers.map((m: TSTypeReference) =>
+  forEachResolverArg(field, (arg) => {
+    if (arg.tsType.kind === "union" && arg.tsType.members) {
+      const members = arg.tsType.members.map((m: TSTypeReference) =>
         createMemberInfo(m, knownTypeNames),
       );
 
@@ -249,9 +250,9 @@ function collectInlineUnionsFromResolverArgs(
       });
     }
 
-    if (arg.inlineObjectProperties) {
+    if (arg.tsType.inlineObjectProperties) {
       collectInlineUnionsFromResolverProperties({
-        properties: arg.inlineObjectProperties,
+        properties: arg.tsType.inlineObjectProperties,
         resolverType,
         fieldName: field.name,
         parentTypeName,
@@ -263,11 +264,11 @@ function collectInlineUnionsFromResolverArgs(
         results,
       });
     }
-  }
+  });
 }
 
 interface CollectInlineUnionsFromResolverPropertiesBaseParams {
-  readonly properties: ReadonlyArray<InlineObjectPropertyDef>;
+  readonly properties: ReadonlyArray<PropertyDef>;
   readonly resolverType: ResolverType;
   readonly fieldName: string;
   readonly parentTypeName: string | null;
@@ -311,8 +312,8 @@ function collectInlineUnionsFromResolverProperties(
   } = params;
 
   traverseInlineObjectProperties(
-    { properties, parentPath },
-    (prop, propPath) => {
+    { properties, parentPath, defaultSourceLocation: sourceLocation },
+    ({ prop, propPath }) => {
       const tsType = prop.tsType;
 
       if (tsType.kind === "union" && tsType.members) {
@@ -387,9 +388,9 @@ function collectInlineUnionsFromPayloadReturnType(
   const { field, resolverType, parentTypeName, knownTypeNames, results } =
     params;
 
-  if (field.returnTypeInlineUnionMembers) {
-    const members = field.returnTypeInlineUnionMembers.map(
-      (m: TSTypeReference) => createMemberInfo(m, knownTypeNames),
+  if (field.returnTsType.kind === "union" && field.returnTsType.members) {
+    const members = field.returnTsType.members.map((m: TSTypeReference) =>
+      createMemberInfo(m, knownTypeNames),
     );
 
     const context: AutoTypeNameContext = {
@@ -410,9 +411,9 @@ function collectInlineUnionsFromPayloadReturnType(
     });
   }
 
-  if (field.returnTypeInlineObjectProperties) {
+  if (field.returnTsType.inlineObjectProperties) {
     collectInlineUnionsFromResolverProperties({
-      properties: field.returnTypeInlineObjectProperties,
+      properties: field.returnTsType.inlineObjectProperties,
       resolverType,
       fieldName: field.name,
       parentTypeName,
