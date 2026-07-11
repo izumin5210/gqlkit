@@ -174,7 +174,7 @@ function collectInlineEnumsFromResolverArgs(
   if (!field.args) return;
 
   for (const arg of field.args) {
-    if (arg.inlineEnumMembers) {
+    if (arg.tsType.inlineEnumMembers) {
       const context: AutoTypeNameContext = {
         kind: "resolverArg",
         resolverType,
@@ -185,19 +185,19 @@ function collectInlineEnumsFromResolverArgs(
       };
 
       results.push({
-        members: arg.inlineEnumMembers,
+        members: arg.tsType.inlineEnumMembers,
         context,
         sourceLocation: field.sourceLocation,
         nullable: arg.type.nullable,
-        externalEnumSymbol: arg.externalEnumSymbol,
-        externalEnumDescription: arg.externalEnumDescription,
-        externalEnumDeprecated: arg.externalEnumDeprecated,
+        externalEnumSymbol: arg.tsType.externalEnumSymbol,
+        externalEnumDescription: arg.tsType.externalEnumDescription,
+        externalEnumDeprecated: arg.tsType.externalEnumDeprecated,
       });
     }
 
-    if (arg.inlineObjectProperties) {
+    if (arg.tsType.inlineObjectProperties) {
       collectInlineEnumsFromResolverProperties({
-        properties: arg.inlineObjectProperties,
+        properties: arg.tsType.inlineObjectProperties,
         resolverType,
         fieldName: field.name,
         parentTypeName,
@@ -317,7 +317,7 @@ function collectInlineEnumsFromPayloadReturnType(
 ): void {
   const { field, resolverType, parentTypeName } = info;
 
-  if (field.returnTypeInlineEnumMembers) {
+  if (field.returnTsType.inlineEnumMembers) {
     const context: AutoTypeNameContext = {
       kind: "resolverPayload",
       resolverType,
@@ -327,19 +327,19 @@ function collectInlineEnumsFromPayloadReturnType(
     };
 
     results.push({
-      members: field.returnTypeInlineEnumMembers,
+      members: field.returnTsType.inlineEnumMembers,
       context,
       sourceLocation: field.sourceLocation,
       nullable: field.type.nullable,
-      externalEnumSymbol: field.returnTypeExternalEnumSymbol,
-      externalEnumDescription: field.returnTypeExternalEnumDescription,
-      externalEnumDeprecated: field.returnTypeExternalEnumDeprecated,
+      externalEnumSymbol: field.returnTsType.externalEnumSymbol,
+      externalEnumDescription: field.returnTsType.externalEnumDescription,
+      externalEnumDeprecated: field.returnTsType.externalEnumDeprecated,
     });
   }
 
-  if (field.returnTypeInlineObjectProperties) {
+  if (field.returnTsType.inlineObjectProperties) {
     collectInlineEnumsFromResolverProperties({
-      properties: field.returnTypeInlineObjectProperties,
+      properties: field.returnTsType.inlineObjectProperties,
       resolverType,
       fieldName: field.name,
       parentTypeName,

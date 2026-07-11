@@ -222,8 +222,8 @@ function collectInlineUnionsFromResolverArgs(
   if (!field.args) return;
 
   for (const arg of field.args) {
-    if (arg.inlineUnionMembers) {
-      const members = arg.inlineUnionMembers.map((m: TSTypeReference) =>
+    if (arg.tsType.kind === "union" && arg.tsType.members) {
+      const members = arg.tsType.members.map((m: TSTypeReference) =>
         createMemberInfo(m, knownTypeNames),
       );
 
@@ -246,9 +246,9 @@ function collectInlineUnionsFromResolverArgs(
       });
     }
 
-    if (arg.inlineObjectProperties) {
+    if (arg.tsType.inlineObjectProperties) {
       collectInlineUnionsFromResolverProperties({
-        properties: arg.inlineObjectProperties,
+        properties: arg.tsType.inlineObjectProperties,
         resolverType,
         fieldName: field.name,
         parentTypeName,
@@ -384,9 +384,9 @@ function collectInlineUnionsFromPayloadReturnType(
   const { field, resolverType, parentTypeName, knownTypeNames, results } =
     params;
 
-  if (field.returnTypeInlineUnionMembers) {
-    const members = field.returnTypeInlineUnionMembers.map(
-      (m: TSTypeReference) => createMemberInfo(m, knownTypeNames),
+  if (field.returnTsType.kind === "union" && field.returnTsType.members) {
+    const members = field.returnTsType.members.map((m: TSTypeReference) =>
+      createMemberInfo(m, knownTypeNames),
     );
 
     const context: AutoTypeNameContext = {
@@ -407,9 +407,9 @@ function collectInlineUnionsFromPayloadReturnType(
     });
   }
 
-  if (field.returnTypeInlineObjectProperties) {
+  if (field.returnTsType.inlineObjectProperties) {
     collectInlineUnionsFromResolverProperties({
-      properties: field.returnTypeInlineObjectProperties,
+      properties: field.returnTsType.inlineObjectProperties,
       resolverType,
       fieldName: field.name,
       parentTypeName,

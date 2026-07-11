@@ -478,7 +478,7 @@ function collectInlineObjectsFromResolverArgs(
   if (!field.args) return;
 
   for (const arg of field.args) {
-    if (!arg.inlineObjectProperties) continue;
+    if (!arg.tsType.inlineObjectProperties) continue;
 
     const context: AutoTypeNameContext = {
       kind: "resolverArg",
@@ -490,7 +490,7 @@ function collectInlineObjectsFromResolverArgs(
     };
 
     results.push({
-      properties: arg.inlineObjectProperties,
+      properties: arg.tsType.inlineObjectProperties,
       context,
       sourceLocation: field.sourceLocation,
       nullable: arg.type.nullable,
@@ -499,7 +499,7 @@ function collectInlineObjectsFromResolverArgs(
     });
 
     extractNestedInlineObjectsRecursively({
-      properties: arg.inlineObjectProperties,
+      properties: arg.tsType.inlineObjectProperties,
       currentPath: [],
       sourceLocation: field.sourceLocation,
       buildContext: (nestedPath) => ({
@@ -542,7 +542,7 @@ function collectInlinePayloadFromReturnType(
   parentTypeName: string | null,
   results: InlineObjectWithContext[],
 ): void {
-  if (!field.returnTypeInlineObjectProperties) return;
+  if (!field.returnTsType.inlineObjectProperties) return;
 
   const context: AutoTypeNameContext = {
     kind: "resolverPayload",
@@ -553,16 +553,16 @@ function collectInlinePayloadFromReturnType(
   };
 
   results.push({
-    properties: field.returnTypeInlineObjectProperties,
+    properties: field.returnTsType.inlineObjectProperties,
     context,
     sourceLocation: field.sourceLocation,
     nullable: field.type.nullable,
-    description: field.returnTypeInlineObjectDescription,
-    deprecated: field.returnTypeInlineObjectDeprecated,
+    description: field.returnTsType.inlineObjectDescription,
+    deprecated: field.returnTsType.inlineObjectDeprecated,
   });
 
   extractNestedInlineObjectsRecursively({
-    properties: field.returnTypeInlineObjectProperties,
+    properties: field.returnTsType.inlineObjectProperties,
     currentPath: [],
     sourceLocation: field.sourceLocation,
     buildContext: (nestedPath) => ({
@@ -963,12 +963,13 @@ function updateResolverField(
   const { generatedTypeNames, enumTypeNames, unionTypeNames } = params;
 
   let updatedType = field.type;
+  let updatedReturnTsType = field.returnTsType;
 
   // Create payload context once for all inline return type checks
   const hasInlinePayload =
-    field.returnTypeInlineObjectProperties ||
-    field.returnTypeInlineEnumMembers ||
-    field.returnTypeInlineUnionMembers;
+    field.returnTsType.inlineObjectProperties ||
+    field.returnTsType.inlineEnumMembers ||
+    (field.returnTsType.kind === "union" && field.returnTsType.members);
 
   if (hasInlinePayload) {
     const payloadContext: AutoTypeNameContext = {
@@ -982,23 +983,38 @@ function updateResolverField(
 
     // These are mutually exclusive - a return type can only be one of:
     // inline object, inline enum, or inline union
-    if (field.returnTypeInlineObjectProperties) {
+    if (field.returnTsType.inlineObjectProperties) {
       // Handle inline payload objects in return type
       const resolvedTypeName = generatedTypeNames.get(payloadContextKey);
       if (resolvedTypeName) {
         updatedType = { ...field.type, typeName: resolvedTypeName };
+        updatedReturnTsType = createReferenceType({
+          name: resolvedTypeName,
+          nullable: field.returnTsType.nullable,
+        });
       }
-    } else if (field.returnTypeInlineEnumMembers) {
+    } else if (field.returnTsType.inlineEnumMembers) {
       // Handle inline enum in return type
       const resolvedTypeName = enumTypeNames.get(payloadContextKey);
       if (resolvedTypeName) {
         updatedType = { ...field.type, typeName: resolvedTypeName };
+        updatedReturnTsType = createReferenceType({
+          name: resolvedTypeName,
+          nullable: field.returnTsType.nullable,
+        });
       }
-    } else if (field.returnTypeInlineUnionMembers) {
+    } else if (
+      field.returnTsType.kind === "union" &&
+      field.returnTsType.members
+    ) {
       // Handle inline union in return type
       const resolvedTypeName = unionTypeNames.get(payloadContextKey);
       if (resolvedTypeName) {
         updatedType = { ...field.type, typeName: resolvedTypeName };
+        updatedReturnTsType = createReferenceType({
+          name: resolvedTypeName,
+          nullable: field.returnTsType.nullable,
+        });
       }
     }
   }
@@ -1007,6 +1023,7 @@ function updateResolverField(
     return {
       ...field,
       type: updatedType,
+      returnTsType: updatedReturnTsType,
     };
   }
 
@@ -1022,7 +1039,7 @@ function updateResolverField(
     const contextKey = getContextKey(context);
 
     // Handle inline objects
-    if (arg.inlineObjectProperties) {
+    if (arg.tsType.inlineObjectProperties) {
       const resolvedTypeName = generatedTypeNames.get(contextKey);
       if (resolvedTypeName) {
         return {
@@ -1031,12 +1048,16 @@ function updateResolverField(
             ...arg.type,
             typeName: resolvedTypeName,
           },
+          tsType: createReferenceType({
+            name: resolvedTypeName,
+            nullable: arg.tsType.nullable,
+          }),
         };
       }
     }
 
     // Handle inline enums
-    if (arg.inlineEnumMembers) {
+    if (arg.tsType.inlineEnumMembers) {
       const resolvedTypeName = enumTypeNames.get(contextKey);
       if (resolvedTypeName) {
         return {
@@ -1045,12 +1066,16 @@ function updateResolverField(
             ...arg.type,
             typeName: resolvedTypeName,
           },
+          tsType: createReferenceType({
+            name: resolvedTypeName,
+            nullable: arg.tsType.nullable,
+          }),
         };
       }
     }
 
     // Handle inline unions (OneOf input objects)
-    if (arg.inlineUnionMembers) {
+    if (arg.tsType.kind === "union" && arg.tsType.members) {
       const resolvedTypeName = unionTypeNames.get(contextKey);
       if (resolvedTypeName) {
         return {
@@ -1059,6 +1084,10 @@ function updateResolverField(
             ...arg.type,
             typeName: resolvedTypeName,
           },
+          tsType: createReferenceType({
+            name: resolvedTypeName,
+            nullable: arg.tsType.nullable,
+          }),
         };
       }
     }
@@ -1069,6 +1098,7 @@ function updateResolverField(
   return {
     ...field,
     type: updatedType,
+    returnTsType: updatedReturnTsType,
     args: updatedArgs,
   };
 }

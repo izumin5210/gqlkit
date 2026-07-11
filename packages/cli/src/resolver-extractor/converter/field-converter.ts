@@ -20,13 +20,7 @@ function convertArgsToInputValues(
     deprecated: arg.deprecated,
     directives: arg.directives,
     defaultValue: arg.defaultValue,
-    inlineObjectProperties: arg.tsType.inlineObjectProperties ?? null,
-    inlineEnumMembers: arg.tsType.inlineEnumMembers ?? null,
-    externalEnumSymbol: arg.tsType.externalEnumSymbol ?? null,
-    externalEnumDescription: arg.tsType.externalEnumDescription ?? null,
-    externalEnumDeprecated: arg.tsType.externalEnumDeprecated ?? null,
-    inlineUnionMembers:
-      arg.tsType.kind === "union" ? (arg.tsType.members ?? null) : null,
+    tsType: arg.tsType,
   }));
 }
 
@@ -74,20 +68,7 @@ export function convertDefineApiToFields(
       description: resolver.description,
       deprecated: resolver.deprecated,
       directives: resolver.directives,
-      returnTypeInlineObjectProperties:
-        returnType.inlineObjectProperties ?? null,
-      returnTypeInlineObjectDescription:
-        returnType.inlineObjectDescription ?? null,
-      returnTypeInlineObjectDeprecated:
-        returnType.inlineObjectDeprecated ?? null,
-      returnTypeInlineEnumMembers: returnType.inlineEnumMembers ?? null,
-      returnTypeInlineUnionMembers:
-        returnType.kind === "union" ? (returnType.members ?? null) : null,
-      returnTypeExternalEnumSymbol: returnType.externalEnumSymbol ?? null,
-      returnTypeExternalEnumDescription:
-        returnType.externalEnumDescription ?? null,
-      returnTypeExternalEnumDeprecated:
-        returnType.externalEnumDeprecated ?? null,
+      returnTsType: returnType,
     };
 
     if (resolver.resolverType === "query") {
