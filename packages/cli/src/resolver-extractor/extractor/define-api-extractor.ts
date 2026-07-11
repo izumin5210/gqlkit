@@ -2,9 +2,9 @@ import ts from "typescript";
 import {
   type DeprecationInfo,
   type Diagnostic,
-  type DirectiveArgumentValue,
   type DirectiveInfo,
   METADATA_PROPERTIES,
+  type PropertyDef,
   type SourceLocation,
   type TSTypeReference,
 } from "../../core/index.js";
@@ -40,23 +40,19 @@ export interface ExportedInputType {
   readonly sourceFile: string;
 }
 
-export interface ArgumentDefinition {
-  readonly name: string;
-  readonly tsType: TSTypeReference;
-  readonly optional: boolean;
-  readonly description: string | null;
-  readonly deprecated: DeprecationInfo | null;
-  readonly defaultValue: DirectiveArgumentValue | null;
-  readonly directives: ReadonlyArray<DirectiveInfo> | null;
-}
-
 export interface DefineApiResolverInfo {
   readonly fieldName: string;
   readonly resolverExportName: string;
   readonly resolverType: DefineApiResolverType;
   readonly parentTypeName: string | null;
   readonly argsType: TSTypeReference | null;
-  readonly args: ReadonlyArray<ArgumentDefinition> | null;
+  /**
+   * Resolver arguments, in `PropertyDef` shape (refactor-plan.md §1.2-D:
+   * `ArgumentDefinition` was a near-duplicate of `PropertyDef` missing only
+   * `sourceLocation`, which `extractArgsFromType` already computes via the
+   * shared `extractFieldsFromType` engine — see that function).
+   */
+  readonly args: ReadonlyArray<PropertyDef> | null;
   readonly returnType: TSTypeReference;
   readonly sourceFile: string;
   readonly sourceLocation: SourceLocation;
@@ -332,7 +328,7 @@ function convertFieldDiagnostics(
 }
 
 interface ExtractArgsResult {
-  readonly args: ArgumentDefinition[];
+  readonly args: PropertyDef[];
   readonly diagnostics: Diagnostic[];
 }
 
@@ -349,6 +345,12 @@ interface ExtractArgsResult {
  * to locate per-property type nodes: `extractFieldsFromType` derives those
  * from each property symbol's own declaration, which resolves correctly for
  * both named args types and inline args type literals.
+ *
+ * `extractFieldsFromType` already returns `PropertyDef[]`, the same shape
+ * `DefineApiResolverInfo.args` is declared in, so the result is used as-is —
+ * no further per-field mapping needed (previously this function copied each
+ * field into a separate `ArgumentDefinition` shape that silently dropped the
+ * `sourceLocation` `extractFieldsFromType` already computes).
  */
 function extractArgsFromType(
   argsType: ts.Type,
@@ -372,17 +374,7 @@ function extractArgsFromType(
     reportDefaultValueErrors: false,
   });
 
-  const args: ArgumentDefinition[] = fields.map((field) => ({
-    name: field.name,
-    tsType: field.tsType,
-    optional: field.optional,
-    description: field.description,
-    deprecated: field.deprecated,
-    defaultValue: field.defaultValue,
-    directives: field.directives,
-  }));
-
-  return { args, diagnostics };
+  return { args: fields, diagnostics };
 }
 
 function extractDirectivesFromTypeNode(
@@ -406,7 +398,7 @@ function extractDirectivesFromTypeNode(
 interface TypeArgumentsResult {
   parentTypeName: string | null;
   argsType: TSTypeReference | null;
-  args: ArgumentDefinition[] | null;
+  args: PropertyDef[] | null;
   returnType: TSTypeReference;
   directives: ReadonlyArray<DirectiveInfo> | null;
   diagnostics: Diagnostic[];
