@@ -316,14 +316,33 @@ function isNewFormat(
   return "name" in scalar && "tsType" in scalar;
 }
 
-function isLegacyFormat(scalar: Record<string, unknown>): scalar is Record<
-  string,
-  unknown
-> & {
-  graphqlName: unknown;
-  type: unknown;
-} {
-  return "graphqlName" in scalar && "type" in scalar;
+/**
+ * Renders the new-format (`{ name, tsType }`) equivalent of a config object
+ * written in the removed legacy (`{ graphqlName, type }`) shape, using
+ * placeholders for any fields the user omitted. Used to make the removal of
+ * the legacy format an actionable migration error instead of a bare
+ * "invalid" message.
+ */
+function describeNewFormatEquivalent(scalar: Record<string, unknown>): string {
+  const graphqlName = scalar["graphqlName"];
+  const name =
+    typeof graphqlName === "string" ? JSON.stringify(graphqlName) : "<name>";
+
+  const type = scalar["type"];
+  let tsType = "{ name: <name> }";
+  if (isRecord(type)) {
+    const typeName =
+      typeof type["name"] === "string"
+        ? JSON.stringify(type["name"])
+        : "<name>";
+    const from =
+      typeof type["from"] === "string"
+        ? `, from: ${JSON.stringify(type["from"])}`
+        : "";
+    tsType = `{ name: ${typeName}${from} }`;
+  }
+
+  return `{ name: ${name}, tsType: ${tsType} }`;
 }
 
 function validateNewScalarMapping(
@@ -417,84 +436,6 @@ function validateNewScalarMapping(
   };
 }
 
-function validateLegacyScalarMapping(
-  scalar: Record<string, unknown>,
-  index: number,
-  configPath: string,
-): { resolved: ResolvedScalarMapping | undefined; diagnostics: Diagnostic[] } {
-  const diagnostics: Diagnostic[] = [];
-
-  if (typeof scalar["graphqlName"] !== "string") {
-    diagnostics.push({
-      code: "CONFIG_MISSING_PROPERTY",
-      message: `scalars[${index}].graphqlName is required and must be a string`,
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
-  }
-
-  if (!isRecord(scalar["type"])) {
-    diagnostics.push({
-      code: "CONFIG_MISSING_PROPERTY",
-      message: `scalars[${index}].type is required and must be an object`,
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
-    return { resolved: undefined, diagnostics };
-  }
-
-  const type = scalar["type"];
-
-  if (typeof type["from"] !== "string") {
-    diagnostics.push({
-      code: "CONFIG_MISSING_PROPERTY",
-      message: `scalars[${index}].type.from is required and must be a string`,
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
-  }
-
-  if (typeof type["name"] !== "string") {
-    diagnostics.push({
-      code: "CONFIG_MISSING_PROPERTY",
-      message: `scalars[${index}].type.name is required and must be a string`,
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
-  }
-
-  if (diagnostics.length > 0) {
-    return { resolved: undefined, diagnostics };
-  }
-
-  const graphqlName = scalar["graphqlName"] as string;
-
-  if (
-    BUILTIN_SCALAR_NAMES.includes(
-      graphqlName as (typeof BUILTIN_SCALAR_NAMES)[number],
-    )
-  ) {
-    diagnostics.push({
-      code: "CONFIG_BUILTIN_OVERRIDE",
-      message: `Cannot override built-in scalar '${graphqlName}'. Built-in scalars: ID, String, Int, Float, Boolean`,
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
-    return { resolved: undefined, diagnostics };
-  }
-
-  return {
-    resolved: {
-      graphqlName,
-      typeName: type["name"] as string,
-      importPath: type["from"] as string,
-      only: null,
-      description: null,
-    },
-    diagnostics,
-  };
-}
-
 function validateScalarMapping(
   scalar: unknown,
   index: number,
@@ -516,13 +457,22 @@ function validateScalarMapping(
     return validateNewScalarMapping(scalar, index, configPath);
   }
 
-  if (isLegacyFormat(scalar)) {
-    return validateLegacyScalarMapping(scalar, index, configPath);
+  // The legacy `{ graphqlName, type }` scalar mapping format was removed
+  // (see Decision D2 in the refactor plan). Detect an attempt to use it and
+  // point the user at the new-format equivalent instead of a bare "invalid".
+  if ("graphqlName" in scalar || "type" in scalar) {
+    diagnostics.push({
+      code: "CONFIG_LEGACY_SCALAR_FORMAT",
+      message: `scalars[${index}] uses the removed legacy scalar mapping format ({ graphqlName, type }). Use the new format instead: ${describeNewFormatEquivalent(scalar)}`,
+      severity: "error",
+      location: { file: configPath, line: 1, column: 1 },
+    });
+    return { resolved: undefined, diagnostics };
   }
 
   diagnostics.push({
     code: "CONFIG_MISSING_PROPERTY",
-    message: `scalars[${index}] must have either (name, tsType) or (graphqlName, type)`,
+    message: `scalars[${index}] must have (name, tsType)`,
     severity: "error",
     location: { file: configPath, line: 1, column: 1 },
   });

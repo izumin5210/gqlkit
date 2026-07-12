@@ -22,8 +22,8 @@ describe("ConfigValidator", () => {
         config: {
           scalars: [
             {
-              graphqlName: "DateTime",
-              type: { from: "./src/scalars", name: "DateTime" },
+              name: "DateTime",
+              tsType: { from: "./src/scalars", name: "DateTime" },
             },
           ],
         },
@@ -71,78 +71,103 @@ describe("ConfigValidator", () => {
       expect(result.diagnostics[0]?.message).toContain("scalars");
     });
 
-    it("should return error when scalar mapping is missing graphqlName", () => {
-      const result = validateConfig({
-        config: {
-          scalars: [
-            {
-              type: { from: "./src/scalars", name: "DateTime" },
-            },
-          ],
-        },
-        configPath,
+    describe("removed legacy scalar format ({ graphqlName, type })", () => {
+      it("should return CONFIG_LEGACY_SCALAR_FORMAT for a full legacy-shaped mapping", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                graphqlName: "DateTime",
+                type: { from: "./src/scalars", name: "DateTime" },
+              },
+            ],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_LEGACY_SCALAR_FORMAT");
+        expect(result.diagnostics[0]?.message).toContain(
+          '{ name: "DateTime", tsType: { name: "DateTime", from: "./src/scalars" } }',
+        );
       });
 
-      expect(result.valid).toBe(false);
-      expect(result.diagnostics.length).toBe(1);
-      expect(result.diagnostics[0]?.code).toBe("CONFIG_MISSING_PROPERTY");
-      expect(result.diagnostics[0]?.message).toContain("graphqlName");
-    });
+      it("should render a global-type equivalent when type.from is absent", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                graphqlName: "DateTime",
+                type: { name: "DateTime" },
+              },
+            ],
+          },
+          configPath,
+        });
 
-    it("should return error when scalar mapping is missing type", () => {
-      const result = validateConfig({
-        config: {
-          scalars: [
-            {
-              graphqlName: "DateTime",
-            },
-          ],
-        },
-        configPath,
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_LEGACY_SCALAR_FORMAT");
+        expect(result.diagnostics[0]?.message).toContain(
+          '{ name: "DateTime", tsType: { name: "DateTime" } }',
+        );
       });
 
-      expect(result.valid).toBe(false);
-      expect(result.diagnostics.length).toBe(1);
-      expect(result.diagnostics[0]?.code).toBe("CONFIG_MISSING_PROPERTY");
-      expect(result.diagnostics[0]?.message).toContain("type");
-    });
+      it("should detect a legacy-shaped mapping missing graphqlName", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                type: { from: "./src/scalars", name: "DateTime" },
+              },
+            ],
+          },
+          configPath,
+        });
 
-    it("should return error when type.from is missing", () => {
-      const result = validateConfig({
-        config: {
-          scalars: [
-            {
-              graphqlName: "DateTime",
-              type: { name: "DateTime" },
-            },
-          ],
-        },
-        configPath,
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_LEGACY_SCALAR_FORMAT");
+        expect(result.diagnostics[0]?.message).toContain(
+          '{ name: <name>, tsType: { name: "DateTime", from: "./src/scalars" } }',
+        );
       });
 
-      expect(result.valid).toBe(false);
-      expect(result.diagnostics.length).toBe(1);
-      expect(result.diagnostics[0]?.code).toBe("CONFIG_MISSING_PROPERTY");
-      expect(result.diagnostics[0]?.message).toContain("type.from");
-    });
+      it("should detect a legacy-shaped mapping missing type", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [
+              {
+                graphqlName: "DateTime",
+              },
+            ],
+          },
+          configPath,
+        });
 
-    it("should return error when type.name is missing", () => {
-      const result = validateConfig({
-        config: {
-          scalars: [
-            {
-              graphqlName: "DateTime",
-              type: { from: "./src/scalars" },
-            },
-          ],
-        },
-        configPath,
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_LEGACY_SCALAR_FORMAT");
+        expect(result.diagnostics[0]?.message).toContain(
+          '{ name: "DateTime", tsType: { name: <name> } }',
+        );
       });
 
-      expect(result.valid).toBe(false);
-      expect(result.diagnostics.length).toBe(1);
-      expect(result.diagnostics[0]?.code).toBe("CONFIG_MISSING_PROPERTY");
-      expect(result.diagnostics[0]?.message).toContain("type.name");
+      it("should return CONFIG_MISSING_PROPERTY when neither format's keys are present", () => {
+        const result = validateConfig({
+          config: {
+            scalars: [{}],
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(false);
+        expect(result.diagnostics.length).toBe(1);
+        expect(result.diagnostics[0]?.code).toBe("CONFIG_MISSING_PROPERTY");
+        expect(result.diagnostics[0]?.message).toContain(
+          "must have (name, tsType)",
+        );
+      });
     });
 
     describe("built-in scalar override", () => {
@@ -152,8 +177,8 @@ describe("ConfigValidator", () => {
             config: {
               scalars: [
                 {
-                  graphqlName: builtinName,
-                  type: { from: "./src/scalars", name: "Custom" },
+                  name: builtinName,
+                  tsType: { from: "./src/scalars", name: "Custom" },
                 },
               ],
             },
@@ -174,12 +199,12 @@ describe("ConfigValidator", () => {
           config: {
             scalars: [
               {
-                graphqlName: "DateTime",
-                type: { from: "./src/scalars", name: "DateTime" },
+                name: "DateTime",
+                tsType: { from: "./src/scalars", name: "DateTime" },
               },
               {
-                graphqlName: "DateTime",
-                type: { from: "./src/other", name: "OtherDateTime" },
+                name: "DateTime",
+                tsType: { from: "./src/other", name: "OtherDateTime" },
               },
             ],
           },
@@ -197,12 +222,12 @@ describe("ConfigValidator", () => {
           config: {
             scalars: [
               {
-                graphqlName: "DateTime",
-                type: { from: "./src/scalars", name: "DateTime" },
+                name: "DateTime",
+                tsType: { from: "./src/scalars", name: "DateTime" },
               },
               {
-                graphqlName: "Timestamp",
-                type: { from: "./src/scalars", name: "DateTime" },
+                name: "Timestamp",
+                tsType: { from: "./src/scalars", name: "DateTime" },
               },
             ],
           },
@@ -220,12 +245,12 @@ describe("ConfigValidator", () => {
           config: {
             scalars: [
               {
-                graphqlName: "DateTime",
-                type: { from: "./src/scalars", name: "DateTime" },
+                name: "DateTime",
+                tsType: { from: "./src/scalars", name: "DateTime" },
               },
               {
-                graphqlName: "CustomDateTime",
-                type: { from: "./src/custom", name: "DateTime" },
+                name: "CustomDateTime",
+                tsType: { from: "./src/custom", name: "DateTime" },
               },
             ],
           },

@@ -114,8 +114,8 @@ describe("gen command", () => {
         export default {
           scalars: [
             {
-              graphqlName: "String",
-              type: { from: "./scalars", name: "MyString" },
+              name: "String",
+              tsType: { from: "./scalars", name: "MyString" },
             },
           ],
         };
@@ -164,8 +164,8 @@ describe("gen command", () => {
           export default {
             scalars: [
               {
-                graphqlName: "DateTime",
-                type: { from: "./src/scalars", name: "DateTime" },
+                name: "DateTime",
+                tsType: { from: "./src/scalars", name: "DateTime" },
               },
             ],
           };

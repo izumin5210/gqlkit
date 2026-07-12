@@ -45,8 +45,8 @@ describe("ConfigLoader", () => {
 export default {
   scalars: [
     {
-      graphqlName: "DateTime",
-      type: { from: "./src/scalars", name: "DateTime" },
+      name: "DateTime",
+      tsType: { from: "./src/scalars", name: "DateTime" },
     },
   ],
 };
@@ -67,9 +67,9 @@ export default {
       const configContent = `
 export default {
   scalars: [
-    { graphqlName: "DateTime", type: { from: "./src/scalars", name: "DateTime" } },
-    { graphqlName: "UUID", type: { from: "./src/scalars", name: "UUID" } },
-    { graphqlName: "URL", type: { from: "@my-lib/types", name: "URL" } },
+    { name: "DateTime", tsType: { from: "./src/scalars", name: "DateTime" } },
+    { name: "UUID", tsType: { from: "./src/scalars", name: "UUID" } },
+    { name: "URL", tsType: { from: "@my-lib/types", name: "URL" } },
   ],
 };
 `;
@@ -88,7 +88,7 @@ export default {
       const configContent = `
 export default {
   scalars: [
-    { graphqlName: "DateTime", type: { from: "./src/scalars", name: "DateTime" }
+    { name: "DateTime", tsType: { from: "./src/scalars", name: "DateTime" }
   ],
 };
 `;
@@ -105,7 +105,7 @@ export default {
       const configContent = `
 export default {
   scalars: [
-    { graphqlName: "DateTime", type: { from: "./src/scalars", name: "DateTime" } },
+    { name: "DateTime", tsType: { from: "./src/scalars", name: "DateTime" } },
   ],
 };
 `;
