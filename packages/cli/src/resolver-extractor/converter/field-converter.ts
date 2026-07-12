@@ -1,9 +1,10 @@
-import { type Diagnostic, isEligibleField } from "../../core/index.js";
+import {
+  type Diagnostic,
+  isEligibleField,
+  type PropertyDef,
+} from "../../core/index.js";
 import { convertTsTypeToGraphQLType } from "../../shared/index.js";
-import type {
-  ArgumentDefinition,
-  DefineApiResolverInfo,
-} from "../extractor/define-api-extractor.js";
+import type { DefineApiResolverInfo } from "../extractor/define-api-extractor.js";
 import type {
   GraphQLFieldDefinition,
   GraphQLInputValue,
@@ -11,7 +12,7 @@ import type {
 } from "../types.js";
 
 function convertArgsToInputValues(
-  args: ReadonlyArray<ArgumentDefinition>,
+  args: ReadonlyArray<PropertyDef>,
 ): GraphQLInputValue[] {
   return args.map((arg) => ({
     name: arg.name,

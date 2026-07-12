@@ -1,6 +1,8 @@
-import { access, mkdir, readFile, symlink, writeFile } from "node:fs/promises";
+import { access, readFile, symlink } from "node:fs/promises";
 import { dirname, join, parse, relative, resolve } from "node:path";
 import { define } from "gunshi";
+import type { OutputWriter } from "../gen-orchestrator/reporter/progress-reporter.js";
+import { writeFiles } from "../gen-orchestrator/writer/file-writer.js";
 
 const SKILL_NAME = "gqlkit-guide";
 
@@ -107,6 +109,17 @@ async function createSymlinkIfNotExists(
   }
 }
 
+/** Writes a single file through the shared file-writer, throwing on failure. */
+async function writeFileOrThrow(
+  filePath: string,
+  content: string,
+): Promise<void> {
+  const result = await writeFiles({ files: [{ filePath, content }] });
+  if (result.error) {
+    throw result.error;
+  }
+}
+
 async function appendOrCreateFile(
   filePath: string,
   content: string,
@@ -114,11 +127,11 @@ async function appendOrCreateFile(
   try {
     const existing = await readFile(filePath, "utf-8");
     if (!existing.includes("## gqlkit")) {
-      await writeFile(filePath, `${existing}\n${content}`);
+      await writeFileOrThrow(filePath, `${existing}\n${content}`);
     }
   } catch (error) {
     if ((error as NodeJS.ErrnoException).code === "ENOENT") {
-      await writeFile(filePath, content);
+      await writeFileOrThrow(filePath, content);
     } else {
       throw error;
     }
@@ -136,10 +149,9 @@ async function generateToolFiles(
   filesWritten: string[],
 ): Promise<void> {
   const skillDir = join(outputDir, `${config.configDir}/skills/${SKILL_NAME}`);
-  await mkdir(skillDir, { recursive: true });
 
   const skillMdPath = join(skillDir, "SKILL.md");
-  await writeFile(skillMdPath, generateSkillMd());
+  await writeFileOrThrow(skillMdPath, generateSkillMd());
   filesWritten.push(skillMdPath);
 
   const docsPath = await findNodeModulesDocsPath(skillDir);
@@ -163,6 +175,11 @@ async function generateToolFiles(
 export async function runDocsCommand(
   options: RunDocsCommandOptions,
 ): Promise<RunDocsCommandResult> {
+  const writer: OutputWriter = {
+    stdout: (msg: string) => console.log(msg),
+    stderr: (msg: string) => console.error(msg),
+  };
+
   const filesWritten: string[] = [];
 
   const autoDetect = !options.claude && !options.codex;
@@ -174,7 +191,7 @@ export async function runDocsCommand(
     (autoDetect && (await detectCodexEnvironment(options.output)));
 
   if (!generateClaude && !generateCodex) {
-    console.log(
+    writer.stdout(
       "No AI tool environment detected. Use --claude or --codex to generate explicitly.",
     );
     return { exitCode: 0, filesWritten: [] };
@@ -197,10 +214,14 @@ export async function runDocsCommand(
       );
     }
   } catch (error) {
-    console.error(
+    writer.stderr(
       error instanceof Error ? (error.stack ?? error.message) : String(error),
     );
     return { exitCode: 1, filesWritten: [] };
+  }
+
+  for (const filePath of filesWritten) {
+    writer.stdout(`Generated: ${filePath}`);
   }
 
   return { exitCode: 0, filesWritten };
@@ -227,9 +248,6 @@ export const docsCommand = define({
     const claude = ctx.values.claude ?? false;
     const codex = ctx.values.codex ?? false;
     const result = await runDocsCommand({ output, claude, codex });
-    for (const file of result.filesWritten) {
-      console.log(`Generated: ${file}`);
-    }
     if (result.exitCode !== 0) {
       process.exitCode = result.exitCode;
     }

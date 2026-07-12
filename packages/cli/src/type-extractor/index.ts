@@ -32,7 +32,6 @@ export {
   type ExtractFieldsParams,
   extractFieldsFromType,
   type FieldExtractionResult,
-  type GlobalTypeMapping,
 } from "./extractor/type-extractor.js";
 export {
   collectDeclaredTypeNames,
@@ -40,4 +39,4 @@ export {
 } from "./extractor/type-name-collector.js";
 export type { ScalarBaseTypeMappingTable } from "./mapper/scalar-base-type-mapper.js";
 
-export type { ExtractedTypeInfo } from "./types/index.js";
+export type { ExtractedTypeInfo, GlobalTypeMapping } from "./types/index.js";

@@ -41,8 +41,8 @@ import type {
   ScalarMappingContext,
 } from "../mapper/scalar-base-type-mapper.js";
 import { lookupScalarMapping } from "../mapper/scalar-base-type-mapper.js";
+import type { GlobalTypeMapping } from "../types/index.js";
 import { detectScalarMetadata } from "./scalar-metadata-detector.js";
-import type { GlobalTypeMapping } from "./type-extractor.js";
 
 export interface DiscoveredTypeEntry {
   readonly name: string;
@@ -104,6 +104,86 @@ export function resolveFieldType(
   return resolveFieldTypeInternal(type, typeNode, internalCtx);
 }
 
+/**
+ * Checks whether `typeNode` is a `TypeReferenceNode` naming a known schema
+ * type, returning the corresponding reference `TSTypeReference` if so, or
+ * `null` if not (fall through to the next resolution strategy).
+ *
+ * `resolveFieldTypeInternal` performs this exact check ~6 times against
+ * different candidate nodes at different points in its strategy chain
+ * (refactor-plan.md §1.2-E, Phase 8 item 3) — decomposition only, the call
+ * sites' order and surrounding guards are unchanged.
+ */
+interface TryReferenceFromTypeNodeParams {
+  readonly typeNode: ts.TypeNode | undefined;
+  readonly ctx: FieldTypeResolverContext;
+  readonly nullable: boolean;
+}
+
+function tryReferenceFromTypeNode(
+  params: TryReferenceFromTypeNodeParams,
+): TSTypeReference | null {
+  const { typeNode, ctx, nullable } = params;
+  if (!(typeNode && ts.isTypeReferenceNode(typeNode))) {
+    return null;
+  }
+  const typeName = getTypeNameFromNode(typeNode);
+  const nodeSymbol = ctx.checker.getSymbolAtLocation(typeNode.typeName);
+  if (typeName && isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx)) {
+    return createReferenceType({ name: typeName, nullable });
+  }
+  return null;
+}
+
+/**
+ * Registers `name` for transitive discovery if it's eligible: a user-defined
+ * type (declaration outside a `.d.ts` file) with at least one property, not
+ * already discovered. Returns whether `name` is now present in
+ * `discoveredTypes` — either just registered here, or already present
+ * (both cases mean "safe to return a reference").
+ *
+ * `resolveFieldTypeInternal` repeats this ~25-30 line block 3 times, once
+ * per place a non-schema named type is encountered (intersection alias,
+ * anonymous type-alias expansion, plain named type) (refactor-plan.md
+ * §1.2-E, Phase 8 item 3) — decomposition only.
+ */
+interface RegisterDiscoveredTypeParams {
+  readonly name: string;
+  readonly type: ts.Type;
+  readonly symbol: ts.Symbol;
+  readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
+}
+
+function registerDiscoveredType(params: RegisterDiscoveredTypeParams): boolean {
+  const { name, type, symbol, discoveredTypes } = params;
+  if (!discoveredTypes) {
+    return false;
+  }
+  if (!discoveredTypes.has(name)) {
+    const declarations = symbol.getDeclarations();
+    const decl = declarations?.[0];
+    if (decl && !decl.getSourceFile().isDeclarationFile) {
+      const properties = type.getProperties();
+      if (properties.length > 0) {
+        const declSourceFile = decl.getSourceFile();
+        const location = getSourceLocationFromNode(decl) ?? {
+          file: declSourceFile.fileName,
+          line: 1,
+          column: 1,
+        };
+        discoveredTypes.set(name, {
+          name,
+          tsType: type,
+          tsSymbol: symbol,
+          sourceFile: relative(process.cwd(), declSourceFile.fileName),
+          sourceLocation: location,
+        });
+      }
+    }
+  }
+  return discoveredTypes.has(name);
+}
+
 function resolveFieldTypeInternal(
   type: ts.Type,
   typeNode: ts.TypeNode | undefined,
@@ -136,16 +216,13 @@ function resolveFieldTypeInternal(
   // can lose the original type alias (e.g., GqlObject<T> intersection flattened to T).
   // The typeNode from the property declaration preserves the original type reference,
   // so check it before any structural analysis.
-  if (typeNode && ts.isTypeReferenceNode(typeNode)) {
-    const typeNodeName = getTypeNameFromNode(typeNode);
-    const typeNodeSymbol = checker.getSymbolAtLocation(typeNode.typeName);
-    if (
-      typeNodeName &&
-      isKnownSchemaType(typeNodeName, typeNodeSymbol ?? undefined, ctx)
-    ) {
-      const nullable = isNullableUnion(type);
-      return createReferenceType({ name: typeNodeName, nullable });
-    }
+  {
+    const ref = tryReferenceFromTypeNode({
+      typeNode,
+      ctx,
+      nullable: isNullableUnion(type),
+    });
+    if (ref) return ref;
   }
 
   // Boolean union handling
@@ -168,15 +245,9 @@ function resolveFieldTypeInternal(
     }
 
     // Fallback: Extract name from typeNode when aliasSymbol is not available (e.g., re-exported types)
-    if (typeNode && ts.isTypeReferenceNode(typeNode)) {
-      const typeName = getTypeNameFromNode(typeNode);
-      const nodeSymbol = checker.getSymbolAtLocation(typeNode.typeName);
-      if (
-        typeName &&
-        isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx)
-      ) {
-        return createReferenceType({ name: typeName, nullable });
-      }
+    {
+      const ref = tryReferenceFromTypeNode({ typeNode, ctx, nullable });
+      if (ref) return ref;
     }
 
     // Handle `T | null` where T is a known union type alias.
@@ -187,19 +258,12 @@ function resolveFieldTypeInternal(
     if (nullable && typeNode && ts.isUnionTypeNode(typeNode)) {
       const nonNullTypeNodes = filterNonNullTypeNodes(typeNode);
       if (nonNullTypeNodes.length === 1) {
-        const singleTypeNode = nonNullTypeNodes[0]!;
-        if (ts.isTypeReferenceNode(singleTypeNode)) {
-          const typeName = getTypeNameFromNode(singleTypeNode);
-          const nodeSymbol = checker.getSymbolAtLocation(
-            singleTypeNode.typeName,
-          );
-          if (
-            typeName &&
-            isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx)
-          ) {
-            return createReferenceType({ name: typeName, nullable });
-          }
-        }
+        const ref = tryReferenceFromTypeNode({
+          typeNode: nonNullTypeNodes[0],
+          ctx,
+          nullable,
+        });
+        if (ref) return ref;
       }
     }
 
@@ -401,34 +465,13 @@ function resolveFieldTypeInternal(
     if (type.aliasSymbol) {
       const aliasName = type.aliasSymbol.getName();
       if (!knownTypeNames.has(aliasName)) {
-        if (ctx.discoveredTypes && !ctx.discoveredTypes.has(aliasName)) {
-          const resolvedAliasSymbol = resolveOriginalSymbol(
-            type.aliasSymbol,
-            checker,
-          );
-          const declarations = resolvedAliasSymbol.getDeclarations();
-          const decl = declarations?.[0];
-          if (decl && !decl.getSourceFile().isDeclarationFile) {
-            const properties = type.getProperties();
-            if (properties.length > 0) {
-              const declSourceFile = decl.getSourceFile();
-              const location = getSourceLocationFromNode(decl) ?? {
-                file: declSourceFile.fileName,
-                line: 1,
-                column: 1,
-              };
-              ctx.discoveredTypes.set(aliasName, {
-                name: aliasName,
-                tsType: type,
-                tsSymbol: resolvedAliasSymbol,
-                sourceFile: relative(process.cwd(), declSourceFile.fileName),
-                sourceLocation: location,
-              });
-              return createReferenceType({ name: aliasName, nullable: false });
-            }
-          }
-        }
-        if (ctx.discoveredTypes?.has(aliasName)) {
+        const isDiscovered = registerDiscoveredType({
+          name: aliasName,
+          type,
+          symbol: resolveOriginalSymbol(type.aliasSymbol, checker),
+          discoveredTypes: ctx.discoveredTypes,
+        });
+        if (isDiscovered) {
           return createReferenceType({ name: aliasName, nullable: false });
         }
       }
@@ -459,15 +502,9 @@ function resolveFieldTypeInternal(
     }
 
     // Check if typeNode references a known type
-    if (typeNode && ts.isTypeReferenceNode(typeNode)) {
-      const typeName = getTypeNameFromNode(typeNode);
-      const nodeSymbol = checker.getSymbolAtLocation(typeNode.typeName);
-      if (
-        typeName &&
-        isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx)
-      ) {
-        return createReferenceType({ name: typeName, nullable: false });
-      }
+    {
+      const ref = tryReferenceFromTypeNode({ typeNode, ctx, nullable: false });
+      if (ref) return ref;
     }
 
     return tryExtractAsInlineObject(type, ctx, null);
@@ -495,15 +532,13 @@ function resolveFieldTypeInternal(
       }
 
       // Check if typeNode references a known type (schema-defined type)
-      if (typeNode && ts.isTypeReferenceNode(typeNode)) {
-        const typeName = getTypeNameFromNode(typeNode);
-        const nodeSymbol = checker.getSymbolAtLocation(typeNode.typeName);
-        if (
-          typeName &&
-          isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx)
-        ) {
-          return createReferenceType({ name: typeName, nullable: false });
-        }
+      {
+        const ref = tryReferenceFromTypeNode({
+          typeNode,
+          ctx,
+          nullable: false,
+        });
+        if (ref) return ref;
       }
       // Not a known type - treat as inline object
       return tryExtractAsInlineObject(type, ctx, null);
@@ -530,34 +565,13 @@ function resolveFieldTypeInternal(
         // Type aliases to object literals used as union members should be
         // discovered with their original alias name, not expanded as inline
         // objects with auto-generated names. (#202)
-        if (ctx.discoveredTypes && !ctx.discoveredTypes.has(aliasName)) {
-          const resolvedAliasSymbol = resolveOriginalSymbol(
-            type.aliasSymbol,
-            checker,
-          );
-          const declarations = resolvedAliasSymbol.getDeclarations();
-          const decl = declarations?.[0];
-          if (decl && !decl.getSourceFile().isDeclarationFile) {
-            const properties = type.getProperties();
-            if (properties.length > 0) {
-              const declSourceFile = decl.getSourceFile();
-              const location = getSourceLocationFromNode(decl) ?? {
-                file: declSourceFile.fileName,
-                line: 1,
-                column: 1,
-              };
-              ctx.discoveredTypes.set(aliasName, {
-                name: aliasName,
-                tsType: type,
-                tsSymbol: resolvedAliasSymbol,
-                sourceFile: relative(process.cwd(), declSourceFile.fileName),
-                sourceLocation: location,
-              });
-              return createReferenceType({ name: aliasName, nullable: false });
-            }
-          }
-        }
-        if (ctx.discoveredTypes?.has(aliasName)) {
+        const isDiscovered = registerDiscoveredType({
+          name: aliasName,
+          type,
+          symbol: resolveOriginalSymbol(type.aliasSymbol, checker),
+          discoveredTypes: ctx.discoveredTypes,
+        });
+        if (isDiscovered) {
           return createReferenceType({ name: aliasName, nullable: false });
         }
         // Not a known schema type and is an anonymous object - expand to generate Payload type
@@ -570,12 +584,9 @@ function resolveFieldTypeInternal(
   // This handles cases like:
   // - `typeof def` where the type's symbol is internal (__type, __object)
   // - `Simplify<T>` where the typeNode is the declared alias name but type.symbol is the expanded type
-  if (typeNode && ts.isTypeReferenceNode(typeNode)) {
-    const typeName = getTypeNameFromNode(typeNode);
-    const nodeSymbol = checker.getSymbolAtLocation(typeNode.typeName);
-    if (typeName && isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx)) {
-      return createReferenceType({ name: typeName, nullable: false });
-    }
+  {
+    const ref = tryReferenceFromTypeNode({ typeNode, ctx, nullable: false });
+    if (ref) return ref;
   }
 
   // Named type reference (symbol-based lookup)
@@ -674,28 +685,12 @@ function resolveFieldTypeInternal(
       }
 
       // Discover extractable named types for transitive type registration
-      if (ctx.discoveredTypes && !ctx.discoveredTypes.has(symbolName)) {
-        const declarations = resolvedSymbol.getDeclarations();
-        const decl = declarations?.[0];
-        if (decl && !decl.getSourceFile().isDeclarationFile) {
-          const properties = type.getProperties();
-          if (properties.length > 0) {
-            const declSourceFile = decl.getSourceFile();
-            const location = getSourceLocationFromNode(decl) ?? {
-              file: declSourceFile.fileName,
-              line: 1,
-              column: 1,
-            };
-            ctx.discoveredTypes.set(symbolName, {
-              name: symbolName,
-              tsType: type,
-              tsSymbol: resolvedSymbol,
-              sourceFile: relative(process.cwd(), declSourceFile.fileName),
-              sourceLocation: location,
-            });
-          }
-        }
-      }
+      registerDiscoveredType({
+        name: symbolName,
+        type,
+        symbol: resolvedSymbol,
+        discoveredTypes: ctx.discoveredTypes,
+      });
 
       // Unknown type - still return reference but it will likely cause validation error later
       return createReferenceType({ name: symbolName, nullable: false });

@@ -47,6 +47,7 @@ import type {
 import type {
   EnumMemberInfo,
   ExtractedTypeInfo,
+  GlobalTypeMapping,
   TypeKind,
   TypeMetadata,
 } from "../types/index.js";
@@ -56,19 +57,6 @@ import {
   resolveFieldType,
 } from "./field-type-resolver.js";
 import { detectScalarMetadata } from "./scalar-metadata-detector.js";
-
-/**
- * Global type mapping configuration.
- * Maps TypeScript type names to GraphQL scalar names when tsType.from is omitted.
- */
-export interface GlobalTypeMapping {
-  /** TypeScript type name (e.g., "Date", "URL") */
-  readonly typeName: string;
-  /** GraphQL scalar name (e.g., "DateTime", "URL") */
-  readonly scalarName: string;
-  /** Usage constraint */
-  readonly only: "input" | "output" | null;
-}
 
 export interface ExtractionOptions {
   /** Global type mappings from config (scalars with tsType.from omitted) */
@@ -480,30 +468,6 @@ function extractStringLiteralUnionMembers(
   return members;
 }
 
-function determineTypeKind(
-  node: ts.Node,
-  type: ts.Type,
-  checker: ts.TypeChecker,
-): TypeKind {
-  if (ts.isInterfaceDeclaration(node)) {
-    return "interface";
-  }
-
-  if (ts.isTypeAliasDeclaration(node)) {
-    if (isDefineInterfaceTypeAlias(node, checker)) {
-      return "graphqlInterface";
-    }
-
-    const unionKind = determineTypeKindFromUnion(type);
-    if (unionKind) {
-      return unionKind;
-    }
-    return "object";
-  }
-
-  return "object";
-}
-
 function determineTypeKindFromUnion(type: ts.Type): TypeKind | null {
   if (!type.isUnion()) {
     return null;
@@ -528,13 +492,27 @@ function determineTypeKindFromUnion(type: ts.Type): TypeKind | null {
   return null;
 }
 
-function determineTypeKindFromType(
-  type: ts.Type,
-  originalSymbol: ts.Symbol,
-  checker: ts.TypeChecker,
-): TypeKind {
-  const declarations = originalSymbol.getDeclarations();
-  const declaration = declarations?.[0];
+/**
+ * Determines the {@link TypeKind} of a declared type.
+ *
+ * Unified for both processing paths (refactor-plan.md §1.2-D, Phase 8 item 2):
+ * for locally-declared types the caller passes the declaration node it already
+ * has in hand (`node` itself); for re-exported types the caller passes the
+ * resolved symbol's first declaration, which may be `undefined` (no
+ * declaration found) or live in a different source file than the
+ * `export type { ... } from ...` statement. All branches below already guard
+ * on `declaration` being present, so a missing declaration safely falls
+ * through to the union/object checks — matching both callers' prior
+ * behavior exactly.
+ */
+interface DetermineTypeKindParams {
+  readonly declaration: ts.Declaration | undefined;
+  readonly type: ts.Type;
+  readonly checker: ts.TypeChecker;
+}
+
+function determineTypeKind(params: DetermineTypeKindParams): TypeKind {
+  const { declaration, type, checker } = params;
 
   if (declaration && ts.isInterfaceDeclaration(declaration)) {
     return "interface";
@@ -591,12 +569,86 @@ function createGenericTypeDiagnostic(
   return null;
 }
 
-interface ProcessReexportedSymbolParams {
-  readonly exportedName: string;
-  readonly resolvedSymbol: ts.Symbol;
+/**
+ * Validates the oneOf-input-union convention: an `*Input`-suffixed type whose
+ * kind is `"union"` must use only inline object literal members, never named
+ * type references. Shared by both declared-type processing paths
+ * (refactor-plan.md §1.2-D / Phase 8 item 2 — this diagnostic block used to
+ * be duplicated ~28 lines at a time in each path).
+ */
+interface ValidateOneOfInputUnionParams {
+  readonly typeName: string;
+  readonly kind: TypeKind;
+  readonly location: SourceLocation;
+  readonly inlineObjectResult: InlineObjectExtractionResult | null;
+}
+
+function validateOneOfInputUnion(
+  params: ValidateOneOfInputUnionParams,
+): Diagnostic[] {
+  const { typeName, kind, location, inlineObjectResult } = params;
+
+  if (!(typeName.endsWith("Input") && kind === "union")) {
+    return [];
+  }
+
+  if (
+    inlineObjectResult?.hasInlineObjects &&
+    inlineObjectResult.hasNamedTypes
+  ) {
+    return [
+      {
+        code: "ONEOF_MIXED_MEMBERS",
+        message: `Input union type '${typeName}' mixes inline object literals with named type references. Use only inline object literals for oneOf input types.`,
+        severity: "error",
+        location: { ...location, column: 1 },
+      },
+    ];
+  }
+
+  if (
+    inlineObjectResult?.hasNamedTypes &&
+    !inlineObjectResult.hasInlineObjects
+  ) {
+    return [
+      {
+        code: "ONEOF_NAMED_TYPE_UNION",
+        message: `Input union type '${typeName}' uses named type references instead of inline object literals. Use inline object pattern: type ${typeName} = { field1: Type1 } | { field2: Type2 }`,
+        severity: "error",
+        location: { ...location, column: 1 },
+      },
+    ];
+  }
+
+  return [];
+}
+
+/**
+ * Shared "process one declared type" pipeline (refactor-plan.md §1.2-D,
+ * Phase 8 item 2): kind detection → interface-implements extraction →
+ * enum-member extraction (early return) OR union/inline-object extraction →
+ * ignore-fields validation → field extraction → oneOf validation → building
+ * the `ExtractedTypeInfo` to push.
+ *
+ * Deliberately excludes scalar detection, the generic-type-parameter
+ * diagnostic, and (for re-exports) the already-locally-processed dedup skip
+ * — those stay in each caller because their relative ORDER against each
+ * other differs per path (see the two callers) and reordering them would be
+ * an observable behavior change, not a decomposition.
+ *
+ * `declaration` is the type's own declaration node (interface/type-alias/enum)
+ * for kind detection and implements-extraction. Local declarations pass the
+ * `ts.Node` they're iterating; re-exports pass the resolved symbol's first
+ * declaration, which may live in a different file or be `undefined`.
+ */
+interface ProcessDeclaredTypeParams {
+  readonly name: string;
   readonly type: ts.Type;
+  readonly symbol: ts.Symbol;
+  readonly declaration: ts.Declaration | undefined;
   readonly location: SourceLocation;
   readonly filePath: string;
+  readonly exportKind: "named" | "default";
   readonly checker: ts.TypeChecker;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
@@ -604,27 +656,33 @@ interface ProcessReexportedSymbolParams {
   readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
   readonly scannedSourceFiles: ReadonlySet<string>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
-  readonly scalarMappingContext: ScalarMappingContext;
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
+  /**
+   * Only the locally-declared path detects `WithDirectives<...>` at the
+   * type level (`typeDirectives` + its error diagnostics). The re-exported
+   * path never did this — a pre-existing divergence (not part of the
+   * audited directive-detection bug family), preserved as-is rather than
+   * silently normalized. See refactor-plan.md Phase 8 sub-task report.
+   */
+  readonly detectTypeLevelDirectives: boolean;
 }
 
-interface ProcessReexportedSymbolResult {
+interface ProcessDeclaredTypeResult {
   readonly typeInfo: ExtractedTypeInfo | null;
   readonly diagnostics: Diagnostic[];
-  readonly scalarName: string | null;
-  readonly scalarMetadata: ScalarMetadataInfo | null;
-  readonly skip: boolean;
 }
 
-function processReexportedSymbol(
-  params: ProcessReexportedSymbolParams,
-): ProcessReexportedSymbolResult {
+function processDeclaredType(
+  params: ProcessDeclaredTypeParams,
+): ProcessDeclaredTypeResult {
   const {
-    exportedName,
-    resolvedSymbol,
+    name,
     type,
+    symbol,
+    declaration,
     location,
     filePath,
+    exportKind,
     checker,
     globalTypeMappings,
     knownTypeNames,
@@ -632,61 +690,30 @@ function processReexportedSymbol(
     underlyingSymbolToTypeName,
     scannedSourceFiles,
     scalarMappingTable,
-    scalarMappingContext,
     discoveredTypes,
+    detectTypeLevelDirectives,
   } = params;
 
   const diagnostics: Diagnostic[] = [];
 
-  const scalarMetadataResult = detectScalarMetadata(type, checker);
-  if (scalarMetadataResult.scalarName && !scalarMetadataResult.isPrimitive) {
-    const tsdocInfo = extractTsDocFromSymbol(resolvedSymbol, checker);
-    return {
-      typeInfo: null,
-      diagnostics: [],
-      scalarName: scalarMetadataResult.scalarName,
-      scalarMetadata: {
-        scalarName: scalarMetadataResult.scalarName,
-        typeName: exportedName,
-        only: scalarMetadataResult.only,
-        sourceFile: filePath,
-        line: location.line,
-        description: tsdocInfo.description ?? null,
-      },
-      skip: false,
-    };
-  }
-
-  const declarations = resolvedSymbol.getDeclarations();
-  const declaration = declarations?.[0];
-  if (declaration) {
-    if (
-      isDeclarationInScannedFiles(declaration, scannedSourceFiles) &&
-      (ts.isTypeAliasDeclaration(declaration) ||
-        ts.isInterfaceDeclaration(declaration) ||
-        ts.isEnumDeclaration(declaration))
-    ) {
-      return {
-        typeInfo: null,
-        diagnostics: [],
-        scalarName: null,
-        scalarMetadata: null,
-        skip: true,
-      };
+  let typeDirectives: ReadonlyArray<DirectiveInfo> | null = null;
+  if (detectTypeLevelDirectives && hasDirectiveMetadata(type)) {
+    const directiveResult = detectDirectiveMetadata(type, checker);
+    if (directiveResult.directives.length > 0) {
+      typeDirectives = directiveResult.directives;
     }
-
-    const genericDiagnostic = createGenericTypeDiagnostic(
-      declaration,
-      exportedName,
-      location,
-    );
-    if (genericDiagnostic) {
-      diagnostics.push(genericDiagnostic);
+    for (const error of directiveResult.errors) {
+      diagnostics.push({
+        code: error.code,
+        message: `Type '${name}': ${error.message}`,
+        severity: "error",
+        location,
+      });
     }
   }
 
-  const kind = determineTypeKindFromType(type, resolvedSymbol, checker);
-  const tsdocInfo = extractTsDocFromSymbol(resolvedSymbol, checker);
+  const kind = determineTypeKind({ declaration, type, checker });
+  const tsdocInfo = extractTsDocFromSymbol(symbol, checker);
 
   let implementedInterfaces: ReadonlyArray<string> | null = null;
   if (declaration && ts.isTypeAliasDeclaration(declaration)) {
@@ -709,25 +736,21 @@ function processReexportedSymbol(
   }
 
   const metadata: TypeMetadata = {
-    name: exportedName,
+    name,
     kind,
     sourceFile: filePath,
     sourceLocation: location,
-    exportKind: "named",
+    exportKind,
     description: tsdocInfo.description ?? null,
     deprecated: tsdocInfo.deprecated ?? null,
-    directives: null,
+    directives: typeDirectives,
   };
 
   if (kind === "enum") {
-    const declarations = resolvedSymbol.getDeclarations();
-    const declaration = declarations?.[0];
-    let enumMembers: ReadonlyArray<EnumMemberInfo>;
-    if (declaration && ts.isEnumDeclaration(declaration)) {
-      enumMembers = extractEnumMembers(declaration, checker);
-    } else {
-      enumMembers = extractStringLiteralUnionMembers(type, checker);
-    }
+    const enumMembers =
+      declaration && ts.isEnumDeclaration(declaration)
+        ? extractEnumMembers(declaration, checker)
+        : extractStringLiteralUnionMembers(type, checker);
     return {
       typeInfo: {
         metadata,
@@ -738,20 +761,18 @@ function processReexportedSymbol(
         implementedInterfaces: null,
       },
       diagnostics,
-      scalarName: null,
-      scalarMetadata: null,
-      skip: false,
     };
   }
 
-  // Get typeNode for union member extraction from declaration
-  const reexportDeclarations = resolvedSymbol.getDeclarations();
-  const reexportDeclaration = reexportDeclarations?.[0];
-  const reexportTypeNode =
-    reexportDeclaration && ts.isTypeAliasDeclaration(reexportDeclaration)
-      ? reexportDeclaration.type
+  const scalarMappingContext: ScalarMappingContext = name.endsWith("Input")
+    ? "input"
+    : "output";
+  const typeNode =
+    declaration && ts.isTypeAliasDeclaration(declaration)
+      ? declaration.type
       : undefined;
-  const unionMembers = extractUnionMembers(type, reexportTypeNode);
+
+  const unionMembers = extractUnionMembers(type, typeNode);
   const inlineObjectResult = extractInlineObjectMembers({
     type,
     checker,
@@ -763,7 +784,7 @@ function processReexportedSymbol(
     scalarMappingTable,
     scalarMappingContext,
     discoveredTypes,
-    typeNode: reexportTypeNode,
+    typeNode,
   });
   diagnostics.push(...(inlineObjectResult?.diagnostics ?? []));
   const ignoreFields = detectIgnoreFieldsMetadata({ type, checker });
@@ -771,7 +792,7 @@ function processReexportedSymbol(
   if (ignoreFields !== null && kind !== "union") {
     const allFieldNames = collectAllFieldNames(type, checker);
     const validationDiagnostics = validateIgnoreFields({
-      typeName: exportedName,
+      typeName: name,
       ignoreFields,
       allFieldNames,
       sourceLocation: location,
@@ -799,35 +820,14 @@ function processReexportedSymbol(
         });
   diagnostics.push(...fieldResult.diagnostics);
 
-  if (exportedName.endsWith("Input") && kind === "union") {
-    if (
-      inlineObjectResult?.hasInlineObjects &&
-      inlineObjectResult.hasNamedTypes
-    ) {
-      diagnostics.push({
-        code: "ONEOF_MIXED_MEMBERS",
-        message: `Input union type '${exportedName}' mixes inline object literals with named type references. Use only inline object literals for oneOf input types.`,
-        severity: "error",
-        location: {
-          ...location,
-          column: 1,
-        },
-      });
-    } else if (
-      inlineObjectResult?.hasNamedTypes &&
-      !inlineObjectResult.hasInlineObjects
-    ) {
-      diagnostics.push({
-        code: "ONEOF_NAMED_TYPE_UNION",
-        message: `Input union type '${exportedName}' uses named type references instead of inline object literals. Use inline object pattern: type ${exportedName} = { field1: Type1 } | { field2: Type2 }`,
-        severity: "error",
-        location: {
-          ...location,
-          column: 1,
-        },
-      });
-    }
-  }
+  diagnostics.push(
+    ...validateOneOfInputUnion({
+      typeName: name,
+      kind,
+      location,
+      inlineObjectResult,
+    }),
+  );
 
   const inlineObjectMembers = inlineObjectResult?.hasInlineObjects
     ? inlineObjectResult.members
@@ -843,6 +843,129 @@ function processReexportedSymbol(
       implementedInterfaces,
     },
     diagnostics,
+  };
+}
+
+interface ProcessReexportedSymbolParams {
+  readonly exportedName: string;
+  readonly resolvedSymbol: ts.Symbol;
+  readonly type: ts.Type;
+  readonly location: SourceLocation;
+  readonly filePath: string;
+  readonly checker: ts.TypeChecker;
+  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly knownTypeNames: ReadonlySet<string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
+  readonly scannedSourceFiles: ReadonlySet<string>;
+  readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
+  readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
+}
+
+interface ProcessReexportedSymbolResult {
+  readonly typeInfo: ExtractedTypeInfo | null;
+  readonly diagnostics: Diagnostic[];
+  readonly scalarName: string | null;
+  readonly scalarMetadata: ScalarMetadataInfo | null;
+  readonly skip: boolean;
+}
+
+/**
+ * Preamble for one re-exported symbol (`export type { X } from "..."`):
+ * scalar detection → dedup skip (if the underlying declaration lives in an
+ * already-scanned file, it's processed once as a local declaration instead)
+ * → the generic-type-parameter diagnostic. Delegates everything from kind
+ * detection onward to {@link processDeclaredType}.
+ */
+function processReexportedSymbol(
+  params: ProcessReexportedSymbolParams,
+): ProcessReexportedSymbolResult {
+  const {
+    exportedName,
+    resolvedSymbol,
+    type,
+    location,
+    filePath,
+    checker,
+    globalTypeMappings,
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
+    scannedSourceFiles,
+    scalarMappingTable,
+    discoveredTypes,
+  } = params;
+
+  const scalarMetadataResult = detectScalarMetadata(type, checker);
+  if (scalarMetadataResult.scalarName && !scalarMetadataResult.isPrimitive) {
+    const tsdocInfo = extractTsDocFromSymbol(resolvedSymbol, checker);
+    return {
+      typeInfo: null,
+      diagnostics: [],
+      scalarName: scalarMetadataResult.scalarName,
+      scalarMetadata: {
+        scalarName: scalarMetadataResult.scalarName,
+        typeName: exportedName,
+        only: scalarMetadataResult.only,
+        sourceFile: filePath,
+        line: location.line,
+        description: tsdocInfo.description ?? null,
+      },
+      skip: false,
+    };
+  }
+
+  const declarations = resolvedSymbol.getDeclarations();
+  const declaration = declarations?.[0];
+  const preambleDiagnostics: Diagnostic[] = [];
+  if (declaration) {
+    if (
+      isDeclarationInScannedFiles(declaration, scannedSourceFiles) &&
+      (ts.isTypeAliasDeclaration(declaration) ||
+        ts.isInterfaceDeclaration(declaration) ||
+        ts.isEnumDeclaration(declaration))
+    ) {
+      return {
+        typeInfo: null,
+        diagnostics: [],
+        scalarName: null,
+        scalarMetadata: null,
+        skip: true,
+      };
+    }
+
+    const genericDiagnostic = createGenericTypeDiagnostic(
+      declaration,
+      exportedName,
+      location,
+    );
+    if (genericDiagnostic) {
+      preambleDiagnostics.push(genericDiagnostic);
+    }
+  }
+
+  const result = processDeclaredType({
+    name: exportedName,
+    type,
+    symbol: resolvedSymbol,
+    declaration,
+    location,
+    filePath,
+    exportKind: "named",
+    checker,
+    globalTypeMappings,
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
+    scannedSourceFiles,
+    scalarMappingTable,
+    discoveredTypes,
+    detectTypeLevelDirectives: false,
+  });
+
+  return {
+    typeInfo: result.typeInfo,
+    diagnostics: [...preambleDiagnostics, ...result.diagnostics],
     scalarName: null,
     scalarMetadata: null,
     skip: false,
@@ -856,19 +979,36 @@ interface ProcessExportDeclarationResult {
   readonly detectedScalars: ScalarMetadataInfo[];
 }
 
+interface ProcessExportDeclarationParams {
+  readonly node: ts.ExportDeclaration;
+  readonly sourceFile: ts.SourceFile;
+  readonly filePath: string;
+  readonly checker: ts.TypeChecker;
+  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+  readonly knownTypeNames: ReadonlySet<string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
+  readonly scannedSourceFiles: ReadonlySet<string>;
+  readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
+  readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
+}
+
 function processExportDeclaration(
-  node: ts.ExportDeclaration,
-  sourceFile: ts.SourceFile,
-  filePath: string,
-  checker: ts.TypeChecker,
-  globalTypeMappings: ReadonlyArray<GlobalTypeMapping>,
-  knownTypeNames: ReadonlySet<string>,
-  knownTypeSymbols: ReadonlyMap<string, ts.Symbol>,
-  underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>,
-  scannedSourceFiles: ReadonlySet<string>,
-  scalarMappingTable: ScalarBaseTypeMappingTable | null,
-  discoveredTypes: Map<string, DiscoveredTypeEntry> | null,
+  params: ProcessExportDeclarationParams,
 ): ProcessExportDeclarationResult {
+  const {
+    node,
+    sourceFile,
+    filePath,
+    checker,
+    globalTypeMappings,
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
+    scannedSourceFiles,
+    scalarMappingTable,
+    discoveredTypes,
+  } = params;
   const types: ExtractedTypeInfo[] = [];
   const diagnostics: Diagnostic[] = [];
   const detectedScalarNames: string[] = [];
@@ -986,7 +1126,6 @@ function processExportDeclaration(
       underlyingSymbolToTypeName,
       scannedSourceFiles,
       scalarMappingTable,
-      scalarMappingContext: exportedName.endsWith("Input") ? "input" : "output",
       discoveredTypes,
     });
 
@@ -1337,13 +1476,13 @@ export function extractTypesFromProgram(
         const name = node.name.getText(sourceFile);
         const typeSourceLocation = getSourceLocationFromNode(node)!;
 
-        if (node.typeParameters && node.typeParameters.length > 0) {
-          diagnostics.push({
-            code: "UNSUPPORTED_SYNTAX",
-            message: `Generic type '${name}' is not supported. Consider using a concrete type instead.`,
-            severity: "warning",
-            location: typeSourceLocation,
-          });
+        const genericDiagnostic = createGenericTypeDiagnostic(
+          node,
+          name,
+          typeSourceLocation,
+        );
+        if (genericDiagnostic) {
+          diagnostics.push(genericDiagnostic);
         }
 
         const symbol = checker.getSymbolAtLocation(node.name);
@@ -1356,7 +1495,7 @@ export function extractTypesFromProgram(
         const scalarMetadata = detectScalarMetadata(type, checker);
         if (scalarMetadata.scalarName && !scalarMetadata.isPrimitive) {
           detectedScalarNames.add(scalarMetadata.scalarName);
-          const tsdocInfo = extractTsDocInfo(node, checker);
+          const tsdocInfo = extractTsDocFromSymbol(symbol, checker);
           detectedScalars.push({
             scalarName: scalarMetadata.scalarName,
             typeName: name,
@@ -1368,183 +1507,32 @@ export function extractTypesFromProgram(
           return;
         }
 
-        let typeDirectives: ReadonlyArray<DirectiveInfo> | null = null;
-        let actualType = type;
-
-        if (hasDirectiveMetadata(type)) {
-          const directiveResult = detectDirectiveMetadata(type, checker);
-          if (directiveResult.directives.length > 0) {
-            typeDirectives = directiveResult.directives;
-          }
-          if (directiveResult.errors.length > 0) {
-            for (const error of directiveResult.errors) {
-              diagnostics.push({
-                code: error.code,
-                message: `Type '${name}': ${error.message}`,
-                severity: "error",
-                location: typeSourceLocation,
-              });
-            }
-          }
-          actualType = type;
-        }
-
-        const kind = determineTypeKind(node, actualType, checker);
-        // Get typeNode for union member extraction (only for type aliases)
-        const typeAliasTypeNode = ts.isTypeAliasDeclaration(node)
-          ? node.type
-          : undefined;
-        const unionMembers = extractUnionMembers(actualType, typeAliasTypeNode);
-        const inlineObjectResult = extractInlineObjectMembers({
-          type: actualType,
+        const result = processDeclaredType({
+          name,
+          type,
+          symbol,
+          declaration: node,
+          location: typeSourceLocation,
+          filePath,
+          exportKind: hasDefaultExport ? "default" : "named",
           checker,
           globalTypeMappings,
           knownTypeNames,
           knownTypeSymbols,
           underlyingSymbolToTypeName,
-          sourceFiles: scannedSourceFilesSet,
+          scannedSourceFiles: scannedSourceFilesSet,
           scalarMappingTable,
-          scalarMappingContext: name.endsWith("Input") ? "input" : "output",
           discoveredTypes,
-          typeNode: typeAliasTypeNode,
+          detectTypeLevelDirectives: true,
         });
-        diagnostics.push(...(inlineObjectResult?.diagnostics ?? []));
-        const tsdocInfo = extractTsDocInfo(node, checker);
-
-        let implementedInterfaces: ReadonlyArray<string> | null = null;
-        if (ts.isTypeAliasDeclaration(node)) {
-          if (kind === "graphqlInterface") {
-            const interfaces = extractImplementsFromDefineInterface(
-              node,
-              sourceFile,
-              checker,
-            );
-            if (interfaces.length > 0) {
-              implementedInterfaces = interfaces;
-            }
-          } else {
-            const interfaces = extractImplementsFromGqlTypeDef(
-              node,
-              sourceFile,
-              checker,
-            );
-            if (interfaces.length > 0) {
-              implementedInterfaces = interfaces;
-            }
-          }
+        diagnostics.push(...result.diagnostics);
+        if (result.typeInfo) {
+          types.push(result.typeInfo);
         }
-
-        const metadata: TypeMetadata = {
-          name,
-          kind,
-          sourceFile: filePath,
-          sourceLocation: typeSourceLocation,
-          exportKind: hasDefaultExport ? "default" : "named",
-          description: tsdocInfo.description,
-          deprecated: tsdocInfo.deprecated,
-          directives: typeDirectives,
-        };
-
-        if (kind === "enum") {
-          const enumMembers = extractStringLiteralUnionMembers(
-            actualType,
-            checker,
-          );
-          types.push({
-            metadata,
-            fields: [],
-            unionMembers: null,
-            inlineObjectMembers: null,
-            enumMembers,
-            implementedInterfaces: null,
-          });
-          return;
-        }
-
-        const ignoreFields = detectIgnoreFieldsMetadata({ type, checker });
-
-        if (ignoreFields !== null && kind !== "union") {
-          const allFieldNames = collectAllFieldNames(type, checker);
-          const validationDiagnostics = validateIgnoreFields({
-            typeName: name,
-            ignoreFields,
-            allFieldNames,
-            sourceLocation: typeSourceLocation,
-          });
-          diagnostics.push(...validationDiagnostics);
-        }
-
-        const fieldResult =
-          kind === "union"
-            ? { fields: [], diagnostics: [] }
-            : extractFieldsFromType({
-                type: actualType,
-                checker,
-                globalTypeMappings,
-                knownTypeNames,
-                knownTypeSymbols,
-                underlyingSymbolToTypeName,
-                sourceFiles: scannedSourceFilesSet,
-                scalarMappingTable,
-                scalarMappingContext: name.endsWith("Input")
-                  ? "input"
-                  : "output",
-                ignoreFields,
-                discoveredTypes,
-                diagnosticLabel: "Field",
-                reportDefaultValueErrors: true,
-              });
-        const fields = fieldResult.fields;
-        diagnostics.push(...fieldResult.diagnostics);
-
-        if (name.endsWith("Input") && kind === "union") {
-          if (
-            inlineObjectResult?.hasInlineObjects &&
-            inlineObjectResult.hasNamedTypes
-          ) {
-            diagnostics.push({
-              code: "ONEOF_MIXED_MEMBERS",
-              message: `Input union type '${name}' mixes inline object literals with named type references. Use only inline object literals for oneOf input types.`,
-              severity: "error",
-              location: {
-                ...typeSourceLocation,
-                column: 1,
-              },
-            });
-          } else if (
-            inlineObjectResult?.hasNamedTypes &&
-            !inlineObjectResult.hasInlineObjects
-          ) {
-            diagnostics.push({
-              code: "ONEOF_NAMED_TYPE_UNION",
-              message: `Input union type '${name}' uses named type references instead of inline object literals. Use inline object pattern: type ${name} = { field1: Type1 } | { field2: Type2 }`,
-              severity: "error",
-              location: {
-                ...typeSourceLocation,
-                column: 1,
-              },
-            });
-          }
-        }
-
-        const inlineObjectMembers = inlineObjectResult?.hasInlineObjects
-          ? inlineObjectResult.members
-          : null;
-
-        const typeInfo: ExtractedTypeInfo = {
-          metadata,
-          fields,
-          unionMembers: unionMembers ?? null,
-          inlineObjectMembers,
-          enumMembers: null,
-          implementedInterfaces,
-        };
-
-        types.push(typeInfo);
       }
 
       if (ts.isExportDeclaration(node)) {
-        const result = processExportDeclaration(
+        const result = processExportDeclaration({
           node,
           sourceFile,
           filePath,
@@ -1553,10 +1541,10 @@ export function extractTypesFromProgram(
           knownTypeNames,
           knownTypeSymbols,
           underlyingSymbolToTypeName,
-          scannedSourceFilesSet,
+          scannedSourceFiles: scannedSourceFilesSet,
           scalarMappingTable,
           discoveredTypes,
-        );
+        });
         types.push(...result.types);
         diagnostics.push(...result.diagnostics);
         for (const scalarName of result.detectedScalarNames) {
