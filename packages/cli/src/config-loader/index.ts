@@ -2,12 +2,15 @@ export {
   type LoadConfigOptions,
   type LoadConfigResult,
   loadConfig,
-  type ResolvedConfig,
-  type ResolvedDiscriminatorFieldsMap,
-  type ResolvedHooksConfig,
-  type ResolvedOutputConfig,
-  type ResolvedScalarMapping,
 } from "./loader.js";
+
+export type {
+  ResolvedConfig,
+  ResolvedDiscriminatorFieldsMap,
+  ResolvedHooksConfig,
+  ResolvedOutputConfig,
+  ResolvedScalarMapping,
+} from "./types.js";
 
 export type {
   ValidateConfigOptions,

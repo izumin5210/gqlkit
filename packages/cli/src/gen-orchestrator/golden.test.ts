@@ -8,7 +8,7 @@ import {
   DEFAULT_RESOLVERS_PATH,
   DEFAULT_SCHEMA_PATH,
   DEFAULT_TYPEDEFS_PATH,
-} from "../config-loader/loader.js";
+} from "../config-loader/types.js";
 import { isSnapshotUpdateMode } from "../testing/snapshot.js";
 import { executeGeneration } from "./orchestrator.js";
 

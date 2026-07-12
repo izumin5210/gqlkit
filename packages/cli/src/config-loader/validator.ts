@@ -12,7 +12,7 @@ import {
   type ResolvedHooksConfig,
   type ResolvedOutputConfig,
   type ResolvedScalarMapping,
-} from "./loader.js";
+} from "./types.js";
 
 export interface ValidateConfigOptions {
   readonly config: unknown;
