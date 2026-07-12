@@ -1,6 +1,8 @@
 import type { ImportExtension } from "../config/types.js";
 import type { Diagnostic } from "../core/index.js";
+import { makeConfigDiagnostic } from "./diagnostic.js";
 import {
+  DEFAULT_IMPORT_EXTENSION,
   DEFAULT_RESOLVERS_PATH,
   DEFAULT_SCHEMA_PATH,
   DEFAULT_SOURCE_DIR,
@@ -65,22 +67,24 @@ function validateOutputPath(
   }
 
   if (typeof value !== "string") {
-    diagnostics.push({
-      code: "CONFIG_INVALID_OUTPUT_TYPE",
-      message: `${fieldName} must be a string, null, or undefined`,
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_INVALID_OUTPUT_TYPE",
+        message: `${fieldName} must be a string, null, or undefined`,
+        configPath,
+      }),
+    );
     return { resolved: null, diagnostics };
   }
 
   if (value === "") {
-    diagnostics.push({
-      code: "CONFIG_INVALID_OUTPUT_PATH",
-      message: `${fieldName} path cannot be empty`,
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_INVALID_OUTPUT_PATH",
+        message: `${fieldName} path cannot be empty`,
+        configPath,
+      }),
+    );
     return { resolved: null, diagnostics };
   }
 
@@ -98,22 +102,24 @@ function validateSourceDir(
   }
 
   if (typeof value !== "string") {
-    diagnostics.push({
-      code: "CONFIG_INVALID_TYPE",
-      message: "sourceDir must be a string",
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_INVALID_TYPE",
+        message: "sourceDir must be a string",
+        configPath,
+      }),
+    );
     return { resolved: undefined, diagnostics };
   }
 
   if (value === "") {
-    diagnostics.push({
-      code: "CONFIG_INVALID_SOURCE_DIR",
-      message: "sourceDir cannot be empty",
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_INVALID_SOURCE_DIR",
+        message: "sourceDir cannot be empty",
+        configPath,
+      }),
+    );
     return { resolved: undefined, diagnostics };
   }
 
@@ -131,23 +137,25 @@ function validateSourceIgnoreGlobs(
   }
 
   if (!Array.isArray(value)) {
-    diagnostics.push({
-      code: "CONFIG_INVALID_IGNORE_GLOBS",
-      message: "sourceIgnoreGlobs must be an array of strings",
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_INVALID_IGNORE_GLOBS",
+        message: "sourceIgnoreGlobs must be an array of strings",
+        configPath,
+      }),
+    );
     return { resolved: undefined, diagnostics };
   }
 
   for (const item of value) {
     if (typeof item !== "string") {
-      diagnostics.push({
-        code: "CONFIG_INVALID_IGNORE_GLOBS",
-        message: "sourceIgnoreGlobs must be an array of strings",
-        severity: "error",
-        location: { file: configPath, line: 1, column: 1 },
-      });
+      diagnostics.push(
+        makeConfigDiagnostic({
+          code: "CONFIG_INVALID_IGNORE_GLOBS",
+          message: "sourceIgnoreGlobs must be an array of strings",
+          configPath,
+        }),
+      );
       return { resolved: undefined, diagnostics };
     }
   }
@@ -166,22 +174,24 @@ function validateTsconfigPath(
   }
 
   if (typeof value !== "string") {
-    diagnostics.push({
-      code: "CONFIG_INVALID_TYPE",
-      message: "tsconfigPath must be a string",
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_INVALID_TYPE",
+        message: "tsconfigPath must be a string",
+        configPath,
+      }),
+    );
     return { resolved: null, diagnostics };
   }
 
   if (value === "") {
-    diagnostics.push({
-      code: "CONFIG_INVALID_PATH",
-      message: "tsconfigPath path cannot be empty",
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_INVALID_PATH",
+        message: "tsconfigPath path cannot be empty",
+        configPath,
+      }),
+    );
     return { resolved: null, diagnostics };
   }
 
@@ -193,19 +203,18 @@ function validateImportExtension(
   configPath: string,
 ): { resolved: ImportExtension; diagnostics: Diagnostic[] } {
   if (value === undefined) {
-    return { resolved: "js", diagnostics: [] };
+    return { resolved: DEFAULT_IMPORT_EXTENSION, diagnostics: [] };
   }
 
   if (value !== "js" && value !== "none" && value !== "ts") {
     return {
-      resolved: "js",
+      resolved: DEFAULT_IMPORT_EXTENSION,
       diagnostics: [
-        {
+        makeConfigDiagnostic({
           code: "CONFIG_INVALID_IMPORT_EXTENSION",
           message: 'output.importExtension must be "js", "none", or "ts"',
-          severity: "error",
-          location: { file: configPath, line: 1, column: 1 },
-        },
+          configPath,
+        }),
       ],
     };
   }
@@ -225,12 +234,11 @@ function validatePruning(
     return {
       resolved: true,
       diagnostics: [
-        {
+        makeConfigDiagnostic({
           code: "CONFIG_INVALID_TYPE",
           message: "output.pruning must be a boolean",
-          severity: "error",
-          location: { file: configPath, line: 1, column: 1 },
-        },
+          configPath,
+        }),
       ],
     };
   }
@@ -250,7 +258,7 @@ function validateOutputConfig(
         resolversPath: DEFAULT_RESOLVERS_PATH,
         typeDefsPath: DEFAULT_TYPEDEFS_PATH,
         schemaPath: DEFAULT_SCHEMA_PATH,
-        importExtension: "js",
+        importExtension: DEFAULT_IMPORT_EXTENSION,
         pruning: true,
       },
       diagnostics: [],
@@ -258,12 +266,13 @@ function validateOutputConfig(
   }
 
   if (!isRecord(output)) {
-    diagnostics.push({
-      code: "CONFIG_INVALID_TYPE",
-      message: "output must be an object",
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_INVALID_TYPE",
+        message: "output must be an object",
+        configPath,
+      }),
+    );
     return { resolved: undefined, diagnostics };
   }
 
@@ -353,53 +362,58 @@ function validateNewScalarMapping(
   const diagnostics: Diagnostic[] = [];
 
   if (typeof scalar["name"] !== "string") {
-    diagnostics.push({
-      code: "CONFIG_MISSING_PROPERTY",
-      message: `scalars[${index}].name is required and must be a string`,
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_MISSING_PROPERTY",
+        message: `scalars[${index}].name is required and must be a string`,
+        configPath,
+      }),
+    );
   }
 
   if (!isRecord(scalar["tsType"])) {
-    diagnostics.push({
-      code: "CONFIG_MISSING_PROPERTY",
-      message: `scalars[${index}].tsType is required and must be an object`,
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_MISSING_PROPERTY",
+        message: `scalars[${index}].tsType is required and must be an object`,
+        configPath,
+      }),
+    );
     return { resolved: undefined, diagnostics };
   }
 
   const tsType = scalar["tsType"];
 
   if (typeof tsType["name"] !== "string") {
-    diagnostics.push({
-      code: "CONFIG_MISSING_PROPERTY",
-      message: `scalars[${index}].tsType.name is required and must be a string`,
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_MISSING_PROPERTY",
+        message: `scalars[${index}].tsType.name is required and must be a string`,
+        configPath,
+      }),
+    );
   }
 
   const only = scalar["only"];
   if (only !== undefined && only !== "input" && only !== "output") {
-    diagnostics.push({
-      code: "CONFIG_INVALID_ONLY_VALUE",
-      message: `scalars[${index}].only must be "input" or "output"`,
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_INVALID_ONLY_VALUE",
+        message: `scalars[${index}].only must be "input" or "output"`,
+        configPath,
+      }),
+    );
   }
 
   const description = scalar["description"];
   if (description !== undefined && typeof description !== "string") {
-    diagnostics.push({
-      code: "CONFIG_INVALID_TYPE",
-      message: `scalars[${index}].description must be a string`,
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_INVALID_TYPE",
+        message: `scalars[${index}].description must be a string`,
+        configPath,
+      }),
+    );
   }
 
   if (diagnostics.length > 0) {
@@ -413,12 +427,13 @@ function validateNewScalarMapping(
       graphqlName as (typeof BUILTIN_SCALAR_NAMES)[number],
     )
   ) {
-    diagnostics.push({
-      code: "CONFIG_BUILTIN_OVERRIDE",
-      message: `Cannot override built-in scalar '${graphqlName}'. Built-in scalars: ID, String, Int, Float, Boolean`,
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_BUILTIN_OVERRIDE",
+        message: `Cannot override built-in scalar '${graphqlName}'. Built-in scalars: ID, String, Int, Float, Boolean`,
+        configPath,
+      }),
+    );
     return { resolved: undefined, diagnostics };
   }
 
@@ -444,12 +459,13 @@ function validateScalarMapping(
   const diagnostics: Diagnostic[] = [];
 
   if (!isRecord(scalar)) {
-    diagnostics.push({
-      code: "CONFIG_INVALID_TYPE",
-      message: `scalars[${index}] must be an object`,
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_INVALID_TYPE",
+        message: `scalars[${index}] must be an object`,
+        configPath,
+      }),
+    );
     return { resolved: undefined, diagnostics };
   }
 
@@ -461,21 +477,23 @@ function validateScalarMapping(
   // (see Decision D2 in the refactor plan). Detect an attempt to use it and
   // point the user at the new-format equivalent instead of a bare "invalid".
   if ("graphqlName" in scalar || "type" in scalar) {
-    diagnostics.push({
-      code: "CONFIG_LEGACY_SCALAR_FORMAT",
-      message: `scalars[${index}] uses the removed legacy scalar mapping format ({ graphqlName, type }). Use the new format instead: ${describeNewFormatEquivalent(scalar)}`,
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_LEGACY_SCALAR_FORMAT",
+        message: `scalars[${index}] uses the removed legacy scalar mapping format ({ graphqlName, type }). Use the new format instead: ${describeNewFormatEquivalent(scalar)}`,
+        configPath,
+      }),
+    );
     return { resolved: undefined, diagnostics };
   }
 
-  diagnostics.push({
-    code: "CONFIG_MISSING_PROPERTY",
-    message: `scalars[${index}] must have (name, tsType)`,
-    severity: "error",
-    location: { file: configPath, line: 1, column: 1 },
-  });
+  diagnostics.push(
+    makeConfigDiagnostic({
+      code: "CONFIG_MISSING_PROPERTY",
+      message: `scalars[${index}] must have (name, tsType)`,
+      configPath,
+    }),
+  );
   return { resolved: undefined, diagnostics };
 }
 
@@ -493,12 +511,13 @@ function validateHooksConfig(
   }
 
   if (!isRecord(hooks)) {
-    diagnostics.push({
-      code: "CONFIG_INVALID_TYPE",
-      message: "hooks must be an object",
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_INVALID_TYPE",
+        message: "hooks must be an object",
+        configPath,
+      }),
+    );
     return { resolved: undefined, diagnostics };
   }
 
@@ -513,12 +532,13 @@ function validateHooksConfig(
 
   if (typeof afterAllFileWrite === "string") {
     if (afterAllFileWrite === "") {
-      diagnostics.push({
-        code: "CONFIG_INVALID_HOOK_COMMAND",
-        message: "hooks.afterAllFileWrite contains empty command",
-        severity: "error",
-        location: { file: configPath, line: 1, column: 1 },
-      });
+      diagnostics.push(
+        makeConfigDiagnostic({
+          code: "CONFIG_INVALID_HOOK_COMMAND",
+          message: "hooks.afterAllFileWrite contains empty command",
+          configPath,
+        }),
+      );
       return { resolved: undefined, diagnostics };
     }
     return {
@@ -530,22 +550,24 @@ function validateHooksConfig(
   if (Array.isArray(afterAllFileWrite)) {
     for (const item of afterAllFileWrite) {
       if (typeof item !== "string") {
-        diagnostics.push({
-          code: "CONFIG_INVALID_HOOK_TYPE",
-          message:
-            "hooks.afterAllFileWrite must be a string or array of strings",
-          severity: "error",
-          location: { file: configPath, line: 1, column: 1 },
-        });
+        diagnostics.push(
+          makeConfigDiagnostic({
+            code: "CONFIG_INVALID_HOOK_TYPE",
+            message:
+              "hooks.afterAllFileWrite must be a string or array of strings",
+            configPath,
+          }),
+        );
         return { resolved: undefined, diagnostics };
       }
       if (item === "") {
-        diagnostics.push({
-          code: "CONFIG_INVALID_HOOK_COMMAND",
-          message: "hooks.afterAllFileWrite contains empty command",
-          severity: "error",
-          location: { file: configPath, line: 1, column: 1 },
-        });
+        diagnostics.push(
+          makeConfigDiagnostic({
+            code: "CONFIG_INVALID_HOOK_COMMAND",
+            message: "hooks.afterAllFileWrite contains empty command",
+            configPath,
+          }),
+        );
         return { resolved: undefined, diagnostics };
       }
     }
@@ -555,12 +577,13 @@ function validateHooksConfig(
     };
   }
 
-  diagnostics.push({
-    code: "CONFIG_INVALID_HOOK_TYPE",
-    message: "hooks.afterAllFileWrite must be a string or array of strings",
-    severity: "error",
-    location: { file: configPath, line: 1, column: 1 },
-  });
+  diagnostics.push(
+    makeConfigDiagnostic({
+      code: "CONFIG_INVALID_HOOK_TYPE",
+      message: "hooks.afterAllFileWrite must be a string or array of strings",
+      configPath,
+    }),
+  );
   return { resolved: undefined, diagnostics };
 }
 
@@ -578,12 +601,13 @@ function validateDiscriminatorFieldsConfig(
   }
 
   if (!isRecord(value)) {
-    diagnostics.push({
-      code: "CONFIG_INVALID_DISCRIMINATOR_FIELDS",
-      message: "discriminatorFields must be an object",
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_INVALID_DISCRIMINATOR_FIELDS",
+        message: "discriminatorFields must be an object",
+        configPath,
+      }),
+    );
     return { resolved: undefined, diagnostics };
   }
 
@@ -592,44 +616,48 @@ function validateDiscriminatorFieldsConfig(
   for (const [key, entry] of Object.entries(value)) {
     if (typeof entry === "string") {
       if (entry === "") {
-        diagnostics.push({
-          code: "CONFIG_EMPTY_DISCRIMINATOR_FIELDS",
-          message: `discriminatorFields["${key}"] cannot be an empty string`,
-          severity: "error",
-          location: { file: configPath, line: 1, column: 1 },
-        });
+        diagnostics.push(
+          makeConfigDiagnostic({
+            code: "CONFIG_EMPTY_DISCRIMINATOR_FIELDS",
+            message: `discriminatorFields["${key}"] cannot be an empty string`,
+            configPath,
+          }),
+        );
         continue;
       }
       result.set(key, [entry]);
     } else if (Array.isArray(entry)) {
       if (entry.length === 0) {
-        diagnostics.push({
-          code: "CONFIG_EMPTY_DISCRIMINATOR_FIELDS",
-          message: `discriminatorFields["${key}"] cannot be an empty array`,
-          severity: "error",
-          location: { file: configPath, line: 1, column: 1 },
-        });
+        diagnostics.push(
+          makeConfigDiagnostic({
+            code: "CONFIG_EMPTY_DISCRIMINATOR_FIELDS",
+            message: `discriminatorFields["${key}"] cannot be an empty array`,
+            configPath,
+          }),
+        );
         continue;
       }
       let hasError = false;
       for (const item of entry) {
         if (typeof item !== "string") {
-          diagnostics.push({
-            code: "CONFIG_INVALID_DISCRIMINATOR_ENTRY",
-            message: `discriminatorFields["${key}"] array must contain only strings`,
-            severity: "error",
-            location: { file: configPath, line: 1, column: 1 },
-          });
+          diagnostics.push(
+            makeConfigDiagnostic({
+              code: "CONFIG_INVALID_DISCRIMINATOR_ENTRY",
+              message: `discriminatorFields["${key}"] array must contain only strings`,
+              configPath,
+            }),
+          );
           hasError = true;
           break;
         }
         if (item === "") {
-          diagnostics.push({
-            code: "CONFIG_EMPTY_DISCRIMINATOR_FIELDS",
-            message: `discriminatorFields["${key}"] array contains an empty string`,
-            severity: "error",
-            location: { file: configPath, line: 1, column: 1 },
-          });
+          diagnostics.push(
+            makeConfigDiagnostic({
+              code: "CONFIG_EMPTY_DISCRIMINATOR_FIELDS",
+              message: `discriminatorFields["${key}"] array contains an empty string`,
+              configPath,
+            }),
+          );
           hasError = true;
           break;
         }
@@ -638,12 +666,13 @@ function validateDiscriminatorFieldsConfig(
         result.set(key, entry as string[]);
       }
     } else {
-      diagnostics.push({
-        code: "CONFIG_INVALID_DISCRIMINATOR_ENTRY",
-        message: `discriminatorFields["${key}"] must be a string or array of strings`,
-        severity: "error",
-        location: { file: configPath, line: 1, column: 1 },
-      });
+      diagnostics.push(
+        makeConfigDiagnostic({
+          code: "CONFIG_INVALID_DISCRIMINATOR_ENTRY",
+          message: `discriminatorFields["${key}"] must be a string or array of strings`,
+          configPath,
+        }),
+      );
     }
   }
 
@@ -661,12 +690,13 @@ export function validateConfig(
   const diagnostics: Diagnostic[] = [];
 
   if (!isRecord(config)) {
-    diagnostics.push({
-      code: "CONFIG_INVALID_TYPE",
-      message: "Config must be an object",
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_INVALID_TYPE",
+        message: "Config must be an object",
+        configPath,
+      }),
+    );
     return { valid: false, resolvedConfig: undefined, diagnostics };
   }
 
@@ -698,12 +728,13 @@ export function validateConfig(
   diagnostics.push(...discriminatorFieldsResult.diagnostics);
 
   if (config["scalars"] !== undefined && !Array.isArray(config["scalars"])) {
-    diagnostics.push({
-      code: "CONFIG_INVALID_TYPE",
-      message: "scalars must be an array",
-      severity: "error",
-      location: { file: configPath, line: 1, column: 1 },
-    });
+    diagnostics.push(
+      makeConfigDiagnostic({
+        code: "CONFIG_INVALID_TYPE",
+        message: "scalars must be an array",
+        configPath,
+      }),
+    );
     return { valid: false, resolvedConfig: undefined, diagnostics };
   }
 
@@ -726,12 +757,13 @@ export function validateConfig(
       const scalarOnlyKey = `${graphqlName}::${only ?? "both"}`;
       const existing = seenGraphqlNamesWithOnly.get(scalarOnlyKey);
       if (existing) {
-        diagnostics.push({
-          code: "CONFIG_DUPLICATE_MAPPING",
-          message: `Duplicate scalar mapping: '${graphqlName}' with ${only ? `only: "${only}"` : "no only constraint"} is defined multiple times`,
-          severity: "error",
-          location: { file: configPath, line: 1, column: 1 },
-        });
+        diagnostics.push(
+          makeConfigDiagnostic({
+            code: "CONFIG_DUPLICATE_MAPPING",
+            message: `Duplicate scalar mapping: '${graphqlName}' with ${only ? `only: "${only}"` : "no only constraint"} is defined multiple times`,
+            configPath,
+          }),
+        );
       } else {
         seenGraphqlNamesWithOnly.set(scalarOnlyKey, { index: i, only });
       }
@@ -740,12 +772,13 @@ export function validateConfig(
       const existingType = seenTypes.get(typeKey);
       if (existingType && existingType.names[0] !== graphqlName) {
         existingType.names.push(graphqlName);
-        diagnostics.push({
-          code: "CONFIG_DUPLICATE_TYPE",
-          message: `Type '${typeName}' from '${importPath}' is mapped to multiple scalars: ${existingType.names.join(", ")}`,
-          severity: "error",
-          location: { file: configPath, line: 1, column: 1 },
-        });
+        diagnostics.push(
+          makeConfigDiagnostic({
+            code: "CONFIG_DUPLICATE_TYPE",
+            message: `Type '${typeName}' from '${importPath}' is mapped to multiple scalars: ${existingType.names.join(", ")}`,
+            configPath,
+          }),
+        );
       } else if (!existingType) {
         seenTypes.set(typeKey, { index: i, names: [graphqlName] });
       }

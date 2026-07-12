@@ -3,6 +3,7 @@ import { isAbsolute, join } from "node:path";
 import { createJiti } from "jiti";
 import type { ImportExtension } from "../config/types.js";
 import type { Diagnostic } from "../core/index.js";
+import { makeConfigDiagnostic } from "./diagnostic.js";
 import { validateConfig } from "./validator.js";
 
 export interface LoadConfigOptions {
@@ -75,12 +76,13 @@ export const DEFAULT_SOURCE_DIR = "src/gqlkit/schema";
 export const DEFAULT_RESOLVERS_PATH = "src/gqlkit/__generated__/resolvers.ts";
 export const DEFAULT_TYPEDEFS_PATH = "src/gqlkit/__generated__/typeDefs.ts";
 export const DEFAULT_SCHEMA_PATH = "src/gqlkit/__generated__/schema.graphql";
+export const DEFAULT_IMPORT_EXTENSION: ImportExtension = "js";
 
 const DEFAULT_OUTPUT_CONFIG: ResolvedOutputConfig = {
   resolversPath: DEFAULT_RESOLVERS_PATH,
   typeDefsPath: DEFAULT_TYPEDEFS_PATH,
   schemaPath: DEFAULT_SCHEMA_PATH,
-  importExtension: "js",
+  importExtension: DEFAULT_IMPORT_EXTENSION,
   pruning: true,
 };
 
@@ -117,16 +119,11 @@ export async function loadConfig(
         config: DEFAULT_RESOLVED_CONFIG,
         configPath,
         diagnostics: [
-          {
+          makeConfigDiagnostic({
             code: "CONFIG_FILE_NOT_FOUND",
             message: `Config file not found: ${configPath}`,
-            severity: "error",
-            location: {
-              file: configPath,
-              line: 1,
-              column: 1,
-            },
-          },
+            configPath,
+          }),
         ],
       };
     }
@@ -172,16 +169,11 @@ export async function loadConfig(
       config: DEFAULT_RESOLVED_CONFIG,
       configPath,
       diagnostics: [
-        {
+        makeConfigDiagnostic({
           code: "CONFIG_SYNTAX_ERROR",
           message: `Failed to load config file: ${message}`,
-          severity: "error",
-          location: {
-            file: configPath,
-            line: 1,
-            column: 1,
-          },
-        },
+          configPath,
+        }),
       ],
     };
   }
