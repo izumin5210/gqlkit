@@ -50,11 +50,26 @@ function getDefaultPathForField(fieldName: string): string {
   }
 }
 
-function validateOutputPath(
-  value: unknown,
-  fieldName: string,
-  configPath: string,
-): { resolved: string | null; diagnostics: Diagnostic[] } {
+/**
+ * Shared param shape for validators that only need the raw config value and
+ * the config file path (no additional context, e.g. a field name or index).
+ */
+interface ValidateFieldParams {
+  readonly value: unknown;
+  readonly configPath: string;
+}
+
+interface ValidateOutputPathParams {
+  readonly value: unknown;
+  readonly fieldName: string;
+  readonly configPath: string;
+}
+
+function validateOutputPath(params: ValidateOutputPathParams): {
+  resolved: string | null;
+  diagnostics: Diagnostic[];
+} {
+  const { value, fieldName, configPath } = params;
   const diagnostics: Diagnostic[] = [];
 
   if (value === undefined) {
@@ -91,10 +106,11 @@ function validateOutputPath(
   return { resolved: value, diagnostics: [] };
 }
 
-function validateSourceDir(
-  value: unknown,
-  configPath: string,
-): { resolved: string | undefined; diagnostics: Diagnostic[] } {
+function validateSourceDir(params: ValidateFieldParams): {
+  resolved: string | undefined;
+  diagnostics: Diagnostic[];
+} {
+  const { value, configPath } = params;
   const diagnostics: Diagnostic[] = [];
 
   if (value === undefined) {
@@ -126,10 +142,11 @@ function validateSourceDir(
   return { resolved: value, diagnostics: [] };
 }
 
-function validateSourceIgnoreGlobs(
-  value: unknown,
-  configPath: string,
-): { resolved: ReadonlyArray<string> | undefined; diagnostics: Diagnostic[] } {
+function validateSourceIgnoreGlobs(params: ValidateFieldParams): {
+  resolved: ReadonlyArray<string> | undefined;
+  diagnostics: Diagnostic[];
+} {
+  const { value, configPath } = params;
   const diagnostics: Diagnostic[] = [];
 
   if (value === undefined) {
@@ -163,10 +180,11 @@ function validateSourceIgnoreGlobs(
   return { resolved: value as ReadonlyArray<string>, diagnostics: [] };
 }
 
-function validateTsconfigPath(
-  value: unknown,
-  configPath: string,
-): { resolved: string | null; diagnostics: Diagnostic[] } {
+function validateTsconfigPath(params: ValidateFieldParams): {
+  resolved: string | null;
+  diagnostics: Diagnostic[];
+} {
+  const { value, configPath } = params;
   const diagnostics: Diagnostic[] = [];
 
   if (value === undefined) {
@@ -198,10 +216,12 @@ function validateTsconfigPath(
   return { resolved: value, diagnostics: [] };
 }
 
-function validateImportExtension(
-  value: unknown,
-  configPath: string,
-): { resolved: ImportExtension; diagnostics: Diagnostic[] } {
+function validateImportExtension(params: ValidateFieldParams): {
+  resolved: ImportExtension;
+  diagnostics: Diagnostic[];
+} {
+  const { value, configPath } = params;
+
   if (value === undefined) {
     return { resolved: DEFAULT_IMPORT_EXTENSION, diagnostics: [] };
   }
@@ -222,10 +242,12 @@ function validateImportExtension(
   return { resolved: value, diagnostics: [] };
 }
 
-function validatePruning(
-  value: unknown,
-  configPath: string,
-): { resolved: boolean; diagnostics: Diagnostic[] } {
+function validatePruning(params: ValidateFieldParams): {
+  resolved: boolean;
+  diagnostics: Diagnostic[];
+} {
+  const { value, configPath } = params;
+
   if (value === undefined) {
     return { resolved: true, diagnostics: [] };
   }
@@ -246,10 +268,16 @@ function validatePruning(
   return { resolved: value, diagnostics: [] };
 }
 
-function validateOutputConfig(
-  output: unknown,
-  configPath: string,
-): { resolved: ResolvedOutputConfig | undefined; diagnostics: Diagnostic[] } {
+interface ValidateOutputConfigParams {
+  readonly output: unknown;
+  readonly configPath: string;
+}
+
+function validateOutputConfig(params: ValidateOutputConfigParams): {
+  resolved: ResolvedOutputConfig | undefined;
+  diagnostics: Diagnostic[];
+} {
+  const { output, configPath } = params;
   const diagnostics: Diagnostic[] = [];
 
   if (output === undefined) {
@@ -276,26 +304,29 @@ function validateOutputConfig(
     return { resolved: undefined, diagnostics };
   }
 
-  const resolversPathResult = validateOutputPath(
-    output["resolversPath"],
-    "output.resolversPath",
+  const resolversPathResult = validateOutputPath({
+    value: output["resolversPath"],
+    fieldName: "output.resolversPath",
     configPath,
-  );
-  const typeDefsPathResult = validateOutputPath(
-    output["typeDefsPath"],
-    "output.typeDefsPath",
+  });
+  const typeDefsPathResult = validateOutputPath({
+    value: output["typeDefsPath"],
+    fieldName: "output.typeDefsPath",
     configPath,
-  );
-  const schemaPathResult = validateOutputPath(
-    output["schemaPath"],
-    "output.schemaPath",
+  });
+  const schemaPathResult = validateOutputPath({
+    value: output["schemaPath"],
+    fieldName: "output.schemaPath",
     configPath,
-  );
-  const importExtensionResult = validateImportExtension(
-    output["importExtension"],
+  });
+  const importExtensionResult = validateImportExtension({
+    value: output["importExtension"],
     configPath,
-  );
-  const pruningResult = validatePruning(output["pruning"], configPath);
+  });
+  const pruningResult = validatePruning({
+    value: output["pruning"],
+    configPath,
+  });
 
   diagnostics.push(...resolversPathResult.diagnostics);
   diagnostics.push(...typeDefsPathResult.diagnostics);
@@ -354,11 +385,17 @@ function describeNewFormatEquivalent(scalar: Record<string, unknown>): string {
   return `{ name: ${name}, tsType: ${tsType} }`;
 }
 
-function validateNewScalarMapping(
-  scalar: Record<string, unknown>,
-  index: number,
-  configPath: string,
-): { resolved: ResolvedScalarMapping | undefined; diagnostics: Diagnostic[] } {
+interface ValidateNewScalarMappingParams {
+  readonly scalar: Record<string, unknown>;
+  readonly index: number;
+  readonly configPath: string;
+}
+
+function validateNewScalarMapping(params: ValidateNewScalarMappingParams): {
+  resolved: ResolvedScalarMapping | undefined;
+  diagnostics: Diagnostic[];
+} {
+  const { scalar, index, configPath } = params;
   const diagnostics: Diagnostic[] = [];
 
   if (typeof scalar["name"] !== "string") {
@@ -451,11 +488,17 @@ function validateNewScalarMapping(
   };
 }
 
-function validateScalarMapping(
-  scalar: unknown,
-  index: number,
-  configPath: string,
-): { resolved: ResolvedScalarMapping | undefined; diagnostics: Diagnostic[] } {
+interface ValidateScalarMappingParams {
+  readonly scalar: unknown;
+  readonly index: number;
+  readonly configPath: string;
+}
+
+function validateScalarMapping(params: ValidateScalarMappingParams): {
+  resolved: ResolvedScalarMapping | undefined;
+  diagnostics: Diagnostic[];
+} {
+  const { scalar, index, configPath } = params;
   const diagnostics: Diagnostic[] = [];
 
   if (!isRecord(scalar)) {
@@ -470,7 +513,7 @@ function validateScalarMapping(
   }
 
   if (isNewFormat(scalar)) {
-    return validateNewScalarMapping(scalar, index, configPath);
+    return validateNewScalarMapping({ scalar, index, configPath });
   }
 
   // The legacy `{ graphqlName, type }` scalar mapping format was removed
@@ -497,10 +540,16 @@ function validateScalarMapping(
   return { resolved: undefined, diagnostics };
 }
 
-function validateHooksConfig(
-  hooks: unknown,
-  configPath: string,
-): { resolved: ResolvedHooksConfig | undefined; diagnostics: Diagnostic[] } {
+interface ValidateHooksConfigParams {
+  readonly hooks: unknown;
+  readonly configPath: string;
+}
+
+function validateHooksConfig(params: ValidateHooksConfigParams): {
+  resolved: ResolvedHooksConfig | undefined;
+  diagnostics: Diagnostic[];
+} {
+  const { hooks, configPath } = params;
   const diagnostics: Diagnostic[] = [];
 
   if (hooks === undefined) {
@@ -587,13 +636,11 @@ function validateHooksConfig(
   return { resolved: undefined, diagnostics };
 }
 
-function validateDiscriminatorFieldsConfig(
-  value: unknown,
-  configPath: string,
-): {
+function validateDiscriminatorFieldsConfig(params: ValidateFieldParams): {
   resolved: ResolvedDiscriminatorFieldsMap | undefined;
   diagnostics: Diagnostic[];
 } {
+  const { value, configPath } = params;
   const diagnostics: Diagnostic[] = [];
 
   if (value === undefined) {
@@ -700,31 +747,40 @@ export function validateConfig(
     return { valid: false, resolvedConfig: undefined, diagnostics };
   }
 
-  const sourceDirResult = validateSourceDir(config["sourceDir"], configPath);
+  const sourceDirResult = validateSourceDir({
+    value: config["sourceDir"],
+    configPath,
+  });
   diagnostics.push(...sourceDirResult.diagnostics);
 
-  const sourceIgnoreGlobsResult = validateSourceIgnoreGlobs(
-    config["sourceIgnoreGlobs"],
+  const sourceIgnoreGlobsResult = validateSourceIgnoreGlobs({
+    value: config["sourceIgnoreGlobs"],
     configPath,
-  );
+  });
   diagnostics.push(...sourceIgnoreGlobsResult.diagnostics);
 
-  const outputResult = validateOutputConfig(config["output"], configPath);
+  const outputResult = validateOutputConfig({
+    output: config["output"],
+    configPath,
+  });
   diagnostics.push(...outputResult.diagnostics);
 
-  const tsconfigPathResult = validateTsconfigPath(
-    config["tsconfigPath"],
+  const tsconfigPathResult = validateTsconfigPath({
+    value: config["tsconfigPath"],
     configPath,
-  );
+  });
   diagnostics.push(...tsconfigPathResult.diagnostics);
 
-  const hooksResult = validateHooksConfig(config["hooks"], configPath);
+  const hooksResult = validateHooksConfig({
+    hooks: config["hooks"],
+    configPath,
+  });
   diagnostics.push(...hooksResult.diagnostics);
 
-  const discriminatorFieldsResult = validateDiscriminatorFieldsConfig(
-    config["discriminatorFields"],
+  const discriminatorFieldsResult = validateDiscriminatorFieldsConfig({
+    value: config["discriminatorFields"],
     configPath,
-  );
+  });
   diagnostics.push(...discriminatorFieldsResult.diagnostics);
 
   if (config["scalars"] !== undefined && !Array.isArray(config["scalars"])) {
@@ -748,7 +804,7 @@ export function validateConfig(
 
   for (let i = 0; i < scalarsArray.length; i++) {
     const scalar = scalarsArray[i];
-    const result = validateScalarMapping(scalar, i, configPath);
+    const result = validateScalarMapping({ scalar, index: i, configPath });
     diagnostics.push(...result.diagnostics);
 
     if (result.resolved) {
