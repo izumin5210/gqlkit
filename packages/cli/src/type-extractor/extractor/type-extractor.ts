@@ -125,18 +125,20 @@ function collectAllFieldNames(
  * TypeScript object type and turning them into `PropertyDef`s — used both
  * for declared GraphQL type fields (type-extractor) and for flattened
  * resolver arguments (resolver-extractor's define-api-extractor, via this
- * module's re-export). Two params capture the only intentional differences
- * between the two call sites:
- * - `diagnosticLabel` prefixes per-property diagnostic messages
- *   ("Field '<name>': ..." vs "Argument '<name>': ...").
- * - `reportDefaultValueErrors` preserves a pre-existing behavior split
- *   (found while unifying, not part of the audited directive divergence):
- *   declared-type fields already surfaced `UNRESOLVABLE_DEFAULT_VALUE`
- *   warnings, but the old `extractArgsFromType` silently dropped them (it
- *   read `defaultValueResult.defaultValue` but never `.errors`). Reporting
- *   them for arguments too looks like a reasonable follow-up bug fix, but
- *   it's outside this phase's directive-only scope, so it's preserved as
- *   `false` for the resolver-argument call site.
+ * module's re-export). `diagnosticLabel` prefixes per-property diagnostic
+ * messages ("Field '<name>': ..." vs "Argument '<name>': ...") — the only
+ * intentional difference left between the two call sites.
+ *
+ * Always reports `UNRESOLVABLE_DEFAULT_VALUE` for unresolvable `GqlField`
+ * default values. This used to be conditional on a `reportDefaultValueErrors`
+ * parameter (`false` for the resolver-argument call site) that preserved a
+ * pre-existing behavior split found while unifying this engine in Phase 5:
+ * declared-type fields already surfaced the diagnostic, but the old
+ * `extractArgsFromType` silently dropped it (it read
+ * `defaultValueResult.defaultValue` but never `.errors`). Phase 9 item 5
+ * (Decision D6) flips arguments to match and deletes the parameter — see
+ * `extractArgsFromType`'s doc for the one remaining wrinkle this surfaced
+ * (named args types that are also separately-declared schema types).
  */
 export interface ExtractFieldsParams {
   readonly type: ts.Type;
@@ -152,8 +154,6 @@ export interface ExtractFieldsParams {
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
   /** Diagnostic message prefix: "Field" for declared-type properties, "Argument" for resolver arguments. */
   readonly diagnosticLabel: string;
-  /** Whether to surface `UNRESOLVABLE_DEFAULT_VALUE` diagnostics (see class doc). */
-  readonly reportDefaultValueErrors: boolean;
 }
 
 export function extractFieldsFromType(
@@ -172,7 +172,6 @@ export function extractFieldsFromType(
     ignoreFields,
     discoveredTypes,
     diagnosticLabel,
-    reportDefaultValueErrors,
   } = params;
   const fields: PropertyDef[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -213,7 +212,7 @@ export function extractFieldsFromType(
       if (defaultValueResult.defaultValue) {
         defaultValue = defaultValueResult.defaultValue;
       }
-      if (reportDefaultValueErrors && defaultValueResult.errors.length > 0) {
+      if (defaultValueResult.errors.length > 0) {
         for (const error of defaultValueResult.errors) {
           diagnostics.push({
             code: error.code,
@@ -816,7 +815,6 @@ function processDeclaredType(
           ignoreFields,
           discoveredTypes,
           diagnosticLabel: "Field",
-          reportDefaultValueErrors: true,
         });
   diagnostics.push(...fieldResult.diagnostics);
 
@@ -1576,7 +1574,6 @@ export function extractTypesFromProgram(
         ignoreFields: null,
         discoveredTypes,
         diagnosticLabel: "Field",
-        reportDefaultValueErrors: true,
       });
       if (fields.length === 0) continue;
 

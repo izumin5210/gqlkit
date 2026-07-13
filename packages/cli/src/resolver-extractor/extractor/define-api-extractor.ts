@@ -332,6 +332,14 @@ interface ExtractArgsResult {
   readonly diagnostics: Diagnostic[];
 }
 
+interface ExtractArgsFromTypeParams {
+  readonly argsType: ts.Type;
+  /** The whole args type's own resolved reference — used only to detect the
+   * declared-args-type overlap described below, not returned. */
+  readonly argsTypeRef: TSTypeReference;
+  readonly ctx: FieldTypeResolverContext;
+}
+
 /**
  * Extracts resolver arguments from an args type by delegating to the same
  * property-walking engine type-extractor uses for declared-type fields
@@ -353,9 +361,9 @@ interface ExtractArgsResult {
  * `sourceLocation` `extractFieldsFromType` already computes).
  */
 function extractArgsFromType(
-  argsType: ts.Type,
-  ctx: FieldTypeResolverContext,
+  params: ExtractArgsFromTypeParams,
 ): ExtractArgsResult {
+  const { argsType, argsTypeRef, ctx } = params;
   const { fields, diagnostics } = extractFieldsFromType({
     type: argsType,
     checker: ctx.checker,
@@ -369,12 +377,29 @@ function extractArgsFromType(
     ignoreFields: null,
     discoveredTypes: ctx.discoveredTypes,
     diagnosticLabel: "Argument",
-    // See extractFieldsFromType's class doc: preserves the pre-unification
-    // behavior of silently dropping UNRESOLVABLE_DEFAULT_VALUE for arguments.
-    reportDefaultValueErrors: false,
   });
 
-  return { args: fields, diagnostics };
+  // A named args type that's ALSO a separately-declared schema type (e.g. an
+  // exported `*Input`-shaped type used directly as `TArgs`, flattened onto
+  // this resolver's argument list) has its fields walked a second time here
+  // by design: its own field list (as a declared type) and its flattened
+  // argument list are extracted independently, by two different pipeline
+  // stages. type-extractor's declared-type extraction already reports
+  // UNRESOLVABLE_DEFAULT_VALUE for such a type's fields (labeled "Field");
+  // reporting it again here (labeled "Argument") would be the same finding
+  // twice, not a new one, so only this diagnostic code is filtered — every
+  // other diagnostic this walk can produce is specific to the argument-list
+  // context and stays.
+  const isDeclaredArgsType =
+    argsTypeRef.kind === "reference" &&
+    argsTypeRef.name !== null &&
+    ctx.knownTypeNames.has(argsTypeRef.name);
+
+  const filteredDiagnostics = isDeclaredArgsType
+    ? diagnostics.filter((d) => d.code !== "UNRESOLVABLE_DEFAULT_VALUE")
+    : diagnostics;
+
+  return { args: fields, diagnostics: filteredDiagnostics };
 }
 
 function extractDirectivesFromTypeNode(
@@ -520,7 +545,7 @@ function extractTypeArgumentsFromCall(
 
   const argsResult = isNoArgs
     ? null
-    : extractArgsFromType(argsType, inputContext);
+    : extractArgsFromType({ argsType, argsTypeRef, ctx: inputContext });
   if (argsResult) {
     diagnostics.push(...argsResult.diagnostics);
   }
