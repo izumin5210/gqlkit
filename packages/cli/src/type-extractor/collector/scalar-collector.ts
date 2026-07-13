@@ -161,7 +161,7 @@ function formatTypeLocation(
  */
 export interface CollectScalarsOptions {
   /** Root path for normalizing source file paths in error messages */
-  readonly sourceRoot?: string | null;
+  readonly sourceRoot: string | null;
 }
 
 /**
@@ -176,9 +176,9 @@ export interface CollectScalarsOptions {
 export function collectScalars(
   scalarInfos: ReadonlyArray<ScalarMetadataInfo>,
   configScalars: ReadonlyArray<ConfigScalarMapping>,
-  options: CollectScalarsOptions = {},
+  options: CollectScalarsOptions,
 ): CollectScalarsResult {
-  const sourceRoot = options.sourceRoot ?? null;
+  const sourceRoot = options.sourceRoot;
   const scalarGroups = new Map<string, ScalarGroup>();
 
   const processInfo = (info: ScalarMetadataInfo, fromConfig: boolean): void => {

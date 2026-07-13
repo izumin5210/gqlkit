@@ -58,7 +58,10 @@ describe("FileScanner", () => {
       fs.writeFileSync(path.join(tempDir, "baz.mts"), "");
       fs.writeFileSync(path.join(tempDir, "subdir", "nested.ts"), "");
 
-      const result = await scanDirectory(tempDir);
+      const result = await scanDirectory(tempDir, {
+        excludeGlobs: null,
+        excludePaths: null,
+      });
 
       expect(result.errors).toEqual([]);
       expect(result.files).toHaveLength(4);
@@ -80,7 +83,10 @@ describe("FileScanner", () => {
       fs.writeFileSync(path.join(tempDir, "types.d.mts"), "");
       fs.writeFileSync(path.join(tempDir, "source.ts"), "");
 
-      const result = await scanDirectory(tempDir);
+      const result = await scanDirectory(tempDir, {
+        excludeGlobs: null,
+        excludePaths: null,
+      });
 
       expect(result.errors).toEqual([]);
       expect(result.files).toHaveLength(1);
@@ -90,7 +96,10 @@ describe("FileScanner", () => {
     });
 
     it("should return error for non-existent directory", async () => {
-      const result = await scanDirectory(path.join(tempDir, "non-existent"));
+      const result = await scanDirectory(path.join(tempDir, "non-existent"), {
+        excludeGlobs: null,
+        excludePaths: null,
+      });
 
       expect(result.files).toEqual([]);
       expect(result.errors).toHaveLength(1);
@@ -107,6 +116,7 @@ describe("FileScanner", () => {
 
         const result = await scanDirectory(tempDir, {
           excludeGlobs: ["**/*.test.ts", "**/*.spec.ts", "**/__tests__/**"],
+          excludePaths: null,
         });
 
         expect(result.errors).toEqual([]);
@@ -121,6 +131,7 @@ describe("FileScanner", () => {
 
         const result = await scanDirectory(tempDir, {
           excludeGlobs: [],
+          excludePaths: null,
         });
 
         expect(result.errors).toEqual([]);
@@ -136,6 +147,7 @@ describe("FileScanner", () => {
         fs.writeFileSync(generatedPath, "");
 
         const result = await scanDirectory(tempDir, {
+          excludeGlobs: null,
           excludePaths: [generatedPath],
         });
 
@@ -155,6 +167,7 @@ describe("FileScanner", () => {
         fs.writeFileSync(typeDefsPath, "");
 
         const result = await scanDirectory(tempDir, {
+          excludeGlobs: null,
           excludePaths: [resolversPath, typeDefsPath],
         });
 

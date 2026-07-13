@@ -24,6 +24,7 @@ describe("HookExecutor", () => {
         commands: ["node -e \"console.log('hello')\""],
         filePaths: [testFile],
         cwd: tempDir,
+        onHookComplete: null,
       });
 
       expect(result.success).toBe(true);
@@ -65,6 +66,7 @@ describe("HookExecutor", () => {
         commands: ["node -e \"console.log(process.argv.slice(1).join(' '))\""],
         filePaths: [testFile1, testFile2],
         cwd: tempDir,
+        onHookComplete: null,
       });
 
       expect(result.success).toBe(true);
@@ -107,6 +109,7 @@ describe("HookExecutor", () => {
         ],
         filePaths: [testFile],
         cwd: tempDir,
+        onHookComplete: null,
       });
 
       expect(result.success).toBe(false);
@@ -123,6 +126,7 @@ describe("HookExecutor", () => {
         commands: ['node -e "console.log(process.cwd())"'],
         filePaths: [testFile],
         cwd: tempDir,
+        onHookComplete: null,
       });
 
       expect(result.success).toBe(true);
@@ -138,6 +142,7 @@ describe("HookExecutor", () => {
         commands: ["nonexistent-command-xyz-123"],
         filePaths: [testFile],
         cwd: tempDir,
+        onHookComplete: null,
       });
 
       // The shell starts successfully and reports the unknown command
@@ -164,6 +169,7 @@ describe("HookExecutor", () => {
         commands: ["echo hi"],
         filePaths: [],
         cwd: missingCwd,
+        onHookComplete: null,
       });
 
       expect(result.success).toBe(false);
@@ -180,6 +186,7 @@ describe("HookExecutor", () => {
         commands: ["node -e \"console.log(process.argv.slice(1).join(' '))\""],
         filePaths: [testFileWithSpaces],
         cwd: tempDir,
+        onHookComplete: null,
       });
 
       expect(result.success).toBe(true);
@@ -197,6 +204,7 @@ describe("HookExecutor", () => {
         ],
         filePaths: [testFile],
         cwd: tempDir,
+        onHookComplete: null,
       });
 
       expect(result.results[0]?.stdout).toContain("stdout message");

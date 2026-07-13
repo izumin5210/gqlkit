@@ -1314,7 +1314,7 @@ function extractInlineObjectMembers(
 
 function extractUnionMembers(
   type: ts.Type,
-  typeNode?: ts.TypeNode,
+  typeNode: ts.TypeNode | undefined,
 ): string[] | undefined {
   if (!type.isUnion()) {
     return undefined;

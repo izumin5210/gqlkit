@@ -34,7 +34,7 @@ export interface ValidateAbstractResolversOptions {
    */
   readonly abstractResolvers: ReadonlyArray<AbstractResolverInfo>;
   readonly baseTypes: ReadonlyArray<AbstractResolverTargetType>;
-  readonly typenameAutoResolveTypeNames?: ReadonlySet<string>;
+  readonly typenameAutoResolveTypeNames: ReadonlySet<string>;
 }
 
 export interface ValidateAbstractResolversResult {
@@ -271,8 +271,7 @@ export function validateAbstractResolvers(
   const missingResolverWarnings = detectMissingAbstractTypeResolvers({
     resolvers,
     typeMap,
-    typenameAutoResolveTypeNames:
-      options.typenameAutoResolveTypeNames ?? new Set(),
+    typenameAutoResolveTypeNames: options.typenameAutoResolveTypeNames,
   });
   diagnostics.push(...missingResolverWarnings);
 
