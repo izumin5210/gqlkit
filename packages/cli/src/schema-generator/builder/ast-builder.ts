@@ -443,11 +443,23 @@ function buildEnumValueDefinitionNode(
   };
 }
 
+interface BuildEnumTypeDefinitionNodeParams {
+  readonly baseType: BaseType;
+  readonly sourceRoot: string | null;
+  readonly directiveDefMap: Map<string, DirectiveDefinitionInfo> | null;
+}
+
 function buildEnumTypeDefinitionNode(
-  baseType: BaseType,
-  sourceRoot: string | null,
+  params: BuildEnumTypeDefinitionNodeParams,
 ): EnumTypeDefinitionNode {
+  const { baseType, sourceRoot, directiveDefMap } = params;
   const enumValues = baseType.enumValues ?? [];
+
+  const directives = buildDirectives({
+    directives: baseType.directives,
+    deprecated: baseType.deprecated,
+    directiveDefMap,
+  });
 
   const description = appendSourceLocation({
     description: baseType.description,
@@ -460,6 +472,7 @@ function buildEnumTypeDefinitionNode(
     name: buildNameNode(baseType.name),
     values: enumValues.map(buildEnumValueDefinitionNode),
     ...(description ? { description: buildStringValueNode(description) } : {}),
+    ...(directives.length > 0 ? { directives } : {}),
   };
 }
 
@@ -517,6 +530,9 @@ function buildInputObjectTypeDefinitionNode(
   });
 
   const directives: ConstDirectiveNode[] = [];
+  if (inputType.deprecated) {
+    directives.push(buildDeprecatedDirective(inputType.deprecated));
+  }
   if (inputType.isOneOf) {
     directives.push(buildOneOfDirective());
   }
@@ -659,7 +675,9 @@ export function buildDocumentNode(
     } else if (baseType.kind === "Union") {
       definitions.push(buildUnionTypeDefinitionNode(baseType, sourceRoot));
     } else if (baseType.kind === "Enum") {
-      definitions.push(buildEnumTypeDefinitionNode(baseType, sourceRoot));
+      definitions.push(
+        buildEnumTypeDefinitionNode({ baseType, sourceRoot, directiveDefMap }),
+      );
     }
   }
 

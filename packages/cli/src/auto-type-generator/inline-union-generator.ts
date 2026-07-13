@@ -107,6 +107,7 @@ function processOneOfInputObjects(
       sourceLocation: inlineUnion.sourceLocation,
       generatedFrom: buildGeneratedFromInfo(inlineUnion.context),
       description: null,
+      deprecated: null,
       resolveTypeFieldPattern: null,
     });
 
@@ -204,6 +205,7 @@ function processUnionTypes(
       sourceLocation: inlineUnion.sourceLocation,
       generatedFrom: buildGeneratedFromInfo(inlineUnion.context),
       description: null,
+      deprecated: null,
       resolveTypeFieldPattern,
     });
 
@@ -536,6 +538,12 @@ function resolveNestedInlineObjectInMember(
     sourceLocation: ctx.sourceLocation,
     generatedFrom: buildGeneratedFromInfo(context),
     description,
+    // Not wired to inlineTsType.inlineObjectDeprecated (bug #9's scope was
+    // InlineObjectWithContext/InlineEnumWithContext, i.e. the top-level
+    // field/resolver-arg/payload collectors); nested inline objects within
+    // union members are a distinct collection path — same gap, deliberately
+    // left for a follow-up rather than widened here.
+    deprecated: null,
     resolveTypeFieldPattern: null,
   });
 
@@ -608,6 +616,9 @@ function resolveInlineEnumInMember(
     sourceLocation: ctx.sourceLocation,
     generatedFrom: buildGeneratedFromInfo(context),
     description,
+    // See the comment in resolveNestedInlineObjectInMember: same deliberate
+    // scope boundary (not sourced from inlineTsType.externalEnumDeprecated).
+    deprecated: null,
     resolveTypeFieldPattern: null,
   });
 
@@ -688,6 +699,7 @@ function resolveInlineUnionInMember(
     sourceLocation: ctx.sourceLocation,
     generatedFrom: buildGeneratedFromInfo(context),
     description: null,
+    deprecated: null,
     resolveTypeFieldPattern: null,
   });
 
@@ -885,6 +897,9 @@ function registerInlineMemberType(
     },
     generatedFrom: buildGeneratedFromInfo(context),
     description,
+    // See the comment in resolveNestedInlineObjectInMember: same deliberate
+    // scope boundary (not sourced from memberType.inlineObjectDeprecated).
+    deprecated: null,
     resolveTypeFieldPattern: null,
   });
 

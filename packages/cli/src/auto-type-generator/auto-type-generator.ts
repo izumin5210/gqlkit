@@ -154,6 +154,7 @@ function generateAutoType(
       sourceLocation: inlineObj.sourceLocation,
       generatedFrom: buildGeneratedFromInfo(inlineObj.context),
       description: inlineObj.description,
+      deprecated: inlineObj.deprecated,
       resolveTypeFieldPattern: null,
     },
     diagnostics,
