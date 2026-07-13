@@ -1,18 +1,18 @@
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { createTempDir, removeTempDir } from "../../testing/temp-dir.js";
 import { executeHooks, type SingleHookResult } from "./hook-executor.js";
 
 describe("HookExecutor", () => {
   let tempDir: string;
 
-  beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "hook-executor-test-"));
+  beforeEach(async () => {
+    tempDir = await createTempDir("hook-executor-test-");
   });
 
-  afterEach(() => {
-    fs.rmSync(tempDir, { recursive: true, force: true });
+  afterEach(async () => {
+    await removeTempDir(tempDir);
   });
 
   describe("executeHooks", () => {

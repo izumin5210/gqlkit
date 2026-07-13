@@ -10,6 +10,10 @@ import {
   type SourceLocation,
   type TSTypeReference,
 } from "../core/index.js";
+import {
+  createExtractedObjectType,
+  createPropertyDef,
+} from "../testing/type-fixtures.js";
 import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import { collectInlineEnumsFromTypes } from "./inline-enum-collector.js";
 import { collectInlineUnionsFromTypes } from "./inline-union-collector.js";
@@ -20,52 +24,21 @@ const sourceLocation: SourceLocation = {
   column: 1,
 };
 
+// `createField`/`createProperty` are the same builder under two names, kept
+// distinct only for call-site readability (a top-level field vs. a nested
+// property within it).
 function createField(name: string, tsType: TSTypeReference): PropertyDef {
-  return {
-    name,
-    tsType,
-    optional: false,
-    description: null,
-    deprecated: null,
-    directives: null,
-    defaultValue: null,
-    sourceLocation,
-  };
+  return createPropertyDef({ name, tsType, sourceLocation });
 }
 
 function createProperty(name: string, tsType: TSTypeReference): PropertyDef {
-  return {
-    name,
-    tsType,
-    optional: false,
-    description: null,
-    deprecated: null,
-    directives: null,
-    defaultValue: null,
-    sourceLocation,
-  };
+  return createPropertyDef({ name, tsType, sourceLocation });
 }
 
 function createExtractedType(
   fields: ReadonlyArray<PropertyDef>,
 ): ExtractedTypeInfo {
-  return {
-    metadata: {
-      name: "Container",
-      kind: "object",
-      sourceFile: sourceLocation.file,
-      sourceLocation,
-      exportKind: "named",
-      description: null,
-      deprecated: null,
-      directives: null,
-    },
-    fields,
-    unionMembers: null,
-    inlineObjectMembers: null,
-    enumMembers: null,
-    implementedInterfaces: null,
-  };
+  return createExtractedObjectType({ name: "Container", fields });
 }
 
 describe("inline collectors", () => {

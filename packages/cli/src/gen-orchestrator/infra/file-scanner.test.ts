@@ -1,19 +1,19 @@
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
 import { toPosixPath } from "../../shared/path-utils.js";
+import { createTempDir, removeTempDir } from "../../testing/temp-dir.js";
 import { isTypeScriptSourceFile, scanDirectory } from "./file-scanner.js";
 
 describe("FileScanner", () => {
   let tempDir: string;
 
-  beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "file-scanner-test-"));
+  beforeEach(async () => {
+    tempDir = await createTempDir("file-scanner-test-");
   });
 
-  afterEach(() => {
-    fs.rmSync(tempDir, { recursive: true });
+  afterEach(async () => {
+    await removeTempDir(tempDir);
   });
 
   describe("isTypeScriptSourceFile", () => {

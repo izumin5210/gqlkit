@@ -1,18 +1,18 @@
-import { mkdir, mkdtemp, readFile, rm, writeFile } from "node:fs/promises";
-import { tmpdir } from "node:os";
+import { mkdir, readFile, writeFile } from "node:fs/promises";
 import { join } from "node:path";
 import { afterEach, beforeEach, describe, expect, it, vi } from "vitest";
+import { createTempDir, removeTempDir } from "../testing/temp-dir.js";
 import { runGenCommand } from "./gen.js";
 
 describe("gen command", () => {
   let testDir: string;
 
   beforeEach(async () => {
-    testDir = await mkdtemp(join(tmpdir(), "gqlkit-gen-test-"));
+    testDir = await createTempDir("gqlkit-gen-test-");
   });
 
   afterEach(async () => {
-    await rm(testDir, { recursive: true });
+    await removeTempDir(testDir);
   });
 
   async function setupProject(): Promise<void> {

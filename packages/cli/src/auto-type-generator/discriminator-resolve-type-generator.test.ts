@@ -1,106 +1,41 @@
 import { describe, expect, it } from "vitest";
-import type { PropertyDef, TSTypeReference } from "../core/index.js";
+import {
+  createPrimitiveType,
+  createStringLiteralType,
+  type PropertyDef,
+  type TSTypeReference,
+} from "../core/index.js";
+import {
+  createExtractedObjectType,
+  createExtractedUnionType,
+  createPropertyDef,
+} from "../testing/type-fixtures.js";
 import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import {
   collectDiscriminatorResolveTypes,
   type ValidatedDiscriminatorEntry,
 } from "./discriminator-resolve-type-generator.js";
 
-function createStringLiteralTsType(value: string): TSTypeReference {
-  return {
-    kind: "stringLiteral",
-    name: value,
-    elementType: null,
-    members: null,
-    nullable: false,
-    scalarInfo: null,
-    inlineObjectProperties: null,
-    inlineObjectDescription: null,
-    inlineObjectDeprecated: null,
-    inlineEnumMembers: null,
-    inlineObjectHintName: null,
-    externalEnumSymbol: null,
-    externalEnumDescription: null,
-    externalEnumDeprecated: null,
-  };
-}
-
 function createPrimitiveTsType(name: string): TSTypeReference {
-  return {
-    kind: "primitive",
-    name,
-    elementType: null,
-    members: null,
-    nullable: false,
-    scalarInfo: null,
-    inlineObjectProperties: null,
-    inlineObjectDescription: null,
-    inlineObjectDeprecated: null,
-    inlineEnumMembers: null,
-    inlineObjectHintName: null,
-    externalEnumSymbol: null,
-    externalEnumDescription: null,
-    externalEnumDeprecated: null,
-  };
+  return createPrimitiveType({ name, nullable: false });
 }
 
 function createInlineProperty(
   name: string,
   tsType: TSTypeReference,
 ): PropertyDef {
-  return {
-    name,
-    tsType,
-    optional: false,
-    description: null,
-    deprecated: null,
-    directives: null,
-    defaultValue: null,
-    sourceLocation: null,
-  };
+  return createPropertyDef({ name, tsType, sourceLocation: null });
 }
 
 function createUnionType(
   name: string,
   unionMembers: string[],
 ): ExtractedTypeInfo {
-  return {
-    metadata: {
-      name,
-      kind: "union",
-      sourceFile: "src/types.ts",
-      sourceLocation: { file: "src/types.ts", line: 1, column: 1 },
-      exportKind: "named",
-      description: null,
-      deprecated: null,
-      directives: null,
-    },
-    fields: [],
-    unionMembers,
-    inlineObjectMembers: null,
-    enumMembers: null,
-    implementedInterfaces: null,
-  };
+  return createExtractedUnionType({ name, unionMembers });
 }
 
 function createObjectType(name: string): ExtractedTypeInfo {
-  return {
-    metadata: {
-      name,
-      kind: "object",
-      sourceFile: "src/types.ts",
-      sourceLocation: { file: "src/types.ts", line: 1, column: 1 },
-      exportKind: "named",
-      description: null,
-      deprecated: null,
-      directives: null,
-    },
-    fields: [],
-    unionMembers: null,
-    inlineObjectMembers: null,
-    enumMembers: null,
-    implementedInterfaces: null,
-  };
+  return createExtractedObjectType({ name, fields: [] });
 }
 
 describe("collectDiscriminatorResolveTypes", () => {
@@ -168,12 +103,12 @@ describe("collectDiscriminatorResolveTypes", () => {
         inlineObjectMembers: [
           {
             properties: [
-              createInlineProperty("type", createStringLiteralTsType("text")),
+              createInlineProperty("type", createStringLiteralType("text")),
             ],
           },
           {
             properties: [
-              createInlineProperty("type", createStringLiteralTsType("image")),
+              createInlineProperty("type", createStringLiteralType("image")),
             ],
           },
         ],
@@ -517,7 +452,7 @@ describe("collectDiscriminatorResolveTypes", () => {
         inlineObjectMembers: [
           {
             properties: [
-              createInlineProperty("type", createStringLiteralTsType("text")),
+              createInlineProperty("type", createStringLiteralType("text")),
               createInlineProperty("content", createPrimitiveTsType("string")),
             ],
           },
@@ -632,7 +567,7 @@ describe("collectDiscriminatorResolveTypes", () => {
         inlineObjectMembers: [
           {
             properties: [
-              createInlineProperty("type", createStringLiteralTsType("image")),
+              createInlineProperty("type", createStringLiteralType("image")),
             ],
           },
         ],
