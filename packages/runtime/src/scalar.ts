@@ -7,6 +7,10 @@
  * // A type with scalar metadata
  * type MyScalar = Base & { " $gqlkitScalar"?: ScalarMetadataShape };
  * ```
+ *
+ * @internal Structural shape consumed by the CLI's shape-based type
+ * detection, not by user code. Kept exported (rather than removed) because
+ * `GqlScalar`'s metadata marker is typed in terms of it.
  */
 export interface ScalarMetadataShape {
   readonly name: string;

@@ -40,19 +40,15 @@ const RUNTIME_SRC_DIR = path.resolve(
  * so known one-sided runtime literals are allowlisted here instead of
  * being registered.
  *
- * - `" $gqlkitInterface"`: a required inner property of
- *   `GqlInterfaceMetaShape` introduced in PR #27, never read by the CLI
- *   (grep-verified: zero matches in packages/cli/src) -- likely a
- *   nominal-typing artifact. Removing it would change the runtime
- *   package's published type surface, which is out of scope for a
- *   no-behavior-change task and unguarded because the runtime package has
- *   no type-level tests for GqlInterface yet. Its fate (delete vs
- *   register) is deferred to the runtime-cleanup phase of
- *   .kiro/specs/refactor-plan.md (Phase 9, item 3).
+ * Empty today: the previous entry, `" $gqlkitInterface"` (a required inner
+ * property of `GqlInterfaceMetaShape` introduced in PR #27, never read by
+ * the CLI), was removed from the runtime source by
+ * .kiro/specs/refactor-plan.md's Phase 9 runtime-cleanup item -- the
+ * self-clean assertion below caught the now-stale allowlist entry, per its
+ * own design. The machinery is kept in place for future one-sided runtime
+ * literals.
  */
-const KNOWN_UNREGISTERED_RUNTIME_MARKERS: ReadonlySet<string> = new Set([
-  " $gqlkitInterface",
-]);
+const KNOWN_UNREGISTERED_RUNTIME_MARKERS: ReadonlySet<string> = new Set([]);
 
 function listRuntimeSourceFiles(): string[] {
   return fs

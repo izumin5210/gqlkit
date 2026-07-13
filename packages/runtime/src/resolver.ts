@@ -97,6 +97,11 @@ export type IsTypeOfResolverFn<TContext = unknown> = (
 /**
  * Abstract type resolver metadata structure embedded in intersection types.
  * Used by CLI to detect and identify abstract type resolvers through type analysis.
+ *
+ * @internal Structural shape consumed by the CLI's shape-based type
+ * detection, not by user code. Kept exported (rather than removed) because
+ * `ResolveTypeResolver`/`IsTypeOfResolver`'s metadata marker is typed in
+ * terms of it.
  */
 export interface AbstractResolverMetadataShape {
   readonly kind: AbstractResolverKind;
@@ -140,6 +145,11 @@ export type IsTypeOfResolver<
 /**
  * Resolver metadata structure embedded in intersection types.
  * Used by CLI to detect and identify resolver types through type analysis.
+ *
+ * @internal Structural shape consumed by the CLI's shape-based type
+ * detection, not by user code. Kept exported (rather than removed) because
+ * `QueryResolver`/`MutationResolver`/`SubscriptionResolver`/`FieldResolver`'s
+ * metadata marker is typed in terms of it.
  */
 export interface ResolverMetadataShape {
   readonly kind: ResolverKind;

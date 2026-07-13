@@ -5,6 +5,10 @@ import type { DirectiveLocation, GqlDirective } from "./directive.js";
  * Used to attach directives, default values, and other metadata to individual fields.
  *
  * @typeParam Meta - The metadata configuration object
+ *
+ * @internal Structural shape consumed by the CLI's shape-based type
+ * detection, not by user code. Kept exported (rather than removed) because
+ * `GqlField`'s metadata marker is typed in terms of it.
  */
 export interface GqlFieldMetaShape<
   Meta extends {

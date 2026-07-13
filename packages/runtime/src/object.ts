@@ -6,6 +6,10 @@ import type { GqlInterfaceMarker } from "./interface.js";
  * Used to attach directives, interface implementations, and field exclusions to types.
  *
  * @typeParam Meta - The metadata configuration object
+ *
+ * @internal Structural shape consumed by the CLI's shape-based type
+ * detection, not by user code. Kept exported (rather than removed) because
+ * `GqlObject`'s metadata marker is typed in terms of it.
  */
 export interface GqlTypeMetaShape<
   Meta extends {
