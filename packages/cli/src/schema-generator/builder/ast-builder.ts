@@ -49,11 +49,16 @@ export interface BuildDocumentOptions {
   readonly sourceRoot: string | null;
 }
 
+interface AppendSourceLocationParams {
+  readonly description: string | null;
+  readonly sourceFile: string | null;
+  readonly sourceRoot: string | null;
+}
+
 function appendSourceLocation(
-  description: string | null,
-  sourceFile: string | null,
-  sourceRoot: string | null,
+  params: AppendSourceLocationParams,
 ): string | null {
+  const { description, sourceFile, sourceRoot } = params;
   if (!sourceRoot || !sourceFile) {
     return description;
   }
@@ -197,11 +202,14 @@ function buildCustomDirective(
   };
 }
 
-function buildDirectives(
-  directives: ReadonlyArray<DirectiveInfo> | null,
-  deprecated: DeprecationInfo | null,
-  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
-): ConstDirectiveNode[] {
+interface BuildDirectivesParams {
+  readonly directives: ReadonlyArray<DirectiveInfo> | null;
+  readonly deprecated: DeprecationInfo | null;
+  readonly directiveDefMap: Map<string, DirectiveDefinitionInfo> | null;
+}
+
+function buildDirectives(params: BuildDirectivesParams): ConstDirectiveNode[] {
+  const { directives, deprecated, directiveDefMap } = params;
   const result: ConstDirectiveNode[] = [];
 
   if (deprecated) {
@@ -264,11 +272,11 @@ function buildInputValueDefinitionNode(
   inputValue: GraphQLInputValue,
   directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): InputValueDefinitionNode {
-  const directives = buildDirectives(
-    inputValue.directives,
-    inputValue.deprecated,
+  const directives = buildDirectives({
+    directives: inputValue.directives,
+    deprecated: inputValue.deprecated,
     directiveDefMap,
-  );
+  });
 
   return {
     kind: Kind.INPUT_VALUE_DEFINITION,
@@ -297,11 +305,11 @@ function buildBaseFieldDefinitionNode(
   field: FieldInfo,
   directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): FieldDefinitionNode {
-  const directives = buildDirectives(
-    field.directives,
-    field.deprecated,
+  const directives = buildDirectives({
+    directives: field.directives,
+    deprecated: field.deprecated,
     directiveDefMap,
-  );
+  });
 
   return {
     kind: Kind.FIELD_DEFINITION,
@@ -314,26 +322,31 @@ function buildBaseFieldDefinitionNode(
   };
 }
 
+interface BuildFieldDefinitionNodeParams {
+  readonly field: ExtensionField;
+  readonly sourceRoot: string | null;
+  readonly directiveDefMap: Map<string, DirectiveDefinitionInfo> | null;
+}
+
 function buildFieldDefinitionNode(
-  field: ExtensionField,
-  sourceRoot: string | null,
-  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
+  params: BuildFieldDefinitionNodeParams,
 ): FieldDefinitionNode {
-  const directives = buildDirectives(
-    field.directives,
-    field.deprecated,
+  const { field, sourceRoot, directiveDefMap } = params;
+  const directives = buildDirectives({
+    directives: field.directives,
+    deprecated: field.deprecated,
     directiveDefMap,
-  );
+  });
 
   const args = field.args?.map((arg) =>
     buildInputValueDefinitionNode(arg, directiveDefMap),
   );
 
-  const description = appendSourceLocation(
-    field.description,
-    field.resolverSourceFile,
+  const description = appendSourceLocation({
+    description: field.description,
+    sourceFile: field.resolverSourceFile,
     sourceRoot,
-  );
+  });
 
   return {
     kind: Kind.FIELD_DEFINITION,
@@ -345,26 +358,31 @@ function buildFieldDefinitionNode(
   };
 }
 
-function buildTypeDefinitionNode(
-  baseType: BaseType,
-  kind:
+interface BuildTypeDefinitionNodeParams {
+  readonly baseType: BaseType;
+  readonly kind:
     | typeof Kind.OBJECT_TYPE_DEFINITION
-    | typeof Kind.INTERFACE_TYPE_DEFINITION,
-  sourceRoot: string | null,
-  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
-): ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode {
-  const sortedFields = baseType.fields ? sortByName(baseType.fields) : [];
-  const directives = buildDirectives(
-    baseType.directives,
-    baseType.deprecated,
-    directiveDefMap,
-  );
+    | typeof Kind.INTERFACE_TYPE_DEFINITION;
+  readonly sourceRoot: string | null;
+  readonly directiveDefMap: Map<string, DirectiveDefinitionInfo> | null;
+}
 
-  const description = appendSourceLocation(
-    baseType.description,
-    baseType.sourceFile,
+function buildTypeDefinitionNode(
+  params: BuildTypeDefinitionNodeParams,
+): ObjectTypeDefinitionNode | InterfaceTypeDefinitionNode {
+  const { baseType, kind, sourceRoot, directiveDefMap } = params;
+  const sortedFields = baseType.fields ? sortByName(baseType.fields) : [];
+  const directives = buildDirectives({
+    directives: baseType.directives,
+    deprecated: baseType.deprecated,
+    directiveDefMap,
+  });
+
+  const description = appendSourceLocation({
+    description: baseType.description,
+    sourceFile: baseType.sourceFile,
     sourceRoot,
-  );
+  });
 
   const interfaces =
     baseType.implementedInterfaces && baseType.implementedInterfaces.length > 0
@@ -393,11 +411,11 @@ function buildUnionTypeDefinitionNode(
     ? [...baseType.unionMembers].sort((a, b) => a.localeCompare(b))
     : [];
 
-  const description = appendSourceLocation(
-    baseType.description,
-    baseType.sourceFile,
+  const description = appendSourceLocation({
+    description: baseType.description,
+    sourceFile: baseType.sourceFile,
     sourceRoot,
-  );
+  });
 
   return {
     kind: Kind.UNION_TYPE_DEFINITION,
@@ -431,11 +449,11 @@ function buildEnumTypeDefinitionNode(
 ): EnumTypeDefinitionNode {
   const enumValues = baseType.enumValues ?? [];
 
-  const description = appendSourceLocation(
-    baseType.description,
-    baseType.sourceFile,
+  const description = appendSourceLocation({
+    description: baseType.description,
+    sourceFile: baseType.sourceFile,
     sourceRoot,
-  );
+  });
 
   return {
     kind: Kind.ENUM_TYPE_DEFINITION,
@@ -460,11 +478,11 @@ function buildInputFieldDefinitionNode(
   field: FieldInfo,
   directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): InputValueDefinitionNode {
-  const directives = buildDirectives(
-    field.directives,
-    field.deprecated,
+  const directives = buildDirectives({
+    directives: field.directives,
+    deprecated: field.deprecated,
     directiveDefMap,
-  );
+  });
 
   return {
     kind: Kind.INPUT_VALUE_DEFINITION,
@@ -480,18 +498,23 @@ function buildInputFieldDefinitionNode(
   };
 }
 
+interface BuildInputObjectTypeDefinitionNodeParams {
+  readonly inputType: InputType;
+  readonly sourceRoot: string | null;
+  readonly directiveDefMap: Map<string, DirectiveDefinitionInfo> | null;
+}
+
 function buildInputObjectTypeDefinitionNode(
-  inputType: InputType,
-  sourceRoot: string | null,
-  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
+  params: BuildInputObjectTypeDefinitionNodeParams,
 ): InputObjectTypeDefinitionNode {
+  const { inputType, sourceRoot, directiveDefMap } = params;
   const sortedFields = sortByName(inputType.fields);
 
-  const description = appendSourceLocation(
-    inputType.description,
-    inputType.sourceFile,
+  const description = appendSourceLocation({
+    description: inputType.description,
+    sourceFile: inputType.sourceFile,
     sourceRoot,
-  );
+  });
 
   const directives: ConstDirectiveNode[] = [];
   if (inputType.isOneOf) {
@@ -509,32 +532,36 @@ function buildInputObjectTypeDefinitionNode(
   };
 }
 
+interface BuildTypeExtensionNodeParams {
+  readonly typeExtension: IntegratedTypeExtension;
+  readonly sourceRoot: string | null;
+  readonly directiveDefMap: Map<string, DirectiveDefinitionInfo> | null;
+}
+
 function buildObjectTypeExtensionNode(
-  typeExtension: IntegratedTypeExtension,
-  sourceRoot: string | null,
-  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
+  params: BuildTypeExtensionNodeParams,
 ): ObjectTypeExtensionNode {
+  const { typeExtension, sourceRoot, directiveDefMap } = params;
   const sortedFields = sortByName(typeExtension.fields);
   return {
     kind: Kind.OBJECT_TYPE_EXTENSION,
     name: buildNameNode(typeExtension.targetTypeName),
     fields: sortedFields.map((field) =>
-      buildFieldDefinitionNode(field, sourceRoot, directiveDefMap),
+      buildFieldDefinitionNode({ field, sourceRoot, directiveDefMap }),
     ),
   };
 }
 
 function buildInterfaceTypeExtensionNode(
-  typeExtension: IntegratedTypeExtension,
-  sourceRoot: string | null,
-  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
+  params: BuildTypeExtensionNodeParams,
 ): InterfaceTypeExtensionNode {
+  const { typeExtension, sourceRoot, directiveDefMap } = params;
   const sortedFields = sortByName(typeExtension.fields);
   return {
     kind: Kind.INTERFACE_TYPE_EXTENSION,
     name: buildNameNode(typeExtension.targetTypeName),
     fields: sortedFields.map((field) =>
-      buildFieldDefinitionNode(field, sourceRoot, directiveDefMap),
+      buildFieldDefinitionNode({ field, sourceRoot, directiveDefMap }),
     ),
   };
 }
@@ -613,21 +640,21 @@ export function buildDocumentNode(
   for (const baseType of sortedBaseTypes) {
     if (baseType.kind === "Interface") {
       definitions.push(
-        buildTypeDefinitionNode(
+        buildTypeDefinitionNode({
           baseType,
-          Kind.INTERFACE_TYPE_DEFINITION,
+          kind: Kind.INTERFACE_TYPE_DEFINITION,
           sourceRoot,
           directiveDefMap,
-        ),
+        }),
       );
     } else if (baseType.kind === "Object") {
       definitions.push(
-        buildTypeDefinitionNode(
+        buildTypeDefinitionNode({
           baseType,
-          Kind.OBJECT_TYPE_DEFINITION,
+          kind: Kind.OBJECT_TYPE_DEFINITION,
           sourceRoot,
           directiveDefMap,
-        ),
+        }),
       );
     } else if (baseType.kind === "Union") {
       definitions.push(buildUnionTypeDefinitionNode(baseType, sourceRoot));
@@ -642,11 +669,11 @@ export function buildDocumentNode(
 
   for (const inputType of sortedInputTypes) {
     definitions.push(
-      buildInputObjectTypeDefinitionNode(
+      buildInputObjectTypeDefinitionNode({
         inputType,
         sourceRoot,
         directiveDefMap,
-      ),
+      }),
     );
   }
 
@@ -663,11 +690,19 @@ export function buildDocumentNode(
   for (const ext of sortedExtensions) {
     if (interfaceTypeNames.has(ext.targetTypeName)) {
       definitions.push(
-        buildInterfaceTypeExtensionNode(ext, sourceRoot, directiveDefMap),
+        buildInterfaceTypeExtensionNode({
+          typeExtension: ext,
+          sourceRoot,
+          directiveDefMap,
+        }),
       );
     } else {
       definitions.push(
-        buildObjectTypeExtensionNode(ext, sourceRoot, directiveDefMap),
+        buildObjectTypeExtensionNode({
+          typeExtension: ext,
+          sourceRoot,
+          directiveDefMap,
+        }),
       );
     }
   }

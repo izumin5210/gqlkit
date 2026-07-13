@@ -231,7 +231,7 @@ export function collectScalars(
     }
 
     // Allow input-only scalars (no output type required) and output-only scalars (no input type required)
-    // These are valid for context-specific scalar usage patterns (Requirements 3.1, 3.2, 3.3)
+    // These are valid for context-specific scalar usage patterns
     if (group.inputTypes.length === 0 && group.outputTypes.length === 0) {
       // Both missing - this shouldn't happen but guard against it
       continue;

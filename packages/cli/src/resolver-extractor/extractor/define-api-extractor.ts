@@ -105,11 +105,16 @@ interface MetadataKindResult {
  * absent, or `kind` isn't a string literal — callers narrow/validate the
  * returned `kind` themselves.
  */
+interface DetectKindFromMetadataTypeParams {
+  readonly returnType: ts.Type;
+  readonly checker: ts.TypeChecker;
+  readonly metadataProperty: string;
+}
+
 function detectKindFromMetadataType(
-  returnType: ts.Type,
-  checker: ts.TypeChecker,
-  metadataProperty: string,
+  params: DetectKindFromMetadataTypeParams,
 ): MetadataKindResult | null {
+  const { returnType, checker, metadataProperty } = params;
   const metadataProp = returnType.getProperty(metadataProperty);
   if (!metadataProp) {
     return null;
@@ -142,11 +147,11 @@ function detectAbstractResolverFromMetadataType(
   returnType: ts.Type,
   checker: ts.TypeChecker,
 ): { kind: AbstractResolverKind; targetTypeName: string } | null {
-  const result = detectKindFromMetadataType(
+  const result = detectKindFromMetadataType({
     returnType,
     checker,
-    ABSTRACT_RESOLVER_METADATA_PROPERTY,
-  );
+    metadataProperty: ABSTRACT_RESOLVER_METADATA_PROPERTY,
+  });
   if (!result) {
     return null;
   }
@@ -215,11 +220,11 @@ function detectResolverFromMetadataType(
   returnType: ts.Type,
   checker: ts.TypeChecker,
 ): DefineApiResolverType | null {
-  const result = detectKindFromMetadataType(
+  const result = detectKindFromMetadataType({
     returnType,
     checker,
-    RESOLVER_METADATA_PROPERTY,
-  );
+    metadataProperty: RESOLVER_METADATA_PROPERTY,
+  });
   if (!result) {
     return null;
   }
@@ -314,11 +319,16 @@ function getTypeNameForDiagnostic(
  * warnings raised inside `resolveFieldType`) visible for resolver args and
  * return types instead of vanishing into a context array that nobody reads.
  */
+interface ConvertFieldDiagnosticsParams {
+  readonly fieldDiagnostics: ReadonlyArray<FieldTypeResolverDiagnostic>;
+  readonly label: string;
+  readonly location: SourceLocation | null;
+}
+
 function convertFieldDiagnostics(
-  fieldDiagnostics: ReadonlyArray<FieldTypeResolverDiagnostic>,
-  label: string,
-  location: SourceLocation | null,
+  params: ConvertFieldDiagnosticsParams,
 ): Diagnostic[] {
+  const { fieldDiagnostics, label, location } = params;
   return fieldDiagnostics.map((d) => ({
     code: d.code,
     message: `${label}: ${d.message}`,
@@ -429,14 +439,17 @@ interface TypeArgumentsResult {
   diagnostics: Diagnostic[];
 }
 
+interface ValidateArgsTypeParams {
+  readonly argsType: ts.Type;
+  readonly argsTypeNode: ts.TypeNode;
+  readonly checker: ts.TypeChecker;
+}
+
 /**
  * Validates an args type and returns diagnostics for problematic types.
  */
-function validateArgsType(
-  argsType: ts.Type,
-  argsTypeNode: ts.TypeNode,
-  checker: ts.TypeChecker,
-): Diagnostic[] {
+function validateArgsType(params: ValidateArgsTypeParams): Diagnostic[] {
+  const { argsType, argsTypeNode, checker } = params;
   const diagnostics: Diagnostic[] = [];
 
   if (hasOnlyIndexSignatures(argsType, checker)) {
@@ -540,7 +553,7 @@ function extractTypeArgumentsFromCall(
   const diagnostics: Diagnostic[] = [];
 
   if (!isNoArgs) {
-    diagnostics.push(...validateArgsType(argsType, argsTypeNode, checker));
+    diagnostics.push(...validateArgsType({ argsType, argsTypeNode, checker }));
   }
 
   const argsResult = isNoArgs
@@ -558,11 +571,11 @@ function extractTypeArgumentsFromCall(
     diagnostics: returnTypeDiagnostics,
   });
   diagnostics.push(
-    ...convertFieldDiagnostics(
-      returnTypeDiagnostics,
-      "Return type",
-      getSourceLocationFromNode(returnTypeNode),
-    ),
+    ...convertFieldDiagnostics({
+      fieldDiagnostics: returnTypeDiagnostics,
+      label: "Return type",
+      location: getSourceLocationFromNode(returnTypeNode),
+    }),
   );
 
   return {
@@ -802,11 +815,16 @@ function processResolverDeclaration(
   };
 }
 
+export interface ExtractDefineApiResolversParams {
+  readonly program: ts.Program;
+  readonly files: ReadonlyArray<string>;
+  readonly options: ExtractDefineApiOptions;
+}
+
 export function extractDefineApiResolvers(
-  program: ts.Program,
-  files: ReadonlyArray<string>,
-  options: ExtractDefineApiOptions,
+  params: ExtractDefineApiResolversParams,
 ): ExtractDefineApiResult {
+  const { program, files, options } = params;
   const checker = program.getTypeChecker();
   const resolvers: DefineApiResolverInfo[] = [];
   const abstractTypeResolvers: AbstractResolverInfo[] = [];

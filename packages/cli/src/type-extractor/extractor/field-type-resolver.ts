@@ -744,7 +744,7 @@ function tryExtractAsInlineObject(
   // object across multiple union members (common with generic .d.ts types).
   visitedTypes.delete(type);
 
-  // Extract type-level TSDoc from the alias symbol if present (Requirement 7.2)
+  // Extract type-level TSDoc from the alias symbol if present.
   // Only extract from user-defined types, not built-in TypeScript utility types
   let description: string | null = null;
   let deprecated: DeprecationInfo | null = null;

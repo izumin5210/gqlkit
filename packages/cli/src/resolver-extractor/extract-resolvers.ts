@@ -47,10 +47,10 @@ export function extractResolvers(
   const allDiagnostics: Diagnostic[] = [];
 
   const sourceFilesSet = new Set(sourceFiles);
-  const defineApiExtractionResult = extractDefineApiResolvers(
+  const defineApiExtractionResult = extractDefineApiResolvers({
     program,
-    sourceFiles,
-    {
+    files: sourceFiles,
+    options: {
       knownTypeNames,
       knownTypeSymbols,
       underlyingSymbolToTypeName,
@@ -58,7 +58,7 @@ export function extractResolvers(
       sourceFiles: sourceFilesSet,
       scalarMappingTable,
     },
-  );
+  });
   allDiagnostics.push(...defineApiExtractionResult.diagnostics);
 
   const result = convertDefineApiToFields(defineApiExtractionResult.resolvers);

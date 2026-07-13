@@ -39,36 +39,40 @@ export function updateExtractedTypes(
     return {
       ...typeInfo,
       fields: typeInfo.fields.map((field) =>
-        updateField(
+        updateField({
           field,
           params,
-          typeInfo.metadata.name,
+          parentTypeName: typeInfo.metadata.name,
           isInput,
           siblingFieldNames,
-        ),
+        }),
       ),
     };
   });
 }
 
-function updateField(
-  field: PropertyDef,
-  params: UpdateTypeNamesParams,
-  parentTypeName: string,
-  isInput: boolean,
-  siblingFieldNames: ReadonlySet<string>,
-): PropertyDef {
+interface UpdateFieldParams {
+  readonly field: PropertyDef;
+  readonly params: UpdateTypeNamesParams;
+  readonly parentTypeName: string;
+  readonly isInput: boolean;
+  readonly siblingFieldNames: ReadonlySet<string>;
+}
+
+function updateField(updateFieldParams: UpdateFieldParams): PropertyDef {
+  const { field, params, parentTypeName, isInput, siblingFieldNames } =
+    updateFieldParams;
   const { generatedTypeNames, enumTypeNames, unionTypeNames } = params;
-  const context = buildFieldContext(
+  const context = buildFieldContext({
     parentTypeName,
-    appendFieldPath({
+    fieldPath: appendFieldPath({
       parentPath: [],
       fieldName: field.name,
       singularize: field.tsType.kind === "array",
       siblingFieldNames,
     }),
     isInput,
-  );
+  });
   const contextKey = getContextKey(context);
 
   const resolved = resolveGeneratedTypeName({
@@ -110,34 +114,60 @@ export function updateResolversResult(
     ...resolversResult,
     queryFields: {
       fields: resolversResult.queryFields.fields.map((field) =>
-        updateResolverField(field, params, "query", null),
+        updateResolverField({
+          field,
+          params,
+          resolverType: "query",
+          parentTypeName: null,
+        }),
       ),
     },
     mutationFields: {
       fields: resolversResult.mutationFields.fields.map((field) =>
-        updateResolverField(field, params, "mutation", null),
+        updateResolverField({
+          field,
+          params,
+          resolverType: "mutation",
+          parentTypeName: null,
+        }),
       ),
     },
     subscriptionFields: {
       fields: resolversResult.subscriptionFields.fields.map((field) =>
-        updateResolverField(field, params, "subscription", null),
+        updateResolverField({
+          field,
+          params,
+          resolverType: "subscription",
+          parentTypeName: null,
+        }),
       ),
     },
     typeExtensions: resolversResult.typeExtensions.map((ext) => ({
       ...ext,
       fields: ext.fields.map((field) =>
-        updateResolverField(field, params, "field", ext.targetTypeName),
+        updateResolverField({
+          field,
+          params,
+          resolverType: "field",
+          parentTypeName: ext.targetTypeName,
+        }),
       ),
     })),
   };
 }
 
+interface UpdateResolverFieldParams {
+  readonly field: GraphQLFieldDefinition;
+  readonly params: UpdateTypeNamesParams;
+  readonly resolverType: "query" | "mutation" | "subscription" | "field";
+  readonly parentTypeName: string | null;
+}
+
 function updateResolverField(
-  field: GraphQLFieldDefinition,
-  params: UpdateTypeNamesParams,
-  resolverType: "query" | "mutation" | "subscription" | "field",
-  parentTypeName: string | null,
+  updateResolverFieldParams: UpdateResolverFieldParams,
 ): GraphQLFieldDefinition {
+  const { field, params, resolverType, parentTypeName } =
+    updateResolverFieldParams;
   const { generatedTypeNames, enumTypeNames, unionTypeNames } = params;
 
   let updatedType = field.type;

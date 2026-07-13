@@ -174,14 +174,19 @@ export function isInputTypeName(name: string): boolean {
   return name.endsWith("Input");
 }
 
+export interface BuildFieldContextParams {
+  readonly parentTypeName: string;
+  readonly fieldPath: ReadonlyArray<string>;
+  readonly isInput: boolean;
+}
+
 /**
  * Build a field context (object or input) based on the parent type name.
  */
 export function buildFieldContext(
-  parentTypeName: string,
-  fieldPath: ReadonlyArray<string>,
-  isInput: boolean,
+  params: BuildFieldContextParams,
 ): ObjectFieldContext | InputFieldContext {
+  const { parentTypeName, fieldPath, isInput } = params;
   return isInput
     ? { kind: "inputField", parentTypeName, fieldPath }
     : { kind: "objectField", parentTypeName, fieldPath };

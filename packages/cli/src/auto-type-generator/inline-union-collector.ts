@@ -124,7 +124,7 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
 
     results.push({
       members,
-      context: buildFieldContext(parentTypeName, fieldPath, isInput),
+      context: buildFieldContext({ parentTypeName, fieldPath, isInput }),
       sourceLocation: getSourceLocationOrDefault(
         field.sourceLocation,
         sourceFile,
@@ -146,7 +146,7 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
 
     results.push({
       members,
-      context: buildFieldContext(parentTypeName, fieldPath, isInput),
+      context: buildFieldContext({ parentTypeName, fieldPath, isInput }),
       sourceLocation: getSourceLocationOrDefault(
         field.sourceLocation,
         sourceFile,
@@ -174,7 +174,11 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
 
           results.push({
             members,
-            context: buildFieldContext(parentTypeName, propPath, isInput),
+            context: buildFieldContext({
+              parentTypeName,
+              fieldPath: propPath,
+              isInput,
+            }),
             sourceLocation: getSourceLocationOrDefault(
               prop.sourceLocation,
               sourceFile,

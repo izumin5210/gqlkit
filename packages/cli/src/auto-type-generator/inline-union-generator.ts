@@ -358,16 +358,21 @@ interface MemberFieldResolutionContext {
   readonly knownTypeNames: ReadonlySet<string>;
 }
 
+interface ConvertMemberPropertiesToFieldsParams {
+  readonly properties: ReadonlyArray<PropertyDef>;
+  readonly parentTypeName: string;
+  readonly ctx: MemberFieldResolutionContext;
+}
+
 /**
  * Convert inline object/enum/union properties within a union member to fields.
  * Handles __INLINE_OBJECT__, __INLINE_ENUM__, and inline union (kind: "union") sentinels
  * by generating appropriate auto types and replacing sentinel type names.
  */
 function convertMemberPropertiesToFields(
-  properties: ReadonlyArray<PropertyDef>,
-  parentTypeName: string,
-  ctx: MemberFieldResolutionContext,
+  params: ConvertMemberPropertiesToFieldsParams,
 ): FieldInfo[] {
+  const { properties, parentTypeName, ctx } = params;
   const siblingFieldNames = new Set(properties.map((prop) => prop.name));
   return properties.flatMap((prop) => {
     const fieldType = convertTsTypeToGraphQLType(prop.tsType, prop.optional);
@@ -375,13 +380,13 @@ function convertMemberPropertiesToFields(
       return [];
     }
 
-    const resolvedTypeName = resolveInlineTypeInMember(
+    const resolvedTypeName = resolveInlineTypeInMember({
       prop,
       fieldType,
       parentTypeName,
       siblingFieldNames,
       ctx,
-    );
+    });
 
     return {
       name: prop.name,
@@ -396,17 +401,22 @@ function convertMemberPropertiesToFields(
   });
 }
 
+interface ResolveInlineTypeInMemberParams {
+  readonly prop: PropertyDef;
+  readonly fieldType: GraphQLFieldType;
+  readonly parentTypeName: string;
+  readonly siblingFieldNames: ReadonlySet<string>;
+  readonly ctx: MemberFieldResolutionContext;
+}
+
 /**
  * Resolve an inline type (object, enum, or union) within a union member property.
  * Returns the generated type name if resolved, or null if no resolution is needed.
  */
 function resolveInlineTypeInMember(
-  prop: PropertyDef,
-  fieldType: GraphQLFieldType,
-  parentTypeName: string,
-  siblingFieldNames: ReadonlySet<string>,
-  ctx: MemberFieldResolutionContext,
+  params: ResolveInlineTypeInMemberParams,
 ): string | null {
+  const { prop, fieldType, parentTypeName, siblingFieldNames, ctx } = params;
   // Determine the inline TS type (direct or array element)
   const inlineTsType =
     prop.tsType.kind === "array" ? prop.tsType.elementType : prop.tsType;
@@ -423,15 +433,15 @@ function resolveInlineTypeInMember(
     fieldType.typeName === "__INLINE_OBJECT__" &&
     inlineTsType.kind === "inlineObject"
   ) {
-    return resolveNestedInlineObjectInMember(
-      inlineTsType.inlineObjectProperties!,
-      prop.name,
+    return resolveNestedInlineObjectInMember({
+      properties: inlineTsType.inlineObjectProperties!,
+      fieldName: prop.name,
       singularizeArrayFieldName,
       parentTypeName,
       siblingFieldNames,
       ctx,
-      inlineTsType.inlineObjectDescription,
-    );
+      description: inlineTsType.inlineObjectDescription,
+    });
   }
 
   // Resolve inline enums (string literal unions)
@@ -440,30 +450,40 @@ function resolveInlineTypeInMember(
     fieldType.typeName === "__INLINE_ENUM__" &&
     inlineTsType.kind === "inlineEnum"
   ) {
-    return resolveInlineEnumInMember(
-      inlineTsType.inlineEnumMembers!,
-      prop.name,
+    return resolveInlineEnumInMember({
+      members: inlineTsType.inlineEnumMembers!,
+      fieldName: prop.name,
       singularizeArrayFieldName,
       parentTypeName,
       siblingFieldNames,
       ctx,
-      inlineTsType.externalEnumDescription,
-    );
+      description: inlineTsType.externalEnumDescription,
+    });
   }
 
   // Resolve inline unions (reference type unions like User | Bot)
   if (mapKind === "union" && inlineTsType.kind === "union") {
-    return resolveInlineUnionInMember(
-      inlineTsType.members!,
-      prop.name,
+    return resolveInlineUnionInMember({
+      members: inlineTsType.members!,
+      fieldName: prop.name,
       singularizeArrayFieldName,
       parentTypeName,
       siblingFieldNames,
       ctx,
-    );
+    });
   }
 
   return null;
+}
+
+interface ResolveNestedInlineObjectInMemberParams {
+  readonly properties: ReadonlyArray<PropertyDef>;
+  readonly fieldName: string;
+  readonly singularizeArrayFieldName: boolean;
+  readonly parentTypeName: string;
+  readonly siblingFieldNames: ReadonlySet<string>;
+  readonly ctx: MemberFieldResolutionContext;
+  readonly description: string | null;
 }
 
 /**
@@ -472,14 +492,17 @@ function resolveInlineTypeInMember(
  * into deeper nesting levels.
  */
 function resolveNestedInlineObjectInMember(
-  properties: ReadonlyArray<PropertyDef>,
-  fieldName: string,
-  singularizeArrayFieldName: boolean,
-  parentTypeName: string,
-  siblingFieldNames: ReadonlySet<string>,
-  ctx: MemberFieldResolutionContext,
-  description: string | null,
+  params: ResolveNestedInlineObjectInMemberParams,
 ): string {
+  const {
+    properties,
+    fieldName,
+    singularizeArrayFieldName,
+    parentTypeName,
+    siblingFieldNames,
+    ctx,
+    description,
+  } = params;
   const context: AutoTypeNameContext = {
     kind: "objectField",
     parentTypeName,
@@ -497,7 +520,11 @@ function resolveNestedInlineObjectInMember(
     return ctx.generatedTypeNames.get(contextKey)!;
   }
 
-  const fields = convertMemberPropertiesToFields(properties, typeName, ctx);
+  const fields = convertMemberPropertiesToFields({
+    properties,
+    parentTypeName: typeName,
+    ctx,
+  });
 
   ctx.types.push({
     name: typeName,
@@ -517,18 +544,31 @@ function resolveNestedInlineObjectInMember(
   return typeName;
 }
 
+interface ResolveInlineEnumInMemberParams {
+  readonly members: ReadonlyArray<InlineEnumMemberInfo>;
+  readonly fieldName: string;
+  readonly singularizeArrayFieldName: boolean;
+  readonly parentTypeName: string;
+  readonly siblingFieldNames: ReadonlySet<string>;
+  readonly ctx: MemberFieldResolutionContext;
+  readonly description: string | null;
+}
+
 /**
  * Resolve an inline enum (string literal union) within an inline union member.
  */
 function resolveInlineEnumInMember(
-  members: ReadonlyArray<InlineEnumMemberInfo>,
-  fieldName: string,
-  singularizeArrayFieldName: boolean,
-  parentTypeName: string,
-  siblingFieldNames: ReadonlySet<string>,
-  ctx: MemberFieldResolutionContext,
-  description: string | null,
+  params: ResolveInlineEnumInMemberParams,
 ): string {
+  const {
+    members,
+    fieldName,
+    singularizeArrayFieldName,
+    parentTypeName,
+    siblingFieldNames,
+    ctx,
+    description,
+  } = params;
   const context: AutoTypeNameContext = {
     kind: "objectField",
     parentTypeName,
@@ -576,17 +616,29 @@ function resolveInlineEnumInMember(
   return typeName;
 }
 
+interface ResolveInlineUnionInMemberParams {
+  readonly members: ReadonlyArray<TSTypeReference>;
+  readonly fieldName: string;
+  readonly singularizeArrayFieldName: boolean;
+  readonly parentTypeName: string;
+  readonly siblingFieldNames: ReadonlySet<string>;
+  readonly ctx: MemberFieldResolutionContext;
+}
+
 /**
  * Resolve an inline union of reference types within an inline union member.
  */
 function resolveInlineUnionInMember(
-  members: ReadonlyArray<TSTypeReference>,
-  fieldName: string,
-  singularizeArrayFieldName: boolean,
-  parentTypeName: string,
-  siblingFieldNames: ReadonlySet<string>,
-  ctx: MemberFieldResolutionContext,
+  params: ResolveInlineUnionInMemberParams,
 ): string {
+  const {
+    members,
+    fieldName,
+    singularizeArrayFieldName,
+    parentTypeName,
+    siblingFieldNames,
+    ctx,
+  } = params;
   const context: AutoTypeNameContext = {
     kind: "objectField",
     parentTypeName,
@@ -760,11 +812,11 @@ function convertInlineMemberFields(
       prop.name !== typenameFieldToFilter,
   );
 
-  return convertMemberPropertiesToFields(
-    filteredProperties,
-    naming.memberTypeName,
-    fieldCtx,
-  );
+  return convertMemberPropertiesToFields({
+    properties: filteredProperties,
+    parentTypeName: naming.memberTypeName,
+    ctx: fieldCtx,
+  });
 }
 
 interface RegisterInlineMemberTypeParams {
