@@ -1,5 +1,5 @@
 import { access, readdir, readFile, unlink } from "node:fs/promises";
-import { basename, dirname, join } from "node:path";
+import { basename, dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import type { GqlkitConfig } from "../config/index.js";
@@ -73,6 +73,19 @@ function findFile(
   return files.find((f) => basename(f.filePath) === filename)?.content;
 }
 
+/**
+ * Mirrors `validateOutputPath` (config-loader/validator.ts): `undefined`
+ * (key absent from config.json) resolves to the default path; an explicit
+ * `null` is preserved as "suppressed" rather than falling back to the
+ * default (a plain `??` would collapse both to the same case).
+ */
+function resolveOutputPath(
+  configuredPath: string | null | undefined,
+  defaultPath: string,
+): string | null {
+  return configuredPath === undefined ? defaultPath : configuredPath;
+}
+
 describe("Golden File Tests", async () => {
   const entries = await readdir(testdataDir, { withFileTypes: true });
   const caseNames = entries
@@ -109,13 +122,19 @@ describe("Golden File Tests", async () => {
         }
       }
 
-      // Output paths stay hardcoded to the defaults for now; only
-      // `output.pruning` (and `output.importExtension`) are threaded from
-      // config.json. Full output-config generalization is a later phase.
       const output = {
-        resolversPath: DEFAULT_RESOLVERS_PATH,
-        typeDefsPath: DEFAULT_TYPEDEFS_PATH,
-        schemaPath: DEFAULT_SCHEMA_PATH,
+        resolversPath: resolveOutputPath(
+          config?.output?.resolversPath,
+          DEFAULT_RESOLVERS_PATH,
+        ),
+        typeDefsPath: resolveOutputPath(
+          config?.output?.typeDefsPath,
+          DEFAULT_TYPEDEFS_PATH,
+        ),
+        schemaPath: resolveOutputPath(
+          config?.output?.schemaPath,
+          DEFAULT_SCHEMA_PATH,
+        ),
         importExtension: config?.output?.importExtension ?? "js",
         pruning: config?.output?.pruning ?? true,
       };
@@ -131,43 +150,59 @@ describe("Golden File Tests", async () => {
         discriminatorFields,
       });
 
-      const expectedDir = join(caseDir, "src/gqlkit/__generated__");
+      // diagnostics.json is a test-harness artifact, not a real gqlkit
+      // output — it has no config.json-configurable path, unlike the three
+      // files below whose location follows `output.*Path`.
+      const diagnosticsPath = join(
+        caseDir,
+        "src/gqlkit/__generated__/diagnostics.json",
+      );
 
       await expect(
         serializeDiagnostics(result.diagnostics),
-      ).toMatchFileSnapshot(join(expectedDir, "diagnostics.json"));
+      ).toMatchFileSnapshot(diagnosticsPath);
 
       if (result.success) {
-        const typeDefsTs = findFile(result.files, "typeDefs.ts");
-        const schemaGraphql = findFile(result.files, "schema.graphql");
-        const resolversTs = findFile(result.files, "resolvers.ts");
-
-        expect(typeDefsTs).toBeDefined();
-        expect(schemaGraphql).toBeDefined();
-        expect(resolversTs).toBeDefined();
-
-        await expect(typeDefsTs).toMatchFileSnapshot(
-          join(expectedDir, "typeDefs.ts"),
-        );
-        await expect(schemaGraphql).toMatchFileSnapshot(
-          join(expectedDir, "schema.graphql"),
-        );
-        await expect(resolversTs).toMatchFileSnapshot(
-          join(expectedDir, "resolvers.ts"),
-        );
+        if (output.typeDefsPath !== null) {
+          const typeDefsTs = findFile(result.files, "typeDefs.ts");
+          expect(typeDefsTs).toBeDefined();
+          await expect(typeDefsTs).toMatchFileSnapshot(
+            resolve(caseDir, output.typeDefsPath),
+          );
+        }
+        if (output.schemaPath !== null) {
+          const schemaGraphql = findFile(result.files, "schema.graphql");
+          expect(schemaGraphql).toBeDefined();
+          await expect(schemaGraphql).toMatchFileSnapshot(
+            resolve(caseDir, output.schemaPath),
+          );
+        }
+        if (output.resolversPath !== null) {
+          const resolversTs = findFile(result.files, "resolvers.ts");
+          expect(resolversTs).toBeDefined();
+          await expect(resolversTs).toMatchFileSnapshot(
+            resolve(caseDir, output.resolversPath),
+          );
+        }
       } else {
-        await assertFileNotExists(
-          join(expectedDir, "typeDefs.ts"),
-          "typeDefs.ts",
-        );
-        await assertFileNotExists(
-          join(expectedDir, "schema.graphql"),
-          "schema.graphql",
-        );
-        await assertFileNotExists(
-          join(expectedDir, "resolvers.ts"),
-          "resolvers.ts",
-        );
+        if (output.typeDefsPath !== null) {
+          await assertFileNotExists(
+            resolve(caseDir, output.typeDefsPath),
+            "typeDefs.ts",
+          );
+        }
+        if (output.schemaPath !== null) {
+          await assertFileNotExists(
+            resolve(caseDir, output.schemaPath),
+            "schema.graphql",
+          );
+        }
+        if (output.resolversPath !== null) {
+          await assertFileNotExists(
+            resolve(caseDir, output.resolversPath),
+            "resolvers.ts",
+          );
+        }
       }
     });
   }
