@@ -7,6 +7,8 @@ description: Add computed fields to object types using defineField.
 
 Add computed fields to object types using `defineField`. Define them alongside the type.
 
+> `defineField` requires explicit type arguments (`defineField<Parent, Args, Result>(...)`) — see [Queries & Mutations](./queries-mutations.md) for why.
+
 GraphQL field names are derived from the exported variable name:
 
 - Default: the full export name is used as-is.
