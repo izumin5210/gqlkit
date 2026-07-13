@@ -6,12 +6,19 @@
  * WHY this test exists: the CLI detects gqlkit runtime types by shape,
  * not by name, via these marker properties (e.g. `" $gqlkitScalar"`).
  * The runtime package embeds the very same string literals directly in its
- * exported type definitions (`packages/runtime/src/index.ts`). There is no
+ * exported type definitions (`packages/runtime/src/*.ts`). There is no
  * compile-time link between the two packages for this contract -- it is
  * purely string-based -- so renaming a marker on either side silently
  * breaks type detection at generation time without any type error. This
  * test reads the runtime source as plain text and cross-checks both
  * directions so such a drift fails loudly in CI instead of at runtime.
+ *
+ * The runtime package's `index.ts` used to be a single 875-line file
+ * mixing every marker-bearing type; it has since been split by concern
+ * (`directive.ts`, `field.ts`, `interface.ts`, `object.ts`, `resolver.ts`,
+ * `scalar.ts`, `apis.ts`) with `index.ts` reduced to a barrel re-export.
+ * This test therefore scans every non-test `.ts` file directly under
+ * `packages/runtime/src` rather than a single known path.
  */
 
 import fs from "node:fs";
@@ -20,9 +27,9 @@ import { fileURLToPath } from "node:url";
 import { describe, expect, it } from "vitest";
 import { METADATA_PROPERTIES } from "./metadata-contract.js";
 
-const RUNTIME_INDEX_PATH = path.resolve(
+const RUNTIME_SRC_DIR = path.resolve(
   path.dirname(fileURLToPath(import.meta.url)),
-  "../../../runtime/src/index.ts",
+  "../../../runtime/src",
 );
 
 /**
@@ -47,8 +54,17 @@ const KNOWN_UNREGISTERED_RUNTIME_MARKERS: ReadonlySet<string> = new Set([
   " $gqlkitInterface",
 ]);
 
+function listRuntimeSourceFiles(): string[] {
+  return fs
+    .readdirSync(RUNTIME_SRC_DIR)
+    .filter((name) => name.endsWith(".ts") && !name.endsWith(".test.ts"))
+    .map((name) => path.join(RUNTIME_SRC_DIR, name));
+}
+
 function readRuntimeSource(): string {
-  return fs.readFileSync(RUNTIME_INDEX_PATH, "utf-8");
+  return listRuntimeSourceFiles()
+    .map((filePath) => fs.readFileSync(filePath, "utf-8"))
+    .join("\n");
 }
 
 /** Matches space-prefixed marker-looking property literals, e.g. `" $gqlkitScalar"`. */
@@ -69,7 +85,7 @@ describe("METADATA_PROPERTIES <-> runtime marker contract", () => {
     for (const [key, value] of Object.entries(METADATA_PROPERTIES)) {
       expect(
         runtimeSource.includes(`"${value}"`),
-        `METADATA_PROPERTIES.${key} (${JSON.stringify(value)}) was not found as a quoted literal in ${RUNTIME_INDEX_PATH}`,
+        `METADATA_PROPERTIES.${key} (${JSON.stringify(value)}) was not found as a quoted literal anywhere under ${RUNTIME_SRC_DIR}`,
       ).toBe(true);
     }
   });
@@ -87,7 +103,7 @@ describe("METADATA_PROPERTIES <-> runtime marker contract", () => {
       }
       expect(
         registeredMarkers.has(marker),
-        `Found marker-like property ${JSON.stringify(marker)} in ${RUNTIME_INDEX_PATH} that is not registered in METADATA_PROPERTIES. Either it's a new gqlkit marker missing a CLI-side entry, or it's dead runtime code that must be explicitly allowlisted in KNOWN_UNREGISTERED_RUNTIME_MARKERS.`,
+        `Found marker-like property ${JSON.stringify(marker)} under ${RUNTIME_SRC_DIR} that is not registered in METADATA_PROPERTIES. Either it's a new gqlkit marker missing a CLI-side entry, or it's dead runtime code that must be explicitly allowlisted in KNOWN_UNREGISTERED_RUNTIME_MARKERS.`,
       ).toBe(true);
     }
   });
@@ -102,7 +118,7 @@ describe("METADATA_PROPERTIES <-> runtime marker contract", () => {
     for (const marker of KNOWN_UNREGISTERED_RUNTIME_MARKERS) {
       expect(
         runtimeMarkers.has(marker),
-        `Allowlisted marker ${JSON.stringify(marker)} no longer exists in ${RUNTIME_INDEX_PATH}. Remove it from KNOWN_UNREGISTERED_RUNTIME_MARKERS.`,
+        `Allowlisted marker ${JSON.stringify(marker)} no longer exists anywhere under ${RUNTIME_SRC_DIR}. Remove it from KNOWN_UNREGISTERED_RUNTIME_MARKERS.`,
       ).toBe(true);
     }
   });
