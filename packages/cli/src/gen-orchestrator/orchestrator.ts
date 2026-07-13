@@ -338,7 +338,11 @@ function extractResolversStep(ctx: PipelineContext): PipelineContext {
   )
     return ctx;
 
-  const { globalTypeMappings } = ctx.scalarConfig;
+  const { globalTypeMappings, customScalarNames } = ctx.scalarConfig;
+
+  const allCustomScalarNames = [
+    ...new Set([...customScalarNames, ...ctx.typesResult.detectedScalarNames]),
+  ];
 
   const resolversResult = extractResolvers({
     program: ctx.program,
@@ -348,6 +352,8 @@ function extractResolversStep(ctx: PipelineContext): PipelineContext {
     underlyingSymbolToTypeName: ctx.underlyingSymbolToTypeName,
     globalTypeMappings,
     scalarMappingTable: ctx.typesResult.scalarMappingTable,
+    declaredTypeNames: ctx.typesResult.types.map((t) => t.name),
+    customScalarNames: allCustomScalarNames,
   });
 
   return { ...ctx, resolversResult };
