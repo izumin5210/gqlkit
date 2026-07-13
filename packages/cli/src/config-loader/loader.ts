@@ -22,7 +22,7 @@ export interface LoadConfigOptions {
 
 export interface LoadConfigResult {
   readonly config: ResolvedConfig;
-  readonly configPath: string | undefined;
+  readonly configPath: string | null;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
@@ -58,7 +58,7 @@ export async function loadConfig(
   if (configPath === null) {
     return {
       config: DEFAULT_RESOLVED_CONFIG,
-      configPath: undefined,
+      configPath: null,
       diagnostics: [],
     };
   }
@@ -79,7 +79,7 @@ export async function loadConfig(
     }
     return {
       config: DEFAULT_RESOLVED_CONFIG,
-      configPath: undefined,
+      configPath: null,
       diagnostics: [],
     };
   }

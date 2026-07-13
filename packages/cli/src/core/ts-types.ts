@@ -14,8 +14,8 @@ export interface ScalarTypeInfo {
   readonly scalarName: string;
   /** The TypeScript type name (e.g., "IDString", "Int", "DateTime") */
   readonly typeName: string;
-  /** The underlying TypeScript primitive type (undefined for custom scalars) */
-  readonly baseType: "string" | "number" | undefined;
+  /** The underlying TypeScript primitive type (null for custom scalars) */
+  readonly baseType: "string" | "number" | null;
   /** Whether this is a custom scalar */
   readonly isCustom: boolean;
   /** Usage constraint: "input" for input-only, "output" for output-only, null for both */

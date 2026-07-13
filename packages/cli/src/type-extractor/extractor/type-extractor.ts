@@ -835,7 +835,7 @@ function processDeclaredType(
     typeInfo: {
       metadata,
       fields: fieldResult.fields,
-      unionMembers: unionMembers ?? null,
+      unionMembers,
       inlineObjectMembers,
       enumMembers: null,
       implementedInterfaces,
@@ -1315,9 +1315,9 @@ function extractInlineObjectMembers(
 function extractUnionMembers(
   type: ts.Type,
   typeNode: ts.TypeNode | undefined,
-): string[] | undefined {
+): string[] | null {
   if (!type.isUnion()) {
-    return undefined;
+    return null;
   }
 
   const nonNullTypes = getNonNullableTypes(type);
@@ -1361,7 +1361,7 @@ function extractUnionMembers(
     }
   }
 
-  return undefined;
+  return null;
 }
 
 export function extractTypesFromProgram(

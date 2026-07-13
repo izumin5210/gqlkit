@@ -21,7 +21,7 @@ export interface ValidateConfigOptions {
 
 export interface ValidateConfigResult {
   readonly valid: boolean;
-  readonly resolvedConfig: ResolvedConfig | undefined;
+  readonly resolvedConfig: ResolvedConfig | null;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
@@ -107,7 +107,7 @@ function validateOutputPath(params: ValidateOutputPathParams): {
 }
 
 function validateSourceDir(params: ValidateFieldParams): {
-  resolved: string | undefined;
+  resolved: string | null;
   diagnostics: Diagnostic[];
 } {
   const { value, configPath } = params;
@@ -125,7 +125,7 @@ function validateSourceDir(params: ValidateFieldParams): {
         configPath,
       }),
     );
-    return { resolved: undefined, diagnostics };
+    return { resolved: null, diagnostics };
   }
 
   if (value === "") {
@@ -136,14 +136,14 @@ function validateSourceDir(params: ValidateFieldParams): {
         configPath,
       }),
     );
-    return { resolved: undefined, diagnostics };
+    return { resolved: null, diagnostics };
   }
 
   return { resolved: value, diagnostics: [] };
 }
 
 function validateSourceIgnoreGlobs(params: ValidateFieldParams): {
-  resolved: ReadonlyArray<string> | undefined;
+  resolved: ReadonlyArray<string> | null;
   diagnostics: Diagnostic[];
 } {
   const { value, configPath } = params;
@@ -161,7 +161,7 @@ function validateSourceIgnoreGlobs(params: ValidateFieldParams): {
         configPath,
       }),
     );
-    return { resolved: undefined, diagnostics };
+    return { resolved: null, diagnostics };
   }
 
   for (const item of value) {
@@ -173,7 +173,7 @@ function validateSourceIgnoreGlobs(params: ValidateFieldParams): {
           configPath,
         }),
       );
-      return { resolved: undefined, diagnostics };
+      return { resolved: null, diagnostics };
     }
   }
 
@@ -274,7 +274,7 @@ interface ValidateOutputConfigParams {
 }
 
 function validateOutputConfig(params: ValidateOutputConfigParams): {
-  resolved: ResolvedOutputConfig | undefined;
+  resolved: ResolvedOutputConfig | null;
   diagnostics: Diagnostic[];
 } {
   const { output, configPath } = params;
@@ -301,7 +301,7 @@ function validateOutputConfig(params: ValidateOutputConfigParams): {
         configPath,
       }),
     );
-    return { resolved: undefined, diagnostics };
+    return { resolved: null, diagnostics };
   }
 
   const resolversPathResult = validateOutputPath({
@@ -335,7 +335,7 @@ function validateOutputConfig(params: ValidateOutputConfigParams): {
   diagnostics.push(...pruningResult.diagnostics);
 
   if (diagnostics.length > 0) {
-    return { resolved: undefined, diagnostics };
+    return { resolved: null, diagnostics };
   }
 
   return {
@@ -392,7 +392,7 @@ interface ValidateNewScalarMappingParams {
 }
 
 function validateNewScalarMapping(params: ValidateNewScalarMappingParams): {
-  resolved: ResolvedScalarMapping | undefined;
+  resolved: ResolvedScalarMapping | null;
   diagnostics: Diagnostic[];
 } {
   const { scalar, index, configPath } = params;
@@ -416,7 +416,7 @@ function validateNewScalarMapping(params: ValidateNewScalarMappingParams): {
         configPath,
       }),
     );
-    return { resolved: undefined, diagnostics };
+    return { resolved: null, diagnostics };
   }
 
   const tsType = scalar["tsType"];
@@ -454,7 +454,7 @@ function validateNewScalarMapping(params: ValidateNewScalarMappingParams): {
   }
 
   if (diagnostics.length > 0) {
-    return { resolved: undefined, diagnostics };
+    return { resolved: null, diagnostics };
   }
 
   const graphqlName = scalar["name"] as string;
@@ -471,7 +471,7 @@ function validateNewScalarMapping(params: ValidateNewScalarMappingParams): {
         configPath,
       }),
     );
-    return { resolved: undefined, diagnostics };
+    return { resolved: null, diagnostics };
   }
 
   const importPath = typeof tsType["from"] === "string" ? tsType["from"] : null;
@@ -495,7 +495,7 @@ interface ValidateScalarMappingParams {
 }
 
 function validateScalarMapping(params: ValidateScalarMappingParams): {
-  resolved: ResolvedScalarMapping | undefined;
+  resolved: ResolvedScalarMapping | null;
   diagnostics: Diagnostic[];
 } {
   const { scalar, index, configPath } = params;
@@ -509,7 +509,7 @@ function validateScalarMapping(params: ValidateScalarMappingParams): {
         configPath,
       }),
     );
-    return { resolved: undefined, diagnostics };
+    return { resolved: null, diagnostics };
   }
 
   if (isNewFormat(scalar)) {
@@ -527,7 +527,7 @@ function validateScalarMapping(params: ValidateScalarMappingParams): {
         configPath,
       }),
     );
-    return { resolved: undefined, diagnostics };
+    return { resolved: null, diagnostics };
   }
 
   diagnostics.push(
@@ -537,7 +537,7 @@ function validateScalarMapping(params: ValidateScalarMappingParams): {
       configPath,
     }),
   );
-  return { resolved: undefined, diagnostics };
+  return { resolved: null, diagnostics };
 }
 
 interface ValidateHooksConfigParams {
@@ -546,7 +546,7 @@ interface ValidateHooksConfigParams {
 }
 
 function validateHooksConfig(params: ValidateHooksConfigParams): {
-  resolved: ResolvedHooksConfig | undefined;
+  resolved: ResolvedHooksConfig | null;
   diagnostics: Diagnostic[];
 } {
   const { hooks, configPath } = params;
@@ -567,7 +567,7 @@ function validateHooksConfig(params: ValidateHooksConfigParams): {
         configPath,
       }),
     );
-    return { resolved: undefined, diagnostics };
+    return { resolved: null, diagnostics };
   }
 
   const afterAllFileWrite = hooks["afterAllFileWrite"];
@@ -588,7 +588,7 @@ function validateHooksConfig(params: ValidateHooksConfigParams): {
           configPath,
         }),
       );
-      return { resolved: undefined, diagnostics };
+      return { resolved: null, diagnostics };
     }
     return {
       resolved: { afterAllFileWrite: [afterAllFileWrite] },
@@ -607,7 +607,7 @@ function validateHooksConfig(params: ValidateHooksConfigParams): {
             configPath,
           }),
         );
-        return { resolved: undefined, diagnostics };
+        return { resolved: null, diagnostics };
       }
       if (item === "") {
         diagnostics.push(
@@ -617,7 +617,7 @@ function validateHooksConfig(params: ValidateHooksConfigParams): {
             configPath,
           }),
         );
-        return { resolved: undefined, diagnostics };
+        return { resolved: null, diagnostics };
       }
     }
     return {
@@ -633,11 +633,11 @@ function validateHooksConfig(params: ValidateHooksConfigParams): {
       configPath,
     }),
   );
-  return { resolved: undefined, diagnostics };
+  return { resolved: null, diagnostics };
 }
 
 function validateDiscriminatorFieldsConfig(params: ValidateFieldParams): {
-  resolved: ResolvedDiscriminatorFieldsMap | undefined;
+  resolved: ResolvedDiscriminatorFieldsMap | null;
   diagnostics: Diagnostic[];
 } {
   const { value, configPath } = params;
@@ -655,7 +655,7 @@ function validateDiscriminatorFieldsConfig(params: ValidateFieldParams): {
         configPath,
       }),
     );
-    return { resolved: undefined, diagnostics };
+    return { resolved: null, diagnostics };
   }
 
   const result = new Map<string, ReadonlyArray<string>>();
@@ -724,7 +724,7 @@ function validateDiscriminatorFieldsConfig(params: ValidateFieldParams): {
   }
 
   if (diagnostics.length > 0) {
-    return { resolved: undefined, diagnostics };
+    return { resolved: null, diagnostics };
   }
 
   return { resolved: result, diagnostics: [] };
@@ -744,7 +744,7 @@ export function validateConfig(
         configPath,
       }),
     );
-    return { valid: false, resolvedConfig: undefined, diagnostics };
+    return { valid: false, resolvedConfig: null, diagnostics };
   }
 
   const sourceDirResult = validateSourceDir({
@@ -791,7 +791,7 @@ export function validateConfig(
         configPath,
       }),
     );
-    return { valid: false, resolvedConfig: undefined, diagnostics };
+    return { valid: false, resolvedConfig: null, diagnostics };
   }
 
   const scalarsArray = config["scalars"] ?? [];
@@ -853,7 +853,7 @@ export function validateConfig(
     !hooksResult.resolved ||
     !discriminatorFieldsResult.resolved
   ) {
-    return { valid: false, resolvedConfig: undefined, diagnostics };
+    return { valid: false, resolvedConfig: null, diagnostics };
   }
 
   return {

@@ -19,7 +19,7 @@ describe("ConfigLoader", () => {
     it("should return default config when gqlkit.config.ts does not exist", async () => {
       const result = await loadConfig({ cwd: tempDir, configPath: null });
 
-      expect(result.configPath).toBe(undefined);
+      expect(result.configPath).toBe(null);
       expect(result.config).toEqual({
         sourceDir: "src/gqlkit/schema",
         sourceIgnoreGlobs: [],

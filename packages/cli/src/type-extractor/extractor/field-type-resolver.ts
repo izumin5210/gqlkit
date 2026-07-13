@@ -203,7 +203,7 @@ function resolveFieldTypeInternal(
       scalarInfo: {
         scalarName: metadataResult.scalarName,
         typeName: metadataResult.scalarName,
-        baseType: undefined,
+        baseType: null,
         isCustom: true,
         only: metadataResult.only,
       },
@@ -387,7 +387,7 @@ function resolveFieldTypeInternal(
       scalarInfo: {
         scalarName: "JSON",
         typeName: "unknown",
-        baseType: undefined,
+        baseType: null,
         isCustom: true,
         only: null,
       },
@@ -441,7 +441,7 @@ function resolveFieldTypeInternal(
           scalarInfo: {
             scalarName: globalMapping.scalarName,
             typeName: globalMapping.typeName,
-            baseType: undefined,
+            baseType: null,
             isCustom: true,
             only: globalMapping.only,
           },
@@ -493,7 +493,7 @@ function resolveFieldTypeInternal(
         scalarInfo: {
           scalarName: "JSONObject",
           typeName: "Record",
-          baseType: undefined,
+          baseType: null,
           isCustom: true,
           only: null,
         },
@@ -523,7 +523,7 @@ function resolveFieldTypeInternal(
           scalarInfo: {
             scalarName: "JSONObject",
             typeName: "Record",
-            baseType: undefined,
+            baseType: null,
             isCustom: true,
             only: null,
           },
@@ -604,7 +604,7 @@ function resolveFieldTypeInternal(
           scalarInfo: {
             scalarName: globalMapping.scalarName,
             typeName: globalMapping.typeName,
-            baseType: undefined,
+            baseType: null,
             isCustom: true,
             only: globalMapping.only,
           },
@@ -652,7 +652,7 @@ function resolveFieldTypeInternal(
             scalarInfo: {
               scalarName: scalarMappingResult.mapping.scalarName,
               typeName: scalarMappingResult.mapping.sourceTypeName,
-              baseType: undefined,
+              baseType: null,
               isCustom: true,
               only: scalarMappingResult.mapping.only,
             },
