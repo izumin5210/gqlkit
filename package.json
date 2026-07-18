@@ -20,7 +20,7 @@
     "@biomejs/biome": "2.4.16",
     "@changesets/changelog-github": "0.6.0",
     "@changesets/cli": "2.31.1",
-    "@types/node": "24.13.0",
+    "@types/node": "24.13.3",
     "@vitest/coverage-v8": "4.1.8",
     "dependency-cruiser": "18.0.0",
     "graphql": "catalog:",
