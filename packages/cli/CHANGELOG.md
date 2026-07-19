@@ -1,5 +1,31 @@
 # @gqlkit-ts/cli
 
+## 0.8.0
+
+### Minor Changes
+
+- [#342](https://github.com/izumin5210/gqlkit/pull/342) [`ad59e30`](https://github.com/izumin5210/gqlkit/commit/ad59e30e4d1660c0996afc5cf8c924f1383c2aa6) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: prune types unreachable from root operation types by default
+
+  **BREAKING CHANGE**: generated schema/typeDefs now omit types not reachable from Query/Mutation/Subscription. Set `output.pruning: false` in gqlkit.config.ts to keep the previous output.
+
+### Patch Changes
+
+- [#262](https://github.com/izumin5210/gqlkit/pull/262) [`5b7a4b3`](https://github.com/izumin5210/gqlkit/commit/5b7a4b362a040cd02fc8d6d8dfdd164fd33206f2) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: preserve re-exported inline union members
+
+- [#341](https://github.com/izumin5210/gqlkit/pull/341) [`25a12a2`](https://github.com/izumin5210/gqlkit/commit/25a12a295a971cf714786318ca1a7be2b20e3451) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: emit directives on resolver arguments
+
+- [#340](https://github.com/izumin5210/gqlkit/pull/340) [`6cd2d50`](https://github.com/izumin5210/gqlkit/commit/6cd2d5033d0f5b1173689f73e134c788e7f7a0a9) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: fail generation when directive definitions are invalid
+
+- [#340](https://github.com/izumin5210/gqlkit/pull/340) [`6cd2d50`](https://github.com/izumin5210/gqlkit/commit/6cd2d5033d0f5b1173689f73e134c788e7f7a0a9) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: point duplicate-typename diagnostics at the first type by name
+
+- [#340](https://github.com/izumin5210/gqlkit/pull/340) [`6cd2d50`](https://github.com/izumin5210/gqlkit/commit/6cd2d5033d0f5b1173689f73e134c788e7f7a0a9) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: handle string error codes from hook spawn failures
+
+- [#340](https://github.com/izumin5210/gqlkit/pull/340) [`6cd2d50`](https://github.com/izumin5210/gqlkit/commit/6cd2d5033d0f5b1173689f73e134c788e7f7a0a9) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: classify re-exported GqlInterface types as GraphQL interfaces
+
+- [#340](https://github.com/izumin5210/gqlkit/pull/340) [`6cd2d50`](https://github.com/izumin5210/gqlkit/commit/6cd2d5033d0f5b1173689f73e134c788e7f7a0a9) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: report cycle diagnostics for resolver argument and return types
+
+- [#340](https://github.com/izumin5210/gqlkit/pull/340) [`6cd2d50`](https://github.com/izumin5210/gqlkit/commit/6cd2d5033d0f5b1173689f73e134c788e7f7a0a9) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: surface file-write error details
+
 ## 0.7.2
 
 ### Patch Changes
