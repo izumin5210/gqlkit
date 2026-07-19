@@ -25,7 +25,7 @@
     "dependency-cruiser": "18.0.0",
     "graphql": "catalog:",
     "knip": "6.15.0",
-    "lefthook": "2.1.9",
+    "lefthook": "2.1.10",
     "tsx": "4.22.4",
     "typescript": "5.9.3",
     "vitest": "4.1.8"
