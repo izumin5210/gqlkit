@@ -11,7 +11,7 @@ allowBuilds:
   sharp: true
 
 catalog:
-  graphql: "16.14.1"
+  graphql: "16.14.2"
 onlyBuiltDependencies:
   - "@prisma/engines"
   - "better-sqlite3"
