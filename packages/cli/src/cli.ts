@@ -1,6 +1,7 @@
 import { cli } from "gunshi";
 import { docsCommand } from "./commands/docs.js";
 import { genCommand } from "./commands/gen.js";
+import { initCommand } from "./commands/init.js";
 import { mainCommand } from "./commands/main.js";
 
 await cli(process.argv.slice(2), mainCommand, {
@@ -9,5 +10,6 @@ await cli(process.argv.slice(2), mainCommand, {
   subCommands: {
     docs: docsCommand,
     gen: genCommand,
+    init: initCommand,
   },
 });
