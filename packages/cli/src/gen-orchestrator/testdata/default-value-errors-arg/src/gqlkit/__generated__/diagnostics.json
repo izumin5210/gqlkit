@@ -1,0 +1,12 @@
+[
+  {
+    "code": "UNRESOLVABLE_DEFAULT_VALUE",
+    "message": "Argument 'age': Default value must be a literal type (string, number, boolean, null, array, object, or enum)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/mutation.ts",
+      "line": 10,
+      "column": 3
+    }
+  }
+]

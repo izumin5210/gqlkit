@@ -13,7 +13,7 @@ export interface HookExecutorOptions {
   /** Working directory for command execution */
   readonly cwd: string;
   /** Callback for each hook completion */
-  readonly onHookComplete?: (result: SingleHookResult) => void;
+  readonly onHookComplete: ((result: SingleHookResult) => void) | null;
 }
 
 export interface SingleHookResult {

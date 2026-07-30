@@ -56,30 +56,43 @@ export function collectInlineEnumsFromTypes(
     );
 
     for (const field of typeInfo.fields) {
-      collectInlineEnumsFromField(
+      collectInlineEnumsFromField({
         field,
-        typeInfo.metadata.name,
-        [],
+        parentTypeName: typeInfo.metadata.name,
+        parentPath: [],
         isInput,
-        typeInfo.metadata.sourceFile,
+        sourceFile: typeInfo.metadata.sourceFile,
         siblingFieldNames,
         results,
-      );
+      });
     }
   }
 
   return results;
 }
 
+interface CollectInlineEnumsFromFieldParams {
+  readonly field: PropertyDef;
+  readonly parentTypeName: string;
+  readonly parentPath: ReadonlyArray<string>;
+  readonly isInput: boolean;
+  readonly sourceFile: string;
+  readonly siblingFieldNames: ReadonlySet<string>;
+  readonly results: InlineEnumWithContext[];
+}
+
 function collectInlineEnumsFromField(
-  field: PropertyDef,
-  parentTypeName: string,
-  parentPath: ReadonlyArray<string>,
-  isInput: boolean,
-  sourceFile: string,
-  siblingFieldNames: ReadonlySet<string>,
-  results: InlineEnumWithContext[],
+  params: CollectInlineEnumsFromFieldParams,
 ): void {
+  const {
+    field,
+    parentTypeName,
+    parentPath,
+    isInput,
+    sourceFile,
+    siblingFieldNames,
+    results,
+  } = params;
   const tsType = field.tsType;
   const fieldPath = appendFieldPath({
     parentPath,
@@ -91,7 +104,7 @@ function collectInlineEnumsFromField(
   if (tsType.kind === "inlineEnum" && tsType.inlineEnumMembers) {
     results.push({
       members: tsType.inlineEnumMembers,
-      context: buildFieldContext(parentTypeName, fieldPath, isInput),
+      context: buildFieldContext({ parentTypeName, fieldPath, isInput }),
       sourceLocation: getSourceLocationOrDefault(
         field.sourceLocation,
         sourceFile,
@@ -110,7 +123,7 @@ function collectInlineEnumsFromField(
   ) {
     results.push({
       members: tsType.elementType.inlineEnumMembers,
-      context: buildFieldContext(parentTypeName, fieldPath, isInput),
+      context: buildFieldContext({ parentTypeName, fieldPath, isInput }),
       sourceLocation: getSourceLocationOrDefault(
         field.sourceLocation,
         sourceFile,
@@ -135,7 +148,11 @@ function collectInlineEnumsFromField(
         if (propTsType.kind === "inlineEnum" && propTsType.inlineEnumMembers) {
           results.push({
             members: propTsType.inlineEnumMembers,
-            context: buildFieldContext(parentTypeName, propPath, isInput),
+            context: buildFieldContext({
+              parentTypeName,
+              fieldPath: propPath,
+              isInput,
+            }),
             sourceLocation: getSourceLocationOrDefault(
               prop.sourceLocation,
               sourceFile,

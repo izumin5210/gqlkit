@@ -203,7 +203,7 @@ function resolveFieldTypeInternal(
       scalarInfo: {
         scalarName: metadataResult.scalarName,
         typeName: metadataResult.scalarName,
-        baseType: undefined,
+        baseType: null,
         isCustom: true,
         only: metadataResult.only,
       },
@@ -387,7 +387,7 @@ function resolveFieldTypeInternal(
       scalarInfo: {
         scalarName: "JSON",
         typeName: "unknown",
-        baseType: undefined,
+        baseType: null,
         isCustom: true,
         only: null,
       },
@@ -441,7 +441,7 @@ function resolveFieldTypeInternal(
           scalarInfo: {
             scalarName: globalMapping.scalarName,
             typeName: globalMapping.typeName,
-            baseType: undefined,
+            baseType: null,
             isCustom: true,
             only: globalMapping.only,
           },
@@ -493,7 +493,7 @@ function resolveFieldTypeInternal(
         scalarInfo: {
           scalarName: "JSONObject",
           typeName: "Record",
-          baseType: undefined,
+          baseType: null,
           isCustom: true,
           only: null,
         },
@@ -523,7 +523,7 @@ function resolveFieldTypeInternal(
           scalarInfo: {
             scalarName: "JSONObject",
             typeName: "Record",
-            baseType: undefined,
+            baseType: null,
             isCustom: true,
             only: null,
           },
@@ -604,7 +604,7 @@ function resolveFieldTypeInternal(
           scalarInfo: {
             scalarName: globalMapping.scalarName,
             typeName: globalMapping.typeName,
-            baseType: undefined,
+            baseType: null,
             isCustom: true,
             only: globalMapping.only,
           },
@@ -652,7 +652,7 @@ function resolveFieldTypeInternal(
             scalarInfo: {
               scalarName: scalarMappingResult.mapping.scalarName,
               typeName: scalarMappingResult.mapping.sourceTypeName,
-              baseType: undefined,
+              baseType: null,
               isCustom: true,
               only: scalarMappingResult.mapping.only,
             },
@@ -744,7 +744,7 @@ function tryExtractAsInlineObject(
   // object across multiple union members (common with generic .d.ts types).
   visitedTypes.delete(type);
 
-  // Extract type-level TSDoc from the alias symbol if present (Requirement 7.2)
+  // Extract type-level TSDoc from the alias symbol if present.
   // Only extract from user-defined types, not built-in TypeScript utility types
   let description: string | null = null;
   let deprecated: DeprecationInfo | null = null;

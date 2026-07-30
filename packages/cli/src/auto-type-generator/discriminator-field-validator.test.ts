@@ -1,91 +1,42 @@
 import { describe, expect, it } from "vitest";
-import type {
-  InlineObjectMember,
-  PropertyDef,
-  TSTypeReference,
+import {
+  createStringLiteralType,
+  type InlineObjectMember,
+  type PropertyDef,
 } from "../core/index.js";
+import {
+  createExtractedObjectType,
+  createExtractedUnionType,
+  createExtractedUnionTypeWithInlineMembers,
+  createInlineObjectMember,
+  createPropertyDef,
+} from "../testing/type-fixtures.js";
 import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import { validateDiscriminatorFields } from "./discriminator-field-validator.js";
-
-function createStringLiteralTsType(value: string): TSTypeReference {
-  return {
-    kind: "stringLiteral",
-    name: value,
-    elementType: null,
-    members: null,
-    nullable: false,
-    scalarInfo: null,
-    inlineObjectProperties: null,
-    inlineObjectDescription: null,
-    inlineObjectDeprecated: null,
-    inlineEnumMembers: null,
-    inlineObjectHintName: null,
-    externalEnumSymbol: null,
-    externalEnumDescription: null,
-    externalEnumDeprecated: null,
-  };
-}
 
 function createStringLiteralField(
   fieldName: string,
   value: string,
 ): PropertyDef {
-  return {
+  return createPropertyDef({
     name: fieldName,
-    tsType: createStringLiteralTsType(value),
-    description: null,
-    deprecated: null,
-    directives: null,
-    optional: false,
-    defaultValue: null,
+    tsType: createStringLiteralType(value),
     sourceLocation: null,
-  };
+  });
 }
 
 function createUnionType(
   name: string,
   unionMembers: string[],
 ): ExtractedTypeInfo {
-  return {
-    metadata: {
-      name,
-      kind: "union",
-      sourceFile: "src/types.ts",
-      sourceLocation: { file: "src/types.ts", line: 1, column: 1 },
-      exportKind: "named",
-      description: null,
-      deprecated: null,
-      directives: null,
-    },
-    fields: [],
-    unionMembers,
-    inlineObjectMembers: null,
-    enumMembers: null,
-    implementedInterfaces: null,
-  };
+  return createExtractedUnionType({ name, unionMembers });
 }
 
 function createObjectType(
   name: string,
   fields: PropertyDef[],
 ): ExtractedTypeInfo {
-  return {
-    metadata: {
-      name,
-      kind: "object",
-      sourceFile: "src/types.ts",
-      sourceLocation: { file: "src/types.ts", line: 1, column: 1 },
-      exportKind: "named",
-      description: null,
-      deprecated: null,
-      directives: null,
-    },
-    fields,
-    unionMembers: null,
-    inlineObjectMembers: null,
-    enumMembers: null,
-    implementedInterfaces: null,
-  };
+  return createExtractedObjectType({ name, fields });
 }
 
 function createUnionTypeWithInlineMembers(
@@ -93,40 +44,11 @@ function createUnionTypeWithInlineMembers(
   unionMembers: string[],
   inlineObjectMembers: InlineObjectMember[],
 ): ExtractedTypeInfo {
-  return {
-    metadata: {
-      name,
-      kind: "union",
-      sourceFile: "src/types.ts",
-      sourceLocation: { file: "src/types.ts", line: 1, column: 1 },
-      exportKind: "named",
-      description: null,
-      deprecated: null,
-      directives: null,
-    },
-    fields: [],
+  return createExtractedUnionTypeWithInlineMembers({
+    name,
     unionMembers,
     inlineObjectMembers,
-    enumMembers: null,
-    implementedInterfaces: null,
-  };
-}
-
-function createInlineObjectMember(
-  properties: ReadonlyArray<{ name: string; tsType: TSTypeReference }>,
-): InlineObjectMember {
-  return {
-    properties: properties.map((p) => ({
-      name: p.name,
-      tsType: p.tsType,
-      optional: false,
-      description: null,
-      deprecated: null,
-      directives: null,
-      defaultValue: null,
-      sourceLocation: null,
-    })),
-  };
+  });
 }
 
 describe("validateDiscriminatorFields", () => {
@@ -240,10 +162,10 @@ describe("validateDiscriminatorFields", () => {
 
     it("returns validated entries for inline object members", () => {
       const inlineText = createInlineObjectMember([
-        { name: "type", tsType: createStringLiteralTsType("text") },
+        { name: "type", tsType: createStringLiteralType("text") },
       ]);
       const inlineImage = createInlineObjectMember([
-        { name: "type", tsType: createStringLiteralTsType("image") },
+        { name: "type", tsType: createStringLiteralType("image") },
       ]);
       const contentPart = createUnionTypeWithInlineMembers(
         "ContentPart",

@@ -6,11 +6,12 @@
  *   - §3.4 "Enforcement": dependency-cruiser is the mechanism chosen (Decision D7) to make the
  *     dependency rule machine-checked instead of only documented.
  *
- * Mode: Phase 0 ships this in BASELINED REPORT-ONLY mode. All violations that already exist today
- * (see §1.2 "Architecture-level findings") are captured in `.dependency-cruiser-known-violations.json`
- * and consumed via the `--ignore-known` CLI flag (see the "depcruise" script in package.json), so this
- * check passes today. Any brand-new violation that isn't in that baseline file will fail the build,
- * which stops the architecture from eroding further while later phases pay down the baseline.
+ * Mode: fully enforcing. Phase 0 shipped this in baselined report-only mode via
+ * `.dependency-cruiser-known-violations.json` and the `--ignore-known` CLI flag, so pre-existing
+ * violations (see §1.2 "Architecture-level findings") wouldn't fail the build while later phases
+ * paid the baseline down. Phases 1-9 closed every baselined entry (the last one, the config-loader
+ * `loader.ts ↔ validator.ts` cycle, in Phase 9); the baseline file and `--ignore-known` flag have
+ * been removed, so any new violation now fails the build immediately.
  */
 
 /** Pipeline stages that must only be imported through their own `index.ts` facade (§3.2). */

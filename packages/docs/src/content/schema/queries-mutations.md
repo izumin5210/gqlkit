@@ -9,6 +9,8 @@ Define Query and Mutation fields using the `@gqlkit-ts/runtime` API.
 
 > **Prerequisites**: This guide assumes you have completed the [basic setup](../getting-started.md#set-up-context-and-resolver-factories).
 
+> **Explicit type arguments are required.** Always call `defineQuery`/`defineMutation`/`defineSubscription`/`defineField` with explicit type arguments, e.g. `defineQuery<Args, Result>(...)`. gqlkit extracts `Args`/`Result` by reading the syntactic type arguments on the call expression — it does not run TypeScript's type inference — so a call that omits them and relies on inference alone (e.g. `defineQuery(() => users)`) fails generation with an `INVALID_DEFINE_CALL` diagnostic, even though the code type-checks fine in your editor. (`defineResolveType`/`defineIsTypeOf` are the exception: they read their target type from the resolver's inferred return-type metadata, so no explicit type argument is required for CLI detection.)
+
 ## Query Resolvers
 
 Use `defineQuery` to define Query fields. GraphQL field names are derived from the exported variable name:

@@ -33,9 +33,9 @@ export interface InlineObjectWithContext {
   readonly context: AutoTypeNameContext;
   readonly sourceLocation: SourceLocation;
   readonly nullable: boolean;
-  /** TSDoc description from the inline object type alias (Requirement 7.2) */
+  /** TSDoc description from the inline object type alias */
   readonly description: string | null;
-  /** Deprecation info from the `@deprecated` TSDoc tag on the inline object type alias (Requirement 7.3) */
+  /** Deprecation info from the `@deprecated` TSDoc tag on the inline object type alias */
   readonly deprecated: DeprecationInfo | null;
 }
 
@@ -80,11 +80,16 @@ function getInlineObjectTypeInfo(
   return null;
 }
 
+interface BuildTypeFieldContextParams {
+  readonly parentTypeName: string;
+  readonly isInput: boolean;
+  readonly fieldPath: ReadonlyArray<string>;
+}
+
 function buildTypeFieldContext(
-  parentTypeName: string,
-  isInput: boolean,
-  fieldPath: ReadonlyArray<string>,
+  params: BuildTypeFieldContextParams,
 ): AutoTypeNameContext {
+  const { parentTypeName, isInput, fieldPath } = params;
   return isInput
     ? { kind: "inputField", parentTypeName, fieldPath }
     : { kind: "objectField", parentTypeName, fieldPath };
@@ -156,7 +161,7 @@ function collectInlineObjectsFromField(
 
   results.push({
     properties: inlineObjectTypeInfo.properties,
-    context: buildTypeFieldContext(parentTypeName, isInput, fieldPath),
+    context: buildTypeFieldContext({ parentTypeName, isInput, fieldPath }),
     sourceLocation,
     nullable: inlineObjectTypeInfo.nullable,
     description: inlineObjectTypeInfo.description,
@@ -174,7 +179,11 @@ function collectInlineObjectsFromField(
       if (!nestedInfo) return;
       results.push({
         properties: nestedInfo.properties,
-        context: buildTypeFieldContext(parentTypeName, isInput, propPath),
+        context: buildTypeFieldContext({
+          parentTypeName,
+          isInput,
+          fieldPath: propPath,
+        }),
         sourceLocation: resolvedSourceLocation,
         nullable: nestedInfo.nullable,
         description: nestedInfo.description,

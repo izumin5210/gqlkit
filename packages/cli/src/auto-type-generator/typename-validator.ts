@@ -77,11 +77,16 @@ function analyzeInlineObjectTypename(
   };
 }
 
+interface ValidateInlineObjectsTypenamesParams {
+  readonly extractionResult: TypenameExtractionResult;
+  readonly inlineObjectMembers: ReadonlyArray<InlineObjectMember>;
+  readonly sourceLocation: SourceLocation;
+}
+
 function validateInlineObjectsTypenames(
-  extractionResult: TypenameExtractionResult,
-  inlineObjectMembers: ReadonlyArray<InlineObjectMember>,
-  sourceLocation: SourceLocation,
+  params: ValidateInlineObjectsTypenamesParams,
 ): Diagnostic[] {
+  const { extractionResult, inlineObjectMembers, sourceLocation } = params;
   if (!extractionResult.hasInlineObjects) {
     return [];
   }
@@ -152,11 +157,11 @@ export function validateTypenames(
   const diagnostics: Diagnostic[] = [];
 
   if (inlineObjectMembers) {
-    const inlineValidationDiagnostics = validateInlineObjectsTypenames(
+    const inlineValidationDiagnostics = validateInlineObjectsTypenames({
       extractionResult,
       inlineObjectMembers,
       sourceLocation,
-    );
+    });
     diagnostics.push(...inlineValidationDiagnostics);
   }
 
@@ -254,9 +259,9 @@ function extractTypenameFromObjectType(
 /**
  * Validates that there are no duplicate typename values across the entire schema.
  * Reports DUPLICATE_TYPENAME_VALUE error when:
- * - Different object types have the same __typename value (Requirement 4.7)
- * - Different object types have the same $typeName value (Requirement 4.8)
- * - An object's __typename equals another object's $typeName (Requirement 4.9)
+ * - Different object types have the same __typename value
+ * - Different object types have the same $typeName value
+ * - An object's __typename equals another object's $typeName
  */
 export function validateSchemaTypenames(
   params: ValidateSchemaTypenamesParams,

@@ -9,7 +9,7 @@
     "test": "vitest run",
     "typecheck": "pnpm -r typecheck",
     "knip": "knip",
-    "depcruise": "depcruise packages/cli/src --ignore-known",
+    "depcruise": "depcruise packages/cli/src",
     "docs:dev": "pnpm --filter @gqlkit-ts/docs dev",
     "docs:build": "pnpm --filter @gqlkit-ts/docs build",
     "docs:preview": "pnpm --filter @gqlkit-ts/docs preview",

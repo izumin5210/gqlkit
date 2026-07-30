@@ -43,7 +43,7 @@ Status of a user account.
 
 Defined in: src/gqlkit/schema/types.ts
 """
-enum UserStatus {
+enum UserStatus @deprecated(reason: """Use AccountStatus instead for better granularity.""") {
   """User is active and can log in"""
   ACTIVE
   """User account is suspended"""

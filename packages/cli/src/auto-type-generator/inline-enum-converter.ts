@@ -123,6 +123,7 @@ export function generateAutoEnumType(
       sourceLocation: inlineEnum.sourceLocation,
       generatedFrom: buildGeneratedFromInfo(inlineEnum.context),
       description: inlineEnum.externalEnumDescription,
+      deprecated: inlineEnum.externalEnumDeprecated,
       resolveTypeFieldPattern: null,
     },
     diagnostics,
