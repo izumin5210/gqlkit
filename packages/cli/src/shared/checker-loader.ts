@@ -51,12 +51,10 @@ export interface CheckerLoader {
   readonly isTupleType: (type: ts.Type) => Promise<boolean>;
   readonly typeToString: (type: ts.Type) => Promise<string>;
   /**
-   * Looks up a property by name. For non-primitive types it searches the
-   * property list the client fetches once per type, so it does not fall
-   * back to `Object`/`Function` prototype members like the checker's own
-   * lookup; none of gqlkit's lookups rely on those. Primitive types' apparent
-   * lib interfaces (`String` has ~50 members) cost ~20x a single-name lookup
-   * to list, so for them each name is asked individually.
+   * Looks up one property by name. Asking for the single name, rather than
+   * listing a type's properties once and searching locally, keeps the cost
+   * independent of the type's size: generated ORM or lib types can have
+   * hundreds of members, and the lookups batch anyway.
    */
   readonly getPropertyOfType: (
     type: ts.Type,
@@ -96,11 +94,7 @@ export function createCheckerLoader(checker: ts.Checker): CheckerLoader {
   const isArrayType = memoize((type: ts.Type) => checker.isArrayType(type));
   const isTupleType = memoize((type: ts.Type) => checker.isTupleType(type));
 
-  const propertiesByName = memoize(
-    async (type: ts.Type) =>
-      new Map((await type.getProperties()).map((p) => [p.name, p])),
-  );
-  const primitivePropertyLookups = new WeakMap<
+  const propertyLookups = new WeakMap<
     ts.Type,
     Map<string, Promise<ts.Symbol | undefined>>
   >();
@@ -133,14 +127,11 @@ export function createCheckerLoader(checker: ts.Checker): CheckerLoader {
     isTupleType: (type) =>
       isTypeReferenceType(type) ? isTupleType(type) : Promise.resolve(false),
     typeToString: memoize((type) => checker.typeToString(type)),
-    getPropertyOfType: async (type, name) => {
-      if ((type.flags & ts.TypeFlags.Primitive) === 0) {
-        return (await propertiesByName(type)).get(name);
-      }
-      let lookups = primitivePropertyLookups.get(type);
+    getPropertyOfType: (type, name) => {
+      let lookups = propertyLookups.get(type);
       if (lookups === undefined) {
         lookups = new Map();
-        primitivePropertyLookups.set(type, lookups);
+        propertyLookups.set(type, lookups);
       }
       let lookup = lookups.get(name);
       if (lookup === undefined) {
