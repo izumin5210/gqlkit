@@ -12,8 +12,10 @@ jobs:
       matrix:
         command:
           - name: format-and-lint
-            # Type-aware lint rules need the built packages to resolve types.
-            run: pnpm build && pnpm check
+            # Type-aware lint rules need the examples' workspace dependencies built to
+            # resolve their types. The docs site is excluded because cli only runs its
+            # bundle-docs script from source, so its Next.js build is not needed.
+            run: pnpm --filter "@gqlkit-examples/*^..." --filter "!@gqlkit-ts/docs" build && pnpm check
           - name: typecheck
             run: pnpm build && pnpm typecheck
           - name: gen
