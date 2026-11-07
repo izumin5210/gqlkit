@@ -14,6 +14,7 @@ import { isTypeAliasDeclaration } from "typescript/ast/is";
 import type { Program, Symbol as TsSymbol } from "typescript/async";
 import { METADATA_PROPERTIES } from "../../core/index.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
+import { RecordedMap } from "../../shared/recorded-reads.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 
 /**
@@ -274,4 +275,38 @@ export function lookupScalarMapping(
   const mapping = mappings.get(baseTypeSymbol);
 
   return { mapping: mapping ?? null, conflict: null };
+}
+
+/**
+ * An empty table that records the lookups made in it. Extraction behaves
+ * the same with it as with no table: lookups find nothing.
+ */
+export interface RecordedScalarMappingTable extends ScalarBaseTypeMappingTable {
+  readonly inputMappings: RecordedMap<TsSymbol, ScalarBaseTypeMapping>;
+  readonly outputMappings: RecordedMap<TsSymbol, ScalarBaseTypeMapping>;
+  readonly conflicts: RecordedMap<TsSymbol, ScalarMappingConflict>;
+}
+
+export function createRecordedScalarMappingTable(): RecordedScalarMappingTable {
+  return {
+    inputMappings: new RecordedMap(new Map()),
+    outputMappings: new RecordedMap(new Map()),
+    conflicts: new RecordedMap(new Map()),
+  };
+}
+
+/**
+ * Whether extraction that used the recorded empty table would have looked
+ * up the same results in `actual` (no table looks up nothing).
+ */
+export function isScalarMappingTableUnread(
+  recorded: RecordedScalarMappingTable,
+  actual: ScalarBaseTypeMappingTable | null,
+): boolean {
+  return (
+    actual === null ||
+    (recorded.inputMappings.agreesWith(actual.inputMappings, Object.is) &&
+      recorded.outputMappings.agreesWith(actual.outputMappings, Object.is) &&
+      recorded.conflicts.agreesWith(actual.conflicts, Object.is))
+  );
 }

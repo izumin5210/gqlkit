@@ -312,8 +312,7 @@ const METADATA_PROPERTY_NAMES: ReadonlySet<string> = new Set(
  */
 function isAnsweredByPropertyList(type: Type, name: string): boolean {
   return (
-    (type.flags & TypeFlags.Object) !== 0 &&
-    METADATA_PROPERTY_NAMES.has(name)
+    (type.flags & TypeFlags.Object) !== 0 && METADATA_PROPERTY_NAMES.has(name)
   );
 }
 
@@ -456,9 +455,7 @@ export function createCheckerLoader(
       const lookup = hasNoMetadataProperty(type, name)
         ? Promise.resolve(undefined)
         : listed !== undefined && isAnsweredByPropertyList(type, name)
-          ? listed.then((properties) =>
-              properties.find((p) => p.name === name),
-            )
+          ? listed.then((properties) => properties.find((p) => p.name === name))
           : query(() => type.getProperty(name));
       lookups.set(name, lookup);
       return lookup;

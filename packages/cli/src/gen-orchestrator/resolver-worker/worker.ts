@@ -68,10 +68,14 @@ async function run(): Promise<void> {
     knownTypeSymbols: names.typeSymbols,
     underlyingSymbolToTypeName: names.underlyingSymbolToTypeName,
   });
-  const [inputs] = (await once(port as NonNullable<typeof port>, "message")) as [
-    ResolverWorkerRequest,
-  ];
-  respond({ kind: "definitions", definitions: await speculation.settle(inputs) });
+  const [inputs] = (await once(
+    port as NonNullable<typeof port>,
+    "message",
+  )) as [ResolverWorkerRequest];
+  respond({
+    kind: "definitions",
+    definitions: await speculation.settle(inputs),
+  });
 }
 
 try {

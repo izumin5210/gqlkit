@@ -134,7 +134,8 @@ export class RecordedMap<K, V> implements ReadonlyMap<K, V> {
     };
     if (this.#enumerated) {
       return (
-        actual.size === this.#entries.size && [...actual.keys()].every(sameEntry)
+        actual.size === this.#entries.size &&
+        [...actual.keys()].every(sameEntry)
       );
     }
     return [...this.#queried].every(sameEntry);

@@ -4,13 +4,12 @@ import {
   extractResolverDefinitions,
 } from "../../resolver-extractor/index.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
-import { RecordedMap, RecordedSet } from "../../shared/recorded-reads.js";
+import { RecordedSet } from "../../shared/recorded-reads.js";
 import {
   buildScalarMappingTable,
+  createRecordedScalarMappingTable,
   type GlobalTypeMapping,
-  type ScalarBaseTypeMapping,
-  type ScalarBaseTypeMappingTable,
-  type ScalarMappingConflict,
+  isScalarMappingTableUnread,
   type ScalarMetadataInfo,
 } from "../../type-extractor/index.js";
 
@@ -43,28 +42,6 @@ export interface ResolverDefinitionsSpeculation {
   ) => Promise<ExtractDefineApiResult>;
 }
 
-interface RecordedScalarMappingTable extends ScalarBaseTypeMappingTable {
-  readonly inputMappings: RecordedMap<TsSymbol, ScalarBaseTypeMapping>;
-  readonly outputMappings: RecordedMap<TsSymbol, ScalarBaseTypeMapping>;
-  readonly conflicts: RecordedMap<TsSymbol, ScalarMappingConflict>;
-}
-
-function scalarTablesAgree(
-  speculated: RecordedScalarMappingTable,
-  actual: ScalarBaseTypeMappingTable | null,
-): boolean {
-  // Field-type resolution only consults the table through lookups, which an
-  // empty table and no table answer alike.
-  if (actual === null) {
-    return true;
-  }
-  return (
-    speculated.inputMappings.agreesWith(actual.inputMappings, Object.is) &&
-    speculated.outputMappings.agreesWith(actual.outputMappings, Object.is) &&
-    speculated.conflicts.agreesWith(actual.conflicts, Object.is)
-  );
-}
-
 /**
  * Starts extracting resolver definitions before type extraction has
  * finished, assuming it discovers no types and detects no scalars, and
@@ -75,11 +52,7 @@ export function speculateResolverDefinitions(
 ): ResolverDefinitionsSpeculation {
   const { declaredTypeNames, ...rest } = params;
   const knownTypeNames = new RecordedSet(declaredTypeNames);
-  const scalarMappingTable: RecordedScalarMappingTable = {
-    inputMappings: new RecordedMap(new Map()),
-    outputMappings: new RecordedMap(new Map()),
-    conflicts: new RecordedMap(new Map()),
-  };
+  const scalarMappingTable = createRecordedScalarMappingTable();
   const speculative = extractResolverDefinitions({
     ...rest,
     knownTypeNames,
@@ -102,7 +75,7 @@ export function speculateResolverDefinitions(
           : null;
       if (
         knownTypeNames.agreesWith(actualKnownTypeNames) &&
-        scalarTablesAgree(scalarMappingTable, actualScalarMappingTable)
+        isScalarMappingTableUnread(scalarMappingTable, actualScalarMappingTable)
       ) {
         return definitions;
       }

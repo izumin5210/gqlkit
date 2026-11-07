@@ -40,9 +40,10 @@ export {
 } from "./extractor/type-name-collector.js";
 export {
   buildScalarMappingTable,
-  type ScalarBaseTypeMapping,
+  createRecordedScalarMappingTable,
+  isScalarMappingTableUnread,
+  type RecordedScalarMappingTable,
   type ScalarBaseTypeMappingTable,
-  type ScalarMappingConflict,
 } from "./mapper/scalar-base-type-mapper.js";
 
 export type { ExtractedTypeInfo, GlobalTypeMapping } from "./types/index.js";

@@ -616,9 +616,7 @@ const RESOLVER_WORKER_MIN_SOURCE_FILES = 200;
 /** Where resolver definitions are extracted. */
 export type ResolverExtraction =
   /** In a worker thread if the project is large enough and a core is free. */
-  | "auto"
-  | "main-thread"
-  | "worker";
+  "auto" | "main-thread" | "worker";
 
 export interface GenerationOptions {
   readonly resolverExtraction: ResolverExtraction;
@@ -679,10 +677,7 @@ async function runPipeline(
   // type extraction, and only waits for its results at the end.
   const resolverWorker =
     !ctx.aborted &&
-    shouldUseResolverWorker(
-      options.resolverExtraction,
-      ctx.sourceFiles.length,
-    )
+    shouldUseResolverWorker(options.resolverExtraction, ctx.sourceFiles.length)
       ? startResolverWorker({
           url: options.resolverWorkerUrl,
           data: {
