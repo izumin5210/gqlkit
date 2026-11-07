@@ -4,6 +4,7 @@ import type { SymbolKey } from "../../shared/typescript-utils.js";
 import type {
   GlobalTypeMapping,
   ScalarMetadataInfo,
+  TypeNameRegistration,
 } from "../../type-extractor/index.js";
 import type { ResolverExtractionInputs } from "./resolver-speculation.js";
 import type { TypeSliceResult } from "./type-slice.js";
@@ -37,11 +38,18 @@ export type SliceWorkerRequest =
   | { readonly kind: "resolvers"; readonly inputs: ResolverExtractionInputs };
 
 /**
- * Sent by the worker: that it loaded, then the types unprompted, then one
- * reply per request.
+ * Sent by the worker: that it loaded, then the type names its range
+ * exports, then the types once it has the type names, then one reply per
+ * later request.
  */
 export type SliceWorkerResponse =
   | { readonly kind: "ready" }
+  | {
+      readonly kind: "type-name-registrations";
+      readonly registrations: ReadonlyArray<TypeNameRegistration>;
+      /** See `collectLocalTypeDeclarationNames`. */
+      readonly localTypeDeclarationNames: ReadonlyArray<string>;
+    }
   | {
       readonly kind: "types";
       readonly result: TypeSliceResult;

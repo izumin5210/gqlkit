@@ -14,6 +14,8 @@ import type { SymbolKey } from "../../shared/typescript-utils.js";
 import {
   buildScalarMappingTable,
   type ConfigScalarMapping,
+  collectLocalTypeDeclarationNames,
+  collectTypeNameRegistrations,
   completeTypeExtraction,
   createDeclaredTypesExtraction,
   createRecordedScalarMappingTable,
@@ -24,6 +26,7 @@ import {
   finalizeTypeExtraction,
   type GlobalTypeMapping,
   isScalarMappingTableUnread,
+  registerTypeNames,
   type ScalarBaseTypeMappingTable,
   type TypeNameCollectionResult,
 } from "../../type-extractor/index.js";
@@ -86,6 +89,11 @@ export interface StartSliceExtractionParams {
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
 }
 
+export interface CollectTypeNamesInSlicesParams {
+  readonly program: Program;
+  readonly checker: CheckerLoader;
+}
+
 export interface ExtractTypesInSlicesParams {
   readonly program: Program;
   readonly checker: CheckerLoader;
@@ -104,13 +112,20 @@ export interface ExtractTypesInSlicesParams {
  * extracting all files in sequence gives.
  */
 export interface SliceExtraction {
-  /** The files whose declarations the main thread prefetches itself. */
+  /** The files the main thread extracts itself. */
   readonly mainThreadFiles: ReadonlyArray<string>;
+  /**
+   * Collects the declared type names of every range and hands them to the
+   * workers, which wait for them.
+   */
+  readonly collectTypeNames: (
+    params: CollectTypeNamesInSlicesParams,
+  ) => Promise<TypeNameCollectionResult>;
+  /** Must follow `collectTypeNames`; see `collectLocalTypeDeclarationNames`. */
+  readonly localTypeDeclarationNames: () => ReadonlySet<string>;
   readonly extractTypes: (
     params: ExtractTypesInSlicesParams,
   ) => Promise<ExtractTypesResult>;
-  /** Hands the workers the declared type names; they wait for them. */
-  readonly shareTypeNames: (names: TypeNameCollectionResult) => void;
   /** Must follow `extractTypes`, which extracts them alongside. */
   readonly directiveDefinitions: () => Promise<DirectiveDefinitionExtractionResult>;
   /** Must follow `extractTypes`. */
@@ -161,11 +176,20 @@ export function startSliceExtraction(
     readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   } | null = null;
 
-  const receiveTypes = async (
+  let localTypeDeclarationNames: ReadonlySet<string> | null = null;
+
+  /** The next message from a worker, or null if it never started. */
+  const receiveUnlessUnstarted = async <
+    K extends "type-name-registrations" | "types",
+  >(
     worker: SliceWorker,
-  ): Promise<Reply<"types"> | null> => {
+    kind: K,
+  ): Promise<Reply<K> | null> => {
+    if (unstartedWorkers.has(worker)) {
+      return null;
+    }
     try {
-      return await worker.receive("types");
+      return await worker.receive(kind);
     } catch (error) {
       if (worker.hasStarted()) {
         throw error;
@@ -173,6 +197,63 @@ export function startSliceExtraction(
       unstartedWorkers.add(worker);
       return null;
     }
+  };
+
+  const collectTypeNames = async (
+    collectParams: CollectTypeNamesInSlicesParams,
+  ): Promise<TypeNameCollectionResult> => {
+    const { program, checker } = collectParams;
+    const registrations = [
+      await collectTypeNameRegistrations({
+        program,
+        checker,
+        files: mainThreadFiles,
+      }),
+    ];
+    const localNames = new Set(
+      await collectLocalTypeDeclarationNames(program, mainThreadFiles),
+    );
+    // Type extraction walks the declarations next; the workers' type names
+    // take a while anyway.
+    const prefetch = prefetchDeclarationFacts(
+      checker,
+      await getSourceFiles(program, mainThreadFiles),
+    );
+    for (const [i, worker] of workers.entries()) {
+      const message = await receiveUnlessUnstarted(
+        worker,
+        "type-name-registrations",
+      );
+      if (message !== null) {
+        registrations.push([...message.registrations]);
+        for (const name of message.localTypeDeclarationNames) {
+          localNames.add(name);
+        }
+        continue;
+      }
+      const files = workerFiles[i] ?? [];
+      registrations.push(
+        await collectTypeNameRegistrations({ program, checker, files }),
+      );
+      for (const name of await collectLocalTypeDeclarationNames(
+        program,
+        files,
+      )) {
+        localNames.add(name);
+      }
+    }
+    const names = registerTypeNames(registrations.flat());
+    for (const worker of workers) {
+      worker.send({
+        kind: "type-names",
+        typeNames: [...names.typeNames],
+        typeSymbols: [...names.typeSymbols],
+        underlyingSymbolToTypeName: [...names.underlyingSymbolToTypeName],
+      });
+    }
+    localTypeDeclarationNames = localNames;
+    await prefetch;
+    return names;
   };
   const directiveParts: Array<Promise<DirectiveDefinitionExtractionResult>> =
     [];
@@ -221,7 +302,7 @@ export function startSliceExtraction(
 
     for (const [i, worker] of workers.entries()) {
       const files = workerFiles[i] ?? [];
-      const message = await receiveTypes(worker);
+      const message = await receiveUnlessUnstarted(worker, "types");
       const directives =
         message === null
           ? extractDirectiveDefinitions({
@@ -348,20 +429,15 @@ export function startSliceExtraction(
       };
     };
 
-  const shareTypeNames = (names: TypeNameCollectionResult): void => {
-    for (const worker of workers) {
-      worker.send({
-        kind: "type-names",
-        typeNames: [...names.typeNames],
-        typeSymbols: [...names.typeSymbols],
-        underlyingSymbolToTypeName: [...names.underlyingSymbolToTypeName],
-      });
-    }
-  };
-
   return {
     mainThreadFiles,
-    shareTypeNames,
+    collectTypeNames,
+    localTypeDeclarationNames: () => {
+      if (localTypeDeclarationNames === null) {
+        throw new Error("type names are collected first");
+      }
+      return localTypeDeclarationNames;
+    },
     extractTypes,
     directiveDefinitions,
     extractResolverDefinitions,

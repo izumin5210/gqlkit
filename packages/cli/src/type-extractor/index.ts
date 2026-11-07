@@ -48,7 +48,10 @@ export {
 export {
   collectDeclaredTypeNames,
   collectLocalTypeDeclarationNames,
+  collectTypeNameRegistrations,
+  registerTypeNames,
   type TypeNameCollectionResult,
+  type TypeNameRegistration,
 } from "./extractor/type-name-collector.js";
 export {
   buildScalarMappingTable,

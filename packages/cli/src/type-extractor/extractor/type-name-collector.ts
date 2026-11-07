@@ -23,14 +23,6 @@ import {
 } from "../../shared/typescript-utils.js";
 
 /**
- * Tracks location and symbol of a type declaration for duplicate detection.
- */
-interface TypeDeclarationLocation {
-  readonly location: SourceLocation;
-  readonly symbol: TsSymbol | null;
-}
-
-/**
  * Formats a source location as a human-readable string.
  */
 function formatLocation(location: SourceLocation): string {
@@ -54,85 +46,115 @@ export interface TypeNameCollectionResult {
 }
 
 /**
- * Collects all declared type names from exported type declarations.
- *
- * Used in Phase 1 of the 2-phase type extraction process to gather
- * all schema-defined type names before processing field types.
+ * An exported type name, as the files export it. Registrations are
+ * collected per file and registered in file order (see
+ * `registerTypeNames`), so ranges of files can be collected separately.
+ */
+export interface TypeNameRegistration {
+  readonly name: string;
+  readonly location: SourceLocation;
+  /** The exported symbol, through aliases; null if it has none. */
+  readonly symbolKey: SymbolKey | null;
+  /**
+   * For a type alias, the symbol of the type it names, through aliases
+   * (`ExternalUser` for `type User = ExternalUser;`); null otherwise.
+   */
+  readonly underlyingSymbolKey: SymbolKey | null;
+}
+
+/**
+ * Registers type names in order, reporting names exported again for a
+ * different type.
+ */
+export function registerTypeNames(
+  registrations: Iterable<TypeNameRegistration>,
+): TypeNameCollectionResult {
+  const typeNames = new Set<string>();
+  const typeSymbols = new Map<string, SymbolKey>();
+  const underlyingSymbolToTypeName = new Map<SymbolKey, string>();
+  const diagnostics: Diagnostic[] = [];
+  const firstRegistrations = new Map<string, TypeNameRegistration>();
+
+  for (const registration of registrations) {
+    const { name, location, symbolKey, underlyingSymbolKey } = registration;
+    const existing = firstRegistrations.get(name);
+    if (existing) {
+      // Re-exports of the same type from different files are no duplicates.
+      if (
+        symbolKey === null ||
+        existing.symbolKey === null ||
+        symbolKey !== existing.symbolKey
+      ) {
+        diagnostics.push({
+          code: "DUPLICATE_TYPE_EXPORT",
+          message: `Type '${name}' is exported from multiple files. First defined at ${formatLocation(existing.location)}.`,
+          severity: "error",
+          location,
+        });
+      }
+      continue;
+    }
+    firstRegistrations.set(name, registration);
+    typeNames.add(name);
+    if (symbolKey !== null) {
+      typeSymbols.set(name, symbolKey);
+    }
+    if (underlyingSymbolKey !== null) {
+      underlyingSymbolToTypeName.set(underlyingSymbolKey, name);
+    }
+  }
+
+  return { typeNames, typeSymbols, underlyingSymbolToTypeName, diagnostics };
+}
+
+export interface CollectTypeNameRegistrationsParams {
+  readonly program: Program;
+  readonly checker: CheckerLoader;
+  /** The files whose exported type names to collect, in order. */
+  readonly files: ReadonlyArray<string>;
+}
+
+/**
+ * Collects the type names the files export, in order.
  *
  * Handles:
  * - Direct type declarations (type, interface, enum)
  * - Named re-exports: `export type { Foo } from "..."`
  * - Wildcard re-exports: `export type * from "..."`
  */
-export interface CollectDeclaredTypeNamesParams {
-  readonly program: Program;
-  readonly checker: CheckerLoader;
-  readonly sourceFiles: ReadonlyArray<string>;
-}
+export async function collectTypeNameRegistrations(
+  params: CollectTypeNameRegistrationsParams,
+): Promise<TypeNameRegistration[]> {
+  const { program, checker, files } = params;
+  const registrations: TypeNameRegistration[] = [];
 
-export async function collectDeclaredTypeNames(
-  params: CollectDeclaredTypeNamesParams,
-): Promise<TypeNameCollectionResult> {
-  const { program, checker, sourceFiles } = params;
-  const typeNames = new Set<string>();
-  const typeSymbols = new Map<string, SymbolKey>();
-  const underlyingSymbolToTypeName = new Map<SymbolKey, string>();
-  const diagnostics: Diagnostic[] = [];
-
-  const typeLocations = new Map<string, TypeDeclarationLocation>();
-
-  /**
-   * Registers a type name and checks for duplicates.
-   * Returns true if this is a new type, false if it's a duplicate.
-   */
-  async function registerTypeName(
+  const register = async (
     name: string,
     location: SourceLocation,
     symbol: TsSymbol | undefined,
-  ): Promise<boolean> {
-    const resolvedSymbol = symbol
-      ? await resolveOriginalSymbol(symbol, checker)
-      : null;
-    const existing = typeLocations.get(name);
-    if (existing) {
-      // Check if both symbols resolve to the same underlying type
-      // (e.g., re-exports of the same type from different files)
-      if (
-        resolvedSymbol &&
-        existing.symbol &&
-        resolvedSymbol === existing.symbol
-      ) {
-        // Same underlying type - not a true duplicate, skip silently
-        return false;
-      }
-      diagnostics.push({
-        code: "DUPLICATE_TYPE_EXPORT",
-        message: `Type '${name}' is exported from multiple files. First defined at ${formatLocation(existing.location)}.`,
-        severity: "error",
-        location,
-      });
-      return false;
-    }
-    typeLocations.set(name, { location, symbol: resolvedSymbol });
-    typeNames.add(name);
-    if (resolvedSymbol) {
-      typeSymbols.set(name, getSymbolIdentityKey(resolvedSymbol));
-    }
-    return true;
-  }
+    underlyingSymbolKey: SymbolKey | null,
+  ): Promise<void> => {
+    registrations.push({
+      name,
+      location,
+      symbolKey: symbol
+        ? getSymbolIdentityKey(await resolveOriginalSymbol(symbol, checker))
+        : null,
+      underlyingSymbolKey,
+    });
+  };
 
   // Every file is fetched, and the symbols the walk below reads prefetched,
   // in a few batched round trips before the sequential walk.
   const loadedSourceFiles = await Promise.all(
-    sourceFiles.map((filePath) => program.getSourceFile(filePath)),
+    files.map((filePath) => program.getSourceFile(filePath)),
   );
   await prefetchTypeNameFacts(
     checker,
     loadedSourceFiles.filter((sf): sf is SourceFile => sf !== undefined),
   );
 
-  for (const filePath of sourceFiles) {
-    const sourceFile = await program.getSourceFile(filePath);
+  for (const sourceFile of loadedSourceFiles) {
     if (!sourceFile) continue;
 
     for (const node of sourceFile.statements) {
@@ -141,36 +163,31 @@ export async function collectDeclaredTypeNames(
         const name = node.name.getText(sourceFile);
         const location = getSourceLocationFromNode(node)!;
         const symbol = await checker.getSymbolAtLocation(node.name);
-        const isNew = await registerTypeName(name, location, symbol);
-
-        if (isNew && symbol) {
+        let underlyingSymbolKey: SymbolKey | null = null;
+        if (symbol) {
           // For type aliases like `type User = ExternalUser;`,
           // also track the underlying type's symbol
           const type = await checker.getTypeAtLocation(node.type);
           const typeSymbol = await checker.getSymbolOfType(type);
           if (typeSymbol) {
-            const underlyingSymbol = await resolveOriginalSymbol(
-              typeSymbol,
-              checker,
-            );
-            underlyingSymbolToTypeName.set(
-              getSymbolIdentityKey(underlyingSymbol),
-              name,
+            underlyingSymbolKey = getSymbolIdentityKey(
+              await resolveOriginalSymbol(typeSymbol, checker),
             );
           }
         }
+        await register(name, location, symbol, underlyingSymbolKey);
       }
       if (isInterfaceDeclaration(node) && isExported(node)) {
         const name = node.name.getText(sourceFile);
         const location = getSourceLocationFromNode(node)!;
         const symbol = await checker.getSymbolAtLocation(node.name);
-        await registerTypeName(name, location, symbol);
+        await register(name, location, symbol, null);
       }
       if (isEnumDeclaration(node) && isExported(node)) {
         const name = node.name.getText(sourceFile);
         const location = getSourceLocationFromNode(node)!;
         const symbol = await checker.getSymbolAtLocation(node.name);
-        await registerTypeName(name, location, symbol);
+        await register(name, location, symbol, null);
       }
 
       // Re-exports: `export type { ... } from "..."` or `export type * from "..."`
@@ -183,7 +200,7 @@ export async function collectDeclaredTypeNames(
               const name = element.name.getText(sourceFile);
               const location = getSourceLocationFromNode(element)!;
               const symbol = await checker.getSymbolAtLocation(element.name);
-              await registerTypeName(name, location, symbol);
+              await register(name, location, symbol, null);
             }
           }
         } else if (!node.isTypeOnly && node.exportClause) {
@@ -194,7 +211,7 @@ export async function collectDeclaredTypeNames(
               const name = element.name.getText(sourceFile);
               const location = getSourceLocationFromNode(element)!;
               const symbol = await checker.getSymbolAtLocation(element.name);
-              await registerTypeName(name, location, symbol);
+              await register(name, location, symbol, null);
             }
           }
         } else if (
@@ -209,11 +226,10 @@ export async function collectDeclaredTypeNames(
           if (moduleSymbol) {
             const exports = await checker.getExportsOfModule(moduleSymbol);
             for (const exp of exports) {
-              const name = exp.name;
               // Check if the export is a type (not a value)
               if (isTypeExport(exp)) {
                 const location = getSourceLocationFromNode(node)!;
-                await registerTypeName(name, location, exp);
+                await register(exp.name, location, exp, null);
               }
             }
           }
@@ -222,7 +238,32 @@ export async function collectDeclaredTypeNames(
     }
   }
 
-  return { typeNames, typeSymbols, underlyingSymbolToTypeName, diagnostics };
+  return registrations;
+}
+
+/**
+ * Collects all declared type names from exported type declarations.
+ *
+ * Used in Phase 1 of the 2-phase type extraction process to gather
+ * all schema-defined type names before processing field types.
+ */
+export interface CollectDeclaredTypeNamesParams {
+  readonly program: Program;
+  readonly checker: CheckerLoader;
+  readonly sourceFiles: ReadonlyArray<string>;
+}
+
+export async function collectDeclaredTypeNames(
+  params: CollectDeclaredTypeNamesParams,
+): Promise<TypeNameCollectionResult> {
+  const { program, checker, sourceFiles } = params;
+  return registerTypeNames(
+    await collectTypeNameRegistrations({
+      program,
+      checker,
+      files: sourceFiles,
+    }),
+  );
 }
 
 /**

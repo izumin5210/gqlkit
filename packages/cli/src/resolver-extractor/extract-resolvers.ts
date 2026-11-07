@@ -48,9 +48,12 @@ export async function extractResolverDefinitions(
 }
 
 export interface CompleteResolverExtractionParams {
-  readonly program: Program;
-  readonly sourceFiles: ReadonlyArray<string>;
   readonly definitions: ExtractDefineApiResult;
+  /**
+   * Names of the type aliases, interfaces and enums declared at the top
+   * level of the source files, exported or not.
+   */
+  readonly localTypeDeclarationNames: ReadonlySet<string>;
   /** Names of types already extracted from `GqlObject`/`GqlInterface`/etc. declarations (type-extractor's stage). */
   readonly declaredTypeNames: ReadonlyArray<string>;
   /** Custom scalar names, both config-declared and auto-detected. */
@@ -61,13 +64,12 @@ export interface CompleteResolverExtractionParams {
  * Groups extracted resolver definitions into GraphQL fields and validates
  * the types they reference against the extracted types.
  */
-export async function completeResolverExtraction(
+export function completeResolverExtraction(
   params: CompleteResolverExtractionParams,
-): Promise<ExtractResolversResult> {
+): ExtractResolversResult {
   const {
-    program,
-    sourceFiles,
     definitions,
+    localTypeDeclarationNames,
     declaredTypeNames,
     customScalarNames,
   } = params;
@@ -83,10 +85,7 @@ export async function completeResolverExtraction(
     typeExtensions: result.typeExtensions,
     declaredTypeNames,
     customScalarNames,
-    localTypeDeclarationNames: await collectLocalTypeDeclarationNames(
-      program,
-      sourceFiles,
-    ),
+    localTypeDeclarationNames,
   });
   allDiagnostics.push(...validationResult.diagnostics);
 
@@ -118,8 +117,10 @@ export async function extractResolvers(
 ): Promise<ExtractResolversResult> {
   const { declaredTypeNames, customScalarNames, ...definitionParams } = params;
   return completeResolverExtraction({
-    program: params.program,
-    sourceFiles: params.sourceFiles,
+    localTypeDeclarationNames: await collectLocalTypeDeclarationNames(
+      params.program,
+      params.sourceFiles,
+    ),
     definitions: await extractResolverDefinitions({
       ...definitionParams,
       files: params.sourceFiles,

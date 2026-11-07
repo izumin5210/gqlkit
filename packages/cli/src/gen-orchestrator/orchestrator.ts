@@ -224,6 +224,7 @@ async function scanSourceFilesStep(
 async function createProgramStep(
   ctx: PipelineContext,
   api: API,
+  sliceExtraction: SliceExtraction | null,
 ): Promise<PipelineContext> {
   if (ctx.aborted) return ctx;
 
@@ -244,12 +245,12 @@ async function createProgramStep(
   }
 
   const { program } = programResult;
-  // Every stage reads the scanned files; loading them together up front
+  // Every stage reads the files it extracts; loading them together up front
   // leaves later `getSourceFile` calls to the client's cache.
   const loadedFiles = await fetchSourceFiles({
     api,
     program,
-    files: ctx.sourceFiles,
+    files: sliceExtraction?.mainThreadFiles ?? ctx.sourceFiles,
   });
 
   return {
@@ -272,29 +273,28 @@ async function collectTypeNamesStep(
   if (ctx.aborted || !ctx.program || !ctx.checker) return ctx;
 
   const { program, checker } = ctx;
-  const sourceFiles = await Promise.all(
-    (sliceExtraction?.mainThreadFiles ?? ctx.sourceFiles).map((file) =>
-      program.getSourceFile(file),
-    ),
-  );
-  const collection = collectDeclaredTypeNames({
-    program,
-    checker,
-    sourceFiles: ctx.sourceFiles,
-  });
-  // Type extraction walks the declarations next. Their facts travel
-  // alongside the collection's own queries, unless workers wait for the
-  // collection: then the collection goes first.
-  if (sliceExtraction !== null) {
-    sliceExtraction.shareTypeNames(await collection);
-  }
-  const [result] = await Promise.all([
-    collection,
-    prefetchDeclarationFacts(
-      checker,
-      sourceFiles.filter((sf) => sf !== undefined),
-    ),
-  ]);
+  const result =
+    sliceExtraction !== null
+      ? await sliceExtraction.collectTypeNames({ program, checker })
+      : (
+          await Promise.all([
+            collectDeclaredTypeNames({
+              program,
+              checker,
+              sourceFiles: ctx.sourceFiles,
+            }),
+            // Type extraction walks the declarations next; their facts
+            // travel alongside the collection's own queries.
+            prefetchDeclarationFacts(
+              checker,
+              (
+                await Promise.all(
+                  ctx.sourceFiles.map((file) => program.getSourceFile(file)),
+                )
+              ).filter((sf) => sf !== undefined),
+            ),
+          ])
+        )[0];
 
   const diagnostics = [...ctx.diagnostics, ...result.diagnostics];
   const hasDiagnosticErrors = result.diagnostics.some(
@@ -457,9 +457,8 @@ async function extractResolversStep(
     knownTypeNames: [...ctx.knownTypeNames],
     detectedScalars: ctx.typesResult.detectedScalars,
   });
-  const resolversResult = await completeResolverExtraction({
-    program: ctx.program,
-    sourceFiles: ctx.sourceFiles,
+  const resolversResult = completeResolverExtraction({
+    localTypeDeclarationNames: sliceExtraction.localTypeDeclarationNames(),
     definitions,
     declaredTypeNames,
     customScalarNames: allCustomScalarNames,
@@ -761,7 +760,7 @@ async function runExtractionAndGeneration(
   const { config } = initialCtx;
   let ctx = initialCtx;
   ctx = await measureAsyncStep("createProgram", () =>
-    createProgramStep(ctx, api),
+    createProgramStep(ctx, api, sliceExtraction),
   );
   // Each range of files extracts its own directive definitions.
   const directiveExtraction =

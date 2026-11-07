@@ -8,7 +8,8 @@
  * extraction time goes. Ranges of files extracted on separate threads, each
  * talking to its own tsc process, run that work in parallel.
  *
- * The main thread collects the declared type names once and sends them.
+ * Each thread collects the type names its range exports; the main thread
+ * registers them in order and sends the result.
  * The worker extracts before the files preceding its range are: it assumes
  * they register no discovered types, that no scalar base type mapping
  * applies, and that type extraction discovers no types the resolvers
@@ -24,6 +25,8 @@ import { prefetchDeclarationFacts } from "../../shared/checker-prefetch.js";
 import { extractDirectiveDefinitions } from "../../shared/index.js";
 import {
   buildScalarMappingTable,
+  collectLocalTypeDeclarationNames,
+  collectTypeNameRegistrations,
   createRecordedScalarMappingTable,
   isScalarMappingTableUnread,
 } from "../../type-extractor/index.js";
@@ -86,6 +89,17 @@ async function run(): Promise<void> {
     api,
     checker: program.getProject().checker,
     loadedFilePaths: new Set(loadedFiles.map((sf) => sf.path)),
+  });
+  respond({
+    kind: "type-name-registrations",
+    registrations: await collectTypeNameRegistrations({
+      program,
+      checker,
+      files,
+    }),
+    localTypeDeclarationNames: [
+      ...(await collectLocalTypeDeclarationNames(program, files)),
+    ],
   });
   const [names] = await Promise.all([
     nextRequest("type-names"),
