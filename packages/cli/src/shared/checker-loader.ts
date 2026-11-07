@@ -133,20 +133,20 @@ function createBatchScheduler(api: ts.API): Scheduler {
   let scheduled = false;
   const inFlight = new Set<Promise<unknown>>();
 
+  const issue = (
+    queries: ReadonlyArray<PendingQuery>,
+  ): ReadonlyArray<Promise<unknown>> => {
+    // Queries issued inside one batch context travel as one request,
+    // separate from those of other contexts.
+    using _batch = api.batchContext();
+    return queries.map((query) => query.send());
+  };
+
   const send = async (queries: ReadonlyArray<PendingQuery>): Promise<void> => {
     while (inFlight.size >= MAX_REQUESTS_IN_FLIGHT) {
       await Promise.race(inFlight);
     }
-    // Queries issued inside one batch context travel as one request,
-    // separate from those of other contexts.
-    const context = api.batchContext();
-    let results: Promise<unknown>[];
-    try {
-      results = queries.map((query) => query.send());
-    } finally {
-      context[Symbol.dispose]();
-    }
-    const settled = Promise.allSettled(results);
+    const settled = Promise.allSettled(issue(queries));
     inFlight.add(settled);
     void settled.finally(() => inFlight.delete(settled));
   };

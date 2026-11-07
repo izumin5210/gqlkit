@@ -565,12 +565,8 @@ export async function executeGeneration(
 ): Promise<GenerationResult> {
   // The API spawns a tsc child process; every program and checker object is
   // only valid until it is closed, so it must outlive the whole pipeline.
-  const api = new ts.API({ cwd: config.cwd });
-  try {
-    return await runPipeline(config, api);
-  } finally {
-    await api.close();
-  }
+  await using api = new ts.API({ cwd: config.cwd });
+  return await runPipeline(config, api);
 }
 
 async function runPipeline(
