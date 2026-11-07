@@ -415,8 +415,6 @@ async function resolveFieldTypeInternal(
   }
 
   // Primitive types
-  const typeString = await checker.typeToString(type);
-
   if (type.flags & ts.TypeFlags.String) {
     return createPrimitiveType({ name: "string", nullable: false });
   }
@@ -430,10 +428,12 @@ async function resolveFieldTypeInternal(
     return createPrimitiveType({ name: "boolean", nullable: false });
   }
   if (type.flags & ts.TypeFlags.StringLiteral) {
-    return createStringLiteralType(typeString.replace(/"/g, ""));
+    return createStringLiteralType(
+      (await checker.typeToString(type)).replace(/"/g, ""),
+    );
   }
   if (type.flags & ts.TypeFlags.NumberLiteral) {
-    return createNumericLiteralType(typeString);
+    return createNumericLiteralType(await checker.typeToString(type));
   }
   // Template literal types (e.g., `prefix-${string}`) represent string subsets
   if (type.flags & ts.TypeFlags.TemplateLiteral) {
@@ -727,7 +727,10 @@ async function resolveFieldTypeInternal(
     }
   }
 
-  return createReferenceType({ name: typeString, nullable: false });
+  return createReferenceType({
+    name: await checker.typeToString(type),
+    nullable: false,
+  });
 }
 
 async function tryExtractAsInlineObject(
