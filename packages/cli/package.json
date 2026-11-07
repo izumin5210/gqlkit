@@ -41,6 +41,9 @@
   },
   "scripts": {
     "build": "tsc --build && bundle-docs --target ./docs",
+    "bench": "tsc --build && node dist/testing/bench/main.js",
+    "bench:compare": "tsc --build && node dist/testing/bench/compare.js",
+    "bench:refs": "tsc --build && node dist/testing/bench/refs.js",
     "test": "pnpm -w vitest run --project=cli --typecheck",
     "typecheck": "tsc --noEmit"
   },

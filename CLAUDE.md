@@ -39,6 +39,17 @@ pnpm test -- -u
 pnpm test -- --coverage
 ```
 
+**Benchmark (golden cases):**
+```bash
+pnpm build                                # golden cases need @gqlkit-ts/runtime built
+pnpm bench                                # all cases in one process, like the golden suite
+pnpm bench --mode per-process             # a fresh process per case, like `gqlkit gen`
+pnpm bench --out result.json              # also write raw results
+pnpm bench:compare base.json head.json    # Markdown comparison of two results
+pnpm bench:refs --base main --head HEAD   # benchmark two git refs with the current harness
+```
+Every run first checks outputs against the golden files and refuses to report timings for wrong output.
+
 **Package manager**: pnpm (v10.28.0)
 
 ## Testing
