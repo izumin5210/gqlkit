@@ -18,6 +18,9 @@ import { validateResolverTypes } from "./validator/resolver-type-validator.js";
 export interface ExtractResolverDefinitionsParams {
   readonly program: Program;
   readonly checker: CheckerLoader;
+  /** The files whose resolvers to extract, in order. */
+  readonly files: ReadonlyArray<string>;
+  /** Every scanned source file. */
   readonly sourceFiles: ReadonlyArray<string>;
   readonly knownTypeNames: ReadonlySet<string>;
   readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
@@ -34,11 +37,11 @@ export interface ExtractResolverDefinitionsParams {
 export async function extractResolverDefinitions(
   params: ExtractResolverDefinitionsParams,
 ): Promise<ExtractDefineApiResult> {
-  const { program, checker, sourceFiles, ...options } = params;
+  const { program, checker, files, sourceFiles, ...options } = params;
   return extractDefineApiResolvers({
     program,
     checker,
-    files: sourceFiles,
+    files,
     options: { ...options, sourceFiles: new Set(sourceFiles) },
   });
 }
@@ -97,7 +100,7 @@ export async function completeResolverExtraction(
 }
 
 export interface ExtractResolversParams
-  extends ExtractResolverDefinitionsParams {
+  extends Omit<ExtractResolverDefinitionsParams, "files"> {
   /** Names of types already extracted from `GqlObject`/`GqlInterface`/etc. declarations (type-extractor's stage). */
   readonly declaredTypeNames: ReadonlyArray<string>;
   /** Custom scalar names, both config-declared and auto-detected. */
@@ -116,7 +119,10 @@ export async function extractResolvers(
   return completeResolverExtraction({
     program: params.program,
     sourceFiles: params.sourceFiles,
-    definitions: await extractResolverDefinitions(definitionParams),
+    definitions: await extractResolverDefinitions({
+      ...definitionParams,
+      files: params.sourceFiles,
+    }),
     declaredTypeNames,
     customScalarNames,
   });

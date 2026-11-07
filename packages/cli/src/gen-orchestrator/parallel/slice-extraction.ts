@@ -1,0 +1,251 @@
+import type { SourceFile } from "typescript/ast";
+import type { Program, Symbol as TsSymbol } from "typescript/async";
+import type { ExtractDefineApiResult } from "../../resolver-extractor/index.js";
+import type { CheckerLoader } from "../../shared/checker-loader.js";
+import { prefetchDeclarationFacts } from "../../shared/checker-prefetch.js";
+import {
+  buildScalarMappingTable,
+  type ConfigScalarMapping,
+  completeTypeExtraction,
+  createDeclaredTypesExtraction,
+  createRecordedScalarMappingTable,
+  type ExtractionOptions,
+  type ExtractTypesResult,
+  extractDeclaredTypes,
+  extractTypesFromProgram,
+  finalizeTypeExtraction,
+  type GlobalTypeMapping,
+  isScalarMappingTableUnread,
+} from "../../type-extractor/index.js";
+import {
+  type SliceWorker,
+  type SliceWorkerModule,
+  startSliceWorker,
+} from "./client.js";
+import {
+  type ResolverDefinitionsSpeculation,
+  type ResolverExtractionInputs,
+  speculateResolverDefinitions,
+} from "./resolver-speculation.js";
+import { appendTypeSlice } from "./type-slice.js";
+
+/**
+ * Splits the files into `count` contiguous ranges of nearly equal length,
+ * in order.
+ */
+export function partitionFiles(
+  files: ReadonlyArray<string>,
+  count: number,
+): ReadonlyArray<ReadonlyArray<string>> {
+  return Array.from({ length: count }, (_, i) =>
+    files.slice(
+      Math.round((files.length * i) / count),
+      Math.round((files.length * (i + 1)) / count),
+    ),
+  );
+}
+
+export interface StartSliceExtractionParams {
+  readonly workerModule: SliceWorkerModule;
+  readonly cwd: string;
+  readonly tsconfigPath: string | null;
+  readonly sourceFiles: ReadonlyArray<string>;
+  readonly slices: ReadonlyArray<ReadonlyArray<string>>;
+  readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
+}
+
+export interface ExtractTypesInSlicesParams {
+  readonly program: Program;
+  readonly checker: CheckerLoader;
+  readonly knownTypeNames: ReadonlySet<string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly customScalarNames: ReadonlyArray<string>;
+  readonly configScalars: ReadonlyArray<ConfigScalarMapping>;
+  readonly sourceRoot: string | null;
+}
+
+/**
+ * Type and resolver extraction split into ranges of files: the main thread
+ * extracts the first range, and a worker each of the others (see
+ * `worker.ts`). Results are combined in file order, so they are the ones
+ * extracting all files in sequence gives.
+ */
+export interface SliceExtraction {
+  /** The files whose declarations the main thread prefetches itself. */
+  readonly mainThreadFiles: ReadonlyArray<string>;
+  readonly extractTypes: (
+    params: ExtractTypesInSlicesParams,
+  ) => Promise<ExtractTypesResult>;
+  /** Must follow `extractTypes`. */
+  readonly extractResolverDefinitions: (
+    inputs: ResolverExtractionInputs,
+  ) => Promise<ExtractDefineApiResult>;
+  readonly terminate: () => Promise<void>;
+}
+
+async function getSourceFiles(
+  program: Program,
+  files: ReadonlyArray<string>,
+): Promise<SourceFile[]> {
+  const sourceFiles = await Promise.all(
+    files.map((file) => program.getSourceFile(file)),
+  );
+  return sourceFiles.filter((sf) => sf !== undefined);
+}
+
+export function startSliceExtraction(
+  params: StartSliceExtractionParams,
+): SliceExtraction {
+  const { workerModule, sourceFiles, slices, globalTypeMappings } = params;
+  const [mainThreadFiles = [], ...workerFiles] = slices;
+  const workers: SliceWorker[] = workerFiles.map((files) =>
+    startSliceWorker({
+      module: workerModule,
+      data: {
+        cwd: params.cwd,
+        tsconfigPath: params.tsconfigPath,
+        sourceFiles,
+        files,
+        globalTypeMappings,
+      },
+    }),
+  );
+  /** Workers whose types were combined, and are asked about scalars. */
+  const workersWithTypes = new Set<SliceWorker>();
+  let mainThreadResolvers: ResolverDefinitionsSpeculation | null = null;
+
+  const extractTypes = async (
+    typeParams: ExtractTypesInSlicesParams,
+  ): Promise<ExtractTypesResult> => {
+    const { program, checker } = typeParams;
+    const scalarMappingTable = createRecordedScalarMappingTable();
+    const options: ExtractionOptions = {
+      globalTypeMappings,
+      knownTypeNames: typeParams.knownTypeNames,
+      knownTypeSymbols: typeParams.knownTypeSymbols,
+      underlyingSymbolToTypeName: typeParams.underlyingSymbolToTypeName,
+      scalarMappingTable,
+    };
+    const extraction = createDeclaredTypesExtraction();
+    // Resolvers are extracted alongside types: each waits on the checker
+    // at times the other can use.
+    mainThreadResolvers = speculateResolverDefinitions({
+      program,
+      checker,
+      files: mainThreadFiles,
+      sourceFiles,
+      globalTypeMappings,
+      declaredTypeNames: typeParams.knownTypeNames,
+      knownTypeSymbols: typeParams.knownTypeSymbols,
+      underlyingSymbolToTypeName: typeParams.underlyingSymbolToTypeName,
+    });
+    await extractDeclaredTypes({
+      program,
+      checker,
+      files: mainThreadFiles,
+      sourceFiles,
+      options,
+      extraction,
+    });
+
+    for (const [i, worker] of workers.entries()) {
+      const { result } = await worker.receive("types");
+      if (appendTypeSlice(extraction, result)) {
+        workersWithTypes.add(worker);
+        continue;
+      }
+      const files = workerFiles[i] ?? [];
+      await prefetchDeclarationFacts(
+        checker,
+        await getSourceFiles(program, files),
+      );
+      await extractDeclaredTypes({
+        program,
+        checker,
+        files,
+        sourceFiles,
+        options,
+        extraction,
+      });
+    }
+    const firstPass = await completeTypeExtraction({
+      checker,
+      sourceFiles,
+      options,
+      extraction,
+    });
+
+    const { detectedScalars } = firstPass;
+    const actualScalarMappingTable =
+      detectedScalars.length > 0
+        ? await buildScalarMappingTable({ detectedScalars, checker, program })
+        : null;
+    let scalarMappingTableUnread = isScalarMappingTableUnread(
+      scalarMappingTable,
+      actualScalarMappingTable,
+    );
+    if (actualScalarMappingTable !== null) {
+      for (const worker of workersWithTypes) {
+        worker.send({ kind: "check-scalar-reads", detectedScalars });
+      }
+      for (const worker of workersWithTypes) {
+        const { unread } = await worker.receive("scalar-reads");
+        scalarMappingTableUnread &&= unread;
+      }
+    }
+
+    let extractionResult = firstPass;
+    if (!scalarMappingTableUnread) {
+      // Field types that are scalar base types map to the scalars: extract
+      // everything again with the table. Rare enough to do here alone.
+      await prefetchDeclarationFacts(
+        checker,
+        await getSourceFiles(program, sourceFiles),
+      );
+      extractionResult = await extractTypesFromProgram({
+        program,
+        checker,
+        sourceFiles,
+        options: { ...options, scalarMappingTable: actualScalarMappingTable },
+      });
+    }
+
+    return finalizeTypeExtraction({
+      extractionResult,
+      scalarMappingTable: actualScalarMappingTable,
+      customScalarNames: typeParams.customScalarNames,
+      configScalars: typeParams.configScalars,
+      sourceRoot: typeParams.sourceRoot,
+    });
+  };
+
+  const extractResolverDefinitions = async (
+    inputs: ResolverExtractionInputs,
+  ): Promise<ExtractDefineApiResult> => {
+    if (mainThreadResolvers === null) {
+      throw new Error("resolvers are extracted after types");
+    }
+    for (const worker of workers) {
+      worker.send({ kind: "resolvers", inputs });
+    }
+    const parts = [await mainThreadResolvers.settle(inputs)];
+    for (const worker of workers) {
+      parts.push((await worker.receive("definitions")).definitions);
+    }
+    return {
+      resolvers: parts.flatMap((p) => p.resolvers),
+      abstractTypeResolvers: parts.flatMap((p) => p.abstractTypeResolvers),
+      diagnostics: parts.flatMap((p) => p.diagnostics),
+    };
+  };
+
+  return {
+    mainThreadFiles,
+    extractTypes,
+    extractResolverDefinitions,
+    terminate: async () => {
+      await Promise.all(workers.map((w) => w.terminate()));
+    },
+  };
+}

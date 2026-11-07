@@ -20,6 +20,7 @@ import {
 } from "../shared/checker-loader.js";
 import { prefetchDeclarationFacts } from "../shared/checker-prefetch.js";
 import {
+  type DirectiveDefinitionExtractionResult,
   type DirectiveDefinitionInfo,
   deduplicateDiagnostics,
   extractDirectiveDefinitions,
@@ -34,10 +35,12 @@ import {
 } from "../type-extractor/index.js";
 import { scanDirectory } from "./infra/file-scanner.js";
 import { createSharedProgram } from "./infra/program-factory.js";
+import type { SliceWorkerModule } from "./parallel/client.js";
 import {
-  type ResolverWorker,
-  startResolverWorker,
-} from "./resolver-worker/client.js";
+  partitionFiles,
+  type SliceExtraction,
+  startSliceExtraction,
+} from "./parallel/slice-extraction.js";
 import { writeFiles } from "./writer/file-writer.js";
 
 export interface GenerationConfig {
@@ -257,12 +260,15 @@ async function createProgramStep(
 
 async function collectTypeNamesStep(
   ctx: PipelineContext,
+  sliceExtraction: SliceExtraction | null,
 ): Promise<PipelineContext> {
   if (ctx.aborted || !ctx.program || !ctx.checker) return ctx;
 
   const { program, checker } = ctx;
   const sourceFiles = await Promise.all(
-    ctx.sourceFiles.map((file) => program.getSourceFile(file)),
+    (sliceExtraction?.mainThreadFiles ?? ctx.sourceFiles).map((file) =>
+      program.getSourceFile(file),
+    ),
   );
   const [result] = await Promise.all([
     collectDeclaredTypeNames({
@@ -339,6 +345,7 @@ function prepareScalarConfigStep(ctx: PipelineContext): PipelineContext {
 
 async function extractTypesStep(
   ctx: PipelineContext,
+  sliceExtraction: SliceExtraction | null,
 ): Promise<PipelineContext> {
   if (
     ctx.aborted ||
@@ -354,18 +361,30 @@ async function extractTypesStep(
   const { customScalarNames, globalTypeMappings, configScalars } =
     ctx.scalarConfig;
 
-  const typesResult = await extractTypes({
-    program: ctx.program,
-    checker: ctx.checker,
-    sourceFiles: ctx.sourceFiles,
-    customScalarNames,
-    globalTypeMappings,
-    configScalars,
-    sourceRoot: ctx.config.cwd,
-    knownTypeNames: ctx.knownTypeNames,
-    knownTypeSymbols: ctx.knownTypeSymbols,
-    underlyingSymbolToTypeName: ctx.underlyingSymbolToTypeName,
-  });
+  const typesResult =
+    sliceExtraction === null
+      ? await extractTypes({
+          program: ctx.program,
+          checker: ctx.checker,
+          sourceFiles: ctx.sourceFiles,
+          customScalarNames,
+          globalTypeMappings,
+          configScalars,
+          sourceRoot: ctx.config.cwd,
+          knownTypeNames: ctx.knownTypeNames,
+          knownTypeSymbols: ctx.knownTypeSymbols,
+          underlyingSymbolToTypeName: ctx.underlyingSymbolToTypeName,
+        })
+      : await sliceExtraction.extractTypes({
+          program: ctx.program,
+          checker: ctx.checker,
+          knownTypeNames: ctx.knownTypeNames,
+          knownTypeSymbols: ctx.knownTypeSymbols,
+          underlyingSymbolToTypeName: ctx.underlyingSymbolToTypeName,
+          customScalarNames,
+          configScalars,
+          sourceRoot: ctx.config.cwd,
+        });
 
   return { ...ctx, typesResult };
 }
@@ -384,7 +403,7 @@ function augmentKnownTypeNamesStep(ctx: PipelineContext): PipelineContext {
 
 async function extractResolversStep(
   ctx: PipelineContext,
-  resolverWorker: ResolverWorker | null,
+  sliceExtraction: SliceExtraction | null,
 ): Promise<PipelineContext> {
   if (
     ctx.aborted ||
@@ -406,7 +425,7 @@ async function extractResolversStep(
 
   const declaredTypeNames = ctx.typesResult.types.map((t) => t.name);
 
-  if (resolverWorker === null) {
+  if (sliceExtraction === null) {
     const resolversResult = await extractResolvers({
       program: ctx.program,
       checker: ctx.checker,
@@ -422,15 +441,10 @@ async function extractResolversStep(
     return { ...ctx, resolversResult };
   }
 
-  const definitions = await resolverWorker.extract({
+  const definitions = await sliceExtraction.extractResolverDefinitions({
     knownTypeNames: [...ctx.knownTypeNames],
     detectedScalars: ctx.typesResult.detectedScalars,
   });
-  if (definitions === null) {
-    throw new Error(
-      "resolver worker failed to create the program the main thread created",
-    );
-  }
   const resolversResult = await completeResolverExtraction({
     program: ctx.program,
     sourceFiles: ctx.sourceFiles,
@@ -441,16 +455,32 @@ async function extractResolversStep(
   return { ...ctx, resolversResult };
 }
 
-async function extractDirectivesStep(
+/**
+ * Starts extracting directive definitions, which depends on nothing but the
+ * program, so its checker queries travel alongside the other stages'.
+ */
+function startDirectiveExtraction(
   ctx: PipelineContext,
-): Promise<PipelineContext> {
-  if (ctx.aborted || !ctx.program || !ctx.checker) return ctx;
+): Promise<DirectiveDefinitionExtractionResult> | null {
+  if (ctx.aborted || !ctx.program || !ctx.checker) return null;
 
-  const directiveDefinitionResult = await extractDirectiveDefinitions({
+  const extraction = extractDirectiveDefinitions({
     program: ctx.program,
     checker: ctx.checker,
     sourceFiles: ctx.sourceFiles,
   });
+  // Observed by extractDirectivesStep unless an earlier step aborts.
+  extraction.catch(() => {});
+  return extraction;
+}
+
+async function extractDirectivesStep(
+  ctx: PipelineContext,
+  extraction: Promise<DirectiveDefinitionExtractionResult> | null,
+): Promise<PipelineContext> {
+  if (ctx.aborted || extraction === null) return ctx;
+
+  const directiveDefinitionResult = await extraction;
 
   const directiveDefinitions: DirectiveDefinitionInfo[] =
     directiveDefinitionResult.definitions.length > 0
@@ -607,43 +637,49 @@ async function measureAsyncStep<T>(
 }
 
 /**
- * Below this many source files, resolver extraction stays on the main
- * thread: a second thread, tsc process and program cost more than the
- * extraction they would take over.
+ * Extraction is split into ranges of at least this many files, each
+ * extracted by its own thread and tsc process. A range costs that thread a
+ * program of the whole project, so smaller projects stay on one thread.
  */
-const RESOLVER_WORKER_MIN_SOURCE_FILES = 200;
+const MIN_FILES_PER_SLICE = 100;
 
-/** Where resolver definitions are extracted. */
-export type ResolverExtraction =
-  /** In a worker thread if the project is large enough and a core is free. */
-  "auto" | "main-thread" | "worker";
+/** At most this many threads extract at once. */
+const MAX_SLICES = 4;
 
 export interface GenerationOptions {
-  readonly resolverExtraction: ResolverExtraction;
-  /** The compiled resolver worker module. */
-  readonly resolverWorkerUrl: URL;
+  /**
+   * How many ranges of files to extract in parallel, one thread each;
+   * "auto" picks from the project size and the available cores.
+   */
+  readonly slices: "auto" | number;
+  readonly sliceWorker: SliceWorkerModule;
 }
 
 const DEFAULT_GENERATION_OPTIONS: GenerationOptions = {
-  resolverExtraction: "auto",
-  resolverWorkerUrl: new URL("./resolver-worker/worker.js", import.meta.url),
+  slices: "auto",
+  sliceWorker: {
+    url: new URL("./parallel/worker.js", import.meta.url),
+    execArgv: null,
+  },
 };
 
-function shouldUseResolverWorker(
-  mode: ResolverExtraction,
+function countSlices(
+  slices: GenerationOptions["slices"],
   sourceFileCount: number,
-): boolean {
-  switch (mode) {
-    case "main-thread":
-      return false;
-    case "worker":
-      return true;
-    case "auto":
-      return (
-        sourceFileCount >= RESOLVER_WORKER_MIN_SOURCE_FILES &&
-        availableParallelism() > 1
-      );
+): number {
+  if (slices !== "auto") {
+    return Math.max(1, Math.min(slices, sourceFileCount));
   }
+  // A thread and its tsc process, which parses and checks in parallel, keep
+  // two to three logical cores busy; more slices only contend for them.
+  return Math.max(
+    1,
+    Math.min(
+      MAX_SLICES,
+      Math.round(availableParallelism() / 3),
+      Math.floor(sourceFileCount / MIN_FILES_PER_SLICE),
+    ),
+  );
 }
 
 export async function executeGeneration(
@@ -673,25 +709,25 @@ async function runPipeline(
     scanSourceFilesStep(ctx),
   );
 
-  // Resolver extraction starts in a worker now, alongside everything up to
-  // type extraction, and only waits for its results at the end.
-  const resolverWorker =
-    !ctx.aborted &&
-    shouldUseResolverWorker(options.resolverExtraction, ctx.sourceFiles.length)
-      ? startResolverWorker({
-          url: options.resolverWorkerUrl,
-          data: {
-            cwd: config.cwd,
-            tsconfigPath: config.tsconfigPath,
-            sourceFiles: ctx.sourceFiles,
-            globalTypeMappings: prepareScalarConfig(config).globalTypeMappings,
-          },
+  // The workers start now, alongside the main thread's program creation.
+  const sliceCount = ctx.aborted
+    ? 1
+    : countSlices(options.slices, ctx.sourceFiles.length);
+  const sliceExtraction =
+    sliceCount > 1
+      ? startSliceExtraction({
+          workerModule: options.sliceWorker,
+          cwd: config.cwd,
+          tsconfigPath: config.tsconfigPath,
+          sourceFiles: ctx.sourceFiles,
+          slices: partitionFiles(ctx.sourceFiles, sliceCount),
+          globalTypeMappings: prepareScalarConfig(config).globalTypeMappings,
         })
       : null;
   try {
-    return await runExtractionAndGeneration(ctx, api, resolverWorker);
+    return await runExtractionAndGeneration(ctx, api, sliceExtraction);
   } catch (error) {
-    await resolverWorker?.terminate();
+    await sliceExtraction?.terminate();
     throw error;
   }
 }
@@ -699,27 +735,30 @@ async function runPipeline(
 async function runExtractionAndGeneration(
   initialCtx: PipelineContext,
   api: API,
-  resolverWorker: ResolverWorker | null,
+  sliceExtraction: SliceExtraction | null,
 ): Promise<GenerationResult> {
   const { config } = initialCtx;
   let ctx = initialCtx;
   ctx = await measureAsyncStep("createProgram", () =>
     createProgramStep(ctx, api),
   );
+  const directiveExtraction = startDirectiveExtraction(ctx);
   ctx = await measureAsyncStep("collectTypeNames", () =>
-    collectTypeNamesStep(ctx),
+    collectTypeNamesStep(ctx, sliceExtraction),
   );
   ctx = prepareScalarConfigStep(ctx);
-  ctx = await measureAsyncStep("extractTypes", () => extractTypesStep(ctx));
+  ctx = await measureAsyncStep("extractTypes", () =>
+    extractTypesStep(ctx, sliceExtraction),
+  );
   ctx = augmentKnownTypeNamesStep(ctx);
   if (ctx.aborted) {
-    await resolverWorker?.terminate();
+    await sliceExtraction?.terminate();
   }
   ctx = await measureAsyncStep("extractResolvers", () =>
-    extractResolversStep(ctx, resolverWorker),
+    extractResolversStep(ctx, sliceExtraction),
   );
   ctx = await measureAsyncStep("extractDirectives", () =>
-    extractDirectivesStep(ctx),
+    extractDirectivesStep(ctx, directiveExtraction),
   );
   ctx = validateExtractionStep(ctx);
 

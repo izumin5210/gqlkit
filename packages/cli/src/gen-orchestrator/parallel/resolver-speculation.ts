@@ -24,6 +24,9 @@ export interface ResolverExtractionInputs {
 export interface SpeculateResolverDefinitionsParams {
   readonly program: Program;
   readonly checker: CheckerLoader;
+  /** The files whose resolvers to extract, in order. */
+  readonly files: ReadonlyArray<string>;
+  /** Every scanned source file. */
   readonly sourceFiles: ReadonlyArray<string>;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   /** Declared type names, as collected before type extraction. */
