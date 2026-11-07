@@ -17,27 +17,27 @@ type Post {
 """Defined in: src/gqlkit/schema/types.ts"""
 enum PostCategory {
   BLOG
-  TUTORIAL
   REVIEW
+  TUTORIAL
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum PostStatus {
+  ARCHIVED
   DRAFT
   PUBLISHED
-  ARCHIVED
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum PostTag {
-  TECH
   LIFESTYLE
   NEWS
+  TECH
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum PostVisibility {
-  PUBLIC
   PRIVATE
+  PUBLIC
   UNLISTED
 }

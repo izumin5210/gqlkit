@@ -845,13 +845,6 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "VALID"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
             "value": "INVALID"
           }
         },
@@ -860,6 +853,13 @@ export const typeDefs: DocumentNode = {
           "name": {
             "kind": "Name",
             "value": "PARTIAL"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "VALID"
           }
         }
       ],
@@ -928,20 +928,6 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "PENDING"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "PROCESSING"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
             "value": "COMPLETED"
           }
         },
@@ -950,6 +936,20 @@ export const typeDefs: DocumentNode = {
           "name": {
             "kind": "Name",
             "value": "FAILED"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "PENDING"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "PROCESSING"
           }
         }
       ],

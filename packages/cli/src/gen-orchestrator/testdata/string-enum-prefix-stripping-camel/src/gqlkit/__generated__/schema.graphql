@@ -12,7 +12,7 @@ Order status enum with camelCase name.
 Defined in: src/gqlkit/schema/types.ts
 """
 enum orderStatus {
+  DELIVERED
   PENDING
   SHIPPED
-  DELIVERED
 }

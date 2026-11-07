@@ -4438,14 +4438,14 @@ export const typeDefs: DocumentNode = {
           kind: "EnumValueDefinition",
           name: {
             kind: "Name",
-            value: "STREAMING",
+            value: "DONE",
           },
         },
         {
           kind: "EnumValueDefinition",
           name: {
             kind: "Name",
-            value: "DONE",
+            value: "STREAMING",
           },
         },
       ],
@@ -4772,14 +4772,14 @@ export const typeDefs: DocumentNode = {
           kind: "EnumValueDefinition",
           name: {
             kind: "Name",
-            value: "STREAMING",
+            value: "DONE",
           },
         },
         {
           kind: "EnumValueDefinition",
           name: {
             kind: "Name",
-            value: "DONE",
+            value: "STREAMING",
           },
         },
       ],
@@ -8008,6 +8008,13 @@ export const typeDefs: DocumentNode = {
           kind: "EnumValueDefinition",
           name: {
             kind: "Name",
+            value: "ASSISTANT",
+          },
+        },
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
             value: "SYSTEM",
           },
         },
@@ -8016,13 +8023,6 @@ export const typeDefs: DocumentNode = {
           name: {
             kind: "Name",
             value: "USER",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "ASSISTANT",
           },
         },
       ],

@@ -2,8 +2,8 @@
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum CreatePostVisibilityInput {
-  PUBLIC
   PRIVATE
+  PUBLIC
   UNLISTED
 }
 
@@ -39,15 +39,15 @@ type User {
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum UserPostsCategoryInput {
-  TECH
   LIFESTYLE
   NEWS
+  TECH
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum UserPostsSortByInput {
-  TITLE
   CREATED_AT
+  TITLE
   UPDATED_AT
 }
 

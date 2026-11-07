@@ -155,6 +155,13 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
+            "value": "ARCHIVED"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
             "value": "DRAFT"
           }
         },
@@ -163,13 +170,6 @@ export const typeDefs: DocumentNode = {
           "name": {
             "kind": "Name",
             "value": "PUBLISHED"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "ARCHIVED"
           }
         }
       ],

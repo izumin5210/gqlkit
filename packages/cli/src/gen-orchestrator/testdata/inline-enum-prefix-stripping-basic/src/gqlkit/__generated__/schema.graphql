@@ -12,16 +12,16 @@ type Post {
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum PostStatus {
+  ARCHIVED
   DRAFT
   PUBLISHED
-  ARCHIVED
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum PostTag {
-  TECH
   LIFESTYLE
   NEWS
+  TECH
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
@@ -35,6 +35,6 @@ type User {
 """Defined in: src/gqlkit/schema/types.ts"""
 enum UserRole {
   ADMIN
-  MEMBER
   GUEST
+  MEMBER
 }

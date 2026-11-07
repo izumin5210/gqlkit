@@ -10,19 +10,19 @@ export function createResolvers() {
       PENDING: "pending",
     },
     SuccessResultMetadataPriority: {
+      HIGH: "high",
       LOW: "low",
       MEDIUM: "medium",
-      HIGH: "high",
     },
     ErrorResultSeverity: {
-      WARNING: "warning",
-      ERROR: "error",
       CRITICAL: "critical",
+      ERROR: "error",
+      WARNING: "warning",
     },
     ErrorResultTag: {
       BUG: "bug",
-      REGRESSION: "regression",
       PERFORMANCE: "performance",
+      REGRESSION: "regression",
     },
     Bot: {
       __isTypeOf: Bot$__isTypeOf,
