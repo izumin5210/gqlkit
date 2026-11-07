@@ -897,50 +897,60 @@ export async function extractDefineApiResolvers(
     diagnostics: [],
   };
 
-  for (const filePath of files) {
-    const sourceFile = await program.getSourceFile(filePath);
-    if (!sourceFile) {
+  // Resolver declarations are independent of each other (no discovered-type
+  // registry here, and the contexts' diagnostics arrays are write-only
+  // scratch), so all of them are processed concurrently: their checker
+  // queries batch into shared round trips. Results are collected in source
+  // order, which keeps the output deterministic.
+  const resultsByFile = await Promise.all(
+    files.map(async (filePath) => {
+      const sourceFile = await program.getSourceFile(filePath);
+      if (!sourceFile) {
+        return [];
+      }
+
+      const exportedInputTypes = await extractExportedInputTypes(
+        sourceFile,
+        inputContext,
+      );
+
+      const declarations = sourceFile.statements.flatMap((node) =>
+        ts.isVariableStatement(node) && isExported(node)
+          ? node.declarationList.declarations.map((declaration) => ({
+              declaration,
+              statement: node,
+            }))
+          : [],
+      );
+
+      return Promise.all(
+        declarations.map(({ declaration, statement }) =>
+          processResolverDeclaration({
+            declaration,
+            statement,
+            sourceFile,
+            filePath,
+            checker,
+            inputContext,
+            outputContext,
+            exportedInputTypes,
+          }),
+        ),
+      );
+    }),
+  );
+
+  for (const result of resultsByFile.flat()) {
+    if (!result) {
       continue;
     }
 
-    const exportedInputTypes = await extractExportedInputTypes(
-      sourceFile,
-      inputContext,
-    );
-
-    for (const node of sourceFile.statements) {
-      if (!ts.isVariableStatement(node)) {
-        continue;
-      }
-
-      if (!isExported(node)) {
-        continue;
-      }
-
-      for (const declaration of node.declarationList.declarations) {
-        const result = await processResolverDeclaration({
-          declaration,
-          statement: node,
-          sourceFile,
-          filePath,
-          checker,
-          inputContext,
-          outputContext,
-          exportedInputTypes,
-        });
-
-        if (!result) {
-          continue;
-        }
-
-        diagnostics.push(...result.diagnostics);
-        if (result.abstractResolver) {
-          abstractTypeResolvers.push(result.abstractResolver);
-        }
-        if (result.resolver) {
-          resolvers.push(result.resolver);
-        }
-      }
+    diagnostics.push(...result.diagnostics);
+    if (result.abstractResolver) {
+      abstractTypeResolvers.push(result.abstractResolver);
+    }
+    if (result.resolver) {
+      resolvers.push(result.resolver);
     }
   }
 

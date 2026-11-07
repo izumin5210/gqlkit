@@ -500,72 +500,101 @@ export interface ExtractDirectiveDefinitionsParams {
   readonly sourceFiles: ReadonlyArray<string>;
 }
 
+interface ExtractDirectiveDefinitionParams {
+  readonly node: ts.TypeAliasDeclaration;
+  readonly sourceFile: ts.SourceFile;
+  readonly filePath: string;
+  readonly checker: CheckerLoader;
+}
+
+interface DirectiveDefinitionResult {
+  readonly definition: DirectiveDefinitionInfo;
+  readonly errors: ReadonlyArray<DirectiveDefinitionError>;
+}
+
+/** Returns null when the type alias is not a directive definition. */
+async function extractDirectiveDefinition(
+  params: ExtractDirectiveDefinitionParams,
+): Promise<DirectiveDefinitionResult | null> {
+  const { node, sourceFile, filePath, checker } = params;
+
+  const symbol = await checker.getSymbolAtLocation(node.name);
+  if (!symbol) {
+    return null;
+  }
+
+  const type = await checker.getDeclaredTypeOfSymbol(symbol);
+  if (!(await isDirectiveType(type, checker))) {
+    return null;
+  }
+
+  const directiveName = await extractDirectiveName(type, checker);
+  if (!directiveName) {
+    return null;
+  }
+
+  const typeAliasName = node.name.getText(sourceFile);
+
+  const { line } = sourceFile.getLineAndCharacterOfPosition(
+    node.getStart(sourceFile),
+  );
+
+  const locations = await extractDirectiveLocations(type, checker);
+  const argsResult = await extractDirectiveArgs(
+    type,
+    checker,
+    filePath,
+    line + 1,
+  );
+
+  const description = await extractDescription(node, checker);
+
+  return {
+    definition: {
+      name: directiveName,
+      typeAliasName,
+      args: argsResult.args,
+      locations,
+      sourceFile: filePath,
+      line: line + 1,
+      description,
+    },
+    errors: argsResult.errors,
+  };
+}
+
 export async function extractDirectiveDefinitions(
   params: ExtractDirectiveDefinitionsParams,
 ): Promise<DirectiveDefinitionExtractionResult> {
   const { program, checker, sourceFiles } = params;
+
+  // Each type alias is examined independently, so all of them run
+  // concurrently and their checker queries batch; results keep source order.
+  const resultsByFile = await Promise.all(
+    sourceFiles.map(async (filePath) => {
+      const sourceFile = await program.getSourceFile(filePath);
+      if (!sourceFile) {
+        return [];
+      }
+      const typeAliases = sourceFile.statements.filter(
+        (node): node is ts.TypeAliasDeclaration =>
+          ts.isTypeAliasDeclaration(node) &&
+          (ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Export) !== 0,
+      );
+      return Promise.all(
+        typeAliases.map((node) =>
+          extractDirectiveDefinition({ node, sourceFile, filePath, checker }),
+        ),
+      );
+    }),
+  );
+
   const definitions: DirectiveDefinitionInfo[] = [];
   const errors: DirectiveDefinitionError[] = [];
-
-  for (const filePath of sourceFiles) {
-    const sourceFile = await program.getSourceFile(filePath);
-    if (!sourceFile) {
-      continue;
-    }
-
-    for (const node of sourceFile.statements) {
-      if (!ts.isTypeAliasDeclaration(node)) {
-        continue;
-      }
-
-      const modifiers = ts.getCombinedModifierFlags(node);
-      const isExported = (modifiers & ts.ModifierFlags.Export) !== 0;
-      if (!isExported) {
-        continue;
-      }
-
-      const symbol = await checker.getSymbolAtLocation(node.name);
-      if (!symbol) {
-        continue;
-      }
-
-      const type = await checker.getDeclaredTypeOfSymbol(symbol);
-      if (!(await isDirectiveType(type, checker))) {
-        continue;
-      }
-
-      const directiveName = await extractDirectiveName(type, checker);
-      if (!directiveName) {
-        continue;
-      }
-
-      const typeAliasName = node.name.getText(sourceFile);
-
-      const { line } = sourceFile.getLineAndCharacterOfPosition(
-        node.getStart(sourceFile),
-      );
-
-      const locations = await extractDirectiveLocations(type, checker);
-      const argsResult = await extractDirectiveArgs(
-        type,
-        checker,
-        filePath,
-        line + 1,
-      );
-
-      const description = await extractDescription(node, checker);
-
-      definitions.push({
-        name: directiveName,
-        typeAliasName,
-        args: argsResult.args,
-        locations,
-        sourceFile: filePath,
-        line: line + 1,
-        description,
-      });
-
-      errors.push(...argsResult.errors);
+  for (const result of resultsByFile.flat()) {
+    if (result) {
+      definitions.push(result.definition);
+      errors.push(...result.errors);
     }
   }
 
