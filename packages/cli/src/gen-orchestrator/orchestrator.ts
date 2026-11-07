@@ -495,19 +495,47 @@ function generateOutputFiles(
   return files;
 }
 
+/**
+ * Records a pipeline step's duration as a `gqlkit:<step>` performance
+ * measure, letting benchmarks break generation time down by step without a
+ * dedicated hook in the public API.
+ */
+function measureStep<T>(step: string, run: () => T): T {
+  const start = performance.now();
+  try {
+    return run();
+  } finally {
+    performance.measure(`gqlkit:${step}`, { start, end: performance.now() });
+  }
+}
+
+async function measureAsyncStep<T>(
+  step: string,
+  run: () => Promise<T>,
+): Promise<T> {
+  const start = performance.now();
+  try {
+    return await run();
+  } finally {
+    performance.measure(`gqlkit:${step}`, { start, end: performance.now() });
+  }
+}
+
 export async function executeGeneration(
   config: GenerationConfig,
 ): Promise<GenerationResult> {
   let ctx = createInitialContext(config);
 
-  ctx = await scanSourceFilesStep(ctx);
-  ctx = createProgramStep(ctx);
-  ctx = collectTypeNamesStep(ctx);
+  ctx = await measureAsyncStep("scanSourceFiles", () =>
+    scanSourceFilesStep(ctx),
+  );
+  ctx = measureStep("createProgram", () => createProgramStep(ctx));
+  ctx = measureStep("collectTypeNames", () => collectTypeNamesStep(ctx));
   ctx = prepareScalarConfigStep(ctx);
-  ctx = extractTypesStep(ctx);
+  ctx = measureStep("extractTypes", () => extractTypesStep(ctx));
   ctx = augmentKnownTypeNamesStep(ctx);
-  ctx = extractResolversStep(ctx);
-  ctx = extractDirectivesStep(ctx);
+  ctx = measureStep("extractResolvers", () => extractResolversStep(ctx));
+  ctx = measureStep("extractDirectives", () => extractDirectivesStep(ctx));
   ctx = validateExtractionStep(ctx);
 
   if (ctx.aborted) {
@@ -519,7 +547,9 @@ export async function executeGeneration(
     };
   }
 
-  const { ctx: schemaCtx, schemaResult } = generateSchemaStep(ctx);
+  const { ctx: schemaCtx, schemaResult } = measureStep("generateSchema", () =>
+    generateSchemaStep(ctx),
+  );
   ctx = schemaCtx;
 
   if (ctx.aborted || !schemaResult) {
