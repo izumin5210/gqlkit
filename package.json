@@ -22,7 +22,7 @@
     "@changesets/cli": "2.31.1",
     "@types/node": "24.19.2",
     "@vitest/coverage-v8": "4.1.12",
-    "dependency-cruiser": "18.1.1",
+    "dependency-cruiser": "18.7.2",
     "graphql": "catalog:",
     "knip": "6.15.0",
     "lefthook": "2.1.17",
