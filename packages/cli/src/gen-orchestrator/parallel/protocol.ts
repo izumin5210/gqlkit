@@ -26,8 +26,12 @@ export type SliceWorkerRequest =
     }
   | { readonly kind: "resolvers"; readonly inputs: ResolverExtractionInputs };
 
-/** Sent by the worker: the types unprompted, then one reply per request. */
+/**
+ * Sent by the worker: that it loaded, then the types unprompted, then one
+ * reply per request.
+ */
 export type SliceWorkerResponse =
+  | { readonly kind: "ready" }
   | {
       readonly kind: "types";
       readonly result: TypeSliceResult;

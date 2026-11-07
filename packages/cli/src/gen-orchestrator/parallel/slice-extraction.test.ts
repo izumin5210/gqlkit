@@ -19,6 +19,8 @@ const sliceWorker: GenerationOptions["sliceWorker"] = {
   execArgv: ["--import", "tsx"],
 };
 
+const missingWorker = new URL("./missing-worker.ts", import.meta.url);
+
 describe.concurrent("extraction split into ranges of files", async () => {
   const caseNames = await listGoldenCaseNames(testdataDir);
 
@@ -41,6 +43,13 @@ describe.concurrent("extraction split into ranges of files", async () => {
       });
 
       expect(split).toEqual(sequential);
+
+      // Workers that cannot start leave their ranges to the main thread.
+      const unstarted = await executeGenerationWithOptions(generationConfig, {
+        slices: Number.MAX_SAFE_INTEGER,
+        sliceWorker: { ...sliceWorker, url: missingWorker },
+      });
+      expect(unstarted).toEqual(sequential);
     });
   }
 });

@@ -1,6 +1,9 @@
 import type { SourceFile } from "typescript/ast";
 import type { Program, Symbol as TsSymbol } from "typescript/async";
-import type { ExtractDefineApiResult } from "../../resolver-extractor/index.js";
+import {
+  type ExtractDefineApiResult,
+  extractResolverDefinitions as extractResolverDefinitionsOfFiles,
+} from "../../resolver-extractor/index.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { prefetchDeclarationFacts } from "../../shared/checker-prefetch.js";
 import {
@@ -20,8 +23,10 @@ import {
   finalizeTypeExtraction,
   type GlobalTypeMapping,
   isScalarMappingTableUnread,
+  type ScalarBaseTypeMappingTable,
 } from "../../type-extractor/index.js";
 import {
+  type Reply,
   type SliceWorker,
   type SliceWorkerModule,
   startSliceWorker,
@@ -119,7 +124,31 @@ export function startSliceExtraction(
   );
   /** Workers whose types were combined, and are asked about scalars. */
   const workersWithTypes = new Set<SliceWorker>();
+  /** Workers that never started, whose ranges the main thread extracts. */
+  const unstartedWorkers = new Set<SliceWorker>();
   let mainThreadResolvers: ResolverDefinitionsSpeculation | null = null;
+  /** What resolver extraction for unstarted workers' ranges needs. */
+  let resolverContext: {
+    readonly program: Program;
+    readonly checker: CheckerLoader;
+    readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
+    readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+    readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
+  } | null = null;
+
+  const receiveTypes = async (
+    worker: SliceWorker,
+  ): Promise<Reply<"types"> | null> => {
+    try {
+      return await worker.receive("types");
+    } catch (error) {
+      if (worker.hasStarted()) {
+        throw error;
+      }
+      unstartedWorkers.add(worker);
+      return null;
+    }
+  };
   const directiveParts: Array<Promise<DirectiveDefinitionExtractionResult>> =
     [];
 
@@ -166,13 +195,22 @@ export function startSliceExtraction(
     });
 
     for (const [i, worker] of workers.entries()) {
-      const { result, directives } = await worker.receive("types");
-      directiveParts.push(Promise.resolve(directives));
-      if (appendTypeSlice(extraction, result)) {
+      const files = workerFiles[i] ?? [];
+      const message = await receiveTypes(worker);
+      const directives =
+        message === null
+          ? extractDirectiveDefinitions({
+              program,
+              checker,
+              sourceFiles: files,
+            })
+          : Promise.resolve(message.directives);
+      directives.catch(() => {});
+      directiveParts.push(directives);
+      if (message !== null && appendTypeSlice(extraction, message.result)) {
         workersWithTypes.add(worker);
         continue;
       }
-      const files = workerFiles[i] ?? [];
       await prefetchDeclarationFacts(
         checker,
         await getSourceFiles(program, files),
@@ -228,6 +266,13 @@ export function startSliceExtraction(
       });
     }
 
+    resolverContext = {
+      program,
+      checker,
+      knownTypeSymbols: typeParams.knownTypeSymbols,
+      underlyingSymbolToTypeName: typeParams.underlyingSymbolToTypeName,
+      scalarMappingTable: actualScalarMappingTable,
+    };
     return finalizeTypeExtraction({
       extractionResult,
       scalarMappingTable: actualScalarMappingTable,
@@ -240,15 +285,27 @@ export function startSliceExtraction(
   const extractResolverDefinitions = async (
     inputs: ResolverExtractionInputs,
   ): Promise<ExtractDefineApiResult> => {
-    if (mainThreadResolvers === null) {
+    if (mainThreadResolvers === null || resolverContext === null) {
       throw new Error("resolvers are extracted after types");
     }
-    for (const worker of workers) {
+    const context = resolverContext;
+    const startedWorkers = workers.filter((w) => !unstartedWorkers.has(w));
+    for (const worker of startedWorkers) {
       worker.send({ kind: "resolvers", inputs });
     }
     const parts = [await mainThreadResolvers.settle(inputs)];
-    for (const worker of workers) {
-      parts.push((await worker.receive("definitions")).definitions);
+    for (const [i, worker] of workers.entries()) {
+      parts.push(
+        unstartedWorkers.has(worker)
+          ? await extractResolverDefinitionsOfFiles({
+              ...context,
+              files: workerFiles[i] ?? [],
+              sourceFiles,
+              globalTypeMappings,
+              knownTypeNames: new Set(inputs.knownTypeNames),
+            })
+          : (await worker.receive("definitions")).definitions,
+      );
     }
     return {
       resolvers: parts.flatMap((p) => p.resolvers),

@@ -5,7 +5,7 @@ import type {
   SliceWorkerResponse,
 } from "./protocol.js";
 
-type Reply<K extends SliceWorkerResponse["kind"]> = Extract<
+export type Reply<K extends SliceWorkerResponse["kind"]> = Extract<
   SliceWorkerResponse,
   { kind: K }
 >;
@@ -13,9 +13,16 @@ type Reply<K extends SliceWorkerResponse["kind"]> = Extract<
 /** The main thread's side of a slice worker (see `worker.ts`). */
 export interface SliceWorker {
   /** The next message from the worker, which must be of kind `kind`. */
-  readonly receive: <K extends Exclude<SliceWorkerResponse["kind"], "error">>(
+  readonly receive: <
+    K extends Exclude<SliceWorkerResponse["kind"], "ready" | "error">,
+  >(
     kind: K,
   ) => Promise<Reply<K>>;
+  /**
+   * Whether the worker loaded. One that failed before, e.g. because the
+   * environment cannot run it, did no work and can be done without.
+   */
+  readonly hasStarted: () => boolean;
   readonly send: (request: SliceWorkerRequest) => void;
   /** Stops the worker if it is still running. */
   readonly terminate: () => Promise<void>;
@@ -43,6 +50,7 @@ export function startSliceWorker(params: StartSliceWorkerParams): SliceWorker {
   const received: SliceWorkerResponse[] = [];
   const waiting: Array<(response: SliceWorkerResponse) => void> = [];
   let failure: { readonly error: unknown } | null = null;
+  let started = false;
   const deliver = (response: SliceWorkerResponse): void => {
     const next = waiting.shift();
     if (next === undefined) {
@@ -58,10 +66,15 @@ export function startSliceWorker(params: StartSliceWorkerParams): SliceWorker {
     }
   };
   worker.on("message", (response: SliceWorkerResponse) => {
-    if (response.kind === "error") {
-      fail(response.error);
-    } else {
-      deliver(response);
+    switch (response.kind) {
+      case "ready":
+        started = true;
+        break;
+      case "error":
+        fail(response.error);
+        break;
+      default:
+        deliver(response);
     }
   });
   worker.on("error", fail);
@@ -88,6 +101,7 @@ export function startSliceWorker(params: StartSliceWorkerParams): SliceWorker {
       }
       return response as Reply<typeof kind>;
     },
+    hasStarted: () => started,
     send: (request) => {
       worker.postMessage(request);
     },

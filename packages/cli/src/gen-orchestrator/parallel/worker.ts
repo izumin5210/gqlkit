@@ -150,6 +150,7 @@ async function run(): Promise<void> {
   }
 }
 
+respond({ kind: "ready" });
 try {
   await run();
 } catch (error) {
