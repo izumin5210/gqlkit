@@ -30,7 +30,7 @@ async function withTestProgram(
   source: string,
   fn: (testProgram: TestProgram) => Promise<void>,
 ): Promise<void> {
-  const api = new ts.API({
+  await using api = new ts.API({
     cwd: VIRTUAL_DIR,
     fs: {
       directoryExists: (dir) => (dir === VIRTUAL_DIR ? true : serverFS.useOS),
@@ -44,30 +44,26 @@ async function withTestProgram(
       removeFile: serverFS.noop,
     },
   });
-  try {
-    const program = await api.createProgram([VIRTUAL_FILE], {
-      target: ts.ScriptTarget.ES2020,
-      module: ts.ModuleKind.ES2020,
-      strict: true,
-      skipLibCheck: true,
-      noEmit: true,
-    });
+  const program = await api.createProgram([VIRTUAL_FILE], {
+    target: ts.ScriptTarget.ES2020,
+    module: ts.ModuleKind.ES2020,
+    strict: true,
+    skipLibCheck: true,
+    noEmit: true,
+  });
 
-    const sourceFile = await program.getSourceFile(VIRTUAL_FILE);
-    if (!sourceFile) {
-      throw new Error("Failed to get source file");
-    }
-
-    await fn({
-      checker: createCheckerLoader({
-        api,
-        checker: program.getProject().checker,
-      }),
-      sourceFile,
-    });
-  } finally {
-    await api.close();
+  const sourceFile = await program.getSourceFile(VIRTUAL_FILE);
+  if (!sourceFile) {
+    throw new Error("Failed to get source file");
   }
+
+  await fn({
+    checker: createCheckerLoader({
+      api,
+      checker: program.getProject().checker,
+    }),
+    sourceFile,
+  });
 }
 
 async function getTypeFromDeclaration(
