@@ -132,6 +132,7 @@ export interface SliceExtraction {
   readonly extractResolverDefinitions: (
     inputs: ResolverExtractionInputs,
   ) => Promise<ExtractDefineApiResult>;
+  /** Stops the workers and waits for the main thread's work in flight. */
   readonly terminate: () => Promise<void>;
 }
 
@@ -177,6 +178,11 @@ export function startSliceExtraction(
   } | null = null;
 
   let localTypeDeclarationNames: ReadonlySet<string> | null = null;
+  /**
+   * Main-thread work left running while the main thread waits for workers.
+   * If a worker fails, it must settle before the API it queries is closed.
+   */
+  const inFlight: Array<Promise<unknown>> = [];
 
   /** The next message from a worker, or null if it never started. */
   const receiveUnlessUnstarted = async <
@@ -219,6 +225,8 @@ export function startSliceExtraction(
       checker,
       await getSourceFiles(program, mainThreadFiles),
     );
+    prefetch.catch(() => {});
+    inFlight.push(prefetch);
     for (const [i, worker] of workers.entries()) {
       const message = await receiveUnlessUnstarted(
         worker,
@@ -278,6 +286,7 @@ export function startSliceExtraction(
     });
     // Observed by directiveDefinitions unless type extraction fails first.
     mainThreadDirectives.catch(() => {});
+    inFlight.push(mainThreadDirectives);
     directiveParts.push(mainThreadDirectives);
     // Resolvers are extracted alongside types: each waits on the checker
     // at times the other can use.
@@ -291,6 +300,7 @@ export function startSliceExtraction(
       knownTypeSymbols: typeParams.knownTypeSymbols,
       underlyingSymbolToTypeName: typeParams.underlyingSymbolToTypeName,
     });
+    inFlight.push(mainThreadResolvers.speculated);
     await extractDeclaredTypes({
       program,
       checker,
@@ -312,6 +322,7 @@ export function startSliceExtraction(
             })
           : Promise.resolve(message.directives);
       directives.catch(() => {});
+      inFlight.push(directives);
       directiveParts.push(directives);
       if (message !== null && appendTypeSlice(extraction, message.result)) {
         workersWithTypes.add(worker);
@@ -442,7 +453,10 @@ export function startSliceExtraction(
     directiveDefinitions,
     extractResolverDefinitions,
     terminate: async () => {
-      await Promise.all(workers.map((w) => w.terminate()));
+      await Promise.all([
+        ...workers.map((w) => w.terminate()),
+        Promise.allSettled(inFlight),
+      ]);
     },
   };
 }

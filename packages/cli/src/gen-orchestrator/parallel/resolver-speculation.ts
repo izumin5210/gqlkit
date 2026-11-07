@@ -41,6 +41,8 @@ export interface ResolverDefinitionsSpeculation {
    * The definitions for the actual inputs: the speculative ones if they
    * read the same answers from them, extracted again otherwise.
    */
+  /** Settles once the speculative extraction has, either way. */
+  readonly speculated: Promise<void>;
   readonly settle: (
     inputs: ResolverExtractionInputs,
   ) => Promise<ExtractDefineApiResult>;
@@ -63,9 +65,13 @@ export function speculateResolverDefinitions(
     scalarMappingTable,
   });
   // Settling observes the failure; until then it must not count as unhandled.
-  speculative.catch(() => {});
+  const speculated = speculative.then(
+    () => {},
+    () => {},
+  );
 
   return {
+    speculated,
     settle: async (inputs) => {
       const definitions = await speculative;
       const actualKnownTypeNames = new Set(inputs.knownTypeNames);

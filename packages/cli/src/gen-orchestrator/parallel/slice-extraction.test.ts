@@ -21,6 +21,14 @@ const sliceWorker: GenerationOptions["sliceWorker"] = {
 
 const missingWorker = new URL("./missing-worker.ts", import.meta.url);
 
+const failingWorker = new URL(
+  `data:text/javascript,${encodeURIComponent(`
+    import { parentPort } from "node:worker_threads";
+    parentPort.postMessage({ kind: "ready" });
+    parentPort.postMessage({ kind: "error", error: new Error("worker failed") });
+  `)}`,
+);
+
 describe.concurrent("extraction split into ranges of files", async () => {
   const caseNames = await listGoldenCaseNames(testdataDir);
 
@@ -52,4 +60,18 @@ describe.concurrent("extraction split into ranges of files", async () => {
       expect(unstarted).toEqual(sequential);
     });
   }
+
+  it("reports the error of a worker that fails after starting", async () => {
+    const { generationConfig } = await loadGoldenCase({
+      testdataDir,
+      name: "abstract-resolver-mixed",
+    });
+
+    await expect(
+      executeGenerationWithOptions(generationConfig, {
+        slices: Number.MAX_SAFE_INTEGER,
+        sliceWorker: { url: failingWorker, execArgv: [] },
+      }),
+    ).rejects.toThrow("worker failed");
+  });
 });
