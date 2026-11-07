@@ -1,4 +1,4 @@
-import ts from "typescript";
+import * as ts from "../core/typescript.js";
 
 /**
  * Extracts type name from a TypeNode.
@@ -14,6 +14,15 @@ export function getTypeNameFromNode(typeNode: ts.TypeNode): string | null {
     }
   }
   return null;
+}
+
+/**
+ * Resolves a symbol's declaration handles into AST nodes.
+ */
+export function getDeclarations(
+  symbol: ts.Symbol,
+): ReadonlyArray<ts.Declaration> {
+  return symbol.declarations.flatMap((handle) => handle.resolve() ?? []);
 }
 
 /**
@@ -88,8 +97,8 @@ export function findMetadataProperty(
     }
   }
 
-  if (type.isIntersection()) {
-    for (const member of type.types) {
+  if (type.isIntersectionType()) {
+    for (const member of type.getTypes()) {
       for (const name of propertyNames) {
         const memberProp = member.getProperty(name);
         if (memberProp) {
@@ -99,8 +108,8 @@ export function findMetadataProperty(
     }
   }
 
-  if (recurseUnion && type.isUnion()) {
-    for (const member of type.types) {
+  if (recurseUnion && type.isUnionType()) {
+    for (const member of type.getTypes()) {
       if (isNullOrUndefined(member)) {
         continue;
       }
@@ -122,16 +131,16 @@ export function findMetadataProperty(
  * Checks if a union type contains null or undefined.
  */
 export function isNullableUnion(type: ts.Type): boolean {
-  if (!type.isUnion()) return false;
-  return type.types.some((t) => isNullOrUndefined(t));
+  if (!type.isUnionType()) return false;
+  return type.getTypes().some((t) => isNullOrUndefined(t));
 }
 
 /**
  * Gets non-nullable types from a union type.
  */
 export function getNonNullableTypes(type: ts.Type): ts.Type[] {
-  if (!type.isUnion()) return [type];
-  return type.types.filter((t) => !isNullOrUndefined(t));
+  if (!type.isUnionType()) return [type];
+  return type.getTypes().filter((t) => !isNullOrUndefined(t));
 }
 
 /**
@@ -146,8 +155,10 @@ export function getNonNullableTypes(type: ts.Type): ts.Type[] {
  */
 export function hasUndefinedInType(type: ts.Type): boolean {
   if ((type.flags & ts.TypeFlags.Undefined) !== 0) return true;
-  if (type.isUnion()) {
-    return type.types.some((t) => (t.flags & ts.TypeFlags.Undefined) !== 0);
+  if (type.isUnionType()) {
+    return type
+      .getTypes()
+      .some((t) => (t.flags & ts.TypeFlags.Undefined) !== 0);
   }
   return false;
 }
@@ -167,13 +178,14 @@ export function isExported(node: ts.Node): boolean {
  * treating the whole intersection as an inline object.
  */
 export function isAnonymousObjectType(type: ts.Type): boolean {
-  if (type.aliasSymbol) {
+  if (type.getAliasSymbol()) {
     return false;
   }
-  if (!type.symbol) {
+  const symbol = type.getSymbol();
+  if (!symbol) {
     return true;
   }
-  const symbolName = type.symbol.getName();
+  const symbolName = symbol.name;
   return symbolName === "__type" || symbolName === "";
 }
 
@@ -183,14 +195,14 @@ export function isAnonymousObjectType(type: ts.Type): boolean {
  */
 export function extractPropertySymbols(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): ts.Symbol[] {
-  if (type.isIntersection()) {
+  if (type.isIntersectionType()) {
     const allProps = new Map<string, ts.Symbol>();
-    for (const member of type.types) {
+    for (const member of type.getTypes()) {
       const memberProps = member.getProperties();
       for (const prop of memberProps) {
-        const propName = prop.getName();
+        const propName = prop.name;
         if (!allProps.has(propName)) {
           allProps.set(propName, prop);
         }
@@ -213,12 +225,6 @@ export function extractPropertySymbols(
 }
 
 /**
- * Internal TypeScript symbol with parent reference.
- * Used to access the parent enum symbol from enum member types.
- */
-export type SymbolWithParent = ts.Symbol & { parent?: ts.Symbol };
-
-/**
  * Finds the parent enum symbol if all types belong to the same enum.
  * Returns null if types are empty, don't have a common parent enum, or belong to different enums.
  */
@@ -227,17 +233,15 @@ export function findEnumParentSymbol(
 ): ts.Symbol | null {
   if (types.length === 0) return null;
 
-  const firstSymbol = types[0]!.symbol as SymbolWithParent | undefined;
-  const parentSymbol = firstSymbol?.parent;
+  const parentSymbol = types[0]!.getSymbol()?.getParent();
 
   if (!parentSymbol || !(parentSymbol.flags & ts.SymbolFlags.Enum)) {
     return null;
   }
 
-  const allBelongToSameEnum = types.every((t) => {
-    const sym = t.symbol as SymbolWithParent | undefined;
-    return sym?.parent === parentSymbol;
-  });
+  const allBelongToSameEnum = types.every(
+    (t) => t.getSymbol()?.getParent() === parentSymbol,
+  );
 
   return allBelongToSameEnum ? parentSymbol : null;
 }
@@ -246,7 +250,7 @@ export function findEnumParentSymbol(
  * Checks if a union type is a boolean union (true | false with optional null/undefined).
  */
 export function isBooleanUnion(type: ts.Type): boolean {
-  if (!type.isUnion()) return false;
+  if (!type.isUnionType()) return false;
   const nonNullTypes = getNonNullableTypes(type);
   return (
     nonNullTypes.length === 2 &&
@@ -260,7 +264,7 @@ export function isBooleanUnion(type: ts.Type): boolean {
  */
 export function resolveOriginalSymbol(
   symbol: ts.Symbol,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): ts.Symbol {
   if (symbol.flags & ts.SymbolFlags.Alias) {
     return checker.getAliasedSymbol(symbol);

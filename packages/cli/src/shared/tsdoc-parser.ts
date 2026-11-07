@@ -1,5 +1,6 @@
-import ts from "typescript";
 import type { DeprecationInfo } from "../core/index.js";
+import * as ts from "../core/typescript.js";
+import { getDeclarations } from "./typescript-utils.js";
 
 export interface TSDocInfo {
   readonly description: string | null;
@@ -8,7 +9,7 @@ export interface TSDocInfo {
 
 function getSymbolFromNode(
   node: ts.Node,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): ts.Symbol | undefined {
   if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
     return checker.getSymbolAtLocation(node.name);
@@ -26,21 +27,17 @@ function getSymbolFromNode(
 }
 
 function getTagCommentText(
-  comment: string | ts.NodeArray<ts.JSDocComment> | undefined,
+  comment: ts.NodeArray<ts.JSDocComment> | undefined,
 ): string | undefined {
-  if (typeof comment === "string") {
-    const trimmed = comment.replace(/\r\n/g, "\n").trim();
-    return trimmed === "" ? undefined : trimmed;
+  if (comment === undefined) {
+    return undefined;
   }
-  if (Array.isArray(comment)) {
-    const text = comment
-      .map((part) => part.text)
-      .join("")
-      .replace(/\r\n/g, "\n")
-      .trim();
-    return text === "" ? undefined : text;
-  }
-  return undefined;
+  const text = comment
+    .map((part) => part.text)
+    .join("")
+    .replace(/\r\n/g, "\n")
+    .trim();
+  return text === "" ? undefined : text;
 }
 
 function extractDescriptionTagContent(
@@ -91,21 +88,19 @@ function normalizeLineEndings(text: string): string {
 
 function extractDescriptionFromSymbol(
   symbol: ts.Symbol,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): string | undefined {
   const documentationComment = symbol.getDocumentationComment(checker);
 
   if (documentationComment.length > 0) {
-    const description = normalizeLineEndings(
-      ts.displayPartsToString(documentationComment).trim(),
-    );
+    const description = normalizeLineEndings(documentationComment.trim());
     if (description !== "") {
       return description;
     }
   }
 
   const descriptionTagContent = extractDescriptionTagContent(
-    symbol.getDeclarations(),
+    getDeclarations(symbol),
   );
   if (descriptionTagContent) {
     return normalizeLineEndings(descriptionTagContent);
@@ -116,7 +111,7 @@ function extractDescriptionFromSymbol(
 
 export function extractTsDocInfo(
   node: ts.Node,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): TSDocInfo {
   const symbol = getSymbolFromNode(node, checker);
 
@@ -125,9 +120,7 @@ export function extractTsDocInfo(
   }
 
   const description = extractDescriptionFromSymbol(symbol, checker);
-  const deprecated = extractDeprecatedFromDeclarations(
-    symbol.getDeclarations(),
-  );
+  const deprecated = extractDeprecatedFromDeclarations(getDeclarations(symbol));
 
   return {
     description: description ?? null,
@@ -137,12 +130,10 @@ export function extractTsDocInfo(
 
 export function extractTsDocFromSymbol(
   symbol: ts.Symbol,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): TSDocInfo {
   const description = extractDescriptionFromSymbol(symbol, checker);
-  const deprecated = extractDeprecatedFromDeclarations(
-    symbol.getDeclarations(),
-  );
+  const deprecated = extractDeprecatedFromDeclarations(getDeclarations(symbol));
 
   return {
     description: description ?? null,

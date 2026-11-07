@@ -1,30 +1,32 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
-import ts from "typescript";
 import type { Diagnostic } from "../../core/index.js";
+import type * as ts from "../../core/typescript.js";
 
 export interface LoadTsconfigOptions {
+  readonly api: ts.API;
   readonly cwd: string;
   readonly tsconfigPath: string | null;
 }
 
 export interface LoadTsconfigResult {
-  readonly compilerOptions: ts.CompilerOptions | null;
+  readonly compilerOptions: ts.RawCompilerOptions | null;
   readonly configFilePath: string | null;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
 export function loadTsconfig(options: LoadTsconfigOptions): LoadTsconfigResult {
-  const { cwd, tsconfigPath } = options;
+  const { api, cwd, tsconfigPath } = options;
 
   if (tsconfigPath !== null) {
-    return loadFromSpecifiedPath(cwd, tsconfigPath);
+    return loadFromSpecifiedPath(api, cwd, tsconfigPath);
   }
 
-  return autoDetectTsconfig(cwd);
+  return autoDetectTsconfig(api, cwd);
 }
 
 function loadFromSpecifiedPath(
+  api: ts.API,
   cwd: string,
   tsconfigPath: string,
 ): LoadTsconfigResult {
@@ -47,11 +49,11 @@ function loadFromSpecifiedPath(
     };
   }
 
-  return parseConfigFile(absolutePath);
+  return parseConfigFile(api, absolutePath);
 }
 
-function autoDetectTsconfig(cwd: string): LoadTsconfigResult {
-  const configPath = ts.findConfigFile(cwd, ts.sys.fileExists, "tsconfig.json");
+function autoDetectTsconfig(api: ts.API, cwd: string): LoadTsconfigResult {
+  const configPath = findConfigFile(cwd);
 
   if (!configPath) {
     return {
@@ -61,18 +63,55 @@ function autoDetectTsconfig(cwd: string): LoadTsconfigResult {
     };
   }
 
-  return parseConfigFile(configPath);
+  return parseConfigFile(api, configPath);
 }
 
-function parseConfigFile(configFilePath: string): LoadTsconfigResult {
+/**
+ * Walks up from `searchPath` looking for a `tsconfig.json`, matching how `tsc`
+ * resolves a project when no `-p` is given.
+ */
+function findConfigFile(searchPath: string): string | null {
+  let dir = path.resolve(searchPath);
+  while (true) {
+    const candidate = path.join(dir, "tsconfig.json");
+    if (existsSync(candidate)) {
+      return candidate;
+    }
+    const parent = path.dirname(dir);
+    if (parent === dir) {
+      return null;
+    }
+    dir = parent;
+  }
+}
+
+/**
+ * Renders a diagnostic and its message chain the same way `tsc` prints them:
+ * each nested message on its own line, indented two spaces per level.
+ */
+function flattenDiagnosticText(
+  diagnostic: ts.Diagnostic,
+  depth: number,
+): string {
+  const lines = [`${"  ".repeat(depth)}${diagnostic.text}`];
+  for (const next of diagnostic.messageChain ?? []) {
+    lines.push(flattenDiagnosticText(next, depth + 1));
+  }
+  return lines.join("\n");
+}
+
+function parseConfigFile(
+  api: ts.API,
+  configFilePath: string,
+): LoadTsconfigResult {
   const diagnostics: Diagnostic[] = [];
 
-  const readResult = ts.readConfigFile(configFilePath, ts.sys.readFile);
+  const readResult = api.readConfigFile(configFilePath);
 
   if (readResult.error) {
     diagnostics.push({
       code: "TSCONFIG_PARSE_ERROR",
-      message: `Failed to parse tsconfig.json: ${ts.flattenDiagnosticMessageText(readResult.error.messageText, "\n")}`,
+      message: `Failed to parse tsconfig.json: ${flattenDiagnosticText(readResult.error, 0)}`,
       severity: "error",
       location: {
         file: configFilePath,
@@ -87,13 +126,12 @@ function parseConfigFile(configFilePath: string): LoadTsconfigResult {
     };
   }
 
-  const configDir = path.dirname(configFilePath);
-  const parseResult = ts.parseJsonConfigFileContent(
-    readResult.config,
-    ts.sys,
-    configDir,
-  );
+  const parseResult = api.parseJsonConfigFileContent(readResult.config, {
+    configFileName: configFilePath,
+  });
 
+  // 18003: "No inputs were found in config file". gqlkit passes its own root
+  // files to the program, so the project's `include` is irrelevant here.
   const significantErrors = parseResult.errors.filter(
     (error) => error.code !== 18003,
   );
@@ -102,7 +140,7 @@ function parseConfigFile(configFilePath: string): LoadTsconfigResult {
     for (const error of significantErrors) {
       diagnostics.push({
         code: "TSCONFIG_INVALID",
-        message: `Invalid compiler options: ${ts.flattenDiagnosticMessageText(error.messageText, "\n")}`,
+        message: `Invalid compiler options: ${flattenDiagnosticText(error, 0)}`,
         severity: "error",
         location: {
           file: configFilePath,

@@ -5,8 +5,8 @@
  * in TypeScript intersection types using the $gqlkitTypeMeta property.
  */
 
-import ts from "typescript";
 import { METADATA_PROPERTIES } from "../../core/index.js";
+import * as ts from "../../core/typescript.js";
 import { getActualMetadataType } from "../../shared/metadata-detector.js";
 
 const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
@@ -16,7 +16,7 @@ const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
  */
 export interface DetectIgnoreFieldsParams {
   readonly type: ts.Type;
-  readonly checker: ts.TypeChecker;
+  readonly checker: ts.Checker;
 }
 
 /**
@@ -25,7 +25,7 @@ export interface DetectIgnoreFieldsParams {
  */
 function extractIgnoreFieldsFromType(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): ReadonlySet<string> | null {
   const metaProp = type.getProperty(TYPE_META_PROPERTY);
   if (!metaProp) {
@@ -61,9 +61,9 @@ function extractStringLiteralUnion(type: ts.Type): ReadonlySet<string> | null {
     return new Set([value]);
   }
 
-  if (type.isUnion()) {
+  if (type.isUnionType()) {
     const values = new Set<string>();
-    for (const member of type.types) {
+    for (const member of type.getTypes()) {
       if (member.flags & ts.TypeFlags.StringLiteral) {
         values.add((member as ts.StringLiteralType).value);
       }
@@ -96,8 +96,8 @@ export function detectIgnoreFieldsMetadata(
     return result;
   }
 
-  if (type.isIntersection()) {
-    for (const member of type.types) {
+  if (type.isIntersectionType()) {
+    for (const member of type.getTypes()) {
       const memberResult = extractIgnoreFieldsFromType(member, checker);
       if (memberResult) {
         return memberResult;

@@ -5,8 +5,8 @@
  * TypeScript type aliases that use the Directive<Name, Args, Location> type.
  */
 
-import ts from "typescript";
 import { type GraphQLFieldType, METADATA_PROPERTIES } from "../core/index.js";
+import * as ts from "../core/typescript.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 import {
   getNonNullableTypes,
@@ -96,7 +96,7 @@ function isDirectiveType(type: ts.Type): boolean {
  */
 function extractDirectiveName(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): string | null {
   const nameProp = type.getProperty(DIRECTIVE_NAME_PROPERTY);
   if (!nameProp) {
@@ -105,7 +105,7 @@ function extractDirectiveName(
 
   const rawNameType = checker.getTypeOfSymbol(nameProp);
   const nameType = getActualMetadataType(rawNameType);
-  if (!nameType || !nameType.isStringLiteral()) {
+  if (!nameType?.isStringLiteralType()) {
     return null;
   }
 
@@ -117,7 +117,7 @@ function extractDirectiveName(
  */
 function extractDirectiveLocations(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): DirectiveLocation[] {
   const locationProp = type.getProperty(DIRECTIVE_LOCATION_PROPERTY);
   if (!locationProp) {
@@ -136,7 +136,7 @@ function extractDirectiveLocations(
       if (arg.flags & ts.TypeFlags.Undefined) {
         continue;
       }
-      if (arg.isStringLiteral()) {
+      if (arg.isStringLiteralType()) {
         const value = arg.value as DirectiveLocation;
         if (isValidLocation(value)) {
           locations.push(value);
@@ -155,12 +155,12 @@ function extractDirectiveLocations(
     );
     if (typeArgs.length > 0 && typeArgs[0]) {
       const elemType = typeArgs[0];
-      if (elemType.isUnion()) {
-        for (const member of elemType.types) {
+      if (elemType.isUnionType()) {
+        for (const member of elemType.getTypes()) {
           if (member.flags & ts.TypeFlags.Undefined) {
             continue;
           }
-          if (member.isStringLiteral()) {
+          if (member.isStringLiteralType()) {
             const value = member.value as DirectiveLocation;
             if (isValidLocation(value)) {
               locations.push(value);
@@ -175,19 +175,19 @@ function extractDirectiveLocations(
   }
 
   // Handle union types like "OBJECT" | "FIELD_DEFINITION" | undefined
-  if (rawLocationType.isUnion()) {
-    for (const member of rawLocationType.types) {
+  if (rawLocationType.isUnionType()) {
+    for (const member of rawLocationType.getTypes()) {
       if (member.flags & ts.TypeFlags.Undefined) {
         continue;
       }
-      if (member.isStringLiteral()) {
+      if (member.isStringLiteralType()) {
         const value = member.value as DirectiveLocation;
         if (isValidLocation(value)) {
           locations.push(value);
         }
       }
     }
-  } else if (rawLocationType.isStringLiteral()) {
+  } else if (rawLocationType.isStringLiteralType()) {
     const value = rawLocationType.value as DirectiveLocation;
     if (isValidLocation(value)) {
       locations.push(value);
@@ -195,7 +195,7 @@ function extractDirectiveLocations(
   } else {
     // Try to unwrap optional type (T | undefined where T is a single type)
     const locationType = getActualMetadataType(rawLocationType);
-    if (locationType?.isStringLiteral()) {
+    if (locationType?.isStringLiteralType()) {
       const value = locationType.value as DirectiveLocation;
       if (isValidLocation(value)) {
         locations.push(value);
@@ -229,7 +229,7 @@ function isValidLocation(value: string): value is DirectiveLocation {
  */
 function convertToGraphQLType(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): GraphQLFieldType | null {
   // Handle type parameters by getting their constraint
   if (type.flags & ts.TypeFlags.TypeParameter) {
@@ -240,8 +240,9 @@ function convertToGraphQLType(
   }
 
   // Check for type alias (e.g., Role = "USER" | "ADMIN")
-  if (type.aliasSymbol) {
-    const aliasName = type.aliasSymbol.getName();
+  const aliasSymbol = type.getAliasSymbol();
+  if (aliasSymbol) {
+    const aliasName = aliasSymbol.name;
     if (aliasName && aliasName !== "__type") {
       return {
         typeName: aliasName,
@@ -288,7 +289,7 @@ function convertToGraphQLType(
     };
   }
 
-  if (type.isUnion()) {
+  if (type.isUnionType()) {
     const nonNullTypes = getNonNullableTypes(type);
     const nullable = isNullableUnion(type);
 
@@ -301,7 +302,7 @@ function convertToGraphQLType(
 
     if (
       nonNullTypes.length > 0 &&
-      nonNullTypes.every((t) => t.isStringLiteral())
+      nonNullTypes.every((t) => t.isStringLiteralType())
     ) {
       return {
         typeName: "String",
@@ -325,8 +326,9 @@ function convertToGraphQLType(
       }
 
       // Check if element type is a type alias (e.g., Role = "USER" | "ADMIN")
-      if (elementType.aliasSymbol) {
-        const aliasName = elementType.aliasSymbol.getName();
+      const elementTypeAliasSymbol = elementType.getAliasSymbol();
+      if (elementTypeAliasSymbol) {
+        const aliasName = elementTypeAliasSymbol.name;
         if (aliasName && aliasName !== "__type") {
           return {
             typeName: aliasName,
@@ -337,11 +339,11 @@ function convertToGraphQLType(
         }
       }
 
-      if (elementType.isUnion()) {
+      if (elementType.isUnionType()) {
         const nonNullMembers = getNonNullableTypes(elementType);
         if (
           nonNullMembers.length > 0 &&
-          nonNullMembers.every((t) => t.isStringLiteral())
+          nonNullMembers.every((t) => t.isStringLiteralType())
         ) {
           return {
             typeName: "String",
@@ -385,8 +387,9 @@ function convertToGraphQLType(
     };
   }
 
-  if (type.symbol) {
-    const symbolName = type.symbol.getName();
+  const symbol = type.getSymbol();
+  if (symbol) {
+    const symbolName = symbol.name;
     if (symbolName !== "__type" && symbolName !== "") {
       return {
         typeName: symbolName,
@@ -405,7 +408,7 @@ function convertToGraphQLType(
  */
 function extractDirectiveArgs(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
   sourceFile: string,
   line: number,
 ): {
@@ -436,7 +439,7 @@ function extractDirectiveArgs(
 
   const properties = argsType.getProperties();
   for (const prop of properties) {
-    const propName = prop.getName();
+    const propName = prop.name;
     const propType = checker.getTypeOfSymbol(prop);
 
     const graphqlType = convertToGraphQLType(propType, checker);
@@ -473,7 +476,7 @@ export function extractDirectiveDefinitions(
   program: ts.Program,
   sourceFiles: ReadonlyArray<string>,
 ): DirectiveDefinitionExtractionResult {
-  const checker = program.getTypeChecker();
+  const checker = program.getProject().checker;
   const definitions: DirectiveDefinitionInfo[] = [];
   const errors: DirectiveDefinitionError[] = [];
 
@@ -483,7 +486,7 @@ export function extractDirectiveDefinitions(
       continue;
     }
 
-    ts.forEachChild(sourceFile, (node) => {
+    sourceFile.forEachChild((node) => {
       if (!ts.isTypeAliasDeclaration(node)) {
         return;
       }
@@ -547,7 +550,7 @@ export function extractDirectiveDefinitions(
  */
 function extractDescription(
   node: ts.TypeAliasDeclaration,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): string | null {
   const symbol = checker.getSymbolAtLocation(node.name);
   if (!symbol) {
@@ -559,5 +562,5 @@ function extractDescription(
     return null;
   }
 
-  return documentation.map((d) => d.text).join("\n");
+  return documentation;
 }

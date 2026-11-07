@@ -1,10 +1,10 @@
-import type ts from "typescript";
 import type {
   DeprecationInfo,
   InlineEnumMemberInfo,
   PropertyDef,
   SourceLocation,
 } from "../core/index.js";
+import type * as ts from "../core/typescript.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import { getSourceLocationOrDefault } from "../shared/source-location.js";
 import type { ExtractedTypeInfo } from "../type-extractor/index.js";

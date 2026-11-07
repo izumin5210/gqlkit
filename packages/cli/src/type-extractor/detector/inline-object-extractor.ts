@@ -1,10 +1,10 @@
-import ts from "typescript";
 import type {
   DirectiveArgumentValue,
   DirectiveInfo,
   PropertyDef,
   TSTypeReference,
 } from "../../core/index.js";
+import * as ts from "../../core/typescript.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   detectDirectiveMetadata,
@@ -15,13 +15,14 @@ import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import { extractTsDocFromSymbol } from "../../shared/tsdoc-parser.js";
 import {
   extractPropertySymbols,
+  getDeclarations,
   hasUndefinedInType,
   isNullableUnion,
 } from "../../shared/typescript-utils.js";
 
 export type TypeConverter = (
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
   typeNode: ts.TypeNode | undefined,
 ) => TSTypeReference;
 
@@ -35,20 +36,20 @@ export type TypeConverter = (
  */
 export function extractInlineObjectProperties(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
   convertType: TypeConverter,
 ): PropertyDef[] {
   const properties: PropertyDef[] = [];
   const typeProperties = extractPropertySymbols(type, checker);
 
   for (const prop of typeProperties) {
-    const propName = prop.getName();
+    const propName = prop.name;
     if (propName.startsWith(" $")) {
       continue;
     }
 
     const propType = checker.getTypeOfSymbol(prop);
-    const declarations = prop.getDeclarations();
+    const declarations = getDeclarations(prop);
     const declaration = declarations?.[0];
 
     const optional = hasUndefinedInType(propType);
@@ -89,7 +90,7 @@ export function extractInlineObjectProperties(
     let propTypeNode: ts.TypeNode | undefined;
     if (
       declaration &&
-      ts.isPropertySignature(declaration) &&
+      ts.isPropertySignatureDeclaration(declaration) &&
       declaration.type
     ) {
       propTypeNode = declaration.type;

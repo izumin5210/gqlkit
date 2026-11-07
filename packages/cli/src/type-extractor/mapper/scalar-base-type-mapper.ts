@@ -10,8 +10,8 @@
  * - Symbol-based comparison for accurate type matching
  */
 
-import ts from "typescript";
 import { METADATA_PROPERTIES } from "../../core/index.js";
+import * as ts from "../../core/typescript.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 
 /**
@@ -68,7 +68,7 @@ export interface ScalarBaseTypeMappingTable {
  */
 export interface BuildScalarMappingTableParams {
   readonly detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
-  readonly checker: ts.TypeChecker;
+  readonly checker: ts.Checker;
   readonly program: ts.Program;
 }
 
@@ -78,7 +78,7 @@ export interface BuildScalarMappingTableParams {
  */
 function extractBaseTypeSymbol(
   scalarInfo: ScalarMetadataInfo,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
   program: ts.Program,
 ): ts.Symbol | null {
   const sourceFile = program.getSourceFile(scalarInfo.sourceFile);
@@ -88,7 +88,7 @@ function extractBaseTypeSymbol(
 
   let foundSymbol: ts.Symbol | null = null;
 
-  ts.forEachChild(sourceFile, (node) => {
+  sourceFile.forEachChild((node) => {
     if (ts.isTypeAliasDeclaration(node)) {
       const name = node.name.getText(sourceFile);
       if (name === scalarInfo.typeName) {
@@ -97,15 +97,16 @@ function extractBaseTypeSymbol(
           const type = checker.getDeclaredTypeOfSymbol(symbol);
           // GqlScalar is an intersection type: Base & { " $gqlkitScalar"?: ... }
           // We need to extract the Base type from this intersection
-          if (type.isIntersection()) {
-            for (const member of type.types) {
+          if (type.isIntersectionType()) {
+            for (const member of type.getTypes()) {
               // Skip the metadata object type
               if (member.getProperty(METADATA_PROPERTIES.SCALAR)) {
                 continue;
               }
               // This should be the base type
-              if (member.symbol) {
-                foundSymbol = member.symbol;
+              const memberSymbol = member.getSymbol();
+              if (memberSymbol) {
+                foundSymbol = memberSymbol;
                 return;
               }
             }

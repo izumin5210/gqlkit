@@ -1,11 +1,11 @@
 import { dirname, relative, resolve } from "node:path";
-import type ts from "typescript";
 import type {
   ResolvedDiscriminatorFieldsMap,
   ResolvedOutputConfig,
   ResolvedScalarMapping,
 } from "../config-loader/index.js";
 import type { Diagnostic, Diagnostics } from "../core/index.js";
+import * as ts from "../core/typescript.js";
 import {
   type ExtractResolversResult,
   extractResolvers,
@@ -200,10 +200,11 @@ async function scanSourceFilesStep(
   return { ...ctx, sourceFiles: scanResult.files };
 }
 
-function createProgramStep(ctx: PipelineContext): PipelineContext {
+function createProgramStep(ctx: PipelineContext, api: ts.API): PipelineContext {
   if (ctx.aborted) return ctx;
 
   const programResult = createSharedProgram({
+    api,
     cwd: ctx.config.cwd,
     tsconfigPath: ctx.config.tsconfigPath ?? null,
     typeFiles: ctx.sourceFiles,
@@ -524,12 +525,26 @@ async function measureAsyncStep<T>(
 export async function executeGeneration(
   config: GenerationConfig,
 ): Promise<GenerationResult> {
+  // The API spawns a tsc child process; every program and checker object is
+  // only valid until it is closed, so it must outlive the whole pipeline.
+  const api = new ts.API({ cwd: config.cwd });
+  try {
+    return await runPipeline(config, api);
+  } finally {
+    api.close();
+  }
+}
+
+async function runPipeline(
+  config: GenerationConfig,
+  api: ts.API,
+): Promise<GenerationResult> {
   let ctx = createInitialContext(config);
 
   ctx = await measureAsyncStep("scanSourceFiles", () =>
     scanSourceFilesStep(ctx),
   );
-  ctx = measureStep("createProgram", () => createProgramStep(ctx));
+  ctx = measureStep("createProgram", () => createProgramStep(ctx, api));
   ctx = measureStep("collectTypeNames", () => collectTypeNamesStep(ctx));
   ctx = prepareScalarConfigStep(ctx);
   ctx = measureStep("extractTypes", () => extractTypesStep(ctx));

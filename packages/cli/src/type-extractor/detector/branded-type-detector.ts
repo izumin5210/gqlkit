@@ -10,7 +10,7 @@
  * - `boolean & { __nominal: true }`
  */
 
-import ts from "typescript";
+import * as ts from "../../core/typescript.js";
 
 /**
  * Result of branded type detection.
@@ -58,14 +58,14 @@ const EXCLUDED_BRAND_PROPERTIES: ReadonlySet<string> = new Set([
 export function detectBrandedType(type: ts.Type): BrandedTypeResult {
   const notBranded: BrandedTypeResult = { isBranded: false, baseType: null };
 
-  if (!type.isIntersection()) {
+  if (!type.isIntersectionType()) {
     return notBranded;
   }
 
   let primitiveBase: "string" | "number" | "boolean" | null = null;
   let hasNonBrandMember = false;
 
-  for (const member of type.types) {
+  for (const member of type.getTypes()) {
     const primitiveType = getPrimitiveType(member);
     if (primitiveType !== null) {
       if (primitiveBase !== null && primitiveBase !== primitiveType) {
@@ -165,7 +165,7 @@ function isPureBrandMarker(type: ts.Type): boolean {
   }
 
   for (const prop of properties) {
-    const propName = prop.getName();
+    const propName = prop.name;
 
     // Excluded properties (like gqlkit metadata) disqualify as brand marker
     if (EXCLUDED_BRAND_PROPERTIES.has(propName)) {

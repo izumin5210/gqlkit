@@ -1,5 +1,5 @@
-import type ts from "typescript";
 import type { SourceLocation } from "../core/index.js";
+import type * as ts from "../core/typescript.js";
 
 /**
  * Extracts source location from a TypeScript AST node.

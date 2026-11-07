@@ -1,5 +1,5 @@
-import type ts from "typescript";
 import type { Diagnostic, Diagnostics } from "../core/index.js";
+import type * as ts from "../core/typescript.js";
 import {
   type CollectedTypesResult,
   collectResults,
@@ -78,7 +78,7 @@ export function extractTypes(params: ExtractTypesParams): ExtractTypesResult {
     pass1Result.detectedScalars.length > 0
       ? buildScalarMappingTable({
           detectedScalars: pass1Result.detectedScalars,
-          checker: program.getTypeChecker(),
+          checker: program.getProject().checker,
           program,
         })
       : null;
@@ -86,7 +86,7 @@ export function extractTypes(params: ExtractTypesParams): ExtractTypesResult {
   // Report scalar mapping conflicts as diagnostics
   if (scalarMappingTable) {
     for (const [, conflict] of scalarMappingTable.conflicts) {
-      const baseTypeName = conflict.baseTypeSymbol.getName();
+      const baseTypeName = conflict.baseTypeSymbol.name;
       const scalarNames = conflict.conflictingScalars
         .map((s) => s.scalarName)
         .join(", ");
