@@ -16,6 +16,7 @@ import {
   type CheckerLoader,
   createCheckerLoader,
 } from "../shared/checker-loader.js";
+import { prefetchDeclarationFacts } from "../shared/checker-prefetch.js";
 import {
   type DirectiveDefinitionInfo,
   deduplicateDiagnostics,
@@ -231,7 +232,9 @@ async function createProgramStep(
   const { program } = programResult;
   // Every stage reads the scanned files; loading them together up front
   // leaves later `getSourceFile` calls to the client's cache.
-  await Promise.all(ctx.sourceFiles.map((file) => program.getSourceFile(file)));
+  const loadedFiles = await Promise.all(
+    ctx.sourceFiles.map((file) => program.getSourceFile(file)),
+  );
 
   return {
     ...ctx,
@@ -239,6 +242,9 @@ async function createProgramStep(
     checker: createCheckerLoader({
       api,
       checker: program.getProject().checker,
+      loadedFilePaths: new Set(
+        loadedFiles.flatMap((sf) => (sf === undefined ? [] : [sf.path])),
+      ),
     }),
   };
 }
@@ -248,11 +254,23 @@ async function collectTypeNamesStep(
 ): Promise<PipelineContext> {
   if (ctx.aborted || !ctx.program || !ctx.checker) return ctx;
 
-  const result = await collectDeclaredTypeNames({
-    program: ctx.program,
-    checker: ctx.checker,
-    sourceFiles: ctx.sourceFiles,
-  });
+  const { program, checker } = ctx;
+  const sourceFiles = await Promise.all(
+    ctx.sourceFiles.map((file) => program.getSourceFile(file)),
+  );
+  const [result] = await Promise.all([
+    collectDeclaredTypeNames({
+      program,
+      checker,
+      sourceFiles: ctx.sourceFiles,
+    }),
+    // Type extraction walks the declarations next; their facts travel
+    // alongside the collection's own queries.
+    prefetchDeclarationFacts(
+      checker,
+      sourceFiles.filter((sf) => sf !== undefined),
+    ),
+  ]);
 
   const diagnostics = [...ctx.diagnostics, ...result.diagnostics];
   const hasDiagnosticErrors = result.diagnostics.some(

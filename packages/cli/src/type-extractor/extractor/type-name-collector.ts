@@ -13,7 +13,7 @@ import {
 } from "typescript/async";
 import type { Diagnostic, SourceLocation } from "../../core/index.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
-import { prefetchDeclarationFacts } from "../../shared/checker-prefetch.js";
+import { prefetchTypeNameFacts } from "../../shared/checker-prefetch.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
   isExported,
@@ -119,12 +119,12 @@ export async function collectDeclaredTypeNames(
     return true;
   }
 
-  // Every file is fetched, and its declarations' first levels prefetched,
-  // in a few batched round trips before the sequential walk below.
+  // Every file is fetched, and the symbols the walk below reads prefetched,
+  // in a few batched round trips before the sequential walk.
   const loadedSourceFiles = await Promise.all(
     sourceFiles.map((filePath) => program.getSourceFile(filePath)),
   );
-  await prefetchDeclarationFacts(
+  await prefetchTypeNameFacts(
     checker,
     loadedSourceFiles.filter((sf): sf is SourceFile => sf !== undefined),
   );

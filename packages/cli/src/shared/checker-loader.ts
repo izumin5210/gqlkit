@@ -12,6 +12,7 @@ import {
   type TypeReference,
   type UnionOrIntersectionType,
 } from "typescript/async";
+import { getLocalDocumentationComment } from "./local-documentation.js";
 
 /**
  * The extraction stages' only way to ask the TypeScript checker questions,
@@ -271,7 +272,7 @@ function createArrayQuery<K, V>(
 function memoize<K extends object, V>(
   load: (key: K) => Promise<V>,
 ): (key: K) => Promise<V> {
-  const cache = new WeakMap<K, Promise<V>>();
+  const cache = new Map<K, Promise<V>>();
   return (key) => {
     let promise = cache.get(key);
     if (promise === undefined) {
@@ -299,12 +300,17 @@ function isTypeReferenceType(type: Type): boolean {
 interface CreateCheckerLoaderParams {
   readonly api: API;
   readonly checker: Checker;
+  /**
+   * Paths (`SourceFile.path`) of the files the client has already fetched.
+   * Questions answerable from their syntax trees are answered locally.
+   */
+  readonly loadedFilePaths: ReadonlySet<string>;
 }
 
 export function createCheckerLoader(
   params: CreateCheckerLoaderParams,
 ): CheckerLoader {
-  const { api, checker } = params;
+  const { api, checker, loadedFilePaths } = params;
   const scheduler = createBatchScheduler(api);
   const { query } = scheduler;
 
@@ -326,7 +332,19 @@ export function createCheckerLoader(
     const resolved = await Promise.all(handles.map(resolveHandle));
     return resolved.filter((d): d is Declaration => d !== undefined);
   };
-  const propertyLookups = new WeakMap<
+  const getSymbolAtLocation = memoize(
+    createArrayQuery({
+      scheduler,
+      loadMany: (nodes: Node[]) => checker.getSymbolAtLocation(nodes),
+      loadOne: (node) => checker.getSymbolAtLocation(node),
+    }),
+  );
+  const localDocumentation = {
+    isLoadedFile: (path: string) => loadedFilePaths.has(path),
+    resolveHandle,
+    getSymbolAtLocation,
+  };
+  const propertyLookups = new Map<
     Type,
     Map<string, Promise<TsSymbol | undefined>>
   >();
@@ -342,13 +360,7 @@ export function createCheckerLoader(
     getDeclaredTypeOfSymbol: memoize((symbol) =>
       query(() => checker.getDeclaredTypeOfSymbol(symbol)),
     ),
-    getSymbolAtLocation: memoize(
-      createArrayQuery({
-        scheduler,
-        loadMany: (nodes: Node[]) => checker.getSymbolAtLocation(nodes),
-        loadOne: (node) => checker.getSymbolAtLocation(node),
-      }),
-    ),
+    getSymbolAtLocation,
     getTypeAtLocation: memoize(
       createArrayQuery({
         scheduler,
@@ -368,8 +380,10 @@ export function createCheckerLoader(
     getExportsOfModule: memoize((symbol) =>
       query(() => checker.getExportsOfModule(symbol)),
     ),
-    getDocumentationComment: memoize((symbol) =>
-      query(() => checker.getDocumentationCommentOfSymbol(symbol)),
+    getDocumentationComment: memoize(
+      async (symbol) =>
+        (await getLocalDocumentationComment(localDocumentation, symbol)) ??
+        query(() => checker.getDocumentationCommentOfSymbol(symbol)),
     ),
     getConstantValue: memoize((node) =>
       query(() => checker.getConstantValue(node)),

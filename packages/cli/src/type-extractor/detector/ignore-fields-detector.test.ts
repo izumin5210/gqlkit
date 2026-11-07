@@ -63,6 +63,7 @@ async function withTestProgram(
     checker: createCheckerLoader({
       api,
       checker: program.getProject().checker,
+      loadedFilePaths: new Set([sourceFile.path]),
     }),
     sourceFile,
   });
