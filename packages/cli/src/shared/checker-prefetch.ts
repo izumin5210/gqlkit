@@ -153,22 +153,40 @@ async function prefetchTypeFacts(
   checker: CheckerLoader,
   types: ReadonlyArray<ts.Type>,
 ): Promise<void> {
-  const seen = new Set<ts.Type>();
+  const covered = coveredLevelsOf(checker);
   // Each type is followed on its own; queries issued in the same tick still
   // travel together, and no type waits for slower siblings before descending.
-  const visit = async (type: ts.Type, depth: number): Promise<void> => {
-    if (seen.has(type)) {
+  const visit = async (type: ts.Type, levelsBelow: number): Promise<void> => {
+    if ((covered.get(type) ?? -1) >= levelsBelow) {
       return;
     }
-    seen.add(type);
+    covered.set(type, levelsBelow);
     const nested = await prefetchFactsOfType(checker, type);
-    if (depth < NESTED_TYPE_DEPTH) {
+    if (levelsBelow > 0) {
       await Promise.all(
-        nested.filter(isVisitedType).map((t) => visit(t, depth + 1)),
+        nested.filter(isVisitedType).map((t) => visit(t, levelsBelow - 1)),
       );
     }
   };
-  await Promise.all(types.map((type) => visit(type, 0)));
+  await Promise.all(types.map((type) => visit(type, NESTED_TYPE_DEPTH)));
+}
+
+/**
+ * How many levels below each type a loader's prefetches have covered.
+ * Successive walks prefetch overlapping types, and following them again only
+ * to find every fact cached costs client time at scale; a type covered to at
+ * least the depth asked for is skipped. Its facts may still be in flight,
+ * which is harmless: the loader shares in-flight queries.
+ */
+const coveredLevels = new WeakMap<CheckerLoader, WeakMap<ts.Type, number>>();
+
+function coveredLevelsOf(checker: CheckerLoader): WeakMap<ts.Type, number> {
+  let covered = coveredLevels.get(checker);
+  if (covered === undefined) {
+    covered = new WeakMap();
+    coveredLevels.set(checker, covered);
+  }
+  return covered;
 }
 
 /**
