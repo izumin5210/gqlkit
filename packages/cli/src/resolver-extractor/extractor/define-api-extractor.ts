@@ -1,3 +1,26 @@
+import type {
+  CallExpression,
+  Node,
+  NodeArray,
+  SourceFile,
+  TypeNode,
+  VariableDeclaration,
+  VariableStatement,
+} from "typescript/ast";
+import {
+  isBinaryExpression,
+  isCallExpression,
+  isConditionalExpression,
+  isIdentifier,
+  isTypeAliasDeclaration,
+  isVariableStatement,
+} from "typescript/ast/is";
+import {
+  type Program,
+  type Symbol as TsSymbol,
+  type Type,
+  TypeFlags,
+} from "typescript/async";
 import {
   type DeprecationInfo,
   type Diagnostic,
@@ -7,7 +30,6 @@ import {
   type SourceLocation,
   type TSTypeReference,
 } from "../../core/index.js";
-import * as ts from "../../core/typescript.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { extractDirectivesFromType } from "../../shared/directive-detector.js";
@@ -79,8 +101,8 @@ export interface ExtractDefineApiResult {
 
 export interface ExtractDefineApiOptions {
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly sourceFiles: ReadonlySet<string>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
@@ -92,7 +114,7 @@ const ABSTRACT_RESOLVER_METADATA_PROPERTY =
 
 interface MetadataKindResult {
   readonly kind: string;
-  readonly actualType: ts.Type;
+  readonly actualType: Type;
 }
 
 /**
@@ -107,7 +129,7 @@ interface MetadataKindResult {
  * returned `kind` themselves.
  */
 interface DetectKindFromMetadataTypeParams {
-  readonly returnType: ts.Type;
+  readonly returnType: Type;
   readonly checker: CheckerLoader;
   readonly metadataProperty: string;
 }
@@ -148,7 +170,7 @@ async function detectKindFromMetadataType(
  * Returns null if no abstract resolver metadata is found.
  */
 async function detectAbstractResolverFromMetadataType(
-  returnType: ts.Type,
+  returnType: Type,
   checker: CheckerLoader,
 ): Promise<{ kind: AbstractResolverKind; targetTypeName: string } | null> {
   const result = await detectKindFromMetadataType({
@@ -189,10 +211,10 @@ async function detectAbstractResolverFromMetadataType(
  * Returns null for unresolvable types (any, unknown).
  */
 async function extractTypeNameFromType(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<string | null> {
-  if (type.flags & ts.TypeFlags.Any) {
+  if (type.flags & TypeFlags.Any) {
     return null;
   }
 
@@ -225,7 +247,7 @@ async function extractTypeNameFromType(
  * Follows the same pattern as scalar metadata detection.
  */
 async function detectResolverFromMetadataType(
-  returnType: ts.Type,
+  returnType: Type,
   checker: CheckerLoader,
 ): Promise<DefineApiResolverType | null> {
   const result = await detectKindFromMetadataType({
@@ -270,7 +292,7 @@ function resolveFieldNameFromExportName(exportName: string): string | null {
  * Returns false for NoArgs type (Record<string, never>).
  */
 async function hasOnlyIndexSignatures(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<boolean> {
   const targetType = await checker.getApparentType(type);
@@ -284,8 +306,8 @@ async function hasOnlyIndexSignatures(
 
   const hasNeverStringIndex = indexInfos.some((info) => {
     return (
-      (info.keyType.flags & ts.TypeFlags.String) !== 0 &&
-      (info.valueType.flags & ts.TypeFlags.Never) !== 0
+      (info.keyType.flags & TypeFlags.String) !== 0 &&
+      (info.valueType.flags & TypeFlags.Never) !== 0
     );
   });
 
@@ -307,7 +329,7 @@ async function hasOnlyIndexSignatures(
  * Gets the type name for error messages.
  */
 async function getTypeNameForDiagnostic(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<string> {
   const aliasSymbol = await checker.getAliasSymbolOfType(type);
@@ -353,7 +375,7 @@ interface ExtractArgsResult {
 }
 
 interface ExtractArgsFromTypeParams {
-  readonly argsType: ts.Type;
+  readonly argsType: Type;
   /** The whole args type's own resolved reference — used only to detect the
    * declared-args-type overlap described below, not returned. */
   readonly argsTypeRef: TSTypeReference;
@@ -423,7 +445,7 @@ async function extractArgsFromType(
 }
 
 async function extractDirectivesFromTypeNode(
-  typeNode: ts.TypeNode | undefined,
+  typeNode: TypeNode | undefined,
   checker: CheckerLoader,
 ): Promise<ReadonlyArray<DirectiveInfo> | null> {
   if (!typeNode) {
@@ -450,8 +472,8 @@ interface TypeArgumentsResult {
 }
 
 interface ValidateArgsTypeParams {
-  readonly argsType: ts.Type;
-  readonly argsTypeNode: ts.TypeNode;
+  readonly argsType: Type;
+  readonly argsTypeNode: TypeNode;
   readonly checker: CheckerLoader;
 }
 
@@ -479,9 +501,9 @@ async function validateArgsType(
 
 interface CallTypeNodes {
   readonly parentTypeName: string | null;
-  readonly argsTypeNode: ts.TypeNode;
-  readonly returnTypeNode: ts.TypeNode;
-  readonly directiveTypeNode: ts.TypeNode | undefined;
+  readonly argsTypeNode: TypeNode;
+  readonly returnTypeNode: TypeNode;
+  readonly directiveTypeNode: TypeNode | undefined;
 }
 
 /**
@@ -492,7 +514,7 @@ interface CallTypeNodes {
  * two index layouts (refactor-plan.md §1.2-D).
  */
 function resolveCallTypeNodes(
-  typeArgs: ts.NodeArray<ts.TypeNode>,
+  typeArgs: NodeArray<TypeNode>,
   resolverType: DefineApiResolverType,
 ): CallTypeNodes | null {
   if (resolverType === "field") {
@@ -532,7 +554,7 @@ function resolveCallTypeNodes(
 }
 
 interface ExtractTypeArgumentsFromCallParams {
-  readonly node: ts.CallExpression;
+  readonly node: CallExpression;
   readonly inputContext: FieldTypeResolverContext;
   readonly outputContext: FieldTypeResolverContext;
   readonly resolverType: DefineApiResolverType;
@@ -606,13 +628,13 @@ async function extractTypeArgumentsFromCall(
 }
 
 async function extractExportedInputTypes(
-  sourceFile: ts.SourceFile,
+  sourceFile: SourceFile,
   ctx: FieldTypeResolverContext,
 ): Promise<ExportedInputType[]> {
   const exportedTypes: ExportedInputType[] = [];
 
   for (const node of sourceFile.statements) {
-    if (ts.isTypeAliasDeclaration(node) && isExported(node)) {
+    if (isTypeAliasDeclaration(node) && isExported(node)) {
       const name = node.name.getText(sourceFile);
       const type = await ctx.checker.getTypeAtLocation(node.name);
       const tsType = await resolveFieldType(type, undefined, ctx);
@@ -646,10 +668,10 @@ const DEFINE_CALL_FUNCTION_NAMES: ReadonlySet<string> = new Set([
  * golden case that exercises this path (`subscription-error-complex-expression`
  * is the only one in the suite).
  */
-function containsDefineCall(node: ts.Node): boolean {
+function containsDefineCall(node: Node): boolean {
   if (
-    ts.isCallExpression(node) &&
-    ts.isIdentifier(node.expression) &&
+    isCallExpression(node) &&
+    isIdentifier(node.expression) &&
     DEFINE_CALL_FUNCTION_NAMES.has(node.expression.text)
   ) {
     return true;
@@ -659,9 +681,9 @@ function containsDefineCall(node: ts.Node): boolean {
 }
 
 interface ProcessResolverDeclarationParams {
-  readonly declaration: ts.VariableDeclaration;
-  readonly statement: ts.VariableStatement;
-  readonly sourceFile: ts.SourceFile;
+  readonly declaration: VariableDeclaration;
+  readonly statement: VariableStatement;
+  readonly sourceFile: SourceFile;
   readonly filePath: string;
   readonly checker: CheckerLoader;
   readonly inputContext: FieldTypeResolverContext;
@@ -696,7 +718,7 @@ async function processResolverDeclaration(
     exportedInputTypes,
   } = params;
 
-  if (!ts.isIdentifier(declaration.name)) {
+  if (!isIdentifier(declaration.name)) {
     return null;
   }
 
@@ -707,10 +729,10 @@ async function processResolverDeclaration(
     return null;
   }
 
-  if (!ts.isCallExpression(initializer)) {
+  if (!isCallExpression(initializer)) {
     if (
-      (ts.isConditionalExpression(initializer) ||
-        ts.isBinaryExpression(initializer)) &&
+      (isConditionalExpression(initializer) ||
+        isBinaryExpression(initializer)) &&
       containsDefineCall(initializer)
     ) {
       return {
@@ -781,7 +803,7 @@ async function processResolverDeclaration(
     };
   }
 
-  const funcName = ts.isIdentifier(initializer.expression)
+  const funcName = isIdentifier(initializer.expression)
     ? initializer.expression.text
     : undefined;
 
@@ -836,7 +858,7 @@ async function processResolverDeclaration(
 }
 
 export interface ExtractDefineApiResolversParams {
-  readonly program: ts.Program;
+  readonly program: Program;
   readonly checker: CheckerLoader;
   readonly files: ReadonlyArray<string>;
   readonly options: ExtractDefineApiOptions;
@@ -915,7 +937,7 @@ export async function extractDefineApiResolvers(
       );
 
       const declarations = sourceFile.statements.flatMap((node) =>
-        ts.isVariableStatement(node) && isExported(node)
+        isVariableStatement(node) && isExported(node)
           ? node.declarationList.declarations.map((declaration) => ({
               declaration,
               statement: node,

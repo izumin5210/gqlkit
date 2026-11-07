@@ -6,10 +6,14 @@
  */
 
 import {
+  type Symbol as TsSymbol,
+  type Type,
+  TypeFlags,
+} from "typescript/async";
+import {
   type DirectiveArgumentValue,
   METADATA_PROPERTIES,
 } from "../core/index.js";
-import * as ts from "../core/typescript.js";
 import type { CheckerLoader } from "./checker-loader.js";
 import { resolveArgumentValue } from "./directive-detector.js";
 import { getActualMetadataType } from "./metadata-detector.js";
@@ -50,9 +54,9 @@ function createEmptyResult(): DefaultValueDetectionResult {
  * Gets the field meta property from a type, checking various type structures.
  */
 async function getFieldMetaProperty(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
-): Promise<ts.Symbol | undefined> {
+): Promise<TsSymbol | undefined> {
   return findMetadataProperty({
     checker,
     type,
@@ -74,7 +78,7 @@ async function getFieldMetaProperty(
  * @returns Detection result with default value and any errors
  */
 export async function detectDefaultValueMetadata(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<DefaultValueDetectionResult> {
   const metaProp = await getFieldMetaProperty(type, checker);
@@ -101,7 +105,7 @@ export async function detectDefaultValueMetadata(
 
   // If defaultValue is undefined (not specified in Meta), return empty result
   // Check raw type first before unwrapping
-  if (rawDefaultValueType.flags & ts.TypeFlags.Undefined) {
+  if (rawDefaultValueType.flags & TypeFlags.Undefined) {
     return createEmptyResult();
   }
 
@@ -110,7 +114,7 @@ export async function detectDefaultValueMetadata(
   if (rawDefaultValueType.isUnionType()) {
     const nonUndefinedTypes = (
       await checker.getTypesOfType(rawDefaultValueType)
-    ).filter((t) => !(t.flags & ts.TypeFlags.Undefined));
+    ).filter((t) => !(t.flags & TypeFlags.Undefined));
     if (nonUndefinedTypes.length === 0) {
       return createEmptyResult();
     }
@@ -123,7 +127,7 @@ export async function detectDefaultValueMetadata(
 
   // If the type is unknown, it means Meta["defaultValue"] was not explicitly specified
   // and TypeScript inferred it from the constraint (defaultValue?: unknown)
-  if (rawDefaultValueType.flags & ts.TypeFlags.Unknown) {
+  if (rawDefaultValueType.flags & TypeFlags.Unknown) {
     return createEmptyResult();
   }
 
@@ -136,7 +140,7 @@ export async function detectDefaultValueMetadata(
   }
 
   // Also check the unwrapped type for undefined
-  if (defaultValueType.flags & ts.TypeFlags.Undefined) {
+  if (defaultValueType.flags & TypeFlags.Undefined) {
     return createEmptyResult();
   }
 

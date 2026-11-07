@@ -1,5 +1,19 @@
+import {
+  type Declaration,
+  getJSDocTags,
+  type JSDocComment,
+  type Node,
+  type NodeArray,
+} from "typescript/ast";
+import {
+  isEnumDeclaration,
+  isIdentifier,
+  isInterfaceDeclaration,
+  isTypeAliasDeclaration,
+  isVariableStatement,
+} from "typescript/ast/is";
+import type { Symbol as TsSymbol } from "typescript/async";
 import type { DeprecationInfo } from "../core/index.js";
-import * as ts from "../core/typescript.js";
 import type { CheckerLoader } from "./checker-loader.js";
 
 export interface TSDocInfo {
@@ -8,18 +22,18 @@ export interface TSDocInfo {
 }
 
 async function getSymbolFromNode(
-  node: ts.Node,
+  node: Node,
   checker: CheckerLoader,
-): Promise<ts.Symbol | undefined> {
-  if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
+): Promise<TsSymbol | undefined> {
+  if (isInterfaceDeclaration(node) || isTypeAliasDeclaration(node)) {
     return checker.getSymbolAtLocation(node.name);
   }
-  if (ts.isEnumDeclaration(node)) {
+  if (isEnumDeclaration(node)) {
     return checker.getSymbolAtLocation(node.name);
   }
-  if (ts.isVariableStatement(node)) {
+  if (isVariableStatement(node)) {
     const declaration = node.declarationList.declarations[0];
-    if (declaration && ts.isIdentifier(declaration.name)) {
+    if (declaration && isIdentifier(declaration.name)) {
       return checker.getSymbolAtLocation(declaration.name);
     }
   }
@@ -27,7 +41,7 @@ async function getSymbolFromNode(
 }
 
 function getTagCommentText(
-  comment: ts.NodeArray<ts.JSDocComment> | undefined,
+  comment: NodeArray<JSDocComment> | undefined,
 ): string | undefined {
   if (comment === undefined) {
     return undefined;
@@ -41,14 +55,14 @@ function getTagCommentText(
 }
 
 function extractDescriptionTagContent(
-  declarations: ReadonlyArray<ts.Declaration> | undefined,
+  declarations: ReadonlyArray<Declaration> | undefined,
 ): string | undefined {
   if (!declarations) {
     return undefined;
   }
 
   for (const declaration of declarations) {
-    const jsdocTags = ts.getJSDocTags(declaration);
+    const jsdocTags = getJSDocTags(declaration);
     for (const tag of jsdocTags) {
       if (tag.tagName.text === "description") {
         return getTagCommentText(tag.comment);
@@ -60,14 +74,14 @@ function extractDescriptionTagContent(
 }
 
 function extractDeprecatedFromDeclarations(
-  declarations: ReadonlyArray<ts.Declaration> | undefined,
+  declarations: ReadonlyArray<Declaration> | undefined,
 ): DeprecationInfo | undefined {
   if (!declarations) {
     return undefined;
   }
 
   for (const declaration of declarations) {
-    const jsdocTags = ts.getJSDocTags(declaration);
+    const jsdocTags = getJSDocTags(declaration);
     for (const tag of jsdocTags) {
       if (tag.tagName.text === "deprecated") {
         const reason = getTagCommentText(tag.comment);
@@ -87,7 +101,7 @@ function normalizeLineEndings(text: string): string {
 }
 
 async function extractDescriptionFromSymbol(
-  symbol: ts.Symbol,
+  symbol: TsSymbol,
   checker: CheckerLoader,
 ): Promise<string | undefined> {
   const documentationComment = await checker.getDocumentationComment(symbol);
@@ -110,7 +124,7 @@ async function extractDescriptionFromSymbol(
 }
 
 export async function extractTsDocInfo(
-  node: ts.Node,
+  node: Node,
   checker: CheckerLoader,
 ): Promise<TSDocInfo> {
   const symbol = await getSymbolFromNode(node, checker);
@@ -131,7 +145,7 @@ export async function extractTsDocInfo(
 }
 
 export async function extractTsDocFromSymbol(
-  symbol: ts.Symbol,
+  symbol: TsSymbol,
   checker: CheckerLoader,
 ): Promise<TSDocInfo> {
   const description = await extractDescriptionFromSymbol(symbol, checker);

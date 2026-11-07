@@ -1,10 +1,10 @@
+import type { Symbol as TsSymbol } from "typescript/async";
 import type {
   DeprecationInfo,
   InlineEnumMemberInfo,
   PropertyDef,
   SourceLocation,
 } from "../core/index.js";
-import type * as ts from "../core/typescript.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import { getSourceLocationOrDefault } from "../shared/source-location.js";
 import type { ExtractedTypeInfo } from "../type-extractor/index.js";
@@ -34,7 +34,7 @@ export interface InlineEnumWithContext {
   readonly sourceLocation: SourceLocation;
   readonly nullable: boolean;
   /** External TypeScript enum symbol for deduplication (null for string literal unions) */
-  readonly externalEnumSymbol: ts.Symbol | null;
+  readonly externalEnumSymbol: TsSymbol | null;
   /** TSDoc description from the external enum type itself (null for string literal unions) */
   readonly externalEnumDescription: string | null;
   /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself (null for string literal unions) */

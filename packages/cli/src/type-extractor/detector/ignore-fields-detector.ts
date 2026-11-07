@@ -5,8 +5,8 @@
  * in TypeScript intersection types using the $gqlkitTypeMeta property.
  */
 
+import { type StringLiteralType, type Type, TypeFlags } from "typescript/async";
 import { METADATA_PROPERTIES } from "../../core/index.js";
-import * as ts from "../../core/typescript.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { getActualMetadataType } from "../../shared/metadata-detector.js";
 
@@ -16,7 +16,7 @@ const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
  * Parameters for detectIgnoreFieldsMetadata function.
  */
 export interface DetectIgnoreFieldsParams {
-  readonly type: ts.Type;
+  readonly type: Type;
   readonly checker: CheckerLoader;
 }
 
@@ -25,7 +25,7 @@ export interface DetectIgnoreFieldsParams {
  * Returns null if the type doesn't have $gqlkitTypeMeta or ignoreFields is not specified.
  */
 async function extractIgnoreFieldsFromType(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<ReadonlySet<string> | null> {
   const metaProp = await checker.getPropertyOfType(type, TYPE_META_PROPERTY);
@@ -63,19 +63,19 @@ async function extractIgnoreFieldsFromType(
  * Extracts string literals from a type (single literal or union of literals).
  */
 async function extractStringLiteralUnion(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<ReadonlySet<string> | null> {
-  if (type.flags & ts.TypeFlags.StringLiteral) {
-    const value = (type as ts.StringLiteralType).value;
+  if (type.flags & TypeFlags.StringLiteral) {
+    const value = (type as StringLiteralType).value;
     return new Set([value]);
   }
 
   if (type.isUnionType()) {
     const values = new Set<string>();
     for (const member of await checker.getTypesOfType(type)) {
-      if (member.flags & ts.TypeFlags.StringLiteral) {
-        values.add((member as ts.StringLiteralType).value);
+      if (member.flags & TypeFlags.StringLiteral) {
+        values.add((member as StringLiteralType).value);
       }
     }
     if (values.size > 0) {

@@ -1,5 +1,17 @@
+import type { SourceFile } from "typescript/ast";
+import {
+  isEnumDeclaration,
+  isExportDeclaration,
+  isInterfaceDeclaration,
+  isNamedExports,
+  isTypeAliasDeclaration,
+} from "typescript/ast/is";
+import {
+  type Program,
+  SymbolFlags,
+  type Symbol as TsSymbol,
+} from "typescript/async";
 import type { Diagnostic, SourceLocation } from "../../core/index.js";
-import * as ts from "../../core/typescript.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { prefetchDeclarationFacts } from "../../shared/checker-prefetch.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
@@ -13,7 +25,7 @@ import {
  */
 interface TypeDeclarationLocation {
   readonly location: SourceLocation;
-  readonly symbol: ts.Symbol | null;
+  readonly symbol: TsSymbol | null;
 }
 
 /**
@@ -25,13 +37,13 @@ function formatLocation(location: SourceLocation): string {
 
 export interface TypeNameCollectionResult {
   readonly typeNames: ReadonlySet<string>;
-  readonly typeSymbols: ReadonlyMap<string, ts.Symbol>;
+  readonly typeSymbols: ReadonlyMap<string, TsSymbol>;
   /**
    * Maps underlying type symbols to their schema type names.
    * For `type User = ExternalUser;`, maps ExternalUser's symbol to "User".
    * This allows recognizing `ExternalUser` as `User` in field types.
    */
-  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
   /**
    * Diagnostics collected during type name collection.
    * Contains errors for duplicate type exports.
@@ -51,7 +63,7 @@ export interface TypeNameCollectionResult {
  * - Wildcard re-exports: `export type * from "..."`
  */
 export interface CollectDeclaredTypeNamesParams {
-  readonly program: ts.Program;
+  readonly program: Program;
   readonly checker: CheckerLoader;
   readonly sourceFiles: ReadonlyArray<string>;
 }
@@ -61,8 +73,8 @@ export async function collectDeclaredTypeNames(
 ): Promise<TypeNameCollectionResult> {
   const { program, checker, sourceFiles } = params;
   const typeNames = new Set<string>();
-  const typeSymbols = new Map<string, ts.Symbol>();
-  const underlyingSymbolToTypeName = new Map<ts.Symbol, string>();
+  const typeSymbols = new Map<string, TsSymbol>();
+  const underlyingSymbolToTypeName = new Map<TsSymbol, string>();
   const diagnostics: Diagnostic[] = [];
 
   const typeLocations = new Map<string, TypeDeclarationLocation>();
@@ -74,7 +86,7 @@ export async function collectDeclaredTypeNames(
   async function registerTypeName(
     name: string,
     location: SourceLocation,
-    symbol: ts.Symbol | undefined,
+    symbol: TsSymbol | undefined,
   ): Promise<boolean> {
     const resolvedSymbol = symbol
       ? await resolveOriginalSymbol(symbol, checker)
@@ -114,7 +126,7 @@ export async function collectDeclaredTypeNames(
   );
   await prefetchDeclarationFacts(
     checker,
-    loadedSourceFiles.filter((sf): sf is ts.SourceFile => sf !== undefined),
+    loadedSourceFiles.filter((sf): sf is SourceFile => sf !== undefined),
   );
 
   for (const filePath of sourceFiles) {
@@ -123,7 +135,7 @@ export async function collectDeclaredTypeNames(
 
     for (const node of sourceFile.statements) {
       // Direct type declarations
-      if (ts.isTypeAliasDeclaration(node) && isExported(node)) {
+      if (isTypeAliasDeclaration(node) && isExported(node)) {
         const name = node.name.getText(sourceFile);
         const location = getSourceLocationFromNode(node)!;
         const symbol = await checker.getSymbolAtLocation(node.name);
@@ -143,13 +155,13 @@ export async function collectDeclaredTypeNames(
           }
         }
       }
-      if (ts.isInterfaceDeclaration(node) && isExported(node)) {
+      if (isInterfaceDeclaration(node) && isExported(node)) {
         const name = node.name.getText(sourceFile);
         const location = getSourceLocationFromNode(node)!;
         const symbol = await checker.getSymbolAtLocation(node.name);
         await registerTypeName(name, location, symbol);
       }
-      if (ts.isEnumDeclaration(node) && isExported(node)) {
+      if (isEnumDeclaration(node) && isExported(node)) {
         const name = node.name.getText(sourceFile);
         const location = getSourceLocationFromNode(node)!;
         const symbol = await checker.getSymbolAtLocation(node.name);
@@ -157,10 +169,10 @@ export async function collectDeclaredTypeNames(
       }
 
       // Re-exports: `export type { ... } from "..."` or `export type * from "..."`
-      if (ts.isExportDeclaration(node)) {
+      if (isExportDeclaration(node)) {
         if (node.isTypeOnly && node.exportClause) {
           // Declaration-level type-only named re-exports: `export type { Foo, Bar } from "..."`
-          if (ts.isNamedExports(node.exportClause)) {
+          if (isNamedExports(node.exportClause)) {
             for (const element of node.exportClause.elements) {
               // Use the exported name (element.name), not the property name
               const name = element.name.getText(sourceFile);
@@ -171,7 +183,7 @@ export async function collectDeclaredTypeNames(
           }
         } else if (!node.isTypeOnly && node.exportClause) {
           // Specifier-level type-only re-exports: `export { type Foo, type Bar } from "..."`
-          if (ts.isNamedExports(node.exportClause)) {
+          if (isNamedExports(node.exportClause)) {
             for (const element of node.exportClause.elements) {
               if (!element.isTypeOnly) continue;
               const name = element.name.getText(sourceFile);
@@ -222,7 +234,7 @@ export async function collectDeclaredTypeNames(
  * membership checks.
  */
 export async function collectLocalTypeDeclarationNames(
-  program: ts.Program,
+  program: Program,
   sourceFiles: ReadonlyArray<string>,
 ): Promise<ReadonlySet<string>> {
   const names = new Set<string>();
@@ -233,9 +245,9 @@ export async function collectLocalTypeDeclarationNames(
 
     sourceFile.forEachChild((node) => {
       if (
-        ts.isTypeAliasDeclaration(node) ||
-        ts.isInterfaceDeclaration(node) ||
-        ts.isEnumDeclaration(node)
+        isTypeAliasDeclaration(node) ||
+        isInterfaceDeclaration(node) ||
+        isEnumDeclaration(node)
       ) {
         names.add(node.name.getText(sourceFile));
       }
@@ -248,12 +260,12 @@ export async function collectLocalTypeDeclarationNames(
 /**
  * Checks if a symbol represents a type export (not a value export).
  */
-function isTypeExport(symbol: ts.Symbol): boolean {
+function isTypeExport(symbol: TsSymbol): boolean {
   const flags = symbol.flags;
   return (
-    (flags & ts.SymbolFlags.Type) !== 0 ||
-    (flags & ts.SymbolFlags.TypeAlias) !== 0 ||
-    (flags & ts.SymbolFlags.Interface) !== 0 ||
-    (flags & ts.SymbolFlags.Enum) !== 0
+    (flags & SymbolFlags.Type) !== 0 ||
+    (flags & SymbolFlags.TypeAlias) !== 0 ||
+    (flags & SymbolFlags.Interface) !== 0 ||
+    (flags & SymbolFlags.Enum) !== 0
   );
 }

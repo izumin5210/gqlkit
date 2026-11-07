@@ -1,16 +1,36 @@
-import * as ts from "../core/typescript.js";
+import {
+  type Declaration,
+  getCombinedModifierFlags,
+  ModifierFlags,
+  type Node,
+  SyntaxKind,
+  type TypeNode,
+  type UnionTypeNode,
+} from "typescript/ast";
+import {
+  isIdentifier,
+  isLiteralTypeNode,
+  isQualifiedName,
+  isTypeReferenceNode,
+} from "typescript/ast/is";
+import {
+  SymbolFlags,
+  type Symbol as TsSymbol,
+  type Type,
+  TypeFlags,
+} from "typescript/async";
 import type { CheckerLoader } from "./checker-loader.js";
 
 /**
  * Extracts type name from a TypeNode.
  * Handles both simple identifiers and qualified names.
  */
-export function getTypeNameFromNode(typeNode: ts.TypeNode): string | null {
-  if (ts.isTypeReferenceNode(typeNode)) {
-    if (ts.isIdentifier(typeNode.typeName)) {
+export function getTypeNameFromNode(typeNode: TypeNode): string | null {
+  if (isTypeReferenceNode(typeNode)) {
+    if (isIdentifier(typeNode.typeName)) {
       return typeNode.typeName.text;
     }
-    if (ts.isQualifiedName(typeNode.typeName)) {
+    if (isQualifiedName(typeNode.typeName)) {
       return typeNode.typeName.right.text;
     }
   }
@@ -20,29 +40,27 @@ export function getTypeNameFromNode(typeNode: ts.TypeNode): string | null {
 /**
  * Checks if a type represents null or undefined.
  */
-export function isNullOrUndefined(type: ts.Type): boolean {
+export function isNullOrUndefined(type: Type): boolean {
   return (
-    (type.flags & ts.TypeFlags.Null) !== 0 ||
-    (type.flags & ts.TypeFlags.Undefined) !== 0
+    (type.flags & TypeFlags.Null) !== 0 ||
+    (type.flags & TypeFlags.Undefined) !== 0
   );
 }
 
 /**
  * Checks if a TypeNode represents null (literal null type).
  */
-function isNullTypeNode(typeNode: ts.TypeNode): boolean {
+function isNullTypeNode(typeNode: TypeNode): boolean {
   return (
-    ts.isLiteralTypeNode(typeNode) &&
-    typeNode.literal.kind === ts.SyntaxKind.NullKeyword
+    isLiteralTypeNode(typeNode) &&
+    typeNode.literal.kind === SyntaxKind.NullKeyword
   );
 }
 
 /**
  * Filters non-null type nodes from a union type node.
  */
-export function filterNonNullTypeNodes(
-  typeNode: ts.UnionTypeNode,
-): ts.TypeNode[] {
+export function filterNonNullTypeNodes(typeNode: UnionTypeNode): TypeNode[] {
   return typeNode.types.filter((t) => !isNullTypeNode(t));
 }
 
@@ -50,8 +68,8 @@ export function filterNonNullTypeNodes(
  * Finds the first non-null type node from a union type node.
  */
 export function findNonNullTypeNode(
-  typeNode: ts.UnionTypeNode,
-): ts.TypeNode | undefined {
+  typeNode: UnionTypeNode,
+): TypeNode | undefined {
   return filterNonNullTypeNodes(typeNode)[0];
 }
 
@@ -59,7 +77,7 @@ export function findNonNullTypeNode(
  * Parameters for {@link findMetadataProperty}.
  */
 export interface FindMetadataPropertyParams {
-  readonly type: ts.Type;
+  readonly type: Type;
   readonly checker: CheckerLoader;
   readonly propertyNames: ReadonlyArray<string>;
   readonly recurseUnion: boolean;
@@ -80,7 +98,7 @@ export interface FindMetadataPropertyParams {
  */
 export async function findMetadataProperty(
   params: FindMetadataPropertyParams,
-): Promise<ts.Symbol | undefined> {
+): Promise<TsSymbol | undefined> {
   const { type, checker, propertyNames, recurseUnion } = params;
 
   for (const name of propertyNames) {
@@ -125,7 +143,7 @@ export async function findMetadataProperty(
  * Checks if a union type contains null or undefined.
  */
 export async function isNullableUnion(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<boolean> {
   if (!type.isUnionType()) return false;
@@ -136,9 +154,9 @@ export async function isNullableUnion(
  * Gets non-nullable types from a union type.
  */
 export async function getNonNullableTypes(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
-): Promise<ts.Type[]> {
+): Promise<Type[]> {
   if (!type.isUnionType()) return [type];
   return (await checker.getTypesOfType(type)).filter(
     (t) => !isNullOrUndefined(t),
@@ -156,13 +174,13 @@ export async function getNonNullableTypes(
  * - Required<T> removes undefined from all property types
  */
 export async function hasUndefinedInType(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<boolean> {
-  if ((type.flags & ts.TypeFlags.Undefined) !== 0) return true;
+  if ((type.flags & TypeFlags.Undefined) !== 0) return true;
   if (type.isUnionType()) {
     return (await checker.getTypesOfType(type)).some(
-      (t) => (t.flags & ts.TypeFlags.Undefined) !== 0,
+      (t) => (t.flags & TypeFlags.Undefined) !== 0,
     );
   }
   return false;
@@ -171,9 +189,9 @@ export async function hasUndefinedInType(
 /**
  * Checks if a node has the export modifier.
  */
-export function isExported(node: ts.Node): boolean {
-  const modifiers = ts.getCombinedModifierFlags(node as ts.Declaration);
-  return (modifiers & ts.ModifierFlags.Export) !== 0;
+export function isExported(node: Node): boolean {
+  const modifiers = getCombinedModifierFlags(node as Declaration);
+  return (modifiers & ModifierFlags.Export) !== 0;
 }
 
 /**
@@ -183,7 +201,7 @@ export function isExported(node: ts.Node): boolean {
  * treating the whole intersection as an inline object.
  */
 export async function isAnonymousObjectType(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<boolean> {
   if (await checker.getAliasSymbolOfType(type)) {
@@ -202,11 +220,11 @@ export async function isAnonymousObjectType(
  * and falling back to getApparentType when getProperties() returns empty.
  */
 export async function extractPropertySymbols(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
-): Promise<ts.Symbol[]> {
+): Promise<TsSymbol[]> {
   if (type.isIntersectionType()) {
-    const allProps = new Map<string, ts.Symbol>();
+    const allProps = new Map<string, TsSymbol>();
     for (const member of await checker.getTypesOfType(type)) {
       const memberProps = await checker.getPropertiesOfType(member);
       for (const prop of memberProps) {
@@ -233,9 +251,9 @@ export async function extractPropertySymbols(
 }
 
 async function getParentOfTypeSymbol(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
-): Promise<ts.Symbol | undefined> {
+): Promise<TsSymbol | undefined> {
   const symbol = await checker.getSymbolOfType(type);
   return symbol ? checker.getParentOfSymbol(symbol) : undefined;
 }
@@ -245,14 +263,14 @@ async function getParentOfTypeSymbol(
  * Returns null if types are empty, don't have a common parent enum, or belong to different enums.
  */
 export async function findEnumParentSymbol(
-  types: readonly ts.Type[],
+  types: readonly Type[],
   checker: CheckerLoader,
-): Promise<ts.Symbol | null> {
+): Promise<TsSymbol | null> {
   if (types.length === 0) return null;
 
   const parentSymbol = await getParentOfTypeSymbol(types[0]!, checker);
 
-  if (!parentSymbol || !(parentSymbol.flags & ts.SymbolFlags.Enum)) {
+  if (!parentSymbol || !(parentSymbol.flags & SymbolFlags.Enum)) {
     return null;
   }
 
@@ -268,14 +286,14 @@ export async function findEnumParentSymbol(
  * Checks if a union type is a boolean union (true | false with optional null/undefined).
  */
 export async function isBooleanUnion(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<boolean> {
   if (!type.isUnionType()) return false;
   const nonNullTypes = await getNonNullableTypes(type, checker);
   return (
     nonNullTypes.length === 2 &&
-    nonNullTypes.every((t) => t.flags & ts.TypeFlags.BooleanLiteral)
+    nonNullTypes.every((t) => t.flags & TypeFlags.BooleanLiteral)
   );
 }
 
@@ -284,10 +302,10 @@ export async function isBooleanUnion(
  * This is necessary for re-exports where the symbol is an alias.
  */
 export async function resolveOriginalSymbol(
-  symbol: ts.Symbol,
+  symbol: TsSymbol,
   checker: CheckerLoader,
-): Promise<ts.Symbol> {
-  if (symbol.flags & ts.SymbolFlags.Alias) {
+): Promise<TsSymbol> {
+  if (symbol.flags & SymbolFlags.Alias) {
     return checker.getAliasedSymbol(symbol);
   }
   return symbol;

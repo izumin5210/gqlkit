@@ -1,10 +1,10 @@
+import type { Symbol as TsSymbol } from "typescript/async";
 import type { SourceLocation } from "./diagnostics.js";
 import type {
   DeprecationInfo,
   DirectiveArgumentValue,
   DirectiveInfo,
 } from "./metadata.js";
-import type * as ts from "./typescript.js";
 
 /**
  * Information about a detected scalar type.
@@ -63,7 +63,7 @@ export interface TSTypeReference {
   /** Original type name hint for inline objects extracted from external types */
   readonly inlineObjectHintName: string | null;
   /** External TypeScript enum symbol for deduplication */
-  readonly externalEnumSymbol: ts.Symbol | null;
+  readonly externalEnumSymbol: TsSymbol | null;
   /** TSDoc description from the external enum type itself */
   readonly externalEnumDescription: string | null;
   /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself */

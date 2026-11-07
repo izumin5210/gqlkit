@@ -10,8 +10,9 @@
  * - Symbol-based comparison for accurate type matching
  */
 
+import { isTypeAliasDeclaration } from "typescript/ast/is";
+import type { Program, Symbol as TsSymbol } from "typescript/async";
 import { METADATA_PROPERTIES } from "../../core/index.js";
-import * as ts from "../../core/typescript.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 
@@ -40,7 +41,7 @@ export interface ScalarMappingLookupResult {
  */
 export interface ScalarMappingConflict {
   readonly code: "AMBIGUOUS_SCALAR_BASE_TYPE";
-  readonly baseTypeSymbol: ts.Symbol;
+  readonly baseTypeSymbol: TsSymbol;
   readonly conflictingScalars: ReadonlyArray<{
     readonly scalarName: string;
     readonly only: "input" | "output" | null;
@@ -57,11 +58,11 @@ export type ScalarMappingContext = "input" | "output";
  */
 export interface ScalarBaseTypeMappingTable {
   /** Maps base type symbol to scalar mappings for input context */
-  readonly inputMappings: ReadonlyMap<ts.Symbol, ScalarBaseTypeMapping>;
+  readonly inputMappings: ReadonlyMap<TsSymbol, ScalarBaseTypeMapping>;
   /** Maps base type symbol to scalar mappings for output context */
-  readonly outputMappings: ReadonlyMap<ts.Symbol, ScalarBaseTypeMapping>;
+  readonly outputMappings: ReadonlyMap<TsSymbol, ScalarBaseTypeMapping>;
   /** Conflicts detected during table construction */
-  readonly conflicts: ReadonlyMap<ts.Symbol, ScalarMappingConflict>;
+  readonly conflicts: ReadonlyMap<TsSymbol, ScalarMappingConflict>;
 }
 
 /**
@@ -70,7 +71,7 @@ export interface ScalarBaseTypeMappingTable {
 export interface BuildScalarMappingTableParams {
   readonly detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
   readonly checker: CheckerLoader;
-  readonly program: ts.Program;
+  readonly program: Program;
 }
 
 /**
@@ -80,17 +81,17 @@ export interface BuildScalarMappingTableParams {
 async function extractBaseTypeSymbol(
   scalarInfo: ScalarMetadataInfo,
   checker: CheckerLoader,
-  program: ts.Program,
-): Promise<ts.Symbol | null> {
+  program: Program,
+): Promise<TsSymbol | null> {
   const sourceFile = await program.getSourceFile(scalarInfo.sourceFile);
   if (!sourceFile) {
     return null;
   }
 
-  let foundSymbol: ts.Symbol | null = null;
+  let foundSymbol: TsSymbol | null = null;
 
   for (const node of sourceFile.statements) {
-    if (ts.isTypeAliasDeclaration(node)) {
+    if (isTypeAliasDeclaration(node)) {
       const name = node.name.getText(sourceFile);
       if (name === scalarInfo.typeName) {
         const symbol = await checker.getSymbolAtLocation(node.name);
@@ -137,13 +138,13 @@ export async function buildScalarMappingTable(
 ): Promise<ScalarBaseTypeMappingTable> {
   const { detectedScalars, checker, program } = params;
 
-  const inputMappings = new Map<ts.Symbol, ScalarBaseTypeMapping>();
-  const outputMappings = new Map<ts.Symbol, ScalarBaseTypeMapping>();
-  const conflicts = new Map<ts.Symbol, ScalarMappingConflict>();
+  const inputMappings = new Map<TsSymbol, ScalarBaseTypeMapping>();
+  const outputMappings = new Map<TsSymbol, ScalarBaseTypeMapping>();
+  const conflicts = new Map<TsSymbol, ScalarMappingConflict>();
 
   // Track all scalars for each base type symbol to detect conflicts
   const inputCandidates = new Map<
-    ts.Symbol,
+    TsSymbol,
     Array<{
       scalarName: string;
       only: "input" | "output" | null;
@@ -151,7 +152,7 @@ export async function buildScalarMappingTable(
     }>
   >();
   const outputCandidates = new Map<
-    ts.Symbol,
+    TsSymbol,
     Array<{
       scalarName: string;
       only: "input" | "output" | null;
@@ -246,7 +247,7 @@ export async function buildScalarMappingTable(
  * Parameters for looking up a scalar mapping.
  */
 export interface LookupScalarMappingParams {
-  readonly baseTypeSymbol: ts.Symbol;
+  readonly baseTypeSymbol: TsSymbol;
   readonly context: ScalarMappingContext;
   readonly table: ScalarBaseTypeMappingTable;
 }

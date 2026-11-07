@@ -1,4 +1,17 @@
-import * as ts from "../core/typescript.js";
+import type { Declaration, Node, SyntaxKind, TypeNode } from "typescript/ast";
+import {
+  type API,
+  type Checker,
+  type IndexInfo,
+  type NodeHandle,
+  ObjectFlags,
+  type ObjectType,
+  type Symbol as TsSymbol,
+  type Type,
+  TypeFlags,
+  type TypeReference,
+  type UnionOrIntersectionType,
+} from "typescript/async";
 
 /**
  * The extraction stages' only way to ask the TypeScript checker questions,
@@ -20,37 +33,29 @@ import * as ts from "../core/typescript.js";
  *   cached, so concurrent callers of an in-flight query share it.
  */
 export interface CheckerLoader {
-  readonly getTypeOfSymbol: (symbol: ts.Symbol) => Promise<ts.Type>;
-  readonly getDeclaredTypeOfSymbol: (symbol: ts.Symbol) => Promise<ts.Type>;
-  readonly getSymbolAtLocation: (
-    node: ts.Node,
-  ) => Promise<ts.Symbol | undefined>;
-  readonly getTypeAtLocation: (node: ts.Node) => Promise<ts.Type>;
-  readonly getTypeFromTypeNode: (node: ts.TypeNode) => Promise<ts.Type>;
-  readonly getAliasedSymbol: (symbol: ts.Symbol) => Promise<ts.Symbol>;
+  readonly getTypeOfSymbol: (symbol: TsSymbol) => Promise<Type>;
+  readonly getDeclaredTypeOfSymbol: (symbol: TsSymbol) => Promise<Type>;
+  readonly getSymbolAtLocation: (node: Node) => Promise<TsSymbol | undefined>;
+  readonly getTypeAtLocation: (node: Node) => Promise<Type>;
+  readonly getTypeFromTypeNode: (node: TypeNode) => Promise<Type>;
+  readonly getAliasedSymbol: (symbol: TsSymbol) => Promise<TsSymbol>;
   readonly getExportSpecifierLocalTargetSymbol: (
-    node: ts.Node,
-  ) => Promise<ts.Symbol | undefined>;
+    node: Node,
+  ) => Promise<TsSymbol | undefined>;
   readonly getExportsOfModule: (
-    symbol: ts.Symbol,
-  ) => Promise<readonly ts.Symbol[]>;
-  readonly getDocumentationComment: (symbol: ts.Symbol) => Promise<string>;
+    symbol: TsSymbol,
+  ) => Promise<readonly TsSymbol[]>;
+  readonly getDocumentationComment: (symbol: TsSymbol) => Promise<string>;
   readonly getConstantValue: (
-    node: ts.Node,
+    node: Node,
   ) => Promise<string | number | undefined>;
-  readonly getApparentType: (type: ts.Type) => Promise<ts.Type>;
-  readonly getBaseConstraintOfType: (
-    type: ts.Type,
-  ) => Promise<ts.Type | undefined>;
-  readonly getIndexInfosOfType: (
-    type: ts.Type,
-  ) => Promise<readonly ts.IndexInfo[]>;
-  readonly getTypeArguments: (
-    type: ts.TypeReference,
-  ) => Promise<readonly ts.Type[]>;
-  readonly isArrayType: (type: ts.Type) => Promise<boolean>;
-  readonly isTupleType: (type: ts.Type) => Promise<boolean>;
-  readonly typeToString: (type: ts.Type) => Promise<string>;
+  readonly getApparentType: (type: Type) => Promise<Type>;
+  readonly getBaseConstraintOfType: (type: Type) => Promise<Type | undefined>;
+  readonly getIndexInfosOfType: (type: Type) => Promise<readonly IndexInfo[]>;
+  readonly getTypeArguments: (type: TypeReference) => Promise<readonly Type[]>;
+  readonly isArrayType: (type: Type) => Promise<boolean>;
+  readonly isTupleType: (type: Type) => Promise<boolean>;
+  readonly typeToString: (type: Type) => Promise<string>;
   /**
    * Looks up one property by name. Asking for the single name, rather than
    * listing a type's properties once and searching locally, keeps the cost
@@ -58,44 +63,38 @@ export interface CheckerLoader {
    * hundreds of members, and the lookups batch anyway.
    */
   readonly getPropertyOfType: (
-    type: ts.Type,
+    type: Type,
     name: string,
-  ) => Promise<ts.Symbol | undefined>;
-  readonly getPropertiesOfType: (
-    type: ts.Type,
-  ) => Promise<readonly ts.Symbol[]>;
-  readonly getSymbolOfType: (type: ts.Type) => Promise<ts.Symbol | undefined>;
-  readonly getAliasSymbolOfType: (
-    type: ts.Type,
-  ) => Promise<ts.Symbol | undefined>;
+  ) => Promise<TsSymbol | undefined>;
+  readonly getPropertiesOfType: (type: Type) => Promise<readonly TsSymbol[]>;
+  readonly getSymbolOfType: (type: Type) => Promise<TsSymbol | undefined>;
+  readonly getAliasSymbolOfType: (type: Type) => Promise<TsSymbol | undefined>;
   readonly getAliasTypeArgumentsOfType: (
-    type: ts.Type,
-  ) => Promise<readonly ts.Type[]>;
+    type: Type,
+  ) => Promise<readonly Type[]>;
   readonly getTypesOfType: (
-    type: ts.UnionOrIntersectionType,
-  ) => Promise<readonly ts.Type[]>;
-  readonly getStringIndexTypeOfType: (
-    type: ts.Type,
-  ) => Promise<ts.Type | undefined>;
+    type: UnionOrIntersectionType,
+  ) => Promise<readonly Type[]>;
+  readonly getStringIndexTypeOfType: (type: Type) => Promise<Type | undefined>;
   readonly getParentOfSymbol: (
-    symbol: ts.Symbol,
-  ) => Promise<ts.Symbol | undefined>;
+    symbol: TsSymbol,
+  ) => Promise<TsSymbol | undefined>;
   /**
    * Resolves a symbol's declaration handles into AST nodes. Resolving a
    * handle fetches its whole source file, which for lib or generated types
    * is a large `.d.ts`; prefer the narrower variants below when they suffice.
    */
   readonly getDeclarationsOfSymbol: (
-    symbol: ts.Symbol,
-  ) => Promise<ReadonlyArray<ts.Declaration>>;
+    symbol: TsSymbol,
+  ) => Promise<ReadonlyArray<Declaration>>;
   readonly getFirstDeclarationOfSymbol: (
-    symbol: ts.Symbol,
-  ) => Promise<ts.Declaration | undefined>;
+    symbol: TsSymbol,
+  ) => Promise<Declaration | undefined>;
   /** Resolves only the declarations of `kind`, using the handles' kinds. */
   readonly getDeclarationsOfSymbolOfKind: (
-    symbol: ts.Symbol,
-    kind: ts.SyntaxKind,
-  ) => Promise<ReadonlyArray<ts.Declaration>>;
+    symbol: TsSymbol,
+    kind: SyntaxKind,
+  ) => Promise<ReadonlyArray<Declaration>>;
 }
 
 /** A query waiting for the next flush. */
@@ -127,7 +126,7 @@ interface Scheduler {
   readonly collect: (source: QuerySource) => void;
 }
 
-function createBatchScheduler(api: ts.API): Scheduler {
+function createBatchScheduler(api: API): Scheduler {
   let queue: PendingQuery[] = [];
   let sources: QuerySource[] = [];
   let scheduled = false;
@@ -290,16 +289,16 @@ function memoize<K extends object, V>(
  * checker tests `ObjectFlags.Reference` before comparing the target), so
  * anything else is answered without a request.
  */
-function isTypeReferenceType(type: ts.Type): boolean {
+function isTypeReferenceType(type: Type): boolean {
   return (
-    (type.flags & ts.TypeFlags.Object) !== 0 &&
-    ((type as ts.ObjectType).objectFlags & ts.ObjectFlags.Reference) !== 0
+    (type.flags & TypeFlags.Object) !== 0 &&
+    ((type as ObjectType).objectFlags & ObjectFlags.Reference) !== 0
   );
 }
 
 interface CreateCheckerLoaderParams {
-  readonly api: ts.API;
-  readonly checker: ts.Checker;
+  readonly api: API;
+  readonly checker: Checker;
 }
 
 export function createCheckerLoader(
@@ -309,34 +308,34 @@ export function createCheckerLoader(
   const scheduler = createBatchScheduler(api);
   const { query } = scheduler;
 
-  const isArrayType = memoize((type: ts.Type) =>
+  const isArrayType = memoize((type: Type) =>
     query(() => checker.isArrayType(type)),
   );
-  const isTupleType = memoize((type: ts.Type) =>
+  const isTupleType = memoize((type: Type) =>
     query(() => checker.isTupleType(type)),
   );
   // Resolving a handle needs no checker: a file the client has answers
   // locally, and the client batches fetches of files it lacks on its own.
   // Queueing it with the checker queries would only delay it by a tick.
-  const resolveHandle = memoize((handle: ts.NodeHandle<ts.Declaration>) =>
+  const resolveHandle = memoize((handle: NodeHandle<Declaration>) =>
     handle.resolve(),
   );
   const resolveHandles = async (
-    handles: ReadonlyArray<ts.NodeHandle<ts.Declaration>>,
-  ): Promise<ReadonlyArray<ts.Declaration>> => {
+    handles: ReadonlyArray<NodeHandle<Declaration>>,
+  ): Promise<ReadonlyArray<Declaration>> => {
     const resolved = await Promise.all(handles.map(resolveHandle));
-    return resolved.filter((d): d is ts.Declaration => d !== undefined);
+    return resolved.filter((d): d is Declaration => d !== undefined);
   };
   const propertyLookups = new WeakMap<
-    ts.Type,
-    Map<string, Promise<ts.Symbol | undefined>>
+    Type,
+    Map<string, Promise<TsSymbol | undefined>>
   >();
 
   return {
     getTypeOfSymbol: memoize(
       createArrayQuery({
         scheduler,
-        loadMany: (symbols: ts.Symbol[]) => checker.getTypeOfSymbol(symbols),
+        loadMany: (symbols: TsSymbol[]) => checker.getTypeOfSymbol(symbols),
         loadOne: (symbol) => checker.getTypeOfSymbol(symbol),
       }),
     ),
@@ -346,14 +345,14 @@ export function createCheckerLoader(
     getSymbolAtLocation: memoize(
       createArrayQuery({
         scheduler,
-        loadMany: (nodes: ts.Node[]) => checker.getSymbolAtLocation(nodes),
+        loadMany: (nodes: Node[]) => checker.getSymbolAtLocation(nodes),
         loadOne: (node) => checker.getSymbolAtLocation(node),
       }),
     ),
     getTypeAtLocation: memoize(
       createArrayQuery({
         scheduler,
-        loadMany: (nodes: ts.Node[]) => checker.getTypeAtLocation(nodes),
+        loadMany: (nodes: Node[]) => checker.getTypeAtLocation(nodes),
         loadOne: (node) => checker.getTypeAtLocation(node),
       }),
     ),

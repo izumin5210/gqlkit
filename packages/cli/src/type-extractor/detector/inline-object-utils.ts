@@ -1,4 +1,9 @@
-import * as ts from "../../core/typescript.js";
+import {
+  ObjectFlags,
+  type ObjectType,
+  type Type,
+  TypeFlags,
+} from "typescript/async";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
 
 /**
@@ -6,7 +11,7 @@ import type { CheckerLoader } from "../../shared/checker-loader.js";
  * Returns true for types like `{ foo: string; bar: number }` but not for named types.
  */
 export async function isInlineObjectType(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<boolean> {
   if (await checker.getAliasSymbolOfType(type)) {
@@ -20,9 +25,9 @@ export async function isInlineObjectType(
   if (symbolName !== "__type" && symbolName !== "__object") {
     return false;
   }
-  if (!(type.flags & ts.TypeFlags.Object)) {
+  if (!(type.flags & TypeFlags.Object)) {
     return false;
   }
-  const objectType = type as ts.ObjectType;
-  return (objectType.objectFlags & ts.ObjectFlags.Anonymous) !== 0;
+  const objectType = type as ObjectType;
+  return (objectType.objectFlags & ObjectFlags.Anonymous) !== 0;
 }

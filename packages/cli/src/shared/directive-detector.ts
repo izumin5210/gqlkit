@@ -6,12 +6,17 @@
  */
 
 import {
+  type Symbol as TsSymbol,
+  type Type,
+  TypeFlags,
+  type TypeReference,
+} from "typescript/async";
+import {
   type DirectiveArgument,
   type DirectiveArgumentValue,
   type DirectiveInfo,
   METADATA_PROPERTIES,
 } from "../core/index.js";
-import * as ts from "../core/typescript.js";
 import type { CheckerLoader } from "./checker-loader.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 import { findMetadataProperty, isNullOrUndefined } from "./typescript-utils.js";
@@ -26,9 +31,9 @@ const ORIGINAL_TYPE_PROPERTY = METADATA_PROPERTIES.ORIGINAL_TYPE;
  * Gets the metadata property from a type, checking both field and type meta properties.
  */
 async function getMetaProperty(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
-): Promise<ts.Symbol | undefined> {
+): Promise<TsSymbol | undefined> {
   return (
     (await checker.getPropertyOfType(type, FIELD_META_PROPERTY)) ??
     (await checker.getPropertyOfType(type, TYPE_META_PROPERTY))
@@ -69,10 +74,10 @@ function createEmptyResult(): DirectiveDetectionResult {
  * Resolves a directive argument value from a TypeScript type.
  */
 export async function resolveArgumentValue(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<DirectiveArgumentValue | null> {
-  if (type.flags & ts.TypeFlags.Null) {
+  if (type.flags & TypeFlags.Null) {
     return { kind: "null", value: null };
   }
 
@@ -93,7 +98,7 @@ export async function resolveArgumentValue(
   }
 
   if (await checker.isTupleType(type)) {
-    const typeArgs = await checker.getTypeArguments(type as ts.TypeReference);
+    const typeArgs = await checker.getTypeArguments(type as TypeReference);
     const values: DirectiveArgumentValue[] = [];
     for (const arg of typeArgs) {
       const resolved = await resolveArgumentValue(arg, checker);
@@ -105,7 +110,7 @@ export async function resolveArgumentValue(
   }
 
   if (await checker.isArrayType(type)) {
-    const typeArgs = await checker.getTypeArguments(type as ts.TypeReference);
+    const typeArgs = await checker.getTypeArguments(type as TypeReference);
     if (typeArgs.length > 0 && typeArgs[0]) {
       const elemType = typeArgs[0];
       if (elemType.isUnionType()) {
@@ -170,7 +175,7 @@ interface ExtractDirectiveArgsResult {
  * Extracts directive arguments from a type.
  */
 async function extractDirectiveArgs(
-  argsType: ts.Type,
+  argsType: Type,
   checker: CheckerLoader,
   directiveName: string,
 ): Promise<ExtractDirectiveArgsResult> {
@@ -199,7 +204,7 @@ async function extractDirectiveArgs(
  * Extracts a single directive from a type.
  */
 async function extractDirectiveFromType(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<{
   directive: DirectiveInfo | null;
@@ -273,7 +278,7 @@ async function extractDirectiveFromType(
  * @returns Detection result with directives and any errors
  */
 export async function detectDirectiveMetadata(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<DirectiveDetectionResult> {
   // Own + intersection tiers: stop at the first metadata property found,
@@ -309,7 +314,7 @@ export async function detectDirectiveMetadata(
 }
 
 async function detectDirectiveMetadataFromProperty(
-  directivesProp: ts.Symbol,
+  directivesProp: TsSymbol,
   checker: CheckerLoader,
 ): Promise<DirectiveDetectionResult> {
   const rawDirectivesType = await checker.getTypeOfSymbol(directivesProp);
@@ -349,7 +354,7 @@ async function detectDirectiveMetadataFromProperty(
  * Use this to extract directives from a type like [AuthDirective, CacheDirective].
  */
 export async function extractDirectivesFromType(
-  directivesType: ts.Type,
+  directivesType: Type,
   checker: CheckerLoader,
 ): Promise<DirectiveDetectionResult> {
   const directives: DirectiveInfo[] = [];
@@ -357,7 +362,7 @@ export async function extractDirectivesFromType(
 
   if (await checker.isTupleType(directivesType)) {
     const typeArgs = await checker.getTypeArguments(
-      directivesType as ts.TypeReference,
+      directivesType as TypeReference,
     );
     for (const arg of typeArgs) {
       const result = await extractDirectiveFromType(arg, checker);
@@ -368,7 +373,7 @@ export async function extractDirectivesFromType(
     }
   } else if (await checker.isArrayType(directivesType)) {
     const typeArgs = await checker.getTypeArguments(
-      directivesType as ts.TypeReference,
+      directivesType as TypeReference,
     );
     if (typeArgs.length > 0 && typeArgs[0]) {
       const elemType = typeArgs[0];
@@ -403,7 +408,7 @@ export async function extractDirectivesFromType(
  * Checks if a type is wrapped with GqlField or GqlObject.
  */
 export async function hasDirectiveMetadata(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<boolean> {
   const metaProp = await getMetaProperty(type, checker);
@@ -461,9 +466,9 @@ export async function hasDirectiveMetadata(
  * If the type is not wrapped with GqlField or GqlObject, returns the original type.
  */
 export async function unwrapDirectiveType(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
-): Promise<ts.Type> {
+): Promise<Type> {
   // 1. Check aliasTypeArguments first (most reliable)
   //    Get T directly from GqlField<T, Meta> or GqlObject<T, Meta>
   //    This works when the type alias hasn't been expanded by TypeScript
@@ -539,7 +544,7 @@ export async function unwrapDirectiveType(
     }
 
     // Fallback: filter out metadata members
-    const nonDirectiveMembers: ts.Type[] = [];
+    const nonDirectiveMembers: Type[] = [];
     for (const member of await checker.getTypesOfType(type)) {
       const metaProp = await getMetaProperty(member, checker);
       const originalTypeProp = await checker.getPropertyOfType(

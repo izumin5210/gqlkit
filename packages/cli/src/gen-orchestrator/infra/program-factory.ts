@@ -1,18 +1,25 @@
+import { ScriptTarget } from "typescript/ast";
+import {
+  type API,
+  ModuleKind,
+  ModuleResolutionKind,
+  type Program,
+  type RawCompilerOptions,
+} from "typescript/async";
 import type { Diagnostic } from "../../core/index.js";
-import * as ts from "../../core/typescript.js";
 import { loadTsconfig } from "./tsconfig-loader.js";
 
-const DEFAULT_COMPILER_OPTIONS: ts.RawCompilerOptions = {
-  target: ts.ScriptTarget.ES2022,
-  module: ts.ModuleKind.NodeNext,
-  moduleResolution: ts.ModuleResolutionKind.Node16,
+const DEFAULT_COMPILER_OPTIONS: RawCompilerOptions = {
+  target: ScriptTarget.ES2022,
+  module: ModuleKind.NodeNext,
+  moduleResolution: ModuleResolutionKind.Node16,
   strict: true,
   skipLibCheck: true,
   noEmit: true,
 };
 
 export interface CreateSharedProgramOptions {
-  readonly api: ts.API;
+  readonly api: API;
   readonly cwd: string;
   readonly tsconfigPath: string | null;
   readonly typeFiles: ReadonlyArray<string>;
@@ -20,7 +27,7 @@ export interface CreateSharedProgramOptions {
 }
 
 export interface CreateSharedProgramResult {
-  readonly program: ts.Program | null;
+  readonly program: Program | null;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
