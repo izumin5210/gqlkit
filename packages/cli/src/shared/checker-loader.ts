@@ -206,8 +206,11 @@ export function createCheckerLoader(
   const isTupleType = memoize((type: ts.Type) =>
     query(() => checker.isTupleType(type)),
   );
+  // Resolving a handle needs no checker: a file the client has answers
+  // locally, and the client batches fetches of files it lacks on its own.
+  // Queueing it with the checker queries would only delay it by a tick.
   const resolveHandle = memoize((handle: ts.NodeHandle<ts.Declaration>) =>
-    query(() => handle.resolve()),
+    handle.resolve(),
   );
   const resolveHandles = async (
     handles: ReadonlyArray<ts.NodeHandle<ts.Declaration>>,

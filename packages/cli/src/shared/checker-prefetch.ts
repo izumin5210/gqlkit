@@ -40,6 +40,10 @@ function isUnionOrIntersection(type: ts.Type): boolean {
   return (type.flags & ts.TypeFlags.UnionOrIntersection) !== 0;
 }
 
+function isObjectType(type: ts.Type): boolean {
+  return (type.flags & ts.TypeFlags.Object) !== 0;
+}
+
 function isTypeReference(type: ts.Type): boolean {
   return (
     (type.flags & ts.TypeFlags.Object) !== 0 &&
@@ -268,10 +272,34 @@ async function prefetchDeclaredTypes(
     ),
   ]);
   const [properties] = await Promise.all([
-    Promise.all(types.map((t) => checker.getPropertiesOfType(t))),
+    Promise.all(types.map((t) => listWalkedProperties(checker, t))),
     prefetchTypeFacts(checker, types),
   ]);
   await prefetchPropertyFacts(checker, properties.flat());
+}
+
+/**
+ * Lists the properties field extraction will walk for a declared type: an
+ * object type's own, or those of an intersection's object members (see
+ * `extractPropertySymbols`). Unions and primitives are skipped: their
+ * property lists are their apparent type's members (e.g. all of `String`'s
+ * for a union of string literals), which no stage reads and which are large.
+ */
+async function listWalkedProperties(
+  checker: CheckerLoader,
+  type: ts.Type,
+): Promise<ReadonlyArray<ts.Symbol>> {
+  if (isObjectType(type)) {
+    return checker.getPropertiesOfType(type);
+  }
+  if (!type.isIntersectionType()) {
+    return [];
+  }
+  const members = await checker.getTypesOfType(type);
+  const lists = await Promise.all(
+    members.filter(isObjectType).map((m) => checker.getPropertiesOfType(m)),
+  );
+  return lists.flat();
 }
 
 /**
