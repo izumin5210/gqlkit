@@ -1,5 +1,6 @@
 import { readdir, readFile } from "node:fs/promises";
 import { join } from "node:path";
+import type { WorkloadGroup } from "./workloads.js";
 
 export type BenchMode = "in-process" | "per-process";
 
@@ -37,10 +38,13 @@ export interface CaseSample {
 
 export interface CaseResult {
   readonly name: string;
+  readonly group: WorkloadGroup;
   /** One sample per measured iteration, in iteration order. */
   readonly samples: ReadonlyArray<CaseSample>;
   /** Collected during the untimed verification pass; null without TS 7. */
   readonly ipc: IpcStats | null;
+  /** Fingerprint of the generated output, from the verification pass. */
+  readonly outputHash: string;
 }
 
 export interface BenchEnvironment {
@@ -52,7 +56,7 @@ export interface BenchEnvironment {
 }
 
 export interface BenchResult {
-  readonly schemaVersion: 1;
+  readonly schemaVersion: 2;
   readonly label: string;
   readonly mode: BenchMode;
   readonly iterations: number;
@@ -156,20 +160,23 @@ function sumMedians(
   return total;
 }
 
-export function summarize(result: BenchResult): BenchSummary {
-  const totalGenerationMs = sumMedians(result.cases, (s) => s.generationMs)!;
+function summarizeCases(
+  cases: ReadonlyArray<CaseResult>,
+  iterations: number,
+): BenchSummary {
+  const totalGenerationMs = sumMedians(cases, (s) => s.generationMs)!;
 
   const iterationTotals: number[] = [];
-  for (let i = 0; i < result.iterations; i++) {
+  for (let i = 0; i < iterations; i++) {
     let total = 0;
-    for (const c of result.cases) {
+    for (const c of cases) {
       total += c.samples[i]?.generationMs ?? 0;
     }
     iterationTotals.push(total);
   }
 
   const stepNames: string[] = [];
-  for (const c of result.cases) {
+  for (const c of cases) {
     for (const sample of c.samples) {
       for (const step of Object.keys(sample.stepsMs)) {
         if (!stepNames.includes(step)) {
@@ -180,7 +187,7 @@ export function summarize(result: BenchResult): BenchSummary {
   }
   const stepsMs = new Map<string, number>();
   for (const step of stepNames) {
-    stepsMs.set(step, sumMedians(result.cases, (s) => s.stepsMs[step] ?? 0)!);
+    stepsMs.set(step, sumMedians(cases, (s) => s.stepsMs[step] ?? 0)!);
   }
   if (stepNames.length > 0) {
     const attributed = [...stepsMs.values()].reduce((a, b) => a + b, 0);
@@ -188,7 +195,7 @@ export function summarize(result: BenchResult): BenchSummary {
   }
 
   let ipc: IpcStats | null = null;
-  for (const c of result.cases) {
+  for (const c of cases) {
     if (c.ipc !== null) {
       ipc = addIpcStats(ipc ?? EMPTY_IPC_STATS, c.ipc);
     }
@@ -197,17 +204,35 @@ export function summarize(result: BenchResult): BenchSummary {
   return {
     totalGenerationMs,
     medianIterationMs: median(iterationTotals),
-    totalProcessMs: sumMedians(result.cases, (s) => s.processMs),
-    totalModuleLoadMs: sumMedians(result.cases, (s) => s.moduleLoadMs),
+    totalProcessMs: sumMedians(cases, (s) => s.processMs),
+    totalModuleLoadMs: sumMedians(cases, (s) => s.moduleLoadMs),
     stepsMs,
     ipc,
     caseMedianMs: new Map(
-      result.cases.map((c) => [
-        c.name,
-        median(c.samples.map((s) => s.generationMs)),
-      ]),
+      cases.map((c) => [c.name, median(c.samples.map((s) => s.generationMs))]),
     ),
   };
+}
+
+/**
+ * Summarizes each workload group on its own: their scales differ by orders
+ * of magnitude, so a single total would only reflect the largest group.
+ */
+export function summarizeGroups(
+  result: BenchResult,
+): ReadonlyMap<WorkloadGroup, BenchSummary> {
+  const byGroup = new Map<WorkloadGroup, CaseResult[]>();
+  for (const c of result.cases) {
+    const cases = byGroup.get(c.group) ?? [];
+    cases.push(c);
+    byGroup.set(c.group, cases);
+  }
+  return new Map(
+    [...byGroup].map(([group, cases]) => [
+      group,
+      summarizeCases(cases, result.iterations),
+    ]),
+  );
 }
 
 export function formatMs(ms: number): string {

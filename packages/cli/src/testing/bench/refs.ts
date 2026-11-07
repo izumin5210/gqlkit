@@ -22,12 +22,20 @@ import type { BenchResult } from "./result.js";
 const HARNESS_PATHS = ["src/testing/bench", "src/testing/golden-cases.ts"];
 
 /** Bench options forwarded verbatim to both runs. */
-const FORWARDED_OPTIONS = ["mode", "iterations", "warmup", "filter"] as const;
+const FORWARDED_OPTIONS = [
+  "mode",
+  "workloads",
+  "synthetic-domains",
+  "iterations",
+  "warmup",
+  "filter",
+] as const;
 
 const USAGE = `Usage: pnpm bench:refs --base <ref> --head <ref> [options]
 
 Options:
-  --mode, --iterations, --warmup, --filter   forwarded to \`pnpm bench\`
+  --mode, --workloads, --synthetic-domains, --iterations, --warmup, --filter
+                     forwarded to \`pnpm bench\`
   --work-dir <dir>   where worktrees and results go (default: a new temp dir)
   --keep             keep the worktrees afterwards
   --top <n>          slowdowns/speedups to list (default: 10)`;
@@ -108,6 +116,8 @@ async function main(): Promise<void> {
       base: { type: "string" },
       head: { type: "string" },
       mode: { type: "string" },
+      workloads: { type: "string" },
+      "synthetic-domains": { type: "string" },
       iterations: { type: "string" },
       warmup: { type: "string" },
       filter: { type: "string" },
