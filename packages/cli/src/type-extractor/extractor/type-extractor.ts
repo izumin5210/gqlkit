@@ -1267,77 +1267,83 @@ async function extractInlineObjectMembers(
   }
 
   if (hasInlineObjects) {
-    for (const memberType of nonNullTypes) {
-      if (await isAnonymousObjectType(memberType, checker)) {
-        const properties = await checker.getPropertiesOfType(memberType);
-        const memberProperties: PropertyDef[] = [];
+    const isAnonymous = await Promise.all(
+      nonNullTypes.map((t) => isAnonymousObjectType(t, checker)),
+    );
+    const anonymousMembers = nonNullTypes.filter((_, i) => isAnonymous[i]);
+    const propertiesOfMembers = await Promise.all(
+      anonymousMembers.map((t) => checker.getPropertiesOfType(t)),
+    );
+    await prefetchPropertyFacts(checker, propertiesOfMembers.flat());
 
-        for (const prop of properties) {
-          const propType = await checker.getTypeOfSymbol(prop);
-          const tsdocInfo = await extractTsDocFromSymbol(prop, checker);
-          const declaration = await checker.getFirstDeclarationOfSymbol(prop);
+    for (const properties of propertiesOfMembers) {
+      const memberProperties: PropertyDef[] = [];
 
-          let propTypeNode: ts.TypeNode | undefined;
-          if (
-            declaration &&
-            (ts.isPropertySignatureDeclaration(declaration) ||
-              ts.isPropertyDeclaration(declaration))
-          ) {
-            propTypeNode = declaration.type;
-          }
+      for (const prop of properties) {
+        const propType = await checker.getTypeOfSymbol(prop);
+        const tsdocInfo = await extractTsDocFromSymbol(prop, checker);
+        const declaration = await checker.getFirstDeclarationOfSymbol(prop);
 
-          const fieldDiagnostics: FieldTypeResolverDiagnostic[] = [];
-          const resolvedType = await resolveFieldType(propType, propTypeNode, {
-            checker,
-            knownTypeNames,
-            knownTypeSymbols,
-            underlyingSymbolToTypeName,
-            globalTypeMappings,
-            sourceFiles,
-            scalarMappingTable,
-            scalarMappingContext,
-            discoveredTypes,
-            diagnostics: fieldDiagnostics,
-          });
-          for (const diagnostic of fieldDiagnostics) {
-            diagnostics.push({
-              code: diagnostic.code,
-              message: `Field '${prop.name}': ${diagnostic.message}`,
-              severity: diagnostic.severity,
-              location: getSourceLocationFromNode(declaration),
-            });
-          }
+        let propTypeNode: ts.TypeNode | undefined;
+        if (
+          declaration &&
+          (ts.isPropertySignatureDeclaration(declaration) ||
+            ts.isPropertyDeclaration(declaration))
+        ) {
+          propTypeNode = declaration.type;
+        }
 
-          // Field resolution diagnostics for inline union members currently mean
-          // the outer property itself has no GraphQL representation.
-          if (fieldDiagnostics.length > 0) {
-            continue;
-          }
-
-          // Skip fields with never type — they have no GraphQL representation.
-          if (resolvedType.kind === "never") {
-            continue;
-          }
-
-          // This path (anonymous union-member object types) has never detected
-          // optionality/directives/defaultValue/sourceLocation — unlike
-          // extractFieldsFromType/extractInlineObjectProperties above, which do.
-          // Fill with PropertyDef's "unset" values; no consumer of
-          // InlineObjectMember.properties reads these fields.
-          memberProperties.push({
-            name: prop.name,
-            tsType: resolvedType,
-            optional: false,
-            description: tsdocInfo.description ?? null,
-            deprecated: tsdocInfo.deprecated ?? null,
-            directives: null,
-            defaultValue: null,
-            sourceLocation: null,
+        const fieldDiagnostics: FieldTypeResolverDiagnostic[] = [];
+        const resolvedType = await resolveFieldType(propType, propTypeNode, {
+          checker,
+          knownTypeNames,
+          knownTypeSymbols,
+          underlyingSymbolToTypeName,
+          globalTypeMappings,
+          sourceFiles,
+          scalarMappingTable,
+          scalarMappingContext,
+          discoveredTypes,
+          diagnostics: fieldDiagnostics,
+        });
+        for (const diagnostic of fieldDiagnostics) {
+          diagnostics.push({
+            code: diagnostic.code,
+            message: `Field '${prop.name}': ${diagnostic.message}`,
+            severity: diagnostic.severity,
+            location: getSourceLocationFromNode(declaration),
           });
         }
 
-        members.push({ properties: memberProperties });
+        // Field resolution diagnostics for inline union members currently mean
+        // the outer property itself has no GraphQL representation.
+        if (fieldDiagnostics.length > 0) {
+          continue;
+        }
+
+        // Skip fields with never type — they have no GraphQL representation.
+        if (resolvedType.kind === "never") {
+          continue;
+        }
+
+        // This path (anonymous union-member object types) has never detected
+        // optionality/directives/defaultValue/sourceLocation — unlike
+        // extractFieldsFromType/extractInlineObjectProperties above, which do.
+        // Fill with PropertyDef's "unset" values; no consumer of
+        // InlineObjectMember.properties reads these fields.
+        memberProperties.push({
+          name: prop.name,
+          tsType: resolvedType,
+          optional: false,
+          description: tsdocInfo.description ?? null,
+          deprecated: tsdocInfo.deprecated ?? null,
+          directives: null,
+          defaultValue: null,
+          sourceLocation: null,
+        });
       }
+
+      members.push({ properties: memberProperties });
     }
   }
 
