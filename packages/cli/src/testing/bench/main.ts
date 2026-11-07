@@ -1,15 +1,16 @@
 /**
- * Benchmarks `executeGeneration` over the golden test cases.
+ * Benchmarks `executeGeneration` over the workloads (golden cases, example
+ * apps and a generated large project; see workloads.ts).
  *
- * Every run starts with an untimed pass that checks each case's output
- * against its golden files (and collects TypeScript 7 IPC stats), then times
- * `--warmup` + `--iterations` passes over all cases.
+ * Every run starts with an untimed pass that checks each workload's output
+ * (and collects TypeScript 7 IPC stats), then times `--warmup` +
+ * `--iterations` passes over all workloads.
  *
  * Modes:
- * - in-process: all cases in one process, like the golden test suite.
+ * - in-process: all workloads in one process, like the golden test suite.
  *   Caches that outlive one generation (e.g. parsed lib files) stay warm.
- * - per-process: a fresh Node.js process per case, like `gqlkit gen`. Also
- *   measures process startup and the TypeScript package load.
+ * - per-process: a fresh Node.js process per workload, like `gqlkit gen`.
+ *   Also measures process startup and the TypeScript package load.
  */
 
 import { execFileSync, spawn } from "node:child_process";
@@ -21,16 +22,10 @@ import { join } from "node:path";
 import { parseArgs } from "node:util";
 import { executeGeneration } from "../../gen-orchestrator/orchestrator.js";
 import {
-  type GoldenCase,
-  listGoldenCaseNames,
-  loadGoldenCase,
-} from "../golden-cases.js";
-import {
   PACKAGE_ROOT,
   RUNTIME_TYPES_PATH,
   resolveUserPath,
   siblingModulePath,
-  TESTDATA_DIR,
 } from "./paths.js";
 import {
   type BenchEnvironment,
@@ -43,26 +38,36 @@ import {
   type IpcStats,
   readIpcStats,
   readStepMeasures,
-  summarize,
+  summarizeGroups,
 } from "./result.js";
 import type { RunCaseOutput } from "./run-case.js";
-import { findGoldenMismatches } from "./verify.js";
+import { hashGenerationResult } from "./verify.js";
+import {
+  prepareWorkloads,
+  WORKLOAD_GROUPS,
+  type Workload,
+  type WorkloadGroup,
+} from "./workloads.js";
 
 const DEFAULT_ITERATIONS: Record<BenchMode, number> = {
   "in-process": 5,
   "per-process": 3,
 };
 
+const DEFAULT_SYNTHETIC_DOMAINS = 100;
+
 const USAGE = `Usage: pnpm bench [options]
 
 Options:
   --mode <in-process|per-process>  (default: in-process)
-  --iterations <n>   timed passes over all cases (default: 5 in-process, 3 per-process)
+  --workloads <groups>  comma-separated: golden,examples,synthetic (default: all)
+  --synthetic-domains <n>  size of the synthetic project (default: ${DEFAULT_SYNTHETIC_DOMAINS})
+  --iterations <n>   timed passes over all workloads (default: 5 in-process, 3 per-process)
   --warmup <n>       untimed passes after verification (default: 0)
-  --filter <regex>   only run cases whose name matches
+  --filter <regex>   only run workloads whose name (<group>/<id>) matches
   --label <text>     label stored in the result (default: <branch>@<revision>)
   --out <path>       write the raw result as JSON
-  --top <n>          slowest cases to list (default: 10)`;
+  --top <n>          slowest workloads to list per group (default: 10)`;
 
 function parsePositiveInt(name: string, value: string, min: number): number {
   const n = Number(value);
@@ -101,18 +106,20 @@ function collectEnvironment(): BenchEnvironment {
 
 interface Measurement {
   readonly sample: CaseSample;
-  readonly mismatches: ReadonlyArray<string>;
+  readonly problems: ReadonlyArray<string>;
+  /** Set only for verifying runs. */
+  readonly outputHash: string | null;
 }
 
 interface RunCaseParams {
-  readonly goldenCase: GoldenCase;
+  readonly workload: Workload;
   readonly verify: boolean;
   /** Where TypeScript 7 writes IPC timing dumps; null disables them. */
   readonly ipcDir: string | null;
 }
 
 async function runInProcess(params: RunCaseParams): Promise<Measurement> {
-  const { goldenCase, verify, ipcDir } = params;
+  const { workload, verify, ipcDir } = params;
   // The TypeScript 7 API reads this when each instance is created.
   if (ipcDir === null) {
     delete process.env["TS_API_TIMING_DIR"];
@@ -122,18 +129,21 @@ async function runInProcess(params: RunCaseParams): Promise<Measurement> {
 
   performance.clearMeasures();
   const start = performance.now();
-  const result = await executeGeneration(goldenCase.generationConfig);
+  const result = await executeGeneration(workload.generationConfig);
   const generationMs = performance.now() - start;
   const stepsMs = readStepMeasures();
 
   return {
     sample: { generationMs, stepsMs, processMs: null, moduleLoadMs: null },
-    mismatches: verify ? await findGoldenMismatches(goldenCase, result) : [],
+    problems: verify ? await workload.check(result) : [],
+    outputHash: verify
+      ? hashGenerationResult(workload.generationConfig, result)
+      : null,
   };
 }
 
 async function runPerProcess(params: RunCaseParams): Promise<Measurement> {
-  const { goldenCase, verify, ipcDir } = params;
+  const { workload, verify, ipcDir } = params;
   const env = { ...process.env };
   delete env["TS_API_TIMING_DIR"];
   if (ipcDir !== null) {
@@ -143,8 +153,8 @@ async function runPerProcess(params: RunCaseParams): Promise<Measurement> {
     // Keeps loaders such as tsx when the benchmark itself runs from source.
     ...process.execArgv,
     siblingModulePath("run-case"),
-    "--case",
-    goldenCase.name,
+    "--workload",
+    workload.name,
     ...(verify ? ["--verify"] : []),
   ];
 
@@ -164,7 +174,7 @@ async function runPerProcess(params: RunCaseParams): Promise<Measurement> {
       if (code === 0) {
         resolvePromise(out);
       } else {
-        reject(new Error(`case ${goldenCase.name} exited with code ${code}`));
+        reject(new Error(`${workload.name} exited with code ${code}`));
       }
     });
   });
@@ -179,66 +189,94 @@ async function runPerProcess(params: RunCaseParams): Promise<Measurement> {
       processMs,
       moduleLoadMs: output.moduleLoadMs,
     },
-    mismatches: output.mismatches,
+    problems: output.problems,
+    outputHash: output.outputHash,
   };
 }
 
 function printSummary(result: BenchResult, top: number): void {
-  const summary = summarize(result);
   const { environment: env } = result;
   const lines = [
-    `gqlkit golden benchmark: ${result.label}`,
-    `mode: ${result.mode}, cases: ${result.cases.length}, iterations: ${result.iterations} (+${result.warmup} warmup)`,
+    `gqlkit benchmark: ${result.label}`,
+    `mode: ${result.mode}, workloads: ${result.cases.length}, iterations: ${result.iterations} (+${result.warmup} warmup)`,
     `TypeScript ${env.typescript}, Node.js ${env.node}, ${env.platform}, ${env.cpu}`,
-    "",
-    `Generation total (sum of per-case medians): ${formatMs(summary.totalGenerationMs)}`,
-    `Median iteration total:                     ${formatMs(summary.medianIterationMs)}`,
   ];
-  if (summary.totalProcessMs !== null) {
-    lines.push(
-      `Process total (sum of per-case medians):    ${formatMs(summary.totalProcessMs)}`,
-    );
-  }
-  if (summary.totalModuleLoadMs !== null) {
-    lines.push(
-      `Module load total:                          ${formatMs(summary.totalModuleLoadMs)}`,
-    );
-  }
 
-  if (summary.stepsMs.size > 0) {
-    lines.push("", "Steps (sum of per-case medians):");
-    const width = Math.max(...[...summary.stepsMs.keys()].map((k) => k.length));
-    for (const [step, ms] of summary.stepsMs) {
-      const share = (ms / summary.totalGenerationMs) * 100;
+  for (const [group, summary] of summarizeGroups(result)) {
+    const count = summary.caseMedianMs.size;
+    lines.push(
+      "",
+      `== ${group} (${count} workload${count === 1 ? "" : "s"})`,
+      `Generation total (sum of medians): ${formatMs(summary.totalGenerationMs)}`,
+      `Median iteration total:            ${formatMs(summary.medianIterationMs)}`,
+    );
+    if (summary.totalProcessMs !== null) {
       lines.push(
-        `  ${step.padEnd(width)}  ${formatMs(ms).padStart(10)}  ${share.toFixed(1).padStart(5)}%`,
+        `Process total (sum of medians):    ${formatMs(summary.totalProcessMs)}`,
       );
     }
-  }
+    if (summary.totalModuleLoadMs !== null) {
+      lines.push(
+        `Module load total:                 ${formatMs(summary.totalModuleLoadMs)}`,
+      );
+    }
 
-  if (summary.ipc !== null) {
-    lines.push("", "TypeScript API IPC (verification pass, all cases):");
-    lines.push(...formatIpcLines(summary.ipc).map((l) => `  ${l}`));
-  }
+    if (summary.stepsMs.size > 0) {
+      lines.push("Steps (sum of medians):");
+      const width = Math.max(
+        ...[...summary.stepsMs.keys()].map((k) => k.length),
+      );
+      for (const [step, ms] of summary.stepsMs) {
+        const share = (ms / summary.totalGenerationMs) * 100;
+        lines.push(
+          `  ${step.padEnd(width)}  ${formatMs(ms).padStart(10)}  ${share.toFixed(1).padStart(5)}%`,
+        );
+      }
+    }
 
-  const slowest = [...summary.caseMedianMs]
-    .sort((a, b) => b[1] - a[1])
-    .slice(0, top);
-  if (slowest.length > 0) {
-    lines.push("", `Slowest cases (median generation time):`);
-    const width = Math.max(...slowest.map(([name]) => name.length));
-    for (const [name, ms] of slowest) {
-      lines.push(`  ${name.padEnd(width)}  ${formatMs(ms).padStart(10)}`);
+    if (summary.ipc !== null) {
+      lines.push("TypeScript API IPC (verification pass):");
+      lines.push(...formatIpcLines(summary.ipc).map((l) => `  ${l}`));
+    }
+
+    const slowest = [...summary.caseMedianMs]
+      .sort((a, b) => b[1] - a[1])
+      .slice(0, top);
+    if (count > 1 && slowest.length > 0) {
+      lines.push("Slowest (median generation time):");
+      const width = Math.max(...slowest.map(([name]) => name.length));
+      for (const [name, ms] of slowest) {
+        lines.push(`  ${name.padEnd(width)}  ${formatMs(ms).padStart(10)}`);
+      }
     }
   }
 
   process.stdout.write(`${lines.join("\n")}\n`);
 }
 
+function parseWorkloadGroups(value: string): Set<WorkloadGroup> {
+  const groups = new Set<WorkloadGroup>();
+  for (const name of value.split(",").map((g) => g.trim())) {
+    const group = WORKLOAD_GROUPS.find((g) => g === name);
+    if (group === undefined) {
+      throw new Error(
+        `unknown workload group "${name}"; expected ${WORKLOAD_GROUPS.join(", ")}`,
+      );
+    }
+    groups.add(group);
+  }
+  return groups;
+}
+
 async function main(): Promise<void> {
   const { values } = parseArgs({
     options: {
       mode: { type: "string", default: "in-process" },
+      workloads: { type: "string", default: WORKLOAD_GROUPS.join(",") },
+      "synthetic-domains": {
+        type: "string",
+        default: String(DEFAULT_SYNTHETIC_DOMAINS),
+      },
       iterations: { type: "string" },
       warmup: { type: "string", default: "0" },
       filter: { type: "string" },
@@ -264,42 +302,47 @@ async function main(): Promise<void> {
   const warmup = parsePositiveInt("warmup", values.warmup, 0);
   const top = parsePositiveInt("top", values.top, 0);
   const filter = values.filter === undefined ? null : new RegExp(values.filter);
+  const groups = parseWorkloadGroups(values.workloads);
+  const syntheticDomains = parsePositiveInt(
+    "synthetic-domains",
+    values["synthetic-domains"],
+    1,
+  );
 
   if (!existsSync(RUNTIME_TYPES_PATH)) {
     throw new Error(
-      `${RUNTIME_TYPES_PATH} is missing; golden cases need @gqlkit-ts/runtime built (run \`pnpm build\`).`,
+      `${RUNTIME_TYPES_PATH} is missing; workloads need @gqlkit-ts/runtime built (run \`pnpm build\`).`,
     );
   }
 
-  const names = (await listGoldenCaseNames(TESTDATA_DIR)).filter(
-    (name) => filter === null || filter.test(name),
-  );
-  if (names.length === 0) {
-    throw new Error("no golden case matches --filter");
+  const workloads = (
+    await prepareWorkloads({ groups, syntheticDomains })
+  ).filter((w) => filter === null || filter.test(w.name));
+  if (workloads.length === 0) {
+    throw new Error("no workload matches --workloads and --filter");
   }
-  const cases = await Promise.all(
-    names.map((name) => loadGoldenCase({ testdataDir: TESTDATA_DIR, name })),
-  );
   const runCase = mode === "in-process" ? runInProcess : runPerProcess;
   const log = (message: string) => process.stderr.write(`${message}\n`);
 
-  log(`Verifying ${cases.length} cases against golden files...`);
+  log(`Verifying ${workloads.length} workloads...`);
   const ipcRoot = await mkdtemp(join(tmpdir(), "gqlkit-bench-ipc-"));
-  const ipcByCase = new Map<string, IpcStats | null>();
+  const ipcByName = new Map<string, IpcStats | null>();
+  const hashByName = new Map<string, string>();
   const failures: string[] = [];
   try {
-    for (const [index, goldenCase] of cases.entries()) {
+    for (const [index, workload] of workloads.entries()) {
       const ipcDir = join(ipcRoot, String(index));
-      const { mismatches } = await runCase({
-        goldenCase,
+      const { problems, outputHash } = await runCase({
+        workload,
         verify: true,
         ipcDir,
       });
-      if (mismatches.length > 0) {
-        failures.push(`${goldenCase.name}: ${mismatches.join(", ")}`);
+      if (problems.length > 0) {
+        failures.push(`${workload.name}: ${problems.join(", ")}`);
       }
-      ipcByCase.set(
-        goldenCase.name,
+      hashByName.set(workload.name, outputHash ?? "");
+      ipcByName.set(
+        workload.name,
         existsSync(ipcDir) ? await readIpcStats(ipcDir) : null,
       );
     }
@@ -308,11 +351,13 @@ async function main(): Promise<void> {
   }
   if (failures.length > 0) {
     throw new Error(
-      `output differs from golden files, refusing to report timings:\n  ${failures.join("\n  ")}`,
+      `wrong output, refusing to report timings:\n  ${failures.join("\n  ")}`,
     );
   }
 
-  const samples = new Map<string, CaseSample[]>(cases.map((c) => [c.name, []]));
+  const samples = new Map<string, CaseSample[]>(
+    workloads.map((w) => [w.name, []]),
+  );
   for (let pass = 0; pass < warmup + iterations; pass++) {
     const timed = pass >= warmup;
     log(
@@ -320,29 +365,31 @@ async function main(): Promise<void> {
         ? `Iteration ${pass - warmup + 1}/${iterations}`
         : `Warmup ${pass + 1}/${warmup}`,
     );
-    // Cases run round-robin across passes so slow drift in machine load
-    // spreads over all cases instead of skewing a few.
-    for (const goldenCase of cases) {
+    // Workloads run round-robin across passes so slow drift in machine load
+    // spreads over all workloads instead of skewing a few.
+    for (const workload of workloads) {
       const { sample } = await runCase({
-        goldenCase,
+        workload,
         verify: false,
         ipcDir: null,
       });
       if (timed) {
-        samples.get(goldenCase.name)!.push(sample);
+        samples.get(workload.name)!.push(sample);
       }
     }
   }
 
   const environment = collectEnvironment();
-  const caseResults: CaseResult[] = cases.map((c) => ({
-    name: c.name,
-    samples: samples.get(c.name)!,
-    ipc: ipcByCase.get(c.name) ?? null,
+  const caseResults: CaseResult[] = workloads.map((w) => ({
+    name: w.name,
+    group: w.group,
+    samples: samples.get(w.name)!,
+    ipc: ipcByName.get(w.name) ?? null,
+    outputHash: hashByName.get(w.name) ?? "",
   }));
   const branch = git(["rev-parse", "--abbrev-ref", "HEAD"]) ?? "unknown";
   const result: BenchResult = {
-    schemaVersion: 1,
+    schemaVersion: 2,
     label: values.label ?? `${branch}@${environment.gitRevision}`,
     mode,
     iterations,

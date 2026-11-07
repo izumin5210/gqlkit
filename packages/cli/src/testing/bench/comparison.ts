@@ -3,8 +3,9 @@ import {
   type BenchSummary,
   formatMs,
   type IpcStats,
-  summarize,
+  summarizeGroups,
 } from "./result.js";
+import type { WorkloadGroup } from "./workloads.js";
 
 function formatChange(base: number, head: number): string {
   if (!Number.isFinite(base) || base === 0) {
@@ -48,6 +49,98 @@ function stepNames(base: BenchSummary, head: BenchSummary): string[] {
   return names;
 }
 
+interface CaseRatio {
+  readonly name: string;
+  readonly base: number;
+  readonly head: number;
+  readonly ratio: number;
+}
+
+function caseRatios(base: BenchSummary, head: BenchSummary): CaseRatio[] {
+  const ratios: CaseRatio[] = [];
+  for (const [name, baseMs] of base.caseMedianMs) {
+    const headMs = head.caseMedianMs.get(name);
+    if (headMs !== undefined) {
+      ratios.push({ name, base: baseMs, head: headMs, ratio: headMs / baseMs });
+    }
+  }
+  return ratios;
+}
+
+function groupSection(
+  group: WorkloadGroup,
+  base: BenchSummary,
+  head: BenchSummary,
+): string[] {
+  const lines = [
+    "",
+    `### ${group}`,
+    "",
+    "| metric | base | head | change |",
+    "|---|---|---|---|",
+    row(
+      "Generation total (sum of medians)",
+      base.totalGenerationMs,
+      head.totalGenerationMs,
+    ),
+    row(
+      "Median iteration total",
+      base.medianIterationMs,
+      head.medianIterationMs,
+    ),
+  ];
+  if (base.totalProcessMs !== null) {
+    lines.push(
+      row(
+        "Process total (sum of medians)",
+        base.totalProcessMs,
+        head.totalProcessMs,
+      ),
+      row("Module load total", base.totalModuleLoadMs, head.totalModuleLoadMs),
+    );
+  }
+  for (const step of stepNames(base, head)) {
+    lines.push(
+      row(
+        `step: ${step}`,
+        base.stepsMs.get(step) ?? null,
+        head.stepsMs.get(step) ?? null,
+      ),
+    );
+  }
+  lines.push(...ipcRows(base.ipc, head.ipc));
+
+  const ratios = caseRatios(base, head);
+  if (ratios.length > 1) {
+    const geomean = Math.exp(
+      ratios.reduce((sum, r) => sum + Math.log(r.ratio), 0) / ratios.length,
+    );
+    const sorted = ratios.map((r) => r.ratio).sort((a, b) => a - b);
+    lines.push(
+      "",
+      `Per-workload ratio (head / base) over ${ratios.length} workloads: geometric mean ${geomean.toFixed(2)}x, range ${sorted[0]!.toFixed(2)}x – ${sorted.at(-1)!.toFixed(2)}x.`,
+    );
+  }
+  return lines;
+}
+
+function caseTable(title: string, entries: ReadonlyArray<CaseRatio>): string[] {
+  if (entries.length === 0) {
+    return [];
+  }
+  return [
+    "",
+    `### ${title}`,
+    "",
+    "| workload | base | head | ratio |",
+    "|---|---|---|---|",
+    ...entries.map(
+      (r) =>
+        `| ${r.name} | ${formatMs(r.base)} | ${formatMs(r.head)} | ${r.ratio.toFixed(2)}x |`,
+    ),
+  ];
+}
+
 interface RenderComparisonParams {
   readonly base: BenchResult;
   readonly head: BenchResult;
@@ -63,11 +156,14 @@ export function renderComparison(params: RenderComparisonParams): string {
       `cannot compare a ${base.mode} result with a ${head.mode} result`,
     );
   }
-  const baseSummary = summarize(base);
-  const headSummary = summarize(head);
+  if (base.schemaVersion !== head.schemaVersion) {
+    throw new Error("results come from incompatible benchmark versions");
+  }
+  const baseGroups = summarizeGroups(base);
+  const headGroups = summarizeGroups(head);
 
   const lines = [
-    `## gqlkit golden benchmark (${base.mode})`,
+    `## gqlkit benchmark (${base.mode})`,
     "",
     "| | base | head |",
     "|---|---|---|",
@@ -76,100 +172,47 @@ export function renderComparison(params: RenderComparisonParams): string {
     `| TypeScript | ${base.environment.typescript} | ${head.environment.typescript} |`,
     `| Node.js | ${base.environment.node} | ${head.environment.node} |`,
     `| platform | ${base.environment.platform}, ${base.environment.cpu} | ${head.environment.platform}, ${head.environment.cpu} |`,
-    `| cases × iterations | ${base.cases.length} × ${base.iterations} | ${head.cases.length} × ${head.iterations} |`,
-    "",
-    "| metric | base | head | change |",
-    "|---|---|---|---|",
-    row(
-      "Generation total (sum of per-case medians)",
-      baseSummary.totalGenerationMs,
-      headSummary.totalGenerationMs,
-    ),
-    row(
-      "Median iteration total",
-      baseSummary.medianIterationMs,
-      headSummary.medianIterationMs,
-    ),
+    `| workloads × iterations | ${base.cases.length} × ${base.iterations} | ${head.cases.length} × ${head.iterations} |`,
   ];
-  if (baseSummary.totalProcessMs !== null) {
-    lines.push(
-      row(
-        "Process total (sum of per-case medians)",
-        baseSummary.totalProcessMs,
-        headSummary.totalProcessMs,
-      ),
-      row(
-        "Module load total",
-        baseSummary.totalModuleLoadMs,
-        headSummary.totalModuleLoadMs,
-      ),
-    );
-  }
-  for (const step of stepNames(baseSummary, headSummary)) {
-    lines.push(
-      row(
-        `step: ${step}`,
-        baseSummary.stepsMs.get(step) ?? null,
-        headSummary.stepsMs.get(step) ?? null,
-      ),
-    );
-  }
-  lines.push(...ipcRows(baseSummary.ipc, headSummary.ipc));
 
-  const ratios: { name: string; base: number; head: number; ratio: number }[] =
-    [];
-  for (const [name, baseMs] of baseSummary.caseMedianMs) {
-    const headMs = headSummary.caseMedianMs.get(name);
-    if (headMs !== undefined) {
-      ratios.push({ name, base: baseMs, head: headMs, ratio: headMs / baseMs });
+  const allRatios: CaseRatio[] = [];
+  for (const [group, baseSummary] of baseGroups) {
+    const headSummary = headGroups.get(group);
+    if (headSummary === undefined) {
+      continue;
     }
+    lines.push(...groupSection(group, baseSummary, headSummary));
+    allRatios.push(...caseRatios(baseSummary, headSummary));
   }
-  const onlyInOne =
-    baseSummary.caseMedianMs.size +
-    headSummary.caseMedianMs.size -
-    2 * ratios.length;
 
-  if (ratios.length > 0) {
-    const geomean = Math.exp(
-      ratios.reduce((sum, r) => sum + Math.log(r.ratio), 0) / ratios.length,
-    );
-    const sorted = [...ratios].sort((a, b) => b.ratio - a.ratio);
-    lines.push(
-      "",
-      `Per-case ratio (head / base) over ${ratios.length} shared cases: geometric mean ${geomean.toFixed(2)}x, range ${sorted.at(-1)!.ratio.toFixed(2)}x – ${sorted[0]!.ratio.toFixed(2)}x.` +
-        (onlyInOne > 0 ? ` ${onlyInOne} case(s) exist on one side only.` : ""),
-    );
+  const headHashes = new Map(head.cases.map((c) => [c.name, c.outputHash]));
+  const changedOutputs = base.cases
+    .filter((c) => {
+      const headHash = headHashes.get(c.name);
+      return headHash !== undefined && headHash !== c.outputHash;
+    })
+    .map((c) => c.name);
+  lines.push(
+    "",
+    changedOutputs.length === 0
+      ? "Generated output is identical for every shared workload."
+      : `Generated output differs for ${changedOutputs.length} workload(s): ${changedOutputs.join(", ")}`,
+  );
 
-    const caseTable = (title: string, entries: typeof ratios) => {
-      if (entries.length === 0) {
-        return [];
-      }
-      return [
-        "",
-        `### ${title}`,
-        "",
-        "| case | base | head | ratio |",
-        "|---|---|---|---|",
-        ...entries.map(
-          (r) =>
-            `| ${r.name} | ${formatMs(r.base)} | ${formatMs(r.head)} | ${r.ratio.toFixed(2)}x |`,
-        ),
-      ];
-    };
-    lines.push(
-      ...caseTable(
-        `Largest slowdowns (top ${top})`,
-        sorted.filter((r) => r.ratio > 1).slice(0, top),
-      ),
-      ...caseTable(
-        `Largest speedups (top ${top})`,
-        [...sorted]
-          .reverse()
-          .filter((r) => r.ratio < 1)
-          .slice(0, top),
-      ),
-    );
-  }
+  const sorted = [...allRatios].sort((a, b) => b.ratio - a.ratio);
+  lines.push(
+    ...caseTable(
+      `Largest slowdowns (top ${top})`,
+      sorted.filter((r) => r.ratio > 1).slice(0, top),
+    ),
+    ...caseTable(
+      `Largest speedups (top ${top})`,
+      [...sorted]
+        .reverse()
+        .filter((r) => r.ratio < 1)
+        .slice(0, top),
+    ),
+  );
 
   return `${lines.join("\n")}\n`;
 }

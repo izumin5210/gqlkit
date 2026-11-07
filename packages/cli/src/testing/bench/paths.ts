@@ -12,6 +12,16 @@ export const PACKAGE_ROOT = resolve(moduleFile, "../../../..");
 /** Golden cases are only in `src`; `tsc` does not copy them to `dist`. */
 export const TESTDATA_DIR = join(PACKAGE_ROOT, "src/gen-orchestrator/testdata");
 
+/** Example apps benchmarked as realistic, mid-sized workloads. */
+export const EXAMPLES_DIR = join(PACKAGE_ROOT, "../../examples");
+
+/**
+ * Where the synthetic workload is generated (gitignored). Living next to the
+ * golden cases gives it their tsconfig base and module resolution, and the
+ * leading underscore keeps it out of the golden test.
+ */
+export const SYNTHETIC_DIR = join(TESTDATA_DIR, "_bench-synthetic");
+
 /** Golden cases import `@gqlkit-ts/runtime`, which resolves to its build. */
 export const RUNTIME_TYPES_PATH = join(
   PACKAGE_ROOT,
