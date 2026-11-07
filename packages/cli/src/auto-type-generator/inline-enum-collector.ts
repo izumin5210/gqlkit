@@ -1,4 +1,3 @@
-import type { Symbol as TsSymbol } from "typescript/async";
 import type {
   DeprecationInfo,
   InlineEnumMemberInfo,
@@ -33,8 +32,8 @@ export interface InlineEnumWithContext {
   readonly context: AutoTypeNameContext;
   readonly sourceLocation: SourceLocation;
   readonly nullable: boolean;
-  /** External TypeScript enum symbol for deduplication (null for string literal unions) */
-  readonly externalEnumSymbol: TsSymbol | null;
+  /** Identity of the external TypeScript enum (see `getSymbolIdentityKey`), for deduplication (null for string literal unions) */
+  readonly externalEnumKey: string | null;
   /** TSDoc description from the external enum type itself (null for string literal unions) */
   readonly externalEnumDescription: string | null;
   /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself (null for string literal unions) */
@@ -110,7 +109,7 @@ function collectInlineEnumsFromField(
         sourceFile,
       ),
       nullable: tsType.nullable,
-      externalEnumSymbol: tsType.externalEnumSymbol,
+      externalEnumKey: tsType.externalEnumKey,
       externalEnumDescription: tsType.externalEnumDescription,
       externalEnumDeprecated: tsType.externalEnumDeprecated,
     });
@@ -129,7 +128,7 @@ function collectInlineEnumsFromField(
         sourceFile,
       ),
       nullable: tsType.elementType.nullable,
-      externalEnumSymbol: tsType.elementType.externalEnumSymbol,
+      externalEnumKey: tsType.elementType.externalEnumKey,
       externalEnumDescription: tsType.elementType.externalEnumDescription,
       externalEnumDeprecated: tsType.elementType.externalEnumDeprecated,
     });
@@ -158,7 +157,7 @@ function collectInlineEnumsFromField(
               sourceFile,
             ),
             nullable: propTsType.nullable,
-            externalEnumSymbol: propTsType.externalEnumSymbol,
+            externalEnumKey: propTsType.externalEnumKey,
             externalEnumDescription: propTsType.externalEnumDescription,
             externalEnumDeprecated: propTsType.externalEnumDeprecated,
           });
@@ -210,7 +209,7 @@ function collectInlineEnumsFromResolverArgs(
         context,
         sourceLocation: field.sourceLocation,
         nullable: arg.type.nullable,
-        externalEnumSymbol: arg.tsType.externalEnumSymbol,
+        externalEnumKey: arg.tsType.externalEnumKey,
         externalEnumDescription: arg.tsType.externalEnumDescription,
         externalEnumDeprecated: arg.tsType.externalEnumDeprecated,
       });
@@ -303,7 +302,7 @@ function collectInlineEnumsFromResolverProperties(
           context,
           sourceLocation: prop.sourceLocation ?? sourceLocation,
           nullable: tsType.nullable,
-          externalEnumSymbol: tsType.externalEnumSymbol,
+          externalEnumKey: tsType.externalEnumKey,
           externalEnumDescription: tsType.externalEnumDescription,
           externalEnumDeprecated: tsType.externalEnumDeprecated,
         });
@@ -352,7 +351,7 @@ function collectInlineEnumsFromPayloadReturnType(
       context,
       sourceLocation: field.sourceLocation,
       nullable: field.type.nullable,
-      externalEnumSymbol: field.returnTsType.externalEnumSymbol,
+      externalEnumKey: field.returnTsType.externalEnumKey,
       externalEnumDescription: field.returnTsType.externalEnumDescription,
       externalEnumDeprecated: field.returnTsType.externalEnumDeprecated,
     });

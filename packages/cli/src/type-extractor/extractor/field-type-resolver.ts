@@ -43,6 +43,7 @@ import {
   findEnumParentSymbol,
   findNonNullTypeNode,
   getNonNullableTypes,
+  getSymbolIdentityKey,
   getTypeNameFromNode,
   isBooleanUnion,
   isNullableUnion,
@@ -334,7 +335,7 @@ async function resolveFieldTypeInternal(
         return createInlineEnumType({
           members: externalEnumResult.members,
           nullable,
-          externalEnumSymbol: enumParentSymbol,
+          externalEnumKey: getSymbolIdentityKey(enumParentSymbol),
           externalEnumDescription: externalEnumResult.description,
           externalEnumDeprecated: externalEnumResult.deprecated,
         });
@@ -347,7 +348,7 @@ async function resolveFieldTypeInternal(
       return createInlineEnumType({
         members: inlineEnumResult,
         nullable,
-        externalEnumSymbol: null,
+        externalEnumKey: null,
         externalEnumDescription: null,
         externalEnumDeprecated: null,
       });
@@ -734,7 +735,7 @@ async function resolveFieldTypeInternal(
           return createInlineEnumType({
             members: externalEnumResult.members,
             nullable: false,
-            externalEnumSymbol: resolvedSymbol,
+            externalEnumKey: getSymbolIdentityKey(resolvedSymbol),
             externalEnumDescription: externalEnumResult.description,
             externalEnumDeprecated: externalEnumResult.deprecated,
           });

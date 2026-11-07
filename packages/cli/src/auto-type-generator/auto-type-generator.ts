@@ -1,4 +1,3 @@
-import type { Symbol as TsSymbol } from "typescript/async";
 import type { ResolvedDiscriminatorFieldsMap } from "../config-loader/index.js";
 import {
   type Diagnostic,
@@ -223,8 +222,8 @@ function buildGeneratedTypeNamesMap(
 }
 
 interface ExternalEnumRegistry {
-  readonly symbolToTypeName: Map<TsSymbol, string>;
-  readonly symbolToContextKey: Map<TsSymbol, string>;
+  readonly keyToTypeName: Map<string, string>;
+  readonly keyToContextKey: Map<string, string>;
 }
 
 interface BuildEnumTypeNamesMapResult {
@@ -237,25 +236,23 @@ function buildEnumTypeNamesMap(
   inlineEnums: InlineEnumWithContext[],
 ): BuildEnumTypeNamesMapResult {
   const enumTypeNames = new Map<string, string>();
-  const symbolToTypeName = new Map<TsSymbol, string>();
-  const symbolToContextKey = new Map<TsSymbol, string>();
+  const keyToTypeName = new Map<string, string>();
+  const keyToContextKey = new Map<string, string>();
   const uniqueInlineEnums: InlineEnumWithContext[] = [];
 
   for (const inlineEnum of inlineEnums) {
     const contextKey = getContextKey(inlineEnum.context);
 
-    if (inlineEnum.externalEnumSymbol !== null) {
-      const existingTypeName = symbolToTypeName.get(
-        inlineEnum.externalEnumSymbol,
-      );
+    if (inlineEnum.externalEnumKey !== null) {
+      const existingTypeName = keyToTypeName.get(inlineEnum.externalEnumKey);
       if (existingTypeName) {
         enumTypeNames.set(contextKey, existingTypeName);
         continue;
       }
 
       const typeName = generateAutoTypeName(inlineEnum.context);
-      symbolToTypeName.set(inlineEnum.externalEnumSymbol, typeName);
-      symbolToContextKey.set(inlineEnum.externalEnumSymbol, contextKey);
+      keyToTypeName.set(inlineEnum.externalEnumKey, typeName);
+      keyToContextKey.set(inlineEnum.externalEnumKey, contextKey);
       enumTypeNames.set(contextKey, typeName);
       uniqueInlineEnums.push(inlineEnum);
     } else {
@@ -267,7 +264,7 @@ function buildEnumTypeNamesMap(
 
   return {
     enumTypeNames,
-    externalEnumRegistry: { symbolToTypeName, symbolToContextKey },
+    externalEnumRegistry: { keyToTypeName, keyToContextKey },
     uniqueInlineEnums,
   };
 }
