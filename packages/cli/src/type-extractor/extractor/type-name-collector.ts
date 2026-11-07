@@ -1,6 +1,7 @@
 import type { Diagnostic, SourceLocation } from "../../core/index.js";
 import * as ts from "../../core/typescript.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
+import { prefetchDeclarationFacts } from "../../shared/checker-prefetch.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
   isExported,
@@ -105,6 +106,16 @@ export async function collectDeclaredTypeNames(
     }
     return true;
   }
+
+  // Every file is fetched, and its declarations' first levels prefetched,
+  // in a few batched round trips before the sequential walk below.
+  const loadedSourceFiles = await Promise.all(
+    sourceFiles.map((filePath) => program.getSourceFile(filePath)),
+  );
+  await prefetchDeclarationFacts(
+    checker,
+    loadedSourceFiles.filter((sf): sf is ts.SourceFile => sf !== undefined),
+  );
 
   for (const filePath of sourceFiles) {
     const sourceFile = await program.getSourceFile(filePath);

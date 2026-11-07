@@ -6,6 +6,7 @@ import type {
 } from "../../core/index.js";
 import * as ts from "../../core/typescript.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
+import { prefetchPropertyFacts } from "../../shared/checker-prefetch.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   detectDirectiveMetadata,
@@ -42,6 +43,7 @@ export async function extractInlineObjectProperties(
 ): Promise<PropertyDef[]> {
   const properties: PropertyDef[] = [];
   const typeProperties = await extractPropertySymbols(type, checker);
+  await prefetchPropertyFacts(checker, typeProperties);
 
   for (const prop of typeProperties) {
     const propName = prop.name;

@@ -11,6 +11,7 @@ import {
 } from "../../core/index.js";
 import * as ts from "../../core/typescript.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
+import { prefetchPropertyFacts } from "../../shared/checker-prefetch.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   detectDirectiveMetadata,
@@ -180,6 +181,7 @@ export async function extractFieldsFromType(
   const fields: PropertyDef[] = [];
   const diagnostics: Diagnostic[] = [];
   const properties = await extractPropertySymbols(type, checker);
+  await prefetchPropertyFacts(checker, properties);
 
   for (const prop of properties) {
     const propName = prop.name;
