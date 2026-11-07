@@ -38,20 +38,41 @@ import {
 } from "./resolver-speculation.js";
 import { appendTypeSlice } from "./type-slice.js";
 
+export interface SizedFile {
+  readonly path: string;
+  readonly bytes: number;
+}
+
 /**
- * Splits the files into `count` contiguous ranges of nearly equal length,
- * in order.
+ * Splits the files into `count` contiguous, non-empty ranges of nearly equal
+ * size, in order; fewer if there are fewer files.
  */
 export function partitionFiles(
-  files: ReadonlyArray<string>,
+  files: ReadonlyArray<SizedFile>,
   count: number,
 ): ReadonlyArray<ReadonlyArray<string>> {
-  return Array.from({ length: count }, (_, i) =>
-    files.slice(
-      Math.round((files.length * i) / count),
-      Math.round((files.length * (i + 1)) / count),
-    ),
-  );
+  const rangeCount = Math.min(count, files.length);
+  const totalBytes = files.reduce((sum, f) => sum + f.bytes, 0);
+  const ranges: string[][] = [];
+  let start = 0;
+  let bytesBefore = 0;
+  for (let i = 1; i <= rangeCount; i++) {
+    // Leaves at least one file for each remaining range.
+    const maxEnd = files.length - (rangeCount - i);
+    let end = start + 1;
+    let bytes = bytesBefore + (files[start]?.bytes ?? 0);
+    while (
+      end < maxEnd &&
+      (i === rangeCount || bytes < (totalBytes * i) / rangeCount)
+    ) {
+      bytes += files[end]?.bytes ?? 0;
+      end++;
+    }
+    ranges.push(files.slice(start, end).map((f) => f.path));
+    start = end;
+    bytesBefore = bytes;
+  }
+  return ranges;
 }
 
 export interface StartSliceExtractionParams {

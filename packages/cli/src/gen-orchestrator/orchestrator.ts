@@ -1,3 +1,4 @@
+import { stat } from "node:fs/promises";
 import { availableParallelism } from "node:os";
 import { dirname, relative, resolve } from "node:path";
 import { API, type Program, type Symbol as TsSymbol } from "typescript/async";
@@ -642,11 +643,11 @@ async function measureAsyncStep<T>(
 }
 
 /**
- * Extraction is split into ranges of at least this many files, each
+ * Extraction is split into ranges of at least this much source, each
  * extracted by its own thread and tsc process. A range costs that thread a
  * program of the whole project, so smaller projects stay on one thread.
  */
-const MIN_FILES_PER_SLICE = 100;
+const MIN_BYTES_PER_SLICE = 160 * 1024;
 
 /** At most this many threads extract at once. */
 const MAX_SLICES = 4;
@@ -668,23 +669,32 @@ const DEFAULT_GENERATION_OPTIONS: GenerationOptions = {
   },
 };
 
-function countSlices(
-  slices: GenerationOptions["slices"],
-  sourceFileCount: number,
-): number {
-  if (slices !== "auto") {
-    return Math.max(1, Math.min(slices, sourceFileCount));
-  }
+/** The most slices the options and the available cores allow. */
+function maxSlices(slices: GenerationOptions["slices"]): number {
   // A thread and its tsc process, which parses and checks in parallel, keep
   // two to three logical cores busy; more slices only contend for them.
-  return Math.max(
-    1,
-    Math.min(
-      MAX_SLICES,
-      Math.round(availableParallelism() / 3),
-      Math.floor(sourceFileCount / MIN_FILES_PER_SLICE),
-    ),
+  return slices === "auto"
+    ? Math.min(MAX_SLICES, Math.round(availableParallelism() / 3))
+    : slices;
+}
+
+async function partitionSourceFiles(
+  sourceFiles: ReadonlyArray<string>,
+  options: GenerationOptions,
+): Promise<ReadonlyArray<ReadonlyArray<string>>> {
+  const max = maxSlices(options.slices);
+  if (max <= 1 || sourceFiles.length <= 1) {
+    return [sourceFiles];
+  }
+  const files = await Promise.all(
+    sourceFiles.map(async (path) => ({ path, bytes: (await stat(path)).size })),
   );
+  const totalBytes = files.reduce((sum, f) => sum + f.bytes, 0);
+  const count =
+    options.slices === "auto"
+      ? Math.min(max, Math.floor(totalBytes / MIN_BYTES_PER_SLICE))
+      : max;
+  return count > 1 ? partitionFiles(files, count) : [sourceFiles];
 }
 
 export async function executeGeneration(
@@ -715,17 +725,17 @@ async function runPipeline(
   );
 
   // The workers start now, alongside the main thread's program creation.
-  const sliceCount = ctx.aborted
-    ? 1
-    : countSlices(options.slices, ctx.sourceFiles.length);
+  const slices = ctx.aborted
+    ? [ctx.sourceFiles]
+    : await partitionSourceFiles(ctx.sourceFiles, options);
   const sliceExtraction =
-    sliceCount > 1
+    slices.length > 1
       ? startSliceExtraction({
           workerModule: options.sliceWorker,
           cwd: config.cwd,
           tsconfigPath: config.tsconfigPath,
           sourceFiles: ctx.sourceFiles,
-          slices: partitionFiles(ctx.sourceFiles, sliceCount),
+          slices,
           globalTypeMappings: prepareScalarConfig(config).globalTypeMappings,
         })
       : null;
