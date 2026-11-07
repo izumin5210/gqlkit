@@ -72,14 +72,14 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "USER"
+            "value": "POST"
           }
         },
         {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "POST"
+            "value": "USER"
           }
         }
       ],

@@ -1,4 +1,3 @@
-import type ts from "typescript";
 import type { ResolvedDiscriminatorFieldsMap } from "../config-loader/index.js";
 import {
   type Diagnostic,
@@ -8,6 +7,7 @@ import {
   isTypenameFieldName,
   type PropertyDef,
 } from "../core/index.js";
+import type * as ts from "../core/typescript.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import { convertTsTypeToGraphQLType } from "../shared/type-converter.js";
 import type { ExtractedTypeInfo } from "../type-extractor/index.js";

@@ -24,9 +24,9 @@ export function createResolvers({
 }) {
   return {
     PostPriority: {
+      HIGH: "high",
       LOW: "low",
       MEDIUM: "medium",
-      HIGH: "high",
     },
     UserStatus: {
       ACTIVE: "active",
@@ -34,9 +34,9 @@ export function createResolvers({
       SUSPENDED: "suspended",
     },
     CreatePostPriorityInput: {
+      HIGH: "high",
       LOW: "low",
       MEDIUM: "medium",
-      HIGH: "high",
     },
     CreateUserStatusInput: {
       ACTIVE: "active",

@@ -13,8 +13,8 @@ User status enum with mixed casing values.
 Defined in: src/gqlkit/schema/types.ts
 """
 enum UserStatus {
-  ACTIVE
   IN_ACTIVE
-  PENDING_REVIEW
+  ACTIVE
   ON_HOLD
+  PENDING_REVIEW
 }

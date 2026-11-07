@@ -112,9 +112,9 @@ type SubmitFormPayloadValidation {
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum SubmitFormPayloadValidationStatus {
-  VALID
   INVALID
   PARTIAL
+  VALID
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
@@ -125,10 +125,10 @@ type UpdateStatusPayload {
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum UpdateStatusPayloadResult {
-  PENDING
-  PROCESSING
   COMPLETED
   FAILED
+  PENDING
+  PROCESSING
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""

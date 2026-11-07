@@ -10,8 +10,8 @@ type Query
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum Role {
-  USER
   ADMIN
+  USER
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""

@@ -1,5 +1,5 @@
-import ts from "typescript";
 import type { Diagnostic, SourceLocation } from "../../core/index.js";
+import * as ts from "../../core/typescript.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
   isExported,
@@ -56,7 +56,7 @@ export function collectDeclaredTypeNames(
   const typeSymbols = new Map<string, ts.Symbol>();
   const underlyingSymbolToTypeName = new Map<ts.Symbol, string>();
   const diagnostics: Diagnostic[] = [];
-  const checker = program.getTypeChecker();
+  const checker = program.getProject().checker;
 
   const typeLocations = new Map<string, TypeDeclarationLocation>();
 
@@ -104,7 +104,7 @@ export function collectDeclaredTypeNames(
     const sourceFile = program.getSourceFile(filePath);
     if (!sourceFile) continue;
 
-    ts.forEachChild(sourceFile, (node) => {
+    sourceFile.forEachChild((node) => {
       // Direct type declarations
       if (ts.isTypeAliasDeclaration(node) && isExported(node)) {
         const name = node.name.getText(sourceFile);
@@ -116,11 +116,9 @@ export function collectDeclaredTypeNames(
           // For type aliases like `type User = ExternalUser;`,
           // also track the underlying type's symbol
           const type = checker.getTypeAtLocation(node.type);
-          if (type.symbol) {
-            const underlyingSymbol = resolveOriginalSymbol(
-              type.symbol,
-              checker,
-            );
+          const typeSymbol = type.getSymbol();
+          if (typeSymbol) {
+            const underlyingSymbol = resolveOriginalSymbol(typeSymbol, checker);
             underlyingSymbolToTypeName.set(underlyingSymbol, name);
           }
         }
@@ -174,7 +172,7 @@ export function collectDeclaredTypeNames(
           if (moduleSymbol) {
             const exports = checker.getExportsOfModule(moduleSymbol);
             for (const exp of exports) {
-              const name = exp.getName();
+              const name = exp.name;
               // Check if the export is a type (not a value)
               if (isTypeExport(exp)) {
                 const location = getSourceLocationFromNode(node)!;
@@ -213,7 +211,7 @@ export function collectLocalTypeDeclarationNames(
     const sourceFile = program.getSourceFile(filePath);
     if (!sourceFile) continue;
 
-    ts.forEachChild(sourceFile, (node) => {
+    sourceFile.forEachChild((node) => {
       if (
         ts.isTypeAliasDeclaration(node) ||
         ts.isInterfaceDeclaration(node) ||

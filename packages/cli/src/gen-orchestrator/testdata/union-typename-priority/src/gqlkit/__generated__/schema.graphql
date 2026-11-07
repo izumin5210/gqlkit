@@ -10,8 +10,8 @@ type Query
 
 """Defined in: src/gqlkit/schema/query.ts"""
 enum SearchQuery$typeNameInput {
-  USER_FROM_PROTOBUF
   POST_FROM_PROTOBUF
+  USER_FROM_PROTOBUF
 }
 
 """Defined in: src/gqlkit/schema/query.ts"""
@@ -21,8 +21,8 @@ type SearchQueryPayload {
 
 """Defined in: src/gqlkit/schema/query.ts"""
 enum SearchQueryTypenameInput {
-  USER
   POST
+  USER
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""

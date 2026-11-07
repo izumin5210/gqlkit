@@ -6,9 +6,9 @@ scalar DateTime
 Defined in: src/__generated__/prisma/models/Post.ts
 """
 enum CreatePostPriorityInput {
+  HIGH
   LOW
   MEDIUM
-  HIGH
 }
 
 """
@@ -38,9 +38,9 @@ type Post {
 Defined in: src/__generated__/prisma/models/Post.ts
 """
 enum PostPriority {
+  HIGH
   LOW
   MEDIUM
-  HIGH
 }
 
 type Query

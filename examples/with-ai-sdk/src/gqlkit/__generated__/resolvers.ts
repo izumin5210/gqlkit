@@ -12,21 +12,25 @@ import {
 export function createResolvers() {
   return {
     MessageRole: {
+      ASSISTANT: "assistant",
       SYSTEM: "system",
       USER: "user",
-      ASSISTANT: "assistant",
-    },
-    MessagePartTextState: {
-      STREAMING: "streaming",
-      DONE: "done",
     },
     MessagePartReasoningState: {
-      STREAMING: "streaming",
       DONE: "done",
+      STREAMING: "streaming",
+    },
+    MessagePartTextState: {
+      DONE: "done",
+      STREAMING: "streaming",
     },
     ChatStreamChunk: {
       __resolveType: (obj: { type: string }) => {
         switch (obj.type) {
+          case "data-chart":
+            return "ChatStreamChunkDataChart";
+          case "data-suggestion":
+            return "ChatStreamChunkDataSuggestion";
           case "text-start":
             return "ChatStreamChunkTextStart";
           case "text-delta":
@@ -67,16 +71,12 @@ export function createResolvers() {
             return "ChatStreamChunkStartStep";
           case "finish-step":
             return "ChatStreamChunkFinishStep";
-          case "abort":
-            return "ChatStreamChunkAbort";
-          case "data-chart":
-            return "ChatStreamChunkDataChart";
-          case "data-suggestion":
-            return "ChatStreamChunkDataSuggestion";
           case "start":
             return "ChatStreamChunkStart";
           case "finish":
             return "ChatStreamChunkFinish";
+          case "abort":
+            return "ChatStreamChunkAbort";
           case "message-metadata":
             return "ChatStreamChunkMessageMetadata";
           default:
@@ -87,10 +87,22 @@ export function createResolvers() {
     MessagePart: {
       __resolveType: (obj: { type: string; state: string }) => {
         switch (obj.type) {
-          case "text":
-            return "MessagePartText";
+          case "file":
+            return "MessagePartFile";
           case "reasoning":
             return "MessagePartReasoning";
+          case "source-document":
+            return "MessagePartSourceDocument";
+          case "source-url":
+            return "MessagePartSourceUrl";
+          case "step-start":
+            return "MessagePartStepStart";
+          case "text":
+            return "MessagePartText";
+          case "data-chart":
+            return "MessagePartDataChart";
+          case "data-suggestion":
+            return "MessagePartDataSuggestion";
           case "dynamic-tool":
             switch (obj.state) {
               case "input-streaming":
@@ -110,37 +122,6 @@ export function createResolvers() {
               default:
                 return undefined;
             }
-          case "source-url":
-            return "MessagePartSourceUrl";
-          case "source-document":
-            return "MessagePartSourceDocument";
-          case "file":
-            return "MessagePartFile";
-          case "step-start":
-            return "MessagePartStepStart";
-          case "data-chart":
-            return "MessagePartDataChart";
-          case "data-suggestion":
-            return "MessagePartDataSuggestion";
-          case "tool-weather":
-            switch (obj.state) {
-              case "input-streaming":
-                return "MessagePartToolWeatherInputStreaming";
-              case "input-available":
-                return "MessagePartToolWeatherInputAvailable";
-              case "approval-requested":
-                return "MessagePartToolWeatherApprovalRequested";
-              case "approval-responded":
-                return "MessagePartToolWeatherApprovalResponded";
-              case "output-available":
-                return "MessagePartToolWeatherOutputAvailable";
-              case "output-error":
-                return "MessagePartToolWeatherOutputError";
-              case "output-denied":
-                return "MessagePartToolWeatherOutputDenied";
-              default:
-                return undefined;
-            }
           case "tool-calculate":
             switch (obj.state) {
               case "input-streaming":
@@ -157,6 +138,25 @@ export function createResolvers() {
                 return "MessagePartToolCalculateOutputError";
               case "output-denied":
                 return "MessagePartToolCalculateOutputDenied";
+              default:
+                return undefined;
+            }
+          case "tool-weather":
+            switch (obj.state) {
+              case "input-streaming":
+                return "MessagePartToolWeatherInputStreaming";
+              case "input-available":
+                return "MessagePartToolWeatherInputAvailable";
+              case "approval-requested":
+                return "MessagePartToolWeatherApprovalRequested";
+              case "approval-responded":
+                return "MessagePartToolWeatherApprovalResponded";
+              case "output-available":
+                return "MessagePartToolWeatherOutputAvailable";
+              case "output-error":
+                return "MessagePartToolWeatherOutputError";
+              case "output-denied":
+                return "MessagePartToolWeatherOutputDenied";
               default:
                 return undefined;
             }

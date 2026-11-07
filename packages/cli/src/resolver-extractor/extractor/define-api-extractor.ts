@@ -1,4 +1,3 @@
-import ts from "typescript";
 import {
   type DeprecationInfo,
   type Diagnostic,
@@ -8,6 +7,7 @@ import {
   type SourceLocation,
   type TSTypeReference,
 } from "../../core/index.js";
+import * as ts from "../../core/typescript.js";
 import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { extractDirectivesFromType } from "../../shared/directive-detector.js";
 import { getActualMetadataType } from "../../shared/metadata-detector.js";
@@ -107,7 +107,7 @@ interface MetadataKindResult {
  */
 interface DetectKindFromMetadataTypeParams {
   readonly returnType: ts.Type;
-  readonly checker: ts.TypeChecker;
+  readonly checker: ts.Checker;
   readonly metadataProperty: string;
 }
 
@@ -132,7 +132,7 @@ function detectKindFromMetadataType(
   }
 
   const kindType = checker.getTypeOfSymbol(kindProp);
-  if (!kindType.isStringLiteral()) {
+  if (!kindType.isStringLiteralType()) {
     return null;
   }
 
@@ -145,7 +145,7 @@ function detectKindFromMetadataType(
  */
 function detectAbstractResolverFromMetadataType(
   returnType: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): { kind: AbstractResolverKind; targetTypeName: string } | null {
   const result = detectKindFromMetadataType({
     returnType,
@@ -183,14 +183,15 @@ function detectAbstractResolverFromMetadataType(
  */
 function extractTypeNameFromType(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): string | null {
   if (type.flags & ts.TypeFlags.Any) {
     return null;
   }
 
-  if (type.aliasSymbol) {
-    const aliasName = type.aliasSymbol.getName();
+  const aliasSymbol = type.getAliasSymbol();
+  if (aliasSymbol) {
+    const aliasName = aliasSymbol.name;
     if (!isInternalTypeSymbol(aliasName)) {
       return aliasName;
     }
@@ -198,7 +199,7 @@ function extractTypeNameFromType(
 
   const symbol = type.getSymbol();
   if (symbol) {
-    const symbolName = symbol.getName();
+    const symbolName = symbol.name;
     if (!isInternalTypeSymbol(symbolName)) {
       return symbolName;
     }
@@ -218,7 +219,7 @@ function extractTypeNameFromType(
  */
 function detectResolverFromMetadataType(
   returnType: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): DefineApiResolverType | null {
   const result = detectKindFromMetadataType({
     returnType,
@@ -261,10 +262,7 @@ function resolveFieldNameFromExportName(exportName: string): string | null {
  * Types like `{ [key: string]: number }` return true.
  * Returns false for NoArgs type (Record<string, never>).
  */
-function hasOnlyIndexSignatures(
-  type: ts.Type,
-  checker: ts.TypeChecker,
-): boolean {
+function hasOnlyIndexSignatures(type: ts.Type, checker: ts.Checker): boolean {
   const targetType = checker.getApparentType(type);
 
   const indexInfos = checker.getIndexInfosOfType(targetType);
@@ -277,7 +275,7 @@ function hasOnlyIndexSignatures(
   const hasNeverStringIndex = indexInfos.some((info) => {
     return (
       (info.keyType.flags & ts.TypeFlags.String) !== 0 &&
-      (info.type.flags & ts.TypeFlags.Never) !== 0
+      (info.valueType.flags & ts.TypeFlags.Never) !== 0
     );
   });
 
@@ -287,7 +285,7 @@ function hasOnlyIndexSignatures(
 
   const properties = targetType
     .getProperties()
-    .filter((p) => !p.getName().startsWith(" $"));
+    .filter((p) => !p.name.startsWith(" $"));
   if (properties.length > 0) {
     return false;
   }
@@ -298,15 +296,14 @@ function hasOnlyIndexSignatures(
 /**
  * Gets the type name for error messages.
  */
-function getTypeNameForDiagnostic(
-  type: ts.Type,
-  checker: ts.TypeChecker,
-): string {
-  if (type.aliasSymbol) {
-    return type.aliasSymbol.getName();
+function getTypeNameForDiagnostic(type: ts.Type, checker: ts.Checker): string {
+  const aliasSymbol = type.getAliasSymbol();
+  if (aliasSymbol) {
+    return aliasSymbol.name;
   }
-  if (type.symbol) {
-    return type.symbol.getName();
+  const symbol = type.getSymbol();
+  if (symbol) {
+    return symbol.name;
   }
   return checker.typeToString(type);
 }
@@ -414,7 +411,7 @@ function extractArgsFromType(
 
 function extractDirectivesFromTypeNode(
   typeNode: ts.TypeNode | undefined,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): ReadonlyArray<DirectiveInfo> | null {
   if (!typeNode) {
     return null;
@@ -442,7 +439,7 @@ interface TypeArgumentsResult {
 interface ValidateArgsTypeParams {
   readonly argsType: ts.Type;
   readonly argsTypeNode: ts.TypeNode;
-  readonly checker: ts.TypeChecker;
+  readonly checker: ts.Checker;
 }
 
 /**
@@ -594,7 +591,7 @@ function extractExportedInputTypes(
 ): ExportedInputType[] {
   const exportedTypes: ExportedInputType[] = [];
 
-  ts.forEachChild(sourceFile, (node) => {
+  sourceFile.forEachChild((node) => {
     if (ts.isTypeAliasDeclaration(node) && isExported(node)) {
       const name = node.name.getText(sourceFile);
       const type = ctx.checker.getTypeAtLocation(node.name);
@@ -638,7 +635,7 @@ function containsDefineCall(node: ts.Node): boolean {
     return true;
   }
 
-  return ts.forEachChild(node, containsDefineCall) ?? false;
+  return node.forEachChild(containsDefineCall) ?? false;
 }
 
 interface ProcessResolverDeclarationParams {
@@ -646,7 +643,7 @@ interface ProcessResolverDeclarationParams {
   readonly statement: ts.VariableStatement;
   readonly sourceFile: ts.SourceFile;
   readonly filePath: string;
-  readonly checker: ts.TypeChecker;
+  readonly checker: ts.Checker;
   readonly inputContext: FieldTypeResolverContext;
   readonly outputContext: FieldTypeResolverContext;
   readonly exportedInputTypes: ReadonlyArray<ExportedInputType>;
@@ -825,7 +822,7 @@ export function extractDefineApiResolvers(
   params: ExtractDefineApiResolversParams,
 ): ExtractDefineApiResult {
   const { program, files, options } = params;
-  const checker = program.getTypeChecker();
+  const checker = program.getProject().checker;
   const resolvers: DefineApiResolverInfo[] = [];
   const abstractTypeResolvers: AbstractResolverInfo[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -888,7 +885,7 @@ export function extractDefineApiResolvers(
       inputContext,
     );
 
-    ts.forEachChild(sourceFile, (node) => {
+    sourceFile.forEachChild((node) => {
       if (!ts.isVariableStatement(node)) {
         return;
       }

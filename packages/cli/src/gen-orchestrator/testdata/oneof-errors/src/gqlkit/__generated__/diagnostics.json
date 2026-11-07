@@ -31,7 +31,7 @@
   },
   {
     "code": "ONEOF_EMPTY_OBJECT",
-    "message": "OneOf input 'EmptyObjectInput' member at index 0 is an empty object. Each member must have exactly one property.",
+    "message": "OneOf input 'EmptyObjectInput' member at index 1 is an empty object. Each member must have exactly one property.",
     "severity": "error",
     "location": {
       "file": "src/gqlkit/schema/errors.ts",
