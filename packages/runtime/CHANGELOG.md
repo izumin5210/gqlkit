@@ -1,5 +1,13 @@
 # @gqlkit-ts/runtime
 
+## 0.4.0
+
+### Minor Changes
+
+- [#347](https://github.com/izumin5210/gqlkit/pull/347) [`31f62f4`](https://github.com/izumin5210/gqlkit/commit/31f62f4137de6513598f91e88b740052e29bc39c) Thanks [@izumin5210](https://github.com/izumin5210)! - refactor: remove the unused inner marker from GqlInterfaceMetaShape
+
+  **BREAKING CHANGE**: the never-functional `" $gqlkitInterface"` property was removed from `GqlInterfaceMetaShape`; code that referenced it structurally (unlikely) must drop it.
+
 ## 0.3.0
 
 ### Minor Changes
