@@ -4,11 +4,11 @@ import * as ts from "../../core/typescript.js";
  * Checks if a TypeScript type is an inline object type (anonymous type literal).
  * Returns true for types like `{ foo: string; bar: number }` but not for named types.
  */
-export function isInlineObjectType(type: ts.Type): boolean {
-  if (type.getAliasSymbol()) {
+export async function isInlineObjectType(type: ts.Type): Promise<boolean> {
+  if (await type.getAliasSymbol()) {
     return false;
   }
-  const symbol = type.getSymbol();
+  const symbol = await type.getSymbol();
   if (!symbol) {
     return false;
   }

@@ -5,6 +5,7 @@ import type {
   TSTypeReference,
 } from "../../core/index.js";
 import * as ts from "../../core/typescript.js";
+import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   detectDirectiveMetadata,
@@ -22,9 +23,9 @@ import {
 
 export type TypeConverter = (
   type: ts.Type,
-  checker: ts.Checker,
+  checker: CheckerLoader,
   typeNode: ts.TypeNode | undefined,
-) => TSTypeReference;
+) => Promise<TSTypeReference>;
 
 /**
  * Extracts inline object properties from a TypeScript type.
@@ -34,13 +35,13 @@ export type TypeConverter = (
  * @param convertType - A function to convert TypeScript types to TSTypeReference
  * @returns An array of inline object property definitions
  */
-export function extractInlineObjectProperties(
+export async function extractInlineObjectProperties(
   type: ts.Type,
-  checker: ts.Checker,
+  checker: CheckerLoader,
   convertType: TypeConverter,
-): PropertyDef[] {
+): Promise<PropertyDef[]> {
   const properties: PropertyDef[] = [];
-  const typeProperties = extractPropertySymbols(type, checker);
+  const typeProperties = await extractPropertySymbols(type, checker);
 
   for (const prop of typeProperties) {
     const propName = prop.name;
@@ -48,36 +49,39 @@ export function extractInlineObjectProperties(
       continue;
     }
 
-    const propType = checker.getTypeOfSymbol(prop);
-    const declarations = getDeclarations(prop);
+    const propType = await checker.getTypeOfSymbol(prop);
+    const declarations = await getDeclarations(prop);
     const declaration = declarations?.[0];
 
-    const optional = hasUndefinedInType(propType);
+    const optional = await hasUndefinedInType(propType);
 
-    const tsdocInfo = extractTsDocFromSymbol(prop, checker);
+    const tsdocInfo = await extractTsDocFromSymbol(prop, checker);
 
     let actualPropType = propType;
     let directives: ReadonlyArray<DirectiveInfo> | null = null;
     let directiveNullable = false;
     let defaultValue: DirectiveArgumentValue | null = null;
 
-    if (hasDirectiveMetadata(propType)) {
-      const directiveResult = detectDirectiveMetadata(propType, checker);
+    if (await hasDirectiveMetadata(propType, checker)) {
+      const directiveResult = await detectDirectiveMetadata(propType, checker);
       if (directiveResult.directives.length > 0) {
         directives = directiveResult.directives;
       }
 
-      const defaultValueResult = detectDefaultValueMetadata(propType, checker);
+      const defaultValueResult = await detectDefaultValueMetadata(
+        propType,
+        checker,
+      );
       if (defaultValueResult.defaultValue) {
         defaultValue = defaultValueResult.defaultValue;
       }
 
-      if (isNullableUnion(propType)) {
+      if (await isNullableUnion(propType)) {
         directiveNullable = true;
       }
-      actualPropType = unwrapDirectiveType(propType, checker);
+      actualPropType = await unwrapDirectiveType(propType, checker);
 
-      if (!directiveNullable && isNullableUnion(actualPropType)) {
+      if (!directiveNullable && (await isNullableUnion(actualPropType))) {
         directiveNullable = true;
       }
     }
@@ -96,7 +100,7 @@ export function extractInlineObjectProperties(
       propTypeNode = declaration.type;
     }
 
-    const tsType = convertType(actualPropType, checker, propTypeNode);
+    const tsType = await convertType(actualPropType, checker, propTypeNode);
     const finalTsType =
       directiveNullable && !tsType.nullable
         ? { ...tsType, nullable: true }

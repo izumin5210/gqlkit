@@ -7,6 +7,7 @@
 
 import { METADATA_PROPERTIES } from "../../core/index.js";
 import * as ts from "../../core/typescript.js";
+import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { getActualMetadataType } from "../../shared/metadata-detector.js";
 
 const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
@@ -16,35 +17,38 @@ const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
  */
 export interface DetectIgnoreFieldsParams {
   readonly type: ts.Type;
-  readonly checker: ts.Checker;
+  readonly checker: CheckerLoader;
 }
 
 /**
  * Extracts ignoreFields from a type's metadata.
  * Returns null if the type doesn't have $gqlkitTypeMeta or ignoreFields is not specified.
  */
-function extractIgnoreFieldsFromType(
+async function extractIgnoreFieldsFromType(
   type: ts.Type,
-  checker: ts.Checker,
-): ReadonlySet<string> | null {
-  const metaProp = type.getProperty(TYPE_META_PROPERTY);
+  checker: CheckerLoader,
+): Promise<ReadonlySet<string> | null> {
+  const metaProp = await checker.getPropertyOfType(type, TYPE_META_PROPERTY);
   if (!metaProp) {
     return null;
   }
 
-  const rawMetadataType = checker.getTypeOfSymbol(metaProp);
-  const metadataType = getActualMetadataType(rawMetadataType);
+  const rawMetadataType = await checker.getTypeOfSymbol(metaProp);
+  const metadataType = await getActualMetadataType(rawMetadataType);
   if (!metadataType) {
     return null;
   }
 
-  const ignoreFieldsProp = metadataType.getProperty("ignoreFields");
+  const ignoreFieldsProp = await checker.getPropertyOfType(
+    metadataType,
+    "ignoreFields",
+  );
   if (!ignoreFieldsProp) {
     return null;
   }
 
-  const rawIgnoreFieldsType = checker.getTypeOfSymbol(ignoreFieldsProp);
-  const ignoreFieldsType = getActualMetadataType(rawIgnoreFieldsType);
+  const rawIgnoreFieldsType = await checker.getTypeOfSymbol(ignoreFieldsProp);
+  const ignoreFieldsType = await getActualMetadataType(rawIgnoreFieldsType);
   if (!ignoreFieldsType) {
     return null;
   }
@@ -55,7 +59,9 @@ function extractIgnoreFieldsFromType(
 /**
  * Extracts string literals from a type (single literal or union of literals).
  */
-function extractStringLiteralUnion(type: ts.Type): ReadonlySet<string> | null {
+async function extractStringLiteralUnion(
+  type: ts.Type,
+): Promise<ReadonlySet<string> | null> {
   if (type.flags & ts.TypeFlags.StringLiteral) {
     const value = (type as ts.StringLiteralType).value;
     return new Set([value]);
@@ -63,7 +69,7 @@ function extractStringLiteralUnion(type: ts.Type): ReadonlySet<string> | null {
 
   if (type.isUnionType()) {
     const values = new Set<string>();
-    for (const member of type.getTypes()) {
+    for (const member of await type.getTypes()) {
       if (member.flags & ts.TypeFlags.StringLiteral) {
         values.add((member as ts.StringLiteralType).value);
       }
@@ -86,19 +92,19 @@ function extractStringLiteralUnion(type: ts.Type): ReadonlySet<string> | null {
  * @param params - The detection parameters containing type and checker
  * @returns The ignoreFields set or null if not specified
  */
-export function detectIgnoreFieldsMetadata(
+export async function detectIgnoreFieldsMetadata(
   params: DetectIgnoreFieldsParams,
-): ReadonlySet<string> | null {
+): Promise<ReadonlySet<string> | null> {
   const { type, checker } = params;
 
-  const result = extractIgnoreFieldsFromType(type, checker);
+  const result = await extractIgnoreFieldsFromType(type, checker);
   if (result) {
     return result;
   }
 
   if (type.isIntersectionType()) {
-    for (const member of type.getTypes()) {
-      const memberResult = extractIgnoreFieldsFromType(member, checker);
+    for (const member of await type.getTypes()) {
+      const memberResult = await extractIgnoreFieldsFromType(member, checker);
       if (memberResult) {
         return memberResult;
       }

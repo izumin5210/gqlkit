@@ -12,20 +12,24 @@
 import { serverFS } from "typescript/fs";
 import { describe, expect, it } from "vitest";
 import * as ts from "../../core/typescript.js";
+import {
+  type CheckerLoader,
+  createCheckerLoader,
+} from "../../shared/checker-loader.js";
 import { detectIgnoreFieldsMetadata } from "./ignore-fields-detector.js";
 
 const VIRTUAL_DIR = "/virtual";
 const VIRTUAL_FILE = `${VIRTUAL_DIR}/test.ts`;
 
 interface TestProgram {
-  readonly checker: ts.Checker;
+  readonly checker: CheckerLoader;
   readonly sourceFile: ts.SourceFile;
 }
 
-function withTestProgram(
+async function withTestProgram(
   source: string,
-  fn: (testProgram: TestProgram) => void,
-): void {
+  fn: (testProgram: TestProgram) => Promise<void>,
+): Promise<void> {
   const api = new ts.API({
     cwd: VIRTUAL_DIR,
     fs: {
@@ -41,7 +45,7 @@ function withTestProgram(
     },
   });
   try {
-    const program = api.createProgram([VIRTUAL_FILE], {
+    const program = await api.createProgram([VIRTUAL_FILE], {
       target: ts.ScriptTarget.ES2020,
       module: ts.ModuleKind.ES2020,
       strict: true,
@@ -49,27 +53,30 @@ function withTestProgram(
       noEmit: true,
     });
 
-    const sourceFile = program.getSourceFile(VIRTUAL_FILE);
+    const sourceFile = await program.getSourceFile(VIRTUAL_FILE);
     if (!sourceFile) {
       throw new Error("Failed to get source file");
     }
 
-    fn({ checker: program.getProject().checker, sourceFile });
+    await fn({
+      checker: createCheckerLoader(program.getProject().checker),
+      sourceFile,
+    });
   } finally {
-    api.close();
+    await api.close();
   }
 }
 
-function getTypeFromDeclaration(
+async function getTypeFromDeclaration(
   sourceFile: ts.SourceFile,
-  checker: ts.Checker,
+  checker: CheckerLoader,
   typeName: string,
-): ts.Type {
+): Promise<ts.Type> {
   for (const statement of sourceFile.statements) {
     if (ts.isTypeAliasDeclaration(statement)) {
       const name = statement.name.getText(sourceFile);
       if (name === typeName) {
-        const symbol = checker.getSymbolAtLocation(statement.name);
+        const symbol = await checker.getSymbolAtLocation(statement.name);
         if (symbol) {
           return checker.getDeclaredTypeOfSymbol(symbol);
         }
@@ -81,17 +88,17 @@ function getTypeFromDeclaration(
 
 describe("detectIgnoreFieldsMetadata", () => {
   describe("edge cases", () => {
-    it("returns null for plain object type (non-GqlObject)", () => {
+    it("returns null for plain object type (non-GqlObject)", async () => {
       const source = `
         type User = {
           id: string;
           name: string;
         };
       `;
-      withTestProgram(source, ({ checker, sourceFile }) => {
-        const type = getTypeFromDeclaration(sourceFile, checker, "User");
+      await withTestProgram(source, async ({ checker, sourceFile }) => {
+        const type = await getTypeFromDeclaration(sourceFile, checker, "User");
 
-        const result = detectIgnoreFieldsMetadata({ type, checker });
+        const result = await detectIgnoreFieldsMetadata({ type, checker });
 
         expect(result).toBeNull();
       });

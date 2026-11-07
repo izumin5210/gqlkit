@@ -17,6 +17,7 @@ import {
   type TSTypeReference,
 } from "../../core/index.js";
 import * as ts from "../../core/typescript.js";
+import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import { extractTsDocFromSymbol } from "../../shared/tsdoc-parser.js";
@@ -60,7 +61,7 @@ export interface FieldTypeResolverDiagnostic {
 }
 
 export interface FieldTypeResolverContext {
-  readonly checker: ts.Checker;
+  readonly checker: CheckerLoader;
   readonly knownTypeNames: ReadonlySet<string>;
   readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
   readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
@@ -93,11 +94,11 @@ interface InternalFieldTypeContext extends FieldTypeResolverContext {
  * - Utility types (both builtin and user-defined) are treated as inline objects
  *   unless they are explicitly declared in the schema
  */
-export function resolveFieldType(
+export async function resolveFieldType(
   type: ts.Type,
   typeNode: ts.TypeNode | undefined,
   ctx: FieldTypeResolverContext,
-): TSTypeReference {
+): Promise<TSTypeReference> {
   const internalCtx: InternalFieldTypeContext = {
     ...ctx,
     visitedTypes: new WeakSet(),
@@ -121,16 +122,19 @@ interface TryReferenceFromTypeNodeParams {
   readonly nullable: boolean;
 }
 
-function tryReferenceFromTypeNode(
+async function tryReferenceFromTypeNode(
   params: TryReferenceFromTypeNodeParams,
-): TSTypeReference | null {
+): Promise<TSTypeReference | null> {
   const { typeNode, ctx, nullable } = params;
   if (!(typeNode && ts.isTypeReferenceNode(typeNode))) {
     return null;
   }
   const typeName = getTypeNameFromNode(typeNode);
-  const nodeSymbol = ctx.checker.getSymbolAtLocation(typeNode.typeName);
-  if (typeName && isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx)) {
+  const nodeSymbol = await ctx.checker.getSymbolAtLocation(typeNode.typeName);
+  if (
+    typeName &&
+    (await isKnownSchemaType(typeName, nodeSymbol ?? undefined, ctx))
+  ) {
     return createReferenceType({ name: typeName, nullable });
   }
   return null;
@@ -155,16 +159,18 @@ interface RegisterDiscoveredTypeParams {
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
 }
 
-function registerDiscoveredType(params: RegisterDiscoveredTypeParams): boolean {
+async function registerDiscoveredType(
+  params: RegisterDiscoveredTypeParams,
+): Promise<boolean> {
   const { name, type, symbol, discoveredTypes } = params;
   if (!discoveredTypes) {
     return false;
   }
   if (!discoveredTypes.has(name)) {
-    const declarations = getDeclarations(symbol);
+    const declarations = await getDeclarations(symbol);
     const decl = declarations?.[0];
     if (decl && !decl.getSourceFile().isDeclarationFile) {
-      const properties = type.getProperties();
+      const properties = await type.getProperties();
       if (properties.length > 0) {
         const declSourceFile = decl.getSourceFile();
         const location = getSourceLocationFromNode(decl) ?? {
@@ -185,15 +191,39 @@ function registerDiscoveredType(params: RegisterDiscoveredTypeParams): boolean {
   return discoveredTypes.has(name);
 }
 
-function resolveFieldTypeInternal(
+/**
+ * Resolves one union member. An unresolvable reference to an object type with
+ * properties (e.g. an external library type) is expanded as an inline object;
+ * discovered types stay references so they can be registered later under
+ * their original names.
+ */
+async function resolveUnionMember(
+  t: ts.Type,
+  ctx: InternalFieldTypeContext,
+): Promise<TSTypeReference> {
+  const result = await resolveFieldTypeInternal(t, undefined, ctx);
+  if (
+    result.kind === "reference" &&
+    result.name !== null &&
+    !ctx.knownTypeNames.has(result.name) &&
+    t.flags & ts.TypeFlags.Object &&
+    (await t.getProperties()).length > 0 &&
+    !ctx.discoveredTypes?.has(result.name)
+  ) {
+    return tryExtractAsInlineObject(t, ctx, result.name);
+  }
+  return result;
+}
+
+async function resolveFieldTypeInternal(
   type: ts.Type,
   typeNode: ts.TypeNode | undefined,
   ctx: InternalFieldTypeContext,
-): TSTypeReference {
+): Promise<TSTypeReference> {
   const { checker, knownTypeNames, globalTypeMappings } = ctx;
 
   // Scalar detection
-  const metadataResult = detectScalarMetadata(type, checker);
+  const metadataResult = await detectScalarMetadata(type, checker);
   if (
     metadataResult.scalarName &&
     !metadataResult.isPrimitive &&
@@ -218,36 +248,36 @@ function resolveFieldTypeInternal(
   // The typeNode from the property declaration preserves the original type reference,
   // so check it before any structural analysis.
   {
-    const ref = tryReferenceFromTypeNode({
+    const ref = await tryReferenceFromTypeNode({
       typeNode,
       ctx,
-      nullable: isNullableUnion(type),
+      nullable: await isNullableUnion(type),
     });
     if (ref) return ref;
   }
 
   // Boolean union handling
-  if (isBooleanUnion(type)) {
-    const nullable = isNullableUnion(type);
+  if (await isBooleanUnion(type)) {
+    const nullable = await isNullableUnion(type);
     return createPrimitiveType({ name: "boolean", nullable });
   }
 
   // Union type handling
   if (type.isUnionType()) {
-    const nullable = isNullableUnion(type);
+    const nullable = await isNullableUnion(type);
 
     // Preserve type alias name for enum types (string literal unions)
-    const aliasSymbol = type.getAliasSymbol();
+    const aliasSymbol = await type.getAliasSymbol();
     if (aliasSymbol) {
       const name = aliasSymbol.name;
-      if (isKnownSchemaType(name, aliasSymbol, ctx)) {
+      if (await isKnownSchemaType(name, aliasSymbol, ctx)) {
         return createReferenceType({ name, nullable });
       }
     }
 
     // Fallback: Extract name from typeNode when aliasSymbol is not available (e.g., re-exported types)
     {
-      const ref = tryReferenceFromTypeNode({ typeNode, ctx, nullable });
+      const ref = await tryReferenceFromTypeNode({ typeNode, ctx, nullable });
       if (ref) return ref;
     }
 
@@ -259,7 +289,7 @@ function resolveFieldTypeInternal(
     if (nullable && typeNode && ts.isUnionTypeNode(typeNode)) {
       const nonNullTypeNodes = filterNonNullTypeNodes(typeNode);
       if (nonNullTypeNodes.length === 1) {
-        const ref = tryReferenceFromTypeNode({
+        const ref = await tryReferenceFromTypeNode({
           typeNode: nonNullTypeNodes[0],
           ctx,
           nullable,
@@ -268,18 +298,18 @@ function resolveFieldTypeInternal(
       }
     }
 
-    const nonNullTypes = getNonNullableTypes(type);
+    const nonNullTypes = await getNonNullableTypes(type);
 
     // Check if all non-null types belong to the same enum
-    const enumParentSymbol = findEnumParentSymbol(nonNullTypes);
+    const enumParentSymbol = await findEnumParentSymbol(nonNullTypes);
     if (enumParentSymbol) {
       const enumName = enumParentSymbol.name;
       // If enum is in knownTypeNames, treat as reference type
-      if (isKnownSchemaType(enumName, enumParentSymbol, ctx)) {
+      if (await isKnownSchemaType(enumName, enumParentSymbol, ctx)) {
         return createReferenceType({ name: enumName, nullable });
       }
       // External enum: extract members and treat as inline enum
-      const externalEnumResult = tryExtractExternalEnumAsInlineEnum(
+      const externalEnumResult = await tryExtractExternalEnumAsInlineEnum(
         enumParentSymbol,
         checker,
       );
@@ -309,7 +339,7 @@ function resolveFieldTypeInternal(
     // Check if all non-null types are branded primitives with the same base type
     // This handles cases like: boolean & { __nominal: true }
     // which expands to: (true & { __nominal: true }) | (false & { __nominal: true })
-    const uniformBrandedResult = detectUniformBrandedType(nonNullTypes);
+    const uniformBrandedResult = await detectUniformBrandedType(nonNullTypes);
     if (
       uniformBrandedResult.isBranded &&
       uniformBrandedResult.baseType !== null
@@ -326,7 +356,7 @@ function resolveFieldTypeInternal(
           ? findNonNullTypeNode(typeNode)
           : undefined;
 
-      const innerResult = resolveFieldTypeInternal(
+      const innerResult = await resolveFieldTypeInternal(
         nonNullTypes[0]!,
         nonNullTypeNode,
         ctx,
@@ -334,33 +364,21 @@ function resolveFieldTypeInternal(
       return { ...innerResult, nullable };
     }
 
-    const memberResults = nonNullTypes.map((t) => {
-      const result = resolveFieldTypeInternal(t, undefined, ctx);
-      // If the result is an unresolvable reference and the original type is an
-      // object type with properties, try to expand it as an inline object.
-      // This handles external library types used as union members.
-      // When type discovery is active, discovered types are kept as references
-      // so they can be registered with their original names later.
-      if (
-        result.kind === "reference" &&
-        result.name !== null &&
-        !ctx.knownTypeNames.has(result.name) &&
-        t.flags & ts.TypeFlags.Object &&
-        t.getProperties().length > 0 &&
-        !ctx.discoveredTypes?.has(result.name)
-      ) {
-        return tryExtractAsInlineObject(t, ctx, result.name);
-      }
-      return result;
-    });
+    // Members are resolved one at a time: resolution records discovered types
+    // and cycle-detection state on the shared context, whose order shows up in
+    // the output.
+    const memberResults: TSTypeReference[] = [];
+    for (const t of nonNullTypes) {
+      memberResults.push(await resolveUnionMember(t, ctx));
+    }
 
-    const aliasName = type.getAliasSymbol()?.name ?? null;
+    const aliasName = (await type.getAliasSymbol())?.name ?? null;
     return createUnionType({ members: memberResults, nullable, aliasName });
   }
 
   // Array type handling
-  if (checker.isArrayType(type)) {
-    const typeArgs = checker.getTypeArguments(type as ts.TypeReference);
+  if (await checker.isArrayType(type)) {
+    const typeArgs = await checker.getTypeArguments(type as ts.TypeReference);
     const elementType = typeArgs[0];
 
     let elementTypeNode: ts.TypeNode | undefined;
@@ -369,7 +387,7 @@ function resolveFieldTypeInternal(
     }
 
     const elementResult = elementType
-      ? resolveFieldTypeInternal(elementType, elementTypeNode, ctx)
+      ? await resolveFieldTypeInternal(elementType, elementTypeNode, ctx)
       : createPrimitiveType({ name: "unknown", nullable: false });
 
     return createArrayType(elementResult);
@@ -397,7 +415,7 @@ function resolveFieldTypeInternal(
   }
 
   // Primitive types
-  const typeString = checker.typeToString(type);
+  const typeString = await checker.typeToString(type);
 
   if (type.flags & ts.TypeFlags.String) {
     return createPrimitiveType({ name: "string", nullable: false });
@@ -426,10 +444,10 @@ function resolveFieldTypeInternal(
   // GraphQL doesn't have intersection types, so we must resolve them appropriately
   if (type.isIntersectionType()) {
     // 1. If the intersection has an alias that's in knownTypeNames, use it as reference
-    const aliasSymbol = type.getAliasSymbol();
+    const aliasSymbol = await type.getAliasSymbol();
     if (aliasSymbol) {
       const aliasName = aliasSymbol.name;
-      if (isKnownSchemaType(aliasName, aliasSymbol, ctx)) {
+      if (await isKnownSchemaType(aliasName, aliasSymbol, ctx)) {
         return createReferenceType({ name: aliasName, nullable: false });
       }
 
@@ -453,7 +471,7 @@ function resolveFieldTypeInternal(
     }
 
     // 3. Check if this is a branded primitive type pattern
-    const brandedResult = detectBrandedType(type);
+    const brandedResult = await detectBrandedType(type);
     if (brandedResult.isBranded && brandedResult.baseType !== null) {
       return createPrimitiveType({
         name: brandedResult.baseType,
@@ -467,10 +485,10 @@ function resolveFieldTypeInternal(
     if (aliasSymbol) {
       const aliasName = aliasSymbol.name;
       if (!knownTypeNames.has(aliasName)) {
-        const isDiscovered = registerDiscoveredType({
+        const isDiscovered = await registerDiscoveredType({
           name: aliasName,
           type,
-          symbol: resolveOriginalSymbol(aliasSymbol, checker),
+          symbol: await resolveOriginalSymbol(aliasSymbol, checker),
           discoveredTypes: ctx.discoveredTypes,
         });
         if (isDiscovered) {
@@ -484,12 +502,11 @@ function resolveFieldTypeInternal(
   }
 
   // Inline object type handling
-  if (isInlineObjectType(type)) {
+  if (await isInlineObjectType(type)) {
     // Index signature types (Record<string, T>, { [key: string]: T })
     // These have no named properties, only index signatures — map to JSONObject (graphql-scalars)
-    const hasStringIndex =
-      checker.getIndexTypeOfType(type, ts.IndexKind.String) !== undefined;
-    if (hasStringIndex && type.getProperties().length === 0) {
+    const hasStringIndex = (await type.getStringIndexType()) !== undefined;
+    if (hasStringIndex && (await type.getProperties()).length === 0) {
       return createScalarType({
         name: "JSONObject",
         scalarInfo: {
@@ -505,7 +522,11 @@ function resolveFieldTypeInternal(
 
     // Check if typeNode references a known type
     {
-      const ref = tryReferenceFromTypeNode({ typeNode, ctx, nullable: false });
+      const ref = await tryReferenceFromTypeNode({
+        typeNode,
+        ctx,
+        nullable: false,
+      });
       if (ref) return ref;
     }
 
@@ -518,8 +539,8 @@ function resolveFieldTypeInternal(
     if (objectType.objectFlags & ts.ObjectFlags.Mapped) {
       // Index signature mapped types (Record<string, T>) — map to JSONObject (graphql-scalars)
       const hasMappedStringIndex =
-        checker.getIndexTypeOfType(type, ts.IndexKind.String) !== undefined;
-      if (hasMappedStringIndex && type.getProperties().length === 0) {
+        (await type.getStringIndexType()) !== undefined;
+      if (hasMappedStringIndex && (await type.getProperties()).length === 0) {
         return createScalarType({
           name: "JSONObject",
           scalarInfo: {
@@ -535,7 +556,7 @@ function resolveFieldTypeInternal(
 
       // Check if typeNode references a known type (schema-defined type)
       {
-        const ref = tryReferenceFromTypeNode({
+        const ref = await tryReferenceFromTypeNode({
           typeNode,
           ctx,
           nullable: false,
@@ -553,7 +574,7 @@ function resolveFieldTypeInternal(
   // Only expand if the underlying type is an anonymous object literal, not a named type
   // IMPORTANT: Only expand if the name doesn't exist in schema at all.
   // If the name exists but symbols don't match, that's a shadowing case handled by later logic.
-  const aliasSymbol = type.getAliasSymbol();
+  const aliasSymbol = await type.getAliasSymbol();
   if (aliasSymbol) {
     const aliasName = aliasSymbol.name;
     if (!knownTypeNames.has(aliasName)) {
@@ -568,10 +589,10 @@ function resolveFieldTypeInternal(
         // Type aliases to object literals used as union members should be
         // discovered with their original alias name, not expanded as inline
         // objects with auto-generated names. (#202)
-        const isDiscovered = registerDiscoveredType({
+        const isDiscovered = await registerDiscoveredType({
           name: aliasName,
           type,
-          symbol: resolveOriginalSymbol(aliasSymbol, checker),
+          symbol: await resolveOriginalSymbol(aliasSymbol, checker),
           discoveredTypes: ctx.discoveredTypes,
         });
         if (isDiscovered) {
@@ -588,12 +609,16 @@ function resolveFieldTypeInternal(
   // - `typeof def` where the type's symbol is internal (__type, __object)
   // - `Simplify<T>` where the typeNode is the declared alias name but type.symbol is the expanded type
   {
-    const ref = tryReferenceFromTypeNode({ typeNode, ctx, nullable: false });
+    const ref = await tryReferenceFromTypeNode({
+      typeNode,
+      ctx,
+      nullable: false,
+    });
     if (ref) return ref;
   }
 
   // Named type reference (symbol-based lookup)
-  const symbol = type.getSymbol();
+  const symbol = await type.getSymbol();
   if (symbol) {
     const symbolName = symbol.name;
 
@@ -617,13 +642,13 @@ function resolveFieldTypeInternal(
       }
 
       // Check if it's a known type by symbol comparison
-      if (isKnownSchemaType(symbolName, symbol, ctx)) {
+      if (await isKnownSchemaType(symbolName, symbol, ctx)) {
         return createReferenceType({ name: symbolName, nullable: false });
       }
 
       // Check if the symbol is the underlying type of a schema type alias
       // For `type User = ExternalUser;`, this allows `ExternalUser` to be recognized as `User`
-      const resolvedSymbol = resolveOriginalSymbol(symbol, checker);
+      const resolvedSymbol = await resolveOriginalSymbol(symbol, checker);
       const schemaTypeName = ctx.underlyingSymbolToTypeName.get(resolvedSymbol);
       if (schemaTypeName) {
         return createReferenceType({ name: schemaTypeName, nullable: false });
@@ -633,7 +658,7 @@ function resolveFieldTypeInternal(
       // it's a different type with the same name
       if (knownTypeNames.has(symbolName)) {
         // Check if the type is declared within schema files (local shadowing)
-        if (isTypeFromSchemaFiles(symbol, ctx.sourceFiles)) {
+        if (await isTypeFromSchemaFiles(symbol, ctx.sourceFiles)) {
           // Local shadowing - use name matching for backwards compatibility
           return createReferenceType({ name: symbolName, nullable: false });
         }
@@ -671,9 +696,10 @@ function resolveFieldTypeInternal(
       // Check both symbol flags and declarations since the flags may vary
       const isEnumSymbol =
         (resolvedSymbol.flags & ts.SymbolFlags.Enum) !== 0 ||
-        getDeclarations(resolvedSymbol)?.some(ts.isEnumDeclaration) === true;
+        (await getDeclarations(resolvedSymbol))?.some(ts.isEnumDeclaration) ===
+          true;
       if (isEnumSymbol) {
-        const externalEnumResult = tryExtractExternalEnumAsInlineEnum(
+        const externalEnumResult = await tryExtractExternalEnumAsInlineEnum(
           resolvedSymbol,
           checker,
         );
@@ -689,7 +715,7 @@ function resolveFieldTypeInternal(
       }
 
       // Discover extractable named types for transitive type registration
-      registerDiscoveredType({
+      await registerDiscoveredType({
         name: symbolName,
         type,
         symbol: resolvedSymbol,
@@ -704,15 +730,16 @@ function resolveFieldTypeInternal(
   return createReferenceType({ name: typeString, nullable: false });
 }
 
-function tryExtractAsInlineObject(
+async function tryExtractAsInlineObject(
   type: ts.Type,
   ctx: InternalFieldTypeContext,
   hintName: string | null,
-): TSTypeReference {
+): Promise<TSTypeReference> {
   const { visitedTypes, checker } = ctx;
   if (visitedTypes.has(type)) {
     // Prefer aliasSymbol (type alias name) over type.symbol (which may be __type for anonymous objects)
-    const candidateName = type.getAliasSymbol()?.name ?? type.getSymbol()?.name;
+    const candidateName =
+      (await type.getAliasSymbol())?.name ?? (await type.getSymbol())?.name;
     if (
       candidateName &&
       !isInternalTypeSymbol(candidateName) &&
@@ -733,7 +760,7 @@ function tryExtractAsInlineObject(
 
   visitedTypes.add(type);
 
-  const inlineProperties = extractInlineObjectPropertiesShared(
+  const inlineProperties = await extractInlineObjectPropertiesShared(
     type,
     checker,
     (propType, _checker, typeNode) =>
@@ -752,9 +779,9 @@ function tryExtractAsInlineObject(
   // Only extract from user-defined types, not built-in TypeScript utility types
   let description: string | null = null;
   let deprecated: DeprecationInfo | null = null;
-  const aliasSymbol = type.getAliasSymbol();
+  const aliasSymbol = await type.getAliasSymbol();
   if (aliasSymbol) {
-    const declarations = getDeclarations(aliasSymbol);
+    const declarations = await getDeclarations(aliasSymbol);
     const isUserDefined =
       declarations?.some((decl) => {
         const sourceFile = decl.getSourceFile();
@@ -762,7 +789,7 @@ function tryExtractAsInlineObject(
       }) ?? false;
 
     if (isUserDefined) {
-      const tsdocInfo = extractTsDocFromSymbol(aliasSymbol, checker);
+      const tsdocInfo = await extractTsDocFromSymbol(aliasSymbol, checker);
       description = tsdocInfo.description;
       deprecated = tsdocInfo.deprecated;
     }
@@ -825,11 +852,11 @@ interface ExternalEnumExtractionResult {
  * as well as the enum type's own TSDoc information.
  * Returns null if the enum declaration cannot be found or has no valid members.
  */
-function tryExtractExternalEnumAsInlineEnum(
+async function tryExtractExternalEnumAsInlineEnum(
   enumSymbol: ts.Symbol,
-  checker: ts.Checker,
-): ExternalEnumExtractionResult | null {
-  const declarations = getDeclarations(enumSymbol);
+  checker: CheckerLoader,
+): Promise<ExternalEnumExtractionResult | null> {
+  const declarations = await getDeclarations(enumSymbol);
   if (!declarations || declarations.length === 0) {
     return null;
   }
@@ -848,9 +875,9 @@ function tryExtractExternalEnumAsInlineEnum(
     }
 
     const value = initializer.text;
-    const memberSymbol = checker.getSymbolAtLocation(member.name);
+    const memberSymbol = await checker.getSymbolAtLocation(member.name);
     const tsdocInfo = memberSymbol
-      ? extractTsDocFromSymbol(memberSymbol, checker)
+      ? await extractTsDocFromSymbol(memberSymbol, checker)
       : { description: null, deprecated: null };
 
     members.push({
@@ -865,7 +892,7 @@ function tryExtractExternalEnumAsInlineEnum(
   }
 
   // Extract TSDoc from the enum type itself
-  const enumTsDoc = extractTsDocFromSymbol(enumSymbol, checker);
+  const enumTsDoc = await extractTsDocFromSymbol(enumSymbol, checker);
 
   return {
     members,
@@ -878,11 +905,11 @@ function tryExtractExternalEnumAsInlineEnum(
  * Checks if a type's symbol matches the known schema type symbol.
  * Returns true if both name matches AND symbol matches (or if symbol comparison is not possible).
  */
-function isKnownSchemaType(
+async function isKnownSchemaType(
   name: string,
   typeSymbol: ts.Symbol | undefined,
   ctx: FieldTypeResolverContext,
-): boolean {
+): Promise<boolean> {
   const { knownTypeNames, knownTypeSymbols, checker } = ctx;
 
   if (!knownTypeNames.has(name)) {
@@ -894,7 +921,7 @@ function isKnownSchemaType(
     return false;
   }
 
-  const resolvedTypeSymbol = resolveOriginalSymbol(typeSymbol, checker);
+  const resolvedTypeSymbol = await resolveOriginalSymbol(typeSymbol, checker);
   return resolvedTypeSymbol === schemaSymbol;
 }
 
@@ -902,11 +929,11 @@ function isKnownSchemaType(
  * Checks if a type's symbol is declared within the schema source files.
  * Returns true if the type is a local definition (shadowing), false if from external files.
  */
-function isTypeFromSchemaFiles(
+async function isTypeFromSchemaFiles(
   symbol: ts.Symbol,
   sourceFiles: ReadonlySet<string>,
-): boolean {
-  const declarations = getDeclarations(symbol);
+): Promise<boolean> {
+  const declarations = await getDeclarations(symbol);
   if (!declarations || declarations.length === 0) {
     return false;
   }

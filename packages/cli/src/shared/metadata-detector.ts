@@ -19,11 +19,13 @@ import * as ts from "../core/typescript.js";
  * @param metadataType - The type of the metadata property (may be union with undefined)
  * @returns The actual type excluding undefined, or null if extraction fails
  */
-export function getActualMetadataType(metadataType: ts.Type): ts.Type | null {
+export async function getActualMetadataType(
+  metadataType: ts.Type,
+): Promise<ts.Type | null> {
   if (metadataType.isUnionType()) {
-    const nonUndefinedTypes = metadataType
-      .getTypes()
-      .filter((t) => !(t.flags & ts.TypeFlags.Undefined));
+    const nonUndefinedTypes = (await metadataType.getTypes()).filter(
+      (t) => !(t.flags & ts.TypeFlags.Undefined),
+    );
     if (nonUndefinedTypes.length === 1) {
       return nonUndefinedTypes[0]!;
     }

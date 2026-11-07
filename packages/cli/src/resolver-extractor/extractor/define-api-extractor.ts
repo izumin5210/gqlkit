@@ -8,6 +8,7 @@ import {
   type TSTypeReference,
 } from "../../core/index.js";
 import * as ts from "../../core/typescript.js";
+import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { extractDirectivesFromType } from "../../shared/directive-detector.js";
 import { getActualMetadataType } from "../../shared/metadata-detector.js";
@@ -107,31 +108,34 @@ interface MetadataKindResult {
  */
 interface DetectKindFromMetadataTypeParams {
   readonly returnType: ts.Type;
-  readonly checker: ts.Checker;
+  readonly checker: CheckerLoader;
   readonly metadataProperty: string;
 }
 
-function detectKindFromMetadataType(
+async function detectKindFromMetadataType(
   params: DetectKindFromMetadataTypeParams,
-): MetadataKindResult | null {
+): Promise<MetadataKindResult | null> {
   const { returnType, checker, metadataProperty } = params;
-  const metadataProp = returnType.getProperty(metadataProperty);
+  const metadataProp = await checker.getPropertyOfType(
+    returnType,
+    metadataProperty,
+  );
   if (!metadataProp) {
     return null;
   }
 
-  const metadataType = checker.getTypeOfSymbol(metadataProp);
-  const actualType = getActualMetadataType(metadataType);
+  const metadataType = await checker.getTypeOfSymbol(metadataProp);
+  const actualType = await getActualMetadataType(metadataType);
   if (!actualType) {
     return null;
   }
 
-  const kindProp = actualType.getProperty("kind");
+  const kindProp = await checker.getPropertyOfType(actualType, "kind");
   if (!kindProp) {
     return null;
   }
 
-  const kindType = checker.getTypeOfSymbol(kindProp);
+  const kindType = await checker.getTypeOfSymbol(kindProp);
   if (!kindType.isStringLiteralType()) {
     return null;
   }
@@ -143,11 +147,11 @@ function detectKindFromMetadataType(
  * Detects abstract resolver kind and target type from metadata embedded in the type.
  * Returns null if no abstract resolver metadata is found.
  */
-function detectAbstractResolverFromMetadataType(
+async function detectAbstractResolverFromMetadataType(
   returnType: ts.Type,
-  checker: ts.Checker,
-): { kind: AbstractResolverKind; targetTypeName: string } | null {
-  const result = detectKindFromMetadataType({
+  checker: CheckerLoader,
+): Promise<{ kind: AbstractResolverKind; targetTypeName: string } | null> {
+  const result = await detectKindFromMetadataType({
     returnType,
     checker,
     metadataProperty: ABSTRACT_RESOLVER_METADATA_PROPERTY,
@@ -161,13 +165,16 @@ function detectAbstractResolverFromMetadataType(
     return null;
   }
 
-  const targetTypeProp = actualType.getProperty("targetType");
+  const targetTypeProp = await checker.getPropertyOfType(
+    actualType,
+    "targetType",
+  );
   if (!targetTypeProp) {
     return null;
   }
 
-  const targetType = checker.getTypeOfSymbol(targetTypeProp);
-  const targetTypeName = extractTypeNameFromType(targetType, checker);
+  const targetType = await checker.getTypeOfSymbol(targetTypeProp);
+  const targetTypeName = await extractTypeNameFromType(targetType, checker);
 
   if (!targetTypeName) {
     return null;
@@ -181,15 +188,15 @@ function detectAbstractResolverFromMetadataType(
  * Handles internal type symbols (like __type) by falling back to typeToString.
  * Returns null for unresolvable types (any, unknown).
  */
-function extractTypeNameFromType(
+async function extractTypeNameFromType(
   type: ts.Type,
-  checker: ts.Checker,
-): string | null {
+  checker: CheckerLoader,
+): Promise<string | null> {
   if (type.flags & ts.TypeFlags.Any) {
     return null;
   }
 
-  const aliasSymbol = type.getAliasSymbol();
+  const aliasSymbol = await type.getAliasSymbol();
   if (aliasSymbol) {
     const aliasName = aliasSymbol.name;
     if (!isInternalTypeSymbol(aliasName)) {
@@ -197,7 +204,7 @@ function extractTypeNameFromType(
     }
   }
 
-  const symbol = type.getSymbol();
+  const symbol = await type.getSymbol();
   if (symbol) {
     const symbolName = symbol.name;
     if (!isInternalTypeSymbol(symbolName)) {
@@ -205,7 +212,7 @@ function extractTypeNameFromType(
     }
   }
 
-  const typeString = checker.typeToString(type);
+  const typeString = await checker.typeToString(type);
   if (typeString && typeString !== "unknown" && typeString !== "any") {
     return typeString;
   }
@@ -217,11 +224,11 @@ function extractTypeNameFromType(
  * Detects resolver type from metadata embedded in the type.
  * Follows the same pattern as scalar metadata detection.
  */
-function detectResolverFromMetadataType(
+async function detectResolverFromMetadataType(
   returnType: ts.Type,
-  checker: ts.Checker,
-): DefineApiResolverType | null {
-  const result = detectKindFromMetadataType({
+  checker: CheckerLoader,
+): Promise<DefineApiResolverType | null> {
+  const result = await detectKindFromMetadataType({
     returnType,
     checker,
     metadataProperty: RESOLVER_METADATA_PROPERTY,
@@ -262,10 +269,13 @@ function resolveFieldNameFromExportName(exportName: string): string | null {
  * Types like `{ [key: string]: number }` return true.
  * Returns false for NoArgs type (Record<string, never>).
  */
-function hasOnlyIndexSignatures(type: ts.Type, checker: ts.Checker): boolean {
-  const targetType = checker.getApparentType(type);
+async function hasOnlyIndexSignatures(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
+  const targetType = await checker.getApparentType(type);
 
-  const indexInfos = checker.getIndexInfosOfType(targetType);
+  const indexInfos = await checker.getIndexInfosOfType(targetType);
   const hasIndexSignatures = indexInfos.length > 0;
 
   if (!hasIndexSignatures) {
@@ -283,9 +293,9 @@ function hasOnlyIndexSignatures(type: ts.Type, checker: ts.Checker): boolean {
     return false;
   }
 
-  const properties = targetType
-    .getProperties()
-    .filter((p) => !p.name.startsWith(" $"));
+  const properties = (await targetType.getProperties()).filter(
+    (p) => !p.name.startsWith(" $"),
+  );
   if (properties.length > 0) {
     return false;
   }
@@ -296,12 +306,15 @@ function hasOnlyIndexSignatures(type: ts.Type, checker: ts.Checker): boolean {
 /**
  * Gets the type name for error messages.
  */
-function getTypeNameForDiagnostic(type: ts.Type, checker: ts.Checker): string {
-  const aliasSymbol = type.getAliasSymbol();
+async function getTypeNameForDiagnostic(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<string> {
+  const aliasSymbol = await type.getAliasSymbol();
   if (aliasSymbol) {
     return aliasSymbol.name;
   }
-  const symbol = type.getSymbol();
+  const symbol = await type.getSymbol();
   if (symbol) {
     return symbol.name;
   }
@@ -367,11 +380,11 @@ interface ExtractArgsFromTypeParams {
  * field into a separate `ArgumentDefinition` shape that silently dropped the
  * `sourceLocation` `extractFieldsFromType` already computes).
  */
-function extractArgsFromType(
+async function extractArgsFromType(
   params: ExtractArgsFromTypeParams,
-): ExtractArgsResult {
+): Promise<ExtractArgsResult> {
   const { argsType, argsTypeRef, ctx } = params;
-  const { fields, diagnostics } = extractFieldsFromType({
+  const { fields, diagnostics } = await extractFieldsFromType({
     type: argsType,
     checker: ctx.checker,
     globalTypeMappings: ctx.globalTypeMappings,
@@ -409,16 +422,16 @@ function extractArgsFromType(
   return { args: fields, diagnostics: filteredDiagnostics };
 }
 
-function extractDirectivesFromTypeNode(
+async function extractDirectivesFromTypeNode(
   typeNode: ts.TypeNode | undefined,
-  checker: ts.Checker,
-): ReadonlyArray<DirectiveInfo> | null {
+  checker: CheckerLoader,
+): Promise<ReadonlyArray<DirectiveInfo> | null> {
   if (!typeNode) {
     return null;
   }
 
-  const type = checker.getTypeFromTypeNode(typeNode);
-  const directiveResult = extractDirectivesFromType(type, checker);
+  const type = await checker.getTypeFromTypeNode(typeNode);
+  const directiveResult = await extractDirectivesFromType(type, checker);
 
   if (directiveResult.directives.length > 0) {
     return directiveResult.directives;
@@ -439,18 +452,20 @@ interface TypeArgumentsResult {
 interface ValidateArgsTypeParams {
   readonly argsType: ts.Type;
   readonly argsTypeNode: ts.TypeNode;
-  readonly checker: ts.Checker;
+  readonly checker: CheckerLoader;
 }
 
 /**
  * Validates an args type and returns diagnostics for problematic types.
  */
-function validateArgsType(params: ValidateArgsTypeParams): Diagnostic[] {
+async function validateArgsType(
+  params: ValidateArgsTypeParams,
+): Promise<Diagnostic[]> {
   const { argsType, argsTypeNode, checker } = params;
   const diagnostics: Diagnostic[] = [];
 
-  if (hasOnlyIndexSignatures(argsType, checker)) {
-    const typeName = getTypeNameForDiagnostic(argsType, checker);
+  if (await hasOnlyIndexSignatures(argsType, checker)) {
+    const typeName = await getTypeNameForDiagnostic(argsType, checker);
     diagnostics.push({
       code: "INDEX_SIGNATURE_ONLY",
       message: `Type '${typeName}' contains only index signatures and cannot be represented as a GraphQL type. Use a concrete object type instead.`,
@@ -523,9 +538,9 @@ interface ExtractTypeArgumentsFromCallParams {
   readonly resolverType: DefineApiResolverType;
 }
 
-function extractTypeArgumentsFromCall(
+async function extractTypeArgumentsFromCall(
   params: ExtractTypeArgumentsFromCallParams,
-): TypeArgumentsResult | null {
+): Promise<TypeArgumentsResult | null> {
   const { node, inputContext, outputContext, resolverType } = params;
   const { checker } = inputContext;
   const typeArgs = node.typeArguments;
@@ -540,30 +555,35 @@ function extractTypeArgumentsFromCall(
   const { parentTypeName, argsTypeNode, returnTypeNode, directiveTypeNode } =
     callTypeNodes;
 
-  const argsType = checker.getTypeFromTypeNode(argsTypeNode);
-  const returnType = checker.getTypeFromTypeNode(returnTypeNode);
+  const argsType = await checker.getTypeFromTypeNode(argsTypeNode);
+  const returnType = await checker.getTypeFromTypeNode(returnTypeNode);
 
-  const argsTypeRef = resolveFieldType(argsType, undefined, inputContext);
+  const argsTypeRef = await resolveFieldType(argsType, undefined, inputContext);
   const isNoArgs =
     argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
   const diagnostics: Diagnostic[] = [];
 
   if (!isNoArgs) {
-    diagnostics.push(...validateArgsType({ argsType, argsTypeNode, checker }));
+    diagnostics.push(
+      ...(await validateArgsType({ argsType, argsTypeNode, checker })),
+    );
   }
 
   const argsResult = isNoArgs
     ? null
-    : extractArgsFromType({ argsType, argsTypeRef, ctx: inputContext });
+    : await extractArgsFromType({ argsType, argsTypeRef, ctx: inputContext });
   if (argsResult) {
     diagnostics.push(...argsResult.diagnostics);
   }
 
-  const directives = extractDirectivesFromTypeNode(directiveTypeNode, checker);
+  const directives = await extractDirectivesFromTypeNode(
+    directiveTypeNode,
+    checker,
+  );
 
   const returnTypeDiagnostics: FieldTypeResolverDiagnostic[] = [];
-  const returnTypeRef = resolveFieldType(returnType, returnTypeNode, {
+  const returnTypeRef = await resolveFieldType(returnType, returnTypeNode, {
     ...outputContext,
     diagnostics: returnTypeDiagnostics,
   });
@@ -585,17 +605,17 @@ function extractTypeArgumentsFromCall(
   };
 }
 
-function extractExportedInputTypes(
+async function extractExportedInputTypes(
   sourceFile: ts.SourceFile,
   ctx: FieldTypeResolverContext,
-): ExportedInputType[] {
+): Promise<ExportedInputType[]> {
   const exportedTypes: ExportedInputType[] = [];
 
-  sourceFile.forEachChild((node) => {
+  for (const node of sourceFile.statements) {
     if (ts.isTypeAliasDeclaration(node) && isExported(node)) {
       const name = node.name.getText(sourceFile);
-      const type = ctx.checker.getTypeAtLocation(node.name);
-      const tsType = resolveFieldType(type, undefined, ctx);
+      const type = await ctx.checker.getTypeAtLocation(node.name);
+      const tsType = await resolveFieldType(type, undefined, ctx);
 
       exportedTypes.push({
         name,
@@ -603,7 +623,7 @@ function extractExportedInputTypes(
         sourceFile: sourceFile.fileName,
       });
     }
-  });
+  }
 
   return exportedTypes;
 }
@@ -643,7 +663,7 @@ interface ProcessResolverDeclarationParams {
   readonly statement: ts.VariableStatement;
   readonly sourceFile: ts.SourceFile;
   readonly filePath: string;
-  readonly checker: ts.Checker;
+  readonly checker: CheckerLoader;
   readonly inputContext: FieldTypeResolverContext;
   readonly outputContext: FieldTypeResolverContext;
   readonly exportedInputTypes: ReadonlyArray<ExportedInputType>;
@@ -662,9 +682,9 @@ interface ProcessResolverDeclarationResult {
  * silently skipped, matching pre-decomposition behavior). Guard order is
  * unchanged from the original inline loop body (refactor-plan.md §1.2-E).
  */
-function processResolverDeclaration(
+async function processResolverDeclaration(
   params: ProcessResolverDeclarationParams,
-): ProcessResolverDeclarationResult | null {
+): Promise<ProcessResolverDeclarationResult | null> {
   const {
     declaration,
     statement,
@@ -711,9 +731,9 @@ function processResolverDeclaration(
 
   // Computed once and offered to both detectors below (they previously
   // each called getTypeAtLocation on this same node independently).
-  const returnType = checker.getTypeAtLocation(initializer);
+  const returnType = await checker.getTypeAtLocation(initializer);
 
-  const abstractResolverInfo = detectAbstractResolverFromMetadataType(
+  const abstractResolverInfo = await detectAbstractResolverFromMetadataType(
     returnType,
     checker,
   );
@@ -736,7 +756,10 @@ function processResolverDeclaration(
     };
   }
 
-  const resolverType = detectResolverFromMetadataType(returnType, checker);
+  const resolverType = await detectResolverFromMetadataType(
+    returnType,
+    checker,
+  );
 
   if (!resolverType) {
     return null;
@@ -762,7 +785,7 @@ function processResolverDeclaration(
     ? initializer.expression.text
     : undefined;
 
-  const typeInfo = extractTypeArgumentsFromCall({
+  const typeInfo = await extractTypeArgumentsFromCall({
     node: initializer,
     inputContext,
     outputContext,
@@ -784,7 +807,7 @@ function processResolverDeclaration(
     };
   }
 
-  const tsdocInfo = extractTsDocInfo(statement, checker);
+  const tsdocInfo = await extractTsDocInfo(statement, checker);
   const sourceLocation = getSourceLocationFromNode(declaration.name) ?? {
     file: filePath,
     line: 1,
@@ -814,15 +837,15 @@ function processResolverDeclaration(
 
 export interface ExtractDefineApiResolversParams {
   readonly program: ts.Program;
+  readonly checker: CheckerLoader;
   readonly files: ReadonlyArray<string>;
   readonly options: ExtractDefineApiOptions;
 }
 
-export function extractDefineApiResolvers(
+export async function extractDefineApiResolvers(
   params: ExtractDefineApiResolversParams,
-): ExtractDefineApiResult {
-  const { program, files, options } = params;
-  const checker = program.getProject().checker;
+): Promise<ExtractDefineApiResult> {
+  const { program, checker, files, options } = params;
   const resolvers: DefineApiResolverInfo[] = [];
   const abstractTypeResolvers: AbstractResolverInfo[] = [];
   const diagnostics: Diagnostic[] = [];
@@ -875,27 +898,27 @@ export function extractDefineApiResolvers(
   };
 
   for (const filePath of files) {
-    const sourceFile = program.getSourceFile(filePath);
+    const sourceFile = await program.getSourceFile(filePath);
     if (!sourceFile) {
       continue;
     }
 
-    const exportedInputTypes = extractExportedInputTypes(
+    const exportedInputTypes = await extractExportedInputTypes(
       sourceFile,
       inputContext,
     );
 
-    sourceFile.forEachChild((node) => {
+    for (const node of sourceFile.statements) {
       if (!ts.isVariableStatement(node)) {
-        return;
+        continue;
       }
 
       if (!isExported(node)) {
-        return;
+        continue;
       }
 
       for (const declaration of node.declarationList.declarations) {
-        const result = processResolverDeclaration({
+        const result = await processResolverDeclaration({
           declaration,
           statement: node,
           sourceFile,
@@ -918,7 +941,7 @@ export function extractDefineApiResolvers(
           resolvers.push(result.resolver);
         }
       }
-    });
+    }
   }
 
   return { resolvers, abstractTypeResolvers, diagnostics };
