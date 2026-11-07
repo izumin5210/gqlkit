@@ -51,8 +51,7 @@ export async function extractInlineObjectProperties(
     }
 
     const propType = await checker.getTypeOfSymbol(prop);
-    const declarations = await checker.getDeclarationsOfSymbol(prop);
-    const declaration = declarations?.[0];
+    const declaration = await checker.getFirstDeclarationOfSymbol(prop);
 
     const optional = await hasUndefinedInType(propType, checker);
 

@@ -79,9 +79,21 @@ export interface CheckerLoader {
   readonly getParentOfSymbol: (
     symbol: ts.Symbol,
   ) => Promise<ts.Symbol | undefined>;
-  /** Resolves a symbol's declaration handles into AST nodes. */
+  /**
+   * Resolves a symbol's declaration handles into AST nodes. Resolving a
+   * handle fetches its whole source file, which for lib or generated types
+   * is a large `.d.ts`; prefer the narrower variants below when they suffice.
+   */
   readonly getDeclarationsOfSymbol: (
     symbol: ts.Symbol,
+  ) => Promise<ReadonlyArray<ts.Declaration>>;
+  readonly getFirstDeclarationOfSymbol: (
+    symbol: ts.Symbol,
+  ) => Promise<ts.Declaration | undefined>;
+  /** Resolves only the declarations of `kind`, using the handles' kinds. */
+  readonly getDeclarationsOfSymbolOfKind: (
+    symbol: ts.Symbol,
+    kind: ts.SyntaxKind,
   ) => Promise<ReadonlyArray<ts.Declaration>>;
 }
 
@@ -199,6 +211,12 @@ export function createCheckerLoader(
   const resolveHandle = memoize((handle: ts.NodeHandle<ts.Declaration>) =>
     query(() => handle.resolve.gen()),
   );
+  const resolveHandles = async (
+    handles: ReadonlyArray<ts.NodeHandle<ts.Declaration>>,
+  ): Promise<ReadonlyArray<ts.Declaration>> => {
+    const resolved = await Promise.all(handles.map(resolveHandle));
+    return resolved.filter((d): d is ts.Declaration => d !== undefined);
+  };
   const propertyLookups = new WeakMap<
     ts.Type,
     Map<string, Promise<ts.Symbol | undefined>>
@@ -283,11 +301,12 @@ export function createCheckerLoader(
       query(() => type.getStringIndexType.gen()),
     ),
     getParentOfSymbol: memoize((symbol) => query(() => symbol.getParent.gen())),
-    getDeclarationsOfSymbol: memoize(async (symbol) => {
-      const resolved = await Promise.all(
-        symbol.declarations.map(resolveHandle),
-      );
-      return resolved.filter((d): d is ts.Declaration => d !== undefined);
-    }),
+    getDeclarationsOfSymbol: (symbol) => resolveHandles(symbol.declarations),
+    getFirstDeclarationOfSymbol: async (symbol) => {
+      const [first] = symbol.declarations;
+      return first === undefined ? undefined : resolveHandle(first);
+    },
+    getDeclarationsOfSymbolOfKind: (symbol, kind) =>
+      resolveHandles(symbol.declarations.filter((h) => h.kind === kind)),
   };
 }

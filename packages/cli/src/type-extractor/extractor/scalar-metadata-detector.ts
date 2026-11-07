@@ -207,7 +207,10 @@ async function detectScalarMetadataCore(
 
   const symbol = await checker.getSymbolOfType(type);
   if (symbol) {
-    const declarations = await checker.getDeclarationsOfSymbol(symbol);
+    const declarations = await checker.getDeclarationsOfSymbolOfKind(
+      symbol,
+      ts.SyntaxKind.TypeAliasDeclaration,
+    );
     if (declarations && declarations.length > 0) {
       for (const decl of declarations) {
         if (ts.isTypeAliasDeclaration(decl)) {

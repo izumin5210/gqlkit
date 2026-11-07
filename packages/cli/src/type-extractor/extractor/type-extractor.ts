@@ -194,8 +194,7 @@ export async function extractFieldsFromType(
     }
 
     const propType = await checker.getTypeOfSymbol(prop);
-    const declarations = await checker.getDeclarationsOfSymbol(prop);
-    const declaration = declarations?.[0];
+    const declaration = await checker.getFirstDeclarationOfSymbol(prop);
 
     const optional = await hasUndefinedInType(propType, checker);
 
@@ -942,8 +941,7 @@ async function processReexportedSymbol(
     };
   }
 
-  const declarations = await checker.getDeclarationsOfSymbol(resolvedSymbol);
-  const declaration = declarations?.[0];
+  const declaration = await checker.getFirstDeclarationOfSymbol(resolvedSymbol);
   const preambleDiagnostics: Diagnostic[] = [];
   if (declaration) {
     if (
@@ -1277,8 +1275,7 @@ async function extractInlineObjectMembers(
         for (const prop of properties) {
           const propType = await checker.getTypeOfSymbol(prop);
           const tsdocInfo = await extractTsDocFromSymbol(prop, checker);
-          const declarations = await checker.getDeclarationsOfSymbol(prop);
-          const declaration = declarations?.[0];
+          const declaration = await checker.getFirstDeclarationOfSymbol(prop);
 
           let propTypeNode: ts.TypeNode | undefined;
           if (

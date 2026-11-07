@@ -167,8 +167,7 @@ async function registerDiscoveredType(
     return false;
   }
   if (!discoveredTypes.has(name)) {
-    const declarations = await checker.getDeclarationsOfSymbol(symbol);
-    const decl = declarations?.[0];
+    const decl = await checker.getFirstDeclarationOfSymbol(symbol);
     if (decl && !decl.getSourceFile().isDeclarationFile) {
       const properties = await checker.getPropertiesOfType(type);
       if (properties.length > 0) {
@@ -709,9 +708,9 @@ async function resolveFieldTypeInternal(
       // Check both symbol flags and declarations since the flags may vary
       const isEnumSymbol =
         (resolvedSymbol.flags & ts.SymbolFlags.Enum) !== 0 ||
-        (await checker.getDeclarationsOfSymbol(resolvedSymbol))?.some(
-          ts.isEnumDeclaration,
-        ) === true;
+        resolvedSymbol.declarations.some(
+          (handle) => handle.kind === ts.SyntaxKind.EnumDeclaration,
+        );
       if (isEnumSymbol) {
         const externalEnumResult = await tryExtractExternalEnumAsInlineEnum(
           resolvedSymbol,
@@ -875,7 +874,10 @@ async function tryExtractExternalEnumAsInlineEnum(
   enumSymbol: ts.Symbol,
   checker: CheckerLoader,
 ): Promise<ExternalEnumExtractionResult | null> {
-  const declarations = await checker.getDeclarationsOfSymbol(enumSymbol);
+  const declarations = await checker.getDeclarationsOfSymbolOfKind(
+    enumSymbol,
+    ts.SyntaxKind.EnumDeclaration,
+  );
   if (!declarations || declarations.length === 0) {
     return null;
   }
@@ -953,12 +955,7 @@ async function isTypeFromSchemaFiles(
   sourceFiles: ReadonlySet<string>,
   checker: CheckerLoader,
 ): Promise<boolean> {
-  const declarations = await checker.getDeclarationsOfSymbol(symbol);
-  if (!declarations || declarations.length === 0) {
-    return false;
-  }
-
-  const declaration = declarations[0];
+  const declaration = await checker.getFirstDeclarationOfSymbol(symbol);
   if (!declaration) {
     return false;
   }
