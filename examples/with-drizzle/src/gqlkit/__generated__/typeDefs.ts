@@ -23,6 +23,13 @@ export const typeDefs: DocumentNode = {
           kind: "EnumValueDefinition",
           name: {
             kind: "Name",
+            value: "HIGH",
+          },
+        },
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
             value: "LOW",
           },
         },
@@ -31,13 +38,6 @@ export const typeDefs: DocumentNode = {
           name: {
             kind: "Name",
             value: "MEDIUM",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "HIGH",
           },
         },
       ],
@@ -214,6 +214,13 @@ export const typeDefs: DocumentNode = {
           kind: "EnumValueDefinition",
           name: {
             kind: "Name",
+            value: "HIGH",
+          },
+        },
+        {
+          kind: "EnumValueDefinition",
+          name: {
+            kind: "Name",
             value: "LOW",
           },
         },
@@ -222,13 +229,6 @@ export const typeDefs: DocumentNode = {
           name: {
             kind: "Name",
             value: "MEDIUM",
-          },
-        },
-        {
-          kind: "EnumValueDefinition",
-          name: {
-            kind: "Name",
-            value: "HIGH",
           },
         },
       ],

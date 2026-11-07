@@ -1,4 +1,3 @@
-import type ts from "typescript";
 import type { DeprecationInfo } from "./metadata.js";
 import type {
   InlineEnumMemberInfo,
@@ -6,6 +5,7 @@ import type {
   ScalarTypeInfo,
   TSTypeReference,
 } from "./ts-types.js";
+import type * as ts from "./typescript.js";
 
 interface CreateTSTypeReferenceParams {
   readonly kind: TSTypeReference["kind"];

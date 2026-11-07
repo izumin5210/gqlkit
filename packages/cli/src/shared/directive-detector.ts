@@ -5,13 +5,13 @@
  * in TypeScript intersection types using the $gqlkitFieldMeta or $gqlkitTypeMeta properties.
  */
 
-import ts from "typescript";
 import {
   type DirectiveArgument,
   type DirectiveArgumentValue,
   type DirectiveInfo,
   METADATA_PROPERTIES,
 } from "../core/index.js";
+import * as ts from "../core/typescript.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 import { findMetadataProperty, isNullOrUndefined } from "./typescript-utils.js";
 
@@ -66,13 +66,13 @@ function createEmptyResult(): DirectiveDetectionResult {
  */
 export function resolveArgumentValue(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): DirectiveArgumentValue | null {
   if (type.flags & ts.TypeFlags.Null) {
     return { kind: "null", value: null };
   }
 
-  if (type.isStringLiteral()) {
+  if (type.isStringLiteralType()) {
     // Check enum pattern: starts with uppercase and contains only uppercase letters, digits, and underscores
     if (/^[A-Z][A-Z0-9_]*$/.test(type.value)) {
       return { kind: "enum", value: type.value };
@@ -80,19 +80,12 @@ export function resolveArgumentValue(
     return { kind: "string", value: type.value };
   }
 
-  if (type.isNumberLiteral()) {
+  if (type.isNumberLiteralType()) {
     return { kind: "number", value: type.value };
   }
 
-  if (type.flags & ts.TypeFlags.BooleanLiteral) {
-    const intrinsicName = (type as unknown as { intrinsicName?: string })
-      .intrinsicName;
-    if (intrinsicName === "true") {
-      return { kind: "boolean", value: true };
-    }
-    if (intrinsicName === "false") {
-      return { kind: "boolean", value: false };
-    }
+  if (type.isBooleanLiteralType()) {
+    return { kind: "boolean", value: type.value };
   }
 
   if (checker.isTupleType(type)) {
@@ -111,9 +104,9 @@ export function resolveArgumentValue(
     const typeArgs = checker.getTypeArguments(type as ts.TypeReference);
     if (typeArgs.length > 0 && typeArgs[0]) {
       const elemType = typeArgs[0];
-      if (elemType.isUnion()) {
+      if (elemType.isUnionType()) {
         const values: DirectiveArgumentValue[] = [];
-        for (const member of elemType.types) {
+        for (const member of elemType.getTypes()) {
           const resolved = resolveArgumentValue(member, checker);
           if (resolved) {
             values.push(resolved);
@@ -128,9 +121,9 @@ export function resolveArgumentValue(
   if (properties.length > 0) {
     const isMetadataProperty = properties.some(
       (p) =>
-        p.getName().startsWith(" $") ||
-        p.getName() === DIRECTIVE_NAME_PROPERTY ||
-        p.getName() === DIRECTIVE_ARGS_PROPERTY,
+        p.name.startsWith(" $") ||
+        p.name === DIRECTIVE_NAME_PROPERTY ||
+        p.name === DIRECTIVE_ARGS_PROPERTY,
     );
 
     if (!isMetadataProperty) {
@@ -139,7 +132,7 @@ export function resolveArgumentValue(
         const propType = checker.getTypeOfSymbol(prop);
         const resolved = resolveArgumentValue(propType, checker);
         if (resolved) {
-          fields.push({ name: prop.getName(), value: resolved });
+          fields.push({ name: prop.name, value: resolved });
         }
       }
       if (fields.length > 0) {
@@ -150,7 +143,7 @@ export function resolveArgumentValue(
 
   const symbol = type.getSymbol();
   if (symbol) {
-    const name = symbol.getName();
+    const name = symbol.name;
     if (
       name !== "__type" &&
       name !== "Array" &&
@@ -174,7 +167,7 @@ interface ExtractDirectiveArgsResult {
  */
 function extractDirectiveArgs(
   argsType: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
   directiveName: string,
 ): ExtractDirectiveArgsResult {
   const args: DirectiveArgument[] = [];
@@ -182,7 +175,7 @@ function extractDirectiveArgs(
   const properties = argsType.getProperties();
 
   for (const prop of properties) {
-    const propName = prop.getName();
+    const propName = prop.name;
     const propType = checker.getTypeOfSymbol(prop);
     const resolved = resolveArgumentValue(propType, checker);
     if (resolved) {
@@ -203,7 +196,7 @@ function extractDirectiveArgs(
  */
 function extractDirectiveFromType(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): { directive: DirectiveInfo | null; errors: DirectiveDetectionError[] } {
   const nameProp = type.getProperty(DIRECTIVE_NAME_PROPERTY);
   if (!nameProp) {
@@ -212,7 +205,7 @@ function extractDirectiveFromType(
 
   const rawNameType = checker.getTypeOfSymbol(nameProp);
   const nameType = getActualMetadataType(rawNameType);
-  if (!nameType || !nameType.isStringLiteral()) {
+  if (!nameType?.isStringLiteralType()) {
     return { directive: null, errors: [] };
   }
 
@@ -264,7 +257,7 @@ function extractDirectiveFromType(
  */
 export function detectDirectiveMetadata(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): DirectiveDetectionResult {
   // Own + intersection tiers: stop at the first metadata property found,
   // regardless of what it extracts to (matches the pre-unification behavior
@@ -283,8 +276,8 @@ export function detectDirectiveMetadata(
   // legitimately extract to zero directives; we keep trying subsequent
   // members in that case instead of stopping at the first property found,
   // so this tier is intentionally not delegated to findMetadataProperty.
-  if (type.isUnion()) {
-    for (const member of type.types) {
+  if (type.isUnionType()) {
+    for (const member of type.getTypes()) {
       if (isNullOrUndefined(member)) {
         continue;
       }
@@ -299,7 +292,7 @@ export function detectDirectiveMetadata(
 
 function detectDirectiveMetadataFromProperty(
   directivesProp: ts.Symbol,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): DirectiveDetectionResult {
   const rawDirectivesType = checker.getTypeOfSymbol(directivesProp);
   const directivesType = getActualMetadataType(rawDirectivesType);
@@ -329,7 +322,7 @@ function detectDirectiveMetadataFromProperty(
  */
 export function extractDirectivesFromType(
   directivesType: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): DirectiveDetectionResult {
   const directives: DirectiveInfo[] = [];
   const errors: DirectiveDetectionError[] = [];
@@ -351,8 +344,8 @@ export function extractDirectivesFromType(
     );
     if (typeArgs.length > 0 && typeArgs[0]) {
       const elemType = typeArgs[0];
-      if (elemType.isUnion()) {
-        for (const member of elemType.types) {
+      if (elemType.isUnionType()) {
+        for (const member of elemType.getTypes()) {
           const result = extractDirectiveFromType(member, checker);
           if (result.directive) {
             directives.push(result.directive);
@@ -393,8 +386,8 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
     return true;
   }
 
-  if (type.isIntersection()) {
-    for (const member of type.types) {
+  if (type.isIntersectionType()) {
+    for (const member of type.getTypes()) {
       const prop = getMetaProperty(member);
       if (prop) {
         return true;
@@ -409,8 +402,8 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
 
   // Handle union types: (T & Meta) | null is normalized by TypeScript
   // to (T & Meta) | null, so we need to check each member recursively
-  if (type.isUnion()) {
-    for (const member of type.types) {
+  if (type.isUnionType()) {
+    for (const member of type.getTypes()) {
       if (hasDirectiveMetadata(member)) {
         return true;
       }
@@ -432,32 +425,35 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
  */
 export function unwrapDirectiveType(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): ts.Type {
   // 1. Check aliasTypeArguments first (most reliable)
   //    Get T directly from GqlField<T, Meta> or GqlObject<T, Meta>
   //    This works when the type alias hasn't been expanded by TypeScript
   //    We detect GqlField/GqlObject by checking for metadata properties, not by type name.
-  if (type.aliasTypeArguments && type.aliasTypeArguments.length > 0) {
+  if (type.getAliasTypeArguments() && type.getAliasTypeArguments().length > 0) {
     const metaProp = getMetaProperty(type);
     const originalTypeProp = type.getProperty(ORIGINAL_TYPE_PROPERTY);
     if (metaProp || originalTypeProp) {
-      return type.aliasTypeArguments[0]!;
+      return type.getAliasTypeArguments()[0]!;
     }
   }
 
   // 2. Check intersection members' aliasTypeArguments
   //    When TypeScript expands the type alias to an intersection,
   //    one of the intersection members might still have aliasTypeArguments
-  if (type.isIntersection()) {
-    for (const member of type.types) {
-      if (member.aliasTypeArguments && member.aliasTypeArguments.length > 0) {
+  if (type.isIntersectionType()) {
+    for (const member of type.getTypes()) {
+      if (
+        member.getAliasTypeArguments() &&
+        member.getAliasTypeArguments().length > 0
+      ) {
         const memberMetaProp = getMetaProperty(member);
         const memberOriginalTypeProp = member.getProperty(
           ORIGINAL_TYPE_PROPERTY,
         );
         if (memberMetaProp || memberOriginalTypeProp) {
-          return member.aliasTypeArguments[0]!;
+          return member.getAliasTypeArguments()[0]!;
         }
       }
     }
@@ -477,8 +473,8 @@ export function unwrapDirectiveType(
   }
 
   // Check intersection members for $gqlkitOriginalType
-  if (type.isIntersection()) {
-    for (const member of type.types) {
+  if (type.isIntersectionType()) {
+    for (const member of type.getTypes()) {
       const originalProp = member.getProperty(ORIGINAL_TYPE_PROPERTY);
       if (originalProp) {
         const rawOriginalType = checker.getTypeOfSymbol(originalProp);
@@ -491,7 +487,7 @@ export function unwrapDirectiveType(
 
     // Fallback: filter out metadata members
     const nonDirectiveMembers: ts.Type[] = [];
-    for (const member of type.types) {
+    for (const member of type.getTypes()) {
       const metaProp = getMetaProperty(member);
       const originalTypeProp = member.getProperty(ORIGINAL_TYPE_PROPERTY);
       if (!metaProp && !originalTypeProp) {
@@ -506,8 +502,8 @@ export function unwrapDirectiveType(
   // Handle union types: (T & Meta) | null
   // We extract the base type from the non-null member and return it.
   // Nullability is handled separately in the type-extractor.
-  if (type.isUnion()) {
-    for (const member of type.types) {
+  if (type.isUnionType()) {
+    for (const member of type.getTypes()) {
       // Skip null/undefined members
       if (isNullOrUndefined(member)) {
         continue;

@@ -1,5 +1,5 @@
-import type ts from "typescript";
 import type { Diagnostic } from "../core/index.js";
+import type * as ts from "../core/typescript.js";
 import { collectDiagnostics } from "../shared/index.js";
 import {
   collectLocalTypeDeclarationNames,

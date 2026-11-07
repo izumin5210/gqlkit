@@ -5,11 +5,11 @@
  * in TypeScript intersection types using the $gqlkitFieldMeta property.
  */
 
-import ts from "typescript";
 import {
   type DirectiveArgumentValue,
   METADATA_PROPERTIES,
 } from "../core/index.js";
+import * as ts from "../core/typescript.js";
 import { resolveArgumentValue } from "./directive-detector.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 import { findMetadataProperty } from "./typescript-utils.js";
@@ -70,7 +70,7 @@ function getFieldMetaProperty(type: ts.Type): ts.Symbol | undefined {
  */
 export function detectDefaultValueMetadata(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): DefaultValueDetectionResult {
   const metaProp = getFieldMetaProperty(type);
   if (!metaProp) {
@@ -99,10 +99,10 @@ export function detectDefaultValueMetadata(
 
   // Check if the type is a union that only contains undefined
   // This handles cases where Meta["defaultValue"] resolves to undefined
-  if (rawDefaultValueType.isUnion()) {
-    const nonUndefinedTypes = rawDefaultValueType.types.filter(
-      (t) => !(t.flags & ts.TypeFlags.Undefined),
-    );
+  if (rawDefaultValueType.isUnionType()) {
+    const nonUndefinedTypes = rawDefaultValueType
+      .getTypes()
+      .filter((t) => !(t.flags & ts.TypeFlags.Undefined));
     if (nonUndefinedTypes.length === 0) {
       return createEmptyResult();
     }

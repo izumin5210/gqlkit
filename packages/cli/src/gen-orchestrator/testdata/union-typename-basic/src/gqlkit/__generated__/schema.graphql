@@ -15,8 +15,8 @@ type SearchQueryPayload {
 
 """Defined in: src/gqlkit/schema/query.ts"""
 enum SearchQueryTypenameInput {
-  USER
   POST
+  USER
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""

@@ -14,8 +14,8 @@ type StatusEvent {
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum StatusEventCode {
-  SUCCESS
   FAILURE
+  SUCCESS
 }
 
 extend type Query {

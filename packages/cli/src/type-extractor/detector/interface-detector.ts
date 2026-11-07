@@ -6,8 +6,8 @@
  * and to extract implements declarations from types using $gqlkitTypeMeta.
  */
 
-import ts from "typescript";
 import { METADATA_PROPERTIES } from "../../core/index.js";
+import * as ts from "../../core/typescript.js";
 import { findMetadataProperty } from "../../shared/typescript-utils.js";
 
 const INTERFACE_META_PROPERTY = METADATA_PROPERTIES.INTERFACE_META;
@@ -19,7 +19,7 @@ const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
  */
 export function isDefineInterfaceTypeAlias(
   node: ts.TypeAliasDeclaration,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): boolean {
   const symbol = checker.getSymbolAtLocation(node.name);
   if (!symbol) {
@@ -62,7 +62,7 @@ function hasTypeMetadata(type: ts.Type): boolean {
 export function extractImplementsFromDefineInterface(
   node: ts.TypeAliasDeclaration,
   sourceFile: ts.SourceFile,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): ReadonlyArray<string> {
   const typeNode = node.type;
   if (!ts.isTypeReferenceNode(typeNode)) {
@@ -89,7 +89,7 @@ export function extractImplementsFromDefineInterface(
 export function extractImplementsFromGqlTypeDef(
   node: ts.TypeAliasDeclaration,
   sourceFile: ts.SourceFile,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): ReadonlyArray<string> {
   const symbol = checker.getSymbolAtLocation(node.name);
   if (!symbol) {
@@ -122,10 +122,10 @@ export function extractImplementsFromGqlTypeDef(
 function extractImplementsFromTypeLiteral(
   typeLiteral: ts.TypeLiteralNode,
   sourceFile: ts.SourceFile,
-  _checker: ts.TypeChecker,
+  _checker: ts.Checker,
 ): ReadonlyArray<string> {
   for (const member of typeLiteral.members) {
-    if (ts.isPropertySignature(member) && member.name) {
+    if (ts.isPropertySignatureDeclaration(member) && member.name) {
       const propName = member.name.getText(sourceFile);
       if (propName === "implements" && member.type) {
         return extractInterfaceNamesFromTupleNode(member.type, sourceFile);
