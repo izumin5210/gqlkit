@@ -23,6 +23,7 @@ export default async function Page(props: PageProps) {
     metadata,
     sourceCode,
   } = await importPage(params.mdxPath);
+  // oxlint-disable-next-line typescript/unbound-method -- nextra types `wrapper` as a method, but it is a component that never uses `this`
   const Wrapper = useMDXComponents().wrapper;
   return (
     <Wrapper toc={toc} metadata={metadata} sourceCode={sourceCode}>
