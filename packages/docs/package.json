@@ -15,7 +15,7 @@
     "@catppuccin/palette": "2.0.0-beta.1",
     "@docsearch/css": "^4.0.0",
     "@docsearch/react": "^4.0.0",
-    "next": "^16.2.1",
+    "next": "^16.4.5",
     "nextra": "^4.6.1",
     "nextra-theme-docs": "^4.6.1",
     "react": "^19.2.4",
