@@ -8,6 +8,7 @@
 
 import { METADATA_PROPERTIES } from "../../core/index.js";
 import * as ts from "../../core/typescript.js";
+import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { findMetadataProperty } from "../../shared/typescript-utils.js";
 
 const INTERFACE_META_PROPERTY = METADATA_PROPERTIES.INTERFACE_META;
@@ -17,42 +18,50 @@ const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
  * Checks if a type alias declaration uses GqlInterface.
  * Detects by checking for the $gqlkitInterfaceMeta property in the resolved type.
  */
-export function isDefineInterfaceTypeAlias(
+export async function isDefineInterfaceTypeAlias(
   node: ts.TypeAliasDeclaration,
-  checker: ts.Checker,
-): boolean {
-  const symbol = checker.getSymbolAtLocation(node.name);
+  checker: CheckerLoader,
+): Promise<boolean> {
+  const symbol = await checker.getSymbolAtLocation(node.name);
   if (!symbol) {
     return false;
   }
 
-  const type = checker.getDeclaredTypeOfSymbol(symbol);
-  return hasInterfaceMetadata(type);
+  const type = await checker.getDeclaredTypeOfSymbol(symbol);
+  return hasInterfaceMetadata(type, checker);
 }
 
 /**
  * Checks if a type has the $gqlkitInterfaceMeta property.
  */
-function hasInterfaceMetadata(type: ts.Type): boolean {
+async function hasInterfaceMetadata(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
   return (
-    findMetadataProperty({
+    (await findMetadataProperty({
+      checker,
       type,
       propertyNames: [INTERFACE_META_PROPERTY],
       recurseUnion: false,
-    }) !== undefined
+    })) !== undefined
   );
 }
 
 /**
  * Checks if a type has the $gqlkitTypeMeta property (GqlObject).
  */
-function hasTypeMetadata(type: ts.Type): boolean {
+async function hasTypeMetadata(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
   return (
-    findMetadataProperty({
+    (await findMetadataProperty({
+      checker,
       type,
       propertyNames: [TYPE_META_PROPERTY],
       recurseUnion: false,
-    }) !== undefined
+    })) !== undefined
   );
 }
 
@@ -62,7 +71,7 @@ function hasTypeMetadata(type: ts.Type): boolean {
 export function extractImplementsFromDefineInterface(
   node: ts.TypeAliasDeclaration,
   sourceFile: ts.SourceFile,
-  checker: ts.Checker,
+  checker: CheckerLoader,
 ): ReadonlyArray<string> {
   const typeNode = node.type;
   if (!ts.isTypeReferenceNode(typeNode)) {
@@ -86,18 +95,18 @@ export function extractImplementsFromDefineInterface(
  * Extracts implements from GqlObject type alias.
  * Detects GqlObject by checking for the $gqlkitTypeMeta property in the resolved type.
  */
-export function extractImplementsFromGqlTypeDef(
+export async function extractImplementsFromGqlTypeDef(
   node: ts.TypeAliasDeclaration,
   sourceFile: ts.SourceFile,
-  checker: ts.Checker,
-): ReadonlyArray<string> {
-  const symbol = checker.getSymbolAtLocation(node.name);
+  checker: CheckerLoader,
+): Promise<ReadonlyArray<string>> {
+  const symbol = await checker.getSymbolAtLocation(node.name);
   if (!symbol) {
     return [];
   }
 
-  const type = checker.getDeclaredTypeOfSymbol(symbol);
-  if (!hasTypeMetadata(type)) {
+  const type = await checker.getDeclaredTypeOfSymbol(symbol);
+  if (!(await hasTypeMetadata(type, checker))) {
     return [];
   }
 
@@ -122,7 +131,7 @@ export function extractImplementsFromGqlTypeDef(
 function extractImplementsFromTypeLiteral(
   typeLiteral: ts.TypeLiteralNode,
   sourceFile: ts.SourceFile,
-  _checker: ts.Checker,
+  _checker: CheckerLoader,
 ): ReadonlyArray<string> {
   for (const member of typeLiteral.members) {
     if (ts.isPropertySignatureDeclaration(member) && member.name) {

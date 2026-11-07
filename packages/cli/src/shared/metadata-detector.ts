@@ -6,6 +6,7 @@
  */
 
 import * as ts from "../core/typescript.js";
+import type { CheckerLoader } from "./checker-loader.js";
 
 /**
  * Extracts the actual type from an optional property type (T | undefined).
@@ -19,11 +20,14 @@ import * as ts from "../core/typescript.js";
  * @param metadataType - The type of the metadata property (may be union with undefined)
  * @returns The actual type excluding undefined, or null if extraction fails
  */
-export function getActualMetadataType(metadataType: ts.Type): ts.Type | null {
+export async function getActualMetadataType(
+  metadataType: ts.Type,
+  checker: CheckerLoader,
+): Promise<ts.Type | null> {
   if (metadataType.isUnionType()) {
-    const nonUndefinedTypes = metadataType
-      .getTypes()
-      .filter((t) => !(t.flags & ts.TypeFlags.Undefined));
+    const nonUndefinedTypes = (
+      await checker.getTypesOfType(metadataType)
+    ).filter((t) => !(t.flags & ts.TypeFlags.Undefined));
     if (nonUndefinedTypes.length === 1) {
       return nonUndefinedTypes[0]!;
     }

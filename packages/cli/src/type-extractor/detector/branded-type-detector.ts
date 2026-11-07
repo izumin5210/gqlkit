@@ -11,6 +11,7 @@
  */
 
 import * as ts from "../../core/typescript.js";
+import type { CheckerLoader } from "../../shared/checker-loader.js";
 
 /**
  * Result of branded type detection.
@@ -55,7 +56,10 @@ const EXCLUDED_BRAND_PROPERTIES: ReadonlySet<string> = new Set([
  * @param type - The TypeScript type to analyze
  * @returns Detection result with isBranded flag and baseType
  */
-export function detectBrandedType(type: ts.Type): BrandedTypeResult {
+export async function detectBrandedType(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<BrandedTypeResult> {
   const notBranded: BrandedTypeResult = { isBranded: false, baseType: null };
 
   if (!type.isIntersectionType()) {
@@ -65,7 +69,7 @@ export function detectBrandedType(type: ts.Type): BrandedTypeResult {
   let primitiveBase: "string" | "number" | "boolean" | null = null;
   let hasNonBrandMember = false;
 
-  for (const member of type.getTypes()) {
+  for (const member of await checker.getTypesOfType(type)) {
     const primitiveType = getPrimitiveType(member);
     if (primitiveType !== null) {
       if (primitiveBase !== null && primitiveBase !== primitiveType) {
@@ -77,7 +81,7 @@ export function detectBrandedType(type: ts.Type): BrandedTypeResult {
     }
 
     // Check if this member is a pure brand marker
-    if (!isPureBrandMarker(member)) {
+    if (!(await isPureBrandMarker(member, checker))) {
       hasNonBrandMember = true;
       break;
     }
@@ -99,20 +103,21 @@ export function detectBrandedType(type: ts.Type): BrandedTypeResult {
  * @param types - Array of TypeScript types to analyze
  * @returns Common branded result if all types are branded with the same base, otherwise non-branded
  */
-export function detectUniformBrandedType(
+export async function detectUniformBrandedType(
   types: ReadonlyArray<ts.Type>,
-): BrandedTypeResult {
+  checker: CheckerLoader,
+): Promise<BrandedTypeResult> {
   if (types.length === 0) {
     return { isBranded: false, baseType: null };
   }
 
-  const first = detectBrandedType(types[0]!);
+  const first = await detectBrandedType(types[0]!, checker);
   if (!first.isBranded) {
     return { isBranded: false, baseType: null };
   }
 
   for (let i = 1; i < types.length; i++) {
-    const result = detectBrandedType(types[i]!);
+    const result = await detectBrandedType(types[i]!, checker);
     if (!result.isBranded || result.baseType !== first.baseType) {
       return { isBranded: false, baseType: null };
     }
@@ -153,12 +158,15 @@ function getPrimitiveType(
  * @param type - The type to check
  * @returns true if the type is a pure brand marker
  */
-function isPureBrandMarker(type: ts.Type): boolean {
+async function isPureBrandMarker(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
   if (!(type.flags & ts.TypeFlags.Object)) {
     return false;
   }
 
-  const properties = type.getProperties();
+  const properties = await checker.getPropertiesOfType(type);
   if (properties.length === 0) {
     // Empty object is not a brand marker
     return false;
