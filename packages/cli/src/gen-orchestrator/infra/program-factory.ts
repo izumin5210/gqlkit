@@ -1,4 +1,4 @@
-import { ScriptTarget } from "typescript/ast";
+import { ScriptTarget, type SourceFile } from "typescript/ast";
 import {
   type API,
   ModuleKind,
@@ -55,4 +55,34 @@ export async function createSharedProgram(
     program,
     diagnostics: [],
   };
+}
+
+/**
+ * Files per request when fetching source files. One request for every file
+ * of a large project makes tsc encode, and the client decode, a single
+ * message of tens of megabytes; requests of this size are handled
+ * concurrently and decoded as they arrive.
+ */
+const SOURCE_FILES_PER_REQUEST = 100;
+
+export interface FetchSourceFilesParams {
+  readonly api: API;
+  readonly program: Program;
+  readonly files: ReadonlyArray<string>;
+}
+
+/** Fetches the files' syntax trees, in the order of `files`. */
+export async function fetchSourceFiles(
+  params: FetchSourceFilesParams,
+): Promise<ReadonlyArray<SourceFile | undefined>> {
+  const { api, program, files } = params;
+  const requests: Promise<SourceFile | undefined>[] = [];
+  for (let i = 0; i < files.length; i += SOURCE_FILES_PER_REQUEST) {
+    // Fetches issued inside one batch context travel as one request.
+    using _batch = api.batchContext();
+    for (const file of files.slice(i, i + SOURCE_FILES_PER_REQUEST)) {
+      requests.push(program.getSourceFile(file));
+    }
+  }
+  return Promise.all(requests);
 }

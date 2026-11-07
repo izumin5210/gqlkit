@@ -55,6 +55,28 @@ interface AppendSourceLocationParams {
   readonly sourceRoot: string | null;
 }
 
+/**
+ * Relative paths of source files from the last source root. Every field
+ * names its file, and resolving paths is a large part of building the
+ * document of a large schema.
+ */
+let relativeSourcePaths: {
+  readonly sourceRoot: string;
+  readonly paths: Map<string, string>;
+} | null = null;
+
+function relativeSourcePath(sourceRoot: string, sourceFile: string): string {
+  if (relativeSourcePaths?.sourceRoot !== sourceRoot) {
+    relativeSourcePaths = { sourceRoot, paths: new Map() };
+  }
+  let relativePath = relativeSourcePaths.paths.get(sourceFile);
+  if (relativePath === undefined) {
+    relativePath = toPosixPath(path.relative(sourceRoot, sourceFile));
+    relativeSourcePaths.paths.set(sourceFile, relativePath);
+  }
+  return relativePath;
+}
+
 function appendSourceLocation(
   params: AppendSourceLocationParams,
 ): string | null {
@@ -63,8 +85,7 @@ function appendSourceLocation(
     return description;
   }
 
-  const relativePath = toPosixPath(path.relative(sourceRoot, sourceFile));
-  const sourceLocation = `Defined in: ${relativePath}`;
+  const sourceLocation = `Defined in: ${relativeSourcePath(sourceRoot, sourceFile)}`;
 
   if (description) {
     return `${description}\n\n${sourceLocation}`;

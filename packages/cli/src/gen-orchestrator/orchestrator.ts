@@ -34,7 +34,10 @@ import {
   type GlobalTypeMapping,
 } from "../type-extractor/index.js";
 import { scanDirectory } from "./infra/file-scanner.js";
-import { createSharedProgram } from "./infra/program-factory.js";
+import {
+  createSharedProgram,
+  fetchSourceFiles,
+} from "./infra/program-factory.js";
 import type { SliceWorkerModule } from "./parallel/client.js";
 import {
   partitionFiles,
@@ -241,9 +244,11 @@ async function createProgramStep(
   const { program } = programResult;
   // Every stage reads the scanned files; loading them together up front
   // leaves later `getSourceFile` calls to the client's cache.
-  const loadedFiles = await Promise.all(
-    ctx.sourceFiles.map((file) => program.getSourceFile(file)),
-  );
+  const loadedFiles = await fetchSourceFiles({
+    api,
+    program,
+    files: ctx.sourceFiles,
+  });
 
   return {
     ...ctx,
@@ -476,11 +481,11 @@ function startDirectiveExtraction(
 
 async function extractDirectivesStep(
   ctx: PipelineContext,
-  extraction: Promise<DirectiveDefinitionExtractionResult> | null,
+  extraction: (() => Promise<DirectiveDefinitionExtractionResult>) | null,
 ): Promise<PipelineContext> {
   if (ctx.aborted || extraction === null) return ctx;
 
-  const directiveDefinitionResult = await extraction;
+  const directiveDefinitionResult = await extraction();
 
   const directiveDefinitions: DirectiveDefinitionInfo[] =
     directiveDefinitionResult.definitions.length > 0
@@ -742,7 +747,12 @@ async function runExtractionAndGeneration(
   ctx = await measureAsyncStep("createProgram", () =>
     createProgramStep(ctx, api),
   );
-  const directiveExtraction = startDirectiveExtraction(ctx);
+  // Each range of files extracts its own directive definitions.
+  const directiveExtraction =
+    sliceExtraction === null ? startDirectiveExtraction(ctx) : null;
+  const directiveDefinitions =
+    sliceExtraction?.directiveDefinitions ??
+    (directiveExtraction === null ? null : () => directiveExtraction);
   ctx = await measureAsyncStep("collectTypeNames", () =>
     collectTypeNamesStep(ctx, sliceExtraction),
   );
@@ -758,7 +768,7 @@ async function runExtractionAndGeneration(
     extractResolversStep(ctx, sliceExtraction),
   );
   ctx = await measureAsyncStep("extractDirectives", () =>
-    extractDirectivesStep(ctx, directiveExtraction),
+    extractDirectivesStep(ctx, directiveDefinitions),
   );
   ctx = validateExtractionStep(ctx);
 

@@ -1,4 +1,5 @@
 import type { ExtractDefineApiResult } from "../../resolver-extractor/index.js";
+import type { DirectiveDefinitionExtractionResult } from "../../shared/index.js";
 import type {
   GlobalTypeMapping,
   ScalarMetadataInfo,
@@ -27,7 +28,11 @@ export type SliceWorkerRequest =
 
 /** Sent by the worker: the types unprompted, then one reply per request. */
 export type SliceWorkerResponse =
-  | { readonly kind: "types"; readonly result: TypeSliceResult }
+  | {
+      readonly kind: "types";
+      readonly result: TypeSliceResult;
+      readonly directives: DirectiveDefinitionExtractionResult;
+    }
   | { readonly kind: "scalar-reads"; readonly unread: boolean }
   | {
       readonly kind: "definitions";

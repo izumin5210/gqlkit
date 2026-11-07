@@ -4,6 +4,10 @@ import type { ExtractDefineApiResult } from "../../resolver-extractor/index.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { prefetchDeclarationFacts } from "../../shared/checker-prefetch.js";
 import {
+  type DirectiveDefinitionExtractionResult,
+  extractDirectiveDefinitions,
+} from "../../shared/index.js";
+import {
   buildScalarMappingTable,
   type ConfigScalarMapping,
   completeTypeExtraction,
@@ -77,6 +81,8 @@ export interface SliceExtraction {
   readonly extractTypes: (
     params: ExtractTypesInSlicesParams,
   ) => Promise<ExtractTypesResult>;
+  /** Must follow `extractTypes`, which extracts them alongside. */
+  readonly directiveDefinitions: () => Promise<DirectiveDefinitionExtractionResult>;
   /** Must follow `extractTypes`. */
   readonly extractResolverDefinitions: (
     inputs: ResolverExtractionInputs,
@@ -114,6 +120,8 @@ export function startSliceExtraction(
   /** Workers whose types were combined, and are asked about scalars. */
   const workersWithTypes = new Set<SliceWorker>();
   let mainThreadResolvers: ResolverDefinitionsSpeculation | null = null;
+  const directiveParts: Array<Promise<DirectiveDefinitionExtractionResult>> =
+    [];
 
   const extractTypes = async (
     typeParams: ExtractTypesInSlicesParams,
@@ -128,6 +136,14 @@ export function startSliceExtraction(
       scalarMappingTable,
     };
     const extraction = createDeclaredTypesExtraction();
+    const mainThreadDirectives = extractDirectiveDefinitions({
+      program,
+      checker,
+      sourceFiles: mainThreadFiles,
+    });
+    // Observed by directiveDefinitions unless type extraction fails first.
+    mainThreadDirectives.catch(() => {});
+    directiveParts.push(mainThreadDirectives);
     // Resolvers are extracted alongside types: each waits on the checker
     // at times the other can use.
     mainThreadResolvers = speculateResolverDefinitions({
@@ -150,7 +166,8 @@ export function startSliceExtraction(
     });
 
     for (const [i, worker] of workers.entries()) {
-      const { result } = await worker.receive("types");
+      const { result, directives } = await worker.receive("types");
+      directiveParts.push(Promise.resolve(directives));
       if (appendTypeSlice(extraction, result)) {
         workersWithTypes.add(worker);
         continue;
@@ -240,9 +257,19 @@ export function startSliceExtraction(
     };
   };
 
+  const directiveDefinitions =
+    async (): Promise<DirectiveDefinitionExtractionResult> => {
+      const parts = await Promise.all(directiveParts);
+      return {
+        definitions: parts.flatMap((p) => p.definitions),
+        errors: parts.flatMap((p) => p.errors),
+      };
+    };
+
   return {
     mainThreadFiles,
     extractTypes,
+    directiveDefinitions,
     extractResolverDefinitions,
     terminate: async () => {
       await Promise.all(workers.map((w) => w.terminate()));

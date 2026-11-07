@@ -20,13 +20,17 @@ import { parentPort, workerData } from "node:worker_threads";
 import { API } from "typescript/async";
 import { createCheckerLoader } from "../../shared/checker-loader.js";
 import { prefetchDeclarationFacts } from "../../shared/checker-prefetch.js";
+import { extractDirectiveDefinitions } from "../../shared/index.js";
 import {
   buildScalarMappingTable,
   collectDeclaredTypeNames,
   createRecordedScalarMappingTable,
   isScalarMappingTableUnread,
 } from "../../type-extractor/index.js";
-import { createSharedProgram } from "../infra/program-factory.js";
+import {
+  createSharedProgram,
+  fetchSourceFiles,
+} from "../infra/program-factory.js";
 import type {
   SliceWorkerData,
   SliceWorkerRequest,
@@ -58,9 +62,11 @@ async function run(): Promise<void> {
   if (program === null) {
     throw new Error("the slice worker could not create the program");
   }
-  const loadedFiles = await Promise.all(
-    sourceFiles.map((file) => program.getSourceFile(file)),
-  );
+  const loadedFiles = await fetchSourceFiles({
+    api,
+    program,
+    files: sourceFiles,
+  });
   const checker = createCheckerLoader({
     api,
     checker: program.getProject().checker,
@@ -90,6 +96,11 @@ async function run(): Promise<void> {
     underlyingSymbolToTypeName: names.underlyingSymbolToTypeName,
   });
 
+  const directives = extractDirectiveDefinitions({
+    program,
+    checker,
+    sourceFiles: files,
+  });
   const scalarMappingTable = createRecordedScalarMappingTable();
   respond({
     kind: "types",
@@ -107,6 +118,7 @@ async function run(): Promise<void> {
       },
       priorRegisteredNames: new Set(),
     }),
+    directives: await directives,
   });
 
   for await (const [request] of on(port, "message") as AsyncIterable<
