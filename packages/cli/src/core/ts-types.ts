@@ -14,8 +14,8 @@ export interface ScalarTypeInfo {
   readonly scalarName: string;
   /** The TypeScript type name (e.g., "IDString", "Int", "DateTime") */
   readonly typeName: string;
-  /** The underlying TypeScript primitive type (undefined for custom scalars) */
-  readonly baseType: "string" | "number" | undefined;
+  /** The underlying TypeScript primitive type (null for custom scalars) */
+  readonly baseType: "string" | "number" | null;
   /** Whether this is a custom scalar */
   readonly isCustom: boolean;
   /** Usage constraint: "input" for input-only, "output" for output-only, null for both */
@@ -54,19 +54,19 @@ export interface TSTypeReference {
   readonly nullable: boolean;
   readonly scalarInfo: ScalarTypeInfo | null;
   readonly inlineObjectProperties: ReadonlyArray<PropertyDef> | null;
-  /** TSDoc description from the inline object type alias (Requirement 7.2) */
+  /** TSDoc description from the inline object type alias */
   readonly inlineObjectDescription: string | null;
-  /** Deprecation info from the `@deprecated` TSDoc tag on the inline object type alias (Requirement 7.3) */
+  /** Deprecation info from the `@deprecated` TSDoc tag on the inline object type alias */
   readonly inlineObjectDeprecated: DeprecationInfo | null;
   /** Inline enum members when kind is "inlineEnum" */
   readonly inlineEnumMembers: ReadonlyArray<InlineEnumMemberInfo> | null;
   /** Original type name hint for inline objects extracted from external types */
   readonly inlineObjectHintName: string | null;
-  /** External TypeScript enum symbol for deduplication (Requirement 5.2) */
+  /** External TypeScript enum symbol for deduplication */
   readonly externalEnumSymbol: ts.Symbol | null;
-  /** TSDoc description from the external enum type itself (Requirement 6.1) */
+  /** TSDoc description from the external enum type itself */
   readonly externalEnumDescription: string | null;
-  /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself (Requirement 6.3) */
+  /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself */
   readonly externalEnumDeprecated: DeprecationInfo | null;
 }
 

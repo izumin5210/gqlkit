@@ -63,14 +63,26 @@ function getStringLiteralValue(tsType: TSTypeReference): string | null {
  * Validates primary (first) discriminator field for a named member.
  * Returns the string literal value if valid, or null if an error was reported.
  */
+interface ValidatePrimaryFieldForNamedMemberParams {
+  readonly memberType: ExtractedTypeInfo;
+  readonly primaryFieldName: string;
+  readonly unionTypeName: string;
+  readonly memberName: string;
+  readonly sourceLocation: SourceLocation;
+  readonly diagnostics: Diagnostic[];
+}
+
 function validatePrimaryFieldForNamedMember(
-  memberType: ExtractedTypeInfo,
-  primaryFieldName: string,
-  unionTypeName: string,
-  memberName: string,
-  sourceLocation: SourceLocation,
-  diagnostics: Diagnostic[],
+  params: ValidatePrimaryFieldForNamedMemberParams,
 ): string | null {
+  const {
+    memberType,
+    primaryFieldName,
+    unionTypeName,
+    memberName,
+    sourceLocation,
+    diagnostics,
+  } = params;
   const field = findFieldInNamedMember(memberType, primaryFieldName);
   if (field === null) {
     diagnostics.push({
@@ -100,14 +112,26 @@ function validatePrimaryFieldForNamedMember(
  * Validates primary (first) discriminator field for an inline object member.
  * Returns the string literal value if valid, or null if an error was reported.
  */
+interface ValidatePrimaryFieldForInlineMemberParams {
+  readonly inlineMember: InlineObjectMember;
+  readonly primaryFieldName: string;
+  readonly unionTypeName: string;
+  readonly memberIndex: number;
+  readonly sourceLocation: SourceLocation;
+  readonly diagnostics: Diagnostic[];
+}
+
 function validatePrimaryFieldForInlineMember(
-  inlineMember: InlineObjectMember,
-  primaryFieldName: string,
-  unionTypeName: string,
-  memberIndex: number,
-  sourceLocation: SourceLocation,
-  diagnostics: Diagnostic[],
+  params: ValidatePrimaryFieldForInlineMemberParams,
 ): string | null {
+  const {
+    inlineMember,
+    primaryFieldName,
+    unionTypeName,
+    memberIndex,
+    sourceLocation,
+    diagnostics,
+  } = params;
   const tsType = findFieldInInlineMember(inlineMember, primaryFieldName);
   if (tsType === null) {
     diagnostics.push({
@@ -174,15 +198,20 @@ function collectSecondaryValuesForInlineMember(
 /**
  * Returns true if duplicates were found (diagnostics were added).
  */
-function validateValueTupleUniqueness(
-  memberTuples: ReadonlyArray<{
+interface ValidateValueTupleUniquenessParams {
+  readonly memberTuples: ReadonlyArray<{
     readonly id: MemberIdentifier;
     readonly values: ReadonlyArray<string | null>;
-  }>,
-  unionTypeName: string,
-  sourceLocation: SourceLocation,
-  diagnostics: Diagnostic[],
+  }>;
+  readonly unionTypeName: string;
+  readonly sourceLocation: SourceLocation;
+  readonly diagnostics: Diagnostic[];
+}
+
+function validateValueTupleUniqueness(
+  params: ValidateValueTupleUniquenessParams,
 ): boolean {
+  const { memberTuples, unionTypeName, sourceLocation, diagnostics } = params;
   // Group members by their serialized value tuple
   const tupleGroups = new Map<string, string[]>();
   for (const { id, values } of memberTuples) {
@@ -278,14 +307,14 @@ export function validateDiscriminatorFields(
         continue;
       }
 
-      const primaryValue = validatePrimaryFieldForNamedMember(
+      const primaryValue = validatePrimaryFieldForNamedMember({
         memberType,
         primaryFieldName,
         unionTypeName,
         memberName,
         sourceLocation,
         diagnostics,
-      );
+      });
 
       if (primaryValue === null) {
         hasPrimaryErrors = true;
@@ -312,14 +341,14 @@ export function validateDiscriminatorFields(
       const inlineMember = inlineObjectMembers[i]!;
       const memberIndex = namedMemberCount + i;
 
-      const primaryValue = validatePrimaryFieldForInlineMember(
+      const primaryValue = validatePrimaryFieldForInlineMember({
         inlineMember,
         primaryFieldName,
         unionTypeName,
         memberIndex,
         sourceLocation,
         diagnostics,
-      );
+      });
 
       if (primaryValue === null) {
         hasPrimaryErrors = true;
@@ -341,12 +370,12 @@ export function validateDiscriminatorFields(
 
     // Only check uniqueness when all primary fields are valid
     if (!hasPrimaryErrors && memberTuples.length > 0) {
-      const hasDuplicateErrors = validateValueTupleUniqueness(
+      const hasDuplicateErrors = validateValueTupleUniqueness({
         memberTuples,
         unionTypeName,
         sourceLocation,
         diagnostics,
-      );
+      });
 
       // Only produce validated entries when validation passed (no primary errors, no duplicates)
       if (!hasDuplicateErrors) {

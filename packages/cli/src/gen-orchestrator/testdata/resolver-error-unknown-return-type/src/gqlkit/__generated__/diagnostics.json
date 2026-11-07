@@ -1,0 +1,12 @@
+[
+  {
+    "code": "UNSUPPORTED_RETURN_TYPE",
+    "message": "Field 'user' returns unresolved type 'any'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/query.ts",
+      "line": 9,
+      "column": 14
+    }
+  }
+]

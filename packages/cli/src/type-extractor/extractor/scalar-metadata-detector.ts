@@ -40,7 +40,7 @@ export interface ScalarMetadataResult {
   /** Whether this is an object type (not a scalar) */
   readonly isObjectType: boolean;
   /** Error if mixed scalar union is detected */
-  readonly error: ScalarMetadataError | undefined;
+  readonly error: ScalarMetadataError | null;
 }
 
 interface InternalMetadata {
@@ -59,7 +59,7 @@ function createDefaultResult(): ScalarMetadataResult {
     listItemNullable: false,
     isPrimitive: false,
     isObjectType: false,
-    error: undefined,
+    error: null,
   };
 }
 

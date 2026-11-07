@@ -191,6 +191,43 @@ export function collectDeclaredTypeNames(
 }
 
 /**
+ * Collects the name of every top-level type alias, interface, and enum
+ * declaration across `sourceFiles`, regardless of whether it is exported.
+ *
+ * Used by resolver-side type-reference validation (refactor-plan.md §6
+ * Decision D6) to recognize plain, non-exported local types — e.g. a
+ * `defineSubscription` payload interface — as real TypeScript declarations,
+ * distinct from a genuinely unresolvable (typo'd) name, even though such
+ * types are never registered as schema types nor emitted (issue #343).
+ * Deliberately simpler than `collectDeclaredTypeNames`: no duplicate
+ * detection, no symbol tracking, no re-export handling — just a name set for
+ * membership checks.
+ */
+export function collectLocalTypeDeclarationNames(
+  program: ts.Program,
+  sourceFiles: ReadonlyArray<string>,
+): ReadonlySet<string> {
+  const names = new Set<string>();
+
+  for (const filePath of sourceFiles) {
+    const sourceFile = program.getSourceFile(filePath);
+    if (!sourceFile) continue;
+
+    ts.forEachChild(sourceFile, (node) => {
+      if (
+        ts.isTypeAliasDeclaration(node) ||
+        ts.isInterfaceDeclaration(node) ||
+        ts.isEnumDeclaration(node)
+      ) {
+        names.add(node.name.getText(sourceFile));
+      }
+    });
+  }
+
+  return names;
+}
+
+/**
  * Checks if a symbol represents a type export (not a value export).
  */
 function isTypeExport(symbol: ts.Symbol): boolean {

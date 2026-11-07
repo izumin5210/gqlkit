@@ -22,16 +22,19 @@ function groupMappingsByFieldValue(
   return groups;
 }
 
+interface BuildSwitchBodyParams {
+  readonly mappings: ReadonlyArray<DiscriminatorValueMapping>;
+  readonly fieldNames: ReadonlyArray<string>;
+  readonly fieldIndex: number;
+  readonly indent: string;
+}
+
 /**
  * Builds a switch statement body for a given field level, recursing for nested fields.
  * Returns an array of code lines (without leading indentation for the switch itself).
  */
-function buildSwitchBody(
-  mappings: ReadonlyArray<DiscriminatorValueMapping>,
-  fieldNames: ReadonlyArray<string>,
-  fieldIndex: number,
-  indent: string,
-): string[] {
+function buildSwitchBody(params: BuildSwitchBodyParams): string[] {
+  const { mappings, fieldNames, fieldIndex, indent } = params;
   const fieldName = fieldNames[fieldIndex]!;
   const groups = groupMappingsByFieldValue(mappings, fieldIndex);
   const lines: string[] = [];
@@ -75,12 +78,12 @@ function buildSwitchBody(
     } else {
       // Need nested switch for remaining fields
       lines.push(`${indent}  case "${value}":`);
-      const nestedLines = buildSwitchBody(
-        groupMappings,
+      const nestedLines = buildSwitchBody({
+        mappings: groupMappings,
         fieldNames,
-        nextFieldIndex,
-        `${indent}    `,
-      );
+        fieldIndex: nextFieldIndex,
+        indent: `${indent}    `,
+      });
       lines.push(...nestedLines);
     }
   }
@@ -118,7 +121,12 @@ export function buildDiscriminatorResolveTypeEntry(
   const objType = buildObjTypeAnnotation(fieldNames);
   const baseIndent = "        ";
 
-  const switchLines = buildSwitchBody(valueMappings, fieldNames, 0, baseIndent);
+  const switchLines = buildSwitchBody({
+    mappings: valueMappings,
+    fieldNames,
+    fieldIndex: 0,
+    indent: baseIndent,
+  });
   const switchBody = switchLines.join("\n");
 
   return `    ${unionTypeName}: {\n      __resolveType: (obj: ${objType}) => {\n${switchBody}\n      },\n    },`;

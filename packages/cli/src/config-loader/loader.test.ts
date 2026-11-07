@@ -1,25 +1,25 @@
 import fs from "node:fs";
-import os from "node:os";
 import path from "node:path";
 import { afterEach, beforeEach, describe, expect, it } from "vitest";
+import { createTempDir, removeTempDir } from "../testing/temp-dir.js";
 import { loadConfig } from "./loader.js";
 
 describe("ConfigLoader", () => {
   let tempDir: string;
 
-  beforeEach(() => {
-    tempDir = fs.mkdtempSync(path.join(os.tmpdir(), "config-loader-test-"));
+  beforeEach(async () => {
+    tempDir = await createTempDir("config-loader-test-");
   });
 
-  afterEach(() => {
-    fs.rmSync(tempDir, { recursive: true });
+  afterEach(async () => {
+    await removeTempDir(tempDir);
   });
 
   describe("loadConfig", () => {
     it("should return default config when gqlkit.config.ts does not exist", async () => {
       const result = await loadConfig({ cwd: tempDir, configPath: null });
 
-      expect(result.configPath).toBe(undefined);
+      expect(result.configPath).toBe(null);
       expect(result.config).toEqual({
         sourceDir: "src/gqlkit/schema",
         sourceIgnoreGlobs: [],
@@ -45,8 +45,8 @@ describe("ConfigLoader", () => {
 export default {
   scalars: [
     {
-      graphqlName: "DateTime",
-      type: { from: "./src/scalars", name: "DateTime" },
+      name: "DateTime",
+      tsType: { from: "./src/scalars", name: "DateTime" },
     },
   ],
 };
@@ -67,9 +67,9 @@ export default {
       const configContent = `
 export default {
   scalars: [
-    { graphqlName: "DateTime", type: { from: "./src/scalars", name: "DateTime" } },
-    { graphqlName: "UUID", type: { from: "./src/scalars", name: "UUID" } },
-    { graphqlName: "URL", type: { from: "@my-lib/types", name: "URL" } },
+    { name: "DateTime", tsType: { from: "./src/scalars", name: "DateTime" } },
+    { name: "UUID", tsType: { from: "./src/scalars", name: "UUID" } },
+    { name: "URL", tsType: { from: "@my-lib/types", name: "URL" } },
   ],
 };
 `;
@@ -88,7 +88,7 @@ export default {
       const configContent = `
 export default {
   scalars: [
-    { graphqlName: "DateTime", type: { from: "./src/scalars", name: "DateTime" }
+    { name: "DateTime", tsType: { from: "./src/scalars", name: "DateTime" }
   ],
 };
 `;
@@ -105,7 +105,7 @@ export default {
       const configContent = `
 export default {
   scalars: [
-    { graphqlName: "DateTime", type: { from: "./src/scalars", name: "DateTime" } },
+    { name: "DateTime", tsType: { from: "./src/scalars", name: "DateTime" } },
   ],
 };
 `;

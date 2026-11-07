@@ -48,11 +48,16 @@ function applyExtension(
   }
 }
 
+interface ComputeRelativeImportPathParams {
+  readonly fromDir: string;
+  readonly toFile: string;
+  readonly importExtension: ImportExtension;
+}
+
 function computeRelativeImportPath(
-  fromDir: string,
-  toFile: string,
-  importExtension: ImportExtension,
+  params: ComputeRelativeImportPathParams,
 ): string {
+  const { fromDir, toFile, importExtension } = params;
   const relativePath = toPosixPath(path.relative(fromDir, toFile));
   const withExt = applyExtension(relativePath, importExtension);
   if (!withExt.startsWith(".")) {
@@ -99,11 +104,16 @@ function collectScalarTypeImports(
   return imports;
 }
 
+interface BuildScalarTypeImportsParams {
+  readonly scalarTypeImports: ScalarTypeImport[];
+  readonly outputDir: string;
+  readonly importExtension: ImportExtension;
+}
+
 function buildScalarTypeImports(
-  scalarTypeImports: ScalarTypeImport[],
-  outputDir: string,
-  importExtension: ImportExtension,
+  params: BuildScalarTypeImportsParams,
 ): string[] {
+  const { scalarTypeImports, outputDir, importExtension } = params;
   const importsByFile = new Map<string, string[]>();
 
   for (const imp of scalarTypeImports) {
@@ -117,11 +127,11 @@ function buildScalarTypeImports(
 
   for (const sourceFile of sortedFiles) {
     const typeNames = importsByFile.get(sourceFile) ?? [];
-    const importPath = computeRelativeImportPath(
-      outputDir,
-      sourceFile,
+    const importPath = computeRelativeImportPath({
+      fromDir: outputDir,
+      toFile: sourceFile,
       importExtension,
-    );
+    });
     imports.push(
       `import type { ${typeNames.sort().join(", ")} } from "${importPath}";`,
     );
@@ -169,11 +179,17 @@ interface ResolverImportInfo {
   readonly localName: string;
 }
 
+interface MakeResolverLocalNameParams {
+  readonly parentType: string;
+  readonly fieldName: string;
+}
+
 /**
  * Creates a unique local name for a resolver import.
  * Format: <ParentType>$<FieldName>
  */
-function makeResolverLocalName(parentType: string, fieldName: string): string {
+function makeResolverLocalName(params: MakeResolverLocalNameParams): string {
+  const { parentType, fieldName } = params;
   return `${parentType}$${fieldName}`;
 }
 
@@ -194,7 +210,10 @@ function collectResolverImports(
 
   for (const type of resolverInfo.types) {
     for (const field of type.fields) {
-      const localName = makeResolverLocalName(type.typeName, field.fieldName);
+      const localName = makeResolverLocalName({
+        parentType: type.typeName,
+        fieldName: field.fieldName,
+      });
 
       const seen = seenByFile.get(field.sourceFile) ?? new Set<string>();
       if (seen.has(localName)) {
@@ -210,10 +229,10 @@ function collectResolverImports(
   }
 
   for (const abstractResolver of resolverInfo.abstractTypeResolvers) {
-    const localName = makeResolverLocalName(
-      abstractResolver.typeName,
-      abstractResolver.resolverKey,
-    );
+    const localName = makeResolverLocalName({
+      parentType: abstractResolver.typeName,
+      fieldName: abstractResolver.resolverKey,
+    });
 
     const seen =
       seenByFile.get(abstractResolver.sourceFile) ?? new Set<string>();
@@ -231,21 +250,24 @@ function collectResolverImports(
   return importsByFile;
 }
 
-function buildResolverImports(
-  importsByFile: Map<string, ResolverImportInfo[]>,
-  outputDir: string,
-  importExtension: ImportExtension,
-): string[] {
+interface BuildResolverImportsParams {
+  readonly importsByFile: Map<string, ResolverImportInfo[]>;
+  readonly outputDir: string;
+  readonly importExtension: ImportExtension;
+}
+
+function buildResolverImports(params: BuildResolverImportsParams): string[] {
+  const { importsByFile, outputDir, importExtension } = params;
   const imports: string[] = [];
   const sortedFiles = [...importsByFile.keys()].sort();
 
   for (const sourceFile of sortedFiles) {
     const importInfos = importsByFile.get(sourceFile) ?? [];
-    const importPath = computeRelativeImportPath(
-      outputDir,
-      sourceFile,
+    const importPath = computeRelativeImportPath({
+      fromDir: outputDir,
+      toFile: sourceFile,
       importExtension,
-    );
+    });
 
     // Sort by localName for consistent output
     const sortedInfos = [...importInfos].sort((a, b) =>
@@ -269,10 +291,10 @@ function buildResolverImports(
 function buildAbstractOnlyTypeEntry(
   abstractResolver: AbstractTypeResolverInfo,
 ): string {
-  const localName = makeResolverLocalName(
-    abstractResolver.typeName,
-    abstractResolver.resolverKey,
-  );
+  const localName = makeResolverLocalName({
+    parentType: abstractResolver.typeName,
+    fieldName: abstractResolver.resolverKey,
+  });
   return `    ${abstractResolver.typeName}: {\n      ${abstractResolver.resolverKey}: ${localName},\n    },`;
 }
 
@@ -322,7 +344,10 @@ function buildTypeResolverEntry(
   const isSubscription = type.typeName === "Subscription";
 
   for (const field of type.fields) {
-    const localName = makeResolverLocalName(type.typeName, field.fieldName);
+    const localName = makeResolverLocalName({
+      parentType: type.typeName,
+      fieldName: field.fieldName,
+    });
     const resolverValue = buildFieldResolverValue(localName, field);
 
     if (isSubscription) {
@@ -335,10 +360,10 @@ function buildTypeResolverEntry(
   }
 
   if (abstractResolverForType !== null) {
-    const localName = makeResolverLocalName(
-      abstractResolverForType.typeName,
-      abstractResolverForType.resolverKey,
-    );
+    const localName = makeResolverLocalName({
+      parentType: abstractResolverForType.typeName,
+      fieldName: abstractResolverForType.resolverKey,
+    });
     entries.push(`      ${abstractResolverForType.resolverKey}: ${localName},`);
   }
 
@@ -470,16 +495,16 @@ export function emitResolversCode(params: EmitResolversCodeParams): string {
 
   const importsByFile = collectResolverImports(resolverInfo);
   imports.push(
-    ...buildResolverImports(importsByFile, outputDir, importExtension),
+    ...buildResolverImports({ importsByFile, outputDir, importExtension }),
   );
 
   if (hasCustomScalars) {
     const scalarTypeImports = collectScalarTypeImports(customScalars);
-    const scalarImports = buildScalarTypeImports(
+    const scalarImports = buildScalarTypeImports({
       scalarTypeImports,
       outputDir,
       importExtension,
-    );
+    });
     imports.push(...scalarImports);
   }
 

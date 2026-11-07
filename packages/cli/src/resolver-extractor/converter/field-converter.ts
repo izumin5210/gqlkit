@@ -62,7 +62,7 @@ export function convertDefineApiToFields(
     const returnType = resolver.returnType;
     const fieldDef: GraphQLFieldDefinition = {
       name: resolver.fieldName,
-      type: convertTsTypeToGraphQLType(returnType),
+      type: convertTsTypeToGraphQLType(returnType, false),
       args: resolver.args ? convertArgsToInputValues(resolver.args) : null,
       sourceLocation: resolver.sourceLocation,
       resolverExportName: resolver.resolverExportName,

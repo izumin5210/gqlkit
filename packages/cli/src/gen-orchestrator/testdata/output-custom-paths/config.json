@@ -1,0 +1,7 @@
+{
+  "output": {
+    "resolversPath": "custom/__generated__/resolvers.ts",
+    "typeDefsPath": "custom/__generated__/typeDefs.ts",
+    "schemaPath": "custom/__generated__/schema.graphql"
+  }
+}

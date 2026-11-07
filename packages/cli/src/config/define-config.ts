@@ -1,8 +1,8 @@
 import type { GqlkitConfig } from "./types.js";
 
 /**
- * 型安全な設定オブジェクトを作成するヘルパー関数。
- * IDE での型補完とコンパイル時の型チェックを提供する。
+ * Helper function for creating a type-safe config object.
+ * Provides IDE autocompletion and compile-time type checking.
  *
  * @example
  * ```typescript
@@ -12,12 +12,12 @@ import type { GqlkitConfig } from "./types.js";
  * export default defineConfig({
  *   scalars: [
  *     {
- *       graphqlName: "DateTime",
- *       type: { from: "./src/types/scalars", name: "DateTime" },
+ *       name: "DateTime",
+ *       tsType: { from: "./src/types/scalars", name: "DateTime" },
  *     },
  *     {
- *       graphqlName: "UUID",
- *       type: { from: "./src/types/scalars", name: "UUID" },
+ *       name: "UUID",
+ *       tsType: { from: "./src/types/scalars", name: "UUID" },
  *     },
  *   ],
  * });

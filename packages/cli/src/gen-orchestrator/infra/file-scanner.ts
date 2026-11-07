@@ -13,13 +13,13 @@ export interface ScanOptions {
    * Glob patterns to exclude files.
    * Patterns are matched against file paths relative to the scan directory.
    */
-  readonly excludeGlobs?: ReadonlyArray<string>;
+  readonly excludeGlobs: ReadonlyArray<string> | null;
 
   /**
    * File paths to exclude (for generated files).
    * Each path is individually excluded from scanning.
    */
-  readonly excludePaths?: ReadonlyArray<string>;
+  readonly excludePaths: ReadonlyArray<string> | null;
 }
 
 const TS_SOURCE_EXTENSIONS = [".ts", ".cts", ".mts"];
@@ -95,7 +95,7 @@ async function collectFiles(
 
 export async function scanDirectory(
   directory: string,
-  options: ScanOptions = {},
+  options: ScanOptions,
 ): Promise<ScanResult> {
   const absolutePath = resolve(directory);
 

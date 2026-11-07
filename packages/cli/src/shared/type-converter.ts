@@ -52,7 +52,7 @@ function convertElementTypeName(elementType: TSTypeReference): string {
 
 export function convertTsTypeToGraphQLType(
   tsType: TSTypeReference,
-  optional = false,
+  optional: boolean,
 ): GraphQLFieldType {
   const nullable = tsType.nullable || optional;
 

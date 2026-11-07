@@ -103,7 +103,7 @@ interface FieldType {
   readonly typeName: string;
   readonly nullable: boolean;
   readonly list: boolean;
-  readonly listItemNullable?: boolean | null;
+  readonly listItemNullable: boolean | null;
 }
 
 function isTypeCompatible(
