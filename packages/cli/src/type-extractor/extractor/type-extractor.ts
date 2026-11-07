@@ -67,6 +67,7 @@ import {
   isExported,
   isNullableUnion,
   isNullOrUndefined,
+  type SymbolKey,
 } from "../../shared/typescript-utils.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 import { detectIgnoreFieldsMetadata } from "../detector/ignore-fields-detector.js";
@@ -100,9 +101,9 @@ export interface ExtractionOptions {
   /** Set of type names declared in the schema (from Phase 1 collection) */
   readonly knownTypeNames: ReadonlySet<string>;
   /** Map of type names to their symbols (from Phase 1 collection) */
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
   /** Map of underlying symbols to schema type names (for type alias resolution) */
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   /** Scalar base type mapping table for automatic base type -> scalar mapping */
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
 }
@@ -183,8 +184,8 @@ export interface ExtractFieldsParams {
   readonly checker: CheckerLoader;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   readonly sourceFiles: ReadonlySet<string>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   readonly scalarMappingContext: ScalarMappingContext;
@@ -706,8 +707,8 @@ interface ProcessDeclaredTypeParams {
   readonly checker: CheckerLoader;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   readonly scannedSourceFiles: ReadonlySet<string>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
@@ -915,8 +916,8 @@ interface ProcessReexportedSymbolParams {
   readonly checker: CheckerLoader;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   readonly scannedSourceFiles: ReadonlySet<string>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
@@ -1045,8 +1046,8 @@ interface ProcessExportDeclarationParams {
   readonly checker: CheckerLoader;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   readonly scannedSourceFiles: ReadonlySet<string>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
@@ -1228,8 +1229,8 @@ interface ExtractInlineObjectMembersParams {
   readonly checker: CheckerLoader;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   readonly sourceFiles: ReadonlySet<string>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   readonly scalarMappingContext: ScalarMappingContext;

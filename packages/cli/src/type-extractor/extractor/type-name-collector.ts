@@ -16,8 +16,10 @@ import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { prefetchTypeNameFacts } from "../../shared/checker-prefetch.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
+  getSymbolIdentityKey,
   isExported,
   resolveOriginalSymbol,
+  type SymbolKey,
 } from "../../shared/typescript-utils.js";
 
 /**
@@ -37,13 +39,13 @@ function formatLocation(location: SourceLocation): string {
 
 export interface TypeNameCollectionResult {
   readonly typeNames: ReadonlySet<string>;
-  readonly typeSymbols: ReadonlyMap<string, TsSymbol>;
+  readonly typeSymbols: ReadonlyMap<string, SymbolKey>;
   /**
    * Maps underlying type symbols to their schema type names.
    * For `type User = ExternalUser;`, maps ExternalUser's symbol to "User".
    * This allows recognizing `ExternalUser` as `User` in field types.
    */
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   /**
    * Diagnostics collected during type name collection.
    * Contains errors for duplicate type exports.
@@ -73,8 +75,8 @@ export async function collectDeclaredTypeNames(
 ): Promise<TypeNameCollectionResult> {
   const { program, checker, sourceFiles } = params;
   const typeNames = new Set<string>();
-  const typeSymbols = new Map<string, TsSymbol>();
-  const underlyingSymbolToTypeName = new Map<TsSymbol, string>();
+  const typeSymbols = new Map<string, SymbolKey>();
+  const underlyingSymbolToTypeName = new Map<SymbolKey, string>();
   const diagnostics: Diagnostic[] = [];
 
   const typeLocations = new Map<string, TypeDeclarationLocation>();
@@ -114,7 +116,7 @@ export async function collectDeclaredTypeNames(
     typeLocations.set(name, { location, symbol: resolvedSymbol });
     typeNames.add(name);
     if (resolvedSymbol) {
-      typeSymbols.set(name, resolvedSymbol);
+      typeSymbols.set(name, getSymbolIdentityKey(resolvedSymbol));
     }
     return true;
   }
@@ -151,7 +153,10 @@ export async function collectDeclaredTypeNames(
               typeSymbol,
               checker,
             );
-            underlyingSymbolToTypeName.set(underlyingSymbol, name);
+            underlyingSymbolToTypeName.set(
+              getSymbolIdentityKey(underlyingSymbol),
+              name,
+            );
           }
         }
       }

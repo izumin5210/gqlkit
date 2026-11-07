@@ -1,5 +1,6 @@
 import type { ExtractDefineApiResult } from "../../resolver-extractor/index.js";
 import type { DirectiveDefinitionExtractionResult } from "../../shared/index.js";
+import type { SymbolKey } from "../../shared/typescript-utils.js";
 import type {
   GlobalTypeMapping,
   ScalarMetadataInfo,
@@ -19,6 +20,15 @@ export interface SliceWorkerData {
 
 /** Sent by the main thread, in this order, once it has the answers. */
 export type SliceWorkerRequest =
+  | {
+      /** The declared type names (see `collectDeclaredTypeNames`). */
+      readonly kind: "type-names";
+      readonly typeNames: ReadonlyArray<string>;
+      readonly typeSymbols: ReadonlyArray<readonly [string, SymbolKey]>;
+      readonly underlyingSymbolToTypeName: ReadonlyArray<
+        readonly [SymbolKey, string]
+      >;
+    }
   | {
       /** Whether the worker's types looked up any of these scalars' base types. */
       readonly kind: "check-scalar-reads";

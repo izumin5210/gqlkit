@@ -1,7 +1,8 @@
-import type { Program, Symbol as TsSymbol } from "typescript/async";
+import type { Program } from "typescript/async";
 import type { Diagnostic } from "../core/index.js";
 import type { CheckerLoader } from "../shared/checker-loader.js";
 import { collectDiagnostics } from "../shared/index.js";
+import type { SymbolKey } from "../shared/typescript-utils.js";
 import {
   collectLocalTypeDeclarationNames,
   type GlobalTypeMapping,
@@ -23,8 +24,8 @@ export interface ExtractResolverDefinitionsParams {
   /** Every scanned source file. */
   readonly sourceFiles: ReadonlyArray<string>;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
 }

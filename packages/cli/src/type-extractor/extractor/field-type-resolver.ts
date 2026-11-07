@@ -48,6 +48,7 @@ import {
   isBooleanUnion,
   isNullableUnion,
   resolveOriginalSymbol,
+  type SymbolKey,
 } from "../../shared/typescript-utils.js";
 import {
   detectBrandedType,
@@ -80,8 +81,8 @@ export interface FieldTypeResolverDiagnostic {
 export interface FieldTypeResolverContext {
   readonly checker: CheckerLoader;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly sourceFiles: ReadonlySet<string>;
   /** Scalar base type mapping table for automatic base type -> scalar mapping */
@@ -676,7 +677,9 @@ async function resolveFieldTypeInternal(
       // Check if the symbol is the underlying type of a schema type alias
       // For `type User = ExternalUser;`, this allows `ExternalUser` to be recognized as `User`
       const resolvedSymbol = await resolveOriginalSymbol(symbol, checker);
-      const schemaTypeName = ctx.underlyingSymbolToTypeName.get(resolvedSymbol);
+      const schemaTypeName = ctx.underlyingSymbolToTypeName.get(
+        getSymbolIdentityKey(resolvedSymbol),
+      );
       if (schemaTypeName) {
         return createReferenceType({ name: schemaTypeName, nullable: false });
       }
@@ -958,7 +961,7 @@ async function isKnownSchemaType(
   }
 
   const resolvedTypeSymbol = await resolveOriginalSymbol(typeSymbol, checker);
-  return resolvedTypeSymbol === schemaSymbol;
+  return getSymbolIdentityKey(resolvedTypeSymbol) === schemaSymbol;
 }
 
 /**

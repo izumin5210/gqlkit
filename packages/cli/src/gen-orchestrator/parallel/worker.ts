@@ -8,6 +8,7 @@
  * extraction time goes. Ranges of files extracted on separate threads, each
  * talking to its own tsc process, run that work in parallel.
  *
+ * The main thread collects the declared type names once and sends them.
  * The worker extracts before the files preceding its range are: it assumes
  * they register no discovered types, that no scalar base type mapping
  * applies, and that type extraction discovers no types the resolvers
@@ -23,7 +24,6 @@ import { prefetchDeclarationFacts } from "../../shared/checker-prefetch.js";
 import { extractDirectiveDefinitions } from "../../shared/index.js";
 import {
   buildScalarMappingTable,
-  collectDeclaredTypeNames,
   createRecordedScalarMappingTable,
   isScalarMappingTableUnread,
 } from "../../type-extractor/index.js";
@@ -51,6 +51,22 @@ function respond(response: SliceWorkerResponse): void {
 
 async function run(): Promise<void> {
   const { cwd, tsconfigPath, sourceFiles, files, globalTypeMappings } = data;
+  const requests = on(port, "message") as AsyncIterableIterator<
+    [SliceWorkerRequest]
+  >;
+  const nextRequest = async <K extends SliceWorkerRequest["kind"]>(
+    kind: K,
+  ): Promise<Extract<SliceWorkerRequest, { kind: K }>> => {
+    const { value, done } = await requests.next();
+    const request = done ? undefined : value[0];
+    if (request?.kind !== kind) {
+      throw new Error(
+        `expected a "${kind}" request, got "${request?.kind ?? "none"}"`,
+      );
+    }
+    return request as Extract<SliceWorkerRequest, { kind: K }>;
+  };
+
   await using api = new API({ cwd });
   const { program } = await createSharedProgram({
     api,
@@ -62,28 +78,22 @@ async function run(): Promise<void> {
   if (program === null) {
     throw new Error("the slice worker could not create the program");
   }
-  const loadedFiles = await fetchSourceFiles({
-    api,
-    program,
-    files: sourceFiles,
-  });
+  // Only the range's files: declarations elsewhere are fetched when read.
+  const loadedFiles = (await fetchSourceFiles({ api, program, files })).filter(
+    (sf) => sf !== undefined,
+  );
   const checker = createCheckerLoader({
     api,
     checker: program.getProject().checker,
-    loadedFilePaths: new Set(
-      loadedFiles.flatMap((sf) => (sf === undefined ? [] : [sf.path])),
-    ),
+    loadedFilePaths: new Set(loadedFiles.map((sf) => sf.path)),
   });
-  const filesInRange = new Set(files);
   const [names] = await Promise.all([
-    collectDeclaredTypeNames({ program, checker, sourceFiles }),
-    prefetchDeclarationFacts(
-      checker,
-      loadedFiles.flatMap((sf, i) =>
-        sf !== undefined && filesInRange.has(sourceFiles[i] ?? "") ? [sf] : [],
-      ),
-    ),
+    nextRequest("type-names"),
+    prefetchDeclarationFacts(checker, loadedFiles),
   ]);
+  const knownTypeNames = new Set(names.typeNames);
+  const knownTypeSymbols = new Map(names.typeSymbols);
+  const underlyingSymbolToTypeName = new Map(names.underlyingSymbolToTypeName);
 
   const resolvers = speculateResolverDefinitions({
     program,
@@ -91,9 +101,9 @@ async function run(): Promise<void> {
     files,
     sourceFiles,
     globalTypeMappings,
-    declaredTypeNames: names.typeNames,
-    knownTypeSymbols: names.typeSymbols,
-    underlyingSymbolToTypeName: names.underlyingSymbolToTypeName,
+    declaredTypeNames: knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
   });
 
   const directives = extractDirectiveDefinitions({
@@ -111,9 +121,9 @@ async function run(): Promise<void> {
       sourceFiles,
       options: {
         globalTypeMappings,
-        knownTypeNames: names.typeNames,
-        knownTypeSymbols: names.typeSymbols,
-        underlyingSymbolToTypeName: names.underlyingSymbolToTypeName,
+        knownTypeNames,
+        knownTypeSymbols,
+        underlyingSymbolToTypeName,
         scalarMappingTable,
       },
       priorRegisteredNames: new Set(),
@@ -121,9 +131,7 @@ async function run(): Promise<void> {
     directives: await directives,
   });
 
-  for await (const [request] of on(port, "message") as AsyncIterable<
-    [SliceWorkerRequest]
-  >) {
+  for await (const [request] of requests) {
     switch (request.kind) {
       case "check-scalar-reads":
         respond({
@@ -140,6 +148,8 @@ async function run(): Promise<void> {
           ),
         });
         break;
+      case "type-names":
+        throw new Error("type names were already sent");
       case "resolvers":
         respond({
           kind: "definitions",

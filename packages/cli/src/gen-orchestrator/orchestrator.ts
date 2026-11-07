@@ -1,7 +1,7 @@
 import { stat } from "node:fs/promises";
 import { availableParallelism } from "node:os";
 import { dirname, relative, resolve } from "node:path";
-import { API, type Program, type Symbol as TsSymbol } from "typescript/async";
+import { API, type Program } from "typescript/async";
 import type {
   ResolvedDiscriminatorFieldsMap,
   ResolvedOutputConfig,
@@ -27,6 +27,7 @@ import {
   extractDirectiveDefinitions,
   toPosixPath,
 } from "../shared/index.js";
+import type { SymbolKey } from "../shared/typescript-utils.js";
 import {
   type ConfigScalarMapping,
   collectDeclaredTypeNames,
@@ -83,8 +84,8 @@ interface PipelineContext {
   readonly program: Program | null;
   readonly checker: CheckerLoader | null;
   readonly knownTypeNames: ReadonlySet<string> | null;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol> | null;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string> | null;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey> | null;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string> | null;
   readonly typesResult: ExtractTypesResult | null;
   readonly resolversResult: ExtractResolversResult | null;
   readonly directiveDefinitions: DirectiveDefinitionInfo[] | null;
@@ -276,14 +277,19 @@ async function collectTypeNamesStep(
       program.getSourceFile(file),
     ),
   );
+  const collection = collectDeclaredTypeNames({
+    program,
+    checker,
+    sourceFiles: ctx.sourceFiles,
+  });
+  // Type extraction walks the declarations next. Their facts travel
+  // alongside the collection's own queries, unless workers wait for the
+  // collection: then the collection goes first.
+  if (sliceExtraction !== null) {
+    sliceExtraction.shareTypeNames(await collection);
+  }
   const [result] = await Promise.all([
-    collectDeclaredTypeNames({
-      program,
-      checker,
-      sourceFiles: ctx.sourceFiles,
-    }),
-    // Type extraction walks the declarations next; their facts travel
-    // alongside the collection's own queries.
+    collection,
     prefetchDeclarationFacts(
       checker,
       sourceFiles.filter((sf) => sf !== undefined),

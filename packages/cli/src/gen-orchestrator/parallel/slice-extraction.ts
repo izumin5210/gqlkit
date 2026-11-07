@@ -1,5 +1,5 @@
 import type { SourceFile } from "typescript/ast";
-import type { Program, Symbol as TsSymbol } from "typescript/async";
+import type { Program } from "typescript/async";
 import {
   type ExtractDefineApiResult,
   extractResolverDefinitions as extractResolverDefinitionsOfFiles,
@@ -10,6 +10,7 @@ import {
   type DirectiveDefinitionExtractionResult,
   extractDirectiveDefinitions,
 } from "../../shared/index.js";
+import type { SymbolKey } from "../../shared/typescript-utils.js";
 import {
   buildScalarMappingTable,
   type ConfigScalarMapping,
@@ -24,6 +25,7 @@ import {
   type GlobalTypeMapping,
   isScalarMappingTableUnread,
   type ScalarBaseTypeMappingTable,
+  type TypeNameCollectionResult,
 } from "../../type-extractor/index.js";
 import {
   type Reply,
@@ -88,8 +90,8 @@ export interface ExtractTypesInSlicesParams {
   readonly program: Program;
   readonly checker: CheckerLoader;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   readonly customScalarNames: ReadonlyArray<string>;
   readonly configScalars: ReadonlyArray<ConfigScalarMapping>;
   readonly sourceRoot: string | null;
@@ -107,6 +109,8 @@ export interface SliceExtraction {
   readonly extractTypes: (
     params: ExtractTypesInSlicesParams,
   ) => Promise<ExtractTypesResult>;
+  /** Hands the workers the declared type names; they wait for them. */
+  readonly shareTypeNames: (names: TypeNameCollectionResult) => void;
   /** Must follow `extractTypes`, which extracts them alongside. */
   readonly directiveDefinitions: () => Promise<DirectiveDefinitionExtractionResult>;
   /** Must follow `extractTypes`. */
@@ -152,8 +156,8 @@ export function startSliceExtraction(
   let resolverContext: {
     readonly program: Program;
     readonly checker: CheckerLoader;
-    readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-    readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+    readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+    readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
     readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   } | null = null;
 
@@ -344,8 +348,20 @@ export function startSliceExtraction(
       };
     };
 
+  const shareTypeNames = (names: TypeNameCollectionResult): void => {
+    for (const worker of workers) {
+      worker.send({
+        kind: "type-names",
+        typeNames: [...names.typeNames],
+        typeSymbols: [...names.typeSymbols],
+        underlyingSymbolToTypeName: [...names.underlyingSymbolToTypeName],
+      });
+    }
+  };
+
   return {
     mainThreadFiles,
+    shareTypeNames,
     extractTypes,
     directiveDefinitions,
     extractResolverDefinitions,

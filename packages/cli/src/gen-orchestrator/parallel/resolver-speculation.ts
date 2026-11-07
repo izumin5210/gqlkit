@@ -1,10 +1,11 @@
-import type { Program, Symbol as TsSymbol } from "typescript/async";
+import type { Program } from "typescript/async";
 import {
   type ExtractDefineApiResult,
   extractResolverDefinitions,
 } from "../../resolver-extractor/index.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { RecordedSet } from "../../shared/recorded-reads.js";
+import type { SymbolKey } from "../../shared/typescript-utils.js";
 import {
   buildScalarMappingTable,
   createRecordedScalarMappingTable,
@@ -31,8 +32,8 @@ export interface SpeculateResolverDefinitionsParams {
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   /** Declared type names, as collected before type extraction. */
   readonly declaredTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
 }
 
 export interface ResolverDefinitionsSpeculation {
