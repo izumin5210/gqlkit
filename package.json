@@ -5,6 +5,9 @@
   "scripts": {
     "prepare": "lefthook install",
     "build": "pnpm -r build",
+    "bench": "pnpm --filter @gqlkit-ts/cli bench",
+    "bench:compare": "pnpm --filter @gqlkit-ts/cli bench:compare",
+    "bench:refs": "pnpm --filter @gqlkit-ts/cli bench:refs",
     "check": "biome check --write",
     "test": "vitest run",
     "typecheck": "pnpm -r typecheck",
