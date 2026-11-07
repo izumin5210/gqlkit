@@ -904,7 +904,7 @@ export async function extractDefineApiResolvers(
   // order, which keeps the output deterministic.
   const resultsByFile = await Promise.all(
     files.map(async (filePath) => {
-      const sourceFile = program.getSourceFile(filePath);
+      const sourceFile = await program.getSourceFile(filePath);
       if (!sourceFile) {
         return [];
       }

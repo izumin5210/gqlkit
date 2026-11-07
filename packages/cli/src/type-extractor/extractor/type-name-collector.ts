@@ -118,7 +118,7 @@ export async function collectDeclaredTypeNames(
   );
 
   for (const filePath of sourceFiles) {
-    const sourceFile = program.getSourceFile(filePath);
+    const sourceFile = await program.getSourceFile(filePath);
     if (!sourceFile) continue;
 
     for (const node of sourceFile.statements) {
@@ -221,14 +221,14 @@ export async function collectDeclaredTypeNames(
  * detection, no symbol tracking, no re-export handling — just a name set for
  * membership checks.
  */
-export function collectLocalTypeDeclarationNames(
+export async function collectLocalTypeDeclarationNames(
   program: ts.Program,
   sourceFiles: ReadonlyArray<string>,
-): ReadonlySet<string> {
+): Promise<ReadonlySet<string>> {
   const names = new Set<string>();
 
   for (const filePath of sourceFiles) {
-    const sourceFile = program.getSourceFile(filePath);
+    const sourceFile = await program.getSourceFile(filePath);
     if (!sourceFile) continue;
 
     sourceFile.forEachChild((node) => {

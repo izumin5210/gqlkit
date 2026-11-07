@@ -15,21 +15,23 @@ export interface LoadTsconfigResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
-export function loadTsconfig(options: LoadTsconfigOptions): LoadTsconfigResult {
+export async function loadTsconfig(
+  options: LoadTsconfigOptions,
+): Promise<LoadTsconfigResult> {
   const { api, cwd, tsconfigPath } = options;
 
   if (tsconfigPath !== null) {
-    return loadFromSpecifiedPath(api, cwd, tsconfigPath);
+    return await loadFromSpecifiedPath(api, cwd, tsconfigPath);
   }
 
-  return autoDetectTsconfig(api, cwd);
+  return await autoDetectTsconfig(api, cwd);
 }
 
-function loadFromSpecifiedPath(
+async function loadFromSpecifiedPath(
   api: ts.API,
   cwd: string,
   tsconfigPath: string,
-): LoadTsconfigResult {
+): Promise<LoadTsconfigResult> {
   const absolutePath = path.isAbsolute(tsconfigPath)
     ? tsconfigPath
     : path.resolve(cwd, tsconfigPath);
@@ -49,10 +51,13 @@ function loadFromSpecifiedPath(
     };
   }
 
-  return parseConfigFile(api, absolutePath);
+  return await parseConfigFile(api, absolutePath);
 }
 
-function autoDetectTsconfig(api: ts.API, cwd: string): LoadTsconfigResult {
+async function autoDetectTsconfig(
+  api: ts.API,
+  cwd: string,
+): Promise<LoadTsconfigResult> {
   const configPath = findConfigFile(cwd);
 
   if (!configPath) {
@@ -63,7 +68,7 @@ function autoDetectTsconfig(api: ts.API, cwd: string): LoadTsconfigResult {
     };
   }
 
-  return parseConfigFile(api, configPath);
+  return await parseConfigFile(api, configPath);
 }
 
 /**
@@ -100,13 +105,13 @@ function flattenDiagnosticText(
   return lines.join("\n");
 }
 
-function parseConfigFile(
+async function parseConfigFile(
   api: ts.API,
   configFilePath: string,
-): LoadTsconfigResult {
+): Promise<LoadTsconfigResult> {
   const diagnostics: Diagnostic[] = [];
 
-  const readResult = api.readConfigFile(configFilePath);
+  const readResult = await api.readConfigFile(configFilePath);
 
   if (readResult.error) {
     diagnostics.push({
@@ -126,7 +131,7 @@ function parseConfigFile(
     };
   }
 
-  const parseResult = api.parseJsonConfigFileContent(readResult.config, {
+  const parseResult = await api.parseJsonConfigFileContent(readResult.config, {
     configFileName: configFilePath,
   });
 
