@@ -8,9 +8,9 @@ type NestedConfig {
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum Priority {
+  HIGH
   LOW
   MEDIUM
-  HIGH
 }
 
 type Query

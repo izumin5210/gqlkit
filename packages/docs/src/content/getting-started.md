@@ -22,6 +22,10 @@ yarn add @gqlkit-ts/runtime @graphql-tools/schema graphql
 yarn add -D @gqlkit-ts/cli
 ```
 
+> [!NOTE]
+>
+> `@gqlkit-ts/cli` analyzes your code through the TypeScript 7 native API and requires `typescript` 7.1 or later in your project.
+
 > [!TIP]
 >
 > If you use AI coding agents like Claude Code or Codex, run `gqlkit docs` to set up gqlkit skills. See [Coding Agents](./coding-agents) for details.

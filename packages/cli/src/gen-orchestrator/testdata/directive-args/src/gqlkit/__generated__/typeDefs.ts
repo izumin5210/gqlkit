@@ -238,14 +238,14 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "PUBLIC"
+            "value": "PRIVATE"
           }
         },
         {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "PRIVATE"
+            "value": "PUBLIC"
           }
         }
       ],

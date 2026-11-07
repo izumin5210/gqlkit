@@ -1,10 +1,10 @@
-import type ts from "typescript";
 import type { SourceLocation } from "./diagnostics.js";
 import type {
   DeprecationInfo,
   DirectiveArgumentValue,
   DirectiveInfo,
 } from "./metadata.js";
+import type * as ts from "./typescript.js";
 
 /**
  * Information about a detected scalar type.

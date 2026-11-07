@@ -21,9 +21,9 @@ Enum type for article status
 Defined in: src/gqlkit/schema/types.ts
 """
 enum ArticleStatus {
+  ARCHIVED
   DRAFT
   PUBLISHED
-  ARCHIVED
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""

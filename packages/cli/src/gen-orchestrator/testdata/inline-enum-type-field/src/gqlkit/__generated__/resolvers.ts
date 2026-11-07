@@ -3,24 +3,24 @@
 export function createResolvers() {
   return {
     PostVisibility: {
-      PUBLIC: "public",
       PRIVATE: "private",
+      PUBLIC: "public",
       UNLISTED: "unlisted",
     },
     PostTag: {
-      TECH: "tech",
       LIFESTYLE: "lifestyle",
       NEWS: "news",
+      TECH: "tech",
     },
     PostCategory: {
       BLOG: "blog",
-      TUTORIAL: "tutorial",
       REVIEW: "review",
+      TUTORIAL: "tutorial",
     },
     PostStatus: {
+      ARCHIVED: "archived",
       DRAFT: "draft",
       PUBLISHED: "published",
-      ARCHIVED: "archived",
     },
   };
 }

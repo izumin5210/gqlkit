@@ -54,7 +54,7 @@
   },
   "peerDependencies": {
     "graphql": "^16.12.0",
-    "typescript": "^5.9.3"
+    "typescript": "^7.1.0-beta"
   },
   "peerDependenciesMeta": {
     "graphql": {
@@ -68,6 +68,7 @@
     "@gqlkit-ts/docs": "workspace:*",
     "@gqlkit-ts/runtime": "workspace:*",
     "@types/shell-quote": "1.7.5",
-    "memfs": "4.80.0"
+    "memfs": "4.80.0",
+    "typescript": "7.1.0-beta"
   }
 }

@@ -14,19 +14,19 @@ export function createResolvers() {
       PENDING_REVIEW: "pendingReview",
     },
     CreatePostVisibilityInput: {
-      PUBLIC: "public",
       PRIVATE: "private",
+      PUBLIC: "public",
       UNLISTED: "unlisted",
     },
     UserPostsSortByInput: {
-      TITLE: "title",
       CREATED_AT: "createdAt",
+      TITLE: "title",
       UPDATED_AT: "updatedAt",
     },
     UserPostsCategoryInput: {
-      TECH: "tech",
       LIFESTYLE: "lifestyle",
       NEWS: "news",
+      TECH: "tech",
     },
     Mutation: {
       createPost: Mutation$createPost,

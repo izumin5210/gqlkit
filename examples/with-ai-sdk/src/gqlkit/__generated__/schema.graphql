@@ -622,8 +622,8 @@ type MessagePartReasoning {
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
 enum MessagePartReasoningState {
-  STREAMING
   DONE
+  STREAMING
 }
 
 type MessagePartSourceDocument {
@@ -667,8 +667,8 @@ type MessagePartText {
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
 enum MessagePartTextState {
-  STREAMING
   DONE
+  STREAMING
 }
 
 type MessagePartToolCalculateApprovalRequested {
@@ -1118,9 +1118,9 @@ type MessagePartToolWeatherOutputErrorInput {
 Defined in: ../../node_modules/.pnpm/ai@6.0.116_zod@3.25.76/node_modules/ai/dist/index.d.ts
 """
 enum MessageRole {
+  ASSISTANT
   SYSTEM
   USER
-  ASSISTANT
 }
 
 type Query

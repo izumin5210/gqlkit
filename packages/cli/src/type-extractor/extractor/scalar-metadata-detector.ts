@@ -5,10 +5,13 @@
  * in TypeScript intersection types using the $gqlkitScalar property.
  */
 
-import ts from "typescript";
 import { METADATA_PROPERTIES } from "../../core/index.js";
+import * as ts from "../../core/typescript.js";
 import { getActualMetadataType } from "../../shared/metadata-detector.js";
-import { isNullOrUndefined } from "../../shared/typescript-utils.js";
+import {
+  getDeclarations,
+  isNullOrUndefined,
+} from "../../shared/typescript-utils.js";
 
 const SCALAR_METADATA_PROPERTY = METADATA_PROPERTIES.SCALAR;
 
@@ -65,7 +68,7 @@ function createDefaultResult(): ScalarMetadataResult {
 
 function extractMetadataFromType(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): InternalMetadata | null {
   const metadataProp = type.getProperty(SCALAR_METADATA_PROPERTY);
   if (!metadataProp) {
@@ -112,13 +115,13 @@ function extractMetadataFromType(
 
 function detectScalarMetadataFromIntersection(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): InternalMetadata | null {
-  if (!type.isIntersection()) {
+  if (!type.isIntersectionType()) {
     return null;
   }
 
-  for (const member of type.types) {
+  for (const member of type.getTypes()) {
     const metadata = extractMetadataFromType(member, checker);
     if (metadata) {
       return metadata;
@@ -170,7 +173,7 @@ function isBooleanLiteralUnion(types: readonly ts.Type[]): boolean {
 
 function detectScalarMetadataCore(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): InternalMetadata | null {
   const primitiveResult = detectPrimitiveScalar(type);
   if (primitiveResult) {
@@ -190,8 +193,9 @@ function detectScalarMetadataCore(
     return directMetadata;
   }
 
-  if (type.aliasSymbol) {
-    const aliasedType = checker.getDeclaredTypeOfSymbol(type.aliasSymbol);
+  const aliasSymbol = type.getAliasSymbol();
+  if (aliasSymbol) {
+    const aliasedType = checker.getDeclaredTypeOfSymbol(aliasSymbol);
     if (aliasedType !== type) {
       const aliasResult = detectScalarMetadataCore(aliasedType, checker);
       if (aliasResult) {
@@ -202,14 +206,14 @@ function detectScalarMetadataCore(
 
   const symbol = type.getSymbol();
   if (symbol) {
-    const declarations = symbol.getDeclarations();
+    const declarations = getDeclarations(symbol);
     if (declarations && declarations.length > 0) {
       for (const decl of declarations) {
         if (ts.isTypeAliasDeclaration(decl)) {
           const declSymbol = checker.getSymbolAtLocation(decl.name);
           if (declSymbol) {
             const declType = checker.getDeclaredTypeOfSymbol(declSymbol);
-            if (declType !== type && declType.isIntersection()) {
+            if (declType !== type && declType.isIntersectionType()) {
               const result = detectScalarMetadataFromIntersection(
                 declType,
                 checker,
@@ -238,7 +242,7 @@ function isObjectLikeType(type: ts.Type): boolean {
       const properties = type.getProperties();
       const hasOnlyMetadataProperty =
         properties.length === 1 &&
-        properties[0]?.getName() === SCALAR_METADATA_PROPERTY;
+        properties[0]?.name === SCALAR_METADATA_PROPERTY;
 
       if (!hasOnlyMetadataProperty && properties.length > 0) {
         const metadataProp = type.getProperty(SCALAR_METADATA_PROPERTY);
@@ -267,13 +271,13 @@ function isObjectLikeType(type: ts.Type): boolean {
  */
 export function detectScalarMetadata(
   type: ts.Type,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): ScalarMetadataResult {
   const result = createDefaultResult();
 
   if (checker.isArrayType(type)) {
     const typeRef = type as ts.TypeReference;
-    const elementType = typeRef.typeArguments?.[0];
+    const elementType = checker.getTypeArguments(typeRef)[0];
 
     if (!elementType) {
       return {
@@ -295,11 +299,11 @@ export function detectScalarMetadata(
     };
   }
 
-  if (type.isUnion()) {
-    const nonNullTypes = type.types.filter((t) => !isNullOrUndefined(t));
-    const hasNull = type.types.some((t) => isNullOrUndefined(t));
+  if (type.isUnionType()) {
+    const nonNullTypes = type.getTypes().filter((t) => !isNullOrUndefined(t));
+    const hasNull = type.getTypes().some((t) => isNullOrUndefined(t));
 
-    if (isBooleanLiteralUnion(type.types)) {
+    if (isBooleanLiteralUnion(type.getTypes())) {
       return {
         ...result,
         scalarName: "Boolean",

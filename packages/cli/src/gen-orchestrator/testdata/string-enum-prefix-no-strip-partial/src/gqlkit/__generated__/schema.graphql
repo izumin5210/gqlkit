@@ -14,7 +14,7 @@ Prefix stripping should NOT be applied since not all values have the prefix.
 Defined in: src/gqlkit/schema/types.ts
 """
 enum UserStatus {
+  PENDING
   USER_STATUS_ACTIVE
   USER_STATUS_INACTIVE
-  PENDING
 }

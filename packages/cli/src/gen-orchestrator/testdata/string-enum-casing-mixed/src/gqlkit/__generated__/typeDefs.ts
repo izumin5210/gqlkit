@@ -81,13 +81,6 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "ACTIVE"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
             "value": "IN_ACTIVE"
           }
         },
@@ -95,7 +88,7 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "PENDING_REVIEW"
+            "value": "ACTIVE"
           }
         },
         {
@@ -103,6 +96,13 @@ export const typeDefs: DocumentNode = {
           "name": {
             "kind": "Name",
             "value": "ON_HOLD"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "PENDING_REVIEW"
           }
         }
       ],

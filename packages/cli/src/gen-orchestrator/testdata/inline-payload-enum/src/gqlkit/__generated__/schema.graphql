@@ -2,19 +2,19 @@
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum GetFormatsPayload {
-  SIMPLE_WORD
-  TWO_WORDS
+  MIXED_CASE
   THREE_WORDS
   KEBAB_CASE_VALUE
+  SIMPLE_WORD
   SNAKE_CASE_VALUE
-  MIXED_CASE
+  TWO_WORDS
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum GetLevelPayload {
+  ADVANCED
   BEGINNER
   INTERMEDIATE
-  ADVANCED
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
@@ -40,17 +40,17 @@ type Task {
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum TaskPriorityPayload {
+  CRITICAL
+  HIGH
   LOW
   MEDIUM
-  HIGH
-  CRITICAL
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum UpdateStatusPayload {
-  SUCCESS
   FAILURE
   PARTIAL_SUCCESS
+  SUCCESS
 }
 
 extend type Mutation {

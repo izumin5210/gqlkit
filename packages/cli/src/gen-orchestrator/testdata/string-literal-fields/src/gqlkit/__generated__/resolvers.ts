@@ -5,8 +5,8 @@ import { event as Query$event } from "../schema/query.js";
 export function createResolvers() {
   return {
     StatusEventCode: {
-      SUCCESS: "success",
       FAILURE: "failure",
+      SUCCESS: "success",
     },
     Query: {
       event: Query$event,

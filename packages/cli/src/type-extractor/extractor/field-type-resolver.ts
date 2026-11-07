@@ -1,5 +1,4 @@
 import { relative } from "node:path";
-import ts from "typescript";
 import {
   createArrayType,
   createInlineEnumType,
@@ -17,6 +16,7 @@ import {
   type SourceLocation,
   type TSTypeReference,
 } from "../../core/index.js";
+import * as ts from "../../core/typescript.js";
 import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import { extractTsDocFromSymbol } from "../../shared/tsdoc-parser.js";
@@ -24,6 +24,7 @@ import {
   filterNonNullTypeNodes,
   findEnumParentSymbol,
   findNonNullTypeNode,
+  getDeclarations,
   getNonNullableTypes,
   getTypeNameFromNode,
   isBooleanUnion,
@@ -59,7 +60,7 @@ export interface FieldTypeResolverDiagnostic {
 }
 
 export interface FieldTypeResolverContext {
-  readonly checker: ts.TypeChecker;
+  readonly checker: ts.Checker;
   readonly knownTypeNames: ReadonlySet<string>;
   readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
   readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
@@ -160,7 +161,7 @@ function registerDiscoveredType(params: RegisterDiscoveredTypeParams): boolean {
     return false;
   }
   if (!discoveredTypes.has(name)) {
-    const declarations = symbol.getDeclarations();
+    const declarations = getDeclarations(symbol);
     const decl = declarations?.[0];
     if (decl && !decl.getSourceFile().isDeclarationFile) {
       const properties = type.getProperties();
@@ -232,13 +233,13 @@ function resolveFieldTypeInternal(
   }
 
   // Union type handling
-  if (type.isUnion()) {
+  if (type.isUnionType()) {
     const nullable = isNullableUnion(type);
 
     // Preserve type alias name for enum types (string literal unions)
-    const aliasSymbol = type.aliasSymbol;
+    const aliasSymbol = type.getAliasSymbol();
     if (aliasSymbol) {
-      const name = aliasSymbol.getName();
+      const name = aliasSymbol.name;
       if (isKnownSchemaType(name, aliasSymbol, ctx)) {
         return createReferenceType({ name, nullable });
       }
@@ -272,7 +273,7 @@ function resolveFieldTypeInternal(
     // Check if all non-null types belong to the same enum
     const enumParentSymbol = findEnumParentSymbol(nonNullTypes);
     if (enumParentSymbol) {
-      const enumName = enumParentSymbol.getName();
+      const enumName = enumParentSymbol.name;
       // If enum is in knownTypeNames, treat as reference type
       if (isKnownSchemaType(enumName, enumParentSymbol, ctx)) {
         return createReferenceType({ name: enumName, nullable });
@@ -353,14 +354,14 @@ function resolveFieldTypeInternal(
       return result;
     });
 
-    const aliasName = type.aliasSymbol?.getName() ?? null;
+    const aliasName = type.getAliasSymbol()?.name ?? null;
     return createUnionType({ members: memberResults, nullable, aliasName });
   }
 
   // Array type handling
   if (checker.isArrayType(type)) {
-    const typeArgs = (type as ts.TypeReference).typeArguments;
-    const elementType = typeArgs?.[0];
+    const typeArgs = checker.getTypeArguments(type as ts.TypeReference);
+    const elementType = typeArgs[0];
 
     let elementTypeNode: ts.TypeNode | undefined;
     if (typeNode && ts.isArrayTypeNode(typeNode)) {
@@ -423,11 +424,12 @@ function resolveFieldTypeInternal(
 
   // Intersection types in field context
   // GraphQL doesn't have intersection types, so we must resolve them appropriately
-  if (type.isIntersection()) {
+  if (type.isIntersectionType()) {
     // 1. If the intersection has an alias that's in knownTypeNames, use it as reference
-    if (type.aliasSymbol) {
-      const aliasName = type.aliasSymbol.getName();
-      if (isKnownSchemaType(aliasName, type.aliasSymbol, ctx)) {
+    const aliasSymbol = type.getAliasSymbol();
+    if (aliasSymbol) {
+      const aliasName = aliasSymbol.name;
+      if (isKnownSchemaType(aliasName, aliasSymbol, ctx)) {
         return createReferenceType({ name: aliasName, nullable: false });
       }
 
@@ -462,13 +464,13 @@ function resolveFieldTypeInternal(
     // 4. Register in discoveredTypes if applicable (same logic as alias expansion)
     //    This handles non-exported recursive intersection types that would otherwise
     //    cause cycle detection failures in tryExtractAsInlineObject.
-    if (type.aliasSymbol) {
-      const aliasName = type.aliasSymbol.getName();
+    if (aliasSymbol) {
+      const aliasName = aliasSymbol.name;
       if (!knownTypeNames.has(aliasName)) {
         const isDiscovered = registerDiscoveredType({
           name: aliasName,
           type,
-          symbol: resolveOriginalSymbol(type.aliasSymbol, checker),
+          symbol: resolveOriginalSymbol(aliasSymbol, checker),
           discoveredTypes: ctx.discoveredTypes,
         });
         if (isDiscovered) {
@@ -551,8 +553,9 @@ function resolveFieldTypeInternal(
   // Only expand if the underlying type is an anonymous object literal, not a named type
   // IMPORTANT: Only expand if the name doesn't exist in schema at all.
   // If the name exists but symbols don't match, that's a shadowing case handled by later logic.
-  if (type.aliasSymbol) {
-    const aliasName = type.aliasSymbol.getName();
+  const aliasSymbol = type.getAliasSymbol();
+  if (aliasSymbol) {
+    const aliasName = aliasSymbol.name;
     if (!knownTypeNames.has(aliasName)) {
       // Check if this is an anonymous object type (not an interface or another named type)
       // using ts.ObjectFlags.Anonymous for a more robust check than internal symbol names
@@ -568,7 +571,7 @@ function resolveFieldTypeInternal(
         const isDiscovered = registerDiscoveredType({
           name: aliasName,
           type,
-          symbol: resolveOriginalSymbol(type.aliasSymbol, checker),
+          symbol: resolveOriginalSymbol(aliasSymbol, checker),
           discoveredTypes: ctx.discoveredTypes,
         });
         if (isDiscovered) {
@@ -590,8 +593,9 @@ function resolveFieldTypeInternal(
   }
 
   // Named type reference (symbol-based lookup)
-  if (type.symbol) {
-    const symbolName = type.symbol.getName();
+  const symbol = type.getSymbol();
+  if (symbol) {
+    const symbolName = symbol.name;
 
     if (!isInternalTypeSymbol(symbolName)) {
       // Check for global type mappings (custom scalars)
@@ -613,13 +617,13 @@ function resolveFieldTypeInternal(
       }
 
       // Check if it's a known type by symbol comparison
-      if (isKnownSchemaType(symbolName, type.symbol, ctx)) {
+      if (isKnownSchemaType(symbolName, symbol, ctx)) {
         return createReferenceType({ name: symbolName, nullable: false });
       }
 
       // Check if the symbol is the underlying type of a schema type alias
       // For `type User = ExternalUser;`, this allows `ExternalUser` to be recognized as `User`
-      const resolvedSymbol = resolveOriginalSymbol(type.symbol, checker);
+      const resolvedSymbol = resolveOriginalSymbol(symbol, checker);
       const schemaTypeName = ctx.underlyingSymbolToTypeName.get(resolvedSymbol);
       if (schemaTypeName) {
         return createReferenceType({ name: schemaTypeName, nullable: false });
@@ -629,7 +633,7 @@ function resolveFieldTypeInternal(
       // it's a different type with the same name
       if (knownTypeNames.has(symbolName)) {
         // Check if the type is declared within schema files (local shadowing)
-        if (isTypeFromSchemaFiles(type.symbol, ctx.sourceFiles)) {
+        if (isTypeFromSchemaFiles(symbol, ctx.sourceFiles)) {
           // Local shadowing - use name matching for backwards compatibility
           return createReferenceType({ name: symbolName, nullable: false });
         }
@@ -667,7 +671,7 @@ function resolveFieldTypeInternal(
       // Check both symbol flags and declarations since the flags may vary
       const isEnumSymbol =
         (resolvedSymbol.flags & ts.SymbolFlags.Enum) !== 0 ||
-        resolvedSymbol.getDeclarations()?.some(ts.isEnumDeclaration) === true;
+        getDeclarations(resolvedSymbol)?.some(ts.isEnumDeclaration) === true;
       if (isEnumSymbol) {
         const externalEnumResult = tryExtractExternalEnumAsInlineEnum(
           resolvedSymbol,
@@ -708,7 +712,7 @@ function tryExtractAsInlineObject(
   const { visitedTypes, checker } = ctx;
   if (visitedTypes.has(type)) {
     // Prefer aliasSymbol (type alias name) over type.symbol (which may be __type for anonymous objects)
-    const candidateName = type.aliasSymbol?.getName() ?? type.symbol?.getName();
+    const candidateName = type.getAliasSymbol()?.name ?? type.getSymbol()?.name;
     if (
       candidateName &&
       !isInternalTypeSymbol(candidateName) &&
@@ -748,8 +752,9 @@ function tryExtractAsInlineObject(
   // Only extract from user-defined types, not built-in TypeScript utility types
   let description: string | null = null;
   let deprecated: DeprecationInfo | null = null;
-  if (type.aliasSymbol) {
-    const declarations = type.aliasSymbol.getDeclarations();
+  const aliasSymbol = type.getAliasSymbol();
+  if (aliasSymbol) {
+    const declarations = getDeclarations(aliasSymbol);
     const isUserDefined =
       declarations?.some((decl) => {
         const sourceFile = decl.getSourceFile();
@@ -757,7 +762,7 @@ function tryExtractAsInlineObject(
       }) ?? false;
 
     if (isUserDefined) {
-      const tsdocInfo = extractTsDocFromSymbol(type.aliasSymbol, checker);
+      const tsdocInfo = extractTsDocFromSymbol(aliasSymbol, checker);
       description = tsdocInfo.description;
       deprecated = tsdocInfo.deprecated;
     }
@@ -822,9 +827,9 @@ interface ExternalEnumExtractionResult {
  */
 function tryExtractExternalEnumAsInlineEnum(
   enumSymbol: ts.Symbol,
-  checker: ts.TypeChecker,
+  checker: ts.Checker,
 ): ExternalEnumExtractionResult | null {
-  const declarations = enumSymbol.getDeclarations();
+  const declarations = getDeclarations(enumSymbol);
   if (!declarations || declarations.length === 0) {
     return null;
   }
@@ -901,7 +906,7 @@ function isTypeFromSchemaFiles(
   symbol: ts.Symbol,
   sourceFiles: ReadonlySet<string>,
 ): boolean {
-  const declarations = symbol.getDeclarations();
+  const declarations = getDeclarations(symbol);
   if (!declarations || declarations.length === 0) {
     return false;
   }

@@ -5,7 +5,7 @@
  * detectors to extract the actual type from an optional metadata property.
  */
 
-import ts from "typescript";
+import * as ts from "../core/typescript.js";
 
 /**
  * Extracts the actual type from an optional property type (T | undefined).
@@ -20,10 +20,10 @@ import ts from "typescript";
  * @returns The actual type excluding undefined, or null if extraction fails
  */
 export function getActualMetadataType(metadataType: ts.Type): ts.Type | null {
-  if (metadataType.isUnion()) {
-    const nonUndefinedTypes = metadataType.types.filter(
-      (t) => !(t.flags & ts.TypeFlags.Undefined),
-    );
+  if (metadataType.isUnionType()) {
+    const nonUndefinedTypes = metadataType
+      .getTypes()
+      .filter((t) => !(t.flags & ts.TypeFlags.Undefined));
     if (nonUndefinedTypes.length === 1) {
       return nonUndefinedTypes[0]!;
     }
