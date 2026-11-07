@@ -13,7 +13,7 @@
   "dependencies": {
     "@gqlkit-ts/runtime": "workspace:*",
     "@graphql-tools/schema": "^10.0.0",
-    "better-sqlite3": "^12.6.2",
+    "better-sqlite3": "^12.11.1",
     "drizzle-orm": "^0.44.0",
     "graphql": "catalog:",
     "graphql-scalars": "^1.24.0",
