@@ -98,20 +98,22 @@ describe("ConfigValidator", () => {
           scalar: { graphqlName: "DateTime" },
           expectedMessage: '{ name: "DateTime", tsType: { name: <name> } }',
         },
-      ])("should return CONFIG_LEGACY_SCALAR_FORMAT for $label", ({
-        scalar,
-        expectedMessage,
-      }) => {
-        const result = validateConfig({
-          config: { scalars: [scalar] },
-          configPath,
-        });
+      ])(
+        "should return CONFIG_LEGACY_SCALAR_FORMAT for $label",
+        ({ scalar, expectedMessage }) => {
+          const result = validateConfig({
+            config: { scalars: [scalar] },
+            configPath,
+          });
 
-        expect(result.valid).toBe(false);
-        expect(result.diagnostics.length).toBe(1);
-        expect(result.diagnostics[0]?.code).toBe("CONFIG_LEGACY_SCALAR_FORMAT");
-        expect(result.diagnostics[0]?.message).toContain(expectedMessage);
-      });
+          expect(result.valid).toBe(false);
+          expect(result.diagnostics.length).toBe(1);
+          expect(result.diagnostics[0]?.code).toBe(
+            "CONFIG_LEGACY_SCALAR_FORMAT",
+          );
+          expect(result.diagnostics[0]?.message).toContain(expectedMessage);
+        },
+      );
 
       it("should return CONFIG_MISSING_PROPERTY when neither format's keys are present", () => {
         const result = validateConfig({
@@ -131,30 +133,27 @@ describe("ConfigValidator", () => {
     });
 
     describe("built-in scalar override", () => {
-      it.each([
-        "ID",
-        "String",
-        "Int",
-        "Float",
-        "Boolean",
-      ])("should return error when overriding built-in scalar %s", (builtinName) => {
-        const result = validateConfig({
-          config: {
-            scalars: [
-              {
-                name: builtinName,
-                tsType: { from: "./src/scalars", name: "Custom" },
-              },
-            ],
-          },
-          configPath,
-        });
+      it.each(["ID", "String", "Int", "Float", "Boolean"])(
+        "should return error when overriding built-in scalar %s",
+        (builtinName) => {
+          const result = validateConfig({
+            config: {
+              scalars: [
+                {
+                  name: builtinName,
+                  tsType: { from: "./src/scalars", name: "Custom" },
+                },
+              ],
+            },
+            configPath,
+          });
 
-        expect(result.valid).toBe(false);
-        expect(result.diagnostics.length).toBe(1);
-        expect(result.diagnostics[0]?.code).toBe("CONFIG_BUILTIN_OVERRIDE");
-        expect(result.diagnostics[0]?.message).toContain(builtinName);
-      });
+          expect(result.valid).toBe(false);
+          expect(result.diagnostics.length).toBe(1);
+          expect(result.diagnostics[0]?.code).toBe("CONFIG_BUILTIN_OVERRIDE");
+          expect(result.diagnostics[0]?.message).toContain(builtinName);
+        },
+      );
     });
 
     describe("duplicate detection", () => {
@@ -310,29 +309,29 @@ describe("ConfigValidator", () => {
           description: undefined,
           expectedDescription: null,
         },
-      ])("should resolve description ($label) correctly", ({
-        description,
-        expectedDescription,
-      }) => {
-        const scalar: Record<string, unknown> = {
-          name: "DateTime",
-          tsType: { name: "Date" },
-        };
-        if (description !== undefined) {
-          scalar["description"] = description;
-        }
+      ])(
+        "should resolve description ($label) correctly",
+        ({ description, expectedDescription }) => {
+          const scalar: Record<string, unknown> = {
+            name: "DateTime",
+            tsType: { name: "Date" },
+          };
+          if (description !== undefined) {
+            scalar["description"] = description;
+          }
 
-        const result = validateConfig({
-          config: { scalars: [scalar] },
-          configPath,
-        });
+          const result = validateConfig({
+            config: { scalars: [scalar] },
+            configPath,
+          });
 
-        expect(result.valid).toBe(true);
-        expect(result.resolvedConfig).toBeTruthy();
-        expect(result.resolvedConfig!.scalars[0]?.description).toBe(
-          expectedDescription,
-        );
-      });
+          expect(result.valid).toBe(true);
+          expect(result.resolvedConfig).toBeTruthy();
+          expect(result.resolvedConfig!.scalars[0]?.description).toBe(
+            expectedDescription,
+          );
+        },
+      );
 
       it("should return error for invalid only value", () => {
         const result = validateConfig({
@@ -368,20 +367,20 @@ describe("ConfigValidator", () => {
           scalar: { name: "DateTime", tsType: {} },
           messageContains: "tsType.name",
         },
-      ])("should return CONFIG_MISSING_PROPERTY when $label is missing", ({
-        scalar,
-        messageContains,
-      }) => {
-        const result = validateConfig({
-          config: { scalars: [scalar] },
-          configPath,
-        });
+      ])(
+        "should return CONFIG_MISSING_PROPERTY when $label is missing",
+        ({ scalar, messageContains }) => {
+          const result = validateConfig({
+            config: { scalars: [scalar] },
+            configPath,
+          });
 
-        expect(result.valid).toBe(false);
-        expect(result.diagnostics.length).toBe(1);
-        expect(result.diagnostics[0]?.code).toBe("CONFIG_MISSING_PROPERTY");
-        expect(result.diagnostics[0]?.message).toContain(messageContains);
-      });
+          expect(result.valid).toBe(false);
+          expect(result.diagnostics.length).toBe(1);
+          expect(result.diagnostics[0]?.code).toBe("CONFIG_MISSING_PROPERTY");
+          expect(result.diagnostics[0]?.message).toContain(messageContains);
+        },
+      );
 
       it("should allow multiple mappings for same scalar name with different only values", () => {
         const result = validateConfig({
@@ -486,21 +485,20 @@ describe("ConfigValidator", () => {
           expectedCode: "CONFIG_INVALID_PATH",
           messageContains: "empty",
         },
-      ])("should return error for $label", ({
-        tsconfigPath,
-        expectedCode,
-        messageContains,
-      }) => {
-        const result = validateConfig({
-          config: { tsconfigPath },
-          configPath,
-        });
+      ])(
+        "should return error for $label",
+        ({ tsconfigPath, expectedCode, messageContains }) => {
+          const result = validateConfig({
+            config: { tsconfigPath },
+            configPath,
+          });
 
-        expect(result.valid).toBe(false);
-        expect(result.diagnostics.length).toBe(1);
-        expect(result.diagnostics[0]?.code).toBe(expectedCode);
-        expect(result.diagnostics[0]?.message).toContain(messageContains);
-      });
+          expect(result.valid).toBe(false);
+          expect(result.diagnostics.length).toBe(1);
+          expect(result.diagnostics[0]?.code).toBe(expectedCode);
+          expect(result.diagnostics[0]?.message).toContain(messageContains);
+        },
+      );
     });
 
     describe("sourceDir options", () => {
@@ -541,21 +539,20 @@ describe("ConfigValidator", () => {
           expectedCode: "CONFIG_INVALID_TYPE",
           messageContains: "sourceDir",
         },
-      ])("should return error for $label", ({
-        sourceDir,
-        expectedCode,
-        messageContains,
-      }) => {
-        const result = validateConfig({
-          config: { sourceDir },
-          configPath,
-        });
+      ])(
+        "should return error for $label",
+        ({ sourceDir, expectedCode, messageContains }) => {
+          const result = validateConfig({
+            config: { sourceDir },
+            configPath,
+          });
 
-        expect(result.valid).toBe(false);
-        expect(result.diagnostics.length).toBe(1);
-        expect(result.diagnostics[0]?.code).toBe(expectedCode);
-        expect(result.diagnostics[0]?.message).toContain(messageContains);
-      });
+          expect(result.valid).toBe(false);
+          expect(result.diagnostics.length).toBe(1);
+          expect(result.diagnostics[0]?.code).toBe(expectedCode);
+          expect(result.diagnostics[0]?.message).toContain(messageContains);
+        },
+      );
     });
 
     describe("sourceIgnoreGlobs options", () => {
@@ -741,40 +738,39 @@ describe("ConfigValidator", () => {
           { field: "resolversPath", invalidValue: 123 },
           { field: "typeDefsPath", invalidValue: true },
           { field: "schemaPath", invalidValue: {} },
-        ])("should return error for invalid $field type", ({
-          field,
-          invalidValue,
-        }) => {
-          const result = validateConfig({
-            config: { output: { [field]: invalidValue } },
-            configPath,
-          });
+        ])(
+          "should return error for invalid $field type",
+          ({ field, invalidValue }) => {
+            const result = validateConfig({
+              config: { output: { [field]: invalidValue } },
+              configPath,
+            });
 
-          expect(result.valid).toBe(false);
-          expect(result.diagnostics.length).toBe(1);
-          expect(result.diagnostics[0]?.code).toBe(
-            "CONFIG_INVALID_OUTPUT_TYPE",
-          );
-          expect(result.diagnostics[0]?.message).toContain(`output.${field}`);
-        });
+            expect(result.valid).toBe(false);
+            expect(result.diagnostics.length).toBe(1);
+            expect(result.diagnostics[0]?.code).toBe(
+              "CONFIG_INVALID_OUTPUT_TYPE",
+            );
+            expect(result.diagnostics[0]?.message).toContain(`output.${field}`);
+          },
+        );
 
-        it.each([
-          "resolversPath",
-          "typeDefsPath",
-          "schemaPath",
-        ])("should return error for empty string %s", (field) => {
-          const result = validateConfig({
-            config: { output: { [field]: "" } },
-            configPath,
-          });
+        it.each(["resolversPath", "typeDefsPath", "schemaPath"])(
+          "should return error for empty string %s",
+          (field) => {
+            const result = validateConfig({
+              config: { output: { [field]: "" } },
+              configPath,
+            });
 
-          expect(result.valid).toBe(false);
-          expect(result.diagnostics.length).toBe(1);
-          expect(result.diagnostics[0]?.code).toBe(
-            "CONFIG_INVALID_OUTPUT_PATH",
-          );
-          expect(result.diagnostics[0]?.message).toContain("empty");
-        });
+            expect(result.valid).toBe(false);
+            expect(result.diagnostics.length).toBe(1);
+            expect(result.diagnostics[0]?.code).toBe(
+              "CONFIG_INVALID_OUTPUT_PATH",
+            );
+            expect(result.diagnostics[0]?.message).toContain("empty");
+          },
+        );
       });
     });
 
@@ -789,18 +785,18 @@ describe("ConfigValidator", () => {
         expect(result.resolvedConfig!.output.pruning).toBe(true);
       });
 
-      it.each([
-        { pruning: false },
-        { pruning: true },
-      ])("should accept pruning: $pruning", ({ pruning }) => {
-        const result = validateConfig({
-          config: { output: { pruning } },
-          configPath,
-        });
+      it.each([{ pruning: false }, { pruning: true }])(
+        "should accept pruning: $pruning",
+        ({ pruning }) => {
+          const result = validateConfig({
+            config: { output: { pruning } },
+            configPath,
+          });
 
-        expect(result.valid).toBe(true);
-        expect(result.resolvedConfig!.output.pruning).toBe(pruning);
-      });
+          expect(result.valid).toBe(true);
+          expect(result.resolvedConfig!.output.pruning).toBe(pruning);
+        },
+      );
 
       it("should return error for non-boolean pruning", () => {
         const result = validateConfig({
@@ -885,19 +881,20 @@ describe("ConfigValidator", () => {
           label: "invalid type (array element)",
           afterAllFileWrite: ["valid", 123, "also-valid"],
         },
-      ])("should return CONFIG_INVALID_HOOK_TYPE for $label", ({
-        afterAllFileWrite,
-      }) => {
-        const result = validateConfig({
-          config: { hooks: { afterAllFileWrite } },
-          configPath,
-        });
+      ])(
+        "should return CONFIG_INVALID_HOOK_TYPE for $label",
+        ({ afterAllFileWrite }) => {
+          const result = validateConfig({
+            config: { hooks: { afterAllFileWrite } },
+            configPath,
+          });
 
-        expect(result.valid).toBe(false);
-        expect(result.diagnostics.length).toBe(1);
-        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_HOOK_TYPE");
-        expect(result.diagnostics[0]?.message).toContain("afterAllFileWrite");
-      });
+          expect(result.valid).toBe(false);
+          expect(result.diagnostics.length).toBe(1);
+          expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_HOOK_TYPE");
+          expect(result.diagnostics[0]?.message).toContain("afterAllFileWrite");
+        },
+      );
 
       it.each([
         { label: "empty command string (top-level)", afterAllFileWrite: "" },
@@ -905,19 +902,22 @@ describe("ConfigValidator", () => {
           label: "empty command string (array element)",
           afterAllFileWrite: ["prettier --write", "", "eslint --fix"],
         },
-      ])("should return CONFIG_INVALID_HOOK_COMMAND for $label", ({
-        afterAllFileWrite,
-      }) => {
-        const result = validateConfig({
-          config: { hooks: { afterAllFileWrite } },
-          configPath,
-        });
+      ])(
+        "should return CONFIG_INVALID_HOOK_COMMAND for $label",
+        ({ afterAllFileWrite }) => {
+          const result = validateConfig({
+            config: { hooks: { afterAllFileWrite } },
+            configPath,
+          });
 
-        expect(result.valid).toBe(false);
-        expect(result.diagnostics.length).toBe(1);
-        expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_HOOK_COMMAND");
-        expect(result.diagnostics[0]?.message).toContain("empty");
-      });
+          expect(result.valid).toBe(false);
+          expect(result.diagnostics.length).toBe(1);
+          expect(result.diagnostics[0]?.code).toBe(
+            "CONFIG_INVALID_HOOK_COMMAND",
+          );
+          expect(result.diagnostics[0]?.message).toContain("empty");
+        },
+      );
     });
 
     describe("discriminatorFields options", () => {
@@ -954,19 +954,19 @@ describe("ConfigValidator", () => {
             ["Content", ["type", "mediaType"]],
           ]),
         },
-      ])("should resolve discriminatorFields: $label", ({
-        discriminatorFields,
-        expected,
-      }) => {
-        const result = validateConfig({
-          config: { discriminatorFields },
-          configPath,
-        });
+      ])(
+        "should resolve discriminatorFields: $label",
+        ({ discriminatorFields, expected }) => {
+          const result = validateConfig({
+            config: { discriminatorFields },
+            configPath,
+          });
 
-        expect(result.valid).toBe(true);
-        expect(result.resolvedConfig).toBeTruthy();
-        expect(result.resolvedConfig!.discriminatorFields).toEqual(expected);
-      });
+          expect(result.valid).toBe(true);
+          expect(result.resolvedConfig).toBeTruthy();
+          expect(result.resolvedConfig!.discriminatorFields).toEqual(expected);
+        },
+      );
 
       it.each([
         {
@@ -1005,21 +1005,20 @@ describe("ConfigValidator", () => {
           expectedCode: "CONFIG_EMPTY_DISCRIMINATOR_FIELDS",
           messageContains: "contains an empty string",
         },
-      ])("should report error when $label", ({
-        discriminatorFields,
-        expectedCode,
-        messageContains,
-      }) => {
-        const result = validateConfig({
-          config: { discriminatorFields },
-          configPath,
-        });
+      ])(
+        "should report error when $label",
+        ({ discriminatorFields, expectedCode, messageContains }) => {
+          const result = validateConfig({
+            config: { discriminatorFields },
+            configPath,
+          });
 
-        expect(result.valid).toBe(false);
-        expect(result.diagnostics.length).toBe(1);
-        expect(result.diagnostics[0]?.code).toBe(expectedCode);
-        expect(result.diagnostics[0]?.message).toContain(messageContains);
-      });
+          expect(result.valid).toBe(false);
+          expect(result.diagnostics.length).toBe(1);
+          expect(result.diagnostics[0]?.code).toBe(expectedCode);
+          expect(result.diagnostics[0]?.message).toContain(messageContains);
+        },
+      );
     });
   });
 });
