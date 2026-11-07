@@ -247,7 +247,7 @@ async function createProgramStep(
   const { program } = programResult;
   // Every stage reads the files it extracts; loading them together up front
   // leaves later `getSourceFile` calls to the client's cache.
-  const loadedFiles = await fetchSourceFiles({
+  await fetchSourceFiles({
     api,
     program,
     files: sliceExtraction?.mainThreadFiles ?? ctx.sourceFiles,
@@ -259,9 +259,6 @@ async function createProgramStep(
     checker: createCheckerLoader({
       api,
       checker: program.getProject().checker,
-      loadedFilePaths: new Set(
-        loadedFiles.flatMap((sf) => (sf === undefined ? [] : [sf.path])),
-      ),
     }),
   };
 }

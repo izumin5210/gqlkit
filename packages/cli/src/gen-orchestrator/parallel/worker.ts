@@ -88,7 +88,6 @@ async function run(): Promise<void> {
   const checker = createCheckerLoader({
     api,
     checker: program.getProject().checker,
-    loadedFilePaths: new Set(loadedFiles.map((sf) => sf.path)),
   });
   respond({
     kind: "type-name-registrations",

@@ -13,7 +13,6 @@ import {
   type UnionOrIntersectionType,
 } from "typescript/async";
 import { METADATA_PROPERTIES } from "../core/index.js";
-import { getLocalDocumentationComment } from "./local-documentation.js";
 
 /**
  * The extraction stages' only way to ask the TypeScript checker questions,
@@ -335,17 +334,12 @@ function hasNoMetadataProperty(type: Type, name: string): boolean {
 interface CreateCheckerLoaderParams {
   readonly api: API;
   readonly checker: Checker;
-  /**
-   * Paths (`SourceFile.path`) of the files the client has already fetched.
-   * Questions answerable from their syntax trees are answered locally.
-   */
-  readonly loadedFilePaths: ReadonlySet<string>;
 }
 
 export function createCheckerLoader(
   params: CreateCheckerLoaderParams,
 ): CheckerLoader {
-  const { api, checker, loadedFilePaths } = params;
+  const { api, checker } = params;
   const scheduler = createBatchScheduler(api);
   const { query } = scheduler;
 
@@ -374,11 +368,6 @@ export function createCheckerLoader(
       loadOne: (node) => checker.getSymbolAtLocation(node),
     }),
   );
-  const localDocumentation = {
-    isLoadedFile: (path: string) => loadedFilePaths.has(path),
-    resolveHandle,
-    getSymbolAtLocation,
-  };
   const propertyLists = new Map<Type, Promise<readonly TsSymbol[]>>();
   const propertyLookups = new Map<
     Type,
@@ -416,10 +405,8 @@ export function createCheckerLoader(
     getExportsOfModule: memoize((symbol) =>
       query(() => checker.getExportsOfModule(symbol)),
     ),
-    getDocumentationComment: memoize(
-      async (symbol) =>
-        (await getLocalDocumentationComment(localDocumentation, symbol)) ??
-        query(() => checker.getDocumentationCommentOfSymbol(symbol)),
+    getDocumentationComment: memoize((symbol) =>
+      query(() => checker.getDocumentationCommentOfSymbol(symbol)),
     ),
     getConstantValue: memoize((node) =>
       query(() => checker.getConstantValue(node)),
