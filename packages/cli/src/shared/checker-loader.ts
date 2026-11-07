@@ -12,6 +12,7 @@ import {
   type TypeReference,
   type UnionOrIntersectionType,
 } from "typescript/async";
+import { METADATA_PROPERTIES } from "../core/index.js";
 import { getLocalDocumentationComment } from "./local-documentation.js";
 
 /**
@@ -297,6 +298,41 @@ function isTypeReferenceType(type: Type): boolean {
   );
 }
 
+const METADATA_PROPERTY_NAMES: ReadonlySet<string> = new Set(
+  Object.values(METADATA_PROPERTIES),
+);
+
+/**
+ * Whether `getPropertyOfType(type, name)` is the property of that name in
+ * the type's property list. For an object type, the checker looks the name
+ * up among the members it lists, and then among the members of the global
+ * `Object` (or `Function`) interface, which have no gqlkit metadata names.
+ * Unions and intersections synthesize properties, and unions also consult
+ * index signatures, so they are asked as usual.
+ */
+function isAnsweredByPropertyList(type: Type, name: string): boolean {
+  return (
+    (type.flags & TypeFlags.Object) !== 0 &&
+    METADATA_PROPERTY_NAMES.has(name)
+  );
+}
+
+/**
+ * Whether `getPropertyOfType(type, name)` is known to be undefined: the
+ * checker looks up properties of primitives and literals on their global
+ * interface (`String`, `Number`, ...), which have no gqlkit metadata names,
+ * and `any`, `unknown`, `null`, `undefined` and `never` have none.
+ */
+function hasNoMetadataProperty(type: Type, name: string): boolean {
+  return (
+    (type.flags &
+      (TypeFlags.Primitive | TypeFlags.AnyOrUnknown | TypeFlags.Never)) !==
+      0 &&
+    (type.flags & TypeFlags.StructuredOrInstantiable) === 0 &&
+    METADATA_PROPERTY_NAMES.has(name)
+  );
+}
+
 interface CreateCheckerLoaderParams {
   readonly api: API;
   readonly checker: Checker;
@@ -344,6 +380,7 @@ export function createCheckerLoader(
     resolveHandle,
     getSymbolAtLocation,
   };
+  const propertyLists = new Map<Type, Promise<readonly TsSymbol[]>>();
   const propertyLookups = new Map<
     Type,
     Map<string, Promise<TsSymbol | undefined>>
@@ -415,11 +452,26 @@ export function createCheckerLoader(
       if (cached !== undefined) {
         return cached;
       }
-      const lookup = query(() => type.getProperty(name));
+      const listed = propertyLists.get(type);
+      const lookup = hasNoMetadataProperty(type, name)
+        ? Promise.resolve(undefined)
+        : listed !== undefined && isAnsweredByPropertyList(type, name)
+          ? listed.then((properties) =>
+              properties.find((p) => p.name === name),
+            )
+          : query(() => type.getProperty(name));
       lookups.set(name, lookup);
       return lookup;
     },
-    getPropertiesOfType: memoize((type) => query(() => type.getProperties())),
+    getPropertiesOfType: (type) => {
+      let properties = propertyLists.get(type);
+      if (properties === undefined) {
+        properties = query(() => type.getProperties());
+        propertyLists.set(type, properties);
+        properties.catch(() => propertyLists.delete(type));
+      }
+      return properties;
+    },
     getSymbolOfType: memoize((type) => query(() => type.getSymbol())),
     getAliasSymbolOfType: memoize((type) => query(() => type.getAliasSymbol())),
     getAliasTypeArgumentsOfType: memoize((type) =>

@@ -38,6 +38,11 @@ export {
   collectLocalTypeDeclarationNames,
   type TypeNameCollectionResult,
 } from "./extractor/type-name-collector.js";
-export type { ScalarBaseTypeMappingTable } from "./mapper/scalar-base-type-mapper.js";
+export {
+  buildScalarMappingTable,
+  type ScalarBaseTypeMapping,
+  type ScalarBaseTypeMappingTable,
+  type ScalarMappingConflict,
+} from "./mapper/scalar-base-type-mapper.js";
 
 export type { ExtractedTypeInfo, GlobalTypeMapping } from "./types/index.js";

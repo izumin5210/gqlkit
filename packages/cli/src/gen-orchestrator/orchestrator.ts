@@ -1,3 +1,4 @@
+import { availableParallelism } from "node:os";
 import { dirname, relative, resolve } from "node:path";
 import { API, type Program, type Symbol as TsSymbol } from "typescript/async";
 import type {
@@ -7,6 +8,7 @@ import type {
 } from "../config-loader/index.js";
 import type { Diagnostic, Diagnostics } from "../core/index.js";
 import {
+  completeResolverExtraction,
   type ExtractResolversResult,
   extractResolvers,
 } from "../resolver-extractor/index.js";
@@ -32,6 +34,10 @@ import {
 } from "../type-extractor/index.js";
 import { scanDirectory } from "./infra/file-scanner.js";
 import { createSharedProgram } from "./infra/program-factory.js";
+import {
+  type ResolverWorker,
+  startResolverWorker,
+} from "./resolver-worker/client.js";
 import { writeFiles } from "./writer/file-writer.js";
 
 export interface GenerationConfig {
@@ -378,6 +384,7 @@ function augmentKnownTypeNamesStep(ctx: PipelineContext): PipelineContext {
 
 async function extractResolversStep(
   ctx: PipelineContext,
+  resolverWorker: ResolverWorker | null,
 ): Promise<PipelineContext> {
   if (
     ctx.aborted ||
@@ -397,19 +404,40 @@ async function extractResolversStep(
     ...new Set([...customScalarNames, ...ctx.typesResult.detectedScalarNames]),
   ];
 
-  const resolversResult = await extractResolvers({
+  const declaredTypeNames = ctx.typesResult.types.map((t) => t.name);
+
+  if (resolverWorker === null) {
+    const resolversResult = await extractResolvers({
+      program: ctx.program,
+      checker: ctx.checker,
+      sourceFiles: ctx.sourceFiles,
+      knownTypeNames: ctx.knownTypeNames,
+      knownTypeSymbols: ctx.knownTypeSymbols,
+      underlyingSymbolToTypeName: ctx.underlyingSymbolToTypeName,
+      globalTypeMappings,
+      scalarMappingTable: ctx.typesResult.scalarMappingTable,
+      declaredTypeNames,
+      customScalarNames: allCustomScalarNames,
+    });
+    return { ...ctx, resolversResult };
+  }
+
+  const definitions = await resolverWorker.extract({
+    knownTypeNames: [...ctx.knownTypeNames],
+    detectedScalars: ctx.typesResult.detectedScalars,
+  });
+  if (definitions === null) {
+    throw new Error(
+      "resolver worker failed to create the program the main thread created",
+    );
+  }
+  const resolversResult = await completeResolverExtraction({
     program: ctx.program,
-    checker: ctx.checker,
     sourceFiles: ctx.sourceFiles,
-    knownTypeNames: ctx.knownTypeNames,
-    knownTypeSymbols: ctx.knownTypeSymbols,
-    underlyingSymbolToTypeName: ctx.underlyingSymbolToTypeName,
-    globalTypeMappings,
-    scalarMappingTable: ctx.typesResult.scalarMappingTable,
-    declaredTypeNames: ctx.typesResult.types.map((t) => t.name),
+    definitions,
+    declaredTypeNames,
     customScalarNames: allCustomScalarNames,
   });
-
   return { ...ctx, resolversResult };
 }
 
@@ -578,24 +606,108 @@ async function measureAsyncStep<T>(
   }
 }
 
+/**
+ * Below this many source files, resolver extraction stays on the main
+ * thread: a second thread, tsc process and program cost more than the
+ * extraction they would take over.
+ */
+const RESOLVER_WORKER_MIN_SOURCE_FILES = 200;
+
+/** Where resolver definitions are extracted. */
+export type ResolverExtraction =
+  /** In a worker thread if the project is large enough and a core is free. */
+  | "auto"
+  | "main-thread"
+  | "worker";
+
+export interface GenerationOptions {
+  readonly resolverExtraction: ResolverExtraction;
+  /** The compiled resolver worker module. */
+  readonly resolverWorkerUrl: URL;
+}
+
+const DEFAULT_GENERATION_OPTIONS: GenerationOptions = {
+  resolverExtraction: "auto",
+  resolverWorkerUrl: new URL("./resolver-worker/worker.js", import.meta.url),
+};
+
+function shouldUseResolverWorker(
+  mode: ResolverExtraction,
+  sourceFileCount: number,
+): boolean {
+  switch (mode) {
+    case "main-thread":
+      return false;
+    case "worker":
+      return true;
+    case "auto":
+      return (
+        sourceFileCount >= RESOLVER_WORKER_MIN_SOURCE_FILES &&
+        availableParallelism() > 1
+      );
+  }
+}
+
 export async function executeGeneration(
   config: GenerationConfig,
+): Promise<GenerationResult> {
+  return executeGenerationWithOptions(config, DEFAULT_GENERATION_OPTIONS);
+}
+
+export async function executeGenerationWithOptions(
+  config: GenerationConfig,
+  options: GenerationOptions,
 ): Promise<GenerationResult> {
   // The API spawns a tsc child process; every program and checker object is
   // only valid until it is closed, so it must outlive the whole pipeline.
   await using api = new API({ cwd: config.cwd });
-  return await runPipeline(config, api);
+  return await runPipeline(config, api, options);
 }
 
 async function runPipeline(
   config: GenerationConfig,
   api: API,
+  options: GenerationOptions,
 ): Promise<GenerationResult> {
   let ctx = createInitialContext(config);
 
   ctx = await measureAsyncStep("scanSourceFiles", () =>
     scanSourceFilesStep(ctx),
   );
+
+  // Resolver extraction starts in a worker now, alongside everything up to
+  // type extraction, and only waits for its results at the end.
+  const resolverWorker =
+    !ctx.aborted &&
+    shouldUseResolverWorker(
+      options.resolverExtraction,
+      ctx.sourceFiles.length,
+    )
+      ? startResolverWorker({
+          url: options.resolverWorkerUrl,
+          data: {
+            cwd: config.cwd,
+            tsconfigPath: config.tsconfigPath,
+            sourceFiles: ctx.sourceFiles,
+            globalTypeMappings: prepareScalarConfig(config).globalTypeMappings,
+          },
+        })
+      : null;
+  try {
+    return await runExtractionAndGeneration(ctx, api, resolverWorker);
+  } catch (error) {
+    await resolverWorker?.terminate();
+    throw error;
+  }
+}
+
+async function runExtractionAndGeneration(
+  initialCtx: PipelineContext,
+  api: API,
+  resolverWorker: ResolverWorker | null,
+): Promise<GenerationResult> {
+  const { config } = initialCtx;
+  let ctx = initialCtx;
   ctx = await measureAsyncStep("createProgram", () =>
     createProgramStep(ctx, api),
   );
@@ -605,8 +717,11 @@ async function runPipeline(
   ctx = prepareScalarConfigStep(ctx);
   ctx = await measureAsyncStep("extractTypes", () => extractTypesStep(ctx));
   ctx = augmentKnownTypeNamesStep(ctx);
+  if (ctx.aborted) {
+    await resolverWorker?.terminate();
+  }
   ctx = await measureAsyncStep("extractResolvers", () =>
-    extractResolversStep(ctx),
+    extractResolversStep(ctx, resolverWorker),
   );
   ctx = await measureAsyncStep("extractDirectives", () =>
     extractDirectivesStep(ctx),
