@@ -1,22 +1,22 @@
 import * as ts from "../core/typescript.js";
 
 /**
- * The extraction stages' only way to ask the TypeScript checker questions.
+ * The extraction stages' only way to ask the TypeScript checker questions,
+ * including those answered by methods on `Type`/`Symbol` objects.
  *
- * With the TypeScript 7 API every checker query is a request to the tsc
- * process. The loader keeps that cheap, DataLoader-style:
+ * With the TypeScript 7 API every query is a request to the tsc process. The
+ * loader keeps that cheap, DataLoader-style:
  *
- * - Queries issued in the same tick share one round trip: the async API
- *   client queues requests and flushes them as a single batch on
- *   `setImmediate`. Callers get this by issuing independent queries
+ * - Queries issued during the same tick share one round trip: they are
+ *   queued and flushed together on `setImmediate` through the sync API's
+ *   `api.batch()`. Callers get this by issuing independent queries
  *   concurrently (e.g. `Promise.all`) instead of awaiting them one by one.
+ *   The sync transport is used rather than the async API's own batching
+ *   because its round trips cost about half as much.
  * - Each distinct query is sent at most once per program. A program never
  *   changes after creation, and the client interns `Type`, `Symbol` and node
  *   objects, so object identity is a sound cache key. The promise itself is
  *   cached, so concurrent callers of an in-flight query share it.
- *
- * Methods on `Type`/`Symbol` objects (`getSymbol()`, `getTypes()`, …) are
- * cached by the client itself and are called directly.
  */
 export interface CheckerLoader {
   readonly getTypeOfSymbol: (symbol: ts.Symbol) => Promise<ts.Type>;
@@ -60,6 +60,95 @@ export interface CheckerLoader {
     type: ts.Type,
     name: string,
   ) => Promise<ts.Symbol | undefined>;
+  readonly getPropertiesOfType: (
+    type: ts.Type,
+  ) => Promise<readonly ts.Symbol[]>;
+  readonly getSymbolOfType: (type: ts.Type) => Promise<ts.Symbol | undefined>;
+  readonly getAliasSymbolOfType: (
+    type: ts.Type,
+  ) => Promise<ts.Symbol | undefined>;
+  readonly getAliasTypeArgumentsOfType: (
+    type: ts.Type,
+  ) => Promise<readonly ts.Type[]>;
+  readonly getTypesOfType: (
+    type: ts.UnionOrIntersectionType,
+  ) => Promise<readonly ts.Type[]>;
+  readonly getStringIndexTypeOfType: (
+    type: ts.Type,
+  ) => Promise<ts.Type | undefined>;
+  readonly getParentOfSymbol: (
+    symbol: ts.Symbol,
+  ) => Promise<ts.Symbol | undefined>;
+  /** Resolves a symbol's declaration handles into AST nodes. */
+  readonly getDeclarationsOfSymbol: (
+    symbol: ts.Symbol,
+  ) => Promise<ReadonlyArray<ts.Declaration>>;
+}
+
+type Settled<T> =
+  | { readonly ok: true; readonly value: T }
+  | { readonly ok: false; readonly error: unknown };
+
+interface PendingQuery {
+  readonly request: () => RequestGenerator<unknown>;
+  readonly resolve: (value: unknown) => void;
+  readonly reject: (error: unknown) => void;
+}
+
+/**
+ * Keeps one query's failure from failing the whole batch: `api.batch()`
+ * throws if any generator throws.
+ */
+function* settle(
+  request: RequestGenerator<unknown>,
+): RequestGenerator<Settled<unknown>> {
+  try {
+    return { ok: true, value: yield* request };
+  } catch (error) {
+    return { ok: false, error };
+  }
+}
+
+/**
+ * A `.gen()` method's generator: it yields protocol requests and returns the
+ * method's result.
+ */
+type RequestGenerator<T> = Generator<unknown, T, never>;
+
+type Scheduler = <T>(request: () => RequestGenerator<T>) => Promise<T>;
+
+function createBatchScheduler(api: ts.API): Scheduler {
+  let queue: PendingQuery[] = [];
+
+  const flush = (): void => {
+    const batch = queue;
+    queue = [];
+    const results = api.batch(
+      ...batch.map(
+        (query) => settle(query.request()) as ts.AnyAPIRequestGenerator,
+      ),
+    ) as Settled<unknown>[];
+    batch.forEach((query, index) => {
+      const result = results[index]!;
+      if (result.ok) {
+        query.resolve(result.value);
+      } else {
+        query.reject(result.error);
+      }
+    });
+  };
+
+  return <T>(request: () => RequestGenerator<T>): Promise<T> =>
+    new Promise<T>((resolve, reject) => {
+      if (queue.length === 0) {
+        setImmediate(flush);
+      }
+      queue.push({
+        request,
+        resolve: resolve as (value: unknown) => void,
+        reject,
+      });
+    });
 }
 
 function memoize<K extends object, V>(
@@ -90,55 +179,115 @@ function isTypeReferenceType(type: ts.Type): boolean {
   );
 }
 
-export function createCheckerLoader(checker: ts.Checker): CheckerLoader {
-  const isArrayType = memoize((type: ts.Type) => checker.isArrayType(type));
-  const isTupleType = memoize((type: ts.Type) => checker.isTupleType(type));
+interface CreateCheckerLoaderParams {
+  readonly api: ts.API;
+  readonly checker: ts.Checker;
+}
 
+export function createCheckerLoader(
+  params: CreateCheckerLoaderParams,
+): CheckerLoader {
+  const { api, checker } = params;
+  const query = createBatchScheduler(api);
+
+  const isArrayType = memoize((type: ts.Type) =>
+    query(() => checker.isArrayType.gen(type)),
+  );
+  const isTupleType = memoize((type: ts.Type) =>
+    query(() => checker.isTupleType.gen(type)),
+  );
+  const resolveHandle = memoize((handle: ts.NodeHandle<ts.Declaration>) =>
+    query(() => handle.resolve.gen()),
+  );
   const propertyLookups = new WeakMap<
     ts.Type,
     Map<string, Promise<ts.Symbol | undefined>>
   >();
 
   return {
-    getTypeOfSymbol: memoize((symbol) => checker.getTypeOfSymbol(symbol)),
+    getTypeOfSymbol: memoize((symbol) =>
+      query(() => checker.getTypeOfSymbol.gen(symbol)),
+    ),
     getDeclaredTypeOfSymbol: memoize((symbol) =>
-      checker.getDeclaredTypeOfSymbol(symbol),
+      query(() => checker.getDeclaredTypeOfSymbol.gen(symbol)),
     ),
-    getSymbolAtLocation: memoize((node) => checker.getSymbolAtLocation(node)),
-    getTypeAtLocation: memoize((node) => checker.getTypeAtLocation(node)),
-    getTypeFromTypeNode: memoize((node) => checker.getTypeFromTypeNode(node)),
-    getAliasedSymbol: memoize((symbol) => checker.getAliasedSymbol(symbol)),
+    getSymbolAtLocation: memoize((node) =>
+      query(() => checker.getSymbolAtLocation.gen(node)),
+    ),
+    getTypeAtLocation: memoize((node) =>
+      query(() => checker.getTypeAtLocation.gen(node)),
+    ),
+    getTypeFromTypeNode: memoize((node) =>
+      query(() => checker.getTypeFromTypeNode.gen(node)),
+    ),
+    getAliasedSymbol: memoize((symbol) =>
+      query(() => checker.getAliasedSymbol.gen(symbol)),
+    ),
     getExportSpecifierLocalTargetSymbol: memoize((node) =>
-      checker.getExportSpecifierLocalTargetSymbol(node),
+      query(() => checker.getExportSpecifierLocalTargetSymbol.gen(node)),
     ),
-    getExportsOfModule: memoize((symbol) => checker.getExportsOfModule(symbol)),
+    getExportsOfModule: memoize((symbol) =>
+      query(() => checker.getExportsOfModule.gen(symbol)),
+    ),
     getDocumentationComment: memoize((symbol) =>
-      checker.getDocumentationCommentOfSymbol(symbol),
+      query(() => checker.getDocumentationCommentOfSymbol.gen(symbol)),
     ),
-    getConstantValue: memoize((node) => checker.getConstantValue(node)),
-    getApparentType: memoize((type) => checker.getApparentType(type)),
+    getConstantValue: memoize((node) =>
+      query(() => checker.getConstantValue.gen(node)),
+    ),
+    getApparentType: memoize((type) =>
+      query(() => checker.getApparentType.gen(type)),
+    ),
     getBaseConstraintOfType: memoize((type) =>
-      checker.getBaseConstraintOfType(type),
+      query(() => checker.getBaseConstraintOfType.gen(type)),
     ),
-    getIndexInfosOfType: memoize((type) => checker.getIndexInfosOfType(type)),
-    getTypeArguments: memoize((type) => checker.getTypeArguments(type)),
+    getIndexInfosOfType: memoize((type) =>
+      query(() => checker.getIndexInfosOfType.gen(type)),
+    ),
+    getTypeArguments: memoize((type) =>
+      query(() => checker.getTypeArguments.gen(type)),
+    ),
     isArrayType: (type) =>
       isTypeReferenceType(type) ? isArrayType(type) : Promise.resolve(false),
     isTupleType: (type) =>
       isTypeReferenceType(type) ? isTupleType(type) : Promise.resolve(false),
-    typeToString: memoize((type) => checker.typeToString(type)),
+    typeToString: memoize((type) =>
+      query(() => checker.typeToString.gen(type)),
+    ),
     getPropertyOfType: (type, name) => {
       let lookups = propertyLookups.get(type);
       if (lookups === undefined) {
         lookups = new Map();
         propertyLookups.set(type, lookups);
       }
-      let lookup = lookups.get(name);
-      if (lookup === undefined) {
-        lookup = type.getProperty(name);
-        lookups.set(name, lookup);
+      const cached = lookups.get(name);
+      if (cached !== undefined) {
+        return cached;
       }
+      const lookup = query(() => type.getProperty.gen(name));
+      lookups.set(name, lookup);
       return lookup;
     },
+    getPropertiesOfType: memoize((type) =>
+      query(() => type.getProperties.gen()),
+    ),
+    getSymbolOfType: memoize((type) => query(() => type.getSymbol.gen())),
+    getAliasSymbolOfType: memoize((type) =>
+      query(() => type.getAliasSymbol.gen()),
+    ),
+    getAliasTypeArgumentsOfType: memoize((type) =>
+      query(() => type.getAliasTypeArguments.gen()),
+    ),
+    getTypesOfType: memoize((type) => query(() => type.getTypes.gen())),
+    getStringIndexTypeOfType: memoize((type) =>
+      query(() => type.getStringIndexType.gen()),
+    ),
+    getParentOfSymbol: memoize((symbol) => query(() => symbol.getParent.gen())),
+    getDeclarationsOfSymbol: memoize(async (symbol) => {
+      const resolved = await Promise.all(
+        symbol.declarations.map(resolveHandle),
+      );
+      return resolved.filter((d): d is ts.Declaration => d !== undefined);
+    }),
   };
 }

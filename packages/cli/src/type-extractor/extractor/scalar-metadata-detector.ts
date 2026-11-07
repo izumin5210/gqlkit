@@ -9,10 +9,7 @@ import { METADATA_PROPERTIES } from "../../core/index.js";
 import * as ts from "../../core/typescript.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { getActualMetadataType } from "../../shared/metadata-detector.js";
-import {
-  getDeclarations,
-  isNullOrUndefined,
-} from "../../shared/typescript-utils.js";
+import { isNullOrUndefined } from "../../shared/typescript-utils.js";
 
 const SCALAR_METADATA_PROPERTY = METADATA_PROPERTIES.SCALAR;
 
@@ -80,7 +77,7 @@ async function extractMetadataFromType(
   }
 
   const rawMetadataType = await checker.getTypeOfSymbol(metadataProp);
-  const metadataType = await getActualMetadataType(rawMetadataType);
+  const metadataType = await getActualMetadataType(rawMetadataType, checker);
   if (!metadataType) {
     return null;
   }
@@ -125,7 +122,7 @@ async function detectScalarMetadataFromIntersection(
     return null;
   }
 
-  for (const member of await type.getTypes()) {
+  for (const member of await checker.getTypesOfType(type)) {
     const metadata = await extractMetadataFromType(member, checker);
     if (metadata) {
       return metadata;
@@ -197,7 +194,7 @@ async function detectScalarMetadataCore(
     return directMetadata;
   }
 
-  const aliasSymbol = await type.getAliasSymbol();
+  const aliasSymbol = await checker.getAliasSymbolOfType(type);
   if (aliasSymbol) {
     const aliasedType = await checker.getDeclaredTypeOfSymbol(aliasSymbol);
     if (aliasedType !== type) {
@@ -208,9 +205,9 @@ async function detectScalarMetadataCore(
     }
   }
 
-  const symbol = await type.getSymbol();
+  const symbol = await checker.getSymbolOfType(type);
   if (symbol) {
-    const declarations = await getDeclarations(symbol);
+    const declarations = await checker.getDeclarationsOfSymbol(symbol);
     if (declarations && declarations.length > 0) {
       for (const decl of declarations) {
         if (ts.isTypeAliasDeclaration(decl)) {
@@ -246,7 +243,7 @@ async function isObjectLikeType(
       objectType.objectFlags & ts.ObjectFlags.Interface ||
       objectType.objectFlags & ts.ObjectFlags.Reference
     ) {
-      const properties = await type.getProperties();
+      const properties = await checker.getPropertiesOfType(type);
       const hasOnlyMetadataProperty =
         properties.length === 1 &&
         properties[0]?.name === SCALAR_METADATA_PROPERTY;
@@ -310,12 +307,14 @@ export async function detectScalarMetadata(
   }
 
   if (type.isUnionType()) {
-    const nonNullTypes = (await type.getTypes()).filter(
+    const nonNullTypes = (await checker.getTypesOfType(type)).filter(
       (t) => !isNullOrUndefined(t),
     );
-    const hasNull = (await type.getTypes()).some((t) => isNullOrUndefined(t));
+    const hasNull = (await checker.getTypesOfType(type)).some((t) =>
+      isNullOrUndefined(t),
+    );
 
-    if (isBooleanLiteralUnion(await type.getTypes())) {
+    if (isBooleanLiteralUnion(await checker.getTypesOfType(type))) {
       return {
         ...result,
         scalarName: "Boolean",

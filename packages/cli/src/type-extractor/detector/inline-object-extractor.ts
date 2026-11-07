@@ -17,7 +17,6 @@ import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import { extractTsDocFromSymbol } from "../../shared/tsdoc-parser.js";
 import {
   extractPropertySymbols,
-  getDeclarations,
   hasUndefinedInType,
   isNullableUnion,
 } from "../../shared/typescript-utils.js";
@@ -52,10 +51,10 @@ export async function extractInlineObjectProperties(
     }
 
     const propType = await checker.getTypeOfSymbol(prop);
-    const declarations = await getDeclarations(prop);
+    const declarations = await checker.getDeclarationsOfSymbol(prop);
     const declaration = declarations?.[0];
 
-    const optional = await hasUndefinedInType(propType);
+    const optional = await hasUndefinedInType(propType, checker);
 
     const tsdocInfo = await extractTsDocFromSymbol(prop, checker);
 
@@ -78,12 +77,15 @@ export async function extractInlineObjectProperties(
         defaultValue = defaultValueResult.defaultValue;
       }
 
-      if (await isNullableUnion(propType)) {
+      if (await isNullableUnion(propType, checker)) {
         directiveNullable = true;
       }
       actualPropType = await unwrapDirectiveType(propType, checker);
 
-      if (!directiveNullable && (await isNullableUnion(actualPropType))) {
+      if (
+        !directiveNullable &&
+        (await isNullableUnion(actualPropType, checker))
+      ) {
         directiveNullable = true;
       }
     }

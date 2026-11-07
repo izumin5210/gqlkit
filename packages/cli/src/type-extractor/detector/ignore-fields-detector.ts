@@ -34,7 +34,7 @@ async function extractIgnoreFieldsFromType(
   }
 
   const rawMetadataType = await checker.getTypeOfSymbol(metaProp);
-  const metadataType = await getActualMetadataType(rawMetadataType);
+  const metadataType = await getActualMetadataType(rawMetadataType, checker);
   if (!metadataType) {
     return null;
   }
@@ -48,12 +48,15 @@ async function extractIgnoreFieldsFromType(
   }
 
   const rawIgnoreFieldsType = await checker.getTypeOfSymbol(ignoreFieldsProp);
-  const ignoreFieldsType = await getActualMetadataType(rawIgnoreFieldsType);
+  const ignoreFieldsType = await getActualMetadataType(
+    rawIgnoreFieldsType,
+    checker,
+  );
   if (!ignoreFieldsType) {
     return null;
   }
 
-  return extractStringLiteralUnion(ignoreFieldsType);
+  return extractStringLiteralUnion(ignoreFieldsType, checker);
 }
 
 /**
@@ -61,6 +64,7 @@ async function extractIgnoreFieldsFromType(
  */
 async function extractStringLiteralUnion(
   type: ts.Type,
+  checker: CheckerLoader,
 ): Promise<ReadonlySet<string> | null> {
   if (type.flags & ts.TypeFlags.StringLiteral) {
     const value = (type as ts.StringLiteralType).value;
@@ -69,7 +73,7 @@ async function extractStringLiteralUnion(
 
   if (type.isUnionType()) {
     const values = new Set<string>();
-    for (const member of await type.getTypes()) {
+    for (const member of await checker.getTypesOfType(type)) {
       if (member.flags & ts.TypeFlags.StringLiteral) {
         values.add((member as ts.StringLiteralType).value);
       }
@@ -103,7 +107,7 @@ export async function detectIgnoreFieldsMetadata(
   }
 
   if (type.isIntersectionType()) {
-    for (const member of await type.getTypes()) {
+    for (const member of await checker.getTypesOfType(type)) {
       const memberResult = await extractIgnoreFieldsFromType(member, checker);
       if (memberResult) {
         return memberResult;

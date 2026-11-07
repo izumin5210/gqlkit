@@ -118,7 +118,7 @@ export async function collectDeclaredTypeNames(
   );
 
   for (const filePath of sourceFiles) {
-    const sourceFile = await program.getSourceFile(filePath);
+    const sourceFile = program.getSourceFile(filePath);
     if (!sourceFile) continue;
 
     for (const node of sourceFile.statements) {
@@ -133,7 +133,7 @@ export async function collectDeclaredTypeNames(
           // For type aliases like `type User = ExternalUser;`,
           // also track the underlying type's symbol
           const type = await checker.getTypeAtLocation(node.type);
-          const typeSymbol = await type.getSymbol();
+          const typeSymbol = await checker.getSymbolOfType(type);
           if (typeSymbol) {
             const underlyingSymbol = await resolveOriginalSymbol(
               typeSymbol,
@@ -221,14 +221,14 @@ export async function collectDeclaredTypeNames(
  * detection, no symbol tracking, no re-export handling — just a name set for
  * membership checks.
  */
-export async function collectLocalTypeDeclarationNames(
+export function collectLocalTypeDeclarationNames(
   program: ts.Program,
   sourceFiles: ReadonlyArray<string>,
-): Promise<ReadonlySet<string>> {
+): ReadonlySet<string> {
   const names = new Set<string>();
 
   for (const filePath of sourceFiles) {
-    const sourceFile = await program.getSourceFile(filePath);
+    const sourceFile = program.getSourceFile(filePath);
     if (!sourceFile) continue;
 
     sourceFile.forEachChild((node) => {

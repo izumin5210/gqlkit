@@ -26,7 +26,6 @@ import {
 import {
   extractPropertySymbols,
   filterNonNullTypeNodes,
-  getDeclarations,
   getNonNullableTypes,
   getTypeNameFromNode,
   hasUndefinedInType,
@@ -195,10 +194,10 @@ export async function extractFieldsFromType(
     }
 
     const propType = await checker.getTypeOfSymbol(prop);
-    const declarations = await getDeclarations(prop);
+    const declarations = await checker.getDeclarationsOfSymbol(prop);
     const declaration = declarations?.[0];
 
-    const optional = await hasUndefinedInType(propType);
+    const optional = await hasUndefinedInType(propType, checker);
 
     const tsdocInfo = await extractTsDocFromSymbol(prop, checker);
 
@@ -234,7 +233,7 @@ export async function extractFieldsFromType(
 
       // Check if the original type is nullable before unwrapping
       // TypeScript normalizes WithDirectives<T | null, [...]> to (T & Directive) | null
-      if (await isNullableUnion(propType)) {
+      if (await isNullableUnion(propType, checker)) {
         directiveNullable = true;
       }
       actualPropType = await unwrapDirectiveType(propType, checker);
@@ -242,7 +241,10 @@ export async function extractFieldsFromType(
       // Check if the unwrapped type (from $gqlkitOriginalType) is nullable
       // This handles cases where TypeScript normalizes intersection types
       // and loses the null from the outer union
-      if (!directiveNullable && (await isNullableUnion(actualPropType))) {
+      if (
+        !directiveNullable &&
+        (await isNullableUnion(actualPropType, checker))
+      ) {
         directiveNullable = true;
       }
     }
@@ -338,10 +340,13 @@ function isConstEnum(node: ts.Node): boolean {
   return (modifiers & ts.ModifierFlags.Const) !== 0;
 }
 
-async function isStringLiteralUnion(type: ts.Type): Promise<boolean> {
+async function isStringLiteralUnion(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
   if (!type.isUnionType()) return false;
 
-  const nonNullTypes = await getNonNullableTypes(type);
+  const nonNullTypes = await getNonNullableTypes(type, checker);
 
   if (nonNullTypes.length === 0) return false;
 
@@ -456,7 +461,7 @@ async function extractStringLiteralUnionMembers(
 
   const members: EnumMemberInfo[] = [];
 
-  for (const t of await type.getTypes()) {
+  for (const t of await checker.getTypesOfType(type)) {
     if (isNullOrUndefined(t)) {
       continue;
     }
@@ -478,14 +483,15 @@ async function extractStringLiteralUnionMembers(
 
 async function determineTypeKindFromUnion(
   type: ts.Type,
+  checker: CheckerLoader,
 ): Promise<TypeKind | null> {
   if (!type.isUnionType()) {
     return null;
   }
 
-  const nonNullTypes = await getNonNullableTypes(type);
+  const nonNullTypes = await getNonNullableTypes(type, checker);
 
-  if (await isStringLiteralUnion(type)) {
+  if (await isStringLiteralUnion(type, checker)) {
     return "enum";
   }
 
@@ -494,7 +500,7 @@ async function determineTypeKindFromUnion(
       async (t) =>
         (t.flags & ts.TypeFlags.Object) !== 0 ||
         (t.flags & ts.TypeFlags.Intersection) !== 0 ||
-        (await t.getSymbol()) !== undefined,
+        (await checker.getSymbolOfType(t)) !== undefined,
     ),
   );
   const allObjectTypes = objectLike.every(Boolean);
@@ -545,7 +551,7 @@ async function determineTypeKind(
     return "graphqlInterface";
   }
 
-  const unionKind = await determineTypeKindFromUnion(type);
+  const unionKind = await determineTypeKindFromUnion(type, checker);
   if (unionKind) {
     return unionKind;
   }
@@ -936,7 +942,7 @@ async function processReexportedSymbol(
     };
   }
 
-  const declarations = await getDeclarations(resolvedSymbol);
+  const declarations = await checker.getDeclarationsOfSymbol(resolvedSymbol);
   const declaration = declarations?.[0];
   const preambleDiagnostics: Diagnostic[] = [];
   if (declaration) {
@@ -1169,14 +1175,17 @@ async function processExportDeclaration(
   return { types, diagnostics, detectedScalarNames, detectedScalars };
 }
 
-async function getNamedTypeName(memberType: ts.Type): Promise<string> {
+async function getNamedTypeName(
+  memberType: ts.Type,
+  checker: CheckerLoader,
+): Promise<string> {
   // For type aliases (e.g., GqlObject<...>), use aliasSymbol
-  const memberTypeAliasSymbol = await memberType.getAliasSymbol();
+  const memberTypeAliasSymbol = await checker.getAliasSymbolOfType(memberType);
   if (memberTypeAliasSymbol) {
     return memberTypeAliasSymbol.name;
   }
   // For regular types, use symbol
-  return (await memberType.getSymbol())?.name ?? "";
+  return (await checker.getSymbolOfType(memberType))?.name ?? "";
 }
 
 interface InlineObjectExtractionResult {
@@ -1220,7 +1229,7 @@ async function extractInlineObjectMembers(
     return null;
   }
 
-  const nonNullTypes = await getNonNullableTypes(type);
+  const nonNullTypes = await getNonNullableTypes(type, checker);
   const memberTypeNodes =
     typeNode && ts.isUnionTypeNode(typeNode)
       ? filterNonNullTypeNodes(typeNode)
@@ -1251,7 +1260,7 @@ async function extractInlineObjectMembers(
     }
   } else {
     for (const memberType of nonNullTypes) {
-      if (await isAnonymousObjectType(memberType)) {
+      if (await isAnonymousObjectType(memberType, checker)) {
         hasInlineObjects = true;
       } else {
         hasNamedTypes = true;
@@ -1261,14 +1270,14 @@ async function extractInlineObjectMembers(
 
   if (hasInlineObjects) {
     for (const memberType of nonNullTypes) {
-      if (await isAnonymousObjectType(memberType)) {
-        const properties = await memberType.getProperties();
+      if (await isAnonymousObjectType(memberType, checker)) {
+        const properties = await checker.getPropertiesOfType(memberType);
         const memberProperties: PropertyDef[] = [];
 
         for (const prop of properties) {
           const propType = await checker.getTypeOfSymbol(prop);
           const tsdocInfo = await extractTsDocFromSymbol(prop, checker);
-          const declarations = await getDeclarations(prop);
+          const declarations = await checker.getDeclarationsOfSymbol(prop);
           const declaration = declarations?.[0];
 
           let propTypeNode: ts.TypeNode | undefined;
@@ -1352,14 +1361,14 @@ async function extractUnionMembers(
     return null;
   }
 
-  const nonNullTypes = await getNonNullableTypes(type);
+  const nonNullTypes = await getNonNullableTypes(type, checker);
 
   const objectLike = await Promise.all(
     nonNullTypes.map(
       async (t) =>
         (t.flags & ts.TypeFlags.Object) !== 0 ||
         (t.flags & ts.TypeFlags.Intersection) !== 0 ||
-        (await t.getSymbol()) !== undefined,
+        (await checker.getSymbolOfType(t)) !== undefined,
     ),
   );
   const allObjectTypes = objectLike.every(Boolean);
@@ -1380,8 +1389,8 @@ async function extractUnionMembers(
     const memberNames = await Promise.all(
       nonNullTypes.map(async (t) => {
         // First try to get name from type
-        if (!(await isAnonymousObjectType(t))) {
-          const name = await getNamedTypeName(t);
+        if (!(await isAnonymousObjectType(t, checker))) {
+          const name = await getNamedTypeName(t, checker);
           if (name !== "" && name !== "__type") {
             return name;
           }
@@ -1434,7 +1443,7 @@ export async function extractTypesFromProgram(
   const scannedSourceFilesSet = new Set(sourceFiles);
 
   for (const filePath of sourceFiles) {
-    const sourceFile = await program.getSourceFile(filePath);
+    const sourceFile = program.getSourceFile(filePath);
     if (!sourceFile) {
       diagnostics.push({
         code: "PARSE_ERROR",

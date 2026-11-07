@@ -1,7 +1,6 @@
 import type { DeprecationInfo } from "../core/index.js";
 import * as ts from "../core/typescript.js";
 import type { CheckerLoader } from "./checker-loader.js";
-import { getDeclarations } from "./typescript-utils.js";
 
 export interface TSDocInfo {
   readonly description: string | null;
@@ -101,7 +100,7 @@ async function extractDescriptionFromSymbol(
   }
 
   const descriptionTagContent = extractDescriptionTagContent(
-    await getDeclarations(symbol),
+    await checker.getDeclarationsOfSymbol(symbol),
   );
   if (descriptionTagContent) {
     return normalizeLineEndings(descriptionTagContent);
@@ -122,7 +121,7 @@ export async function extractTsDocInfo(
 
   const description = await extractDescriptionFromSymbol(symbol, checker);
   const deprecated = extractDeprecatedFromDeclarations(
-    await getDeclarations(symbol),
+    await checker.getDeclarationsOfSymbol(symbol),
   );
 
   return {
@@ -137,7 +136,7 @@ export async function extractTsDocFromSymbol(
 ): Promise<TSDocInfo> {
   const description = await extractDescriptionFromSymbol(symbol, checker);
   const deprecated = extractDeprecatedFromDeclarations(
-    await getDeclarations(symbol),
+    await checker.getDeclarationsOfSymbol(symbol),
   );
 
   return {

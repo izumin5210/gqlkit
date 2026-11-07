@@ -110,7 +110,7 @@ export async function resolveArgumentValue(
       const elemType = typeArgs[0];
       if (elemType.isUnionType()) {
         const values: DirectiveArgumentValue[] = [];
-        for (const member of await elemType.getTypes()) {
+        for (const member of await checker.getTypesOfType(elemType)) {
           const resolved = await resolveArgumentValue(member, checker);
           if (resolved) {
             values.push(resolved);
@@ -121,7 +121,7 @@ export async function resolveArgumentValue(
     }
   }
 
-  const properties = await type.getProperties();
+  const properties = await checker.getPropertiesOfType(type);
   if (properties.length > 0) {
     const isMetadataProperty = properties.some(
       (p) =>
@@ -145,7 +145,7 @@ export async function resolveArgumentValue(
     }
   }
 
-  const symbol = await type.getSymbol();
+  const symbol = await checker.getSymbolOfType(type);
   if (symbol) {
     const name = symbol.name;
     if (
@@ -176,7 +176,7 @@ async function extractDirectiveArgs(
 ): Promise<ExtractDirectiveArgsResult> {
   const args: DirectiveArgument[] = [];
   const errors: DirectiveDetectionError[] = [];
-  const properties = await argsType.getProperties();
+  const properties = await checker.getPropertiesOfType(argsType);
 
   for (const prop of properties) {
     const propName = prop.name;
@@ -214,7 +214,7 @@ async function extractDirectiveFromType(
   }
 
   const rawNameType = await checker.getTypeOfSymbol(nameProp);
-  const nameType = await getActualMetadataType(rawNameType);
+  const nameType = await getActualMetadataType(rawNameType, checker);
   if (!nameType?.isStringLiteralType()) {
     return { directive: null, errors: [] };
   }
@@ -242,7 +242,7 @@ async function extractDirectiveFromType(
 
   if (argsProp) {
     const rawArgsType = await checker.getTypeOfSymbol(argsProp);
-    const argsType = await getActualMetadataType(rawArgsType);
+    const argsType = await getActualMetadataType(rawArgsType, checker);
     if (argsType) {
       const argsResult = await extractDirectiveArgs(
         argsType,
@@ -295,7 +295,7 @@ export async function detectDirectiveMetadata(
   // members in that case instead of stopping at the first property found,
   // so this tier is intentionally not delegated to findMetadataProperty.
   if (type.isUnionType()) {
-    for (const member of await type.getTypes()) {
+    for (const member of await checker.getTypesOfType(type)) {
       if (isNullOrUndefined(member)) {
         continue;
       }
@@ -313,7 +313,10 @@ async function detectDirectiveMetadataFromProperty(
   checker: CheckerLoader,
 ): Promise<DirectiveDetectionResult> {
   const rawDirectivesType = await checker.getTypeOfSymbol(directivesProp);
-  const directivesType = await getActualMetadataType(rawDirectivesType);
+  const directivesType = await getActualMetadataType(
+    rawDirectivesType,
+    checker,
+  );
 
   if (!directivesType) {
     return createEmptyResult();
@@ -330,6 +333,7 @@ async function detectDirectiveMetadataFromProperty(
       await checker.getTypeOfSymbol(directivesArrayProp);
     const directivesArrayType = await getActualMetadataType(
       rawDirectivesArrayType,
+      checker,
     );
     if (directivesArrayType) {
       return extractDirectivesFromType(directivesArrayType, checker);
@@ -369,7 +373,7 @@ export async function extractDirectivesFromType(
     if (typeArgs.length > 0 && typeArgs[0]) {
       const elemType = typeArgs[0];
       if (elemType.isUnionType()) {
-        for (const member of await elemType.getTypes()) {
+        for (const member of await checker.getTypesOfType(elemType)) {
           const result = await extractDirectiveFromType(member, checker);
           if (result.directive) {
             directives.push(result.directive);
@@ -417,7 +421,7 @@ export async function hasDirectiveMetadata(
   }
 
   if (type.isIntersectionType()) {
-    for (const member of await type.getTypes()) {
+    for (const member of await checker.getTypesOfType(type)) {
       const prop = await getMetaProperty(member, checker);
       if (prop) {
         return true;
@@ -436,7 +440,7 @@ export async function hasDirectiveMetadata(
   // Handle union types: (T & Meta) | null is normalized by TypeScript
   // to (T & Meta) | null, so we need to check each member recursively
   if (type.isUnionType()) {
-    for (const member of await type.getTypes()) {
+    for (const member of await checker.getTypesOfType(type)) {
       if (await hasDirectiveMetadata(member, checker)) {
         return true;
       }
@@ -465,8 +469,8 @@ export async function unwrapDirectiveType(
   //    This works when the type alias hasn't been expanded by TypeScript
   //    We detect GqlField/GqlObject by checking for metadata properties, not by type name.
   if (
-    (await type.getAliasTypeArguments()) &&
-    (await type.getAliasTypeArguments()).length > 0
+    (await checker.getAliasTypeArgumentsOfType(type)) &&
+    (await checker.getAliasTypeArgumentsOfType(type)).length > 0
   ) {
     const metaProp = await getMetaProperty(type, checker);
     const originalTypeProp = await checker.getPropertyOfType(
@@ -474,7 +478,7 @@ export async function unwrapDirectiveType(
       ORIGINAL_TYPE_PROPERTY,
     );
     if (metaProp || originalTypeProp) {
-      return (await type.getAliasTypeArguments())[0]!;
+      return (await checker.getAliasTypeArgumentsOfType(type))[0]!;
     }
   }
 
@@ -482,10 +486,10 @@ export async function unwrapDirectiveType(
   //    When TypeScript expands the type alias to an intersection,
   //    one of the intersection members might still have aliasTypeArguments
   if (type.isIntersectionType()) {
-    for (const member of await type.getTypes()) {
+    for (const member of await checker.getTypesOfType(type)) {
       if (
-        (await member.getAliasTypeArguments()) &&
-        (await member.getAliasTypeArguments()).length > 0
+        (await checker.getAliasTypeArgumentsOfType(member)) &&
+        (await checker.getAliasTypeArgumentsOfType(member)).length > 0
       ) {
         const memberMetaProp = await getMetaProperty(member, checker);
         const memberOriginalTypeProp = await checker.getPropertyOfType(
@@ -493,7 +497,7 @@ export async function unwrapDirectiveType(
           ORIGINAL_TYPE_PROPERTY,
         );
         if (memberMetaProp || memberOriginalTypeProp) {
-          return (await member.getAliasTypeArguments())[0]!;
+          return (await checker.getAliasTypeArgumentsOfType(member))[0]!;
         }
       }
     }
@@ -509,7 +513,7 @@ export async function unwrapDirectiveType(
   );
   if (originalTypeProp) {
     const rawOriginalType = await checker.getTypeOfSymbol(originalTypeProp);
-    const originalType = await getActualMetadataType(rawOriginalType);
+    const originalType = await getActualMetadataType(rawOriginalType, checker);
     if (originalType) {
       return originalType;
     }
@@ -517,14 +521,17 @@ export async function unwrapDirectiveType(
 
   // Check intersection members for $gqlkitOriginalType
   if (type.isIntersectionType()) {
-    for (const member of await type.getTypes()) {
+    for (const member of await checker.getTypesOfType(type)) {
       const originalProp = await checker.getPropertyOfType(
         member,
         ORIGINAL_TYPE_PROPERTY,
       );
       if (originalProp) {
         const rawOriginalType = await checker.getTypeOfSymbol(originalProp);
-        const originalType = await getActualMetadataType(rawOriginalType);
+        const originalType = await getActualMetadataType(
+          rawOriginalType,
+          checker,
+        );
         if (originalType) {
           return originalType;
         }
@@ -533,7 +540,7 @@ export async function unwrapDirectiveType(
 
     // Fallback: filter out metadata members
     const nonDirectiveMembers: ts.Type[] = [];
-    for (const member of await type.getTypes()) {
+    for (const member of await checker.getTypesOfType(type)) {
       const metaProp = await getMetaProperty(member, checker);
       const originalTypeProp = await checker.getPropertyOfType(
         member,
@@ -552,7 +559,7 @@ export async function unwrapDirectiveType(
   // We extract the base type from the non-null member and return it.
   // Nullability is handled separately in the type-extractor.
   if (type.isUnionType()) {
-    for (const member of await type.getTypes()) {
+    for (const member of await checker.getTypesOfType(type)) {
       // Skip null/undefined members
       if (isNullOrUndefined(member)) {
         continue;

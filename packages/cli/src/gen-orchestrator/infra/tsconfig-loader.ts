@@ -15,9 +15,7 @@ export interface LoadTsconfigResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
-export async function loadTsconfig(
-  options: LoadTsconfigOptions,
-): Promise<LoadTsconfigResult> {
+export function loadTsconfig(options: LoadTsconfigOptions): LoadTsconfigResult {
   const { api, cwd, tsconfigPath } = options;
 
   if (tsconfigPath !== null) {
@@ -27,11 +25,11 @@ export async function loadTsconfig(
   return autoDetectTsconfig(api, cwd);
 }
 
-async function loadFromSpecifiedPath(
+function loadFromSpecifiedPath(
   api: ts.API,
   cwd: string,
   tsconfigPath: string,
-): Promise<LoadTsconfigResult> {
+): LoadTsconfigResult {
   const absolutePath = path.isAbsolute(tsconfigPath)
     ? tsconfigPath
     : path.resolve(cwd, tsconfigPath);
@@ -54,10 +52,7 @@ async function loadFromSpecifiedPath(
   return parseConfigFile(api, absolutePath);
 }
 
-async function autoDetectTsconfig(
-  api: ts.API,
-  cwd: string,
-): Promise<LoadTsconfigResult> {
+function autoDetectTsconfig(api: ts.API, cwd: string): LoadTsconfigResult {
   const configPath = findConfigFile(cwd);
 
   if (!configPath) {
@@ -105,13 +100,13 @@ function flattenDiagnosticText(
   return lines.join("\n");
 }
 
-async function parseConfigFile(
+function parseConfigFile(
   api: ts.API,
   configFilePath: string,
-): Promise<LoadTsconfigResult> {
+): LoadTsconfigResult {
   const diagnostics: Diagnostic[] = [];
 
-  const readResult = await api.readConfigFile(configFilePath);
+  const readResult = api.readConfigFile(configFilePath);
 
   if (readResult.error) {
     diagnostics.push({
@@ -131,7 +126,7 @@ async function parseConfigFile(
     };
   }
 
-  const parseResult = await api.parseJsonConfigFileContent(readResult.config, {
+  const parseResult = api.parseJsonConfigFileContent(readResult.config, {
     configFileName: configFilePath,
   });
 

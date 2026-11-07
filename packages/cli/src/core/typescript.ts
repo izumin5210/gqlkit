@@ -5,4 +5,4 @@ export * from "typescript/ast";
 // ambiguous.
 /** @lintignore */
 export { ModifierFlags, ScriptKind } from "typescript/ast";
-export * from "typescript/async";
+export * from "typescript/sync";

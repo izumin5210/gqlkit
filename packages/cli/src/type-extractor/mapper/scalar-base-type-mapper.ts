@@ -82,7 +82,7 @@ async function extractBaseTypeSymbol(
   checker: CheckerLoader,
   program: ts.Program,
 ): Promise<ts.Symbol | null> {
-  const sourceFile = await program.getSourceFile(scalarInfo.sourceFile);
+  const sourceFile = program.getSourceFile(scalarInfo.sourceFile);
   if (!sourceFile) {
     return null;
   }
@@ -99,7 +99,7 @@ async function extractBaseTypeSymbol(
           // GqlScalar is an intersection type: Base & { " $gqlkitScalar"?: ... }
           // We need to extract the Base type from this intersection
           if (type.isIntersectionType()) {
-            for (const member of await type.getTypes()) {
+            for (const member of await checker.getTypesOfType(type)) {
               // Skip the metadata object type
               if (
                 await checker.getPropertyOfType(
@@ -110,7 +110,7 @@ async function extractBaseTypeSymbol(
                 continue;
               }
               // This should be the base type
-              const memberSymbol = await member.getSymbol();
+              const memberSymbol = await checker.getSymbolOfType(member);
               if (memberSymbol) {
                 foundSymbol = memberSymbol;
               }

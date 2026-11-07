@@ -38,19 +38,19 @@ function isUnionOrIntersection(type: ts.Type): boolean {
  * type (its full property list, its display string) are left to the code
  * that needs them, since external types can be huge.
  */
-export async function prefetchTypeFacts(
+async function prefetchTypeFacts(
   checker: CheckerLoader,
   types: ReadonlyArray<ts.Type>,
 ): Promise<void> {
   const unique = [...new Set(types)];
   await Promise.all(
     unique.flatMap((type) => [
-      type.getSymbol(),
-      type.getAliasSymbol(),
+      checker.getSymbolOfType(type),
+      checker.getAliasSymbolOfType(type),
       checker.isArrayType(type),
       checker.isTupleType(type),
       ...(isUnionOrIntersection(type)
-        ? [(type as ts.UnionOrIntersectionType).getTypes()]
+        ? [checker.getTypesOfType(type as ts.UnionOrIntersectionType)]
         : []),
       ...COMMON_METADATA_NAMES.map((name) =>
         checker.getPropertyOfType(type, name),
@@ -153,7 +153,7 @@ export async function prefetchDeclarationFacts(
     ),
   ]);
   const [properties] = await Promise.all([
-    Promise.all(types.map((t) => t.getProperties())),
+    Promise.all(types.map((t) => checker.getPropertiesOfType(t))),
     prefetchTypeFacts(checker, types),
   ]);
   await prefetchPropertyFacts(checker, properties.flat());

@@ -45,7 +45,7 @@ async function withTestProgram(
     },
   });
   try {
-    const program = await api.createProgram([VIRTUAL_FILE], {
+    const program = api.createProgram([VIRTUAL_FILE], {
       target: ts.ScriptTarget.ES2020,
       module: ts.ModuleKind.ES2020,
       strict: true,
@@ -53,17 +53,20 @@ async function withTestProgram(
       noEmit: true,
     });
 
-    const sourceFile = await program.getSourceFile(VIRTUAL_FILE);
+    const sourceFile = program.getSourceFile(VIRTUAL_FILE);
     if (!sourceFile) {
       throw new Error("Failed to get source file");
     }
 
     await fn({
-      checker: createCheckerLoader(program.getProject().checker),
+      checker: createCheckerLoader({
+        api,
+        checker: program.getProject().checker,
+      }),
       sourceFile,
     });
   } finally {
-    await api.close();
+    api.close();
   }
 }
 

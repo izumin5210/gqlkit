@@ -125,7 +125,7 @@ async function detectKindFromMetadataType(
   }
 
   const metadataType = await checker.getTypeOfSymbol(metadataProp);
-  const actualType = await getActualMetadataType(metadataType);
+  const actualType = await getActualMetadataType(metadataType, checker);
   if (!actualType) {
     return null;
   }
@@ -196,7 +196,7 @@ async function extractTypeNameFromType(
     return null;
   }
 
-  const aliasSymbol = await type.getAliasSymbol();
+  const aliasSymbol = await checker.getAliasSymbolOfType(type);
   if (aliasSymbol) {
     const aliasName = aliasSymbol.name;
     if (!isInternalTypeSymbol(aliasName)) {
@@ -204,7 +204,7 @@ async function extractTypeNameFromType(
     }
   }
 
-  const symbol = await type.getSymbol();
+  const symbol = await checker.getSymbolOfType(type);
   if (symbol) {
     const symbolName = symbol.name;
     if (!isInternalTypeSymbol(symbolName)) {
@@ -293,7 +293,7 @@ async function hasOnlyIndexSignatures(
     return false;
   }
 
-  const properties = (await targetType.getProperties()).filter(
+  const properties = (await checker.getPropertiesOfType(targetType)).filter(
     (p) => !p.name.startsWith(" $"),
   );
   if (properties.length > 0) {
@@ -310,11 +310,11 @@ async function getTypeNameForDiagnostic(
   type: ts.Type,
   checker: CheckerLoader,
 ): Promise<string> {
-  const aliasSymbol = await type.getAliasSymbol();
+  const aliasSymbol = await checker.getAliasSymbolOfType(type);
   if (aliasSymbol) {
     return aliasSymbol.name;
   }
-  const symbol = await type.getSymbol();
+  const symbol = await checker.getSymbolOfType(type);
   if (symbol) {
     return symbol.name;
   }
@@ -904,7 +904,7 @@ export async function extractDefineApiResolvers(
   // order, which keeps the output deterministic.
   const resultsByFile = await Promise.all(
     files.map(async (filePath) => {
-      const sourceFile = await program.getSourceFile(filePath);
+      const sourceFile = program.getSourceFile(filePath);
       if (!sourceFile) {
         return [];
       }

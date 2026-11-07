@@ -117,7 +117,7 @@ async function extractDirectiveName(
   }
 
   const rawNameType = await checker.getTypeOfSymbol(nameProp);
-  const nameType = await getActualMetadataType(rawNameType);
+  const nameType = await getActualMetadataType(rawNameType, checker);
   if (!nameType?.isStringLiteralType()) {
     return null;
   }
@@ -172,7 +172,7 @@ async function extractDirectiveLocations(
     if (typeArgs.length > 0 && typeArgs[0]) {
       const elemType = typeArgs[0];
       if (elemType.isUnionType()) {
-        for (const member of await elemType.getTypes()) {
+        for (const member of await checker.getTypesOfType(elemType)) {
           if (member.flags & ts.TypeFlags.Undefined) {
             continue;
           }
@@ -192,7 +192,7 @@ async function extractDirectiveLocations(
 
   // Handle union types like "OBJECT" | "FIELD_DEFINITION" | undefined
   if (rawLocationType.isUnionType()) {
-    for (const member of await rawLocationType.getTypes()) {
+    for (const member of await checker.getTypesOfType(rawLocationType)) {
       if (member.flags & ts.TypeFlags.Undefined) {
         continue;
       }
@@ -210,7 +210,7 @@ async function extractDirectiveLocations(
     }
   } else {
     // Try to unwrap optional type (T | undefined where T is a single type)
-    const locationType = await getActualMetadataType(rawLocationType);
+    const locationType = await getActualMetadataType(rawLocationType, checker);
     if (locationType?.isStringLiteralType()) {
       const value = locationType.value as DirectiveLocation;
       if (isValidLocation(value)) {
@@ -256,7 +256,7 @@ async function convertToGraphQLType(
   }
 
   // Check for type alias (e.g., Role = "USER" | "ADMIN")
-  const aliasSymbol = await type.getAliasSymbol();
+  const aliasSymbol = await checker.getAliasSymbolOfType(type);
   if (aliasSymbol) {
     const aliasName = aliasSymbol.name;
     if (aliasName && aliasName !== "__type") {
@@ -306,8 +306,8 @@ async function convertToGraphQLType(
   }
 
   if (type.isUnionType()) {
-    const nonNullTypes = await getNonNullableTypes(type);
-    const nullable = await isNullableUnion(type);
+    const nonNullTypes = await getNonNullableTypes(type, checker);
+    const nullable = await isNullableUnion(type, checker);
 
     if (nonNullTypes.length === 1 && nonNullTypes[0]) {
       const innerType = await convertToGraphQLType(nonNullTypes[0], checker);
@@ -342,7 +342,8 @@ async function convertToGraphQLType(
       }
 
       // Check if element type is a type alias (e.g., Role = "USER" | "ADMIN")
-      const elementTypeAliasSymbol = await elementType.getAliasSymbol();
+      const elementTypeAliasSymbol =
+        await checker.getAliasSymbolOfType(elementType);
       if (elementTypeAliasSymbol) {
         const aliasName = elementTypeAliasSymbol.name;
         if (aliasName && aliasName !== "__type") {
@@ -356,7 +357,7 @@ async function convertToGraphQLType(
       }
 
       if (elementType.isUnionType()) {
-        const nonNullMembers = await getNonNullableTypes(elementType);
+        const nonNullMembers = await getNonNullableTypes(elementType, checker);
         if (
           nonNullMembers.length > 0 &&
           nonNullMembers.every((t) => t.isStringLiteralType())
@@ -369,7 +370,7 @@ async function convertToGraphQLType(
           };
         }
 
-        const hasNull = await isNullableUnion(elementType);
+        const hasNull = await isNullableUnion(elementType, checker);
 
         if (nonNullMembers.length === 1 && nonNullMembers[0]) {
           const innerType = await convertToGraphQLType(
@@ -406,7 +407,7 @@ async function convertToGraphQLType(
     };
   }
 
-  const symbol = await type.getSymbol();
+  const symbol = await checker.getSymbolOfType(type);
   if (symbol) {
     const symbolName = symbol.name;
     if (symbolName !== "__type" && symbolName !== "") {
@@ -443,7 +444,7 @@ async function extractDirectiveArgs(
   }
 
   const rawArgsType = await checker.getTypeOfSymbol(argsProp);
-  let argsType = await getActualMetadataType(rawArgsType);
+  let argsType = await getActualMetadataType(rawArgsType, checker);
   if (!argsType) {
     return { args: [], errors: [] };
   }
@@ -459,7 +460,7 @@ async function extractDirectiveArgs(
   const args: DirectiveArgumentDefinition[] = [];
   const errors: DirectiveDefinitionError[] = [];
 
-  const properties = await argsType.getProperties();
+  const properties = await checker.getPropertiesOfType(argsType);
   for (const prop of properties) {
     const propName = prop.name;
     const propType = await checker.getTypeOfSymbol(prop);
@@ -572,7 +573,7 @@ export async function extractDirectiveDefinitions(
   // concurrently and their checker queries batch; results keep source order.
   const resultsByFile = await Promise.all(
     sourceFiles.map(async (filePath) => {
-      const sourceFile = await program.getSourceFile(filePath);
+      const sourceFile = program.getSourceFile(filePath);
       if (!sourceFile) {
         return [];
       }

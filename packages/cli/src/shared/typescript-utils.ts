@@ -18,18 +18,6 @@ export function getTypeNameFromNode(typeNode: ts.TypeNode): string | null {
 }
 
 /**
- * Resolves a symbol's declaration handles into AST nodes.
- */
-export async function getDeclarations(
-  symbol: ts.Symbol,
-): Promise<ReadonlyArray<ts.Declaration>> {
-  const resolved = await Promise.all(
-    symbol.declarations.map((handle) => handle.resolve()),
-  );
-  return resolved.filter((d): d is ts.Declaration => d !== undefined);
-}
-
-/**
  * Checks if a type represents null or undefined.
  */
 export function isNullOrUndefined(type: ts.Type): boolean {
@@ -103,7 +91,7 @@ export async function findMetadataProperty(
   }
 
   if (type.isIntersectionType()) {
-    for (const member of await type.getTypes()) {
+    for (const member of await checker.getTypesOfType(type)) {
       for (const name of propertyNames) {
         const memberProp = await checker.getPropertyOfType(member, name);
         if (memberProp) {
@@ -114,7 +102,7 @@ export async function findMetadataProperty(
   }
 
   if (recurseUnion && type.isUnionType()) {
-    for (const member of await type.getTypes()) {
+    for (const member of await checker.getTypesOfType(type)) {
       if (isNullOrUndefined(member)) {
         continue;
       }
@@ -136,17 +124,25 @@ export async function findMetadataProperty(
 /**
  * Checks if a union type contains null or undefined.
  */
-export async function isNullableUnion(type: ts.Type): Promise<boolean> {
+export async function isNullableUnion(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
   if (!type.isUnionType()) return false;
-  return (await type.getTypes()).some((t) => isNullOrUndefined(t));
+  return (await checker.getTypesOfType(type)).some((t) => isNullOrUndefined(t));
 }
 
 /**
  * Gets non-nullable types from a union type.
  */
-export async function getNonNullableTypes(type: ts.Type): Promise<ts.Type[]> {
+export async function getNonNullableTypes(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<ts.Type[]> {
   if (!type.isUnionType()) return [type];
-  return (await type.getTypes()).filter((t) => !isNullOrUndefined(t));
+  return (await checker.getTypesOfType(type)).filter(
+    (t) => !isNullOrUndefined(t),
+  );
 }
 
 /**
@@ -159,10 +155,13 @@ export async function getNonNullableTypes(type: ts.Type): Promise<ts.Type[]> {
  * - Partial<T> adds undefined to all property types
  * - Required<T> removes undefined from all property types
  */
-export async function hasUndefinedInType(type: ts.Type): Promise<boolean> {
+export async function hasUndefinedInType(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
   if ((type.flags & ts.TypeFlags.Undefined) !== 0) return true;
   if (type.isUnionType()) {
-    return (await type.getTypes()).some(
+    return (await checker.getTypesOfType(type)).some(
       (t) => (t.flags & ts.TypeFlags.Undefined) !== 0,
     );
   }
@@ -183,11 +182,14 @@ export function isExported(node: ts.Node): boolean {
  * This is used to determine if an intersection member should trigger
  * treating the whole intersection as an inline object.
  */
-export async function isAnonymousObjectType(type: ts.Type): Promise<boolean> {
-  if (await type.getAliasSymbol()) {
+export async function isAnonymousObjectType(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
+  if (await checker.getAliasSymbolOfType(type)) {
     return false;
   }
-  const symbol = await type.getSymbol();
+  const symbol = await checker.getSymbolOfType(type);
   if (!symbol) {
     return true;
   }
@@ -205,8 +207,8 @@ export async function extractPropertySymbols(
 ): Promise<ts.Symbol[]> {
   if (type.isIntersectionType()) {
     const allProps = new Map<string, ts.Symbol>();
-    for (const member of await type.getTypes()) {
-      const memberProps = await member.getProperties();
+    for (const member of await checker.getTypesOfType(type)) {
+      const memberProps = await checker.getPropertiesOfType(member);
       for (const prop of memberProps) {
         const propName = prop.name;
         if (!allProps.has(propName)) {
@@ -217,17 +219,25 @@ export async function extractPropertySymbols(
     return [...allProps.values()];
   }
 
-  const properties = await type.getProperties();
+  const properties = await checker.getPropertiesOfType(type);
   if (properties.length > 0) {
     return [...properties];
   }
 
   const apparentType = await checker.getApparentType(type);
   if (apparentType !== type) {
-    return [...(await apparentType.getProperties())];
+    return [...(await checker.getPropertiesOfType(apparentType))];
   }
 
   return [];
+}
+
+async function getParentOfTypeSymbol(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<ts.Symbol | undefined> {
+  const symbol = await checker.getSymbolOfType(type);
+  return symbol ? checker.getParentOfSymbol(symbol) : undefined;
 }
 
 /**
@@ -236,17 +246,18 @@ export async function extractPropertySymbols(
  */
 export async function findEnumParentSymbol(
   types: readonly ts.Type[],
+  checker: CheckerLoader,
 ): Promise<ts.Symbol | null> {
   if (types.length === 0) return null;
 
-  const parentSymbol = await (await types[0]!.getSymbol())?.getParent();
+  const parentSymbol = await getParentOfTypeSymbol(types[0]!, checker);
 
   if (!parentSymbol || !(parentSymbol.flags & ts.SymbolFlags.Enum)) {
     return null;
   }
 
   const parents = await Promise.all(
-    types.map(async (t) => (await t.getSymbol())?.getParent()),
+    types.map((t) => getParentOfTypeSymbol(t, checker)),
   );
   const allBelongToSameEnum = parents.every((p) => p === parentSymbol);
 
@@ -256,9 +267,12 @@ export async function findEnumParentSymbol(
 /**
  * Checks if a union type is a boolean union (true | false with optional null/undefined).
  */
-export async function isBooleanUnion(type: ts.Type): Promise<boolean> {
+export async function isBooleanUnion(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
   if (!type.isUnionType()) return false;
-  const nonNullTypes = await getNonNullableTypes(type);
+  const nonNullTypes = await getNonNullableTypes(type, checker);
   return (
     nonNullTypes.length === 2 &&
     nonNullTypes.every((t) => t.flags & ts.TypeFlags.BooleanLiteral)

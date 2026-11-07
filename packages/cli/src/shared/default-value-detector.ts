@@ -83,7 +83,7 @@ export async function detectDefaultValueMetadata(
   }
 
   const rawMetaType = await checker.getTypeOfSymbol(metaProp);
-  const metaType = await getActualMetadataType(rawMetaType);
+  const metaType = await getActualMetadataType(rawMetaType, checker);
   if (!metaType) {
     return createEmptyResult();
   }
@@ -108,9 +108,9 @@ export async function detectDefaultValueMetadata(
   // Check if the type is a union that only contains undefined
   // This handles cases where Meta["defaultValue"] resolves to undefined
   if (rawDefaultValueType.isUnionType()) {
-    const nonUndefinedTypes = (await rawDefaultValueType.getTypes()).filter(
-      (t) => !(t.flags & ts.TypeFlags.Undefined),
-    );
+    const nonUndefinedTypes = (
+      await checker.getTypesOfType(rawDefaultValueType)
+    ).filter((t) => !(t.flags & ts.TypeFlags.Undefined));
     if (nonUndefinedTypes.length === 0) {
       return createEmptyResult();
     }
@@ -127,7 +127,10 @@ export async function detectDefaultValueMetadata(
     return createEmptyResult();
   }
 
-  const defaultValueType = await getActualMetadataType(rawDefaultValueType);
+  const defaultValueType = await getActualMetadataType(
+    rawDefaultValueType,
+    checker,
+  );
   if (!defaultValueType) {
     return createEmptyResult();
   }

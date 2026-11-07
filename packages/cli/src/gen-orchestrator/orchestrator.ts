@@ -206,13 +206,10 @@ async function scanSourceFilesStep(
   return { ...ctx, sourceFiles: scanResult.files };
 }
 
-async function createProgramStep(
-  ctx: PipelineContext,
-  api: ts.API,
-): Promise<PipelineContext> {
+function createProgramStep(ctx: PipelineContext, api: ts.API): PipelineContext {
   if (ctx.aborted) return ctx;
 
-  const programResult = await createSharedProgram({
+  const programResult = createSharedProgram({
     api,
     cwd: ctx.config.cwd,
     tsconfigPath: ctx.config.tsconfigPath ?? null,
@@ -228,10 +225,18 @@ async function createProgramStep(
     };
   }
 
+  const { program } = programResult;
+  // Every stage reads the scanned files; loading them in one batched round
+  // trip leaves later `getSourceFile` calls to the client's cache.
+  api.batch(...ctx.sourceFiles.map((file) => program.getSourceFile.gen(file)));
+
   return {
     ...ctx,
-    program: programResult.program,
-    checker: createCheckerLoader(programResult.program.getProject().checker),
+    program,
+    checker: createCheckerLoader({
+      api,
+      checker: program.getProject().checker,
+    }),
   };
 }
 
@@ -561,7 +566,7 @@ export async function executeGeneration(
   try {
     return await runPipeline(config, api);
   } finally {
-    await api.close();
+    api.close();
   }
 }
 
@@ -574,9 +579,7 @@ async function runPipeline(
   ctx = await measureAsyncStep("scanSourceFiles", () =>
     scanSourceFilesStep(ctx),
   );
-  ctx = await measureAsyncStep("createProgram", () =>
-    createProgramStep(ctx, api),
-  );
+  ctx = measureStep("createProgram", () => createProgramStep(ctx, api));
   ctx = await measureAsyncStep("collectTypeNames", () =>
     collectTypeNamesStep(ctx),
   );

@@ -24,12 +24,12 @@ export interface CreateSharedProgramResult {
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
 
-export async function createSharedProgram(
+export function createSharedProgram(
   options: CreateSharedProgramOptions,
-): Promise<CreateSharedProgramResult> {
+): CreateSharedProgramResult {
   const { api, cwd, tsconfigPath, typeFiles, resolverFiles } = options;
 
-  const tsconfigResult = await loadTsconfig({ api, cwd, tsconfigPath });
+  const tsconfigResult = loadTsconfig({ api, cwd, tsconfigPath });
 
   if (tsconfigResult.diagnostics.length > 0) {
     return {
@@ -42,7 +42,7 @@ export async function createSharedProgram(
     tsconfigResult.compilerOptions ?? DEFAULT_COMPILER_OPTIONS;
 
   const allFiles = [...typeFiles, ...resolverFiles];
-  const program = await api.createProgram(allFiles, compilerOptions);
+  const program = api.createProgram(allFiles, compilerOptions);
 
   return {
     program,
