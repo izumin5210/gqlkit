@@ -14,16 +14,16 @@ type ErrorResult {
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum ErrorResultSeverity {
-  WARNING
-  ERROR
   CRITICAL
+  ERROR
+  WARNING
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum ErrorResultTag {
   BUG
-  REGRESSION
   PERFORMANCE
+  REGRESSION
 }
 
 type InfoResult {
@@ -53,9 +53,9 @@ type SuccessResultMetadata {
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum SuccessResultMetadataPriority {
+  HIGH
   LOW
   MEDIUM
-  HIGH
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""

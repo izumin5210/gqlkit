@@ -1,5 +1,6 @@
-import type ts from "typescript";
+import type { Program, Symbol as TsSymbol } from "typescript/async";
 import type { Diagnostic } from "../core/index.js";
+import type { CheckerLoader } from "../shared/checker-loader.js";
 import { collectDiagnostics } from "../shared/index.js";
 import {
   collectLocalTypeDeclarationNames,
@@ -12,11 +13,12 @@ import type { ExtractResolversResult } from "./types.js";
 import { validateResolverTypes } from "./validator/resolver-type-validator.js";
 
 export interface ExtractResolversParams {
-  readonly program: ts.Program;
+  readonly program: Program;
+  readonly checker: CheckerLoader;
   readonly sourceFiles: ReadonlyArray<string>;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   /** Names of types already extracted from `GqlObject`/`GqlInterface`/etc. declarations (type-extractor's stage). */
@@ -30,11 +32,12 @@ export interface ExtractResolversParams {
  * type extensions, and abstract-type resolvers) from `define*` calls in the
  * TypeScript program.
  */
-export function extractResolvers(
+export async function extractResolvers(
   params: ExtractResolversParams,
-): ExtractResolversResult {
+): Promise<ExtractResolversResult> {
   const {
     program,
+    checker,
     sourceFiles,
     knownTypeNames,
     knownTypeSymbols,
@@ -47,8 +50,9 @@ export function extractResolvers(
   const allDiagnostics: Diagnostic[] = [];
 
   const sourceFilesSet = new Set(sourceFiles);
-  const defineApiExtractionResult = extractDefineApiResolvers({
+  const defineApiExtractionResult = await extractDefineApiResolvers({
     program,
+    checker,
     files: sourceFiles,
     options: {
       knownTypeNames,
@@ -71,7 +75,7 @@ export function extractResolvers(
     typeExtensions: result.typeExtensions,
     declaredTypeNames,
     customScalarNames,
-    localTypeDeclarationNames: collectLocalTypeDeclarationNames(
+    localTypeDeclarationNames: await collectLocalTypeDeclarationNames(
       program,
       sourceFiles,
     ),

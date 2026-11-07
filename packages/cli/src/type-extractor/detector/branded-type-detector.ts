@@ -10,7 +10,8 @@
  * - `boolean & { __nominal: true }`
  */
 
-import ts from "typescript";
+import { type Type, TypeFlags } from "typescript/async";
+import type { CheckerLoader } from "../../shared/checker-loader.js";
 
 /**
  * Result of branded type detection.
@@ -55,17 +56,20 @@ const EXCLUDED_BRAND_PROPERTIES: ReadonlySet<string> = new Set([
  * @param type - The TypeScript type to analyze
  * @returns Detection result with isBranded flag and baseType
  */
-export function detectBrandedType(type: ts.Type): BrandedTypeResult {
+export async function detectBrandedType(
+  type: Type,
+  checker: CheckerLoader,
+): Promise<BrandedTypeResult> {
   const notBranded: BrandedTypeResult = { isBranded: false, baseType: null };
 
-  if (!type.isIntersection()) {
+  if (!type.isIntersectionType()) {
     return notBranded;
   }
 
   let primitiveBase: "string" | "number" | "boolean" | null = null;
   let hasNonBrandMember = false;
 
-  for (const member of type.types) {
+  for (const member of await checker.getTypesOfType(type)) {
     const primitiveType = getPrimitiveType(member);
     if (primitiveType !== null) {
       if (primitiveBase !== null && primitiveBase !== primitiveType) {
@@ -77,7 +81,7 @@ export function detectBrandedType(type: ts.Type): BrandedTypeResult {
     }
 
     // Check if this member is a pure brand marker
-    if (!isPureBrandMarker(member)) {
+    if (!(await isPureBrandMarker(member, checker))) {
       hasNonBrandMember = true;
       break;
     }
@@ -99,20 +103,21 @@ export function detectBrandedType(type: ts.Type): BrandedTypeResult {
  * @param types - Array of TypeScript types to analyze
  * @returns Common branded result if all types are branded with the same base, otherwise non-branded
  */
-export function detectUniformBrandedType(
-  types: ReadonlyArray<ts.Type>,
-): BrandedTypeResult {
+export async function detectUniformBrandedType(
+  types: ReadonlyArray<Type>,
+  checker: CheckerLoader,
+): Promise<BrandedTypeResult> {
   if (types.length === 0) {
     return { isBranded: false, baseType: null };
   }
 
-  const first = detectBrandedType(types[0]!);
+  const first = await detectBrandedType(types[0]!, checker);
   if (!first.isBranded) {
     return { isBranded: false, baseType: null };
   }
 
   for (let i = 1; i < types.length; i++) {
-    const result = detectBrandedType(types[i]!);
+    const result = await detectBrandedType(types[i]!, checker);
     if (!result.isBranded || result.baseType !== first.baseType) {
       return { isBranded: false, baseType: null };
     }
@@ -126,19 +131,14 @@ export function detectUniformBrandedType(
  *
  * @returns "string", "number", "boolean", or null if not a primitive
  */
-function getPrimitiveType(
-  type: ts.Type,
-): "string" | "number" | "boolean" | null {
-  if (type.flags & ts.TypeFlags.String) {
+function getPrimitiveType(type: Type): "string" | "number" | "boolean" | null {
+  if (type.flags & TypeFlags.String) {
     return "string";
   }
-  if (type.flags & ts.TypeFlags.Number) {
+  if (type.flags & TypeFlags.Number) {
     return "number";
   }
-  if (
-    type.flags & ts.TypeFlags.Boolean ||
-    type.flags & ts.TypeFlags.BooleanLiteral
-  ) {
+  if (type.flags & TypeFlags.Boolean || type.flags & TypeFlags.BooleanLiteral) {
     return "boolean";
   }
   return null;
@@ -153,19 +153,22 @@ function getPrimitiveType(
  * @param type - The type to check
  * @returns true if the type is a pure brand marker
  */
-function isPureBrandMarker(type: ts.Type): boolean {
-  if (!(type.flags & ts.TypeFlags.Object)) {
+async function isPureBrandMarker(
+  type: Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
+  if (!(type.flags & TypeFlags.Object)) {
     return false;
   }
 
-  const properties = type.getProperties();
+  const properties = await checker.getPropertiesOfType(type);
   if (properties.length === 0) {
     // Empty object is not a brand marker
     return false;
   }
 
   for (const prop of properties) {
-    const propName = prop.getName();
+    const propName = prop.name;
 
     // Excluded properties (like gqlkit metadata) disqualify as brand marker
     if (EXCLUDED_BRAND_PROPERTIES.has(propName)) {

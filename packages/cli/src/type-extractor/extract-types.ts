@@ -1,5 +1,6 @@
-import type ts from "typescript";
+import type { Program, Symbol as TsSymbol } from "typescript/async";
 import type { Diagnostic, Diagnostics } from "../core/index.js";
+import type { CheckerLoader } from "../shared/checker-loader.js";
 import {
   type CollectedTypesResult,
   collectResults,
@@ -20,15 +21,16 @@ import type { ExtractedTypeInfo, GlobalTypeMapping } from "./types/index.js";
 import { validateTypes } from "./validator/type-validator.js";
 
 export interface ExtractTypesParams {
-  readonly program: ts.Program;
+  readonly program: Program;
+  readonly checker: CheckerLoader;
   readonly sourceFiles: ReadonlyArray<string>;
   readonly customScalarNames: ReadonlyArray<string>;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly configScalars: ReadonlyArray<ConfigScalarMapping>;
   readonly sourceRoot: string | null;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
 }
 
 export interface ExtractTypesResult {
@@ -50,9 +52,12 @@ export interface ExtractTypesResult {
  * the detected scalars, and pass 2 re-extracts types using that table so base
  * types (e.g. `Date`) are correctly mapped to their scalar names (e.g. `DateTime`).
  */
-export function extractTypes(params: ExtractTypesParams): ExtractTypesResult {
+export async function extractTypes(
+  params: ExtractTypesParams,
+): Promise<ExtractTypesResult> {
   const {
     program,
+    checker,
     sourceFiles,
     customScalarNames,
     globalTypeMappings,
@@ -65,20 +70,25 @@ export function extractTypes(params: ExtractTypesParams): ExtractTypesResult {
   const allDiagnostics: Diagnostic[] = [];
 
   // Pass 1: Extract types and detect scalars (without scalar mapping table)
-  const pass1Result = extractTypesFromProgram(program, sourceFiles, {
-    globalTypeMappings,
-    knownTypeNames,
-    knownTypeSymbols,
-    underlyingSymbolToTypeName,
-    scalarMappingTable: null,
+  const pass1Result = await extractTypesFromProgram({
+    program,
+    checker,
+    sourceFiles,
+    options: {
+      globalTypeMappings,
+      knownTypeNames,
+      knownTypeSymbols,
+      underlyingSymbolToTypeName,
+      scalarMappingTable: null,
+    },
   });
 
   // Build scalar mapping table from detected scalars
   const scalarMappingTable =
     pass1Result.detectedScalars.length > 0
-      ? buildScalarMappingTable({
+      ? await buildScalarMappingTable({
           detectedScalars: pass1Result.detectedScalars,
-          checker: program.getTypeChecker(),
+          checker,
           program,
         })
       : null;
@@ -86,7 +96,7 @@ export function extractTypes(params: ExtractTypesParams): ExtractTypesResult {
   // Report scalar mapping conflicts as diagnostics
   if (scalarMappingTable) {
     for (const [, conflict] of scalarMappingTable.conflicts) {
-      const baseTypeName = conflict.baseTypeSymbol.getName();
+      const baseTypeName = conflict.baseTypeSymbol.name;
       const scalarNames = conflict.conflictingScalars
         .map((s) => s.scalarName)
         .join(", ");
@@ -101,12 +111,17 @@ export function extractTypes(params: ExtractTypesParams): ExtractTypesResult {
 
   // Pass 2: Re-extract types with scalar mapping table (if we have detected scalars)
   const extractionResult = scalarMappingTable
-    ? extractTypesFromProgram(program, sourceFiles, {
-        globalTypeMappings,
-        knownTypeNames,
-        knownTypeSymbols,
-        underlyingSymbolToTypeName,
-        scalarMappingTable,
+    ? await extractTypesFromProgram({
+        program,
+        checker,
+        sourceFiles,
+        options: {
+          globalTypeMappings,
+          knownTypeNames,
+          knownTypeSymbols,
+          underlyingSymbolToTypeName,
+          scalarMappingTable,
+        },
       })
     : pass1Result;
 

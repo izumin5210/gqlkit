@@ -3,9 +3,9 @@
 export function createResolvers() {
   return {
     orderStatus: {
+      DELIVERED: "ORDER_STATUS_DELIVERED",
       PENDING: "ORDER_STATUS_PENDING",
       SHIPPED: "ORDER_STATUS_SHIPPED",
-      DELIVERED: "ORDER_STATUS_DELIVERED",
     },
   };
 }

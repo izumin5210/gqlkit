@@ -10,8 +10,10 @@
  * - Symbol-based comparison for accurate type matching
  */
 
-import ts from "typescript";
+import { isTypeAliasDeclaration } from "typescript/ast/is";
+import type { Program, Symbol as TsSymbol } from "typescript/async";
 import { METADATA_PROPERTIES } from "../../core/index.js";
+import type { CheckerLoader } from "../../shared/checker-loader.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 
 /**
@@ -39,7 +41,7 @@ export interface ScalarMappingLookupResult {
  */
 export interface ScalarMappingConflict {
   readonly code: "AMBIGUOUS_SCALAR_BASE_TYPE";
-  readonly baseTypeSymbol: ts.Symbol;
+  readonly baseTypeSymbol: TsSymbol;
   readonly conflictingScalars: ReadonlyArray<{
     readonly scalarName: string;
     readonly only: "input" | "output" | null;
@@ -56,11 +58,11 @@ export type ScalarMappingContext = "input" | "output";
  */
 export interface ScalarBaseTypeMappingTable {
   /** Maps base type symbol to scalar mappings for input context */
-  readonly inputMappings: ReadonlyMap<ts.Symbol, ScalarBaseTypeMapping>;
+  readonly inputMappings: ReadonlyMap<TsSymbol, ScalarBaseTypeMapping>;
   /** Maps base type symbol to scalar mappings for output context */
-  readonly outputMappings: ReadonlyMap<ts.Symbol, ScalarBaseTypeMapping>;
+  readonly outputMappings: ReadonlyMap<TsSymbol, ScalarBaseTypeMapping>;
   /** Conflicts detected during table construction */
-  readonly conflicts: ReadonlyMap<ts.Symbol, ScalarMappingConflict>;
+  readonly conflicts: ReadonlyMap<TsSymbol, ScalarMappingConflict>;
 }
 
 /**
@@ -68,52 +70,57 @@ export interface ScalarBaseTypeMappingTable {
  */
 export interface BuildScalarMappingTableParams {
   readonly detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
-  readonly checker: ts.TypeChecker;
-  readonly program: ts.Program;
+  readonly checker: CheckerLoader;
+  readonly program: Program;
 }
 
 /**
  * Extract the base type symbol from a scalar type.
  * For GqlScalar<"DateTime", Date>, this returns the symbol for Date.
  */
-function extractBaseTypeSymbol(
+async function extractBaseTypeSymbol(
   scalarInfo: ScalarMetadataInfo,
-  checker: ts.TypeChecker,
-  program: ts.Program,
-): ts.Symbol | null {
-  const sourceFile = program.getSourceFile(scalarInfo.sourceFile);
+  checker: CheckerLoader,
+  program: Program,
+): Promise<TsSymbol | null> {
+  const sourceFile = await program.getSourceFile(scalarInfo.sourceFile);
   if (!sourceFile) {
     return null;
   }
 
-  let foundSymbol: ts.Symbol | null = null;
+  let foundSymbol: TsSymbol | null = null;
 
-  ts.forEachChild(sourceFile, (node) => {
-    if (ts.isTypeAliasDeclaration(node)) {
+  for (const node of sourceFile.statements) {
+    if (isTypeAliasDeclaration(node)) {
       const name = node.name.getText(sourceFile);
       if (name === scalarInfo.typeName) {
-        const symbol = checker.getSymbolAtLocation(node.name);
+        const symbol = await checker.getSymbolAtLocation(node.name);
         if (symbol) {
-          const type = checker.getDeclaredTypeOfSymbol(symbol);
+          const type = await checker.getDeclaredTypeOfSymbol(symbol);
           // GqlScalar is an intersection type: Base & { " $gqlkitScalar"?: ... }
           // We need to extract the Base type from this intersection
-          if (type.isIntersection()) {
-            for (const member of type.types) {
+          if (type.isIntersectionType()) {
+            for (const member of await checker.getTypesOfType(type)) {
               // Skip the metadata object type
-              if (member.getProperty(METADATA_PROPERTIES.SCALAR)) {
+              if (
+                await checker.getPropertyOfType(
+                  member,
+                  METADATA_PROPERTIES.SCALAR,
+                )
+              ) {
                 continue;
               }
               // This should be the base type
-              if (member.symbol) {
-                foundSymbol = member.symbol;
-                return;
+              const memberSymbol = await checker.getSymbolOfType(member);
+              if (memberSymbol) {
+                foundSymbol = memberSymbol;
               }
             }
           }
         }
       }
     }
-  });
+  }
 
   return foundSymbol;
 }
@@ -126,18 +133,18 @@ function extractBaseTypeSymbol(
  * 2. Groups mappings by input/output context based on the `only` constraint
  * 3. Detects conflicts when multiple scalars share the same base type in a context
  */
-export function buildScalarMappingTable(
+export async function buildScalarMappingTable(
   params: BuildScalarMappingTableParams,
-): ScalarBaseTypeMappingTable {
+): Promise<ScalarBaseTypeMappingTable> {
   const { detectedScalars, checker, program } = params;
 
-  const inputMappings = new Map<ts.Symbol, ScalarBaseTypeMapping>();
-  const outputMappings = new Map<ts.Symbol, ScalarBaseTypeMapping>();
-  const conflicts = new Map<ts.Symbol, ScalarMappingConflict>();
+  const inputMappings = new Map<TsSymbol, ScalarBaseTypeMapping>();
+  const outputMappings = new Map<TsSymbol, ScalarBaseTypeMapping>();
+  const conflicts = new Map<TsSymbol, ScalarMappingConflict>();
 
   // Track all scalars for each base type symbol to detect conflicts
   const inputCandidates = new Map<
-    ts.Symbol,
+    TsSymbol,
     Array<{
       scalarName: string;
       only: "input" | "output" | null;
@@ -145,7 +152,7 @@ export function buildScalarMappingTable(
     }>
   >();
   const outputCandidates = new Map<
-    ts.Symbol,
+    TsSymbol,
     Array<{
       scalarName: string;
       only: "input" | "output" | null;
@@ -154,7 +161,11 @@ export function buildScalarMappingTable(
   >();
 
   for (const scalarInfo of detectedScalars) {
-    const baseTypeSymbol = extractBaseTypeSymbol(scalarInfo, checker, program);
+    const baseTypeSymbol = await extractBaseTypeSymbol(
+      scalarInfo,
+      checker,
+      program,
+    );
     if (!baseTypeSymbol) {
       continue;
     }
@@ -236,7 +247,7 @@ export function buildScalarMappingTable(
  * Parameters for looking up a scalar mapping.
  */
 export interface LookupScalarMappingParams {
-  readonly baseTypeSymbol: ts.Symbol;
+  readonly baseTypeSymbol: TsSymbol;
   readonly context: ScalarMappingContext;
   readonly table: ScalarBaseTypeMappingTable;
 }

@@ -1,10 +1,14 @@
-import ts from "typescript";
+import type { TypeNode } from "typescript/ast";
+import { isPropertySignatureDeclaration } from "typescript/ast/is";
+import type { Type } from "typescript/async";
 import type {
   DirectiveArgumentValue,
   DirectiveInfo,
   PropertyDef,
   TSTypeReference,
 } from "../../core/index.js";
+import type { CheckerLoader } from "../../shared/checker-loader.js";
+import { prefetchPropertyFacts } from "../../shared/checker-prefetch.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   detectDirectiveMetadata,
@@ -20,10 +24,10 @@ import {
 } from "../../shared/typescript-utils.js";
 
 export type TypeConverter = (
-  type: ts.Type,
-  checker: ts.TypeChecker,
-  typeNode: ts.TypeNode | undefined,
-) => TSTypeReference;
+  type: Type,
+  checker: CheckerLoader,
+  typeNode: TypeNode | undefined,
+) => Promise<TSTypeReference>;
 
 /**
  * Extracts inline object properties from a TypeScript type.
@@ -33,50 +37,56 @@ export type TypeConverter = (
  * @param convertType - A function to convert TypeScript types to TSTypeReference
  * @returns An array of inline object property definitions
  */
-export function extractInlineObjectProperties(
-  type: ts.Type,
-  checker: ts.TypeChecker,
+export async function extractInlineObjectProperties(
+  type: Type,
+  checker: CheckerLoader,
   convertType: TypeConverter,
-): PropertyDef[] {
+): Promise<PropertyDef[]> {
   const properties: PropertyDef[] = [];
-  const typeProperties = extractPropertySymbols(type, checker);
+  const typeProperties = await extractPropertySymbols(type, checker);
+  await prefetchPropertyFacts(checker, typeProperties);
 
   for (const prop of typeProperties) {
-    const propName = prop.getName();
+    const propName = prop.name;
     if (propName.startsWith(" $")) {
       continue;
     }
 
-    const propType = checker.getTypeOfSymbol(prop);
-    const declarations = prop.getDeclarations();
-    const declaration = declarations?.[0];
+    const propType = await checker.getTypeOfSymbol(prop);
+    const declaration = await checker.getFirstDeclarationOfSymbol(prop);
 
-    const optional = hasUndefinedInType(propType);
+    const optional = await hasUndefinedInType(propType, checker);
 
-    const tsdocInfo = extractTsDocFromSymbol(prop, checker);
+    const tsdocInfo = await extractTsDocFromSymbol(prop, checker);
 
     let actualPropType = propType;
     let directives: ReadonlyArray<DirectiveInfo> | null = null;
     let directiveNullable = false;
     let defaultValue: DirectiveArgumentValue | null = null;
 
-    if (hasDirectiveMetadata(propType)) {
-      const directiveResult = detectDirectiveMetadata(propType, checker);
+    if (await hasDirectiveMetadata(propType, checker)) {
+      const directiveResult = await detectDirectiveMetadata(propType, checker);
       if (directiveResult.directives.length > 0) {
         directives = directiveResult.directives;
       }
 
-      const defaultValueResult = detectDefaultValueMetadata(propType, checker);
+      const defaultValueResult = await detectDefaultValueMetadata(
+        propType,
+        checker,
+      );
       if (defaultValueResult.defaultValue) {
         defaultValue = defaultValueResult.defaultValue;
       }
 
-      if (isNullableUnion(propType)) {
+      if (await isNullableUnion(propType, checker)) {
         directiveNullable = true;
       }
-      actualPropType = unwrapDirectiveType(propType, checker);
+      actualPropType = await unwrapDirectiveType(propType, checker);
 
-      if (!directiveNullable && isNullableUnion(actualPropType)) {
+      if (
+        !directiveNullable &&
+        (await isNullableUnion(actualPropType, checker))
+      ) {
         directiveNullable = true;
       }
     }
@@ -86,16 +96,16 @@ export function extractInlineObjectProperties(
     // (e.g., GqlObject<T, Meta> = T & { ... } may flatten to just T),
     // so passing the typeNode allows resolveFieldTypeInternal to recover
     // the original type reference via TypeReferenceNode.
-    let propTypeNode: ts.TypeNode | undefined;
+    let propTypeNode: TypeNode | undefined;
     if (
       declaration &&
-      ts.isPropertySignature(declaration) &&
+      isPropertySignatureDeclaration(declaration) &&
       declaration.type
     ) {
       propTypeNode = declaration.type;
     }
 
-    const tsType = convertType(actualPropType, checker, propTypeNode);
+    const tsType = await convertType(actualPropType, checker, propTypeNode);
     const finalTsType =
       directiveNullable && !tsType.nullable
         ? { ...tsType, nullable: true }

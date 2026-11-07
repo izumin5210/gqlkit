@@ -5,7 +5,8 @@
  * detectors to extract the actual type from an optional metadata property.
  */
 
-import ts from "typescript";
+import { type Type, TypeFlags } from "typescript/async";
+import type { CheckerLoader } from "./checker-loader.js";
 
 /**
  * Extracts the actual type from an optional property type (T | undefined).
@@ -19,11 +20,14 @@ import ts from "typescript";
  * @param metadataType - The type of the metadata property (may be union with undefined)
  * @returns The actual type excluding undefined, or null if extraction fails
  */
-export function getActualMetadataType(metadataType: ts.Type): ts.Type | null {
-  if (metadataType.isUnion()) {
-    const nonUndefinedTypes = metadataType.types.filter(
-      (t) => !(t.flags & ts.TypeFlags.Undefined),
-    );
+export async function getActualMetadataType(
+  metadataType: Type,
+  checker: CheckerLoader,
+): Promise<Type | null> {
+  if (metadataType.isUnionType()) {
+    const nonUndefinedTypes = (
+      await checker.getTypesOfType(metadataType)
+    ).filter((t) => !(t.flags & TypeFlags.Undefined));
     if (nonUndefinedTypes.length === 1) {
       return nonUndefinedTypes[0]!;
     }
@@ -31,7 +35,7 @@ export function getActualMetadataType(metadataType: ts.Type): ts.Type | null {
     // TypeScript represents boolean | undefined as true | false | undefined
     if (
       nonUndefinedTypes.length === 2 &&
-      nonUndefinedTypes.every((t) => t.flags & ts.TypeFlags.BooleanLiteral)
+      nonUndefinedTypes.every((t) => t.flags & TypeFlags.BooleanLiteral)
     ) {
       // This is effectively "boolean" - return the first member to preserve
       // the boolean literal nature, or we could return the union

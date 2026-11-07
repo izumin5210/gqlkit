@@ -1,11 +1,11 @@
-import type ts from "typescript";
+import type { Node } from "typescript/ast";
 import type { SourceLocation } from "../core/index.js";
 
 /**
  * Extracts source location from a TypeScript AST node.
  */
 export function getSourceLocationFromNode(
-  node: ts.Node | undefined,
+  node: Node | undefined,
 ): SourceLocation | null {
   if (!node) return null;
 

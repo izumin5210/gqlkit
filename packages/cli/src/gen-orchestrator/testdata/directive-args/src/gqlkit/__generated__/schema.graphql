@@ -14,8 +14,8 @@ type Query
 
 """Defined in: src/gqlkit/schema/types.ts"""
 enum Scope {
-  PUBLIC
   PRIVATE
+  PUBLIC
 }
 
 extend type Query {

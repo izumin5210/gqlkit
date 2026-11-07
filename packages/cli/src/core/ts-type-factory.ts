@@ -1,4 +1,4 @@
-import type ts from "typescript";
+import type { Symbol as TsSymbol } from "typescript/async";
 import type { DeprecationInfo } from "./metadata.js";
 import type {
   InlineEnumMemberInfo,
@@ -148,7 +148,7 @@ interface CreateInlineEnumTypeParams {
   readonly members: ReadonlyArray<InlineEnumMemberInfo>;
   readonly nullable: boolean;
   /** External TypeScript enum symbol for deduplication (null for string literal unions) */
-  readonly externalEnumSymbol: ts.Symbol | null;
+  readonly externalEnumSymbol: TsSymbol | null;
   /** TSDoc description from the external enum type itself (null for string literal unions) */
   readonly externalEnumDescription: string | null;
   /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself (null for string literal unions) */

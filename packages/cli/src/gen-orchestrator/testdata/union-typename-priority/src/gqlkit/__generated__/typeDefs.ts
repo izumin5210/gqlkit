@@ -72,14 +72,14 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "USER_FROM_PROTOBUF"
+            "value": "POST_FROM_PROTOBUF"
           }
         },
         {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "POST_FROM_PROTOBUF"
+            "value": "USER_FROM_PROTOBUF"
           }
         }
       ],
@@ -131,14 +131,14 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "USER"
+            "value": "POST"
           }
         },
         {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "POST"
+            "value": "USER"
           }
         }
       ],

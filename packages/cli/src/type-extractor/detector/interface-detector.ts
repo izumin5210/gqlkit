@@ -6,8 +6,22 @@
  * and to extract implements declarations from types using $gqlkitTypeMeta.
  */
 
-import ts from "typescript";
+import type {
+  SourceFile,
+  TypeAliasDeclaration,
+  TypeLiteralNode,
+  TypeNode,
+} from "typescript/ast";
+import {
+  isArrayTypeNode,
+  isPropertySignatureDeclaration,
+  isTupleTypeNode,
+  isTypeLiteralNode,
+  isTypeReferenceNode,
+} from "typescript/ast/is";
+import type { Type } from "typescript/async";
 import { METADATA_PROPERTIES } from "../../core/index.js";
+import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { findMetadataProperty } from "../../shared/typescript-utils.js";
 
 const INTERFACE_META_PROPERTY = METADATA_PROPERTIES.INTERFACE_META;
@@ -17,42 +31,50 @@ const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
  * Checks if a type alias declaration uses GqlInterface.
  * Detects by checking for the $gqlkitInterfaceMeta property in the resolved type.
  */
-export function isDefineInterfaceTypeAlias(
-  node: ts.TypeAliasDeclaration,
-  checker: ts.TypeChecker,
-): boolean {
-  const symbol = checker.getSymbolAtLocation(node.name);
+export async function isDefineInterfaceTypeAlias(
+  node: TypeAliasDeclaration,
+  checker: CheckerLoader,
+): Promise<boolean> {
+  const symbol = await checker.getSymbolAtLocation(node.name);
   if (!symbol) {
     return false;
   }
 
-  const type = checker.getDeclaredTypeOfSymbol(symbol);
-  return hasInterfaceMetadata(type);
+  const type = await checker.getDeclaredTypeOfSymbol(symbol);
+  return hasInterfaceMetadata(type, checker);
 }
 
 /**
  * Checks if a type has the $gqlkitInterfaceMeta property.
  */
-function hasInterfaceMetadata(type: ts.Type): boolean {
+async function hasInterfaceMetadata(
+  type: Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
   return (
-    findMetadataProperty({
+    (await findMetadataProperty({
+      checker,
       type,
       propertyNames: [INTERFACE_META_PROPERTY],
       recurseUnion: false,
-    }) !== undefined
+    })) !== undefined
   );
 }
 
 /**
  * Checks if a type has the $gqlkitTypeMeta property (GqlObject).
  */
-function hasTypeMetadata(type: ts.Type): boolean {
+async function hasTypeMetadata(
+  type: Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
   return (
-    findMetadataProperty({
+    (await findMetadataProperty({
+      checker,
       type,
       propertyNames: [TYPE_META_PROPERTY],
       recurseUnion: false,
-    }) !== undefined
+    })) !== undefined
   );
 }
 
@@ -60,12 +82,12 @@ function hasTypeMetadata(type: ts.Type): boolean {
  * Extracts implements from GqlInterface type alias.
  */
 export function extractImplementsFromDefineInterface(
-  node: ts.TypeAliasDeclaration,
-  sourceFile: ts.SourceFile,
-  checker: ts.TypeChecker,
+  node: TypeAliasDeclaration,
+  sourceFile: SourceFile,
+  checker: CheckerLoader,
 ): ReadonlyArray<string> {
   const typeNode = node.type;
-  if (!ts.isTypeReferenceNode(typeNode)) {
+  if (!isTypeReferenceNode(typeNode)) {
     return [];
   }
 
@@ -75,7 +97,7 @@ export function extractImplementsFromDefineInterface(
   }
 
   const metaArg = typeArgs[1];
-  if (!metaArg || !ts.isTypeLiteralNode(metaArg)) {
+  if (!metaArg || !isTypeLiteralNode(metaArg)) {
     return [];
   }
 
@@ -86,23 +108,23 @@ export function extractImplementsFromDefineInterface(
  * Extracts implements from GqlObject type alias.
  * Detects GqlObject by checking for the $gqlkitTypeMeta property in the resolved type.
  */
-export function extractImplementsFromGqlTypeDef(
-  node: ts.TypeAliasDeclaration,
-  sourceFile: ts.SourceFile,
-  checker: ts.TypeChecker,
-): ReadonlyArray<string> {
-  const symbol = checker.getSymbolAtLocation(node.name);
+export async function extractImplementsFromGqlTypeDef(
+  node: TypeAliasDeclaration,
+  sourceFile: SourceFile,
+  checker: CheckerLoader,
+): Promise<ReadonlyArray<string>> {
+  const symbol = await checker.getSymbolAtLocation(node.name);
   if (!symbol) {
     return [];
   }
 
-  const type = checker.getDeclaredTypeOfSymbol(symbol);
-  if (!hasTypeMetadata(type)) {
+  const type = await checker.getDeclaredTypeOfSymbol(symbol);
+  if (!(await hasTypeMetadata(type, checker))) {
     return [];
   }
 
   const typeNode = node.type;
-  if (!ts.isTypeReferenceNode(typeNode)) {
+  if (!isTypeReferenceNode(typeNode)) {
     return [];
   }
 
@@ -112,7 +134,7 @@ export function extractImplementsFromGqlTypeDef(
   }
 
   const metaArg = typeArgs[1];
-  if (!metaArg || !ts.isTypeLiteralNode(metaArg)) {
+  if (!metaArg || !isTypeLiteralNode(metaArg)) {
     return [];
   }
 
@@ -120,12 +142,12 @@ export function extractImplementsFromGqlTypeDef(
 }
 
 function extractImplementsFromTypeLiteral(
-  typeLiteral: ts.TypeLiteralNode,
-  sourceFile: ts.SourceFile,
-  _checker: ts.TypeChecker,
+  typeLiteral: TypeLiteralNode,
+  sourceFile: SourceFile,
+  _checker: CheckerLoader,
 ): ReadonlyArray<string> {
   for (const member of typeLiteral.members) {
-    if (ts.isPropertySignature(member) && member.name) {
+    if (isPropertySignatureDeclaration(member) && member.name) {
       const propName = member.name.getText(sourceFile);
       if (propName === "implements" && member.type) {
         return extractInterfaceNamesFromTupleNode(member.type, sourceFile);
@@ -136,13 +158,13 @@ function extractImplementsFromTypeLiteral(
 }
 
 function extractInterfaceNamesFromTupleNode(
-  typeNode: ts.TypeNode,
-  sourceFile: ts.SourceFile,
+  typeNode: TypeNode,
+  sourceFile: SourceFile,
 ): ReadonlyArray<string> {
-  if (ts.isTupleTypeNode(typeNode)) {
+  if (isTupleTypeNode(typeNode)) {
     return typeNode.elements
       .map((elem) => {
-        if (ts.isTypeReferenceNode(elem)) {
+        if (isTypeReferenceNode(elem)) {
           return elem.typeName.getText(sourceFile);
         }
         return null;
@@ -150,10 +172,7 @@ function extractInterfaceNamesFromTupleNode(
       .filter((name): name is string => name !== null);
   }
 
-  if (
-    ts.isArrayTypeNode(typeNode) &&
-    ts.isTypeReferenceNode(typeNode.elementType)
-  ) {
+  if (isArrayTypeNode(typeNode) && isTypeReferenceNode(typeNode.elementType)) {
     return [typeNode.elementType.typeName.getText(sourceFile)];
   }
 

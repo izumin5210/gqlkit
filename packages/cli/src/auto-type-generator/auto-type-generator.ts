@@ -1,4 +1,4 @@
-import type ts from "typescript";
+import type { Symbol as TsSymbol } from "typescript/async";
 import type { ResolvedDiscriminatorFieldsMap } from "../config-loader/index.js";
 import {
   type Diagnostic,
@@ -223,8 +223,8 @@ function buildGeneratedTypeNamesMap(
 }
 
 interface ExternalEnumRegistry {
-  readonly symbolToTypeName: Map<ts.Symbol, string>;
-  readonly symbolToContextKey: Map<ts.Symbol, string>;
+  readonly symbolToTypeName: Map<TsSymbol, string>;
+  readonly symbolToContextKey: Map<TsSymbol, string>;
 }
 
 interface BuildEnumTypeNamesMapResult {
@@ -237,8 +237,8 @@ function buildEnumTypeNamesMap(
   inlineEnums: InlineEnumWithContext[],
 ): BuildEnumTypeNamesMapResult {
   const enumTypeNames = new Map<string, string>();
-  const symbolToTypeName = new Map<ts.Symbol, string>();
-  const symbolToContextKey = new Map<ts.Symbol, string>();
+  const symbolToTypeName = new Map<TsSymbol, string>();
+  const symbolToContextKey = new Map<TsSymbol, string>();
   const uniqueInlineEnums: InlineEnumWithContext[] = [];
 
   for (const inlineEnum of inlineEnums) {

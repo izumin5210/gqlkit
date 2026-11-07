@@ -10,8 +10,8 @@ type Query
 
 """Defined in: src/gqlkit/schema/query.ts"""
 enum SearchQuery$typeNameInput {
-  USER
   POST
+  USER
 }
 
 """Defined in: src/gqlkit/schema/query.ts"""

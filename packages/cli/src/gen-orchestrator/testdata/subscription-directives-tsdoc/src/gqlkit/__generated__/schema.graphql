@@ -6,8 +6,8 @@ type Query
 
 """Defined in: src/gqlkit/schema/subscription.ts"""
 enum Role {
-  USER
   ADMIN
+  USER
 }
 
 type Subscription

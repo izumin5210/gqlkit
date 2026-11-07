@@ -3,10 +3,10 @@
 export function createResolvers() {
   return {
     UserStatus: {
-      ACTIVE: "active",
       IN_ACTIVE: "InActive",
-      PENDING_REVIEW: "pending_review",
+      ACTIVE: "active",
       ON_HOLD: "on-hold",
+      PENDING_REVIEW: "pending_review",
     },
   };
 }

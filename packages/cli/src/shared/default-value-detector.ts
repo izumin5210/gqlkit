@@ -5,11 +5,16 @@
  * in TypeScript intersection types using the $gqlkitFieldMeta property.
  */
 
-import ts from "typescript";
+import {
+  type Symbol as TsSymbol,
+  type Type,
+  TypeFlags,
+} from "typescript/async";
 import {
   type DirectiveArgumentValue,
   METADATA_PROPERTIES,
 } from "../core/index.js";
+import type { CheckerLoader } from "./checker-loader.js";
 import { resolveArgumentValue } from "./directive-detector.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 import { findMetadataProperty } from "./typescript-utils.js";
@@ -48,8 +53,12 @@ function createEmptyResult(): DefaultValueDetectionResult {
 /**
  * Gets the field meta property from a type, checking various type structures.
  */
-function getFieldMetaProperty(type: ts.Type): ts.Symbol | undefined {
+async function getFieldMetaProperty(
+  type: Type,
+  checker: CheckerLoader,
+): Promise<TsSymbol | undefined> {
   return findMetadataProperty({
+    checker,
     type,
     propertyNames: [FIELD_META_PROPERTY],
     recurseUnion: true,
@@ -68,41 +77,44 @@ function getFieldMetaProperty(type: ts.Type): ts.Symbol | undefined {
  * @param checker - The TypeScript type checker
  * @returns Detection result with default value and any errors
  */
-export function detectDefaultValueMetadata(
-  type: ts.Type,
-  checker: ts.TypeChecker,
-): DefaultValueDetectionResult {
-  const metaProp = getFieldMetaProperty(type);
+export async function detectDefaultValueMetadata(
+  type: Type,
+  checker: CheckerLoader,
+): Promise<DefaultValueDetectionResult> {
+  const metaProp = await getFieldMetaProperty(type, checker);
   if (!metaProp) {
     return createEmptyResult();
   }
 
-  const rawMetaType = checker.getTypeOfSymbol(metaProp);
-  const metaType = getActualMetadataType(rawMetaType);
+  const rawMetaType = await checker.getTypeOfSymbol(metaProp);
+  const metaType = await getActualMetadataType(rawMetaType, checker);
   if (!metaType) {
     return createEmptyResult();
   }
 
-  const defaultValueProp = metaType.getProperty(DEFAULT_VALUE_PROPERTY);
+  const defaultValueProp = await checker.getPropertyOfType(
+    metaType,
+    DEFAULT_VALUE_PROPERTY,
+  );
   if (!defaultValueProp) {
     return createEmptyResult();
   }
 
-  const rawDefaultValueType = checker.getTypeOfSymbol(defaultValueProp);
-  const typeString = checker.typeToString(rawDefaultValueType);
+  const rawDefaultValueType = await checker.getTypeOfSymbol(defaultValueProp);
+  const typeString = await checker.typeToString(rawDefaultValueType);
 
   // If defaultValue is undefined (not specified in Meta), return empty result
   // Check raw type first before unwrapping
-  if (rawDefaultValueType.flags & ts.TypeFlags.Undefined) {
+  if (rawDefaultValueType.flags & TypeFlags.Undefined) {
     return createEmptyResult();
   }
 
   // Check if the type is a union that only contains undefined
   // This handles cases where Meta["defaultValue"] resolves to undefined
-  if (rawDefaultValueType.isUnion()) {
-    const nonUndefinedTypes = rawDefaultValueType.types.filter(
-      (t) => !(t.flags & ts.TypeFlags.Undefined),
-    );
+  if (rawDefaultValueType.isUnionType()) {
+    const nonUndefinedTypes = (
+      await checker.getTypesOfType(rawDefaultValueType)
+    ).filter((t) => !(t.flags & TypeFlags.Undefined));
     if (nonUndefinedTypes.length === 0) {
       return createEmptyResult();
     }
@@ -115,21 +127,24 @@ export function detectDefaultValueMetadata(
 
   // If the type is unknown, it means Meta["defaultValue"] was not explicitly specified
   // and TypeScript inferred it from the constraint (defaultValue?: unknown)
-  if (rawDefaultValueType.flags & ts.TypeFlags.Unknown) {
+  if (rawDefaultValueType.flags & TypeFlags.Unknown) {
     return createEmptyResult();
   }
 
-  const defaultValueType = getActualMetadataType(rawDefaultValueType);
+  const defaultValueType = await getActualMetadataType(
+    rawDefaultValueType,
+    checker,
+  );
   if (!defaultValueType) {
     return createEmptyResult();
   }
 
   // Also check the unwrapped type for undefined
-  if (defaultValueType.flags & ts.TypeFlags.Undefined) {
+  if (defaultValueType.flags & TypeFlags.Undefined) {
     return createEmptyResult();
   }
 
-  const resolved = resolveArgumentValue(defaultValueType, checker);
+  const resolved = await resolveArgumentValue(defaultValueType, checker);
   if (resolved) {
     return {
       defaultValue: resolved,

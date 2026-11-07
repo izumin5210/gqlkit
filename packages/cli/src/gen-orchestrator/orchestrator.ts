@@ -1,5 +1,5 @@
 import { dirname, relative, resolve } from "node:path";
-import type ts from "typescript";
+import { API, type Program, type Symbol as TsSymbol } from "typescript/async";
 import type {
   ResolvedDiscriminatorFieldsMap,
   ResolvedOutputConfig,
@@ -12,6 +12,10 @@ import {
 } from "../resolver-extractor/index.js";
 import { generateSchema } from "../schema-generator/index.js";
 
+import {
+  type CheckerLoader,
+  createCheckerLoader,
+} from "../shared/checker-loader.js";
 import {
   type DirectiveDefinitionInfo,
   deduplicateDiagnostics,
@@ -62,10 +66,11 @@ interface ScalarConfig {
 interface PipelineContext {
   readonly config: GenerationConfig;
   readonly sourceFiles: ReadonlyArray<string>;
-  readonly program: ts.Program | null;
+  readonly program: Program | null;
+  readonly checker: CheckerLoader | null;
   readonly knownTypeNames: ReadonlySet<string> | null;
-  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol> | null;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string> | null;
+  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol> | null;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string> | null;
   readonly typesResult: ExtractTypesResult | null;
   readonly resolversResult: ExtractResolversResult | null;
   readonly directiveDefinitions: DirectiveDefinitionInfo[] | null;
@@ -162,6 +167,7 @@ function createInitialContext(config: GenerationConfig): PipelineContext {
     config,
     sourceFiles: [],
     program: null,
+    checker: null,
     knownTypeNames: null,
     knownTypeSymbols: null,
     underlyingSymbolToTypeName: null,
@@ -200,10 +206,14 @@ async function scanSourceFilesStep(
   return { ...ctx, sourceFiles: scanResult.files };
 }
 
-function createProgramStep(ctx: PipelineContext): PipelineContext {
+async function createProgramStep(
+  ctx: PipelineContext,
+  api: API,
+): Promise<PipelineContext> {
   if (ctx.aborted) return ctx;
 
-  const programResult = createSharedProgram({
+  const programResult = await createSharedProgram({
+    api,
     cwd: ctx.config.cwd,
     tsconfigPath: ctx.config.tsconfigPath ?? null,
     typeFiles: ctx.sourceFiles,
@@ -218,13 +228,31 @@ function createProgramStep(ctx: PipelineContext): PipelineContext {
     };
   }
 
-  return { ...ctx, program: programResult.program };
+  const { program } = programResult;
+  // Every stage reads the scanned files; loading them together up front
+  // leaves later `getSourceFile` calls to the client's cache.
+  await Promise.all(ctx.sourceFiles.map((file) => program.getSourceFile(file)));
+
+  return {
+    ...ctx,
+    program,
+    checker: createCheckerLoader({
+      api,
+      checker: program.getProject().checker,
+    }),
+  };
 }
 
-function collectTypeNamesStep(ctx: PipelineContext): PipelineContext {
-  if (ctx.aborted || !ctx.program) return ctx;
+async function collectTypeNamesStep(
+  ctx: PipelineContext,
+): Promise<PipelineContext> {
+  if (ctx.aborted || !ctx.program || !ctx.checker) return ctx;
 
-  const result = collectDeclaredTypeNames(ctx.program, ctx.sourceFiles);
+  const result = await collectDeclaredTypeNames({
+    program: ctx.program,
+    checker: ctx.checker,
+    sourceFiles: ctx.sourceFiles,
+  });
 
   const diagnostics = [...ctx.diagnostics, ...result.diagnostics];
   const hasDiagnosticErrors = result.diagnostics.some(
@@ -285,10 +313,13 @@ function prepareScalarConfigStep(ctx: PipelineContext): PipelineContext {
   return { ...ctx, scalarConfig: prepareScalarConfig(ctx.config) };
 }
 
-function extractTypesStep(ctx: PipelineContext): PipelineContext {
+async function extractTypesStep(
+  ctx: PipelineContext,
+): Promise<PipelineContext> {
   if (
     ctx.aborted ||
     !ctx.program ||
+    !ctx.checker ||
     !ctx.knownTypeNames ||
     !ctx.knownTypeSymbols ||
     !ctx.underlyingSymbolToTypeName ||
@@ -299,8 +330,9 @@ function extractTypesStep(ctx: PipelineContext): PipelineContext {
   const { customScalarNames, globalTypeMappings, configScalars } =
     ctx.scalarConfig;
 
-  const typesResult = extractTypes({
+  const typesResult = await extractTypes({
     program: ctx.program,
+    checker: ctx.checker,
     sourceFiles: ctx.sourceFiles,
     customScalarNames,
     globalTypeMappings,
@@ -326,10 +358,13 @@ function augmentKnownTypeNamesStep(ctx: PipelineContext): PipelineContext {
   return { ...ctx, knownTypeNames: augmented };
 }
 
-function extractResolversStep(ctx: PipelineContext): PipelineContext {
+async function extractResolversStep(
+  ctx: PipelineContext,
+): Promise<PipelineContext> {
   if (
     ctx.aborted ||
     !ctx.program ||
+    !ctx.checker ||
     !ctx.knownTypeNames ||
     !ctx.knownTypeSymbols ||
     !ctx.underlyingSymbolToTypeName ||
@@ -344,8 +379,9 @@ function extractResolversStep(ctx: PipelineContext): PipelineContext {
     ...new Set([...customScalarNames, ...ctx.typesResult.detectedScalarNames]),
   ];
 
-  const resolversResult = extractResolvers({
+  const resolversResult = await extractResolvers({
     program: ctx.program,
+    checker: ctx.checker,
     sourceFiles: ctx.sourceFiles,
     knownTypeNames: ctx.knownTypeNames,
     knownTypeSymbols: ctx.knownTypeSymbols,
@@ -359,13 +395,16 @@ function extractResolversStep(ctx: PipelineContext): PipelineContext {
   return { ...ctx, resolversResult };
 }
 
-function extractDirectivesStep(ctx: PipelineContext): PipelineContext {
-  if (ctx.aborted || !ctx.program) return ctx;
+async function extractDirectivesStep(
+  ctx: PipelineContext,
+): Promise<PipelineContext> {
+  if (ctx.aborted || !ctx.program || !ctx.checker) return ctx;
 
-  const directiveDefinitionResult = extractDirectiveDefinitions(
-    ctx.program,
-    ctx.sourceFiles,
-  );
+  const directiveDefinitionResult = await extractDirectiveDefinitions({
+    program: ctx.program,
+    checker: ctx.checker,
+    sourceFiles: ctx.sourceFiles,
+  });
 
   const directiveDefinitions: DirectiveDefinitionInfo[] =
     directiveDefinitionResult.definitions.length > 0
@@ -495,19 +534,65 @@ function generateOutputFiles(
   return files;
 }
 
+/**
+ * Records a pipeline step's duration as a `gqlkit:<step>` performance
+ * measure, letting benchmarks break generation time down by step without a
+ * dedicated hook in the public API.
+ */
+function measureStep<T>(step: string, run: () => T): T {
+  const start = performance.now();
+  try {
+    return run();
+  } finally {
+    performance.measure(`gqlkit:${step}`, { start, end: performance.now() });
+  }
+}
+
+async function measureAsyncStep<T>(
+  step: string,
+  run: () => Promise<T>,
+): Promise<T> {
+  const start = performance.now();
+  try {
+    return await run();
+  } finally {
+    performance.measure(`gqlkit:${step}`, { start, end: performance.now() });
+  }
+}
+
 export async function executeGeneration(
   config: GenerationConfig,
 ): Promise<GenerationResult> {
+  // The API spawns a tsc child process; every program and checker object is
+  // only valid until it is closed, so it must outlive the whole pipeline.
+  await using api = new API({ cwd: config.cwd });
+  return await runPipeline(config, api);
+}
+
+async function runPipeline(
+  config: GenerationConfig,
+  api: API,
+): Promise<GenerationResult> {
   let ctx = createInitialContext(config);
 
-  ctx = await scanSourceFilesStep(ctx);
-  ctx = createProgramStep(ctx);
-  ctx = collectTypeNamesStep(ctx);
+  ctx = await measureAsyncStep("scanSourceFiles", () =>
+    scanSourceFilesStep(ctx),
+  );
+  ctx = await measureAsyncStep("createProgram", () =>
+    createProgramStep(ctx, api),
+  );
+  ctx = await measureAsyncStep("collectTypeNames", () =>
+    collectTypeNamesStep(ctx),
+  );
   ctx = prepareScalarConfigStep(ctx);
-  ctx = extractTypesStep(ctx);
+  ctx = await measureAsyncStep("extractTypes", () => extractTypesStep(ctx));
   ctx = augmentKnownTypeNamesStep(ctx);
-  ctx = extractResolversStep(ctx);
-  ctx = extractDirectivesStep(ctx);
+  ctx = await measureAsyncStep("extractResolvers", () =>
+    extractResolversStep(ctx),
+  );
+  ctx = await measureAsyncStep("extractDirectives", () =>
+    extractDirectivesStep(ctx),
+  );
   ctx = validateExtractionStep(ctx);
 
   if (ctx.aborted) {
@@ -519,7 +604,9 @@ export async function executeGeneration(
     };
   }
 
-  const { ctx: schemaCtx, schemaResult } = generateSchemaStep(ctx);
+  const { ctx: schemaCtx, schemaResult } = measureStep("generateSchema", () =>
+    generateSchemaStep(ctx),
+  );
   ctx = schemaCtx;
 
   if (ctx.aborted || !schemaResult) {
