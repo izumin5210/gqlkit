@@ -282,14 +282,12 @@ interface CollectInlineUnionsFromResolverPropertiesBaseParams {
   readonly results: InlineUnionWithContext[];
 }
 
-interface CollectInlineUnionsFromResolverArgPropertiesParams
-  extends CollectInlineUnionsFromResolverPropertiesBaseParams {
+interface CollectInlineUnionsFromResolverArgPropertiesParams extends CollectInlineUnionsFromResolverPropertiesBaseParams {
   readonly contextKind: "resolverArg";
   readonly argName: string;
 }
 
-interface CollectInlineUnionsFromResolverPayloadPropertiesParams
-  extends CollectInlineUnionsFromResolverPropertiesBaseParams {
+interface CollectInlineUnionsFromResolverPayloadPropertiesParams extends CollectInlineUnionsFromResolverPropertiesBaseParams {
   readonly contextKind: "resolverPayload";
 }
 

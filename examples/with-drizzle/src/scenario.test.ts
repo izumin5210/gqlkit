@@ -52,15 +52,15 @@ describe("with-drizzle scenario tests", () => {
       schema,
       context,
       /* GraphQL */ `
-      mutation CreateUser($input: CreateUserInput!) {
-        createUser(input: $input) {
-          id
-          name
-          status
-          createdAt
+        mutation CreateUser($input: CreateUserInput!) {
+          createUser(input: $input) {
+            id
+            name
+            status
+            createdAt
+          }
         }
-      }
-    `,
+      `,
       {
         input: { name: "Alice", email: "alice@example.com", status: "ACTIVE" },
       },
@@ -79,15 +79,15 @@ describe("with-drizzle scenario tests", () => {
       schema,
       context,
       /* GraphQL */ `
-      mutation CreatePost($input: CreatePostInput!) {
-        createPost(input: $input) {
-          id
-          title
-          priority
-          createdAt
+        mutation CreatePost($input: CreatePostInput!) {
+          createPost(input: $input) {
+            id
+            title
+            priority
+            createdAt
+          }
         }
-      }
-    `,
+      `,
       {
         input: {
           title: "Hello World",
@@ -117,22 +117,24 @@ describe("with-drizzle scenario tests", () => {
       schema,
       context,
       /* GraphQL */ `
-      query GetUserWithPosts($id: String!) {
-        user(id: $id) {
-          id
-          name
-          status
-          createdAt
-          posts {
+        query GetUserWithPosts($id: String!) {
+          user(id: $id) {
             id
-            title
-            priority
+            name
+            status
             createdAt
-            author { name }
+            posts {
+              id
+              title
+              priority
+              createdAt
+              author {
+                name
+              }
+            }
           }
         }
-      }
-    `,
+      `,
       { id: userId },
     );
 

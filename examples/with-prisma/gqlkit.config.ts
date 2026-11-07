@@ -2,7 +2,7 @@ import type { GqlkitConfig } from "@gqlkit-ts/cli";
 
 const config: GqlkitConfig = {
   hooks: {
-    afterAllFileWrite: "biome check --write",
+    afterAllFileWrite: ["oxlint --fix", "oxfmt"],
   },
 };
 

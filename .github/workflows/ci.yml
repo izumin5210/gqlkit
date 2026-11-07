@@ -12,7 +12,8 @@ jobs:
       matrix:
         command:
           - name: format-and-lint
-            run: pnpm check
+            # Type-aware lint rules need the built packages to resolve types.
+            run: pnpm build && pnpm check
           - name: typecheck
             run: pnpm build && pnpm typecheck
           - name: gen

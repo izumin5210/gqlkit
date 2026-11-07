@@ -17,7 +17,7 @@ gqlkit is a convention-driven code generator for GraphQL servers in TypeScript.
 ## Common Commands
 
 ```bash
-pnpm check      # Lint/format with Biome (auto-fix)
+pnpm check      # Format with oxfmt and lint with oxlint (auto-fix)
 pnpm test       # Run all tests
 pnpm typecheck  # Type check all packages
 pnpm knip       # Detect unused exports
@@ -92,10 +92,12 @@ Uses **golden file testing** for CLI validation:
 
 ## Code Quality
 
-- **Linter/Formatter**: Biome (configured in biome.jsonc)
+- **Formatter**: oxfmt (configured in `.oxfmtrc.json`)
   - Double quotes for JS/TS
   - Space indentation
-  - Auto organize imports
+  - Sorts imports
+- **Linter**: oxlint (configured in `.oxlintrc.json`)
+  - Type-aware rules are enabled, so run `pnpm build` first for the examples to resolve `@gqlkit-ts/runtime` types
 - **knip**: Unused export detection (`pnpm knip`)
 
 ## CLI Development

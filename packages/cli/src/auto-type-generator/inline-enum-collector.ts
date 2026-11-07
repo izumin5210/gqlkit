@@ -242,14 +242,12 @@ interface CollectInlineEnumsFromResolverPropertiesBaseParams {
   readonly results: InlineEnumWithContext[];
 }
 
-interface CollectInlineEnumsFromResolverArgPropertiesParams
-  extends CollectInlineEnumsFromResolverPropertiesBaseParams {
+interface CollectInlineEnumsFromResolverArgPropertiesParams extends CollectInlineEnumsFromResolverPropertiesBaseParams {
   readonly contextKind: "resolverArg";
   readonly argName: string;
 }
 
-interface CollectInlineEnumsFromResolverPayloadPropertiesParams
-  extends CollectInlineEnumsFromResolverPropertiesBaseParams {
+interface CollectInlineEnumsFromResolverPayloadPropertiesParams extends CollectInlineEnumsFromResolverPropertiesBaseParams {
   readonly contextKind: "resolverPayload";
 }
 

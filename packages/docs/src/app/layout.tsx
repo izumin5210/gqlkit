@@ -1,10 +1,10 @@
 import { flavors } from "@catppuccin/palette";
-import { Head } from "nextra/components";
-import { getPageMap } from "nextra/page-map";
+import type { Metadata } from "next";
 import { Layout, Navbar } from "nextra-theme-docs";
+import { Head } from "nextra/components";
 import "nextra-theme-docs/style.css";
 import "../styles/catppuccin-theme.css";
-import type { Metadata } from "next";
+import { getPageMap } from "nextra/page-map";
 import type { ReactNode } from "react";
 import { Search } from "../components/search";
 

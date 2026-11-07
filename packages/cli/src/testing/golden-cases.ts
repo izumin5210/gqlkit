@@ -6,13 +6,13 @@
 
 import { readdir, readFile } from "node:fs/promises";
 import { basename, join } from "node:path";
-import type { GqlkitConfig } from "../config/index.js";
 import type { ResolvedScalarMapping } from "../config-loader/index.js";
 import {
   DEFAULT_RESOLVERS_PATH,
   DEFAULT_SCHEMA_PATH,
   DEFAULT_TYPEDEFS_PATH,
 } from "../config-loader/types.js";
+import type { GqlkitConfig } from "../config/index.js";
 import type { GenerationConfig } from "../gen-orchestrator/orchestrator.js";
 
 export interface GoldenCase {
