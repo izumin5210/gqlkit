@@ -13,6 +13,10 @@ import {
 import { generateSchema } from "../schema-generator/index.js";
 
 import {
+  type CheckerLoader,
+  createCheckerLoader,
+} from "../shared/checker-loader.js";
+import {
   type DirectiveDefinitionInfo,
   deduplicateDiagnostics,
   extractDirectiveDefinitions,
@@ -63,6 +67,7 @@ interface PipelineContext {
   readonly config: GenerationConfig;
   readonly sourceFiles: ReadonlyArray<string>;
   readonly program: ts.Program | null;
+  readonly checker: CheckerLoader | null;
   readonly knownTypeNames: ReadonlySet<string> | null;
   readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol> | null;
   readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string> | null;
@@ -162,6 +167,7 @@ function createInitialContext(config: GenerationConfig): PipelineContext {
     config,
     sourceFiles: [],
     program: null,
+    checker: null,
     knownTypeNames: null,
     knownTypeSymbols: null,
     underlyingSymbolToTypeName: null,
@@ -219,13 +225,31 @@ function createProgramStep(ctx: PipelineContext, api: ts.API): PipelineContext {
     };
   }
 
-  return { ...ctx, program: programResult.program };
+  const { program } = programResult;
+  // Every stage reads the scanned files; loading them in one batched round
+  // trip leaves later `getSourceFile` calls to the client's cache.
+  api.batch(...ctx.sourceFiles.map((file) => program.getSourceFile.gen(file)));
+
+  return {
+    ...ctx,
+    program,
+    checker: createCheckerLoader({
+      api,
+      checker: program.getProject().checker,
+    }),
+  };
 }
 
-function collectTypeNamesStep(ctx: PipelineContext): PipelineContext {
-  if (ctx.aborted || !ctx.program) return ctx;
+async function collectTypeNamesStep(
+  ctx: PipelineContext,
+): Promise<PipelineContext> {
+  if (ctx.aborted || !ctx.program || !ctx.checker) return ctx;
 
-  const result = collectDeclaredTypeNames(ctx.program, ctx.sourceFiles);
+  const result = await collectDeclaredTypeNames({
+    program: ctx.program,
+    checker: ctx.checker,
+    sourceFiles: ctx.sourceFiles,
+  });
 
   const diagnostics = [...ctx.diagnostics, ...result.diagnostics];
   const hasDiagnosticErrors = result.diagnostics.some(
@@ -286,10 +310,13 @@ function prepareScalarConfigStep(ctx: PipelineContext): PipelineContext {
   return { ...ctx, scalarConfig: prepareScalarConfig(ctx.config) };
 }
 
-function extractTypesStep(ctx: PipelineContext): PipelineContext {
+async function extractTypesStep(
+  ctx: PipelineContext,
+): Promise<PipelineContext> {
   if (
     ctx.aborted ||
     !ctx.program ||
+    !ctx.checker ||
     !ctx.knownTypeNames ||
     !ctx.knownTypeSymbols ||
     !ctx.underlyingSymbolToTypeName ||
@@ -300,8 +327,9 @@ function extractTypesStep(ctx: PipelineContext): PipelineContext {
   const { customScalarNames, globalTypeMappings, configScalars } =
     ctx.scalarConfig;
 
-  const typesResult = extractTypes({
+  const typesResult = await extractTypes({
     program: ctx.program,
+    checker: ctx.checker,
     sourceFiles: ctx.sourceFiles,
     customScalarNames,
     globalTypeMappings,
@@ -327,10 +355,13 @@ function augmentKnownTypeNamesStep(ctx: PipelineContext): PipelineContext {
   return { ...ctx, knownTypeNames: augmented };
 }
 
-function extractResolversStep(ctx: PipelineContext): PipelineContext {
+async function extractResolversStep(
+  ctx: PipelineContext,
+): Promise<PipelineContext> {
   if (
     ctx.aborted ||
     !ctx.program ||
+    !ctx.checker ||
     !ctx.knownTypeNames ||
     !ctx.knownTypeSymbols ||
     !ctx.underlyingSymbolToTypeName ||
@@ -345,8 +376,9 @@ function extractResolversStep(ctx: PipelineContext): PipelineContext {
     ...new Set([...customScalarNames, ...ctx.typesResult.detectedScalarNames]),
   ];
 
-  const resolversResult = extractResolvers({
+  const resolversResult = await extractResolvers({
     program: ctx.program,
+    checker: ctx.checker,
     sourceFiles: ctx.sourceFiles,
     knownTypeNames: ctx.knownTypeNames,
     knownTypeSymbols: ctx.knownTypeSymbols,
@@ -360,13 +392,16 @@ function extractResolversStep(ctx: PipelineContext): PipelineContext {
   return { ...ctx, resolversResult };
 }
 
-function extractDirectivesStep(ctx: PipelineContext): PipelineContext {
-  if (ctx.aborted || !ctx.program) return ctx;
+async function extractDirectivesStep(
+  ctx: PipelineContext,
+): Promise<PipelineContext> {
+  if (ctx.aborted || !ctx.program || !ctx.checker) return ctx;
 
-  const directiveDefinitionResult = extractDirectiveDefinitions(
-    ctx.program,
-    ctx.sourceFiles,
-  );
+  const directiveDefinitionResult = await extractDirectiveDefinitions({
+    program: ctx.program,
+    checker: ctx.checker,
+    sourceFiles: ctx.sourceFiles,
+  });
 
   const directiveDefinitions: DirectiveDefinitionInfo[] =
     directiveDefinitionResult.definitions.length > 0
@@ -545,12 +580,18 @@ async function runPipeline(
     scanSourceFilesStep(ctx),
   );
   ctx = measureStep("createProgram", () => createProgramStep(ctx, api));
-  ctx = measureStep("collectTypeNames", () => collectTypeNamesStep(ctx));
+  ctx = await measureAsyncStep("collectTypeNames", () =>
+    collectTypeNamesStep(ctx),
+  );
   ctx = prepareScalarConfigStep(ctx);
-  ctx = measureStep("extractTypes", () => extractTypesStep(ctx));
+  ctx = await measureAsyncStep("extractTypes", () => extractTypesStep(ctx));
   ctx = augmentKnownTypeNamesStep(ctx);
-  ctx = measureStep("extractResolvers", () => extractResolversStep(ctx));
-  ctx = measureStep("extractDirectives", () => extractDirectivesStep(ctx));
+  ctx = await measureAsyncStep("extractResolvers", () =>
+    extractResolversStep(ctx),
+  );
+  ctx = await measureAsyncStep("extractDirectives", () =>
+    extractDirectivesStep(ctx),
+  );
   ctx = validateExtractionStep(ctx);
 
   if (ctx.aborted) {

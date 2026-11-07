@@ -12,6 +12,7 @@
 
 import { METADATA_PROPERTIES } from "../../core/index.js";
 import * as ts from "../../core/typescript.js";
+import type { CheckerLoader } from "../../shared/checker-loader.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 
 /**
@@ -68,7 +69,7 @@ export interface ScalarBaseTypeMappingTable {
  */
 export interface BuildScalarMappingTableParams {
   readonly detectedScalars: ReadonlyArray<ScalarMetadataInfo>;
-  readonly checker: ts.Checker;
+  readonly checker: CheckerLoader;
   readonly program: ts.Program;
 }
 
@@ -76,11 +77,11 @@ export interface BuildScalarMappingTableParams {
  * Extract the base type symbol from a scalar type.
  * For GqlScalar<"DateTime", Date>, this returns the symbol for Date.
  */
-function extractBaseTypeSymbol(
+async function extractBaseTypeSymbol(
   scalarInfo: ScalarMetadataInfo,
-  checker: ts.Checker,
+  checker: CheckerLoader,
   program: ts.Program,
-): ts.Symbol | null {
+): Promise<ts.Symbol | null> {
   const sourceFile = program.getSourceFile(scalarInfo.sourceFile);
   if (!sourceFile) {
     return null;
@@ -88,33 +89,37 @@ function extractBaseTypeSymbol(
 
   let foundSymbol: ts.Symbol | null = null;
 
-  sourceFile.forEachChild((node) => {
+  for (const node of sourceFile.statements) {
     if (ts.isTypeAliasDeclaration(node)) {
       const name = node.name.getText(sourceFile);
       if (name === scalarInfo.typeName) {
-        const symbol = checker.getSymbolAtLocation(node.name);
+        const symbol = await checker.getSymbolAtLocation(node.name);
         if (symbol) {
-          const type = checker.getDeclaredTypeOfSymbol(symbol);
+          const type = await checker.getDeclaredTypeOfSymbol(symbol);
           // GqlScalar is an intersection type: Base & { " $gqlkitScalar"?: ... }
           // We need to extract the Base type from this intersection
           if (type.isIntersectionType()) {
-            for (const member of type.getTypes()) {
+            for (const member of await checker.getTypesOfType(type)) {
               // Skip the metadata object type
-              if (member.getProperty(METADATA_PROPERTIES.SCALAR)) {
+              if (
+                await checker.getPropertyOfType(
+                  member,
+                  METADATA_PROPERTIES.SCALAR,
+                )
+              ) {
                 continue;
               }
               // This should be the base type
-              const memberSymbol = member.getSymbol();
+              const memberSymbol = await checker.getSymbolOfType(member);
               if (memberSymbol) {
                 foundSymbol = memberSymbol;
-                return;
               }
             }
           }
         }
       }
     }
-  });
+  }
 
   return foundSymbol;
 }
@@ -127,9 +132,9 @@ function extractBaseTypeSymbol(
  * 2. Groups mappings by input/output context based on the `only` constraint
  * 3. Detects conflicts when multiple scalars share the same base type in a context
  */
-export function buildScalarMappingTable(
+export async function buildScalarMappingTable(
   params: BuildScalarMappingTableParams,
-): ScalarBaseTypeMappingTable {
+): Promise<ScalarBaseTypeMappingTable> {
   const { detectedScalars, checker, program } = params;
 
   const inputMappings = new Map<ts.Symbol, ScalarBaseTypeMapping>();
@@ -155,7 +160,11 @@ export function buildScalarMappingTable(
   >();
 
   for (const scalarInfo of detectedScalars) {
-    const baseTypeSymbol = extractBaseTypeSymbol(scalarInfo, checker, program);
+    const baseTypeSymbol = await extractBaseTypeSymbol(
+      scalarInfo,
+      checker,
+      program,
+    );
     if (!baseTypeSymbol) {
       continue;
     }

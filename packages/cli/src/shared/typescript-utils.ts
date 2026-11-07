@@ -1,4 +1,5 @@
 import * as ts from "../core/typescript.js";
+import type { CheckerLoader } from "./checker-loader.js";
 
 /**
  * Extracts type name from a TypeNode.
@@ -14,15 +15,6 @@ export function getTypeNameFromNode(typeNode: ts.TypeNode): string | null {
     }
   }
   return null;
-}
-
-/**
- * Resolves a symbol's declaration handles into AST nodes.
- */
-export function getDeclarations(
-  symbol: ts.Symbol,
-): ReadonlyArray<ts.Declaration> {
-  return symbol.declarations.flatMap((handle) => handle.resolve() ?? []);
 }
 
 /**
@@ -68,6 +60,7 @@ export function findNonNullTypeNode(
  */
 export interface FindMetadataPropertyParams {
   readonly type: ts.Type;
+  readonly checker: CheckerLoader;
   readonly propertyNames: ReadonlyArray<string>;
   readonly recurseUnion: boolean;
 }
@@ -85,22 +78,22 @@ export interface FindMetadataPropertyParams {
  * Set `recurseUnion` to `false` to reproduce call sites that never handle
  * union types (own + intersection tiers only).
  */
-export function findMetadataProperty(
+export async function findMetadataProperty(
   params: FindMetadataPropertyParams,
-): ts.Symbol | undefined {
-  const { type, propertyNames, recurseUnion } = params;
+): Promise<ts.Symbol | undefined> {
+  const { type, checker, propertyNames, recurseUnion } = params;
 
   for (const name of propertyNames) {
-    const prop = type.getProperty(name);
+    const prop = await checker.getPropertyOfType(type, name);
     if (prop) {
       return prop;
     }
   }
 
   if (type.isIntersectionType()) {
-    for (const member of type.getTypes()) {
+    for (const member of await checker.getTypesOfType(type)) {
       for (const name of propertyNames) {
-        const memberProp = member.getProperty(name);
+        const memberProp = await checker.getPropertyOfType(member, name);
         if (memberProp) {
           return memberProp;
         }
@@ -109,11 +102,12 @@ export function findMetadataProperty(
   }
 
   if (recurseUnion && type.isUnionType()) {
-    for (const member of type.getTypes()) {
+    for (const member of await checker.getTypesOfType(type)) {
       if (isNullOrUndefined(member)) {
         continue;
       }
-      const result = findMetadataProperty({
+      const result = await findMetadataProperty({
+        checker,
         type: member,
         propertyNames,
         recurseUnion,
@@ -130,17 +124,25 @@ export function findMetadataProperty(
 /**
  * Checks if a union type contains null or undefined.
  */
-export function isNullableUnion(type: ts.Type): boolean {
+export async function isNullableUnion(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
   if (!type.isUnionType()) return false;
-  return type.getTypes().some((t) => isNullOrUndefined(t));
+  return (await checker.getTypesOfType(type)).some((t) => isNullOrUndefined(t));
 }
 
 /**
  * Gets non-nullable types from a union type.
  */
-export function getNonNullableTypes(type: ts.Type): ts.Type[] {
+export async function getNonNullableTypes(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<ts.Type[]> {
   if (!type.isUnionType()) return [type];
-  return type.getTypes().filter((t) => !isNullOrUndefined(t));
+  return (await checker.getTypesOfType(type)).filter(
+    (t) => !isNullOrUndefined(t),
+  );
 }
 
 /**
@@ -153,12 +155,15 @@ export function getNonNullableTypes(type: ts.Type): ts.Type[] {
  * - Partial<T> adds undefined to all property types
  * - Required<T> removes undefined from all property types
  */
-export function hasUndefinedInType(type: ts.Type): boolean {
+export async function hasUndefinedInType(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
   if ((type.flags & ts.TypeFlags.Undefined) !== 0) return true;
   if (type.isUnionType()) {
-    return type
-      .getTypes()
-      .some((t) => (t.flags & ts.TypeFlags.Undefined) !== 0);
+    return (await checker.getTypesOfType(type)).some(
+      (t) => (t.flags & ts.TypeFlags.Undefined) !== 0,
+    );
   }
   return false;
 }
@@ -177,11 +182,14 @@ export function isExported(node: ts.Node): boolean {
  * This is used to determine if an intersection member should trigger
  * treating the whole intersection as an inline object.
  */
-export function isAnonymousObjectType(type: ts.Type): boolean {
-  if (type.getAliasSymbol()) {
+export async function isAnonymousObjectType(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
+  if (await checker.getAliasSymbolOfType(type)) {
     return false;
   }
-  const symbol = type.getSymbol();
+  const symbol = await checker.getSymbolOfType(type);
   if (!symbol) {
     return true;
   }
@@ -193,14 +201,14 @@ export function isAnonymousObjectType(type: ts.Type): boolean {
  * Extracts property symbols from a type, handling intersection types
  * and falling back to getApparentType when getProperties() returns empty.
  */
-export function extractPropertySymbols(
+export async function extractPropertySymbols(
   type: ts.Type,
-  checker: ts.Checker,
-): ts.Symbol[] {
+  checker: CheckerLoader,
+): Promise<ts.Symbol[]> {
   if (type.isIntersectionType()) {
     const allProps = new Map<string, ts.Symbol>();
-    for (const member of type.getTypes()) {
-      const memberProps = member.getProperties();
+    for (const member of await checker.getTypesOfType(type)) {
+      const memberProps = await checker.getPropertiesOfType(member);
       for (const prop of memberProps) {
         const propName = prop.name;
         if (!allProps.has(propName)) {
@@ -211,37 +219,47 @@ export function extractPropertySymbols(
     return [...allProps.values()];
   }
 
-  const properties = type.getProperties();
+  const properties = await checker.getPropertiesOfType(type);
   if (properties.length > 0) {
     return [...properties];
   }
 
-  const apparentType = checker.getApparentType(type);
+  const apparentType = await checker.getApparentType(type);
   if (apparentType !== type) {
-    return [...apparentType.getProperties()];
+    return [...(await checker.getPropertiesOfType(apparentType))];
   }
 
   return [];
+}
+
+async function getParentOfTypeSymbol(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<ts.Symbol | undefined> {
+  const symbol = await checker.getSymbolOfType(type);
+  return symbol ? checker.getParentOfSymbol(symbol) : undefined;
 }
 
 /**
  * Finds the parent enum symbol if all types belong to the same enum.
  * Returns null if types are empty, don't have a common parent enum, or belong to different enums.
  */
-export function findEnumParentSymbol(
+export async function findEnumParentSymbol(
   types: readonly ts.Type[],
-): ts.Symbol | null {
+  checker: CheckerLoader,
+): Promise<ts.Symbol | null> {
   if (types.length === 0) return null;
 
-  const parentSymbol = types[0]!.getSymbol()?.getParent();
+  const parentSymbol = await getParentOfTypeSymbol(types[0]!, checker);
 
   if (!parentSymbol || !(parentSymbol.flags & ts.SymbolFlags.Enum)) {
     return null;
   }
 
-  const allBelongToSameEnum = types.every(
-    (t) => t.getSymbol()?.getParent() === parentSymbol,
+  const parents = await Promise.all(
+    types.map((t) => getParentOfTypeSymbol(t, checker)),
   );
+  const allBelongToSameEnum = parents.every((p) => p === parentSymbol);
 
   return allBelongToSameEnum ? parentSymbol : null;
 }
@@ -249,9 +267,12 @@ export function findEnumParentSymbol(
 /**
  * Checks if a union type is a boolean union (true | false with optional null/undefined).
  */
-export function isBooleanUnion(type: ts.Type): boolean {
+export async function isBooleanUnion(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
   if (!type.isUnionType()) return false;
-  const nonNullTypes = getNonNullableTypes(type);
+  const nonNullTypes = await getNonNullableTypes(type, checker);
   return (
     nonNullTypes.length === 2 &&
     nonNullTypes.every((t) => t.flags & ts.TypeFlags.BooleanLiteral)
@@ -262,10 +283,10 @@ export function isBooleanUnion(type: ts.Type): boolean {
  * Resolves a symbol to its original symbol by following alias chains.
  * This is necessary for re-exports where the symbol is an alias.
  */
-export function resolveOriginalSymbol(
+export async function resolveOriginalSymbol(
   symbol: ts.Symbol,
-  checker: ts.Checker,
-): ts.Symbol {
+  checker: CheckerLoader,
+): Promise<ts.Symbol> {
   if (symbol.flags & ts.SymbolFlags.Alias) {
     return checker.getAliasedSymbol(symbol);
   }
