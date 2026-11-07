@@ -1,5 +1,5 @@
+import type { Program, Symbol as TsSymbol } from "typescript/async";
 import type { Diagnostic } from "../core/index.js";
-import type * as ts from "../core/typescript.js";
 import type { CheckerLoader } from "../shared/checker-loader.js";
 import { collectDiagnostics } from "../shared/index.js";
 import {
@@ -13,12 +13,12 @@ import type { ExtractResolversResult } from "./types.js";
 import { validateResolverTypes } from "./validator/resolver-type-validator.js";
 
 export interface ExtractResolversParams {
-  readonly program: ts.Program;
+  readonly program: Program;
   readonly checker: CheckerLoader;
   readonly sourceFiles: ReadonlyArray<string>;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   /** Names of types already extracted from `GqlObject`/`GqlInterface`/etc. declarations (type-extractor's stage). */

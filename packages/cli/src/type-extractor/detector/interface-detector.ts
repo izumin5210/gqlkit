@@ -6,8 +6,21 @@
  * and to extract implements declarations from types using $gqlkitTypeMeta.
  */
 
+import type {
+  SourceFile,
+  TypeAliasDeclaration,
+  TypeLiteralNode,
+  TypeNode,
+} from "typescript/ast";
+import {
+  isArrayTypeNode,
+  isPropertySignatureDeclaration,
+  isTupleTypeNode,
+  isTypeLiteralNode,
+  isTypeReferenceNode,
+} from "typescript/ast/is";
+import type { Type } from "typescript/async";
 import { METADATA_PROPERTIES } from "../../core/index.js";
-import * as ts from "../../core/typescript.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { findMetadataProperty } from "../../shared/typescript-utils.js";
 
@@ -19,7 +32,7 @@ const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
  * Detects by checking for the $gqlkitInterfaceMeta property in the resolved type.
  */
 export async function isDefineInterfaceTypeAlias(
-  node: ts.TypeAliasDeclaration,
+  node: TypeAliasDeclaration,
   checker: CheckerLoader,
 ): Promise<boolean> {
   const symbol = await checker.getSymbolAtLocation(node.name);
@@ -35,7 +48,7 @@ export async function isDefineInterfaceTypeAlias(
  * Checks if a type has the $gqlkitInterfaceMeta property.
  */
 async function hasInterfaceMetadata(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<boolean> {
   return (
@@ -52,7 +65,7 @@ async function hasInterfaceMetadata(
  * Checks if a type has the $gqlkitTypeMeta property (GqlObject).
  */
 async function hasTypeMetadata(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<boolean> {
   return (
@@ -69,12 +82,12 @@ async function hasTypeMetadata(
  * Extracts implements from GqlInterface type alias.
  */
 export function extractImplementsFromDefineInterface(
-  node: ts.TypeAliasDeclaration,
-  sourceFile: ts.SourceFile,
+  node: TypeAliasDeclaration,
+  sourceFile: SourceFile,
   checker: CheckerLoader,
 ): ReadonlyArray<string> {
   const typeNode = node.type;
-  if (!ts.isTypeReferenceNode(typeNode)) {
+  if (!isTypeReferenceNode(typeNode)) {
     return [];
   }
 
@@ -84,7 +97,7 @@ export function extractImplementsFromDefineInterface(
   }
 
   const metaArg = typeArgs[1];
-  if (!metaArg || !ts.isTypeLiteralNode(metaArg)) {
+  if (!metaArg || !isTypeLiteralNode(metaArg)) {
     return [];
   }
 
@@ -96,8 +109,8 @@ export function extractImplementsFromDefineInterface(
  * Detects GqlObject by checking for the $gqlkitTypeMeta property in the resolved type.
  */
 export async function extractImplementsFromGqlTypeDef(
-  node: ts.TypeAliasDeclaration,
-  sourceFile: ts.SourceFile,
+  node: TypeAliasDeclaration,
+  sourceFile: SourceFile,
   checker: CheckerLoader,
 ): Promise<ReadonlyArray<string>> {
   const symbol = await checker.getSymbolAtLocation(node.name);
@@ -111,7 +124,7 @@ export async function extractImplementsFromGqlTypeDef(
   }
 
   const typeNode = node.type;
-  if (!ts.isTypeReferenceNode(typeNode)) {
+  if (!isTypeReferenceNode(typeNode)) {
     return [];
   }
 
@@ -121,7 +134,7 @@ export async function extractImplementsFromGqlTypeDef(
   }
 
   const metaArg = typeArgs[1];
-  if (!metaArg || !ts.isTypeLiteralNode(metaArg)) {
+  if (!metaArg || !isTypeLiteralNode(metaArg)) {
     return [];
   }
 
@@ -129,12 +142,12 @@ export async function extractImplementsFromGqlTypeDef(
 }
 
 function extractImplementsFromTypeLiteral(
-  typeLiteral: ts.TypeLiteralNode,
-  sourceFile: ts.SourceFile,
+  typeLiteral: TypeLiteralNode,
+  sourceFile: SourceFile,
   _checker: CheckerLoader,
 ): ReadonlyArray<string> {
   for (const member of typeLiteral.members) {
-    if (ts.isPropertySignatureDeclaration(member) && member.name) {
+    if (isPropertySignatureDeclaration(member) && member.name) {
       const propName = member.name.getText(sourceFile);
       if (propName === "implements" && member.type) {
         return extractInterfaceNamesFromTupleNode(member.type, sourceFile);
@@ -145,13 +158,13 @@ function extractImplementsFromTypeLiteral(
 }
 
 function extractInterfaceNamesFromTupleNode(
-  typeNode: ts.TypeNode,
-  sourceFile: ts.SourceFile,
+  typeNode: TypeNode,
+  sourceFile: SourceFile,
 ): ReadonlyArray<string> {
-  if (ts.isTupleTypeNode(typeNode)) {
+  if (isTupleTypeNode(typeNode)) {
     return typeNode.elements
       .map((elem) => {
-        if (ts.isTypeReferenceNode(elem)) {
+        if (isTypeReferenceNode(elem)) {
           return elem.typeName.getText(sourceFile);
         }
         return null;
@@ -159,10 +172,7 @@ function extractInterfaceNamesFromTupleNode(
       .filter((name): name is string => name !== null);
   }
 
-  if (
-    ts.isArrayTypeNode(typeNode) &&
-    ts.isTypeReferenceNode(typeNode.elementType)
-  ) {
+  if (isArrayTypeNode(typeNode) && isTypeReferenceNode(typeNode.elementType)) {
     return [typeNode.elementType.typeName.getText(sourceFile)];
   }
 

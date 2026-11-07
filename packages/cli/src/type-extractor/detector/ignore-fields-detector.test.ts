@@ -9,9 +9,11 @@
  * This file only contains tests for edge cases not suitable for golden tests.
  */
 
+import { ScriptTarget, type SourceFile } from "typescript/ast";
+import { isTypeAliasDeclaration } from "typescript/ast/is";
+import { API, ModuleKind, type Type } from "typescript/async";
 import { serverFS } from "typescript/fs";
 import { describe, expect, it } from "vitest";
-import * as ts from "../../core/typescript.js";
 import {
   type CheckerLoader,
   createCheckerLoader,
@@ -23,14 +25,14 @@ const VIRTUAL_FILE = `${VIRTUAL_DIR}/test.ts`;
 
 interface TestProgram {
   readonly checker: CheckerLoader;
-  readonly sourceFile: ts.SourceFile;
+  readonly sourceFile: SourceFile;
 }
 
 async function withTestProgram(
   source: string,
   fn: (testProgram: TestProgram) => Promise<void>,
 ): Promise<void> {
-  await using api = new ts.API({
+  await using api = new API({
     cwd: VIRTUAL_DIR,
     fs: {
       directoryExists: (dir) => (dir === VIRTUAL_DIR ? true : serverFS.useOS),
@@ -45,8 +47,8 @@ async function withTestProgram(
     },
   });
   const program = await api.createProgram([VIRTUAL_FILE], {
-    target: ts.ScriptTarget.ES2020,
-    module: ts.ModuleKind.ES2020,
+    target: ScriptTarget.ES2020,
+    module: ModuleKind.ES2020,
     strict: true,
     skipLibCheck: true,
     noEmit: true,
@@ -67,12 +69,12 @@ async function withTestProgram(
 }
 
 async function getTypeFromDeclaration(
-  sourceFile: ts.SourceFile,
+  sourceFile: SourceFile,
   checker: CheckerLoader,
   typeName: string,
-): Promise<ts.Type> {
+): Promise<Type> {
   for (const statement of sourceFile.statements) {
-    if (ts.isTypeAliasDeclaration(statement)) {
+    if (isTypeAliasDeclaration(statement)) {
       const name = statement.name.getText(sourceFile);
       if (name === typeName) {
         const symbol = await checker.getSymbolAtLocation(statement.name);

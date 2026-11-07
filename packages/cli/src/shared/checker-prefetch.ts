@@ -11,8 +11,33 @@
  * prefetched here; a fact missing from this list only costs a round trip.
  */
 
+import type {
+  EntityName,
+  EnumDeclaration,
+  InterfaceDeclaration,
+  Node,
+  SourceFile,
+  TypeAliasDeclaration,
+  TypeNode,
+} from "typescript/ast";
+import {
+  isEnumDeclaration,
+  isInterfaceDeclaration,
+  isTypeAliasDeclaration,
+  isTypeReferenceNode,
+  isUnionTypeNode,
+} from "typescript/ast/is";
+import {
+  ObjectFlags,
+  type ObjectType,
+  SymbolFlags,
+  type Symbol as TsSymbol,
+  type Type,
+  TypeFlags,
+  type TypeReference,
+  type UnionOrIntersectionType,
+} from "typescript/async";
 import { METADATA_PROPERTIES } from "../core/index.js";
-import * as ts from "../core/typescript.js";
 import type { CheckerLoader } from "./checker-loader.js";
 
 /**
@@ -36,33 +61,32 @@ const COMMON_METADATA_NAMES: ReadonlyArray<string> = [
  */
 const NESTED_TYPE_DEPTH = 3;
 
-function isUnionOrIntersection(type: ts.Type): boolean {
-  return (type.flags & ts.TypeFlags.UnionOrIntersection) !== 0;
+function isUnionOrIntersection(type: Type): boolean {
+  return (type.flags & TypeFlags.UnionOrIntersection) !== 0;
 }
 
-function isObjectType(type: ts.Type): boolean {
-  return (type.flags & ts.TypeFlags.Object) !== 0;
+function isObjectType(type: Type): boolean {
+  return (type.flags & TypeFlags.Object) !== 0;
 }
 
-function isTypeReference(type: ts.Type): boolean {
+function isTypeReference(type: Type): boolean {
   return (
-    (type.flags & ts.TypeFlags.Object) !== 0 &&
-    ((type as ts.ObjectType).objectFlags & ts.ObjectFlags.Reference) !== 0
+    (type.flags & TypeFlags.Object) !== 0 &&
+    ((type as ObjectType).objectFlags & ObjectFlags.Reference) !== 0
   );
 }
 
-function isLiteralType(type: ts.Type): boolean {
+function isLiteralType(type: Type): boolean {
   return (
-    (type.flags & (ts.TypeFlags.StringLiteral | ts.TypeFlags.NumberLiteral)) !==
-    0
+    (type.flags & (TypeFlags.StringLiteral | TypeFlags.NumberLiteral)) !== 0
   );
 }
 
-function hasIndexableShape(type: ts.Type): boolean {
+function hasIndexableShape(type: Type): boolean {
   return (
-    (type.flags & ts.TypeFlags.Object) !== 0 &&
-    ((type as ts.ObjectType).objectFlags &
-      (ts.ObjectFlags.Anonymous | ts.ObjectFlags.Mapped)) !==
+    (type.flags & TypeFlags.Object) !== 0 &&
+    ((type as ObjectType).objectFlags &
+      (ObjectFlags.Anonymous | ObjectFlags.Mapped)) !==
       0
   );
 }
@@ -73,10 +97,10 @@ function hasIndexableShape(type: ts.Type): boolean {
  * through their display strings. Other primitives are classified from their
  * flags alone.
  */
-function isVisitedType(type: ts.Type): boolean {
+function isVisitedType(type: Type): boolean {
   return (
-    (type.flags & (ts.TypeFlags.Object | ts.TypeFlags.UnionOrIntersection)) !==
-      0 || isLiteralType(type)
+    (type.flags & (TypeFlags.Object | TypeFlags.UnionOrIntersection)) !== 0 ||
+    isLiteralType(type)
   );
 }
 
@@ -86,13 +110,13 @@ function isVisitedType(type: ts.Type): boolean {
  * property lists are as long as what is written there.
  */
 function isTypeLiteral(
-  type: ts.Type,
-  symbol: ts.Symbol | undefined,
-  aliasSymbol: ts.Symbol | undefined,
+  type: Type,
+  symbol: TsSymbol | undefined,
+  aliasSymbol: TsSymbol | undefined,
 ): boolean {
   return (
-    (type.flags & ts.TypeFlags.Object) !== 0 &&
-    ((type as ts.ObjectType).objectFlags & ts.ObjectFlags.Anonymous) !== 0 &&
+    (type.flags & TypeFlags.Object) !== 0 &&
+    ((type as ObjectType).objectFlags & ObjectFlags.Anonymous) !== 0 &&
     aliasSymbol === undefined &&
     symbol?.name === "__type"
   );
@@ -104,16 +128,16 @@ function isTypeLiteral(
  */
 async function prefetchFactsOfType(
   checker: CheckerLoader,
-  type: ts.Type,
-): Promise<ReadonlyArray<ts.Type>> {
+  type: Type,
+): Promise<ReadonlyArray<Type>> {
   const [members, isArray, typeArguments, symbol, aliasSymbol] =
     await Promise.all([
       isUnionOrIntersection(type)
-        ? checker.getTypesOfType(type as ts.UnionOrIntersectionType)
+        ? checker.getTypesOfType(type as UnionOrIntersectionType)
         : [],
       checker.isArrayType(type),
       isTypeReference(type)
-        ? checker.getTypeArguments(type as ts.TypeReference)
+        ? checker.getTypeArguments(type as TypeReference)
         : [],
       checker.getSymbolOfType(type),
       checker.getAliasSymbolOfType(type),
@@ -151,12 +175,12 @@ async function prefetchFactsOfType(
  */
 async function prefetchTypeFacts(
   checker: CheckerLoader,
-  types: ReadonlyArray<ts.Type>,
+  types: ReadonlyArray<Type>,
 ): Promise<void> {
   const covered = coveredLevelsOf(checker);
   // Each type is followed on its own; queries issued in the same tick still
   // travel together, and no type waits for slower siblings before descending.
-  const visit = async (type: ts.Type, levelsBelow: number): Promise<void> => {
+  const visit = async (type: Type, levelsBelow: number): Promise<void> => {
     if ((covered.get(type) ?? -1) >= levelsBelow) {
       return;
     }
@@ -178,9 +202,9 @@ async function prefetchTypeFacts(
  * least the depth asked for is skipped. Its facts may still be in flight,
  * which is harmless: the loader shares in-flight queries.
  */
-const coveredLevels = new WeakMap<CheckerLoader, WeakMap<ts.Type, number>>();
+const coveredLevels = new WeakMap<CheckerLoader, WeakMap<Type, number>>();
 
-function coveredLevelsOf(checker: CheckerLoader): WeakMap<ts.Type, number> {
+function coveredLevelsOf(checker: CheckerLoader): WeakMap<Type, number> {
   let covered = coveredLevels.get(checker);
   if (covered === undefined) {
     covered = new WeakMap();
@@ -198,7 +222,7 @@ function coveredLevelsOf(checker: CheckerLoader): WeakMap<ts.Type, number> {
  */
 export async function prefetchPropertyFacts(
   checker: CheckerLoader,
-  properties: ReadonlyArray<ts.Symbol>,
+  properties: ReadonlyArray<TsSymbol>,
 ): Promise<void> {
   const unique = [...new Set(properties)];
   const [types] = await Promise.all([
@@ -209,10 +233,10 @@ export async function prefetchPropertyFacts(
 }
 
 /** Walks syntax (already local, no request) for names in type references. */
-function collectReferenceNames(nodes: ReadonlyArray<ts.Node>): ts.EntityName[] {
-  const names: ts.EntityName[] = [];
-  const visit = (node: ts.Node): void => {
-    if (ts.isTypeReferenceNode(node)) {
+function collectReferenceNames(nodes: ReadonlyArray<Node>): EntityName[] {
+  const names: EntityName[] = [];
+  const visit = (node: Node): void => {
+    if (isTypeReferenceNode(node)) {
       names.push(node.typeName);
     }
     node.forEachChild(visit);
@@ -229,14 +253,14 @@ function collectReferenceNames(nodes: ReadonlyArray<ts.Node>): ts.EntityName[] {
  */
 async function prefetchReferencedSymbols(
   checker: CheckerLoader,
-  names: ReadonlyArray<ts.EntityName>,
+  names: ReadonlyArray<EntityName>,
 ): Promise<void> {
   const symbols = await Promise.all(
     names.map((n) => checker.getSymbolAtLocation(n)),
   );
   await Promise.all(
     symbols.flatMap((s) =>
-      s !== undefined && (s.flags & ts.SymbolFlags.Alias) !== 0
+      s !== undefined && (s.flags & SymbolFlags.Alias) !== 0
         ? [checker.getAliasedSymbol(s)]
         : [],
     ),
@@ -244,24 +268,24 @@ async function prefetchReferencedSymbols(
 }
 
 type NamedDeclaration =
-  | ts.InterfaceDeclaration
-  | ts.TypeAliasDeclaration
-  | ts.EnumDeclaration;
+  | InterfaceDeclaration
+  | TypeAliasDeclaration
+  | EnumDeclaration;
 
-function isNamedTypeDeclaration(node: ts.Node): node is NamedDeclaration {
+function isNamedTypeDeclaration(node: Node): node is NamedDeclaration {
   return (
-    ts.isInterfaceDeclaration(node) ||
-    ts.isTypeAliasDeclaration(node) ||
-    ts.isEnumDeclaration(node)
+    isInterfaceDeclaration(node) ||
+    isTypeAliasDeclaration(node) ||
+    isEnumDeclaration(node)
   );
 }
 
 /** Members of type aliases' top-level unions, named union members. */
 function collectUnionMembers(
   declarations: ReadonlyArray<NamedDeclaration>,
-): ts.TypeNode[] {
+): TypeNode[] {
   return declarations.flatMap((d) =>
-    ts.isTypeAliasDeclaration(d) && ts.isUnionTypeNode(d.type)
+    isTypeAliasDeclaration(d) && isUnionTypeNode(d.type)
       ? [...d.type.types]
       : [],
   );
@@ -279,13 +303,13 @@ async function prefetchDeclaredTypes(
   const symbols = await Promise.all(
     declarations.map((d) => checker.getSymbolAtLocation(d.name)),
   );
-  const declared = symbols.filter((s): s is ts.Symbol => s !== undefined);
+  const declared = symbols.filter((s): s is TsSymbol => s !== undefined);
   const [types] = await Promise.all([
     Promise.all(declared.map((s) => checker.getDeclaredTypeOfSymbol(s))),
     Promise.all(declared.map((s) => checker.getDocumentationComment(s))),
     Promise.all(
       declarations.flatMap((d) =>
-        ts.isTypeAliasDeclaration(d) ? [checker.getTypeAtLocation(d.type)] : [],
+        isTypeAliasDeclaration(d) ? [checker.getTypeAtLocation(d.type)] : [],
       ),
     ),
   ]);
@@ -305,8 +329,8 @@ async function prefetchDeclaredTypes(
  */
 async function listWalkedProperties(
   checker: CheckerLoader,
-  type: ts.Type,
-): Promise<ReadonlyArray<ts.Symbol>> {
+  type: Type,
+): Promise<ReadonlyArray<TsSymbol>> {
   if (isObjectType(type)) {
     return checker.getPropertiesOfType(type);
   }
@@ -328,7 +352,7 @@ async function listWalkedProperties(
  */
 export async function prefetchDeclarationFacts(
   checker: CheckerLoader,
-  sourceFiles: ReadonlyArray<ts.SourceFile>,
+  sourceFiles: ReadonlyArray<SourceFile>,
 ): Promise<void> {
   const declarations = sourceFiles.flatMap((sf) =>
     sf.statements.filter(isNamedTypeDeclaration),

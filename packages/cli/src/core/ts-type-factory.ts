@@ -1,3 +1,4 @@
+import type { Symbol as TsSymbol } from "typescript/async";
 import type { DeprecationInfo } from "./metadata.js";
 import type {
   InlineEnumMemberInfo,
@@ -5,7 +6,6 @@ import type {
   ScalarTypeInfo,
   TSTypeReference,
 } from "./ts-types.js";
-import type * as ts from "./typescript.js";
 
 interface CreateTSTypeReferenceParams {
   readonly kind: TSTypeReference["kind"];
@@ -148,7 +148,7 @@ interface CreateInlineEnumTypeParams {
   readonly members: ReadonlyArray<InlineEnumMemberInfo>;
   readonly nullable: boolean;
   /** External TypeScript enum symbol for deduplication (null for string literal unions) */
-  readonly externalEnumSymbol: ts.Symbol | null;
+  readonly externalEnumSymbol: TsSymbol | null;
   /** TSDoc description from the external enum type itself (null for string literal unions) */
   readonly externalEnumDescription: string | null;
   /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself (null for string literal unions) */

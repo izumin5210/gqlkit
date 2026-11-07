@@ -1,4 +1,22 @@
 import { relative } from "node:path";
+import { SyntaxKind, type TypeNode } from "typescript/ast";
+import {
+  isArrayTypeNode,
+  isEnumDeclaration,
+  isStringLiteral,
+  isTypeReferenceNode,
+  isUnionTypeNode,
+} from "typescript/ast/is";
+import {
+  ObjectFlags,
+  type ObjectType,
+  type StringLiteralType,
+  SymbolFlags,
+  type Symbol as TsSymbol,
+  type Type,
+  TypeFlags,
+  type TypeReference,
+} from "typescript/async";
 import {
   createArrayType,
   createInlineEnumType,
@@ -16,7 +34,6 @@ import {
   type SourceLocation,
   type TSTypeReference,
 } from "../../core/index.js";
-import * as ts from "../../core/typescript.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
@@ -47,8 +64,8 @@ import { detectScalarMetadata } from "./scalar-metadata-detector.js";
 
 export interface DiscoveredTypeEntry {
   readonly name: string;
-  readonly tsType: ts.Type;
-  readonly tsSymbol: ts.Symbol;
+  readonly tsType: Type;
+  readonly tsSymbol: TsSymbol;
   readonly sourceFile: string;
   readonly sourceLocation: SourceLocation;
 }
@@ -62,8 +79,8 @@ export interface FieldTypeResolverDiagnostic {
 export interface FieldTypeResolverContext {
   readonly checker: CheckerLoader;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly sourceFiles: ReadonlySet<string>;
   /** Scalar base type mapping table for automatic base type -> scalar mapping */
@@ -80,7 +97,7 @@ export interface FieldTypeResolverContext {
  * Internal context including cycle detection state.
  */
 interface InternalFieldTypeContext extends FieldTypeResolverContext {
-  readonly visitedTypes: WeakSet<ts.Type>;
+  readonly visitedTypes: WeakSet<Type>;
 }
 
 /**
@@ -94,8 +111,8 @@ interface InternalFieldTypeContext extends FieldTypeResolverContext {
  *   unless they are explicitly declared in the schema
  */
 export async function resolveFieldType(
-  type: ts.Type,
-  typeNode: ts.TypeNode | undefined,
+  type: Type,
+  typeNode: TypeNode | undefined,
   ctx: FieldTypeResolverContext,
 ): Promise<TSTypeReference> {
   const internalCtx: InternalFieldTypeContext = {
@@ -116,7 +133,7 @@ export async function resolveFieldType(
  * sites' order and surrounding guards are unchanged.
  */
 interface TryReferenceFromTypeNodeParams {
-  readonly typeNode: ts.TypeNode | undefined;
+  readonly typeNode: TypeNode | undefined;
   readonly ctx: FieldTypeResolverContext;
   readonly nullable: boolean;
 }
@@ -125,7 +142,7 @@ async function tryReferenceFromTypeNode(
   params: TryReferenceFromTypeNodeParams,
 ): Promise<TSTypeReference | null> {
   const { typeNode, ctx, nullable } = params;
-  if (!(typeNode && ts.isTypeReferenceNode(typeNode))) {
+  if (!(typeNode && isTypeReferenceNode(typeNode))) {
     return null;
   }
   const typeName = getTypeNameFromNode(typeNode);
@@ -154,8 +171,8 @@ async function tryReferenceFromTypeNode(
 interface RegisterDiscoveredTypeParams {
   readonly checker: CheckerLoader;
   readonly name: string;
-  readonly type: ts.Type;
-  readonly symbol: ts.Symbol;
+  readonly type: Type;
+  readonly symbol: TsSymbol;
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
 }
 
@@ -197,7 +214,7 @@ async function registerDiscoveredType(
  * their original names.
  */
 async function resolveUnionMember(
-  t: ts.Type,
+  t: Type,
   ctx: InternalFieldTypeContext,
 ): Promise<TSTypeReference> {
   const { checker } = ctx;
@@ -206,7 +223,7 @@ async function resolveUnionMember(
     result.kind === "reference" &&
     result.name !== null &&
     !ctx.knownTypeNames.has(result.name) &&
-    t.flags & ts.TypeFlags.Object &&
+    t.flags & TypeFlags.Object &&
     (await checker.getPropertiesOfType(t)).length > 0 &&
     !ctx.discoveredTypes?.has(result.name)
   ) {
@@ -216,8 +233,8 @@ async function resolveUnionMember(
 }
 
 async function resolveFieldTypeInternal(
-  type: ts.Type,
-  typeNode: ts.TypeNode | undefined,
+  type: Type,
+  typeNode: TypeNode | undefined,
   ctx: InternalFieldTypeContext,
 ): Promise<TSTypeReference> {
   const { checker, knownTypeNames, globalTypeMappings } = ctx;
@@ -286,7 +303,7 @@ async function resolveFieldTypeInternal(
     // Recover the alias by inspecting the UnionTypeNode children for a TypeReferenceNode.
     // Only applies when there is exactly one non-null type node (e.g., `Item | null`),
     // not when there are multiple (e.g., `User | Post | null` which is an inline union).
-    if (nullable && typeNode && ts.isUnionTypeNode(typeNode)) {
+    if (nullable && typeNode && isUnionTypeNode(typeNode)) {
       const nonNullTypeNodes = filterNonNullTypeNodes(typeNode);
       if (nonNullTypeNodes.length === 1) {
         const ref = await tryReferenceFromTypeNode({
@@ -355,7 +372,7 @@ async function resolveFieldTypeInternal(
 
     if (nonNullTypes.length === 1) {
       const nonNullTypeNode =
-        typeNode && ts.isUnionTypeNode(typeNode)
+        typeNode && isUnionTypeNode(typeNode)
           ? findNonNullTypeNode(typeNode)
           : undefined;
 
@@ -381,11 +398,11 @@ async function resolveFieldTypeInternal(
 
   // Array type handling
   if (await checker.isArrayType(type)) {
-    const typeArgs = await checker.getTypeArguments(type as ts.TypeReference);
+    const typeArgs = await checker.getTypeArguments(type as TypeReference);
     const elementType = typeArgs[0];
 
-    let elementTypeNode: ts.TypeNode | undefined;
-    if (typeNode && ts.isArrayTypeNode(typeNode)) {
+    let elementTypeNode: TypeNode | undefined;
+    if (typeNode && isArrayTypeNode(typeNode)) {
       elementTypeNode = typeNode.elementType;
     }
 
@@ -398,12 +415,12 @@ async function resolveFieldTypeInternal(
 
   // Never type — represents an impossible value, skip this field
   // Also handles `undefined` which results from `field?: never` (never | undefined simplifies to undefined)
-  if (type.flags & ts.TypeFlags.Never || type.flags & ts.TypeFlags.Undefined) {
+  if (type.flags & TypeFlags.Never || type.flags & TypeFlags.Undefined) {
     return createNeverType();
   }
 
   // Unknown type — represents arbitrary values, map to JSON scalar (graphql-scalars)
-  if (type.flags & ts.TypeFlags.Unknown) {
+  if (type.flags & TypeFlags.Unknown) {
     return createScalarType({
       name: "JSON",
       scalarInfo: {
@@ -418,28 +435,25 @@ async function resolveFieldTypeInternal(
   }
 
   // Primitive types
-  if (type.flags & ts.TypeFlags.String) {
+  if (type.flags & TypeFlags.String) {
     return createPrimitiveType({ name: "string", nullable: false });
   }
-  if (type.flags & ts.TypeFlags.Number) {
+  if (type.flags & TypeFlags.Number) {
     return createPrimitiveType({ name: "number", nullable: false });
   }
-  if (
-    type.flags & ts.TypeFlags.Boolean ||
-    type.flags & ts.TypeFlags.BooleanLiteral
-  ) {
+  if (type.flags & TypeFlags.Boolean || type.flags & TypeFlags.BooleanLiteral) {
     return createPrimitiveType({ name: "boolean", nullable: false });
   }
-  if (type.flags & ts.TypeFlags.StringLiteral) {
+  if (type.flags & TypeFlags.StringLiteral) {
     return createStringLiteralType(
       (await checker.typeToString(type)).replace(/"/g, ""),
     );
   }
-  if (type.flags & ts.TypeFlags.NumberLiteral) {
+  if (type.flags & TypeFlags.NumberLiteral) {
     return createNumericLiteralType(await checker.typeToString(type));
   }
   // Template literal types (e.g., `prefix-${string}`) represent string subsets
-  if (type.flags & ts.TypeFlags.TemplateLiteral) {
+  if (type.flags & TypeFlags.TemplateLiteral) {
     return createPrimitiveType({ name: "string", nullable: false });
   }
 
@@ -542,9 +556,9 @@ async function resolveFieldTypeInternal(
   }
 
   // Mapped types (utility types like Omit, Pick, user-defined utilities)
-  if (type.flags & ts.TypeFlags.Object) {
-    const objectType = type as ts.ObjectType;
-    if (objectType.objectFlags & ts.ObjectFlags.Mapped) {
+  if (type.flags & TypeFlags.Object) {
+    const objectType = type as ObjectType;
+    if (objectType.objectFlags & ObjectFlags.Mapped) {
       // Index signature mapped types (Record<string, T>) — map to JSONObject (graphql-scalars)
       const hasMappedStringIndex =
         (await checker.getStringIndexTypeOfType(type)) !== undefined;
@@ -590,10 +604,10 @@ async function resolveFieldTypeInternal(
     const aliasName = aliasSymbol.name;
     if (!knownTypeNames.has(aliasName)) {
       // Check if this is an anonymous object type (not an interface or another named type)
-      // using ts.ObjectFlags.Anonymous for a more robust check than internal symbol names
+      // using ObjectFlags.Anonymous for a more robust check than internal symbol names
       const isAnonymousObject =
-        (type.flags & ts.TypeFlags.Object) !== 0 &&
-        ((type as ts.ObjectType).objectFlags & ts.ObjectFlags.Anonymous) !== 0;
+        (type.flags & TypeFlags.Object) !== 0 &&
+        ((type as ObjectType).objectFlags & ObjectFlags.Anonymous) !== 0;
 
       if (isAnonymousObject) {
         // Check if this type alias qualifies for transitive discovery.
@@ -707,9 +721,9 @@ async function resolveFieldTypeInternal(
       // When a field uses an enum type directly (not as a union), handle it here
       // Check both symbol flags and declarations since the flags may vary
       const isEnumSymbol =
-        (resolvedSymbol.flags & ts.SymbolFlags.Enum) !== 0 ||
+        (resolvedSymbol.flags & SymbolFlags.Enum) !== 0 ||
         resolvedSymbol.declarations.some(
-          (handle) => handle.kind === ts.SyntaxKind.EnumDeclaration,
+          (handle) => handle.kind === SyntaxKind.EnumDeclaration,
         );
       if (isEnumSymbol) {
         const externalEnumResult = await tryExtractExternalEnumAsInlineEnum(
@@ -748,7 +762,7 @@ async function resolveFieldTypeInternal(
 }
 
 async function tryExtractAsInlineObject(
-  type: ts.Type,
+  type: Type,
   ctx: InternalFieldTypeContext,
   hintName: string | null,
 ): Promise<TSTypeReference> {
@@ -826,7 +840,7 @@ async function tryExtractAsInlineObject(
  * Returns null if any type is not a string literal.
  */
 function tryExtractAsInlineEnum(
-  types: ReadonlyArray<ts.Type>,
+  types: ReadonlyArray<Type>,
 ): ReadonlyArray<InlineEnumMemberInfo> | null {
   if (types.length === 0) {
     return null;
@@ -835,11 +849,11 @@ function tryExtractAsInlineEnum(
   const members: InlineEnumMemberInfo[] = [];
 
   for (const type of types) {
-    if (!(type.flags & ts.TypeFlags.StringLiteral)) {
+    if (!(type.flags & TypeFlags.StringLiteral)) {
       return null;
     }
 
-    const literalType = type as ts.StringLiteralType;
+    const literalType = type as StringLiteralType;
     const value = literalType.value;
 
     members.push({
@@ -871,18 +885,18 @@ interface ExternalEnumExtractionResult {
  * Returns null if the enum declaration cannot be found or has no valid members.
  */
 async function tryExtractExternalEnumAsInlineEnum(
-  enumSymbol: ts.Symbol,
+  enumSymbol: TsSymbol,
   checker: CheckerLoader,
 ): Promise<ExternalEnumExtractionResult | null> {
   const declarations = await checker.getDeclarationsOfSymbolOfKind(
     enumSymbol,
-    ts.SyntaxKind.EnumDeclaration,
+    SyntaxKind.EnumDeclaration,
   );
   if (!declarations || declarations.length === 0) {
     return null;
   }
 
-  const enumDeclaration = declarations.find(ts.isEnumDeclaration);
+  const enumDeclaration = declarations.find(isEnumDeclaration);
   if (!enumDeclaration) {
     return null;
   }
@@ -891,7 +905,7 @@ async function tryExtractExternalEnumAsInlineEnum(
 
   for (const member of enumDeclaration.members) {
     const initializer = member.initializer;
-    if (!initializer || !ts.isStringLiteral(initializer)) {
+    if (!initializer || !isStringLiteral(initializer)) {
       continue;
     }
 
@@ -928,7 +942,7 @@ async function tryExtractExternalEnumAsInlineEnum(
  */
 async function isKnownSchemaType(
   name: string,
-  typeSymbol: ts.Symbol | undefined,
+  typeSymbol: TsSymbol | undefined,
   ctx: FieldTypeResolverContext,
 ): Promise<boolean> {
   const { knownTypeNames, knownTypeSymbols, checker } = ctx;
@@ -951,7 +965,7 @@ async function isKnownSchemaType(
  * Returns true if the type is a local definition (shadowing), false if from external files.
  */
 async function isTypeFromSchemaFiles(
-  symbol: ts.Symbol,
+  symbol: TsSymbol,
   sourceFiles: ReadonlySet<string>,
   checker: CheckerLoader,
 ): Promise<boolean> {

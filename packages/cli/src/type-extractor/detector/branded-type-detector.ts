@@ -10,7 +10,7 @@
  * - `boolean & { __nominal: true }`
  */
 
-import * as ts from "../../core/typescript.js";
+import { type Type, TypeFlags } from "typescript/async";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
 
 /**
@@ -57,7 +57,7 @@ const EXCLUDED_BRAND_PROPERTIES: ReadonlySet<string> = new Set([
  * @returns Detection result with isBranded flag and baseType
  */
 export async function detectBrandedType(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<BrandedTypeResult> {
   const notBranded: BrandedTypeResult = { isBranded: false, baseType: null };
@@ -104,7 +104,7 @@ export async function detectBrandedType(
  * @returns Common branded result if all types are branded with the same base, otherwise non-branded
  */
 export async function detectUniformBrandedType(
-  types: ReadonlyArray<ts.Type>,
+  types: ReadonlyArray<Type>,
   checker: CheckerLoader,
 ): Promise<BrandedTypeResult> {
   if (types.length === 0) {
@@ -131,19 +131,14 @@ export async function detectUniformBrandedType(
  *
  * @returns "string", "number", "boolean", or null if not a primitive
  */
-function getPrimitiveType(
-  type: ts.Type,
-): "string" | "number" | "boolean" | null {
-  if (type.flags & ts.TypeFlags.String) {
+function getPrimitiveType(type: Type): "string" | "number" | "boolean" | null {
+  if (type.flags & TypeFlags.String) {
     return "string";
   }
-  if (type.flags & ts.TypeFlags.Number) {
+  if (type.flags & TypeFlags.Number) {
     return "number";
   }
-  if (
-    type.flags & ts.TypeFlags.Boolean ||
-    type.flags & ts.TypeFlags.BooleanLiteral
-  ) {
+  if (type.flags & TypeFlags.Boolean || type.flags & TypeFlags.BooleanLiteral) {
     return "boolean";
   }
   return null;
@@ -159,10 +154,10 @@ function getPrimitiveType(
  * @returns true if the type is a pure brand marker
  */
 async function isPureBrandMarker(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<boolean> {
-  if (!(type.flags & ts.TypeFlags.Object)) {
+  if (!(type.flags & TypeFlags.Object)) {
     return false;
   }
 

@@ -1,5 +1,5 @@
+import type { Program, Symbol as TsSymbol } from "typescript/async";
 import type { Diagnostic, Diagnostics } from "../core/index.js";
-import type * as ts from "../core/typescript.js";
 import type { CheckerLoader } from "../shared/checker-loader.js";
 import {
   type CollectedTypesResult,
@@ -21,7 +21,7 @@ import type { ExtractedTypeInfo, GlobalTypeMapping } from "./types/index.js";
 import { validateTypes } from "./validator/type-validator.js";
 
 export interface ExtractTypesParams {
-  readonly program: ts.Program;
+  readonly program: Program;
   readonly checker: CheckerLoader;
   readonly sourceFiles: ReadonlyArray<string>;
   readonly customScalarNames: ReadonlyArray<string>;
@@ -29,8 +29,8 @@ export interface ExtractTypesParams {
   readonly configScalars: ReadonlyArray<ConfigScalarMapping>;
   readonly sourceRoot: string | null;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
 }
 
 export interface ExtractTypesResult {

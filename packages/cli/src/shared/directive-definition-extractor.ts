@@ -5,8 +5,20 @@
  * TypeScript type aliases that use the Directive<Name, Args, Location> type.
  */
 
+import {
+  getCombinedModifierFlags,
+  ModifierFlags,
+  type SourceFile,
+  type TypeAliasDeclaration,
+} from "typescript/ast";
+import { isTypeAliasDeclaration } from "typescript/ast/is";
+import {
+  type Program,
+  type Type,
+  TypeFlags,
+  type TypeReference,
+} from "typescript/async";
 import { type GraphQLFieldType, METADATA_PROPERTIES } from "../core/index.js";
-import * as ts from "../core/typescript.js";
 import type { CheckerLoader } from "./checker-loader.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 import {
@@ -86,7 +98,7 @@ export interface DirectiveDefinitionExtractionResult {
  * Checks if a type is a Directive type (has $directiveName, $directiveArgs, $directiveLocation properties).
  */
 async function isDirectiveType(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<boolean> {
   const nameProp = await checker.getPropertyOfType(
@@ -105,7 +117,7 @@ async function isDirectiveType(
  * Extracts the directive name from a Directive type.
  */
 async function extractDirectiveName(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<string | null> {
   const nameProp = await checker.getPropertyOfType(
@@ -129,7 +141,7 @@ async function extractDirectiveName(
  * Extracts directive locations from a Directive type.
  */
 async function extractDirectiveLocations(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<DirectiveLocation[]> {
   const locationProp = await checker.getPropertyOfType(
@@ -146,10 +158,10 @@ async function extractDirectiveLocations(
   // Handle tuple types like ["FIELD_DEFINITION", "OBJECT"]
   if (await checker.isTupleType(rawLocationType)) {
     const typeArgs = await checker.getTypeArguments(
-      rawLocationType as ts.TypeReference,
+      rawLocationType as TypeReference,
     );
     for (const arg of typeArgs) {
-      if (arg.flags & ts.TypeFlags.Undefined) {
+      if (arg.flags & TypeFlags.Undefined) {
         continue;
       }
       if (arg.isStringLiteralType()) {
@@ -167,13 +179,13 @@ async function extractDirectiveLocations(
   // Handle array types
   if (await checker.isArrayType(rawLocationType)) {
     const typeArgs = await checker.getTypeArguments(
-      rawLocationType as ts.TypeReference,
+      rawLocationType as TypeReference,
     );
     if (typeArgs.length > 0 && typeArgs[0]) {
       const elemType = typeArgs[0];
       if (elemType.isUnionType()) {
         for (const member of await checker.getTypesOfType(elemType)) {
-          if (member.flags & ts.TypeFlags.Undefined) {
+          if (member.flags & TypeFlags.Undefined) {
             continue;
           }
           if (member.isStringLiteralType()) {
@@ -193,7 +205,7 @@ async function extractDirectiveLocations(
   // Handle union types like "OBJECT" | "FIELD_DEFINITION" | undefined
   if (rawLocationType.isUnionType()) {
     for (const member of await checker.getTypesOfType(rawLocationType)) {
-      if (member.flags & ts.TypeFlags.Undefined) {
+      if (member.flags & TypeFlags.Undefined) {
         continue;
       }
       if (member.isStringLiteralType()) {
@@ -244,11 +256,11 @@ function isValidLocation(value: string): value is DirectiveLocation {
  * Converts a TypeScript type to a GraphQL field type.
  */
 async function convertToGraphQLType(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<GraphQLFieldType | null> {
   // Handle type parameters by getting their constraint
-  if (type.flags & ts.TypeFlags.TypeParameter) {
+  if (type.flags & TypeFlags.TypeParameter) {
     const constraint = await checker.getBaseConstraintOfType(type);
     if (constraint) {
       return convertToGraphQLType(constraint, checker);
@@ -269,10 +281,7 @@ async function convertToGraphQLType(
     }
   }
 
-  if (
-    type.flags & ts.TypeFlags.String ||
-    type.flags & ts.TypeFlags.StringLiteral
-  ) {
+  if (type.flags & TypeFlags.String || type.flags & TypeFlags.StringLiteral) {
     return {
       typeName: "String",
       nullable: false,
@@ -281,10 +290,7 @@ async function convertToGraphQLType(
     };
   }
 
-  if (
-    type.flags & ts.TypeFlags.Number ||
-    type.flags & ts.TypeFlags.NumberLiteral
-  ) {
+  if (type.flags & TypeFlags.Number || type.flags & TypeFlags.NumberLiteral) {
     return {
       typeName: "Float",
       nullable: false,
@@ -293,10 +299,7 @@ async function convertToGraphQLType(
     };
   }
 
-  if (
-    type.flags & ts.TypeFlags.Boolean ||
-    type.flags & ts.TypeFlags.BooleanLiteral
-  ) {
+  if (type.flags & TypeFlags.Boolean || type.flags & TypeFlags.BooleanLiteral) {
     return {
       typeName: "Boolean",
       nullable: false,
@@ -330,7 +333,7 @@ async function convertToGraphQLType(
   }
 
   if ((await checker.isArrayType(type)) || (await checker.isTupleType(type))) {
-    const typeArgs = await checker.getTypeArguments(type as ts.TypeReference);
+    const typeArgs = await checker.getTypeArguments(type as TypeReference);
     if (typeArgs.length > 0 && typeArgs[0]) {
       let elementType = typeArgs[0];
 
@@ -427,7 +430,7 @@ async function convertToGraphQLType(
  * Extracts directive argument definitions from a Directive type.
  */
 async function extractDirectiveArgs(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
   sourceFile: string,
   line: number,
@@ -450,7 +453,7 @@ async function extractDirectiveArgs(
   }
 
   // If argsType is a type parameter, get its constraint
-  if (argsType.flags & ts.TypeFlags.TypeParameter) {
+  if (argsType.flags & TypeFlags.TypeParameter) {
     const constraint = await checker.getBaseConstraintOfType(argsType);
     if (constraint) {
       argsType = constraint;
@@ -496,14 +499,14 @@ async function extractDirectiveArgs(
  * @returns Extraction result with definitions and errors
  */
 export interface ExtractDirectiveDefinitionsParams {
-  readonly program: ts.Program;
+  readonly program: Program;
   readonly checker: CheckerLoader;
   readonly sourceFiles: ReadonlyArray<string>;
 }
 
 interface ExtractDirectiveDefinitionParams {
-  readonly node: ts.TypeAliasDeclaration;
-  readonly sourceFile: ts.SourceFile;
+  readonly node: TypeAliasDeclaration;
+  readonly sourceFile: SourceFile;
   readonly filePath: string;
   readonly checker: CheckerLoader;
 }
@@ -578,9 +581,9 @@ export async function extractDirectiveDefinitions(
         return [];
       }
       const typeAliases = sourceFile.statements.filter(
-        (node): node is ts.TypeAliasDeclaration =>
-          ts.isTypeAliasDeclaration(node) &&
-          (ts.getCombinedModifierFlags(node) & ts.ModifierFlags.Export) !== 0,
+        (node): node is TypeAliasDeclaration =>
+          isTypeAliasDeclaration(node) &&
+          (getCombinedModifierFlags(node) & ModifierFlags.Export) !== 0,
       );
       return Promise.all(
         typeAliases.map((node) =>
@@ -606,7 +609,7 @@ export async function extractDirectiveDefinitions(
  * Extracts description from TSDoc comments.
  */
 async function extractDescription(
-  node: ts.TypeAliasDeclaration,
+  node: TypeAliasDeclaration,
   checker: CheckerLoader,
 ): Promise<string | null> {
   const symbol = await checker.getSymbolAtLocation(node.name);

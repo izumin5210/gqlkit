@@ -5,8 +5,17 @@
  * in TypeScript intersection types using the $gqlkitScalar property.
  */
 
+import { SyntaxKind } from "typescript/ast";
+import { isTypeAliasDeclaration } from "typescript/ast/is";
+import {
+  ObjectFlags,
+  type ObjectType,
+  type StringLiteralType,
+  type Type,
+  TypeFlags,
+  type TypeReference,
+} from "typescript/async";
 import { METADATA_PROPERTIES } from "../../core/index.js";
-import * as ts from "../../core/typescript.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { getActualMetadataType } from "../../shared/metadata-detector.js";
 import { isNullOrUndefined } from "../../shared/typescript-utils.js";
@@ -65,7 +74,7 @@ function createDefaultResult(): ScalarMetadataResult {
 }
 
 async function extractMetadataFromType(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<InternalMetadata | null> {
   const metadataProp = await checker.getPropertyOfType(
@@ -88,18 +97,18 @@ async function extractMetadataFromType(
   }
 
   const nameType = await checker.getTypeOfSymbol(nameProp);
-  if (!(nameType.flags & ts.TypeFlags.StringLiteral)) {
+  if (!(nameType.flags & TypeFlags.StringLiteral)) {
     return null;
   }
 
-  const scalarName = (nameType as ts.StringLiteralType).value;
+  const scalarName = (nameType as StringLiteralType).value;
 
   const onlyProp = await checker.getPropertyOfType(metadataType, "only");
   let only: "input" | "output" | null = null;
   if (onlyProp) {
     const onlyType = await checker.getTypeOfSymbol(onlyProp);
-    if (onlyType.flags & ts.TypeFlags.StringLiteral) {
-      const onlyValue = (onlyType as ts.StringLiteralType).value;
+    if (onlyType.flags & TypeFlags.StringLiteral) {
+      const onlyValue = (onlyType as StringLiteralType).value;
       if (onlyValue === "input" || onlyValue === "output") {
         only = onlyValue;
       }
@@ -115,7 +124,7 @@ async function extractMetadataFromType(
 }
 
 async function detectScalarMetadataFromIntersection(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<InternalMetadata | null> {
   if (!type.isIntersectionType()) {
@@ -132,8 +141,8 @@ async function detectScalarMetadataFromIntersection(
   return null;
 }
 
-function detectPrimitiveScalar(type: ts.Type): InternalMetadata | null {
-  if (type.flags & ts.TypeFlags.String) {
+function detectPrimitiveScalar(type: Type): InternalMetadata | null {
+  if (type.flags & TypeFlags.String) {
     return {
       scalarName: "String",
       only: null,
@@ -141,7 +150,7 @@ function detectPrimitiveScalar(type: ts.Type): InternalMetadata | null {
       isObjectType: false,
     };
   }
-  if (type.flags & ts.TypeFlags.Number) {
+  if (type.flags & TypeFlags.Number) {
     return {
       scalarName: "Float",
       only: null,
@@ -149,10 +158,7 @@ function detectPrimitiveScalar(type: ts.Type): InternalMetadata | null {
       isObjectType: false,
     };
   }
-  if (
-    type.flags & ts.TypeFlags.Boolean ||
-    type.flags & ts.TypeFlags.BooleanLiteral
-  ) {
+  if (type.flags & TypeFlags.Boolean || type.flags & TypeFlags.BooleanLiteral) {
     return {
       scalarName: "Boolean",
       only: null,
@@ -164,16 +170,16 @@ function detectPrimitiveScalar(type: ts.Type): InternalMetadata | null {
   return null;
 }
 
-function isBooleanLiteralUnion(types: readonly ts.Type[]): boolean {
+function isBooleanLiteralUnion(types: readonly Type[]): boolean {
   const nonNullTypes = types.filter((t) => !isNullOrUndefined(t));
   return (
     nonNullTypes.length === 2 &&
-    nonNullTypes.every((t) => t.flags & ts.TypeFlags.BooleanLiteral)
+    nonNullTypes.every((t) => t.flags & TypeFlags.BooleanLiteral)
   );
 }
 
 async function detectScalarMetadataCore(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<InternalMetadata | null> {
   const primitiveResult = detectPrimitiveScalar(type);
@@ -209,11 +215,11 @@ async function detectScalarMetadataCore(
   if (symbol) {
     const declarations = await checker.getDeclarationsOfSymbolOfKind(
       symbol,
-      ts.SyntaxKind.TypeAliasDeclaration,
+      SyntaxKind.TypeAliasDeclaration,
     );
     if (declarations && declarations.length > 0) {
       for (const decl of declarations) {
-        if (ts.isTypeAliasDeclaration(decl)) {
+        if (isTypeAliasDeclaration(decl)) {
           const declSymbol = await checker.getSymbolAtLocation(decl.name);
           if (declSymbol) {
             const declType = await checker.getDeclaredTypeOfSymbol(declSymbol);
@@ -236,15 +242,15 @@ async function detectScalarMetadataCore(
 }
 
 async function isObjectLikeType(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<boolean> {
-  if (type.flags & ts.TypeFlags.Object) {
-    const objectType = type as ts.ObjectType;
+  if (type.flags & TypeFlags.Object) {
+    const objectType = type as ObjectType;
     if (
-      objectType.objectFlags & ts.ObjectFlags.Anonymous ||
-      objectType.objectFlags & ts.ObjectFlags.Interface ||
-      objectType.objectFlags & ts.ObjectFlags.Reference
+      objectType.objectFlags & ObjectFlags.Anonymous ||
+      objectType.objectFlags & ObjectFlags.Interface ||
+      objectType.objectFlags & ObjectFlags.Reference
     ) {
       const properties = await checker.getPropertiesOfType(type);
       const hasOnlyMetadataProperty =
@@ -280,13 +286,13 @@ async function isObjectLikeType(
  * @returns Detection result with scalar information
  */
 export async function detectScalarMetadata(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
 ): Promise<ScalarMetadataResult> {
   const result = createDefaultResult();
 
   if (await checker.isArrayType(type)) {
-    const typeRef = type as ts.TypeReference;
+    const typeRef = type as TypeReference;
     const elementType = (await checker.getTypeArguments(typeRef))[0];
 
     if (!elementType) {

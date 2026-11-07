@@ -7,7 +7,7 @@ Static code generation tool that analyzes TypeScript source files and produces G
 ## Core Technologies
 
 - **Language**: TypeScript 5.9+ (strict mode); `packages/cli` is built with TypeScript 7.1
-- **Type analysis**: TypeScript 7 native API (`typescript/sync` checker client + `typescript/ast`), which runs `tsc` as a child process. The CLI requires `typescript` 7.1+ as a peer dependency
+- **Type analysis**: TypeScript 7 native API (`typescript/async` checker client + `typescript/ast`), which runs `tsc` as a child process. The CLI requires `typescript` 7.1+ as a peer dependency
 - **Runtime**: Node.js with ES Modules
 - **CLI Framework**: gunshi for command-line interface
 

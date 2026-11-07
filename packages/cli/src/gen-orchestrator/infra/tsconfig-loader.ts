@@ -1,16 +1,20 @@
 import { existsSync } from "node:fs";
 import path from "node:path";
+import type {
+  API,
+  RawCompilerOptions,
+  Diagnostic as TsDiagnostic,
+} from "typescript/async";
 import type { Diagnostic } from "../../core/index.js";
-import type * as ts from "../../core/typescript.js";
 
 export interface LoadTsconfigOptions {
-  readonly api: ts.API;
+  readonly api: API;
   readonly cwd: string;
   readonly tsconfigPath: string | null;
 }
 
 export interface LoadTsconfigResult {
-  readonly compilerOptions: ts.RawCompilerOptions | null;
+  readonly compilerOptions: RawCompilerOptions | null;
   readonly configFilePath: string | null;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
 }
@@ -28,7 +32,7 @@ export async function loadTsconfig(
 }
 
 async function loadFromSpecifiedPath(
-  api: ts.API,
+  api: API,
   cwd: string,
   tsconfigPath: string,
 ): Promise<LoadTsconfigResult> {
@@ -55,7 +59,7 @@ async function loadFromSpecifiedPath(
 }
 
 async function autoDetectTsconfig(
-  api: ts.API,
+  api: API,
   cwd: string,
 ): Promise<LoadTsconfigResult> {
   const configPath = findConfigFile(cwd);
@@ -95,7 +99,7 @@ function findConfigFile(searchPath: string): string | null {
  * each nested message on its own line, indented two spaces per level.
  */
 function flattenDiagnosticText(
-  diagnostic: ts.Diagnostic,
+  diagnostic: TsDiagnostic,
   depth: number,
 ): string {
   const lines = [`${"  ".repeat(depth)}${diagnostic.text}`];
@@ -106,7 +110,7 @@ function flattenDiagnosticText(
 }
 
 async function parseConfigFile(
-  api: ts.API,
+  api: API,
   configFilePath: string,
 ): Promise<LoadTsconfigResult> {
   const diagnostics: Diagnostic[] = [];

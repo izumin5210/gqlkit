@@ -1,10 +1,12 @@
+import type { TypeNode } from "typescript/ast";
+import { isPropertySignatureDeclaration } from "typescript/ast/is";
+import type { Type } from "typescript/async";
 import type {
   DirectiveArgumentValue,
   DirectiveInfo,
   PropertyDef,
   TSTypeReference,
 } from "../../core/index.js";
-import * as ts from "../../core/typescript.js";
 import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { prefetchPropertyFacts } from "../../shared/checker-prefetch.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
@@ -22,9 +24,9 @@ import {
 } from "../../shared/typescript-utils.js";
 
 export type TypeConverter = (
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
-  typeNode: ts.TypeNode | undefined,
+  typeNode: TypeNode | undefined,
 ) => Promise<TSTypeReference>;
 
 /**
@@ -36,7 +38,7 @@ export type TypeConverter = (
  * @returns An array of inline object property definitions
  */
 export async function extractInlineObjectProperties(
-  type: ts.Type,
+  type: Type,
   checker: CheckerLoader,
   convertType: TypeConverter,
 ): Promise<PropertyDef[]> {
@@ -94,10 +96,10 @@ export async function extractInlineObjectProperties(
     // (e.g., GqlObject<T, Meta> = T & { ... } may flatten to just T),
     // so passing the typeNode allows resolveFieldTypeInternal to recover
     // the original type reference via TypeReferenceNode.
-    let propTypeNode: ts.TypeNode | undefined;
+    let propTypeNode: TypeNode | undefined;
     if (
       declaration &&
-      ts.isPropertySignatureDeclaration(declaration) &&
+      isPropertySignatureDeclaration(declaration) &&
       declaration.type
     ) {
       propTypeNode = declaration.type;

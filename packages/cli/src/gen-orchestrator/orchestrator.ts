@@ -1,11 +1,11 @@
 import { dirname, relative, resolve } from "node:path";
+import { API, type Program, type Symbol as TsSymbol } from "typescript/async";
 import type {
   ResolvedDiscriminatorFieldsMap,
   ResolvedOutputConfig,
   ResolvedScalarMapping,
 } from "../config-loader/index.js";
 import type { Diagnostic, Diagnostics } from "../core/index.js";
-import * as ts from "../core/typescript.js";
 import {
   type ExtractResolversResult,
   extractResolvers,
@@ -66,11 +66,11 @@ interface ScalarConfig {
 interface PipelineContext {
   readonly config: GenerationConfig;
   readonly sourceFiles: ReadonlyArray<string>;
-  readonly program: ts.Program | null;
+  readonly program: Program | null;
   readonly checker: CheckerLoader | null;
   readonly knownTypeNames: ReadonlySet<string> | null;
-  readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol> | null;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<ts.Symbol, string> | null;
+  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol> | null;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string> | null;
   readonly typesResult: ExtractTypesResult | null;
   readonly resolversResult: ExtractResolversResult | null;
   readonly directiveDefinitions: DirectiveDefinitionInfo[] | null;
@@ -208,7 +208,7 @@ async function scanSourceFilesStep(
 
 async function createProgramStep(
   ctx: PipelineContext,
-  api: ts.API,
+  api: API,
 ): Promise<PipelineContext> {
   if (ctx.aborted) return ctx;
 
@@ -565,13 +565,13 @@ export async function executeGeneration(
 ): Promise<GenerationResult> {
   // The API spawns a tsc child process; every program and checker object is
   // only valid until it is closed, so it must outlive the whole pipeline.
-  await using api = new ts.API({ cwd: config.cwd });
+  await using api = new API({ cwd: config.cwd });
   return await runPipeline(config, api);
 }
 
 async function runPipeline(
   config: GenerationConfig,
-  api: ts.API,
+  api: API,
 ): Promise<GenerationResult> {
   let ctx = createInitialContext(config);
 
