@@ -1,5 +1,7 @@
-import ts from "typescript";
 import type { Diagnostic, SourceLocation } from "../../core/index.js";
+import * as ts from "../../core/typescript.js";
+import type { CheckerLoader } from "../../shared/checker-loader.js";
+import { prefetchDeclarationFacts } from "../../shared/checker-prefetch.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
   isExported,
@@ -48,15 +50,20 @@ export interface TypeNameCollectionResult {
  * - Named re-exports: `export type { Foo } from "..."`
  * - Wildcard re-exports: `export type * from "..."`
  */
-export function collectDeclaredTypeNames(
-  program: ts.Program,
-  sourceFiles: ReadonlyArray<string>,
-): TypeNameCollectionResult {
+export interface CollectDeclaredTypeNamesParams {
+  readonly program: ts.Program;
+  readonly checker: CheckerLoader;
+  readonly sourceFiles: ReadonlyArray<string>;
+}
+
+export async function collectDeclaredTypeNames(
+  params: CollectDeclaredTypeNamesParams,
+): Promise<TypeNameCollectionResult> {
+  const { program, checker, sourceFiles } = params;
   const typeNames = new Set<string>();
   const typeSymbols = new Map<string, ts.Symbol>();
   const underlyingSymbolToTypeName = new Map<ts.Symbol, string>();
   const diagnostics: Diagnostic[] = [];
-  const checker = program.getTypeChecker();
 
   const typeLocations = new Map<string, TypeDeclarationLocation>();
 
@@ -64,13 +71,13 @@ export function collectDeclaredTypeNames(
    * Registers a type name and checks for duplicates.
    * Returns true if this is a new type, false if it's a duplicate.
    */
-  function registerTypeName(
+  async function registerTypeName(
     name: string,
     location: SourceLocation,
     symbol: ts.Symbol | undefined,
-  ): boolean {
+  ): Promise<boolean> {
     const resolvedSymbol = symbol
-      ? resolveOriginalSymbol(symbol, checker)
+      ? await resolveOriginalSymbol(symbol, checker)
       : null;
     const existing = typeLocations.get(name);
     if (existing) {
@@ -100,25 +107,36 @@ export function collectDeclaredTypeNames(
     return true;
   }
 
+  // Every file is fetched, and its declarations' first levels prefetched,
+  // in a few batched round trips before the sequential walk below.
+  const loadedSourceFiles = await Promise.all(
+    sourceFiles.map((filePath) => program.getSourceFile(filePath)),
+  );
+  await prefetchDeclarationFacts(
+    checker,
+    loadedSourceFiles.filter((sf): sf is ts.SourceFile => sf !== undefined),
+  );
+
   for (const filePath of sourceFiles) {
-    const sourceFile = program.getSourceFile(filePath);
+    const sourceFile = await program.getSourceFile(filePath);
     if (!sourceFile) continue;
 
-    ts.forEachChild(sourceFile, (node) => {
+    for (const node of sourceFile.statements) {
       // Direct type declarations
       if (ts.isTypeAliasDeclaration(node) && isExported(node)) {
         const name = node.name.getText(sourceFile);
         const location = getSourceLocationFromNode(node)!;
-        const symbol = checker.getSymbolAtLocation(node.name);
-        const isNew = registerTypeName(name, location, symbol);
+        const symbol = await checker.getSymbolAtLocation(node.name);
+        const isNew = await registerTypeName(name, location, symbol);
 
         if (isNew && symbol) {
           // For type aliases like `type User = ExternalUser;`,
           // also track the underlying type's symbol
-          const type = checker.getTypeAtLocation(node.type);
-          if (type.symbol) {
-            const underlyingSymbol = resolveOriginalSymbol(
-              type.symbol,
+          const type = await checker.getTypeAtLocation(node.type);
+          const typeSymbol = await checker.getSymbolOfType(type);
+          if (typeSymbol) {
+            const underlyingSymbol = await resolveOriginalSymbol(
+              typeSymbol,
               checker,
             );
             underlyingSymbolToTypeName.set(underlyingSymbol, name);
@@ -128,14 +146,14 @@ export function collectDeclaredTypeNames(
       if (ts.isInterfaceDeclaration(node) && isExported(node)) {
         const name = node.name.getText(sourceFile);
         const location = getSourceLocationFromNode(node)!;
-        const symbol = checker.getSymbolAtLocation(node.name);
-        registerTypeName(name, location, symbol);
+        const symbol = await checker.getSymbolAtLocation(node.name);
+        await registerTypeName(name, location, symbol);
       }
       if (ts.isEnumDeclaration(node) && isExported(node)) {
         const name = node.name.getText(sourceFile);
         const location = getSourceLocationFromNode(node)!;
-        const symbol = checker.getSymbolAtLocation(node.name);
-        registerTypeName(name, location, symbol);
+        const symbol = await checker.getSymbolAtLocation(node.name);
+        await registerTypeName(name, location, symbol);
       }
 
       // Re-exports: `export type { ... } from "..."` or `export type * from "..."`
@@ -147,8 +165,8 @@ export function collectDeclaredTypeNames(
               // Use the exported name (element.name), not the property name
               const name = element.name.getText(sourceFile);
               const location = getSourceLocationFromNode(element)!;
-              const symbol = checker.getSymbolAtLocation(element.name);
-              registerTypeName(name, location, symbol);
+              const symbol = await checker.getSymbolAtLocation(element.name);
+              await registerTypeName(name, location, symbol);
             }
           }
         } else if (!node.isTypeOnly && node.exportClause) {
@@ -158,8 +176,8 @@ export function collectDeclaredTypeNames(
               if (!element.isTypeOnly) continue;
               const name = element.name.getText(sourceFile);
               const location = getSourceLocationFromNode(element)!;
-              const symbol = checker.getSymbolAtLocation(element.name);
-              registerTypeName(name, location, symbol);
+              const symbol = await checker.getSymbolAtLocation(element.name);
+              await registerTypeName(name, location, symbol);
             }
           }
         } else if (
@@ -168,23 +186,23 @@ export function collectDeclaredTypeNames(
           node.moduleSpecifier
         ) {
           // Wildcard re-exports: `export type * from "..."`
-          const moduleSymbol = checker.getSymbolAtLocation(
+          const moduleSymbol = await checker.getSymbolAtLocation(
             node.moduleSpecifier,
           );
           if (moduleSymbol) {
-            const exports = checker.getExportsOfModule(moduleSymbol);
+            const exports = await checker.getExportsOfModule(moduleSymbol);
             for (const exp of exports) {
-              const name = exp.getName();
+              const name = exp.name;
               // Check if the export is a type (not a value)
               if (isTypeExport(exp)) {
                 const location = getSourceLocationFromNode(node)!;
-                registerTypeName(name, location, exp);
+                await registerTypeName(name, location, exp);
               }
             }
           }
         }
       }
-    });
+    }
   }
 
   return { typeNames, typeSymbols, underlyingSymbolToTypeName, diagnostics };
@@ -203,17 +221,17 @@ export function collectDeclaredTypeNames(
  * detection, no symbol tracking, no re-export handling — just a name set for
  * membership checks.
  */
-export function collectLocalTypeDeclarationNames(
+export async function collectLocalTypeDeclarationNames(
   program: ts.Program,
   sourceFiles: ReadonlyArray<string>,
-): ReadonlySet<string> {
+): Promise<ReadonlySet<string>> {
   const names = new Set<string>();
 
   for (const filePath of sourceFiles) {
-    const sourceFile = program.getSourceFile(filePath);
+    const sourceFile = await program.getSourceFile(filePath);
     if (!sourceFile) continue;
 
-    ts.forEachChild(sourceFile, (node) => {
+    sourceFile.forEachChild((node) => {
       if (
         ts.isTypeAliasDeclaration(node) ||
         ts.isInterfaceDeclaration(node) ||

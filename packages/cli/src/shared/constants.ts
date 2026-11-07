@@ -56,7 +56,7 @@ const TS_OBJECT_LITERAL_TYPE_SYMBOL = "__object";
  * Checks if a symbol name represents a TypeScript internal/anonymous type
  * that should not be used directly as a GraphQL type name.
  *
- * @param symbolName - The symbol name from `type.symbol.getName()`
+ * @param symbolName - The symbol name from `type.getSymbol()?.name`
  * @returns true if the symbol name is internal and should be filtered out
  */
 export function isInternalTypeSymbol(symbolName: string): boolean {

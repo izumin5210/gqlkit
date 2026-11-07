@@ -15,7 +15,7 @@ Prefix stripping should NOT be applied since removing the prefix from
 Defined in: src/gqlkit/schema/types.ts
 """
 enum UserStatus {
+  USER_STATUS_
   USER_STATUS_ACTIVE
   USER_STATUS_INACTIVE
-  USER_STATUS_
 }

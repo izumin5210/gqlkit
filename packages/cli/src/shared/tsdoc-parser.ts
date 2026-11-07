@@ -1,15 +1,16 @@
-import ts from "typescript";
 import type { DeprecationInfo } from "../core/index.js";
+import * as ts from "../core/typescript.js";
+import type { CheckerLoader } from "./checker-loader.js";
 
 export interface TSDocInfo {
   readonly description: string | null;
   readonly deprecated: DeprecationInfo | null;
 }
 
-function getSymbolFromNode(
+async function getSymbolFromNode(
   node: ts.Node,
-  checker: ts.TypeChecker,
-): ts.Symbol | undefined {
+  checker: CheckerLoader,
+): Promise<ts.Symbol | undefined> {
   if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
     return checker.getSymbolAtLocation(node.name);
   }
@@ -26,21 +27,17 @@ function getSymbolFromNode(
 }
 
 function getTagCommentText(
-  comment: string | ts.NodeArray<ts.JSDocComment> | undefined,
+  comment: ts.NodeArray<ts.JSDocComment> | undefined,
 ): string | undefined {
-  if (typeof comment === "string") {
-    const trimmed = comment.replace(/\r\n/g, "\n").trim();
-    return trimmed === "" ? undefined : trimmed;
+  if (comment === undefined) {
+    return undefined;
   }
-  if (Array.isArray(comment)) {
-    const text = comment
-      .map((part) => part.text)
-      .join("")
-      .replace(/\r\n/g, "\n")
-      .trim();
-    return text === "" ? undefined : text;
-  }
-  return undefined;
+  const text = comment
+    .map((part) => part.text)
+    .join("")
+    .replace(/\r\n/g, "\n")
+    .trim();
+  return text === "" ? undefined : text;
 }
 
 function extractDescriptionTagContent(
@@ -89,23 +86,21 @@ function normalizeLineEndings(text: string): string {
   return text.replace(/\r\n/g, "\n");
 }
 
-function extractDescriptionFromSymbol(
+async function extractDescriptionFromSymbol(
   symbol: ts.Symbol,
-  checker: ts.TypeChecker,
-): string | undefined {
-  const documentationComment = symbol.getDocumentationComment(checker);
+  checker: CheckerLoader,
+): Promise<string | undefined> {
+  const documentationComment = await checker.getDocumentationComment(symbol);
 
   if (documentationComment.length > 0) {
-    const description = normalizeLineEndings(
-      ts.displayPartsToString(documentationComment).trim(),
-    );
+    const description = normalizeLineEndings(documentationComment.trim());
     if (description !== "") {
       return description;
     }
   }
 
   const descriptionTagContent = extractDescriptionTagContent(
-    symbol.getDeclarations(),
+    await checker.getDeclarationsOfSymbol(symbol),
   );
   if (descriptionTagContent) {
     return normalizeLineEndings(descriptionTagContent);
@@ -114,19 +109,19 @@ function extractDescriptionFromSymbol(
   return undefined;
 }
 
-export function extractTsDocInfo(
+export async function extractTsDocInfo(
   node: ts.Node,
-  checker: ts.TypeChecker,
-): TSDocInfo {
-  const symbol = getSymbolFromNode(node, checker);
+  checker: CheckerLoader,
+): Promise<TSDocInfo> {
+  const symbol = await getSymbolFromNode(node, checker);
 
   if (!symbol) {
     return { description: null, deprecated: null };
   }
 
-  const description = extractDescriptionFromSymbol(symbol, checker);
+  const description = await extractDescriptionFromSymbol(symbol, checker);
   const deprecated = extractDeprecatedFromDeclarations(
-    symbol.getDeclarations(),
+    await checker.getDeclarationsOfSymbol(symbol),
   );
 
   return {
@@ -135,13 +130,13 @@ export function extractTsDocInfo(
   };
 }
 
-export function extractTsDocFromSymbol(
+export async function extractTsDocFromSymbol(
   symbol: ts.Symbol,
-  checker: ts.TypeChecker,
-): TSDocInfo {
-  const description = extractDescriptionFromSymbol(symbol, checker);
+  checker: CheckerLoader,
+): Promise<TSDocInfo> {
+  const description = await extractDescriptionFromSymbol(symbol, checker);
   const deprecated = extractDeprecatedFromDeclarations(
-    symbol.getDeclarations(),
+    await checker.getDeclarationsOfSymbol(symbol),
   );
 
   return {

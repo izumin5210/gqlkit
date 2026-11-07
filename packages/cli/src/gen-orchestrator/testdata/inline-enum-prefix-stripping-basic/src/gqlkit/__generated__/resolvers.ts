@@ -3,19 +3,19 @@
 export function createResolvers() {
   return {
     PostStatus: {
+      ARCHIVED: "POST_STATUS_ARCHIVED",
       DRAFT: "POST_STATUS_DRAFT",
       PUBLISHED: "POST_STATUS_PUBLISHED",
-      ARCHIVED: "POST_STATUS_ARCHIVED",
     },
     PostTag: {
-      TECH: "POST_TAGS_TECH",
       LIFESTYLE: "POST_TAGS_LIFESTYLE",
       NEWS: "POST_TAGS_NEWS",
+      TECH: "POST_TAGS_TECH",
     },
     UserRole: {
       ADMIN: "USER_ROLE_ADMIN",
-      MEMBER: "USER_ROLE_MEMBER",
       GUEST: "USER_ROLE_GUEST",
+      MEMBER: "USER_ROLE_MEMBER",
     },
   };
 }

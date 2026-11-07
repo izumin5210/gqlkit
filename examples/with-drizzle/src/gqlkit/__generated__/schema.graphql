@@ -6,9 +6,9 @@ scalar DateTime
 Defined in: src/gqlkit/schema/post.ts
 """
 enum CreatePostPriorityInput {
+  HIGH
   LOW
   MEDIUM
-  HIGH
 }
 
 """
@@ -38,9 +38,9 @@ type Post {
 Defined in: src/gqlkit/schema/post.ts
 """
 enum PostPriority {
+  HIGH
   LOW
   MEDIUM
-  HIGH
 }
 
 type Query

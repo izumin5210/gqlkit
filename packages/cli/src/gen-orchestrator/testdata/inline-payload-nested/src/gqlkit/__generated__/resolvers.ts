@@ -5,15 +5,15 @@ import { createOrder as Mutation$createOrder, processData as Mutation$processDat
 export function createResolvers() {
   return {
     UpdateStatusPayloadResult: {
-      PENDING: "pending",
-      PROCESSING: "processing",
       COMPLETED: "completed",
       FAILED: "failed",
+      PENDING: "pending",
+      PROCESSING: "processing",
     },
     SubmitFormPayloadValidationStatus: {
-      VALID: "valid",
       INVALID: "invalid",
       PARTIAL: "partial",
+      VALID: "valid",
     },
     Mutation: {
       createOrder: Mutation$createOrder,

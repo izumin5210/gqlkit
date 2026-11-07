@@ -7,6 +7,7 @@
   "tags": ["-lintignore"],
   "workspaces": {
     "packages/cli": {
+      "entry": ["src/testing/bench/{main,compare,refs,run-case}.ts"],
       "ignoreFiles": ["src/**/testdata/**"],
       "ignoreDependencies": ["@gqlkit-ts/runtime"]
     }

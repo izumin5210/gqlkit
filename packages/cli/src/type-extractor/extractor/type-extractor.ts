@@ -1,5 +1,4 @@
 import { resolve } from "node:path";
-import ts from "typescript";
 import {
   type Diagnostic,
   type DirectiveArgumentValue,
@@ -10,6 +9,9 @@ import {
   type SourceLocation,
   type TSTypeReference,
 } from "../../core/index.js";
+import * as ts from "../../core/typescript.js";
+import type { CheckerLoader } from "../../shared/checker-loader.js";
+import { prefetchPropertyFacts } from "../../shared/checker-prefetch.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   detectDirectiveMetadata,
@@ -81,9 +83,11 @@ export interface ExtractionResult {
 
 function isDefaultExport(node: ts.Node, sourceFile: ts.SourceFile): boolean {
   let hasDefaultExport = false;
-  const nodeName = (node as ts.DeclarationStatement).name?.getText(sourceFile);
+  const nodeName = ts
+    .getNameOfDeclaration(node as ts.Declaration)
+    ?.getText(sourceFile);
 
-  ts.forEachChild(sourceFile, (child) => {
+  sourceFile.forEachChild((child) => {
     if (
       ts.isExportAssignment(child) &&
       !child.isExportEquals &&
@@ -103,14 +107,14 @@ export interface FieldExtractionResult {
   diagnostics: Diagnostic[];
 }
 
-function collectAllFieldNames(
+async function collectAllFieldNames(
   type: ts.Type,
-  checker: ts.TypeChecker,
-): ReadonlySet<string> {
-  const properties = extractPropertySymbols(type, checker);
+  checker: CheckerLoader,
+): Promise<ReadonlySet<string>> {
+  const properties = await extractPropertySymbols(type, checker);
   const fieldNames = new Set<string>();
   for (const prop of properties) {
-    const propName = prop.getName();
+    const propName = prop.name;
     if (!propName.startsWith(" $")) {
       fieldNames.add(propName);
     }
@@ -142,7 +146,7 @@ function collectAllFieldNames(
  */
 export interface ExtractFieldsParams {
   readonly type: ts.Type;
-  readonly checker: ts.TypeChecker;
+  readonly checker: CheckerLoader;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
   readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
@@ -156,9 +160,9 @@ export interface ExtractFieldsParams {
   readonly diagnosticLabel: string;
 }
 
-export function extractFieldsFromType(
+export async function extractFieldsFromType(
   params: ExtractFieldsParams,
-): FieldExtractionResult {
+): Promise<FieldExtractionResult> {
   const {
     type,
     checker,
@@ -175,10 +179,11 @@ export function extractFieldsFromType(
   } = params;
   const fields: PropertyDef[] = [];
   const diagnostics: Diagnostic[] = [];
-  const properties = extractPropertySymbols(type, checker);
+  const properties = await extractPropertySymbols(type, checker);
+  await prefetchPropertyFacts(checker, properties);
 
   for (const prop of properties) {
-    const propName = prop.getName();
+    const propName = prop.name;
 
     if (propName.startsWith(" $")) {
       continue;
@@ -188,27 +193,29 @@ export function extractFieldsFromType(
       continue;
     }
 
-    const propType = checker.getTypeOfSymbol(prop);
-    const declarations = prop.getDeclarations();
-    const declaration = declarations?.[0];
+    const propType = await checker.getTypeOfSymbol(prop);
+    const declaration = await checker.getFirstDeclarationOfSymbol(prop);
 
-    const optional = hasUndefinedInType(propType);
+    const optional = await hasUndefinedInType(propType, checker);
 
-    const tsdocInfo = extractTsDocFromSymbol(prop, checker);
+    const tsdocInfo = await extractTsDocFromSymbol(prop, checker);
 
     let actualPropType = propType;
     let directives: ReadonlyArray<DirectiveInfo> | null = null;
     let directiveNullable = false;
     let defaultValue: DirectiveArgumentValue | null = null;
 
-    if (hasDirectiveMetadata(propType)) {
-      const directiveResult = detectDirectiveMetadata(propType, checker);
+    if (await hasDirectiveMetadata(propType, checker)) {
+      const directiveResult = await detectDirectiveMetadata(propType, checker);
       if (directiveResult.directives.length > 0) {
         directives = directiveResult.directives;
       }
 
       // Detect default value from $gqlkitFieldMeta
-      const defaultValueResult = detectDefaultValueMetadata(propType, checker);
+      const defaultValueResult = await detectDefaultValueMetadata(
+        propType,
+        checker,
+      );
       if (defaultValueResult.defaultValue) {
         defaultValue = defaultValueResult.defaultValue;
       }
@@ -225,15 +232,18 @@ export function extractFieldsFromType(
 
       // Check if the original type is nullable before unwrapping
       // TypeScript normalizes WithDirectives<T | null, [...]> to (T & Directive) | null
-      if (isNullableUnion(propType)) {
+      if (await isNullableUnion(propType, checker)) {
         directiveNullable = true;
       }
-      actualPropType = unwrapDirectiveType(propType, checker);
+      actualPropType = await unwrapDirectiveType(propType, checker);
 
       // Check if the unwrapped type (from $gqlkitOriginalType) is nullable
       // This handles cases where TypeScript normalizes intersection types
       // and loses the null from the outer union
-      if (!directiveNullable && isNullableUnion(actualPropType)) {
+      if (
+        !directiveNullable &&
+        (await isNullableUnion(actualPropType, checker))
+      ) {
         directiveNullable = true;
       }
     }
@@ -242,14 +252,14 @@ export function extractFieldsFromType(
     let propTypeNode: ts.TypeNode | undefined;
     if (
       declaration &&
-      (ts.isPropertySignature(declaration) ||
+      (ts.isPropertySignatureDeclaration(declaration) ||
         ts.isPropertyDeclaration(declaration))
     ) {
       propTypeNode = declaration.type;
     }
 
     const fieldDiagnostics: FieldTypeResolverDiagnostic[] = [];
-    const resolvedType = resolveFieldType(actualPropType, propTypeNode, {
+    const resolvedType = await resolveFieldType(actualPropType, propTypeNode, {
       checker,
       knownTypeNames,
       knownTypeSymbols,
@@ -329,10 +339,13 @@ function isConstEnum(node: ts.Node): boolean {
   return (modifiers & ts.ModifierFlags.Const) !== 0;
 }
 
-function isStringLiteralUnion(type: ts.Type): boolean {
-  if (!type.isUnion()) return false;
+async function isStringLiteralUnion(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
+  if (!type.isUnionType()) return false;
 
-  const nonNullTypes = getNonNullableTypes(type);
+  const nonNullTypes = await getNonNullableTypes(type, checker);
 
   if (nonNullTypes.length === 0) return false;
 
@@ -346,19 +359,19 @@ function getEnumMemberName(memberName: ts.PropertyName): string {
   return memberName.getText();
 }
 
-function extractEnumMembers(
+async function extractEnumMembers(
   node: ts.EnumDeclaration,
-  checker: ts.TypeChecker,
-): ReadonlyArray<EnumMemberInfo> {
+  checker: CheckerLoader,
+): Promise<ReadonlyArray<EnumMemberInfo>> {
   const members: EnumMemberInfo[] = [];
 
   for (const member of node.members) {
     const name = getEnumMemberName(member.name);
     const initializer = member.initializer;
 
-    const symbol = checker.getSymbolAtLocation(member.name);
+    const symbol = await checker.getSymbolAtLocation(member.name);
     const tsdocInfo = symbol
-      ? extractTsDocFromSymbol(symbol, checker)
+      ? await extractTsDocFromSymbol(symbol, checker)
       : { description: undefined, deprecated: undefined };
 
     if (initializer && ts.isStringLiteral(initializer)) {
@@ -371,7 +384,7 @@ function extractEnumMembers(
         sourceLocation: getSourceLocationFromNode(member),
       });
     } else {
-      const constantValue = checker.getConstantValue(member);
+      const constantValue = await checker.getConstantValue(member);
       if (typeof constantValue === "number") {
         members.push({
           name,
@@ -439,20 +452,20 @@ function validateNumericEnumMembers(
   return diagnostics;
 }
 
-function extractStringLiteralUnionMembers(
+async function extractStringLiteralUnionMembers(
   type: ts.Type,
-  checker: ts.TypeChecker,
-): ReadonlyArray<EnumMemberInfo> {
-  if (!type.isUnion()) return [];
+  checker: CheckerLoader,
+): Promise<ReadonlyArray<EnumMemberInfo>> {
+  if (!type.isUnionType()) return [];
 
   const members: EnumMemberInfo[] = [];
 
-  for (const t of type.types) {
+  for (const t of await checker.getTypesOfType(type)) {
     if (isNullOrUndefined(t)) {
       continue;
     }
     if (t.flags & ts.TypeFlags.StringLiteral) {
-      const value = checker.typeToString(t).replace(/^"|"$/g, "");
+      const value = (await checker.typeToString(t)).replace(/^"|"$/g, "");
       members.push({
         name: value,
         value: value,
@@ -467,23 +480,29 @@ function extractStringLiteralUnionMembers(
   return members;
 }
 
-function determineTypeKindFromUnion(type: ts.Type): TypeKind | null {
-  if (!type.isUnion()) {
+async function determineTypeKindFromUnion(
+  type: ts.Type,
+  checker: CheckerLoader,
+): Promise<TypeKind | null> {
+  if (!type.isUnionType()) {
     return null;
   }
 
-  const nonNullTypes = getNonNullableTypes(type);
+  const nonNullTypes = await getNonNullableTypes(type, checker);
 
-  if (isStringLiteralUnion(type)) {
+  if (await isStringLiteralUnion(type, checker)) {
     return "enum";
   }
 
-  const allObjectTypes = nonNullTypes.every(
-    (t) =>
-      (t.flags & ts.TypeFlags.Object) !== 0 ||
-      (t.flags & ts.TypeFlags.Intersection) !== 0 ||
-      t.symbol !== undefined,
+  const objectLike = await Promise.all(
+    nonNullTypes.map(
+      async (t) =>
+        (t.flags & ts.TypeFlags.Object) !== 0 ||
+        (t.flags & ts.TypeFlags.Intersection) !== 0 ||
+        (await checker.getSymbolOfType(t)) !== undefined,
+    ),
   );
+  const allObjectTypes = objectLike.every(Boolean);
   if (nonNullTypes.length > 1 && allObjectTypes) {
     return "union";
   }
@@ -507,10 +526,12 @@ function determineTypeKindFromUnion(type: ts.Type): TypeKind | null {
 interface DetermineTypeKindParams {
   readonly declaration: ts.Declaration | undefined;
   readonly type: ts.Type;
-  readonly checker: ts.TypeChecker;
+  readonly checker: CheckerLoader;
 }
 
-function determineTypeKind(params: DetermineTypeKindParams): TypeKind {
+async function determineTypeKind(
+  params: DetermineTypeKindParams,
+): Promise<TypeKind> {
   const { declaration, type, checker } = params;
 
   if (declaration && ts.isInterfaceDeclaration(declaration)) {
@@ -524,12 +545,12 @@ function determineTypeKind(params: DetermineTypeKindParams): TypeKind {
   if (
     declaration &&
     ts.isTypeAliasDeclaration(declaration) &&
-    isDefineInterfaceTypeAlias(declaration, checker)
+    (await isDefineInterfaceTypeAlias(declaration, checker))
   ) {
     return "graphqlInterface";
   }
 
-  const unionKind = determineTypeKindFromUnion(type);
+  const unionKind = await determineTypeKindFromUnion(type, checker);
   if (unionKind) {
     return unionKind;
   }
@@ -648,7 +669,7 @@ interface ProcessDeclaredTypeParams {
   readonly location: SourceLocation;
   readonly filePath: string;
   readonly exportKind: "named" | "default";
-  readonly checker: ts.TypeChecker;
+  readonly checker: CheckerLoader;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
   readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
@@ -671,9 +692,9 @@ interface ProcessDeclaredTypeResult {
   readonly diagnostics: Diagnostic[];
 }
 
-function processDeclaredType(
+async function processDeclaredType(
   params: ProcessDeclaredTypeParams,
-): ProcessDeclaredTypeResult {
+): Promise<ProcessDeclaredTypeResult> {
   const {
     name,
     type,
@@ -696,8 +717,11 @@ function processDeclaredType(
   const diagnostics: Diagnostic[] = [];
 
   let typeDirectives: ReadonlyArray<DirectiveInfo> | null = null;
-  if (detectTypeLevelDirectives && hasDirectiveMetadata(type)) {
-    const directiveResult = detectDirectiveMetadata(type, checker);
+  if (
+    detectTypeLevelDirectives &&
+    (await hasDirectiveMetadata(type, checker))
+  ) {
+    const directiveResult = await detectDirectiveMetadata(type, checker);
     if (directiveResult.directives.length > 0) {
       typeDirectives = directiveResult.directives;
     }
@@ -711,8 +735,8 @@ function processDeclaredType(
     }
   }
 
-  const kind = determineTypeKind({ declaration, type, checker });
-  const tsdocInfo = extractTsDocFromSymbol(symbol, checker);
+  const kind = await determineTypeKind({ declaration, type, checker });
+  const tsdocInfo = await extractTsDocFromSymbol(symbol, checker);
 
   let implementedInterfaces: ReadonlyArray<string> | null = null;
   if (declaration && ts.isTypeAliasDeclaration(declaration)) {
@@ -724,7 +748,7 @@ function processDeclaredType(
             declarationSourceFile,
             checker,
           )
-        : extractImplementsFromGqlTypeDef(
+        : await extractImplementsFromGqlTypeDef(
             declaration,
             declarationSourceFile,
             checker,
@@ -748,8 +772,8 @@ function processDeclaredType(
   if (kind === "enum") {
     const enumMembers =
       declaration && ts.isEnumDeclaration(declaration)
-        ? extractEnumMembers(declaration, checker)
-        : extractStringLiteralUnionMembers(type, checker);
+        ? await extractEnumMembers(declaration, checker)
+        : await extractStringLiteralUnionMembers(type, checker);
     return {
       typeInfo: {
         metadata,
@@ -771,8 +795,12 @@ function processDeclaredType(
       ? declaration.type
       : undefined;
 
-  const unionMembers = extractUnionMembers(type, typeNode);
-  const inlineObjectResult = extractInlineObjectMembers({
+  const unionMembers = await extractUnionMembers({
+    type,
+    typeNode: typeNode ?? null,
+    checker,
+  });
+  const inlineObjectResult = await extractInlineObjectMembers({
     type,
     checker,
     globalTypeMappings,
@@ -786,10 +814,10 @@ function processDeclaredType(
     typeNode,
   });
   diagnostics.push(...(inlineObjectResult?.diagnostics ?? []));
-  const ignoreFields = detectIgnoreFieldsMetadata({ type, checker });
+  const ignoreFields = await detectIgnoreFieldsMetadata({ type, checker });
 
   if (ignoreFields !== null && kind !== "union") {
-    const allFieldNames = collectAllFieldNames(type, checker);
+    const allFieldNames = await collectAllFieldNames(type, checker);
     const validationDiagnostics = validateIgnoreFields({
       typeName: name,
       ignoreFields,
@@ -802,7 +830,7 @@ function processDeclaredType(
   const fieldResult =
     kind === "union"
       ? { fields: [], diagnostics: [] }
-      : extractFieldsFromType({
+      : await extractFieldsFromType({
           type,
           checker,
           globalTypeMappings,
@@ -850,7 +878,7 @@ interface ProcessReexportedSymbolParams {
   readonly type: ts.Type;
   readonly location: SourceLocation;
   readonly filePath: string;
-  readonly checker: ts.TypeChecker;
+  readonly checker: CheckerLoader;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
   readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
@@ -875,9 +903,9 @@ interface ProcessReexportedSymbolResult {
  * → the generic-type-parameter diagnostic. Delegates everything from kind
  * detection onward to {@link processDeclaredType}.
  */
-function processReexportedSymbol(
+async function processReexportedSymbol(
   params: ProcessReexportedSymbolParams,
-): ProcessReexportedSymbolResult {
+): Promise<ProcessReexportedSymbolResult> {
   const {
     exportedName,
     resolvedSymbol,
@@ -894,9 +922,9 @@ function processReexportedSymbol(
     discoveredTypes,
   } = params;
 
-  const scalarMetadataResult = detectScalarMetadata(type, checker);
+  const scalarMetadataResult = await detectScalarMetadata(type, checker);
   if (scalarMetadataResult.scalarName && !scalarMetadataResult.isPrimitive) {
-    const tsdocInfo = extractTsDocFromSymbol(resolvedSymbol, checker);
+    const tsdocInfo = await extractTsDocFromSymbol(resolvedSymbol, checker);
     return {
       typeInfo: null,
       diagnostics: [],
@@ -913,8 +941,7 @@ function processReexportedSymbol(
     };
   }
 
-  const declarations = resolvedSymbol.getDeclarations();
-  const declaration = declarations?.[0];
+  const declaration = await checker.getFirstDeclarationOfSymbol(resolvedSymbol);
   const preambleDiagnostics: Diagnostic[] = [];
   if (declaration) {
     if (
@@ -942,7 +969,7 @@ function processReexportedSymbol(
     }
   }
 
-  const result = processDeclaredType({
+  const result = await processDeclaredType({
     name: exportedName,
     type,
     symbol: resolvedSymbol,
@@ -981,7 +1008,7 @@ interface ProcessExportDeclarationParams {
   readonly node: ts.ExportDeclaration;
   readonly sourceFile: ts.SourceFile;
   readonly filePath: string;
-  readonly checker: ts.TypeChecker;
+  readonly checker: CheckerLoader;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
   readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
@@ -991,9 +1018,9 @@ interface ProcessExportDeclarationParams {
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
 }
 
-function processExportDeclaration(
+async function processExportDeclaration(
   params: ProcessExportDeclarationParams,
-): ProcessExportDeclarationResult {
+): Promise<ProcessExportDeclarationResult> {
   const {
     node,
     sourceFile,
@@ -1025,16 +1052,16 @@ function processExportDeclaration(
     for (const specifier of exportClause.elements) {
       const exportedName = specifier.name.text;
       const localTargetSymbol =
-        checker.getExportSpecifierLocalTargetSymbol(specifier);
+        await checker.getExportSpecifierLocalTargetSymbol(specifier);
       if (!localTargetSymbol) continue;
 
       const originalSymbol =
         localTargetSymbol.flags & ts.SymbolFlags.Alias
-          ? checker.getAliasedSymbol(localTargetSymbol)
+          ? await checker.getAliasedSymbol(localTargetSymbol)
           : localTargetSymbol;
       if (!originalSymbol) continue;
 
-      const type = checker.getDeclaredTypeOfSymbol(originalSymbol);
+      const type = await checker.getDeclaredTypeOfSymbol(originalSymbol);
       symbolsToProcess.push({
         exportedName,
         resolvedSymbol: originalSymbol,
@@ -1051,16 +1078,16 @@ function processExportDeclaration(
       if (!specifier.isTypeOnly) continue;
       const exportedName = specifier.name.text;
       const localTargetSymbol =
-        checker.getExportSpecifierLocalTargetSymbol(specifier);
+        await checker.getExportSpecifierLocalTargetSymbol(specifier);
       if (!localTargetSymbol) continue;
 
       const originalSymbol =
         localTargetSymbol.flags & ts.SymbolFlags.Alias
-          ? checker.getAliasedSymbol(localTargetSymbol)
+          ? await checker.getAliasedSymbol(localTargetSymbol)
           : localTargetSymbol;
       if (!originalSymbol) continue;
 
-      const type = checker.getDeclaredTypeOfSymbol(originalSymbol);
+      const type = await checker.getDeclaredTypeOfSymbol(originalSymbol);
       symbolsToProcess.push({
         exportedName,
         resolvedSymbol: originalSymbol,
@@ -1068,7 +1095,9 @@ function processExportDeclaration(
       });
     }
   } else if (node.isTypeOnly && !exportClause && node.moduleSpecifier) {
-    const moduleSymbol = checker.getSymbolAtLocation(node.moduleSpecifier);
+    const moduleSymbol = await checker.getSymbolAtLocation(
+      node.moduleSpecifier,
+    );
     if (!moduleSymbol) {
       const location = getSourceLocationFromNode(node)!;
       const modulePath = ts.isStringLiteral(node.moduleSpecifier)
@@ -1083,11 +1112,11 @@ function processExportDeclaration(
       return { types, diagnostics, detectedScalarNames, detectedScalars };
     }
 
-    const exports = checker.getExportsOfModule(moduleSymbol);
+    const exports = await checker.getExportsOfModule(moduleSymbol);
     for (const exportedSymbol of exports) {
       const resolvedSymbol =
         exportedSymbol.flags & ts.SymbolFlags.Alias
-          ? checker.getAliasedSymbol(exportedSymbol)
+          ? await checker.getAliasedSymbol(exportedSymbol)
           : exportedSymbol;
 
       if (
@@ -1100,9 +1129,9 @@ function processExportDeclaration(
         continue;
       }
 
-      const type = checker.getDeclaredTypeOfSymbol(resolvedSymbol);
+      const type = await checker.getDeclaredTypeOfSymbol(resolvedSymbol);
       symbolsToProcess.push({
-        exportedName: exportedSymbol.getName(),
+        exportedName: exportedSymbol.name,
         resolvedSymbol,
         type,
       });
@@ -1111,7 +1140,7 @@ function processExportDeclaration(
 
   const location = getSourceLocationFromNode(node)!;
   for (const { exportedName, resolvedSymbol, type } of symbolsToProcess) {
-    const result = processReexportedSymbol({
+    const result = await processReexportedSymbol({
       exportedName,
       resolvedSymbol,
       type,
@@ -1144,13 +1173,17 @@ function processExportDeclaration(
   return { types, diagnostics, detectedScalarNames, detectedScalars };
 }
 
-function getNamedTypeName(memberType: ts.Type): string {
+async function getNamedTypeName(
+  memberType: ts.Type,
+  checker: CheckerLoader,
+): Promise<string> {
   // For type aliases (e.g., GqlObject<...>), use aliasSymbol
-  if (memberType.aliasSymbol) {
-    return memberType.aliasSymbol.getName();
+  const memberTypeAliasSymbol = await checker.getAliasSymbolOfType(memberType);
+  if (memberTypeAliasSymbol) {
+    return memberTypeAliasSymbol.name;
   }
   // For regular types, use symbol
-  return memberType.symbol?.getName() ?? "";
+  return (await checker.getSymbolOfType(memberType))?.name ?? "";
 }
 
 interface InlineObjectExtractionResult {
@@ -1162,7 +1195,7 @@ interface InlineObjectExtractionResult {
 
 interface ExtractInlineObjectMembersParams {
   readonly type: ts.Type;
-  readonly checker: ts.TypeChecker;
+  readonly checker: CheckerLoader;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
   readonly knownTypeSymbols: ReadonlyMap<string, ts.Symbol>;
@@ -1174,9 +1207,9 @@ interface ExtractInlineObjectMembersParams {
   readonly typeNode: ts.TypeNode | undefined;
 }
 
-function extractInlineObjectMembers(
+async function extractInlineObjectMembers(
   params: ExtractInlineObjectMembersParams,
-): InlineObjectExtractionResult | null {
+): Promise<InlineObjectExtractionResult | null> {
   const {
     type,
     checker,
@@ -1190,11 +1223,11 @@ function extractInlineObjectMembers(
     discoveredTypes,
     typeNode,
   } = params;
-  if (!type.isUnion()) {
+  if (!type.isUnionType()) {
     return null;
   }
 
-  const nonNullTypes = getNonNullableTypes(type);
+  const nonNullTypes = await getNonNullableTypes(type, checker);
   const memberTypeNodes =
     typeNode && ts.isUnionTypeNode(typeNode)
       ? filterNonNullTypeNodes(typeNode)
@@ -1225,7 +1258,7 @@ function extractInlineObjectMembers(
     }
   } else {
     for (const memberType of nonNullTypes) {
-      if (isAnonymousObjectType(memberType)) {
+      if (await isAnonymousObjectType(memberType, checker)) {
         hasInlineObjects = true;
       } else {
         hasNamedTypes = true;
@@ -1234,127 +1267,150 @@ function extractInlineObjectMembers(
   }
 
   if (hasInlineObjects) {
-    for (const memberType of nonNullTypes) {
-      if (isAnonymousObjectType(memberType)) {
-        const properties = memberType.getProperties();
-        const memberProperties: PropertyDef[] = [];
+    const isAnonymous = await Promise.all(
+      nonNullTypes.map((t) => isAnonymousObjectType(t, checker)),
+    );
+    const anonymousMembers = nonNullTypes.filter((_, i) => isAnonymous[i]);
+    const propertiesOfMembers = await Promise.all(
+      anonymousMembers.map((t) => checker.getPropertiesOfType(t)),
+    );
+    await prefetchPropertyFacts(checker, propertiesOfMembers.flat());
 
-        for (const prop of properties) {
-          const propType = checker.getTypeOfSymbol(prop);
-          const tsdocInfo = extractTsDocFromSymbol(prop, checker);
-          const declarations = prop.getDeclarations();
-          const declaration = declarations?.[0];
+    for (const properties of propertiesOfMembers) {
+      const memberProperties: PropertyDef[] = [];
 
-          let propTypeNode: ts.TypeNode | undefined;
-          if (
-            declaration &&
-            (ts.isPropertySignature(declaration) ||
-              ts.isPropertyDeclaration(declaration))
-          ) {
-            propTypeNode = declaration.type;
-          }
+      for (const prop of properties) {
+        const propType = await checker.getTypeOfSymbol(prop);
+        const tsdocInfo = await extractTsDocFromSymbol(prop, checker);
+        const declaration = await checker.getFirstDeclarationOfSymbol(prop);
 
-          const fieldDiagnostics: FieldTypeResolverDiagnostic[] = [];
-          const resolvedType = resolveFieldType(propType, propTypeNode, {
-            checker,
-            knownTypeNames,
-            knownTypeSymbols,
-            underlyingSymbolToTypeName,
-            globalTypeMappings,
-            sourceFiles,
-            scalarMappingTable,
-            scalarMappingContext,
-            discoveredTypes,
-            diagnostics: fieldDiagnostics,
-          });
-          for (const diagnostic of fieldDiagnostics) {
-            diagnostics.push({
-              code: diagnostic.code,
-              message: `Field '${prop.getName()}': ${diagnostic.message}`,
-              severity: diagnostic.severity,
-              location: getSourceLocationFromNode(declaration),
-            });
-          }
+        let propTypeNode: ts.TypeNode | undefined;
+        if (
+          declaration &&
+          (ts.isPropertySignatureDeclaration(declaration) ||
+            ts.isPropertyDeclaration(declaration))
+        ) {
+          propTypeNode = declaration.type;
+        }
 
-          // Field resolution diagnostics for inline union members currently mean
-          // the outer property itself has no GraphQL representation.
-          if (fieldDiagnostics.length > 0) {
-            continue;
-          }
-
-          // Skip fields with never type — they have no GraphQL representation.
-          if (resolvedType.kind === "never") {
-            continue;
-          }
-
-          // This path (anonymous union-member object types) has never detected
-          // optionality/directives/defaultValue/sourceLocation — unlike
-          // extractFieldsFromType/extractInlineObjectProperties above, which do.
-          // Fill with PropertyDef's "unset" values; no consumer of
-          // InlineObjectMember.properties reads these fields.
-          memberProperties.push({
-            name: prop.getName(),
-            tsType: resolvedType,
-            optional: false,
-            description: tsdocInfo.description ?? null,
-            deprecated: tsdocInfo.deprecated ?? null,
-            directives: null,
-            defaultValue: null,
-            sourceLocation: null,
+        const fieldDiagnostics: FieldTypeResolverDiagnostic[] = [];
+        const resolvedType = await resolveFieldType(propType, propTypeNode, {
+          checker,
+          knownTypeNames,
+          knownTypeSymbols,
+          underlyingSymbolToTypeName,
+          globalTypeMappings,
+          sourceFiles,
+          scalarMappingTable,
+          scalarMappingContext,
+          discoveredTypes,
+          diagnostics: fieldDiagnostics,
+        });
+        for (const diagnostic of fieldDiagnostics) {
+          diagnostics.push({
+            code: diagnostic.code,
+            message: `Field '${prop.name}': ${diagnostic.message}`,
+            severity: diagnostic.severity,
+            location: getSourceLocationFromNode(declaration),
           });
         }
 
-        members.push({ properties: memberProperties });
+        // Field resolution diagnostics for inline union members currently mean
+        // the outer property itself has no GraphQL representation.
+        if (fieldDiagnostics.length > 0) {
+          continue;
+        }
+
+        // Skip fields with never type — they have no GraphQL representation.
+        if (resolvedType.kind === "never") {
+          continue;
+        }
+
+        // This path (anonymous union-member object types) has never detected
+        // optionality/directives/defaultValue/sourceLocation — unlike
+        // extractFieldsFromType/extractInlineObjectProperties above, which do.
+        // Fill with PropertyDef's "unset" values; no consumer of
+        // InlineObjectMember.properties reads these fields.
+        memberProperties.push({
+          name: prop.name,
+          tsType: resolvedType,
+          optional: false,
+          description: tsdocInfo.description ?? null,
+          deprecated: tsdocInfo.deprecated ?? null,
+          directives: null,
+          defaultValue: null,
+          sourceLocation: null,
+        });
       }
+
+      members.push({ properties: memberProperties });
     }
   }
 
   return { members, hasInlineObjects, hasNamedTypes, diagnostics };
 }
 
-function extractUnionMembers(
-  type: ts.Type,
-  typeNode: ts.TypeNode | undefined,
-): string[] | null {
-  if (!type.isUnion()) {
+interface ExtractUnionMembersParams {
+  readonly type: ts.Type;
+  readonly typeNode: ts.TypeNode | null;
+  readonly checker: CheckerLoader;
+}
+
+async function extractUnionMembers(
+  params: ExtractUnionMembersParams,
+): Promise<string[] | null> {
+  const { type, typeNode, checker } = params;
+  if (!type.isUnionType()) {
     return null;
   }
 
-  const nonNullTypes = getNonNullableTypes(type);
+  const nonNullTypes = await getNonNullableTypes(type, checker);
 
-  const allObjectTypes = nonNullTypes.every(
-    (t) =>
-      (t.flags & ts.TypeFlags.Object) !== 0 ||
-      (t.flags & ts.TypeFlags.Intersection) !== 0 ||
-      t.symbol !== undefined,
+  const objectLike = await Promise.all(
+    nonNullTypes.map(
+      async (t) =>
+        (t.flags & ts.TypeFlags.Object) !== 0 ||
+        (t.flags & ts.TypeFlags.Intersection) !== 0 ||
+        (await checker.getSymbolOfType(t)) !== undefined,
+    ),
   );
+  const allObjectTypes = objectLike.every(Boolean);
 
   if (nonNullTypes.length > 1 && allObjectTypes) {
-    // Extract member type nodes from union type node if available
-    const memberTypeNodes =
-      typeNode && ts.isUnionTypeNode(typeNode)
-        ? filterNonNullTypeNodes(typeNode)
-        : [];
+    // The checker orders union constituents by its own rules, not by source
+    // position, so member nodes are matched to constituents by type identity.
+    const memberTypeNodes = new Map<ts.Type, ts.TypeNode>();
+    if (typeNode && ts.isUnionTypeNode(typeNode)) {
+      for (const memberNode of filterNonNullTypeNodes(typeNode)) {
+        memberTypeNodes.set(
+          await checker.getTypeFromTypeNode(memberNode),
+          memberNode,
+        );
+      }
+    }
 
-    const namedMembers = nonNullTypes
-      .map((t, index) => {
+    const memberNames = await Promise.all(
+      nonNullTypes.map(async (t) => {
         // First try to get name from type
-        if (!isAnonymousObjectType(t)) {
-          const name = getNamedTypeName(t);
+        if (!(await isAnonymousObjectType(t, checker))) {
+          const name = await getNamedTypeName(t, checker);
           if (name !== "" && name !== "__type") {
             return name;
           }
         }
         // Fallback to typeNode name for Simplify<T> pattern
-        if (memberTypeNodes[index]) {
-          const memberNode = memberTypeNodes[index];
+        const memberNode = memberTypeNodes.get(t);
+        if (memberNode) {
           if (ts.isTypeReferenceNode(memberNode)) {
             return getTypeNameFromNode(memberNode) ?? "";
           }
         }
         return "";
-      })
-      .filter((name) => name !== "" && name !== "__type");
+      }),
+    );
+    const namedMembers = memberNames.filter(
+      (name) => name !== "" && name !== "__type",
+    );
 
     if (namedMembers.length > 0) {
       return namedMembers.sort();
@@ -1364,12 +1420,17 @@ function extractUnionMembers(
   return null;
 }
 
-export function extractTypesFromProgram(
-  program: ts.Program,
-  sourceFiles: ReadonlyArray<string>,
-  options: ExtractionOptions,
-): ExtractionResult {
-  const checker = program.getTypeChecker();
+export interface ExtractTypesFromProgramParams {
+  readonly program: ts.Program;
+  readonly checker: CheckerLoader;
+  readonly sourceFiles: ReadonlyArray<string>;
+  readonly options: ExtractionOptions;
+}
+
+export async function extractTypesFromProgram(
+  params: ExtractTypesFromProgramParams,
+): Promise<ExtractionResult> {
+  const { program, checker, sourceFiles, options } = params;
   const types: ExtractedTypeInfo[] = [];
   const diagnostics: Diagnostic[] = [];
   const detectedScalarNames = new Set<string>();
@@ -1385,7 +1446,7 @@ export function extractTypesFromProgram(
   const scannedSourceFilesSet = new Set(sourceFiles);
 
   for (const filePath of sourceFiles) {
-    const sourceFile = program.getSourceFile(filePath);
+    const sourceFile = await program.getSourceFile(filePath);
     if (!sourceFile) {
       diagnostics.push({
         code: "PARSE_ERROR",
@@ -1396,13 +1457,13 @@ export function extractTypesFromProgram(
       continue;
     }
 
-    ts.forEachChild(sourceFile, (node) => {
+    for (const node of sourceFile.statements) {
       if (ts.isEnumDeclaration(node)) {
         const hasExport = isExported(node);
         const hasDefaultExport = isDefaultExport(node, sourceFile);
 
         if (!hasExport && !hasDefaultExport) {
-          return;
+          continue;
         }
 
         const name = node.name.getText(sourceFile);
@@ -1415,7 +1476,7 @@ export function extractTypesFromProgram(
             severity: "error",
             location,
           });
-          return;
+          continue;
         }
 
         if (isHeterogeneousEnum(node)) {
@@ -1425,10 +1486,10 @@ export function extractTypesFromProgram(
             severity: "error",
             location,
           });
-          return;
+          continue;
         }
 
-        const enumMembers = extractEnumMembers(node, checker);
+        const enumMembers = await extractEnumMembers(node, checker);
 
         const validationDiagnostics = validateNumericEnumMembers(
           enumMembers,
@@ -1437,10 +1498,10 @@ export function extractTypesFromProgram(
         );
         if (validationDiagnostics.length > 0) {
           diagnostics.push(...validationDiagnostics);
-          return;
+          continue;
         }
 
-        const tsdocInfo = extractTsDocInfo(node, checker);
+        const tsdocInfo = await extractTsDocInfo(node, checker);
         const metadata: TypeMetadata = {
           name,
           kind: "enum",
@@ -1460,7 +1521,7 @@ export function extractTypesFromProgram(
           enumMembers,
           implementedInterfaces: null,
         });
-        return;
+        continue;
       }
 
       if (ts.isInterfaceDeclaration(node) || ts.isTypeAliasDeclaration(node)) {
@@ -1468,7 +1529,7 @@ export function extractTypesFromProgram(
         const hasDefaultExport = isDefaultExport(node, sourceFile);
 
         if (!hasExport && !hasDefaultExport) {
-          return;
+          continue;
         }
 
         const name = node.name.getText(sourceFile);
@@ -1483,17 +1544,17 @@ export function extractTypesFromProgram(
           diagnostics.push(genericDiagnostic);
         }
 
-        const symbol = checker.getSymbolAtLocation(node.name);
+        const symbol = await checker.getSymbolAtLocation(node.name);
         if (!symbol) {
-          return;
+          continue;
         }
 
-        const type = checker.getDeclaredTypeOfSymbol(symbol);
+        const type = await checker.getDeclaredTypeOfSymbol(symbol);
 
-        const scalarMetadata = detectScalarMetadata(type, checker);
+        const scalarMetadata = await detectScalarMetadata(type, checker);
         if (scalarMetadata.scalarName && !scalarMetadata.isPrimitive) {
           detectedScalarNames.add(scalarMetadata.scalarName);
-          const tsdocInfo = extractTsDocFromSymbol(symbol, checker);
+          const tsdocInfo = await extractTsDocFromSymbol(symbol, checker);
           detectedScalars.push({
             scalarName: scalarMetadata.scalarName,
             typeName: name,
@@ -1502,10 +1563,10 @@ export function extractTypesFromProgram(
             line: typeSourceLocation.line,
             description: tsdocInfo.description ?? null,
           });
-          return;
+          continue;
         }
 
-        const result = processDeclaredType({
+        const result = await processDeclaredType({
           name,
           type,
           symbol,
@@ -1530,7 +1591,7 @@ export function extractTypesFromProgram(
       }
 
       if (ts.isExportDeclaration(node)) {
-        const result = processExportDeclaration({
+        const result = await processExportDeclaration({
           node,
           sourceFile,
           filePath,
@@ -1550,7 +1611,7 @@ export function extractTypesFromProgram(
         }
         detectedScalars.push(...result.detectedScalars);
       }
-    });
+    }
   }
 
   // Process transitively discovered types
@@ -1561,7 +1622,7 @@ export function extractTypesFromProgram(
       processedDiscovered.add(name);
       if (knownTypeNames.has(name)) continue;
 
-      const { fields } = extractFieldsFromType({
+      const { fields } = await extractFieldsFromType({
         type: entry.tsType,
         checker,
         globalTypeMappings,

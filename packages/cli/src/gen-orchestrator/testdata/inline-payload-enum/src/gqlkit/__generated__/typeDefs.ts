@@ -16,14 +16,7 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "SIMPLE_WORD"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "TWO_WORDS"
+            "value": "MIXED_CASE"
           }
         },
         {
@@ -44,6 +37,13 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
+            "value": "SIMPLE_WORD"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
             "value": "SNAKE_CASE_VALUE"
           }
         },
@@ -51,7 +51,7 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "MIXED_CASE"
+            "value": "TWO_WORDS"
           }
         }
       ],
@@ -72,6 +72,13 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
+            "value": "ADVANCED"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
             "value": "BEGINNER"
           }
         },
@@ -80,13 +87,6 @@ export const typeDefs: DocumentNode = {
           "name": {
             "kind": "Name",
             "value": "INTERMEDIATE"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "ADVANCED"
           }
         }
       ],
@@ -206,14 +206,7 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "LOW"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "MEDIUM"
+            "value": "CRITICAL"
           }
         },
         {
@@ -227,7 +220,14 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "CRITICAL"
+            "value": "LOW"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "MEDIUM"
           }
         }
       ],
@@ -248,13 +248,6 @@ export const typeDefs: DocumentNode = {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
-            "value": "SUCCESS"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
             "value": "FAILURE"
           }
         },
@@ -263,6 +256,13 @@ export const typeDefs: DocumentNode = {
           "name": {
             "kind": "Name",
             "value": "PARTIAL_SUCCESS"
+          }
+        },
+        {
+          "kind": "EnumValueDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "SUCCESS"
           }
         }
       ],
