@@ -1,6 +1,10 @@
+import { createHash } from "node:crypto";
 import { readFile } from "node:fs/promises";
-import { resolve } from "node:path";
-import type { GenerationResult } from "../../gen-orchestrator/orchestrator.js";
+import { relative, resolve } from "node:path";
+import type {
+  GenerationConfig,
+  GenerationResult,
+} from "../../gen-orchestrator/orchestrator.js";
 import {
   findGeneratedFile,
   type GoldenCase,
@@ -51,4 +55,38 @@ export async function findGoldenMismatches(
   }
 
   return mismatches;
+}
+
+/** Describes every error diagnostic and a failed generation. */
+export function findErrorDiagnostics(result: GenerationResult): string[] {
+  const problems = result.diagnostics
+    .filter((d) => d.severity === "error")
+    .map((d) => `${d.code}: ${d.message}`);
+  if (!result.success && problems.length === 0) {
+    problems.push("generation failed without an error diagnostic");
+  }
+  return problems;
+}
+
+/**
+ * Fingerprints a result (diagnostics and generated files, with paths made
+ * relative to the project) so comparisons can flag workloads whose output
+ * changed between two refs.
+ */
+export function hashGenerationResult(
+  config: GenerationConfig,
+  result: GenerationResult,
+): string {
+  const hash = createHash("sha256");
+  hash.update(serializeDiagnostics(result.diagnostics));
+  const files = result.files
+    .map((f) => ({
+      path: relative(config.cwd, f.filePath).replaceAll("\\", "/"),
+      content: f.content,
+    }))
+    .sort((a, b) => a.path.localeCompare(b.path));
+  for (const file of files) {
+    hash.update(`\0${file.path}\0${file.content}`);
+  }
+  return hash.digest("hex").slice(0, 16);
 }
