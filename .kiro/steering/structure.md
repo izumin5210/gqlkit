@@ -30,7 +30,7 @@ Pipeline-based architecture for code generation:
 - **Resolver Extraction**: `src/resolver-extractor/` - Scans and analyzes resolver definitions
 - **Auto-Type Generation**: `src/auto-type-generator/` - Generates named types from inline definitions (objects, unions, enums)
 - **Schema Generation**: `src/schema-generator/` - Builds GraphQL AST and resolver maps
-- **Orchestration**: `src/gen-orchestrator/` - Coordinates pipeline stages (reporter, writer)
+- **Orchestration**: `src/gen-orchestrator/` - Coordinates pipeline stages (reporter, writer, `parallel/` for extracting ranges of files on worker threads)
 - **Core Vocabulary**: `src/core/` - Pipeline-wide IR and vocabulary with no dependencies on the rest of `src/`: IR types (diagnostics, TypeScript/GraphQL type references), the CLI↔runtime metadata/marker contract, and naming-convention predicates (field eligibility, typename discrimination)
 - **Shared Utilities**: `src/shared/` - Cross-cutting utilities used by multiple pipeline stages (e.g., TSDoc parsing, type conversion, TypeScript AST helpers)
 

@@ -692,7 +692,14 @@ async function partitionSourceFiles(
     return [sourceFiles];
   }
   const files = await Promise.all(
-    sourceFiles.map(async (path) => ({ path, bytes: (await stat(path)).size })),
+    sourceFiles.map(async (path) => ({
+      path,
+      // A file gone since scanning is left for program creation to report.
+      bytes: await stat(path).then(
+        (s) => s.size,
+        () => 0,
+      ),
+    })),
   );
   const totalBytes = files.reduce((sum, f) => sum + f.bytes, 0);
   const count =
