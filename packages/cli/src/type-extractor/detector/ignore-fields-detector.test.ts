@@ -45,7 +45,7 @@ async function withTestProgram(
     },
   });
   try {
-    const program = api.createProgram([VIRTUAL_FILE], {
+    const program = await api.createProgram([VIRTUAL_FILE], {
       target: ts.ScriptTarget.ES2020,
       module: ts.ModuleKind.ES2020,
       strict: true,
@@ -53,7 +53,7 @@ async function withTestProgram(
       noEmit: true,
     });
 
-    const sourceFile = program.getSourceFile(VIRTUAL_FILE);
+    const sourceFile = await program.getSourceFile(VIRTUAL_FILE);
     if (!sourceFile) {
       throw new Error("Failed to get source file");
     }
@@ -66,7 +66,7 @@ async function withTestProgram(
       sourceFile,
     });
   } finally {
-    api.close();
+    await api.close();
   }
 }
 

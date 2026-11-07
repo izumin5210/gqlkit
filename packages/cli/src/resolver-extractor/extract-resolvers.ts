@@ -75,7 +75,7 @@ export async function extractResolvers(
     typeExtensions: result.typeExtensions,
     declaredTypeNames,
     customScalarNames,
-    localTypeDeclarationNames: collectLocalTypeDeclarationNames(
+    localTypeDeclarationNames: await collectLocalTypeDeclarationNames(
       program,
       sourceFiles,
     ),

@@ -82,7 +82,7 @@ async function extractBaseTypeSymbol(
   checker: CheckerLoader,
   program: ts.Program,
 ): Promise<ts.Symbol | null> {
-  const sourceFile = program.getSourceFile(scalarInfo.sourceFile);
+  const sourceFile = await program.getSourceFile(scalarInfo.sourceFile);
   if (!sourceFile) {
     return null;
   }

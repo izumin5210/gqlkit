@@ -1440,7 +1440,7 @@ export async function extractTypesFromProgram(
   const scannedSourceFilesSet = new Set(sourceFiles);
 
   for (const filePath of sourceFiles) {
-    const sourceFile = program.getSourceFile(filePath);
+    const sourceFile = await program.getSourceFile(filePath);
     if (!sourceFile) {
       diagnostics.push({
         code: "PARSE_ERROR",

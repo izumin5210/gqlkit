@@ -573,7 +573,7 @@ export async function extractDirectiveDefinitions(
   // concurrently and their checker queries batch; results keep source order.
   const resultsByFile = await Promise.all(
     sourceFiles.map(async (filePath) => {
-      const sourceFile = program.getSourceFile(filePath);
+      const sourceFile = await program.getSourceFile(filePath);
       if (!sourceFile) {
         return [];
       }
