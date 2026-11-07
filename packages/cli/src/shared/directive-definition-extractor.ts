@@ -7,9 +7,11 @@
 
 import { type GraphQLFieldType, METADATA_PROPERTIES } from "../core/index.js";
 import * as ts from "../core/typescript.js";
+import { getCachedChecker } from "./cached-checker.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 import {
   getNonNullableTypes,
+  getPropertyByName,
   isNullableUnion,
   isNullOrUndefined,
 } from "./typescript-utils.js";
@@ -85,8 +87,8 @@ export interface DirectiveDefinitionExtractionResult {
  * Checks if a type is a Directive type (has $directiveName, $directiveArgs, $directiveLocation properties).
  */
 function isDirectiveType(type: ts.Type): boolean {
-  const nameProp = type.getProperty(DIRECTIVE_NAME_PROPERTY);
-  const argsProp = type.getProperty(DIRECTIVE_ARGS_PROPERTY);
+  const nameProp = getPropertyByName(type, DIRECTIVE_NAME_PROPERTY);
+  const argsProp = getPropertyByName(type, DIRECTIVE_ARGS_PROPERTY);
 
   return nameProp !== undefined && argsProp !== undefined;
 }
@@ -98,7 +100,7 @@ function extractDirectiveName(
   type: ts.Type,
   checker: ts.Checker,
 ): string | null {
-  const nameProp = type.getProperty(DIRECTIVE_NAME_PROPERTY);
+  const nameProp = getPropertyByName(type, DIRECTIVE_NAME_PROPERTY);
   if (!nameProp) {
     return null;
   }
@@ -119,7 +121,7 @@ function extractDirectiveLocations(
   type: ts.Type,
   checker: ts.Checker,
 ): DirectiveLocation[] {
-  const locationProp = type.getProperty(DIRECTIVE_LOCATION_PROPERTY);
+  const locationProp = getPropertyByName(type, DIRECTIVE_LOCATION_PROPERTY);
   if (!locationProp) {
     return ["FIELD_DEFINITION"];
   }
@@ -415,7 +417,7 @@ function extractDirectiveArgs(
   args: DirectiveArgumentDefinition[];
   errors: DirectiveDefinitionError[];
 } {
-  const argsProp = type.getProperty(DIRECTIVE_ARGS_PROPERTY);
+  const argsProp = getPropertyByName(type, DIRECTIVE_ARGS_PROPERTY);
   if (!argsProp) {
     return { args: [], errors: [] };
   }
@@ -476,7 +478,7 @@ export function extractDirectiveDefinitions(
   program: ts.Program,
   sourceFiles: ReadonlyArray<string>,
 ): DirectiveDefinitionExtractionResult {
-  const checker = program.getProject().checker;
+  const checker = getCachedChecker(program);
   const definitions: DirectiveDefinitionInfo[] = [];
   const errors: DirectiveDefinitionError[] = [];
 

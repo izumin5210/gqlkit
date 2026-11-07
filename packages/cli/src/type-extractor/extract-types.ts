@@ -1,5 +1,6 @@
 import type { Diagnostic, Diagnostics } from "../core/index.js";
 import type * as ts from "../core/typescript.js";
+import { getCachedChecker } from "../shared/cached-checker.js";
 import {
   type CollectedTypesResult,
   collectResults,
@@ -78,7 +79,7 @@ export function extractTypes(params: ExtractTypesParams): ExtractTypesResult {
     pass1Result.detectedScalars.length > 0
       ? buildScalarMappingTable({
           detectedScalars: pass1Result.detectedScalars,
-          checker: program.getProject().checker,
+          checker: getCachedChecker(program),
           program,
         })
       : null;

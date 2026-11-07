@@ -13,7 +13,11 @@ import {
 } from "../core/index.js";
 import * as ts from "../core/typescript.js";
 import { getActualMetadataType } from "./metadata-detector.js";
-import { findMetadataProperty, isNullOrUndefined } from "./typescript-utils.js";
+import {
+  findMetadataProperty,
+  getPropertyByName,
+  isNullOrUndefined,
+} from "./typescript-utils.js";
 
 const FIELD_META_PROPERTY = METADATA_PROPERTIES.FIELD_META;
 const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
@@ -26,8 +30,8 @@ const ORIGINAL_TYPE_PROPERTY = METADATA_PROPERTIES.ORIGINAL_TYPE;
  */
 function getMetaProperty(type: ts.Type): ts.Symbol | undefined {
   return (
-    type.getProperty(FIELD_META_PROPERTY) ??
-    type.getProperty(TYPE_META_PROPERTY)
+    getPropertyByName(type, FIELD_META_PROPERTY) ??
+    getPropertyByName(type, TYPE_META_PROPERTY)
   );
 }
 
@@ -198,7 +202,7 @@ function extractDirectiveFromType(
   type: ts.Type,
   checker: ts.Checker,
 ): { directive: DirectiveInfo | null; errors: DirectiveDetectionError[] } {
-  const nameProp = type.getProperty(DIRECTIVE_NAME_PROPERTY);
+  const nameProp = getPropertyByName(type, DIRECTIVE_NAME_PROPERTY);
   if (!nameProp) {
     return { directive: null, errors: [] };
   }
@@ -223,7 +227,7 @@ function extractDirectiveFromType(
     };
   }
 
-  const argsProp = type.getProperty(DIRECTIVE_ARGS_PROPERTY);
+  const argsProp = getPropertyByName(type, DIRECTIVE_ARGS_PROPERTY);
   let args: DirectiveArgument[] = [];
   let argErrors: DirectiveDetectionError[] = [];
 
@@ -303,7 +307,7 @@ function detectDirectiveMetadataFromProperty(
 
   // New structure: { directives: Ds }
   // Check if the type has a "directives" property
-  const directivesArrayProp = directivesType.getProperty("directives");
+  const directivesArrayProp = getPropertyByName(directivesType, "directives");
   if (directivesArrayProp) {
     const rawDirectivesArrayType = checker.getTypeOfSymbol(directivesArrayProp);
     const directivesArrayType = getActualMetadataType(rawDirectivesArrayType);
@@ -381,7 +385,7 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
   }
 
   // Also check for the original type property (GqlField marker)
-  const originalTypeProp = type.getProperty(ORIGINAL_TYPE_PROPERTY);
+  const originalTypeProp = getPropertyByName(type, ORIGINAL_TYPE_PROPERTY);
   if (originalTypeProp) {
     return true;
   }
@@ -393,7 +397,7 @@ export function hasDirectiveMetadata(type: ts.Type): boolean {
         return true;
       }
       // Also check for original type property in intersection members
-      const origProp = member.getProperty(ORIGINAL_TYPE_PROPERTY);
+      const origProp = getPropertyByName(member, ORIGINAL_TYPE_PROPERTY);
       if (origProp) {
         return true;
       }
@@ -433,7 +437,7 @@ export function unwrapDirectiveType(
   //    We detect GqlField/GqlObject by checking for metadata properties, not by type name.
   if (type.getAliasTypeArguments() && type.getAliasTypeArguments().length > 0) {
     const metaProp = getMetaProperty(type);
-    const originalTypeProp = type.getProperty(ORIGINAL_TYPE_PROPERTY);
+    const originalTypeProp = getPropertyByName(type, ORIGINAL_TYPE_PROPERTY);
     if (metaProp || originalTypeProp) {
       return type.getAliasTypeArguments()[0]!;
     }
@@ -449,7 +453,8 @@ export function unwrapDirectiveType(
         member.getAliasTypeArguments().length > 0
       ) {
         const memberMetaProp = getMetaProperty(member);
-        const memberOriginalTypeProp = member.getProperty(
+        const memberOriginalTypeProp = getPropertyByName(
+          member,
           ORIGINAL_TYPE_PROPERTY,
         );
         if (memberMetaProp || memberOriginalTypeProp) {
@@ -463,7 +468,7 @@ export function unwrapDirectiveType(
   // This property preserves the original type information including array types.
   // The type's symbol name may be __type (internal TypeScript symbol), but that's
   // handled by the caller using checker.typeToString() for correct type name resolution.
-  const originalTypeProp = type.getProperty(ORIGINAL_TYPE_PROPERTY);
+  const originalTypeProp = getPropertyByName(type, ORIGINAL_TYPE_PROPERTY);
   if (originalTypeProp) {
     const rawOriginalType = checker.getTypeOfSymbol(originalTypeProp);
     const originalType = getActualMetadataType(rawOriginalType);
@@ -475,7 +480,7 @@ export function unwrapDirectiveType(
   // Check intersection members for $gqlkitOriginalType
   if (type.isIntersectionType()) {
     for (const member of type.getTypes()) {
-      const originalProp = member.getProperty(ORIGINAL_TYPE_PROPERTY);
+      const originalProp = getPropertyByName(member, ORIGINAL_TYPE_PROPERTY);
       if (originalProp) {
         const rawOriginalType = checker.getTypeOfSymbol(originalProp);
         const originalType = getActualMetadataType(rawOriginalType);
@@ -489,7 +494,10 @@ export function unwrapDirectiveType(
     const nonDirectiveMembers: ts.Type[] = [];
     for (const member of type.getTypes()) {
       const metaProp = getMetaProperty(member);
-      const originalTypeProp = member.getProperty(ORIGINAL_TYPE_PROPERTY);
+      const originalTypeProp = getPropertyByName(
+        member,
+        ORIGINAL_TYPE_PROPERTY,
+      );
       if (!metaProp && !originalTypeProp) {
         nonDirectiveMembers.push(member);
       }

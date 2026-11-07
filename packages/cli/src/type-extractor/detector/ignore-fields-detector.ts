@@ -8,6 +8,7 @@
 import { METADATA_PROPERTIES } from "../../core/index.js";
 import * as ts from "../../core/typescript.js";
 import { getActualMetadataType } from "../../shared/metadata-detector.js";
+import { getPropertyByName } from "../../shared/typescript-utils.js";
 
 const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
 
@@ -27,7 +28,7 @@ function extractIgnoreFieldsFromType(
   type: ts.Type,
   checker: ts.Checker,
 ): ReadonlySet<string> | null {
-  const metaProp = type.getProperty(TYPE_META_PROPERTY);
+  const metaProp = getPropertyByName(type, TYPE_META_PROPERTY);
   if (!metaProp) {
     return null;
   }
@@ -38,7 +39,7 @@ function extractIgnoreFieldsFromType(
     return null;
   }
 
-  const ignoreFieldsProp = metadataType.getProperty("ignoreFields");
+  const ignoreFieldsProp = getPropertyByName(metadataType, "ignoreFields");
   if (!ignoreFieldsProp) {
     return null;
   }

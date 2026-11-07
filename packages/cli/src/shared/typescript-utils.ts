@@ -25,6 +25,48 @@ export function getDeclarations(
   return symbol.declarations.flatMap((handle) => handle.resolve() ?? []);
 }
 
+const propertiesByName = new WeakMap<ts.Type, Map<string, ts.Symbol>>();
+const primitivePropertyLookups = new WeakMap<
+  ts.Type,
+  Map<string, ts.Symbol | undefined>
+>();
+
+/**
+ * Looks up a property by name with as few round trips to the tsc process as
+ * possible; `type.getProperty()` would issue one on every call.
+ *
+ * - Non-primitive types: the API client fetches the property list once and
+ *   caches it on the type object. Unlike the checker's own lookup, this does
+ *   not fall back to `Object`/`Function` prototype members, which none of
+ *   gqlkit's lookups rely on.
+ * - Primitive types: their apparent type is a lib interface (`String` has
+ *   ~50 members), whose full list costs ~20x a single-name lookup, so each
+ *   name is asked once and memoized.
+ */
+export function getPropertyByName(
+  type: ts.Type,
+  name: string,
+): ts.Symbol | undefined {
+  if (type.flags & ts.TypeFlags.Primitive) {
+    let lookups = primitivePropertyLookups.get(type);
+    if (lookups === undefined) {
+      lookups = new Map();
+      primitivePropertyLookups.set(type, lookups);
+    }
+    if (!lookups.has(name)) {
+      lookups.set(name, type.getProperty(name));
+    }
+    return lookups.get(name);
+  }
+
+  let byName = propertiesByName.get(type);
+  if (byName === undefined) {
+    byName = new Map(type.getProperties().map((p) => [p.name, p]));
+    propertiesByName.set(type, byName);
+  }
+  return byName.get(name);
+}
+
 /**
  * Checks if a type represents null or undefined.
  */
@@ -91,7 +133,7 @@ export function findMetadataProperty(
   const { type, propertyNames, recurseUnion } = params;
 
   for (const name of propertyNames) {
-    const prop = type.getProperty(name);
+    const prop = getPropertyByName(type, name);
     if (prop) {
       return prop;
     }
@@ -100,7 +142,7 @@ export function findMetadataProperty(
   if (type.isIntersectionType()) {
     for (const member of type.getTypes()) {
       for (const name of propertyNames) {
-        const memberProp = member.getProperty(name);
+        const memberProp = getPropertyByName(member, name);
         if (memberProp) {
           return memberProp;
         }

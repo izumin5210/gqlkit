@@ -12,7 +12,7 @@ import {
 import * as ts from "../core/typescript.js";
 import { resolveArgumentValue } from "./directive-detector.js";
 import { getActualMetadataType } from "./metadata-detector.js";
-import { findMetadataProperty } from "./typescript-utils.js";
+import { findMetadataProperty, getPropertyByName } from "./typescript-utils.js";
 
 const FIELD_META_PROPERTY = METADATA_PROPERTIES.FIELD_META;
 const DEFAULT_VALUE_PROPERTY = "defaultValue";
@@ -83,7 +83,7 @@ export function detectDefaultValueMetadata(
     return createEmptyResult();
   }
 
-  const defaultValueProp = metaType.getProperty(DEFAULT_VALUE_PROPERTY);
+  const defaultValueProp = getPropertyByName(metaType, DEFAULT_VALUE_PROPERTY);
   if (!defaultValueProp) {
     return createEmptyResult();
   }

@@ -12,6 +12,7 @@
 
 import { METADATA_PROPERTIES } from "../../core/index.js";
 import * as ts from "../../core/typescript.js";
+import { getPropertyByName } from "../../shared/typescript-utils.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 
 /**
@@ -100,7 +101,7 @@ function extractBaseTypeSymbol(
           if (type.isIntersectionType()) {
             for (const member of type.getTypes()) {
               // Skip the metadata object type
-              if (member.getProperty(METADATA_PROPERTIES.SCALAR)) {
+              if (getPropertyByName(member, METADATA_PROPERTIES.SCALAR)) {
                 continue;
               }
               // This should be the base type

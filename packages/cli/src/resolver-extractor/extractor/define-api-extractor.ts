@@ -8,12 +8,14 @@ import {
   type TSTypeReference,
 } from "../../core/index.js";
 import * as ts from "../../core/typescript.js";
+import { getCachedChecker } from "../../shared/cached-checker.js";
 import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { extractDirectivesFromType } from "../../shared/directive-detector.js";
 import { getActualMetadataType } from "../../shared/metadata-detector.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import { extractTsDocInfo } from "../../shared/tsdoc-parser.js";
 import {
+  getPropertyByName,
   getTypeNameFromNode,
   isExported,
 } from "../../shared/typescript-utils.js";
@@ -115,7 +117,7 @@ function detectKindFromMetadataType(
   params: DetectKindFromMetadataTypeParams,
 ): MetadataKindResult | null {
   const { returnType, checker, metadataProperty } = params;
-  const metadataProp = returnType.getProperty(metadataProperty);
+  const metadataProp = getPropertyByName(returnType, metadataProperty);
   if (!metadataProp) {
     return null;
   }
@@ -126,7 +128,7 @@ function detectKindFromMetadataType(
     return null;
   }
 
-  const kindProp = actualType.getProperty("kind");
+  const kindProp = getPropertyByName(actualType, "kind");
   if (!kindProp) {
     return null;
   }
@@ -161,7 +163,7 @@ function detectAbstractResolverFromMetadataType(
     return null;
   }
 
-  const targetTypeProp = actualType.getProperty("targetType");
+  const targetTypeProp = getPropertyByName(actualType, "targetType");
   if (!targetTypeProp) {
     return null;
   }
@@ -822,7 +824,7 @@ export function extractDefineApiResolvers(
   params: ExtractDefineApiResolversParams,
 ): ExtractDefineApiResult {
   const { program, files, options } = params;
-  const checker = program.getProject().checker;
+  const checker = getCachedChecker(program);
   const resolvers: DefineApiResolverInfo[] = [];
   const abstractTypeResolvers: AbstractResolverInfo[] = [];
   const diagnostics: Diagnostic[] = [];

@@ -10,6 +10,7 @@ import {
   type TSTypeReference,
 } from "../../core/index.js";
 import * as ts from "../../core/typescript.js";
+import { getCachedChecker } from "../../shared/cached-checker.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   detectDirectiveMetadata,
@@ -1389,7 +1390,7 @@ export function extractTypesFromProgram(
   sourceFiles: ReadonlyArray<string>,
   options: ExtractionOptions,
 ): ExtractionResult {
-  const checker = program.getProject().checker;
+  const checker = getCachedChecker(program);
   const types: ExtractedTypeInfo[] = [];
   const diagnostics: Diagnostic[] = [];
   const detectedScalarNames = new Set<string>();

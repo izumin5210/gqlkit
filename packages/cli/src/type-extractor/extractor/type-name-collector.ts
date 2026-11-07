@@ -1,5 +1,6 @@
 import type { Diagnostic, SourceLocation } from "../../core/index.js";
 import * as ts from "../../core/typescript.js";
+import { getCachedChecker } from "../../shared/cached-checker.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
   isExported,
@@ -56,7 +57,7 @@ export function collectDeclaredTypeNames(
   const typeSymbols = new Map<string, ts.Symbol>();
   const underlyingSymbolToTypeName = new Map<ts.Symbol, string>();
   const diagnostics: Diagnostic[] = [];
-  const checker = program.getProject().checker;
+  const checker = getCachedChecker(program);
 
   const typeLocations = new Map<string, TypeDeclarationLocation>();
 

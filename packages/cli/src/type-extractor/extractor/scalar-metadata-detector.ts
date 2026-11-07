@@ -10,6 +10,7 @@ import * as ts from "../../core/typescript.js";
 import { getActualMetadataType } from "../../shared/metadata-detector.js";
 import {
   getDeclarations,
+  getPropertyByName,
   isNullOrUndefined,
 } from "../../shared/typescript-utils.js";
 
@@ -70,7 +71,7 @@ function extractMetadataFromType(
   type: ts.Type,
   checker: ts.Checker,
 ): InternalMetadata | null {
-  const metadataProp = type.getProperty(SCALAR_METADATA_PROPERTY);
+  const metadataProp = getPropertyByName(type, SCALAR_METADATA_PROPERTY);
   if (!metadataProp) {
     return null;
   }
@@ -81,7 +82,7 @@ function extractMetadataFromType(
     return null;
   }
 
-  const nameProp = metadataType.getProperty("name");
+  const nameProp = getPropertyByName(metadataType, "name");
   if (!nameProp) {
     return null;
   }
@@ -93,7 +94,7 @@ function extractMetadataFromType(
 
   const scalarName = (nameType as ts.StringLiteralType).value;
 
-  const onlyProp = metadataType.getProperty("only");
+  const onlyProp = getPropertyByName(metadataType, "only");
   let only: "input" | "output" | null = null;
   if (onlyProp) {
     const onlyType = checker.getTypeOfSymbol(onlyProp);
@@ -245,7 +246,7 @@ function isObjectLikeType(type: ts.Type): boolean {
         properties[0]?.name === SCALAR_METADATA_PROPERTY;
 
       if (!hasOnlyMetadataProperty && properties.length > 0) {
-        const metadataProp = type.getProperty(SCALAR_METADATA_PROPERTY);
+        const metadataProp = getPropertyByName(type, SCALAR_METADATA_PROPERTY);
         if (!metadataProp) {
           return true;
         }
