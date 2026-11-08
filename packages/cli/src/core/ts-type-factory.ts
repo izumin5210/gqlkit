@@ -1,4 +1,3 @@
-import type { Symbol as TsSymbol } from "typescript/async";
 import type { DeprecationInfo } from "./metadata.js";
 import type {
   InlineEnumMemberInfo,
@@ -27,7 +26,7 @@ function createTSTypeReference(
     inlineObjectDeprecated: null,
     inlineObjectHintName: null,
     inlineEnumMembers: null,
-    externalEnumSymbol: null,
+    externalEnumKey: null,
     externalEnumDescription: null,
     externalEnumDeprecated: null,
     ...params.overrides,
@@ -147,8 +146,8 @@ export function createNumericLiteralType(name: string): TSTypeReference {
 interface CreateInlineEnumTypeParams {
   readonly members: ReadonlyArray<InlineEnumMemberInfo>;
   readonly nullable: boolean;
-  /** External TypeScript enum symbol for deduplication (null for string literal unions) */
-  readonly externalEnumSymbol: TsSymbol | null;
+  /** Identity of the external TypeScript enum (see `getSymbolIdentityKey`), for deduplication (null for string literal unions) */
+  readonly externalEnumKey: string | null;
   /** TSDoc description from the external enum type itself (null for string literal unions) */
   readonly externalEnumDescription: string | null;
   /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself (null for string literal unions) */
@@ -163,7 +162,7 @@ export function createInlineEnumType(
     overrides: {
       inlineEnumMembers: params.members,
       nullable: params.nullable,
-      externalEnumSymbol: params.externalEnumSymbol,
+      externalEnumKey: params.externalEnumKey,
       externalEnumDescription: params.externalEnumDescription,
       externalEnumDeprecated: params.externalEnumDeprecated,
     },

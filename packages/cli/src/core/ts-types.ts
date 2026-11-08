@@ -1,4 +1,3 @@
-import type { Symbol as TsSymbol } from "typescript/async";
 import type { SourceLocation } from "./diagnostics.js";
 import type {
   DeprecationInfo,
@@ -62,8 +61,8 @@ export interface TSTypeReference {
   readonly inlineEnumMembers: ReadonlyArray<InlineEnumMemberInfo> | null;
   /** Original type name hint for inline objects extracted from external types */
   readonly inlineObjectHintName: string | null;
-  /** External TypeScript enum symbol for deduplication */
-  readonly externalEnumSymbol: TsSymbol | null;
+  /** Identity of the external TypeScript enum (see `getSymbolIdentityKey`), for deduplication */
+  readonly externalEnumKey: string | null;
   /** TSDoc description from the external enum type itself */
   readonly externalEnumDescription: string | null;
   /** Deprecation info from the `@deprecated` TSDoc tag on the external enum type itself */

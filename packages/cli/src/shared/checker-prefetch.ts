@@ -22,7 +22,9 @@ import type {
 } from "typescript/ast";
 import {
   isEnumDeclaration,
+  isExportDeclaration,
   isInterfaceDeclaration,
+  isNamedExports,
   isTypeAliasDeclaration,
   isTypeReferenceNode,
   isUnionTypeNode,
@@ -258,13 +260,7 @@ async function prefetchReferencedSymbols(
   const symbols = await Promise.all(
     names.map((n) => checker.getSymbolAtLocation(n)),
   );
-  await Promise.all(
-    symbols.flatMap((s) =>
-      s !== undefined && (s.flags & SymbolFlags.Alias) !== 0
-        ? [checker.getAliasedSymbol(s)]
-        : [],
-    ),
-  );
+  await prefetchAliasTargets(checker, symbols);
 }
 
 type NamedDeclaration =
@@ -342,6 +338,59 @@ async function listWalkedProperties(
     members.filter(isObjectType).map((m) => checker.getPropertiesOfType(m)),
   );
   return lists.flat();
+}
+
+/** Resolves symbols that are import or export aliases to their targets. */
+async function prefetchAliasTargets(
+  checker: CheckerLoader,
+  symbols: ReadonlyArray<TsSymbol | undefined>,
+): Promise<void> {
+  await Promise.all(
+    symbols.flatMap((s) =>
+      s !== undefined && (s.flags & SymbolFlags.Alias) !== 0
+        ? [checker.getAliasedSymbol(s)]
+        : [],
+    ),
+  );
+}
+
+/**
+ * Prefetches what collecting the declared type names reads: the symbols of
+ * type declarations and re-exported names, through aliases, and the symbols
+ * of the types that type aliases name.
+ */
+export async function prefetchTypeNameFacts(
+  checker: CheckerLoader,
+  sourceFiles: ReadonlyArray<SourceFile>,
+): Promise<void> {
+  const statements = sourceFiles.flatMap((sf) => sf.statements);
+  const declarations = statements.filter(isNamedTypeDeclaration);
+  const exportedNames = statements.flatMap((node) =>
+    isExportDeclaration(node) &&
+    node.exportClause !== undefined &&
+    isNamedExports(node.exportClause)
+      ? node.exportClause.elements.map((e) => e.name)
+      : [],
+  );
+  const aliasTypeSymbols = async (): Promise<void> => {
+    const types = await Promise.all(
+      declarations.flatMap((d) =>
+        isTypeAliasDeclaration(d) ? [checker.getTypeAtLocation(d.type)] : [],
+      ),
+    );
+    await prefetchAliasTargets(
+      checker,
+      await Promise.all(types.map((t) => checker.getSymbolOfType(t))),
+    );
+  };
+  await Promise.all([
+    Promise.all(
+      [...declarations.map((d) => d.name), ...exportedNames].map((n) =>
+        checker.getSymbolAtLocation(n),
+      ),
+    ).then((symbols) => prefetchAliasTargets(checker, symbols)),
+    aliasTypeSymbols(),
+  ]);
 }
 
 /**

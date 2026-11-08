@@ -67,6 +67,7 @@ import {
   isExported,
   isNullableUnion,
   isNullOrUndefined,
+  type SymbolKey,
 } from "../../shared/typescript-utils.js";
 import type { ScalarMetadataInfo } from "../collector/scalar-collector.js";
 import { detectIgnoreFieldsMetadata } from "../detector/ignore-fields-detector.js";
@@ -100,9 +101,9 @@ export interface ExtractionOptions {
   /** Set of type names declared in the schema (from Phase 1 collection) */
   readonly knownTypeNames: ReadonlySet<string>;
   /** Map of type names to their symbols (from Phase 1 collection) */
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
   /** Map of underlying symbols to schema type names (for type alias resolution) */
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   /** Scalar base type mapping table for automatic base type -> scalar mapping */
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
 }
@@ -183,8 +184,8 @@ export interface ExtractFieldsParams {
   readonly checker: CheckerLoader;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   readonly sourceFiles: ReadonlySet<string>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   readonly scalarMappingContext: ScalarMappingContext;
@@ -706,8 +707,8 @@ interface ProcessDeclaredTypeParams {
   readonly checker: CheckerLoader;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   readonly scannedSourceFiles: ReadonlySet<string>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
@@ -915,8 +916,8 @@ interface ProcessReexportedSymbolParams {
   readonly checker: CheckerLoader;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   readonly scannedSourceFiles: ReadonlySet<string>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
@@ -1045,8 +1046,8 @@ interface ProcessExportDeclarationParams {
   readonly checker: CheckerLoader;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   readonly scannedSourceFiles: ReadonlySet<string>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
@@ -1228,8 +1229,8 @@ interface ExtractInlineObjectMembersParams {
   readonly checker: CheckerLoader;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   readonly sourceFiles: ReadonlySet<string>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   readonly scalarMappingContext: ScalarMappingContext;
@@ -1450,22 +1451,58 @@ async function extractUnionMembers(
   return null;
 }
 
-export interface ExtractTypesFromProgramParams {
-  readonly program: Program;
-  readonly checker: CheckerLoader;
-  readonly sourceFiles: ReadonlyArray<string>;
-  readonly options: ExtractionOptions;
+/**
+ * What extracting the declarations of the files accumulates, in file order.
+ * Extraction is split here so that ranges of files can be extracted
+ * separately and their results appended in order.
+ */
+export interface DeclaredTypesExtraction {
+  readonly types: ExtractedTypeInfo[];
+  readonly diagnostics: Diagnostic[];
+  readonly detectedScalarNames: Set<string>;
+  readonly detectedScalars: ScalarMetadataInfo[];
+  /**
+   * Named types found through fields, registered by the first declaration
+   * that reaches them. Field-type resolution only asks whether a name is
+   * registered and registers new ones.
+   */
+  readonly discoveredTypes: Map<string, DiscoveredTypeEntry>;
 }
 
-export async function extractTypesFromProgram(
-  params: ExtractTypesFromProgramParams,
-): Promise<ExtractionResult> {
-  const { program, checker, sourceFiles, options } = params;
-  const types: ExtractedTypeInfo[] = [];
-  const diagnostics: Diagnostic[] = [];
-  const detectedScalarNames = new Set<string>();
-  const detectedScalars: ScalarMetadataInfo[] = [];
-  const discoveredTypes = new Map<string, DiscoveredTypeEntry>();
+export function createDeclaredTypesExtraction(): DeclaredTypesExtraction {
+  return {
+    types: [],
+    diagnostics: [],
+    detectedScalarNames: new Set(),
+    detectedScalars: [],
+    discoveredTypes: new Map(),
+  };
+}
+
+export interface ExtractDeclaredTypesParams {
+  readonly program: Program;
+  readonly checker: CheckerLoader;
+  /** The files whose declarations to extract, in order. */
+  readonly files: ReadonlyArray<string>;
+  /** Every scanned source file. */
+  readonly sourceFiles: ReadonlyArray<string>;
+  readonly options: ExtractionOptions;
+  /** Results of the preceding files, which this appends to. */
+  readonly extraction: DeclaredTypesExtraction;
+}
+
+/** Extracts the types exported by `files`, in order. */
+export async function extractDeclaredTypes(
+  params: ExtractDeclaredTypesParams,
+): Promise<void> {
+  const { program, checker, files, sourceFiles, options, extraction } = params;
+  const {
+    types,
+    diagnostics,
+    detectedScalarNames,
+    detectedScalars,
+    discoveredTypes,
+  } = extraction;
   const {
     globalTypeMappings,
     knownTypeNames,
@@ -1475,7 +1512,7 @@ export async function extractTypesFromProgram(
   } = options;
   const scannedSourceFilesSet = new Set(sourceFiles);
 
-  for (const filePath of sourceFiles) {
+  for (const filePath of files) {
     const sourceFile = await program.getSourceFile(filePath);
     if (!sourceFile) {
       diagnostics.push({
@@ -1643,6 +1680,39 @@ export async function extractTypesFromProgram(
       }
     }
   }
+}
+
+export interface CompleteTypeExtractionParams {
+  readonly checker: CheckerLoader;
+  readonly sourceFiles: ReadonlyArray<string>;
+  readonly options: ExtractionOptions;
+  /** Results of every file. */
+  readonly extraction: DeclaredTypesExtraction;
+}
+
+/**
+ * Extracts the types discovered through fields of the declared ones, and
+ * collects the scalars all extracted fields use.
+ */
+export async function completeTypeExtraction(
+  params: CompleteTypeExtractionParams,
+): Promise<ExtractionResult> {
+  const { checker, sourceFiles, options, extraction } = params;
+  const {
+    types,
+    diagnostics,
+    detectedScalarNames,
+    detectedScalars,
+    discoveredTypes,
+  } = extraction;
+  const {
+    globalTypeMappings,
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
+    scalarMappingTable,
+  } = options;
+  const scannedSourceFilesSet = new Set(sourceFiles);
 
   // Process transitively discovered types
   const processedDiscovered = new Set<string>();
@@ -1707,6 +1777,29 @@ export async function extractTypesFromProgram(
     detectedScalars,
     discoveredTypeNames: new Set(discoveredTypes.keys()),
   };
+}
+
+export interface ExtractTypesFromProgramParams {
+  readonly program: Program;
+  readonly checker: CheckerLoader;
+  readonly sourceFiles: ReadonlyArray<string>;
+  readonly options: ExtractionOptions;
+}
+
+export async function extractTypesFromProgram(
+  params: ExtractTypesFromProgramParams,
+): Promise<ExtractionResult> {
+  const { program, checker, sourceFiles, options } = params;
+  const extraction = createDeclaredTypesExtraction();
+  await extractDeclaredTypes({
+    program,
+    checker,
+    files: sourceFiles,
+    sourceFiles,
+    options,
+    extraction,
+  });
+  return completeTypeExtraction({ checker, sourceFiles, options, extraction });
 }
 
 function collectScalarNamesFromType(

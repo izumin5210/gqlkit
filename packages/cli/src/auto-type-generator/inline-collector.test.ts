@@ -57,7 +57,7 @@ describe("inline collectors", () => {
               createInlineEnumType({
                 members: enumMembers,
                 nullable: false,
-                externalEnumSymbol: null,
+                externalEnumKey: null,
                 externalEnumDescription: null,
                 externalEnumDeprecated: null,
               }),

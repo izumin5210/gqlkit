@@ -1,6 +1,7 @@
-import type { Program, Symbol as TsSymbol } from "typescript/async";
+import type { Program } from "typescript/async";
 import type { Diagnostic, Diagnostics } from "../core/index.js";
 import type { CheckerLoader } from "../shared/checker-loader.js";
+import type { SymbolKey } from "../shared/typescript-utils.js";
 import {
   type CollectedTypesResult,
   collectResults,
@@ -12,9 +13,14 @@ import {
   type ScalarMetadataInfo,
 } from "./collector/scalar-collector.js";
 import { convertToGraphQL } from "./converter/graphql-converter.js";
-import { extractTypesFromProgram } from "./extractor/type-extractor.js";
+import {
+  type ExtractionResult,
+  extractTypesFromProgram,
+} from "./extractor/type-extractor.js";
 import {
   buildScalarMappingTable,
+  createRecordedScalarMappingTable,
+  isScalarMappingTableUnread,
   type ScalarBaseTypeMappingTable,
 } from "./mapper/scalar-base-type-mapper.js";
 import type { ExtractedTypeInfo, GlobalTypeMapping } from "./types/index.js";
@@ -29,8 +35,8 @@ export interface ExtractTypesParams {
   readonly configScalars: ReadonlyArray<ConfigScalarMapping>;
   readonly sourceRoot: string | null;
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
 }
 
 export interface ExtractTypesResult {
@@ -44,54 +50,30 @@ export interface ExtractTypesResult {
   discoveredTypeNames: ReadonlySet<string>;
 }
 
+export interface FinalizeTypeExtractionParams {
+  /** The extraction that used `scalarMappingTable`. */
+  readonly extractionResult: ExtractionResult;
+  readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
+  readonly customScalarNames: ReadonlyArray<string>;
+  readonly configScalars: ReadonlyArray<ConfigScalarMapping>;
+  readonly sourceRoot: string | null;
+}
+
 /**
- * Extracts GraphQL types from the TypeScript program.
- *
- * Runs a two-pass extraction: pass 1 extracts types and detects scalar usages
- * without a scalar mapping table, then a scalar mapping table is built from
- * the detected scalars, and pass 2 re-extracts types using that table so base
- * types (e.g. `Date`) are correctly mapped to their scalar names (e.g. `DateTime`).
+ * Turns extracted types into GraphQL types and validates them, along with
+ * the scalars they use.
  */
-export async function extractTypes(
-  params: ExtractTypesParams,
-): Promise<ExtractTypesResult> {
+export function finalizeTypeExtraction(
+  params: FinalizeTypeExtractionParams,
+): ExtractTypesResult {
   const {
-    program,
-    checker,
-    sourceFiles,
+    extractionResult,
+    scalarMappingTable,
     customScalarNames,
-    globalTypeMappings,
     configScalars,
     sourceRoot,
-    knownTypeNames,
-    knownTypeSymbols,
-    underlyingSymbolToTypeName,
   } = params;
   const allDiagnostics: Diagnostic[] = [];
-
-  // Pass 1: Extract types and detect scalars (without scalar mapping table)
-  const pass1Result = await extractTypesFromProgram({
-    program,
-    checker,
-    sourceFiles,
-    options: {
-      globalTypeMappings,
-      knownTypeNames,
-      knownTypeSymbols,
-      underlyingSymbolToTypeName,
-      scalarMappingTable: null,
-    },
-  });
-
-  // Build scalar mapping table from detected scalars
-  const scalarMappingTable =
-    pass1Result.detectedScalars.length > 0
-      ? await buildScalarMappingTable({
-          detectedScalars: pass1Result.detectedScalars,
-          checker,
-          program,
-        })
-      : null;
 
   // Report scalar mapping conflicts as diagnostics
   if (scalarMappingTable) {
@@ -108,22 +90,6 @@ export async function extractTypes(
       });
     }
   }
-
-  // Pass 2: Re-extract types with scalar mapping table (if we have detected scalars)
-  const extractionResult = scalarMappingTable
-    ? await extractTypesFromProgram({
-        program,
-        checker,
-        sourceFiles,
-        options: {
-          globalTypeMappings,
-          knownTypeNames,
-          knownTypeSymbols,
-          underlyingSymbolToTypeName,
-          scalarMappingTable,
-        },
-      })
-    : pass1Result;
 
   allDiagnostics.push(...extractionResult.diagnostics);
 
@@ -170,4 +136,72 @@ export async function extractTypes(
     scalarMappingTable,
     discoveredTypeNames: extractionResult.discoveredTypeNames,
   };
+}
+
+/**
+ * Extracts GraphQL types from the TypeScript program.
+ *
+ * Extracts types without a scalar mapping table first, which also detects
+ * the scalars declared in the program. If a field's type is the base type of
+ * one of them (e.g. `Date` for a `DateTime` scalar), extraction runs again
+ * with the mapping table built from them, so the field maps to the scalar.
+ */
+export async function extractTypes(
+  params: ExtractTypesParams,
+): Promise<ExtractTypesResult> {
+  const {
+    program,
+    checker,
+    sourceFiles,
+    customScalarNames,
+    globalTypeMappings,
+    configScalars,
+    sourceRoot,
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
+  } = params;
+  const options = {
+    globalTypeMappings,
+    knownTypeNames,
+    knownTypeSymbols,
+    underlyingSymbolToTypeName,
+  };
+
+  const unmappedScalars = createRecordedScalarMappingTable();
+  const firstPass = await extractTypesFromProgram({
+    program,
+    checker,
+    sourceFiles,
+    options: { ...options, scalarMappingTable: unmappedScalars },
+  });
+
+  const scalarMappingTable =
+    firstPass.detectedScalars.length > 0
+      ? await buildScalarMappingTable({
+          detectedScalars: firstPass.detectedScalars,
+          checker,
+          program,
+        })
+      : null;
+
+  const extractionResult = isScalarMappingTableUnread(
+    unmappedScalars,
+    scalarMappingTable,
+  )
+    ? firstPass
+    : await extractTypesFromProgram({
+        program,
+        checker,
+        sourceFiles,
+        options: { ...options, scalarMappingTable },
+      });
+
+  return finalizeTypeExtraction({
+    extractionResult,
+    scalarMappingTable,
+    customScalarNames,
+    configScalars,
+    sourceRoot,
+  });
 }

@@ -124,6 +124,21 @@ function singularizeIrregularSuffix(name: string): string | null {
  * the plural form is ambiguous or non-inflecting.
  */
 export function singularize(name: string): string {
+  let singular = singularized.get(name);
+  if (singular === undefined) {
+    singular = singularizeUncached(name);
+    singularized.set(name, singular);
+  }
+  return singular;
+}
+
+/**
+ * Auto-type naming singularizes every field name of an object once for each
+ * of its fields, to compare it with its siblings'.
+ */
+const singularized = new Map<string, string>();
+
+function singularizeUncached(name: string): string {
   const irregularSingular = singularizeIrregularSuffix(name);
   if (irregularSingular) {
     return irregularSingular;

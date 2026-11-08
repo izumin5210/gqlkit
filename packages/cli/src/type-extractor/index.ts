@@ -17,7 +17,10 @@ export {
   type ExtractTypesParams,
   type ExtractTypesResult,
   extractTypes,
+  type FinalizeTypeExtractionParams,
+  finalizeTypeExtraction,
 } from "./extract-types.js";
+export type { DiscoveredTypeEntry } from "./extractor/field-type-resolver.js";
 // Shared type-resolution engine (refactor-plan.md §3.2): resolver-extractor
 // consumes this as a declared dependency of the facade, not a deep import.
 export {
@@ -29,15 +32,33 @@ export {
 // resolver-extractor consumes this the same way it consumes `resolveFieldType`
 // above, instead of maintaining its own diverged property-walking copy.
 export {
+  type CompleteTypeExtractionParams,
+  completeTypeExtraction,
+  createDeclaredTypesExtraction,
+  type DeclaredTypesExtraction,
+  type ExtractDeclaredTypesParams,
   type ExtractFieldsParams,
+  type ExtractionOptions,
+  type ExtractionResult,
+  extractDeclaredTypes,
   extractFieldsFromType,
+  extractTypesFromProgram,
   type FieldExtractionResult,
 } from "./extractor/type-extractor.js";
 export {
   collectDeclaredTypeNames,
   collectLocalTypeDeclarationNames,
+  collectTypeNameRegistrations,
+  registerTypeNames,
   type TypeNameCollectionResult,
+  type TypeNameRegistration,
 } from "./extractor/type-name-collector.js";
-export type { ScalarBaseTypeMappingTable } from "./mapper/scalar-base-type-mapper.js";
+export {
+  buildScalarMappingTable,
+  createRecordedScalarMappingTable,
+  isScalarMappingTableUnread,
+  type RecordedScalarMappingTable,
+  type ScalarBaseTypeMappingTable,
+} from "./mapper/scalar-base-type-mapper.js";
 
 export type { ExtractedTypeInfo, GlobalTypeMapping } from "./types/index.js";

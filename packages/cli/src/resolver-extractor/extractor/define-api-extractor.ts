@@ -15,12 +15,7 @@ import {
   isTypeAliasDeclaration,
   isVariableStatement,
 } from "typescript/ast/is";
-import {
-  type Program,
-  type Symbol as TsSymbol,
-  type Type,
-  TypeFlags,
-} from "typescript/async";
+import { type Program, type Type, TypeFlags } from "typescript/async";
 import {
   type DeprecationInfo,
   type Diagnostic,
@@ -36,6 +31,7 @@ import { extractDirectivesFromType } from "../../shared/directive-detector.js";
 import { getActualMetadataType } from "../../shared/metadata-detector.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import { extractTsDocInfo } from "../../shared/tsdoc-parser.js";
+import type { SymbolKey } from "../../shared/typescript-utils.js";
 import {
   getTypeNameFromNode,
   isExported,
@@ -101,8 +97,8 @@ export interface ExtractDefineApiResult {
 
 export interface ExtractDefineApiOptions {
   readonly knownTypeNames: ReadonlySet<string>;
-  readonly knownTypeSymbols: ReadonlyMap<string, TsSymbol>;
-  readonly underlyingSymbolToTypeName: ReadonlyMap<TsSymbol, string>;
+  readonly knownTypeSymbols: ReadonlyMap<string, SymbolKey>;
+  readonly underlyingSymbolToTypeName: ReadonlyMap<SymbolKey, string>;
   readonly globalTypeMappings: ReadonlyArray<GlobalTypeMapping>;
   readonly sourceFiles: ReadonlySet<string>;
   readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;

@@ -301,6 +301,19 @@ export async function isBooleanUnion(
  * Resolves a symbol to its original symbol by following alias chains.
  * This is necessary for re-exports where the symbol is an alias.
  */
+/** Identifies a symbol; see `getSymbolIdentityKey`. */
+export type SymbolKey = string;
+
+/**
+ * Identifies a symbol across processes. Symbol objects belong to one
+ * TypeScript API instance; a symbol's declarations are the same in every
+ * instance that builds the program, and a symbol merged from several
+ * declarations is told apart from each original by having more of them.
+ */
+export function getSymbolIdentityKey(symbol: TsSymbol): SymbolKey {
+  return symbol.declarations.map((d) => `${d.path}#${d.index}`).join("|");
+}
+
 export async function resolveOriginalSymbol(
   symbol: TsSymbol,
   checker: CheckerLoader,
