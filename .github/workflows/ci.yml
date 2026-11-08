@@ -12,9 +12,7 @@ jobs:
       matrix:
         command:
           - name: format-and-lint
-            # Type-aware lint rules need the examples' workspace dependencies built to
-            # resolve their types.
-            run: pnpm --filter "@gqlkit-examples/*^..." build && pnpm check
+            run: pnpm check
           - name: typecheck
             run: pnpm build && pnpm typecheck
           - name: gen
