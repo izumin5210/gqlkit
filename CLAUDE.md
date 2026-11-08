@@ -97,7 +97,7 @@ Uses **golden file testing** for CLI validation:
   - Space indentation
   - Sorts imports
 - **Linter**: oxlint (configured in `.oxlintrc.json`)
-  - Type-aware rules are enabled, so build the examples' dependencies first for them to resolve `@gqlkit-ts/runtime` and `@gqlkit-ts/cli` types: `pnpm --filter "@gqlkit-examples/*^..." --filter "!@gqlkit-ts/docs" build`
+  - Type-aware rules are enabled, so build the examples' dependencies first for them to resolve `@gqlkit-ts/runtime` and `@gqlkit-ts/cli` types: `pnpm --filter "@gqlkit-examples/*^..." build`
 - **knip**: Unused export detection (`pnpm knip`)
 
 ## CLI Development

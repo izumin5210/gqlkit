@@ -1,11 +1,6 @@
 {
   "$schema": "./node_modules/oxlint/configuration_schema.json",
-  "plugins": [
-    "typescript",
-    "unicorn",
-    "oxc",
-    "vitest"
-  ],
+  "plugins": ["typescript", "unicorn", "oxc", "vitest"],
   "categories": {
     "correctness": "error"
   },
@@ -38,8 +33,5 @@
       }
     ]
   },
-  "ignorePatterns": [
-    "**/testdata/**",
-    "**/__generated__/prisma/**"
-  ]
+  "ignorePatterns": ["**/testdata/**", "**/__generated__/prisma/**"]
 }

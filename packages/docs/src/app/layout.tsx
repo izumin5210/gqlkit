@@ -1,9 +1,9 @@
 import { flavors } from "@catppuccin/palette";
-import { Head } from "nextra/components";
+import type { Metadata } from "next";
 import { Layout, Navbar } from "nextra-theme-docs";
 import "nextra-theme-docs/style.css";
 import "../styles/catppuccin-theme.css";
-import type { Metadata } from "next";
+import { Head } from "nextra/components";
 import type { ReactNode } from "react";
 import { Search } from "../components/search";
 import { getContent } from "../lib/content";

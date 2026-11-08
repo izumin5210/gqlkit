@@ -42,6 +42,7 @@ const loadPage = cache(async (route: string) => {
       },
     },
   });
+  // oxlint-disable-next-line typescript/unbound-method -- nextra types `wrapper` as a method, but it is a component that never uses `this`
   const { wrapper: Wrapper, ...components } = useMDXComponents({ IndexCards });
   return { rawJs, Wrapper, ...evaluate(rawJs, components) };
 });
