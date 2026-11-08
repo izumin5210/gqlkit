@@ -10,6 +10,7 @@ Monorepo with feature-by-purpose organization. Each package has a clear responsi
 packages/
   cli/       - @gqlkit-ts/cli - Code generation CLI
   runtime/   - @gqlkit-ts/runtime - Define API and type utilities
+  docs-content/ - @gqlkit-ts/docs-content - Documentation pages shared by the site and the CLI
   docs/      - @gqlkit-ts/docs - Documentation site (Next.js + Nextra)
 examples/    - Example projects demonstrating usage
 ```
@@ -52,11 +53,18 @@ Minimal runtime utilities for user codebases:
 - `GqlDirective<Name, Args, Location>` utility type for custom directive definitions
 - `NoArgs` helper type
 
+### @gqlkit-ts/docs-content (`packages/docs-content/`)
+
+Documentation pages (`content/`) and the tooling that reads them:
+- Internal package (not published)
+- Provides `bundle-docs` CLI, which bundles the pages into `@gqlkit-ts/cli` for `gqlkit docs`
+- Has no Next.js dependency, so building the CLI does not build the site
+
 ### @gqlkit-ts/docs (`packages/docs/`)
 
 Documentation site built with Next.js and Nextra:
 - Internal package (not published)
-- Provides `bundle-docs` CLI for CLI package documentation bundling
+- Renders the pages of `@gqlkit-ts/docs-content` with Nextra's remote content APIs
 - Runs independently from main TypeScript project references
 
 ### User Convention Directories (gqlkit-managed)

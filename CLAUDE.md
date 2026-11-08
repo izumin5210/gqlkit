@@ -12,7 +12,7 @@ gqlkit is a convention-driven code generator for GraphQL servers in TypeScript.
 - Product vision and capabilities: `.kiro/steering/product.md`
 - Architecture and technical decisions: `.kiro/steering/tech.md`
 - Project structure and patterns: `.kiro/steering/structure.md`
-- User documentation: `packages/docs/src/content/`
+- User documentation: `packages/docs-content/content/`
 
 ## Common Commands
 

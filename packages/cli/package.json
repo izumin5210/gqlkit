@@ -65,7 +65,7 @@
     }
   },
   "devDependencies": {
-    "@gqlkit-ts/docs": "workspace:*",
+    "@gqlkit-ts/docs-content": "workspace:*",
     "@gqlkit-ts/runtime": "workspace:*",
     "@types/shell-quote": "1.7.5",
     "memfs": "4.80.0",

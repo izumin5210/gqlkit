@@ -1,17 +1,14 @@
 #!/usr/bin/env -S npx tsx
 import fs from "node:fs/promises";
 import path from "node:path";
-import { fileURLToPath } from "node:url";
 import { parseArgs } from "node:util";
 import {
   buildSections,
+  contentDir,
   HEADER_LINES,
   type PageInfo,
   type Section,
-} from "../lib/docs-parser";
-
-const __dirname = path.dirname(fileURLToPath(import.meta.url));
-const CONTENT_DIR = path.resolve(__dirname, "../../src/content");
+} from "../index";
 
 export async function validateSourceDir(sourceDir: string): Promise<void> {
   try {
@@ -89,11 +86,11 @@ export function generateIndex(sections: Section[]): string {
 }
 
 export async function run(targetDir: string): Promise<void> {
-  await validateSourceDir(CONTENT_DIR);
+  await validateSourceDir(contentDir);
   await clearDocsDir(targetDir);
-  await copyMarkdownFiles(CONTENT_DIR, targetDir);
+  await copyMarkdownFiles(contentDir, targetDir);
 
-  const sections = await buildSections(CONTENT_DIR);
+  const sections = await buildSections(contentDir);
   const indexContent = generateIndex(sections);
   await fs.writeFile(path.join(targetDir, "index.md"), indexContent);
 }

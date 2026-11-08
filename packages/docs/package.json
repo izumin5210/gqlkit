@@ -3,9 +3,6 @@
   "version": "0.0.1",
   "private": true,
   "type": "module",
-  "bin": {
-    "bundle-docs": "./src/bin/bundle-docs.ts"
-  },
   "scripts": {
     "dev": "next dev",
     "build": "next build --webpack",
@@ -15,11 +12,13 @@
     "@catppuccin/palette": "2.0.0-beta.1",
     "@docsearch/css": "^4.0.0",
     "@docsearch/react": "^4.0.0",
-    "next": "^16.2.1",
+    "@gqlkit-ts/docs-content": "workspace:*",
+    "next": "^16.4.5",
     "nextra": "^4.6.1",
     "nextra-theme-docs": "^4.6.1",
     "react": "^19.2.4",
-    "react-dom": "^19.2.4"
+    "react-dom": "^19.2.4",
+    "yaml": "2.9.0"
   },
   "devDependencies": {
     "@types/node": "24.19.2",

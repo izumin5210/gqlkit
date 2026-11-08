@@ -1,12 +1,12 @@
 import { flavors } from "@catppuccin/palette";
-import type { Metadata } from "next";
-import { Layout, Navbar } from "nextra-theme-docs";
 import { Head } from "nextra/components";
+import { Layout, Navbar } from "nextra-theme-docs";
 import "nextra-theme-docs/style.css";
 import "../styles/catppuccin-theme.css";
-import { getPageMap } from "nextra/page-map";
+import type { Metadata } from "next";
 import type { ReactNode } from "react";
 import { Search } from "../components/search";
+import { getContent } from "../lib/content";
 
 const siteUrl = "https://gqlkit.izumin.dev";
 const description =
@@ -84,8 +84,8 @@ export default async function RootLayout({
       <body>
         <Layout
           navbar={navbar}
-          pageMap={await getPageMap()}
-          docsRepositoryBase="https://github.com/izumin5210/gqlkit/tree/main/packages/docs/src/content"
+          pageMap={(await getContent()).pageMap}
+          docsRepositoryBase="https://github.com/izumin5210/gqlkit/tree/main/packages/docs-content/content"
           editLink="Edit this page on GitHub"
           sidebar={{ autoCollapse: false, defaultMenuCollapseLevel: 1 }}
           search={<Search />}
