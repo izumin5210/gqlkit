@@ -10,6 +10,9 @@
       "entry": ["src/testing/bench/{main,compare,refs,run-case}.ts"],
       "ignoreFiles": ["src/**/testdata/**"],
       "ignoreDependencies": ["@gqlkit-ts/runtime"]
+    },
+    "packages/docs-content": {
+      "ignoreFiles": ["content/**"]
     }
   },
   "ignoreWorkspaces": ["examples/*", "packages/docs"],

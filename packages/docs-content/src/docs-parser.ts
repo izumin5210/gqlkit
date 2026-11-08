@@ -40,7 +40,7 @@ export const HEADER_LINES = [
   "",
 ];
 
-export const SECTION_TITLES: Record<string, string> = {
+const SECTION_TITLES: Record<string, string> = {
   schema: "Schema Definition",
   integration: "Integration",
 };
@@ -54,7 +54,7 @@ export async function loadMeta(dir: string): Promise<Meta> {
   return context.module.exports as Meta;
 }
 
-export function isSeparator(
+function isSeparator(
   value: MetaValue,
 ): value is { type: "separator"; title: string } {
   return (

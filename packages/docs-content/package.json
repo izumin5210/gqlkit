@@ -1,0 +1,21 @@
+{
+  "name": "@gqlkit-ts/docs-content",
+  "version": "0.0.1",
+  "private": true,
+  "description": "gqlkit documentation pages, shared by the docs site and the docs bundled into @gqlkit-ts/cli",
+  "type": "module",
+  "exports": {
+    ".": "./src/index.ts"
+  },
+  "bin": {
+    "bundle-docs": "./src/bin/bundle-docs.ts"
+  },
+  "scripts": {
+    "test": "pnpm -w vitest run --project=docs-content",
+    "typecheck": "tsc --noEmit"
+  },
+  "devDependencies": {
+    "@types/node": "24.19.2",
+    "typescript": "5.9.3"
+  }
+}
