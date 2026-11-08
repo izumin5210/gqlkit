@@ -18,7 +18,9 @@ export async function validateSourceDir(sourceDir: string): Promise<void> {
     }
   } catch (err) {
     if ((err as NodeJS.ErrnoException).code === "ENOENT") {
-      throw new Error(`Source directory not found: ${sourceDir}`);
+      throw new Error(`Source directory not found: ${sourceDir}`, {
+        cause: err,
+      });
     }
     throw err;
   }
@@ -125,5 +127,5 @@ const isDirectExecution =
   process.argv[1]?.endsWith("bundle-docs.js");
 
 if (isDirectExecution) {
-  main();
+  await main();
 }

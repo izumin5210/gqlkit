@@ -32,9 +32,8 @@ const workload = await loadWorkload(values.workload);
 
 // Imported lazily so the TypeScript package load is measured on its own.
 const loadStart = performance.now();
-const { executeGeneration } = await import(
-  "../../gen-orchestrator/orchestrator.js"
-);
+const { executeGeneration } =
+  await import("../../gen-orchestrator/orchestrator.js");
 const moduleLoadMs = performance.now() - loadStart;
 
 const start = performance.now();

@@ -187,7 +187,10 @@ function summarizeCases(
   }
   const stepsMs = new Map<string, number>();
   for (const step of stepNames) {
-    stepsMs.set(step, sumMedians(cases, (s) => s.stepsMs[step] ?? 0)!);
+    stepsMs.set(
+      step,
+      sumMedians(cases, (s) => s.stepsMs[step] ?? 0)!,
+    );
   }
   if (stepNames.length > 0) {
     const attributed = [...stepsMs.values()].reduce((a, b) => a + b, 0);

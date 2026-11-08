@@ -2,7 +2,7 @@ import type { GqlkitConfig } from "@gqlkit-ts/cli";
 
 const config: GqlkitConfig = {
   hooks: {
-    afterAllFileWrite: "biome check --write",
+    afterAllFileWrite: ["oxlint --fix", "oxfmt"],
   },
   discriminatorFields: {
     // Auto-generated union name from Message.parts field → discriminator is "type"

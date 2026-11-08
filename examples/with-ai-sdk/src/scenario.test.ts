@@ -36,7 +36,6 @@ function createTextStreamModel(): MockLanguageModelV3 {
   return new MockLanguageModelV3({
     doStream: async () => ({
       stream: simulateReadableStream({
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any -- AI SDK V3 stream part types are complex; cast to avoid deep structural mismatch
         chunks: [
           { type: "text-start", id: "t1" },
           { type: "text-delta", id: "t1", delta: "Hello" },
@@ -47,6 +46,7 @@ function createTextStreamModel(): MockLanguageModelV3 {
             finishReason: "stop",
             usage: { inputTokens: {}, outputTokens: {} },
           },
+          // oxlint-disable-next-line typescript/no-explicit-any -- AI SDK V3 stream part types are complex; cast to avoid deep structural mismatch
         ] as any[],
       }),
     }),

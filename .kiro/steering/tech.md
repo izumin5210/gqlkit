@@ -26,10 +26,11 @@ Static code generation tool that analyzes TypeScript source files and produces G
 
 ### Code Quality
 
-- **Biome**: Linting and formatting (replaces ESLint + Prettier)
+- **oxfmt**: Formatting (configured via `.oxfmtrc.json`)
   - Double quotes for strings
   - Space indentation
-  - Auto organize imports on save
+  - Sorts imports
+- **oxlint**: Linting with type-aware rules (configured via `.oxlintrc.json`)
 - **knip**: Unused export detection and cleanup
   - Ignores type/interface exports used in same file
   - Configured via `knip.json` at root
@@ -57,7 +58,7 @@ Static code generation tool that analyzes TypeScript source files and produces G
 ## Key Technical Decisions
 
 1. **ESM-only**: Using `"type": "module"` with `moduleResolution: "node16"` for modern Node.js compatibility
-2. **Biome over ESLint/Prettier**: Single tool for linting and formatting with better performance
+2. **oxlint/oxfmt over ESLint/Prettier**: Fast Rust-based linting (including type-aware rules) and formatting
 3. **gunshi for CLI**: Provides type-safe command definitions with built-in help generation
 4. **No decorators**: Design decision to keep schema generation based purely on type analysis
 5. **graphql-tools compatible output**: Generated resolvers work directly with `makeExecutableSchema`

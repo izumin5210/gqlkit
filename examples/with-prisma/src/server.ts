@@ -20,6 +20,7 @@ async function main() {
     context: () => ({ db: prisma }),
   });
 
+  // oxlint-disable-next-line typescript/no-misused-promises -- yoga handles request errors itself, so node:http can ignore the returned promise
   const server = createServer(yoga);
 
   server.listen(4000, () => {

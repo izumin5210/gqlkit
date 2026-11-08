@@ -8,8 +8,8 @@ import {
   validateSchemaTypenames,
   validateTypenames,
 } from "../auto-type-generator/index.js";
-import type { ImportExtension } from "../config/types.js";
 import type { ResolvedDiscriminatorFieldsMap } from "../config-loader/index.js";
+import type { ImportExtension } from "../config/types.js";
 import type { Diagnostic } from "../core/index.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import type { DirectiveDefinitionInfo } from "../shared/directive-definition-extractor.js";
