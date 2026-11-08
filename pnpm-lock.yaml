@@ -364,9 +364,9 @@ importers:
         specifier: ^1.8.3
         version: 1.8.3
     devDependencies:
-      '@gqlkit-ts/docs':
+      '@gqlkit-ts/docs-content':
         specifier: workspace:*
-        version: link:../docs
+        version: link:../docs-content
       '@gqlkit-ts/runtime':
         specifier: workspace:*
         version: link:../runtime
@@ -391,6 +391,9 @@ importers:
       '@docsearch/react':
         specifier: ^4.0.0
         version: 4.4.0(@algolia/client-search@5.46.2)(@types/react@19.3.0)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)(search-insights@2.17.3)
+      '@gqlkit-ts/docs-content':
+        specifier: workspace:*
+        version: link:../docs-content
       next:
         specifier: ^16.4.5
         version: 16.4.5(@opentelemetry/api@1.9.0)(@types/node@24.19.2)(react-dom@19.2.4(react@19.2.4))(react@19.2.4)
@@ -406,6 +409,9 @@ importers:
       react-dom:
         specifier: ^19.2.4
         version: 19.2.4(react@19.2.4)
+      yaml:
+        specifier: 2.9.0
+        version: 2.9.0
     devDependencies:
       '@types/node':
         specifier: 24.19.2
@@ -416,6 +422,15 @@ importers:
       '@types/react-dom':
         specifier: 19.3.0
         version: 19.3.0(@types/react@19.3.0)
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+
+  packages/docs-content:
+    devDependencies:
+      '@types/node':
+        specifier: 24.19.2
+        version: 24.19.2
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -4324,11 +4339,6 @@ packages:
     resolution: {integrity: sha512-Tz09sEL2EEuv5fFowm419c1+a/jSMiBjI9gHxVLrVdbUkkNUUfjsVYs9pVZu5oCon/kmRh9TfLEObFtkVxmY0w==}
     engines: {node: '>=8.0.0'}
 
-  nanoid@3.3.11:
-    resolution: {integrity: sha512-N8SpfPUnUp1bK+PMYW8qSWdl9U+wwNWI4QKxOYDy9JAro3WMX7p2OeVRF9v+347pnakNevPmiHhNmZ2HbFA76w==}
-    engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
-    hasBin: true
-
   nanoid@3.3.20:
     resolution: {integrity: sha512-uKdg2G3GNCKQn9byYOpxbGqrT2fGO5KRt5J/8b3pok8rT6qxGWF6hxMyJiEYtAf+FVyYuD9hRaDqX5uPFYJ4ZQ==}
     engines: {node: ^10 || ^12 || ^13.7 || ^14 || >=15.0.1}
@@ -4552,10 +4562,6 @@ packages:
 
   postcss@8.5.23:
     resolution: {integrity: sha512-g50586zr4bZmwFiTlflMu8E0bDTb5I5gertgwAKmsdUlTQIhZtunzUlD1WSzwcVWPoAVpsrA6vlfCD7oXvRwgg==}
-    engines: {node: ^10 || ^12 || >=14}
-
-  postcss@8.5.6:
-    resolution: {integrity: sha512-3Ybi1tAuwAP9s0r1UQ2J4n5Y0G05bJkpUIO0/bI9MhwmD70S5aTWbXGBwxHrelT+XM1k6dM0pk+SwNkpTRN7Pg==}
     engines: {node: ^10 || ^12 || >=14}
 
   postgres@3.4.7:
@@ -5315,11 +5321,6 @@ packages:
 
   wrappy@1.0.2:
     resolution: {integrity: sha512-l4Sp/DRseor9wL6EvV2+TuQn63dMkPjZ/sp9XkghTEbV9KlPS1xUsZ3u7/IQO4wxtcFB4bgpQPRcR3QCvezPcQ==}
-
-  yaml@2.8.2:
-    resolution: {integrity: sha512-mplynKqc1C2hTVYxd0PU2xQAc22TI1vShAYGksCCfxbn/dFwnHTNi1bvYsBTkhdUNtGIf5xNOg938rrSSYvS9A==}
-    engines: {node: '>= 14.6'}
-    hasBin: true
 
   yaml@2.9.0:
     resolution: {integrity: sha512-2AvhNX3mb8zd6Zy7INTtSpl1F15HW6Wnqj0srWlkKLcpYl/gMIMJiyuGq2KeI2YFxUPjdlB+3Lc10seMLtL4cA==}
@@ -9306,8 +9307,6 @@ snapshots:
     dependencies:
       lru.min: 1.1.3
 
-  nanoid@3.3.11: {}
-
   nanoid@3.3.20: {}
 
   napi-build-utils@2.0.0: {}
@@ -9405,7 +9404,7 @@ snapshots:
       unist-util-remove: 4.0.0
       unist-util-visit: 5.0.0
       unist-util-visit-children: 3.0.0
-      yaml: 2.8.2
+      yaml: 2.9.0
       zod: 4.3.4
     transitivePeerDependencies:
       - supports-color
@@ -9605,12 +9604,6 @@ snapshots:
   postcss@8.5.23:
     dependencies:
       nanoid: 3.3.20
-      picocolors: 1.1.1
-      source-map-js: 1.2.1
-
-  postcss@8.5.6:
-    dependencies:
-      nanoid: 3.3.11
       picocolors: 1.1.1
       source-map-js: 1.2.1
 
@@ -10395,7 +10388,7 @@ snapshots:
       esbuild: 0.27.2
       fdir: 6.5.0(picomatch@4.0.7)
       picomatch: 4.0.7
-      postcss: 8.5.6
+      postcss: 8.5.23
       rollup: 4.54.0
       tinyglobby: 0.2.17
     optionalDependencies:
@@ -10467,8 +10460,6 @@ snapshots:
   wicked-good-xpath@1.3.0: {}
 
   wrappy@1.0.2: {}
-
-  yaml@2.8.2: {}
 
   yaml@2.9.0: {}
 

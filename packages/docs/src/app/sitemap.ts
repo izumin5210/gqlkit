@@ -1,5 +1,5 @@
 import type { MetadataRoute } from "next";
-import { getPageMap } from "nextra/page-map";
+import { getContent } from "../lib/content";
 
 export const dynamic = "force-static";
 
@@ -21,7 +21,7 @@ function extractRoutes(pageMap: unknown[]): string[] {
 }
 
 export default async function sitemap(): Promise<MetadataRoute.Sitemap> {
-  const pageMap = await getPageMap();
+  const { pageMap } = await getContent();
   const routes = [...new Set(extractRoutes(pageMap))];
 
   return routes.map((route) => ({

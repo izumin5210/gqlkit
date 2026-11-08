@@ -1,13 +1,12 @@
-import path from "node:path";
 import {
   buildSections,
+  contentDir,
   HEADER_LINES,
   type PageInfo,
   type Section,
-} from "./docs-parser";
+} from "@gqlkit-ts/docs-content";
 
 const BASE_URL = "https://gqlkit.izumin.dev";
-const CONTENT_DIR = path.join(process.cwd(), "src/content");
 
 const DESCRIPTION_OVERRIDES: Record<string, string> = {
   "getting-started":
@@ -29,7 +28,7 @@ function formatLink(page: PageInfo): string {
 }
 
 export async function generateLlmsTxt(): Promise<string> {
-  const rawSections = await buildSections(CONTENT_DIR);
+  const rawSections = await buildSections(contentDir);
   const sections = applyDescriptionOverrides(rawSections);
 
   const lines: string[] = [...HEADER_LINES];
@@ -47,7 +46,7 @@ export async function generateLlmsTxt(): Promise<string> {
 }
 
 export async function generateLlmsFullTxt(): Promise<string> {
-  const sections = await buildSections(CONTENT_DIR);
+  const sections = await buildSections(contentDir);
 
   const lines: string[] = [...HEADER_LINES, "---", ""];
 
