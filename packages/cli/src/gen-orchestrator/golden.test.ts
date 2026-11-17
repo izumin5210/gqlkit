@@ -46,16 +46,16 @@ async function assertFileNotExists(
  * remove it.
  */
 const casesWithKnownInvalidSchema: ReadonlySet<string> = new Set([
-  // Object types used as argument or input field types.
+  // Object types used as argument or input field types (#411).
   "default-value-complex",
   "gqlfield-def-unwrap-bug",
-  // Types referenced by resolvers are missing from the schema.
+  // Types referenced by resolvers are missing from the schema (#343).
   "import-extension-none",
   "import-extension-ts",
   "subscription-directives-tsdoc",
   "subscription-mixed",
   "subscription-only",
-  // `$typeName` is emitted as a GraphQL name.
+  // `$typeName` is emitted as a GraphQL name (#344).
   "union-dollar-typename-basic",
   "union-typename-priority",
 ]);
