@@ -69,6 +69,86 @@ const schema = makeExecutableSchema({ typeDefs, resolvers: createResolvers() });
 createServer(createYoga({ schema })).listen(4001);
 ```
 
+## Federation Directives
+
+`@gqlkit-ts/runtime/federation` provides federation directives as types. Attach them with `GqlObject` and `GqlField` like custom directives, but do not define them: gqlkit takes their definitions from the federation spec, imports the ones you use with `@link`, and adds their definitions to `typeDefs.ts` only.
+
+gqlkit recognizes these types, not the directive names. A custom `GqlDirective` named `key` stays a custom directive; with `federation` set, it is reported as `FEDERATION_DIRECTIVE_NAME_CONFLICT` only when the schema also imports `@key`. Using a federation directive without `federation` is reported as `FEDERATION_NOT_CONFIGURED`.
+
+| Type | Directive | Where to attach |
+|------|-----------|-----------------|
+| `Key<Fields, Options?>` | `@key` | Object types |
+| `Shareable` | `@shareable` | Object types and fields, including resolver fields |
+| `Inaccessible` | `@inaccessible` | Object types, fields, arguments, and input fields |
+
+### Entities and Keys
+
+Declare an entity with `Key`. `Fields` is the key as a selection set without the outer braces; attach several `Key`s to declare several keys:
+
+```typescript
+import type { GqlObject, IDString } from "@gqlkit-ts/runtime";
+import type { Key } from "@gqlkit-ts/runtime/federation";
+
+export type User = GqlObject<
+  { id: IDString; organization: Organization; name: string },
+  { directives: [Key<"id">, Key<"organization { id }">] }
+>;
+
+// A subgraph that only references Organization, and leaves resolving it to another subgraph
+export type Organization = GqlObject<
+  { id: IDString },
+  { directives: [Key<"id", { resolvable: false }>] }
+>;
+```
+
+Generates:
+
+```graphql
+extend schema @link(url: "https://specs.apollo.dev/federation/v2.9", import: ["@key"])
+
+type Organization @key(fields: "id", resolvable: false) {
+  id: ID!
+}
+
+type User @key(fields: "id") @key(fields: "organization { id }") {
+  id: ID!
+  name: String!
+  organization: Organization!
+}
+```
+
+gqlkit checks each key against the type and reports `INVALID_KEY_FIELDS` when the key:
+
+- is not a selection set
+- names a field the type does not have, including the fields added with `defineField`
+- selects a field that takes arguments, or uses aliases, arguments, directives, or fragments
+- selects an object-typed field without selecting its fields, or selects fields of a scalar or enum
+- selects a field of a union or interface type
+
+Pruning keeps types with `Key` even when no root field reaches them, because the gateway reaches entities through the subgraph's entity resolution.
+
+### Sharing and Hiding Fields
+
+```typescript
+import type { GqlField, GqlObject, IDString } from "@gqlkit-ts/runtime";
+import type { Inaccessible, Shareable } from "@gqlkit-ts/runtime/federation";
+
+// Every field of Money can be resolved by more than one subgraph
+export type Money = GqlObject<
+  { amount: number; currency: string },
+  { directives: [Shareable] }
+>;
+
+export type Product = {
+  id: IDString;
+  name: GqlField<string, { directives: [Shareable] }>;
+  // Hidden from the supergraph's public API
+  internalCode: GqlField<string, { directives: [Inaccessible] }>;
+};
+```
+
+Resolver fields take them as the directives type parameter, e.g. `defineField<Product, NoArgs, string, [Shareable]>(...)`.
+
 ## Keeping Custom Directives in the Supergraph
 
 Composition drops the directives of a subgraph unless the subgraph marks them with `@composeDirective`. List them in `composeDirectives`, together with a URL that identifies a spec of your own:

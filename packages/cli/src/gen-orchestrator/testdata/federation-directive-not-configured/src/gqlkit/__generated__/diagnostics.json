@@ -1,0 +1,12 @@
+[
+  {
+    "code": "FEDERATION_NOT_CONFIGURED",
+    "message": "Type 'User': Federation directive '@key' requires the federation config",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/user.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

@@ -1,0 +1,92 @@
+[
+  {
+    "code": "INVALID_KEY_FIELDS",
+    "message": "Type 'User': @key(fields: \"uuid\") is invalid: 'User' has no field 'uuid'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "INVALID_KEY_FIELDS",
+    "message": "Type 'User': @key(fields: \"id { value }\") is invalid: 'User.id' returns the leaf type 'ID' and cannot have a selection",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "INVALID_KEY_FIELDS",
+    "message": "Type 'User': @key(fields: \"address\") is invalid: 'User.address' returns the object type 'Address' and needs a selection of its fields",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "INVALID_KEY_FIELDS",
+    "message": "Type 'User': @key(fields: \"address { zip }\") is invalid: 'Address' has no field 'zip'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "INVALID_KEY_FIELDS",
+    "message": "Type 'User': @key(fields: \"pet { name }\") is invalid: 'User.pet' returns the abstract type 'Pet'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "INVALID_KEY_FIELDS",
+    "message": "Type 'User': @key(fields: \"avatarUrl\") is invalid: 'User.avatarUrl' takes arguments",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "INVALID_KEY_FIELDS",
+    "message": "Type 'User': @key(fields: \"alias: id\") is invalid: 'alias: id' uses an alias",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "INVALID_KEY_FIELDS",
+    "message": "Type 'User': @key(fields: \"\") is invalid: it is not a selection set (Syntax Error: Expected Name, found \"}\".)",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "INVALID_KEY_FIELDS",
+    "message": "Type 'User': @key(fields: \"id {\") is invalid: it is not a selection set (Syntax Error: Expected Name, found \"}\".)",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

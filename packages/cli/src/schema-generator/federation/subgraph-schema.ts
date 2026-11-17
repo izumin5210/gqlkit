@@ -10,24 +10,14 @@ import {
 import type { ResolvedFederationConfig } from "../../config-loader/index.js";
 import {
   APOLLO_FEDERATION_DIRECTIVES,
+  type ApolloFederationDirectiveName,
+  type ApolloFederationVersion,
+  apolloFederationDirectiveDefinition,
   type Diagnostic,
   LINK_DIRECTIVE_NAME,
   LINK_SPEC_DEFINITIONS,
 } from "../../core/index.js";
 import type { DirectiveDefinitionInfo } from "../../shared/directive-definition-extractor.js";
-
-type ApolloFederationDirectiveName = keyof typeof APOLLO_FEDERATION_DIRECTIVES;
-
-/** Federation directives the subgraph imports, sorted by name. */
-function collectFederationImports(
-  federation: ResolvedFederationConfig,
-): ApolloFederationDirectiveName[] {
-  const names: ApolloFederationDirectiveName[] = [];
-  if (federation.composeDirectives.length > 0) {
-    names.push("composeDirective");
-  }
-  return names.sort();
-}
 
 function stringValue(value: string): ConstValueNode {
   return { kind: Kind.STRING, value };
@@ -116,10 +106,13 @@ function omitEmptyLists<T>(value: T): T {
  */
 function buildRuntimeDefinitions(
   imports: ReadonlyArray<ApolloFederationDirectiveName>,
+  version: ApolloFederationVersion,
 ): ReadonlyArray<DefinitionNode> {
   const sdl = [
     LINK_SPEC_DEFINITIONS,
-    ...imports.map((name) => APOLLO_FEDERATION_DIRECTIVES[name].definition),
+    ...imports.map((name) =>
+      apolloFederationDirectiveDefinition(name, version),
+    ),
   ].join("\n");
   return omitEmptyLists(parse(sdl, { noLocation: true }).definitions);
 }
@@ -127,6 +120,7 @@ function buildRuntimeDefinitions(
 export interface BuildSubgraphDocumentsParams {
   readonly documentNode: DocumentNode;
   readonly federation: ResolvedFederationConfig;
+  readonly imports: ReadonlyArray<ApolloFederationDirectiveName>;
 }
 
 export interface BuildSubgraphDocumentsResult {
@@ -139,8 +133,7 @@ export interface BuildSubgraphDocumentsResult {
 export function buildSubgraphDocuments(
   params: BuildSubgraphDocumentsParams,
 ): BuildSubgraphDocumentsResult {
-  const { documentNode, federation } = params;
-  const imports = collectFederationImports(federation);
+  const { documentNode, federation, imports } = params;
 
   const sdlDocument: DocumentNode = {
     ...documentNode,
@@ -153,7 +146,7 @@ export function buildSubgraphDocuments(
     ...sdlDocument,
     definitions: [
       ...sdlDocument.definitions,
-      ...buildRuntimeDefinitions(imports),
+      ...buildRuntimeDefinitions(imports, federation.version),
     ],
   };
   return { sdlDocument, typeDefsDocument };
@@ -161,6 +154,7 @@ export function buildSubgraphDocuments(
 
 export interface ValidateFederationDirectivesParams {
   readonly federation: ResolvedFederationConfig;
+  readonly imports: ReadonlyArray<ApolloFederationDirectiveName>;
   readonly directiveDefinitions: ReadonlyArray<DirectiveDefinitionInfo> | null;
 }
 
@@ -172,9 +166,14 @@ export interface ValidateFederationDirectivesParams {
 export function validateFederationDirectives(
   params: ValidateFederationDirectivesParams,
 ): Diagnostic[] {
-  const { federation, directiveDefinitions } = params;
+  const { federation, imports, directiveDefinitions } = params;
   const diagnostics: Diagnostic[] = [];
-  const definedNames = new Set(directiveDefinitions?.map((d) => d.name));
+  // Aliases of federation directives (`type UserKey = Key<"id">`) define no
+  // directive of their own.
+  const userDefinitions = (directiveDefinitions ?? []).filter(
+    (d) => d.federation === null,
+  );
+  const definedNames = new Set(userDefinitions.map((d) => d.name));
 
   for (const link of federation.composeDirectives) {
     for (const name of link.directiveNames) {
@@ -189,11 +188,8 @@ export function validateFederationDirectives(
     }
   }
 
-  const reservedNames = new Set<string>([
-    LINK_DIRECTIVE_NAME,
-    ...collectFederationImports(federation),
-  ]);
-  for (const definition of directiveDefinitions ?? []) {
+  const reservedNames = new Set<string>([LINK_DIRECTIVE_NAME, ...imports]);
+  for (const definition of userDefinitions) {
     if (reservedNames.has(definition.name)) {
       diagnostics.push({
         code: "FEDERATION_DIRECTIVE_NAME_CONFLICT",

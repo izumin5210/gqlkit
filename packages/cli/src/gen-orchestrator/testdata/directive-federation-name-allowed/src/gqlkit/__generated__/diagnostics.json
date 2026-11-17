@@ -1,0 +1,12 @@
+[
+  {
+    "code": "UNSUPPORTED_SYNTAX",
+    "message": "Generic type 'KeyDirective' is not supported. Consider using a concrete type instead.",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/user.ts",
+      "line": 14,
+      "column": 1
+    }
+  }
+]

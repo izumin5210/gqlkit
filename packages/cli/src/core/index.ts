@@ -24,6 +24,7 @@ export type {
   DirectiveArgument,
   DirectiveArgumentValue,
   DirectiveInfo,
+  FederationDirectiveKind,
 } from "./metadata.js";
 export {
   BUILT_IN_SCALARS,
@@ -56,7 +57,10 @@ export type {
 } from "./ts-types.js";
 export {
   APOLLO_FEDERATION_DIRECTIVES,
+  type ApolloFederationDirectiveName,
   type ApolloFederationVersion,
+  apolloFederationDirectiveDefinition,
+  isFederationDirectiveKind,
   formatApolloFederationVersion,
   isApolloFederationVersionAtLeast,
   LINK_DIRECTIVE_NAME,

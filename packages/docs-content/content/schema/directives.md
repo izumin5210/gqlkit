@@ -237,3 +237,7 @@ export type CreatePostInput = {
   }>;
 };
 ```
+
+## Federation Directives
+
+For Apollo Federation subgraphs, use the directive types from `@gqlkit-ts/runtime/federation` (`Key`, `Shareable`, `Inaccessible`) instead of defining them with `GqlDirective`. See [Apollo Federation](../integration/apollo-federation.md#federation-directives).

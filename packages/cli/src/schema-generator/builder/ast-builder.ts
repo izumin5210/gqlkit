@@ -25,14 +25,15 @@ import {
   type TypeNode,
   type UnionTypeDefinitionNode,
 } from "graphql";
-import type {
-  DeprecationInfo,
-  DirectiveArgument,
-  DirectiveArgumentValue,
-  DirectiveInfo,
-  EnumValueInfo,
-  FieldInfo,
-  GraphQLFieldType,
+import {
+  APOLLO_FEDERATION_DIRECTIVES,
+  type DeprecationInfo,
+  type DirectiveArgument,
+  type DirectiveArgumentValue,
+  type DirectiveInfo,
+  type EnumValueInfo,
+  type FieldInfo,
+  type GraphQLFieldType,
 } from "../../core/index.js";
 import type { GraphQLInputValue } from "../../resolver-extractor/index.js";
 import type { DirectiveDefinitionInfo } from "../../shared/directive-definition-extractor.js";
@@ -204,10 +205,17 @@ function buildCustomDirective(
   directive: DirectiveInfo,
   directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
 ): ConstDirectiveNode {
-  const def = directiveDefMap?.get(directive.name);
   const argTypeMap = new Map<string, string>();
-  if (def) {
-    for (const argDef of def.args) {
+  if (directive.federation !== null) {
+    // A key such as `Key<"SKU">` reads as an enum value; the federation
+    // spec, not a user definition, says that `fields` is a string.
+    const spec = APOLLO_FEDERATION_DIRECTIVES[directive.federation];
+    for (const argName of spec.stringArguments) {
+      argTypeMap.set(argName, "String");
+    }
+  } else {
+    const def = directiveDefMap?.get(directive.name);
+    for (const argDef of def?.args ?? []) {
       argTypeMap.set(argDef.name, argDef.type.typeName);
     }
   }
@@ -642,17 +650,20 @@ export function buildDocumentNode(
   const sourceRoot = options.sourceRoot;
   const definitions: DefinitionNode[] = [];
 
+  // Aliases of federation directives define no directive of their own.
+  const userDirectiveDefinitions = (
+    integratedResult.directiveDefinitions ?? []
+  ).filter((def) => def.federation === null);
+
   // Build directive definition map for argument type lookup
   const directiveDefMap = new Map<string, DirectiveDefinitionInfo>();
-  if (integratedResult.directiveDefinitions) {
-    for (const def of integratedResult.directiveDefinitions) {
-      directiveDefMap.set(def.name, def);
-    }
+  for (const def of userDirectiveDefinitions) {
+    directiveDefMap.set(def.name, def);
   }
 
-  if (integratedResult.directiveDefinitions) {
-    const sortedDirectives = [...integratedResult.directiveDefinitions].sort(
-      (a, b) => a.name.localeCompare(b.name),
+  {
+    const sortedDirectives = [...userDirectiveDefinitions].sort((a, b) =>
+      a.name.localeCompare(b.name),
     );
     for (const directiveDef of sortedDirectives) {
       definitions.push(buildDirectiveDefinitionNode(directiveDef));

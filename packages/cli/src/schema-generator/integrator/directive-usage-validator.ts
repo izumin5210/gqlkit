@@ -6,7 +6,11 @@
  * applied.
  */
 
-import type { Diagnostic, GraphQLTypeInfo } from "../../core/index.js";
+import type {
+  Diagnostic,
+  FederationDirectiveKind,
+  GraphQLTypeInfo,
+} from "../../core/index.js";
 import type {
   DirectiveDefinitionInfo,
   DirectiveLocation,
@@ -30,6 +34,7 @@ type UsageLocation =
 
 interface DirectiveUsageContext {
   readonly directiveName: string;
+  readonly federation: FederationDirectiveKind | null;
   readonly usageLocation: UsageLocation;
   readonly targetName: string;
   readonly sourceFile: string;
@@ -43,6 +48,12 @@ function validateDirectiveUsage(
 ): void {
   const { directiveName, usageLocation, targetName, sourceFile, line } =
     context;
+
+  // Federation directives are checked against the federation spec instead
+  // (schema-generator/federation), since the user does not define them.
+  if (context.federation !== null) {
+    return;
+  }
 
   const def = directiveDefMap.get(directiveName);
   if (!def) {
@@ -124,7 +135,9 @@ export function validateDirectiveUsages(
 
   const directiveDefMap = new Map<string, DirectiveDefinitionInfo>();
   for (const def of directiveDefinitions ?? []) {
-    directiveDefMap.set(def.name, def);
+    if (def.federation === null) {
+      directiveDefMap.set(def.name, def);
+    }
   }
 
   for (const type of types) {
@@ -142,6 +155,7 @@ export function validateDirectiveUsages(
         validateDirectiveUsage(
           {
             directiveName: directive.name,
+            federation: directive.federation,
             usageLocation,
             targetName: `Type '${type.name}'`,
             sourceFile: type.sourceFile,
@@ -164,6 +178,7 @@ export function validateDirectiveUsages(
           validateDirectiveUsage(
             {
               directiveName: directive.name,
+              federation: directive.federation,
               usageLocation: fieldUsageLocation,
               targetName: `Field '${type.name}.${field.name}'`,
               sourceFile: type.sourceFile,
@@ -184,6 +199,7 @@ export function validateDirectiveUsages(
           validateDirectiveUsage(
             {
               directiveName: directive.name,
+              federation: directive.federation,
               usageLocation: "FIELD_DEFINITION",
               targetName: `Field '${ext.targetTypeName}.${field.name}'`,
               sourceFile: field.resolverSourceFile,
@@ -201,6 +217,7 @@ export function validateDirectiveUsages(
             validateDirectiveUsage(
               {
                 directiveName: directive.name,
+                federation: directive.federation,
                 usageLocation: "ARGUMENT_DEFINITION",
                 targetName: `Argument '${ext.targetTypeName}.${field.name}(${arg.name}:)'`,
                 sourceFile: field.resolverSourceFile,

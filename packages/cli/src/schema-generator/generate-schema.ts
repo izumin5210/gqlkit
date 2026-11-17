@@ -25,6 +25,7 @@ import {
 import { buildDocumentNode } from "./builder/ast-builder.js";
 import { emitResolversCode, emitTypeDefsCode } from "./emitter/code-emitter.js";
 import { emitSdlContent } from "./emitter/sdl-emitter.js";
+import { analyzeFederationDirectives } from "./federation/directive-usages.js";
 import {
   buildSubgraphDocuments,
   validateFederationDirectives,
@@ -354,13 +355,20 @@ export function generateSchema(
     tsAliasToGraphQLNameMap: autoTypeResult.tsAliasToGraphQLNameMap,
   });
 
-  const federationDiagnostics =
-    federation === null
-      ? []
-      : validateFederationDirectives({ federation, directiveDefinitions });
+  const federationAnalysis = analyzeFederationDirectives({
+    federation,
+    integratedResult,
+  });
   const diagnostics = [
     ...integratedResult.diagnostics,
-    ...federationDiagnostics,
+    ...federationAnalysis.diagnostics,
+    ...(federation === null
+      ? []
+      : validateFederationDirectives({
+          federation,
+          imports: federationAnalysis.imports,
+          directiveDefinitions,
+        })),
   ];
   const hasErrors = diagnostics.some((d) => d.severity === "error");
 
@@ -370,7 +378,10 @@ export function generateSchema(
   // Prune only on the success path: an errored result is never written, and
   // its document may be arbitrarily incomplete.
   if (enablePruning && !hasErrors) {
-    const pruneResult = pruneDocumentNode(documentNode);
+    const pruneResult = pruneDocumentNode({
+      documentNode,
+      additionalRootTypeNames: federationAnalysis.entityTypeNames,
+    });
     documentNode = pruneResult.documentNode;
     prunedTypes = pruneResult.removedTypes;
   }
@@ -380,7 +391,11 @@ export function generateSchema(
   const { sdlDocument, typeDefsDocument } =
     federation === null
       ? { sdlDocument: documentNode, typeDefsDocument: documentNode }
-      : buildSubgraphDocuments({ documentNode, federation });
+      : buildSubgraphDocuments({
+          documentNode,
+          federation,
+          imports: federationAnalysis.imports,
+        });
   const typeDefsCode = emitTypeDefsCode(typeDefsDocument);
   const sdlContent = emitSdlContent(sdlDocument);
 
