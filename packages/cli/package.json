@@ -68,7 +68,7 @@
     "@gqlkit-ts/docs-content": "workspace:*",
     "@gqlkit-ts/runtime": "workspace:*",
     "@types/shell-quote": "1.7.5",
-    "memfs": "4.80.0",
+    "memfs": "4.80.1",
     "typescript": "7.1.0-dev.20261113.1"
   }
 }
