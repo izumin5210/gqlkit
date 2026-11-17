@@ -98,6 +98,78 @@ export const typeDefs: DocumentNode = {
       "kind": "ObjectTypeExtension",
       "name": {
         "kind": "Name",
+        "value": "Item"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "excerpt"
+          },
+          "arguments": [
+            {
+              "kind": "InputValueDefinition",
+              "name": {
+                "kind": "Name",
+                "value": "length"
+              },
+              "type": {
+                "kind": "NonNullType",
+                "type": {
+                  "kind": "NamedType",
+                  "name": {
+                    "kind": "Name",
+                    "value": "Float"
+                  }
+                }
+              },
+              "directives": [
+                {
+                  "kind": "Directive",
+                  "name": {
+                    "kind": "Name",
+                    "value": "maxLength"
+                  },
+                  "arguments": [
+                    {
+                      "kind": "Argument",
+                      "name": {
+                        "kind": "Name",
+                        "value": "max"
+                      },
+                      "value": {
+                        "kind": "IntValue",
+                        "value": "500"
+                      }
+                    }
+                  ]
+                }
+              ]
+            }
+          ],
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Field resolver arguments are emitted on an `extend type` of the parent\nobject rather than of a root operation type.\n\nDefined in: src/gqlkit/schema/query.ts",
+            "block": true
+          }
+        }
+      ]
+    },
+    {
+      "kind": "ObjectTypeExtension",
+      "name": {
+        "kind": "Name",
         "value": "Query"
       },
       "fields": [
