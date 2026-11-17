@@ -1020,5 +1020,177 @@ describe("ConfigValidator", () => {
         },
       );
     });
+    describe("federation options", () => {
+      it("should resolve federation to null when not provided", () => {
+        const result = validateConfig({ config: {}, configPath });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig!.federation).toBeNull();
+      });
+
+      it("should resolve the federation version from the spec URL", () => {
+        const result = validateConfig({
+          config: {
+            federation: {
+              spec: "apollo-federation",
+              url: "https://specs.apollo.dev/federation/v2.9",
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig!.federation).toEqual({
+          spec: "apollo-federation",
+          url: "https://specs.apollo.dev/federation/v2.9",
+          version: { major: 2, minor: 9 },
+          composeDirectives: [],
+        });
+      });
+
+      it("should resolve composeDirectives with directive names stripped of @", () => {
+        const result = validateConfig({
+          config: {
+            federation: {
+              spec: "apollo-federation",
+              url: "https://specs.apollo.dev/federation/v2.1",
+              composeDirectives: [
+                {
+                  url: "https://example.com/redact/v1.0",
+                  import: ["@redact", "@mask"],
+                },
+              ],
+            },
+          },
+          configPath,
+        });
+
+        expect(result.valid).toBe(true);
+        expect(result.resolvedConfig!.federation?.composeDirectives).toEqual([
+          {
+            url: "https://example.com/redact/v1.0",
+            directiveNames: ["redact", "mask"],
+          },
+        ]);
+      });
+
+      it.each([
+        {
+          label: "federation is not an object",
+          federation: "apollo-federation",
+          messageContains: "federation must be an object",
+        },
+        {
+          label: "spec is missing",
+          federation: { url: "https://specs.apollo.dev/federation/v2.9" },
+          messageContains: 'federation.spec must be "apollo-federation"',
+        },
+        {
+          label: "spec is unknown",
+          federation: {
+            spec: "graphql-federation",
+            url: "https://specs.apollo.dev/federation/v2.9",
+          },
+          messageContains: 'federation.spec must be "apollo-federation"',
+        },
+        {
+          label: "url is missing",
+          federation: { spec: "apollo-federation" },
+          messageContains: "federation.url must be",
+        },
+        {
+          label: "url is not an Apollo Federation spec URL",
+          federation: {
+            spec: "apollo-federation",
+            url: "https://example.com/federation/v2.9",
+          },
+          messageContains: "federation.url must be",
+        },
+        {
+          label: "url points at federation v1",
+          federation: {
+            spec: "apollo-federation",
+            url: "https://specs.apollo.dev/federation/v1.0",
+          },
+          messageContains: "federation.url must be",
+        },
+        {
+          label: "composeDirectives is not an array",
+          federation: {
+            spec: "apollo-federation",
+            url: "https://specs.apollo.dev/federation/v2.9",
+            composeDirectives: {},
+          },
+          messageContains: "federation.composeDirectives must be an array",
+        },
+        {
+          label: "a composeDirectives entry has no url",
+          federation: {
+            spec: "apollo-federation",
+            url: "https://specs.apollo.dev/federation/v2.9",
+            composeDirectives: [{ import: ["@redact"] }],
+          },
+          messageContains: "federation.composeDirectives[0].url",
+        },
+        {
+          label: "a composeDirectives entry imports nothing",
+          federation: {
+            spec: "apollo-federation",
+            url: "https://specs.apollo.dev/federation/v2.9",
+            composeDirectives: [
+              { url: "https://example.com/redact/v1.0", import: [] },
+            ],
+          },
+          messageContains: "federation.composeDirectives[0].import",
+        },
+        {
+          label: "an import is not a directive name",
+          federation: {
+            spec: "apollo-federation",
+            url: "https://specs.apollo.dev/federation/v2.9",
+            composeDirectives: [
+              { url: "https://example.com/redact/v1.0", import: ["redact"] },
+            ],
+          },
+          messageContains: "federation.composeDirectives[0].import",
+        },
+        {
+          label: "the same directive is imported twice",
+          federation: {
+            spec: "apollo-federation",
+            url: "https://specs.apollo.dev/federation/v2.9",
+            composeDirectives: [
+              { url: "https://example.com/redact/v1.0", import: ["@redact"] },
+              { url: "https://example.com/mask/v1.0", import: ["@redact"] },
+            ],
+          },
+          messageContains: "'@redact' is imported more than once",
+        },
+        {
+          label: "composeDirectives is used before federation v2.1",
+          federation: {
+            spec: "apollo-federation",
+            url: "https://specs.apollo.dev/federation/v2.0",
+            composeDirectives: [
+              { url: "https://example.com/redact/v1.0", import: ["@redact"] },
+            ],
+          },
+          messageContains: "requires federation v2.1 or later",
+        },
+      ])(
+        "should report error when $label",
+        ({ federation, messageContains }) => {
+          const result = validateConfig({
+            config: { federation },
+            configPath,
+          });
+
+          expect(result.valid).toBe(false);
+          expect(result.diagnostics.length).toBe(1);
+          expect(result.diagnostics[0]?.code).toBe("CONFIG_INVALID_FEDERATION");
+          expect(result.diagnostics[0]?.message).toContain(messageContains);
+        },
+      );
+    });
   });
 });

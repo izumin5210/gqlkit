@@ -48,6 +48,7 @@ const DEFAULT_RESOLVED_CONFIG: ResolvedConfig = {
   tsconfigPath: null,
   hooks: DEFAULT_HOOKS_CONFIG,
   discriminatorFields: new Map(),
+  federation: null,
 };
 
 export async function loadConfig(

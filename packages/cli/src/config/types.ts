@@ -120,6 +120,62 @@ export interface GqlkitConfig {
   readonly discriminatorFields?: Readonly<
     Record<string, string | ReadonlyArray<string>>
   >;
+
+  /**
+   * Generates the schema as a federation subgraph.
+   * When omitted, the output is a plain GraphQL schema.
+   */
+  readonly federation?: FederationConfig;
+}
+
+/**
+ * Federation subgraph configuration, discriminated by `spec`.
+ */
+export type FederationConfig = ApolloFederationConfig;
+
+/**
+ * Configuration for an Apollo Federation v2 subgraph.
+ *
+ * @example
+ * {
+ *   spec: "apollo-federation",
+ *   url: "https://specs.apollo.dev/federation/v2.9",
+ *   composeDirectives: [
+ *     { url: "https://example.com/redact/v1.0", import: ["@redact"] },
+ *   ],
+ * }
+ */
+export interface ApolloFederationConfig {
+  readonly spec: "apollo-federation";
+
+  /**
+   * The Apollo Federation spec URL the subgraph links, which selects the
+   * federation version. Use a version your composition and gateway support.
+   */
+  readonly url: `https://specs.apollo.dev/federation/v2.${number}`;
+
+  /**
+   * Custom directives to keep in the supergraph. Each entry links your own
+   * spec URL and imports the listed directives, which are then marked with
+   * `@composeDirective`. Each listed directive must be defined with
+   * `GqlDirective`. Requires federation v2.1 or later.
+   */
+  readonly composeDirectives?: ReadonlyArray<ComposeDirectiveLinkConfig>;
+}
+
+/**
+ * A spec of your own that provides directives to keep in the supergraph.
+ */
+export interface ComposeDirectiveLinkConfig {
+  /**
+   * URL identifying the spec, ending with its name and version,
+   * e.g. `https://example.com/redact/v1.0`. Subgraphs that link the same
+   * spec must use the same major version.
+   */
+  readonly url: string;
+
+  /** Directives to import from the spec, with the leading `@`. */
+  readonly import: ReadonlyArray<`@${string}`>;
 }
 
 /**

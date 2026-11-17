@@ -1,4 +1,9 @@
 export {
+  type ResolveFederationConfigParams,
+  type ResolveFederationConfigResult,
+  resolveFederationConfig,
+} from "./federation-validator.js";
+export {
   type LoadConfigOptions,
   type LoadConfigResult,
   loadConfig,
@@ -6,7 +11,10 @@ export {
 
 export type {
   ResolvedConfig,
+  ResolvedApolloFederationConfig,
+  ResolvedComposeDirectiveLink,
   ResolvedDiscriminatorFieldsMap,
+  ResolvedFederationConfig,
   ResolvedHooksConfig,
   ResolvedOutputConfig,
   ResolvedScalarMapping,
