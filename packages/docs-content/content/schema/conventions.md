@@ -52,6 +52,38 @@ For `defineQuery`, `defineMutation`, and `defineField`, GraphQL field names are 
 
 For complete details on inline enum naming, see [Inline Enums](./enums.md#inline-enums).
 
+### Types that are not exported
+
+A named type that is not exported still becomes a GraphQL type when a schema type's field or a resolver's argument or return type references it. It keeps its TypeScript name, except where it is used as an input: there it becomes an input type named `{Name}Input` (or `{Name}` if the name already ends with `Input`).
+
+```ts
+interface Filter {
+  keyword: string;
+}
+
+interface Item {
+  name: string;
+}
+
+export const search = defineQuery<{ filter: Filter }, Item[]>(() => []);
+```
+
+```graphql
+type Item {
+  name: String!
+}
+
+input FilterInput {
+  keyword: String!
+}
+
+extend type Query {
+  search(filter: FilterInput!): [Item!]!
+}
+```
+
+If `{Name}Input` is already the name of a declared type, gqlkit reports an error.
+
 ## Project Layout
 
 Default project layout:

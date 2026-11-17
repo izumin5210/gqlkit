@@ -3,10 +3,9 @@ import type { Diagnostic } from "../core/index.js";
 import type { CheckerLoader } from "../shared/checker-loader.js";
 import { collectDiagnostics } from "../shared/index.js";
 import type { SymbolKey } from "../shared/typescript-utils.js";
-import {
-  collectLocalTypeDeclarationNames,
-  type GlobalTypeMapping,
-  type ScalarBaseTypeMappingTable,
+import type {
+  GlobalTypeMapping,
+  ScalarBaseTypeMappingTable,
 } from "../type-extractor/index.js";
 import { convertDefineApiToFields } from "./converter/field-converter.js";
 import {
@@ -50,11 +49,9 @@ export async function extractResolverDefinitions(
 export interface CompleteResolverExtractionParams {
   readonly definitions: ExtractDefineApiResult;
   /**
-   * Names of the type aliases, interfaces and enums declared at the top
-   * level of the source files, exported or not.
+   * Names of the extracted types, including those extracted from the
+   * definitions' `localTypeReferences`.
    */
-  readonly localTypeDeclarationNames: ReadonlySet<string>;
-  /** Names of types already extracted from `GqlObject`/`GqlInterface`/etc. declarations (type-extractor's stage). */
   readonly declaredTypeNames: ReadonlyArray<string>;
   /** Custom scalar names, both config-declared and auto-detected. */
   readonly customScalarNames: ReadonlyArray<string>;
@@ -67,12 +64,7 @@ export interface CompleteResolverExtractionParams {
 export function completeResolverExtraction(
   params: CompleteResolverExtractionParams,
 ): ExtractResolversResult {
-  const {
-    definitions,
-    localTypeDeclarationNames,
-    declaredTypeNames,
-    customScalarNames,
-  } = params;
+  const { definitions, declaredTypeNames, customScalarNames } = params;
   const allDiagnostics: Diagnostic[] = [...definitions.diagnostics];
 
   const result = convertDefineApiToFields(definitions.resolvers);
@@ -85,7 +77,6 @@ export function completeResolverExtraction(
     typeExtensions: result.typeExtensions,
     declaredTypeNames,
     customScalarNames,
-    localTypeDeclarationNames,
   });
   allDiagnostics.push(...validationResult.diagnostics);
 
@@ -97,37 +88,4 @@ export function completeResolverExtraction(
     abstractTypeResolvers: definitions.abstractTypeResolvers,
     diagnostics: collectDiagnostics(allDiagnostics),
   };
-}
-
-export interface ExtractResolversParams extends Omit<
-  ExtractResolverDefinitionsParams,
-  "files"
-> {
-  /** Names of types already extracted from `GqlObject`/`GqlInterface`/etc. declarations (type-extractor's stage). */
-  readonly declaredTypeNames: ReadonlyArray<string>;
-  /** Custom scalar names, both config-declared and auto-detected. */
-  readonly customScalarNames: ReadonlyArray<string>;
-}
-
-/**
- * Extracts GraphQL resolver definitions (queries, mutations, subscriptions,
- * type extensions, and abstract-type resolvers) from `define*` calls in the
- * TypeScript program.
- */
-export async function extractResolvers(
-  params: ExtractResolversParams,
-): Promise<ExtractResolversResult> {
-  const { declaredTypeNames, customScalarNames, ...definitionParams } = params;
-  return completeResolverExtraction({
-    localTypeDeclarationNames: await collectLocalTypeDeclarationNames(
-      params.program,
-      params.sourceFiles,
-    ),
-    definitions: await extractResolverDefinitions({
-      ...definitionParams,
-      files: params.sourceFiles,
-    }),
-    declaredTypeNames,
-    customScalarNames,
-  });
 }

@@ -25,7 +25,6 @@ import { prefetchDeclarationFacts } from "../../shared/checker-prefetch.js";
 import { extractDirectiveDefinitions } from "../../shared/index.js";
 import {
   buildScalarMappingTable,
-  collectLocalTypeDeclarationNames,
   collectTypeNameRegistrations,
   createRecordedScalarMappingTable,
   isScalarMappingTableUnread,
@@ -96,9 +95,6 @@ async function run(): Promise<void> {
       checker,
       files,
     }),
-    localTypeDeclarationNames: [
-      ...(await collectLocalTypeDeclarationNames(program, files)),
-    ],
   });
   const [names] = await Promise.all([
     nextRequest("type-names"),

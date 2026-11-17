@@ -41,6 +41,7 @@ import {
   type FieldTypeResolverContext,
   type FieldTypeResolverDiagnostic,
   type GlobalTypeMapping,
+  type LocalTypeReference,
   resolveFieldType,
   type ScalarBaseTypeMappingTable,
 } from "../../type-extractor/index.js";
@@ -93,6 +94,12 @@ export interface ExtractDefineApiResult {
   readonly resolvers: ReadonlyArray<DefineApiResolverInfo>;
   readonly abstractTypeResolvers: ReadonlyArray<AbstractResolverInfo>;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
+  /**
+   * The types declared in the source but not as schema types that the
+   * resolvers' arguments and return types reference, in source order; the
+   * first declaration of a name wins, as in type extraction's discovery.
+   */
+  readonly localTypeReferences: ReadonlyArray<LocalTypeReference>;
 }
 
 export interface ExtractDefineApiOptions {
@@ -414,6 +421,7 @@ async function extractArgsFromType(
     scalarMappingContext: ctx.scalarMappingContext,
     ignoreFields: null,
     discoveredTypes: ctx.discoveredTypes,
+    localTypeReferences: ctx.localTypeReferences,
     diagnosticLabel: "Argument",
   });
 
@@ -576,7 +584,11 @@ async function extractTypeArgumentsFromCall(
   const argsType = await checker.getTypeFromTypeNode(argsTypeNode);
   const returnType = await checker.getTypeFromTypeNode(returnTypeNode);
 
-  const argsTypeRef = await resolveFieldType(argsType, undefined, inputContext);
+  // The whole arguments object is flattened into arguments, never referenced.
+  const argsTypeRef = await resolveFieldType(argsType, undefined, {
+    ...inputContext,
+    localTypeReferences: null,
+  });
   const isNoArgs =
     argsTypeRef.kind === "reference" && argsTypeRef.name === "Record";
 
@@ -691,6 +703,28 @@ interface ProcessResolverDeclarationResult {
   readonly resolver: DefineApiResolverInfo | null;
   readonly abstractResolver: AbstractResolverInfo | null;
   readonly diagnostics: ReadonlyArray<Diagnostic>;
+}
+
+/**
+ * Collects the names of the named types `tsType` references, including
+ * through lists, unions and inline objects.
+ */
+function collectReferencedTypeNames(
+  tsType: TSTypeReference,
+  names: Set<string>,
+): void {
+  if (tsType.kind === "reference" && tsType.name !== null) {
+    names.add(tsType.name);
+  }
+  if (tsType.elementType) {
+    collectReferencedTypeNames(tsType.elementType, names);
+  }
+  for (const member of tsType.members ?? []) {
+    collectReferencedTypeNames(member, names);
+  }
+  for (const property of tsType.inlineObjectProperties ?? []) {
+    collectReferencedTypeNames(property.tsType, names);
+  }
 }
 
 /**
@@ -900,6 +934,7 @@ export async function extractDefineApiResolvers(
     scalarMappingTable,
     scalarMappingContext: "input",
     discoveredTypes: null,
+    localTypeReferences: null,
     diagnostics: [],
   };
   const outputContext: FieldTypeResolverContext = {
@@ -912,6 +947,7 @@ export async function extractDefineApiResolvers(
     scalarMappingTable,
     scalarMappingContext: "output",
     discoveredTypes: null,
+    localTypeReferences: null,
     diagnostics: [],
   };
 
@@ -942,22 +978,27 @@ export async function extractDefineApiResolvers(
       );
 
       return Promise.all(
-        declarations.map(({ declaration, statement }) =>
-          processResolverDeclaration({
+        declarations.map(async ({ declaration, statement }) => {
+          // One map per declaration, merged in source order below, so that
+          // which declaration of a name wins doesn't depend on timing.
+          const localTypeReferences = new Map<string, LocalTypeReference>();
+          const result = await processResolverDeclaration({
             declaration,
             statement,
             sourceFile,
             filePath,
             checker,
-            inputContext,
-            outputContext,
+            inputContext: { ...inputContext, localTypeReferences },
+            outputContext: { ...outputContext, localTypeReferences },
             exportedInputTypes,
-          }),
-        ),
+          });
+          return result === null ? null : { ...result, localTypeReferences };
+        }),
       );
     }),
   );
 
+  const recordedTypes = new Map<string, LocalTypeReference>();
   for (const result of resultsByFile.flat()) {
     if (!result) {
       continue;
@@ -970,7 +1011,25 @@ export async function extractDefineApiResolvers(
     if (result.resolver) {
       resolvers.push(result.resolver);
     }
+    for (const [name, reference] of result.localTypeReferences) {
+      if (!recordedTypes.has(name)) {
+        recordedTypes.set(name, reference);
+      }
+    }
   }
 
-  return { resolvers, abstractTypeResolvers, diagnostics };
+  // Resolution also records names it then doesn't use as references (e.g.
+  // union members it expands as inline objects).
+  const referencedNames = new Set<string>();
+  for (const resolver of resolvers) {
+    collectReferencedTypeNames(resolver.returnType, referencedNames);
+    for (const arg of resolver.args ?? []) {
+      collectReferencedTypeNames(arg.tsType, referencedNames);
+    }
+  }
+  const localTypeReferences = [...recordedTypes.values()].filter((r) =>
+    referencedNames.has(r.name),
+  );
+
+  return { resolvers, abstractTypeResolvers, diagnostics, localTypeReferences };
 }

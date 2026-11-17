@@ -72,6 +72,30 @@ export interface DiscoveredTypeEntry {
   readonly sourceLocation: SourceLocation;
 }
 
+/**
+ * Where a named type that is declared in the source but is not a schema type
+ * is declared. Unlike `DiscoveredTypeEntry` it holds no TypeScript objects,
+ * so it can cross API instances.
+ */
+export interface LocalTypeReference {
+  /** The name the type takes in the schema (see `getDiscoveredTypeName`). */
+  readonly name: string;
+  readonly declarationFile: string;
+  readonly declarationPos: number;
+}
+
+/**
+ * The name a discovered type takes in the schema. Whether a type is an input
+ * type follows from its name ending with `Input` alone, so a type reached
+ * from an input position takes that suffix if it lacks it.
+ */
+function getDiscoveredTypeName(
+  name: string,
+  context: ScalarMappingContext,
+): string {
+  return context === "input" && !name.endsWith("Input") ? `${name}Input` : name;
+}
+
 export interface FieldTypeResolverDiagnostic {
   readonly code: DiagnosticCode;
   readonly message: string;
@@ -91,6 +115,15 @@ export interface FieldTypeResolverContext {
   readonly scalarMappingContext: ScalarMappingContext;
   /** Mutable map for collecting transitively discovered types */
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
+  /**
+   * Mutable map for collecting named types referenced without a registry to
+   * discover them in. Resolver extraction runs after type extraction and
+   * possibly in another API instance, so the types its references reach are
+   * extracted afterwards from these (see `extractLocalTypeReferences`). It
+   * can't take a registry either: one also makes aliases of object literals
+   * and union members references, which resolvers expand as inline objects.
+   */
+  readonly localTypeReferences: Map<string, LocalTypeReference> | null;
   /** Mutable array for collecting diagnostics during field type resolution */
   readonly diagnostics: FieldTypeResolverDiagnostic[];
 }
@@ -161,9 +194,9 @@ async function tryReferenceFromTypeNode(
 /**
  * Registers `name` for transitive discovery if it's eligible: a user-defined
  * type (declaration outside a `.d.ts` file) with at least one property, not
- * already discovered. Returns whether `name` is now present in
- * `discoveredTypes` — either just registered here, or already present
- * (both cases mean "safe to return a reference").
+ * already discovered. Returns the name to reference the type by — the one
+ * it is registered under in `discoveredTypes`, just now or before, or a
+ * taken one (see `isDiscoveredNameTaken`) — or null if there is none.
  *
  * `resolveFieldTypeInternal` repeats this ~25-30 line block 3 times, once
  * per place a non-schema named type is encountered (intersection alias,
@@ -171,21 +204,25 @@ async function tryReferenceFromTypeNode(
  * §1.2-E, Phase 8 item 3) — decomposition only.
  */
 interface RegisterDiscoveredTypeParams {
-  readonly checker: CheckerLoader;
   readonly name: string;
   readonly type: Type;
   readonly symbol: TsSymbol;
-  readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
+  readonly ctx: FieldTypeResolverContext;
 }
 
 async function registerDiscoveredType(
   params: RegisterDiscoveredTypeParams,
-): Promise<boolean> {
-  const { checker, name, type, symbol, discoveredTypes } = params;
+): Promise<string | null> {
+  const { type, symbol, ctx } = params;
+  const { checker, discoveredTypes } = ctx;
   if (!discoveredTypes) {
-    return false;
+    return null;
   }
+  const name = getDiscoveredTypeName(params.name, ctx.scalarMappingContext);
   if (!discoveredTypes.has(name)) {
+    if (isDiscoveredNameTaken({ name, originalName: params.name, ctx })) {
+      return name;
+    }
     const decl = await checker.getFirstDeclarationOfSymbol(symbol);
     if (decl && !decl.getSourceFile().isDeclarationFile) {
       const properties = await checker.getPropertiesOfType(type);
@@ -206,7 +243,75 @@ async function registerDiscoveredType(
       }
     }
   }
-  return discoveredTypes.has(name);
+  return discoveredTypes.has(name) ? name : null;
+}
+
+/**
+ * Records a reference to a named type for discovery after resolver
+ * extraction, under the same eligibility as `registerDiscoveredType`, and
+ * returns the name to reference it by as that does.
+ */
+interface RecordLocalTypeReferenceParams {
+  readonly name: string;
+  readonly type: Type;
+  readonly symbol: TsSymbol;
+  readonly ctx: FieldTypeResolverContext;
+}
+
+async function recordLocalTypeReference(
+  params: RecordLocalTypeReferenceParams,
+): Promise<string | null> {
+  const { type, symbol, ctx } = params;
+  const { checker, localTypeReferences } = ctx;
+  if (!localTypeReferences) {
+    return null;
+  }
+  const name = getDiscoveredTypeName(params.name, ctx.scalarMappingContext);
+  if (localTypeReferences.has(name)) {
+    return name;
+  }
+  if (isDiscoveredNameTaken({ name, originalName: params.name, ctx })) {
+    return name;
+  }
+  const decl = await checker.getFirstDeclarationOfSymbol(symbol);
+  if (!decl || decl.getSourceFile().isDeclarationFile) {
+    return null;
+  }
+  if ((await checker.getPropertiesOfType(type)).length === 0) {
+    return null;
+  }
+  localTypeReferences.set(name, {
+    name,
+    declarationFile: decl.getSourceFile().fileName,
+    declarationPos: decl.pos,
+  });
+  return name;
+}
+
+/**
+ * Whether the name a type is discovered under is already a declared type's,
+ * which only a name gqlkit derived (see `getDiscoveredTypeName`) can be: the
+ * user didn't write it, so the type would silently become the declared one.
+ * Reports that as an error; the type is then left undiscovered, and its
+ * references name the declared type, which reports nothing more.
+ */
+interface IsDiscoveredNameTakenParams {
+  readonly name: string;
+  readonly originalName: string;
+  readonly ctx: FieldTypeResolverContext;
+}
+
+function isDiscoveredNameTaken(params: IsDiscoveredNameTakenParams): boolean {
+  const { name, originalName, ctx } = params;
+  if (name === originalName || !ctx.knownTypeSymbols.has(name)) {
+    return false;
+  }
+  ctx.diagnostics.push({
+    code: "AUTO_TYPE_NAME_COLLISION_USER",
+    message: `Type '${originalName}' becomes the input type '${name}' where it is used as an input, but a type named '${name}' is already declared. Rename one of them, or export an input type to use there.`,
+    severity: "error",
+  });
+  return true;
 }
 
 /**
@@ -504,15 +609,14 @@ async function resolveFieldTypeInternal(
     if (aliasSymbol) {
       const aliasName = aliasSymbol.name;
       if (!knownTypeNames.has(aliasName)) {
-        const isDiscovered = await registerDiscoveredType({
-          checker: ctx.checker,
+        const discoveredName = await registerDiscoveredType({
           name: aliasName,
           type,
           symbol: await resolveOriginalSymbol(aliasSymbol, checker),
-          discoveredTypes: ctx.discoveredTypes,
+          ctx,
         });
-        if (isDiscovered) {
-          return createReferenceType({ name: aliasName, nullable: false });
+        if (discoveredName !== null) {
+          return createReferenceType({ name: discoveredName, nullable: false });
         }
       }
     }
@@ -616,15 +720,14 @@ async function resolveFieldTypeInternal(
         // Type aliases to object literals used as union members should be
         // discovered with their original alias name, not expanded as inline
         // objects with auto-generated names. (#202)
-        const isDiscovered = await registerDiscoveredType({
-          checker: ctx.checker,
+        const discoveredName = await registerDiscoveredType({
           name: aliasName,
           type,
           symbol: await resolveOriginalSymbol(aliasSymbol, checker),
-          discoveredTypes: ctx.discoveredTypes,
+          ctx,
         });
-        if (isDiscovered) {
-          return createReferenceType({ name: aliasName, nullable: false });
+        if (discoveredName !== null) {
+          return createReferenceType({ name: discoveredName, nullable: false });
         }
         // Not a known schema type and is an anonymous object - expand to generate Payload type
         return tryExtractAsInlineObject(type, ctx, null);
@@ -685,8 +788,14 @@ async function resolveFieldTypeInternal(
       }
 
       // If the name exists in schema but symbol doesn't match,
-      // it's a different type with the same name
-      if (knownTypeNames.has(symbolName)) {
+      // it's a different type with the same name. A name known only through
+      // discovery is an output type's, which an input position can't
+      // reference: such a type is discovered as an input type below.
+      if (
+        knownTypeNames.has(symbolName) &&
+        getDiscoveredTypeName(symbolName, ctx.scalarMappingContext) ===
+          symbolName
+      ) {
         // Check if the type is declared within schema files (local shadowing)
         if (await isTypeFromSchemaFiles(symbol, ctx.sourceFiles, checker)) {
           // Local shadowing - use name matching for backwards compatibility
@@ -746,16 +855,25 @@ async function resolveFieldTypeInternal(
       }
 
       // Discover extractable named types for transitive type registration
-      await registerDiscoveredType({
-        checker: ctx.checker,
-        name: symbolName,
-        type,
-        symbol: resolvedSymbol,
-        discoveredTypes: ctx.discoveredTypes,
-      });
+      const discoveredName =
+        (await registerDiscoveredType({
+          name: symbolName,
+          type,
+          symbol: resolvedSymbol,
+          ctx,
+        })) ??
+        (await recordLocalTypeReference({
+          name: symbolName,
+          type,
+          symbol: resolvedSymbol,
+          ctx,
+        }));
 
       // Unknown type - still return reference but it will likely cause validation error later
-      return createReferenceType({ name: symbolName, nullable: false });
+      return createReferenceType({
+        name: discoveredName ?? symbolName,
+        nullable: false,
+      });
     }
   }
 
