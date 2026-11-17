@@ -17,6 +17,7 @@ Case names are `<feature>-<scenario>`, grouped by feature-area prefix. The large
 | `abstract-resolver-*` | Manual `defineResolveType`/`defineIsTypeOf` |
 | `ignore-fields-*` | `$gqlkitIgnore`-style field exclusion |
 | `auto-object-*` | Auto-generated Object types from nested inline shapes |
+| `local-type-*` | Non-exported named types becoming schema types through references (input naming, collisions) |
 | `type-alias-*`, `utility-type-*` | Type-alias expansion, `Pick`/`Omit`/intersection handling |
 | `default-value-*` | Argument/field default values |
 | `duplicate-*` | Duplicate type/enum/field-name detection (export collisions) |
