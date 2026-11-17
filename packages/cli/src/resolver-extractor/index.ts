@@ -2,9 +2,7 @@ export {
   type CompleteResolverExtractionParams,
   completeResolverExtraction,
   type ExtractResolverDefinitionsParams,
-  type ExtractResolversParams,
   extractResolverDefinitions,
-  extractResolvers,
 } from "./extract-resolvers.js";
 export type {
   AbstractResolverInfo,

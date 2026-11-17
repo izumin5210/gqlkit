@@ -2,6 +2,20 @@
 
 directive @auth(role: [Role!]!) on FIELD_DEFINITION
 
+"""Defined in: src/gqlkit/schema/subscription.ts"""
+type Alert {
+  id: String!
+  severity: String!
+  title: String!
+}
+
+"""Defined in: src/gqlkit/schema/subscription.ts"""
+type Message {
+  authorId: String!
+  content: String!
+  id: String!
+}
+
 type Query
 
 """Defined in: src/gqlkit/schema/subscription.ts"""

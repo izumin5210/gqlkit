@@ -17,18 +17,13 @@ export interface ValidateResolverTypesOptions {
   readonly mutationFields: MutationFieldDefinitions;
   readonly subscriptionFields: SubscriptionFieldDefinitions;
   readonly typeExtensions: ReadonlyArray<TypeExtension>;
-  /** Names of types already extracted from `GqlObject`/`GqlInterface`/etc. declarations (type-extractor's stage). */
+  /**
+   * Names of the extracted types: declared ones, those type extraction
+   * discovered, and those extracted from resolvers' local type references.
+   */
   readonly declaredTypeNames: ReadonlyArray<string>;
   /** Custom scalar names, both config-declared and auto-detected. */
   readonly customScalarNames: ReadonlyArray<string>;
-  /**
-   * Every top-level type alias / interface / enum name declared in the
-   * scanned source files, exported or not (see
-   * `collectLocalTypeDeclarationNames`). A resolver return/arg type that
-   * resolves to one of these is a real TypeScript declaration — just not one
-   * registered as a schema type (issue #343) — and must not be flagged.
-   */
-  readonly localTypeDeclarationNames: ReadonlySet<string>;
 }
 
 // Placeholder tokens `resolveFieldType`/`convertTsTypeToGraphQLType` emit for
@@ -45,17 +40,13 @@ const PLACEHOLDER_TYPES = new Set([
 /**
  * Validates that resolver return types and argument types reference only
  * names within the same resolution universe the rest of the pipeline
- * accepts (refactor-plan.md §6 Decision D6): declared/extracted schema
- * types, built-in and custom scalars, inline-type placeholders, and any
- * real local type declaration (whether or not it's registered as a schema
- * type — see `localTypeDeclarationNames`).
+ * accepts: extracted schema types, built-in and custom scalars, and
+ * inline-type placeholders.
  *
  * This is `type-extractor/validator/type-validator.ts`'s pattern applied to
- * `ExtractResolversResult`: declared-type fields already get this coverage;
- * resolver args/return types previously got none, so a typo'd or forgotten
- * type name would silently produce a dangling reference (e.g. `role:
- * NonExistentRole!`) or, worse, collapse to a bare `any!` return type,
- * instead of failing generation.
+ * `ExtractResolversResult`, so that a typo'd or forgotten type name fails
+ * generation instead of silently producing a dangling reference (e.g.
+ * `role: NonExistentRole!`) or collapsing to a bare `any!` return type.
  */
 export function validateResolverTypes(
   options: ValidateResolverTypesOptions,
@@ -67,14 +58,12 @@ export function validateResolverTypes(
     typeExtensions,
     declaredTypeNames,
     customScalarNames,
-    localTypeDeclarationNames,
   } = options;
 
   const knownNames = new Set([
     ...declaredTypeNames,
     ...BUILT_IN_SCALARS,
     ...customScalarNames,
-    ...localTypeDeclarationNames,
   ]);
 
   function isKnown(typeName: string): boolean {

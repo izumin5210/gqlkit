@@ -205,3 +205,54 @@ export async function extractTypes(
     sourceRoot,
   });
 }
+
+export interface AppendExtractedTypesParams {
+  readonly typesResult: ExtractTypesResult;
+  /** Types extracted after `typesResult`, e.g. by `extractLocalTypeReferences`. */
+  readonly extractionResult: ExtractionResult;
+  /** Config-declared custom scalar names. */
+  readonly customScalarNames: ReadonlyArray<string>;
+}
+
+/**
+ * Adds types extracted after type extraction to its result, converted and
+ * validated as `finalizeTypeExtraction` does.
+ */
+export function appendExtractedTypes(
+  params: AppendExtractedTypesParams,
+): ExtractTypesResult {
+  const { typesResult, extractionResult, customScalarNames } = params;
+  const detectedScalarNames = [
+    ...new Set([
+      ...typesResult.detectedScalarNames,
+      ...extractionResult.detectedScalarNames,
+    ]),
+  ];
+
+  const conversionResult = convertToGraphQL(extractionResult.types);
+  const types = [...typesResult.types, ...conversionResult.types];
+  // Validates all types, as the appended ones reference the others; what
+  // it reports again about those is deduplicated.
+  const validationResult = validateTypes({
+    types,
+    customScalarNames: [...customScalarNames, ...detectedScalarNames],
+  });
+
+  const result = collectResults(types, [
+    ...typesResult.diagnostics.errors,
+    ...typesResult.diagnostics.warnings,
+    ...extractionResult.diagnostics,
+    ...conversionResult.diagnostics,
+    ...validationResult.diagnostics,
+  ]);
+  return {
+    ...typesResult,
+    ...result,
+    extractedTypes: [...typesResult.extractedTypes, ...extractionResult.types],
+    detectedScalarNames,
+    discoveredTypeNames: new Set([
+      ...typesResult.discoveredTypeNames,
+      ...extractionResult.discoveredTypeNames,
+    ]),
+  };
+}

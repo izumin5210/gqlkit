@@ -14,6 +14,8 @@ export {
 } from "./collector/scalar-collector.js";
 export { convertToGraphQL } from "./converter/graphql-converter.js";
 export {
+  type AppendExtractedTypesParams,
+  appendExtractedTypes,
   type ExtractTypesParams,
   type ExtractTypesResult,
   extractTypes,
@@ -26,6 +28,7 @@ export type { DiscoveredTypeEntry } from "./extractor/field-type-resolver.js";
 export {
   type FieldTypeResolverContext,
   type FieldTypeResolverDiagnostic,
+  type LocalTypeReference,
   resolveFieldType,
 } from "./extractor/field-type-resolver.js";
 // Shared field/argument-extraction engine (refactor-plan.md §1.2-D, Phase 5):
@@ -42,12 +45,13 @@ export {
   type ExtractionResult,
   extractDeclaredTypes,
   extractFieldsFromType,
+  type ExtractLocalTypeReferencesParams,
+  extractLocalTypeReferences,
   extractTypesFromProgram,
   type FieldExtractionResult,
 } from "./extractor/type-extractor.js";
 export {
   collectDeclaredTypeNames,
-  collectLocalTypeDeclarationNames,
   collectTypeNameRegistrations,
   registerTypeNames,
   type TypeNameCollectionResult,
