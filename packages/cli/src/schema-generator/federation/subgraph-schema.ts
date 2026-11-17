@@ -117,23 +117,56 @@ function buildRuntimeDefinitions(
   return omitEmptyLists(parse(sdl, { noLocation: true }).definitions);
 }
 
+/**
+ * The fields through which the gateway reads the subgraph's SDL and resolves
+ * its entities. `_entities` exists only when the subgraph has entities.
+ */
+function buildSubgraphFields(
+  documentNode: DocumentNode,
+  entityTypeNames: ReadonlyArray<string>,
+): ReadonlyArray<DefinitionNode> {
+  const hasQuery = documentNode.definitions.some(
+    (definition) =>
+      definition.kind === Kind.OBJECT_TYPE_DEFINITION &&
+      definition.name.value === "Query",
+  );
+  const hasEntities = entityTypeNames.length > 0;
+  const sdl = [
+    ...(hasEntities
+      ? ["scalar _Any", `union _Entity = ${entityTypeNames.join(" | ")}`]
+      : []),
+    "type _Service { sdl: String! }",
+    `${hasQuery ? "extend type" : "type"} Query {`,
+    ...(hasEntities
+      ? ["  _entities(representations: [_Any!]!): [_Entity]!"]
+      : []),
+    "  _service: _Service!",
+    "}",
+  ].join("\n");
+  return omitEmptyLists(parse(sdl, { noLocation: true }).definitions);
+}
+
 export interface BuildSubgraphDocumentsParams {
   readonly documentNode: DocumentNode;
   readonly federation: ResolvedFederationConfig;
   readonly imports: ReadonlyArray<ApolloFederationDirectiveName>;
+  readonly entityTypeNames: ReadonlyArray<string>;
 }
 
 export interface BuildSubgraphDocumentsResult {
   /** The subgraph SDL for composition, also served as `_service.sdl`. */
   readonly sdlDocument: DocumentNode;
-  /** The SDL plus the definitions graphql-js needs to execute it. */
+  /**
+   * The SDL plus the definitions graphql-js needs to execute it and the
+   * fields the gateway queries (`_service`, `_entities`).
+   */
   readonly typeDefsDocument: DocumentNode;
 }
 
 export function buildSubgraphDocuments(
   params: BuildSubgraphDocumentsParams,
 ): BuildSubgraphDocumentsResult {
-  const { documentNode, federation, imports } = params;
+  const { documentNode, federation, imports, entityTypeNames } = params;
 
   const sdlDocument: DocumentNode = {
     ...documentNode,
@@ -147,6 +180,7 @@ export function buildSubgraphDocuments(
     definitions: [
       ...sdlDocument.definitions,
       ...buildRuntimeDefinitions(imports, federation.version),
+      ...buildSubgraphFields(documentNode, entityTypeNames),
     ],
   };
   return { sdlDocument, typeDefsDocument };

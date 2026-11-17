@@ -23,7 +23,7 @@ export interface TypeResolvers {
 
 export interface AbstractTypeResolverInfo {
   readonly typeName: string;
-  readonly resolverKey: "__resolveType" | "__isTypeOf";
+  readonly resolverKey: "__resolveType" | "__isTypeOf" | "__resolveReference";
   readonly sourceFile: string;
   readonly exportName: string;
 }
@@ -65,13 +65,18 @@ function collectFieldResolvers(ext: IntegratedTypeExtension): FieldResolver[] {
   );
 }
 
+const RESOLVER_KEYS = {
+  resolveType: "__resolveType",
+  isTypeOf: "__isTypeOf",
+  resolveReference: "__resolveReference",
+} as const;
+
 function convertToAbstractTypeResolverInfo(
   resolver: AbstractResolverInfo,
 ): AbstractTypeResolverInfo {
   return {
     typeName: resolver.targetTypeName,
-    resolverKey:
-      resolver.kind === "resolveType" ? "__resolveType" : "__isTypeOf",
+    resolverKey: RESOLVER_KEYS[resolver.kind],
     sourceFile: resolver.sourceFile,
     exportName: resolver.exportName,
   };
@@ -82,7 +87,11 @@ function collectAbstractTypeResolvers(
 ): AbstractTypeResolverInfo[] {
   return abstractResolvers
     .map(convertToAbstractTypeResolverInfo)
-    .sort((a, b) => a.typeName.localeCompare(b.typeName));
+    .sort(
+      (a, b) =>
+        a.typeName.localeCompare(b.typeName) ||
+        a.resolverKey.localeCompare(b.resolverKey),
+    );
 }
 
 export function collectResolverInfo(

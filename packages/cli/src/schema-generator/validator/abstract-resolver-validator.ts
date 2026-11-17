@@ -95,16 +95,18 @@ function detectDuplicateResolvers(
   resolvers: ReadonlyArray<AbstractResolverInfo>,
   typeMap: Map<string, AbstractResolverTargetType>,
 ): Diagnostic[] {
-  const resolveTypeMap = new Map<string, AbstractResolverInfo[]>();
-  const isTypeOfMap = new Map<string, AbstractResolverInfo[]>();
+  const resolverMaps = {
+    resolveType: new Map<string, AbstractResolverInfo[]>(),
+    isTypeOf: new Map<string, AbstractResolverInfo[]>(),
+    resolveReference: new Map<string, AbstractResolverInfo[]>(),
+  };
 
   for (const resolver of resolvers) {
     if (!typeMap.has(resolver.targetTypeName)) {
       continue;
     }
 
-    const targetMap =
-      resolver.kind === "resolveType" ? resolveTypeMap : isTypeOfMap;
+    const targetMap = resolverMaps[resolver.kind];
     const existing = targetMap.get(resolver.targetTypeName) ?? [];
     existing.push(resolver);
     targetMap.set(resolver.targetTypeName, existing);
@@ -112,11 +114,20 @@ function detectDuplicateResolvers(
 
   return [
     ...reportDuplicates(
-      resolveTypeMap,
+      resolverMaps.resolveType,
       "DUPLICATE_RESOLVE_TYPE",
       "resolveType",
     ),
-    ...reportDuplicates(isTypeOfMap, "DUPLICATE_IS_TYPE_OF", "isTypeOf"),
+    ...reportDuplicates(
+      resolverMaps.isTypeOf,
+      "DUPLICATE_IS_TYPE_OF",
+      "isTypeOf",
+    ),
+    ...reportDuplicates(
+      resolverMaps.resolveReference,
+      "DUPLICATE_RESOLVE_REFERENCE",
+      "resolveReference",
+    ),
   ];
 }
 

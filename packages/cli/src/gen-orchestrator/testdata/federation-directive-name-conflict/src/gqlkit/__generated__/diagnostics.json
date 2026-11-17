@@ -10,6 +10,16 @@
     }
   },
   {
+    "code": "MISSING_REFERENCE_RESOLVER",
+    "message": "Entity 'User' has fields that its references do not carry (homepage), but no reference resolver. Define one with defineResolveReference<User>.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/query.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
     "code": "FEDERATION_DIRECTIVE_NAME_CONFLICT",
     "message": "Directive '@link' has the same name as a directive that federation adds to the subgraph schema",
     "severity": "error",
