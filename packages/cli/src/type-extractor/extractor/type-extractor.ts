@@ -1,14 +1,16 @@
-import { resolve } from "node:path";
+import { relative, resolve } from "node:path";
 import {
   type Declaration,
   type EnumDeclaration,
   type ExportDeclaration,
   getCombinedModifierFlags,
   getNameOfDeclaration,
+  type InterfaceDeclaration,
   ModifierFlags,
   type Node,
   type PropertyName,
   type SourceFile,
+  type TypeAliasDeclaration,
   type TypeNode,
 } from "typescript/ast";
 import {
@@ -49,7 +51,9 @@ import { prefetchPropertyFacts } from "../../shared/checker-prefetch.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   detectDirectiveMetadata,
+  detectFieldDirectiveMetadata,
   hasDirectiveMetadata,
+  hasFieldMetadata,
   unwrapDirectiveType,
 } from "../../shared/directive-detector.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
@@ -91,6 +95,7 @@ import type {
 import {
   type DiscoveredTypeEntry,
   type FieldTypeResolverDiagnostic,
+  type LocalTypeReference,
   resolveFieldType,
 } from "./field-type-resolver.js";
 import { detectScalarMetadata } from "./scalar-metadata-detector.js";
@@ -191,6 +196,8 @@ export interface ExtractFieldsParams {
   readonly scalarMappingContext: ScalarMappingContext;
   readonly ignoreFields: ReadonlySet<string> | null;
   readonly discoveredTypes: Map<string, DiscoveredTypeEntry> | null;
+  /** See `FieldTypeResolverContext.localTypeReferences`. */
+  readonly localTypeReferences: Map<string, LocalTypeReference> | null;
   /** Diagnostic message prefix: "Field" for declared-type properties, "Argument" for resolver arguments. */
   readonly diagnosticLabel: string;
 }
@@ -210,6 +217,7 @@ export async function extractFieldsFromType(
     scalarMappingContext,
     ignoreFields,
     discoveredTypes,
+    localTypeReferences,
     diagnosticLabel,
   } = params;
   const fields: PropertyDef[] = [];
@@ -240,8 +248,11 @@ export async function extractFieldsFromType(
     let directiveNullable = false;
     let defaultValue: DirectiveArgumentValue | null = null;
 
-    if (await hasDirectiveMetadata(propType, checker)) {
-      const directiveResult = await detectDirectiveMetadata(propType, checker);
+    if (await hasFieldMetadata(propType, checker)) {
+      const directiveResult = await detectFieldDirectiveMetadata(
+        propType,
+        checker,
+      );
       if (directiveResult.directives.length > 0) {
         directives = directiveResult.directives;
       }
@@ -304,6 +315,7 @@ export async function extractFieldsFromType(
       scalarMappingTable,
       scalarMappingContext,
       discoveredTypes,
+      localTypeReferences,
       diagnostics: fieldDiagnostics,
     });
     for (const d of fieldDiagnostics) {
@@ -877,6 +889,7 @@ async function processDeclaredType(
           scalarMappingContext,
           ignoreFields,
           discoveredTypes,
+          localTypeReferences: null,
           diagnosticLabel: "Field",
         });
   diagnostics.push(...fieldResult.diagnostics);
@@ -1335,6 +1348,7 @@ async function extractInlineObjectMembers(
           scalarMappingTable,
           scalarMappingContext,
           discoveredTypes,
+          localTypeReferences: null,
           diagnostics: fieldDiagnostics,
         });
         for (const diagnostic of fieldDiagnostics) {
@@ -1722,20 +1736,23 @@ export async function completeTypeExtraction(
       processedDiscovered.add(name);
       if (knownTypeNames.has(name)) continue;
 
-      const { fields } = await extractFieldsFromType({
-        type: entry.tsType,
-        checker,
-        globalTypeMappings,
-        knownTypeNames,
-        knownTypeSymbols,
-        underlyingSymbolToTypeName,
-        sourceFiles: scannedSourceFilesSet,
-        scalarMappingTable,
-        scalarMappingContext: "output",
-        ignoreFields: null,
-        discoveredTypes,
-        diagnosticLabel: "Field",
-      });
+      const { fields, diagnostics: fieldDiagnostics } =
+        await extractFieldsFromType({
+          type: entry.tsType,
+          checker,
+          globalTypeMappings,
+          knownTypeNames,
+          knownTypeSymbols,
+          underlyingSymbolToTypeName,
+          sourceFiles: scannedSourceFilesSet,
+          scalarMappingTable,
+          scalarMappingContext: name.endsWith("Input") ? "input" : "output",
+          ignoreFields: null,
+          discoveredTypes,
+          localTypeReferences: null,
+          diagnosticLabel: "Field",
+        });
+      diagnostics.push(...fieldDiagnostics);
       if (fields.length === 0) continue;
 
       types.push({
@@ -1776,6 +1793,94 @@ export async function completeTypeExtraction(
     detectedScalarNames: [...detectedScalarNames],
     detectedScalars,
     discoveredTypeNames: new Set(discoveredTypes.keys()),
+  };
+}
+
+export interface ExtractLocalTypeReferencesParams {
+  readonly program: Program;
+  readonly checker: CheckerLoader;
+  readonly references: ReadonlyArray<LocalTypeReference>;
+  /** Every scanned source file. */
+  readonly sourceFiles: ReadonlyArray<string>;
+  readonly options: ExtractionOptions;
+}
+
+/**
+ * Extracts the types resolver extraction referenced without being able to
+ * discover them (see `FieldTypeResolverContext.localTypeReferences`), and
+ * the types discovered through their fields, as type extraction extracts
+ * the types it discovers. Names in `options.knownTypeNames` are left out:
+ * type extraction already discovered them.
+ */
+export async function extractLocalTypeReferences(
+  params: ExtractLocalTypeReferencesParams,
+): Promise<ExtractionResult> {
+  const { program, checker, references, sourceFiles, options } = params;
+  const extraction = createDeclaredTypesExtraction();
+  const entries = await Promise.all(
+    references
+      .filter((reference) => !options.knownTypeNames.has(reference.name))
+      .map((reference) =>
+        resolveLocalTypeReference({ program, checker, reference }),
+      ),
+  );
+  for (const entry of entries) {
+    if (entry !== null) {
+      extraction.discoveredTypes.set(entry.name, entry);
+    }
+  }
+  return completeTypeExtraction({ checker, sourceFiles, options, extraction });
+}
+
+interface ResolveLocalTypeReferenceParams {
+  readonly program: Program;
+  readonly checker: CheckerLoader;
+  readonly reference: LocalTypeReference;
+}
+
+async function resolveLocalTypeReference(
+  params: ResolveLocalTypeReferenceParams,
+): Promise<DiscoveredTypeEntry | null> {
+  const { program, checker, reference } = params;
+  const sourceFile = await program.getSourceFile(reference.declarationFile);
+  if (!sourceFile) {
+    return null;
+  }
+  const findDeclaration = (
+    node: Node,
+  ): InterfaceDeclaration | TypeAliasDeclaration | undefined => {
+    if (
+      node.pos === reference.declarationPos &&
+      (isInterfaceDeclaration(node) || isTypeAliasDeclaration(node))
+    ) {
+      return node;
+    }
+    if (
+      node.pos <= reference.declarationPos &&
+      reference.declarationPos < node.end
+    ) {
+      return node.forEachChild(findDeclaration);
+    }
+    return undefined;
+  };
+  const declaration = sourceFile.forEachChild(findDeclaration);
+  if (!declaration) {
+    return null;
+  }
+  const symbol = await checker.getSymbolAtLocation(declaration.name);
+  if (!symbol) {
+    return null;
+  }
+  return {
+    name: reference.name,
+    tsType: await checker.getDeclaredTypeOfSymbol(symbol),
+    tsSymbol: symbol,
+    sourceFile: relative(process.cwd(), sourceFile.fileName),
+    sourceLocation: getSourceLocationFromNode(declaration) ?? {
+      file: sourceFile.fileName,
+      line: 1,
+      column: 1,
+    },
   };
 }
 

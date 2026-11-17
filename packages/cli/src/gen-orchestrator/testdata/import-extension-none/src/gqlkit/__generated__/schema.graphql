@@ -2,6 +2,12 @@
 
 type Query
 
+"""Defined in: src/gqlkit/schema/query.ts"""
+type User {
+  id: String!
+  name: String!
+}
+
 extend type Query {
   """Defined in: src/gqlkit/schema/query.ts"""
   user(id: String!): User

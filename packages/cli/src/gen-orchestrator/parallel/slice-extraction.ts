@@ -14,7 +14,6 @@ import type { SymbolKey } from "../../shared/typescript-utils.js";
 import {
   buildScalarMappingTable,
   type ConfigScalarMapping,
-  collectLocalTypeDeclarationNames,
   collectTypeNameRegistrations,
   completeTypeExtraction,
   createDeclaredTypesExtraction,
@@ -26,6 +25,7 @@ import {
   finalizeTypeExtraction,
   type GlobalTypeMapping,
   isScalarMappingTableUnread,
+  type LocalTypeReference,
   registerTypeNames,
   type ScalarBaseTypeMappingTable,
   type TypeNameCollectionResult,
@@ -121,8 +121,6 @@ export interface SliceExtraction {
   readonly collectTypeNames: (
     params: CollectTypeNamesInSlicesParams,
   ) => Promise<TypeNameCollectionResult>;
-  /** Must follow `collectTypeNames`; see `collectLocalTypeDeclarationNames`. */
-  readonly localTypeDeclarationNames: () => ReadonlySet<string>;
   readonly extractTypes: (
     params: ExtractTypesInSlicesParams,
   ) => Promise<ExtractTypesResult>;
@@ -177,7 +175,6 @@ export function startSliceExtraction(
     readonly scalarMappingTable: ScalarBaseTypeMappingTable | null;
   } | null = null;
 
-  let localTypeDeclarationNames: ReadonlySet<string> | null = null;
   /**
    * Main-thread work left running while the main thread waits for workers.
    * If a worker fails, it must settle before the API it queries is closed.
@@ -216,9 +213,6 @@ export function startSliceExtraction(
         files: mainThreadFiles,
       }),
     ];
-    const localNames = new Set(
-      await collectLocalTypeDeclarationNames(program, mainThreadFiles),
-    );
     // Type extraction walks the declarations next; the workers' type names
     // take a while anyway.
     const prefetch = prefetchDeclarationFacts(
@@ -234,21 +228,12 @@ export function startSliceExtraction(
       );
       if (message !== null) {
         registrations.push([...message.registrations]);
-        for (const name of message.localTypeDeclarationNames) {
-          localNames.add(name);
-        }
         continue;
       }
       const files = workerFiles[i] ?? [];
       registrations.push(
         await collectTypeNameRegistrations({ program, checker, files }),
       );
-      for (const name of await collectLocalTypeDeclarationNames(
-        program,
-        files,
-      )) {
-        localNames.add(name);
-      }
     }
     const names = registerTypeNames(registrations.flat());
     for (const worker of workers) {
@@ -259,7 +244,6 @@ export function startSliceExtraction(
         underlyingSymbolToTypeName: [...names.underlyingSymbolToTypeName],
       });
     }
-    localTypeDeclarationNames = localNames;
     await prefetch;
     return names;
   };
@@ -424,10 +408,18 @@ export function startSliceExtraction(
           : (await worker.receive("definitions")).definitions,
       );
     }
+    // The first declaration of a name wins, as within each part.
+    const localTypeReferences = new Map<string, LocalTypeReference>();
+    for (const reference of parts.flatMap((p) => p.localTypeReferences)) {
+      if (!localTypeReferences.has(reference.name)) {
+        localTypeReferences.set(reference.name, reference);
+      }
+    }
     return {
       resolvers: parts.flatMap((p) => p.resolvers),
       abstractTypeResolvers: parts.flatMap((p) => p.abstractTypeResolvers),
       diagnostics: parts.flatMap((p) => p.diagnostics),
+      localTypeReferences: [...localTypeReferences.values()],
     };
   };
 
@@ -443,12 +435,6 @@ export function startSliceExtraction(
   return {
     mainThreadFiles,
     collectTypeNames,
-    localTypeDeclarationNames: () => {
-      if (localTypeDeclarationNames === null) {
-        throw new Error("type names are collected first");
-      }
-      return localTypeDeclarationNames;
-    },
     extractTypes,
     directiveDefinitions,
     extractResolverDefinitions,

@@ -10,8 +10,9 @@ import type {
 import type { Diagnostic, Diagnostics } from "../core/index.js";
 import {
   completeResolverExtraction,
+  type ExtractDefineApiResult,
   type ExtractResolversResult,
-  extractResolvers,
+  extractResolverDefinitions,
 } from "../resolver-extractor/index.js";
 import { generateSchema } from "../schema-generator/index.js";
 
@@ -29,9 +30,11 @@ import {
 } from "../shared/index.js";
 import type { SymbolKey } from "../shared/typescript-utils.js";
 import {
+  appendExtractedTypes,
   type ConfigScalarMapping,
   collectDeclaredTypeNames,
   type ExtractTypesResult,
+  extractLocalTypeReferences,
   extractTypes,
   type GlobalTypeMapping,
 } from "../type-extractor/index.js";
@@ -428,39 +431,58 @@ async function extractResolversStep(
 
   const { globalTypeMappings, customScalarNames } = ctx.scalarConfig;
 
-  const allCustomScalarNames = [
-    ...new Set([...customScalarNames, ...ctx.typesResult.detectedScalarNames]),
-  ];
+  const definitions: ExtractDefineApiResult =
+    sliceExtraction === null
+      ? await extractResolverDefinitions({
+          program: ctx.program,
+          checker: ctx.checker,
+          files: ctx.sourceFiles,
+          sourceFiles: ctx.sourceFiles,
+          knownTypeNames: ctx.knownTypeNames,
+          knownTypeSymbols: ctx.knownTypeSymbols,
+          underlyingSymbolToTypeName: ctx.underlyingSymbolToTypeName,
+          globalTypeMappings,
+          scalarMappingTable: ctx.typesResult.scalarMappingTable,
+        })
+      : await sliceExtraction.extractResolverDefinitions({
+          knownTypeNames: [...ctx.knownTypeNames],
+          detectedScalars: ctx.typesResult.detectedScalars,
+        });
 
-  const declaredTypeNames = ctx.typesResult.types.map((t) => t.name);
-
-  if (sliceExtraction === null) {
-    const resolversResult = await extractResolvers({
+  let { typesResult, knownTypeNames } = ctx;
+  if (definitions.localTypeReferences.length > 0) {
+    const extractionResult = await extractLocalTypeReferences({
       program: ctx.program,
       checker: ctx.checker,
+      references: definitions.localTypeReferences,
       sourceFiles: ctx.sourceFiles,
-      knownTypeNames: ctx.knownTypeNames,
-      knownTypeSymbols: ctx.knownTypeSymbols,
-      underlyingSymbolToTypeName: ctx.underlyingSymbolToTypeName,
-      globalTypeMappings,
-      scalarMappingTable: ctx.typesResult.scalarMappingTable,
-      declaredTypeNames,
-      customScalarNames: allCustomScalarNames,
+      options: {
+        globalTypeMappings,
+        knownTypeNames,
+        knownTypeSymbols: ctx.knownTypeSymbols,
+        underlyingSymbolToTypeName: ctx.underlyingSymbolToTypeName,
+        scalarMappingTable: typesResult.scalarMappingTable,
+      },
     });
-    return { ...ctx, resolversResult };
+    typesResult = appendExtractedTypes({
+      typesResult,
+      extractionResult,
+      customScalarNames,
+    });
+    knownTypeNames = new Set([
+      ...knownTypeNames,
+      ...extractionResult.discoveredTypeNames,
+    ]);
   }
 
-  const definitions = await sliceExtraction.extractResolverDefinitions({
-    knownTypeNames: [...ctx.knownTypeNames],
-    detectedScalars: ctx.typesResult.detectedScalars,
-  });
   const resolversResult = completeResolverExtraction({
-    localTypeDeclarationNames: sliceExtraction.localTypeDeclarationNames(),
     definitions,
-    declaredTypeNames,
-    customScalarNames: allCustomScalarNames,
+    declaredTypeNames: typesResult.types.map((t) => t.name),
+    customScalarNames: [
+      ...new Set([...customScalarNames, ...typesResult.detectedScalarNames]),
+    ],
   });
-  return { ...ctx, resolversResult };
+  return { ...ctx, typesResult, knownTypeNames, resolversResult };
 }
 
 /**

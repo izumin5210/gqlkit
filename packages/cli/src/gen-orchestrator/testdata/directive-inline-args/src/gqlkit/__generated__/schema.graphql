@@ -10,6 +10,16 @@ type Item {
 
 type Query
 
+extend type Item {
+  """
+  Field resolver arguments are emitted on an `extend type` of the parent
+  object rather than of a root operation type.
+  
+  Defined in: src/gqlkit/schema/query.ts
+  """
+  excerpt(length: Float! @maxLength(max: 500)): String!
+}
+
 extend type Query {
   """
   Args type is an inline object literal (not a named type alias), covering

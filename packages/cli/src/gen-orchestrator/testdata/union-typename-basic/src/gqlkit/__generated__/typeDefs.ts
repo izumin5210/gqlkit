@@ -93,34 +93,6 @@ export const typeDefs: DocumentNode = {
       }
     },
     {
-      "kind": "EnumTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "SearchQueryTypenameInput"
-      },
-      "values": [
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "POST"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "USER"
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/query.ts",
-        "block": true
-      }
-    },
-    {
       "kind": "UnionTypeDefinition",
       "name": {
         "kind": "Name",
@@ -210,23 +182,6 @@ export const typeDefs: DocumentNode = {
             "value": "searchQuery"
           },
           "arguments": [
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "__typename"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "SearchQueryTypenameInput"
-                  }
-                }
-              }
-            },
             {
               "kind": "InputValueDefinition",
               "name": {

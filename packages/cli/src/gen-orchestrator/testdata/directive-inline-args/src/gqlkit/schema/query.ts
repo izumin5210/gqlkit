@@ -1,5 +1,5 @@
 import type { GqlDirective, GqlField } from "@gqlkit-ts/runtime";
-import { defineQuery } from "../gqlkit.js";
+import { defineField, defineQuery } from "../gqlkit.js";
 
 export type MaxLengthDirective<TArgs extends { max: number }> = GqlDirective<
   "maxLength",
@@ -23,3 +23,18 @@ export const search = defineQuery<
   },
   Item[]
 >((_root, _args) => []);
+
+/**
+ * Field resolver arguments are emitted on an `extend type` of the parent
+ * object rather than of a root operation type.
+ */
+export const excerpt = defineField<
+  Item,
+  {
+    length: GqlField<
+      number,
+      { directives: [MaxLengthDirective<{ max: 500 }>] }
+    >;
+  },
+  string
+>((parent, args) => parent.name.slice(0, args.length));

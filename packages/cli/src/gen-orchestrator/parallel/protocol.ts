@@ -47,8 +47,6 @@ export type SliceWorkerResponse =
   | {
       readonly kind: "type-name-registrations";
       readonly registrations: ReadonlyArray<TypeNameRegistration>;
-      /** See `collectLocalTypeDeclarationNames`. */
-      readonly localTypeDeclarationNames: ReadonlyArray<string>;
     }
   | {
       readonly kind: "types";

@@ -77,11 +77,36 @@ jobs:
       - uses: k1LoW/octocov-action@73d561f65d59e66899ed5c87e4621a913b5d5c20 # v1
         if: matrix.node-version == 'lts/*' && matrix.os == 'ubuntu-latest'
 
+  # The catalog pins one graphql version for the whole workspace, so this job
+  # swaps it for the lowest version in @gqlkit-ts/cli's peer range.
+  test-graphql-lowest:
+    runs-on: ubuntu-latest
+    name: test / graphql 16.9.0
+    permissions:
+      contents: read
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+      - uses: pnpm/action-setup@fc06bc1257f339d1d5d8b3a19a8cae5388b55320 # v5
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7
+        with:
+          node-version: "lts/*"
+          cache: pnpm
+      - name: Pin graphql to 16.9.0
+        run: |
+          sed -i 's/^  graphql: .*/  graphql: "16.9.0"/' pnpm-workspace.yaml
+          pnpm install --no-frozen-lockfile
+          test "$(node -p 'require("graphql/package.json").version')" = "16.9.0"
+      - name: test
+        run: |
+          pnpm build
+          pnpm test
+
   status-check:
     runs-on: ubuntu-latest
     needs:
       - build
       - test
+      - test-graphql-lowest
     permissions: {}
     if: failure()
     steps:

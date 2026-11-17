@@ -1,7 +1,9 @@
 import {
   type Diagnostic,
   isEligibleField,
+  isTypenameFieldName,
   type PropertyDef,
+  type SourceLocation,
 } from "../../core/index.js";
 import { convertTsTypeToGraphQLType } from "../../shared/index.js";
 import type { DefineApiResolverInfo } from "../extractor/define-api-extractor.js";
@@ -11,18 +13,53 @@ import type {
   TypeExtension,
 } from "../types.js";
 
+interface ConvertArgsToInputValuesParams {
+  readonly args: ReadonlyArray<PropertyDef>;
+  readonly resolverLocation: SourceLocation;
+  readonly diagnostics: Diagnostic[];
+}
+
+/**
+ * Arguments get the same name filtering as declared and inline input fields:
+ * the downstream auto-type stages derive generated type names from argument
+ * names, so a name that is not a valid GraphQL identifier would otherwise
+ * leak into both the argument and a generated type name.
+ */
 function convertArgsToInputValues(
-  args: ReadonlyArray<PropertyDef>,
+  params: ConvertArgsToInputValuesParams,
 ): GraphQLInputValue[] {
-  return args.map((arg) => ({
-    name: arg.name,
-    type: convertTsTypeToGraphQLType(arg.tsType, arg.optional),
-    description: arg.description,
-    deprecated: arg.deprecated,
-    directives: arg.directives,
-    defaultValue: arg.defaultValue,
-    tsType: arg.tsType,
-  }));
+  const { args, resolverLocation, diagnostics } = params;
+  const inputValues: GraphQLInputValue[] = [];
+
+  for (const arg of args) {
+    // Typename discrimination fields are silently excluded from the schema
+    if (isTypenameFieldName(arg.name)) {
+      continue;
+    }
+
+    const eligibility = isEligibleField({ fieldName: arg.name, kind: "input" });
+    if (!eligibility.eligible) {
+      diagnostics.push({
+        code: "SKIPPED_FIELD",
+        message: eligibility.skipReason.message,
+        severity: "warning",
+        location: arg.sourceLocation ?? resolverLocation,
+      });
+      continue;
+    }
+
+    inputValues.push({
+      name: arg.name,
+      type: convertTsTypeToGraphQLType(arg.tsType, arg.optional),
+      description: arg.description,
+      deprecated: arg.deprecated,
+      directives: arg.directives,
+      defaultValue: arg.defaultValue,
+      tsType: arg.tsType,
+    });
+  }
+
+  return inputValues;
 }
 
 export function convertDefineApiToFields(
@@ -63,7 +100,13 @@ export function convertDefineApiToFields(
     const fieldDef: GraphQLFieldDefinition = {
       name: resolver.fieldName,
       type: convertTsTypeToGraphQLType(returnType, false),
-      args: resolver.args ? convertArgsToInputValues(resolver.args) : null,
+      args: resolver.args
+        ? convertArgsToInputValues({
+            args: resolver.args,
+            resolverLocation: resolver.sourceLocation,
+            diagnostics,
+          })
+        : null,
       sourceLocation: resolver.sourceLocation,
       resolverExportName: resolver.resolverExportName,
       description: resolver.description,

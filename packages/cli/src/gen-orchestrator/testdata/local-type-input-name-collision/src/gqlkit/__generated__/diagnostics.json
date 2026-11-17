@@ -1,0 +1,12 @@
+[
+  {
+    "code": "AUTO_TYPE_NAME_COLLISION_USER",
+    "message": "Argument 'filter': Type 'Filter' becomes the input type 'FilterInput' where it is used as an input, but a type named 'FilterInput' is already declared. Rename one of them, or export an input type to use there.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/search.ts",
+      "line": 13,
+      "column": 37
+    }
+  }
+]
