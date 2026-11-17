@@ -4,14 +4,6 @@ import { searchQuery as Query$searchQuery } from "../schema/query.js";
 
 export function createResolvers() {
   return {
-    SearchQueryTypenameInput: {
-      POST: "Post",
-      USER: "User",
-    },
-    SearchQuery$typeNameInput: {
-      POST_FROM_PROTOBUF: "PostFromProtobuf",
-      USER_FROM_PROTOBUF: "UserFromProtobuf",
-    },
     Query: {
       searchQuery: Query$searchQuery,
     },

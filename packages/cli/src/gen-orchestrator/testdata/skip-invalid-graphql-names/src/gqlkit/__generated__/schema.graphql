@@ -30,5 +30,7 @@ input CreateUserInput {
 
 extend type Query {
   """Defined in: src/gqlkit/schema/query.ts"""
+  searchUsers(name: String!): [User!]!
+  """Defined in: src/gqlkit/schema/query.ts"""
   users: [User!]!
 }

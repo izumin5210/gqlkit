@@ -8,3 +8,17 @@ interface User {
 }
 
 export const users = defineQuery<NoArgs, User[]>(() => []);
+
+export const searchUsers = defineQuery<
+  {
+    name: string;
+    // Invalid argument names (should be skipped)
+    "0invalid": string;
+    __reserved: string;
+    "hyphen-arg": string;
+    // Typename discrimination fields (should be excluded without a diagnostic)
+    $typeName: "User" | "Admin";
+    __typename: "User";
+  },
+  User[]
+>(() => []);
