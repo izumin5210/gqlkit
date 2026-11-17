@@ -1,6 +1,7 @@
 import { access, unlink } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { buildASTSchema, parse } from "graphql";
 import { describe, expect, it } from "vitest";
 import {
   findGeneratedFile,
@@ -39,6 +40,26 @@ async function assertFileNotExists(
   }
 }
 
+/**
+ * Cases whose generated schema graphql-js rejects because of bugs not fixed
+ * yet. Each stays here only while it still fails to build, so a fix has to
+ * remove it.
+ */
+const casesWithKnownInvalidSchema: ReadonlySet<string> = new Set([
+  // Object types used as argument or input field types.
+  "default-value-complex",
+  "gqlfield-def-unwrap-bug",
+  // Types referenced by resolvers are missing from the schema.
+  "import-extension-none",
+  "import-extension-ts",
+  "subscription-directives-tsdoc",
+  "subscription-mixed",
+  "subscription-only",
+  // `$typeName` is emitted as a GraphQL name.
+  "union-dollar-typename-basic",
+  "union-typename-priority",
+]);
+
 describe("Golden File Tests", async () => {
   const caseNames = await listGoldenCaseNames(testdataDir);
 
@@ -74,6 +95,17 @@ describe("Golden File Tests", async () => {
           await expect(schemaGraphql).toMatchFileSnapshot(
             resolve(caseDir, output.schemaPath),
           );
+          // Golden snapshots only compare text, so check that the output also
+          // forms a schema that graphql-js accepts.
+          const buildSchema = () => buildASTSchema(parse(schemaGraphql ?? ""));
+          if (casesWithKnownInvalidSchema.has(caseName)) {
+            expect(
+              buildSchema,
+              `${caseName} now builds; remove it from casesWithKnownInvalidSchema`,
+            ).toThrow();
+          } else {
+            expect(buildSchema).not.toThrow();
+          }
         }
         if (output.resolversPath !== null) {
           const resolversTs = findGeneratedFile(result.files, "resolvers.ts");
