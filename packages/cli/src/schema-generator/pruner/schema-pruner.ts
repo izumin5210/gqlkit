@@ -127,7 +127,10 @@ function indexDocument(documentNode: DocumentNode): DocumentIndex {
   };
 }
 
-function collectReachableTypeNames(index: DocumentIndex): Set<string> {
+function collectReachableTypeNames(
+  index: DocumentIndex,
+  additionalRootTypeNames: ReadonlyArray<string>,
+): Set<string> {
   const reachable = new Set<string>();
   const queue: string[] = [];
 
@@ -144,6 +147,12 @@ function collectReachableTypeNames(index: DocumentIndex): Set<string> {
       index.typeExtensions.has(rootName)
     ) {
       markReachable(rootName);
+    }
+  }
+
+  for (const name of additionalRootTypeNames) {
+    if (index.typeDefinitions.has(name)) {
+      markReachable(name);
     }
   }
 
@@ -201,6 +210,8 @@ function hasRootOperationType(index: DocumentIndex): boolean {
  * - Type extensions are kept iff their target definition is kept.
  * - Directive definitions are always kept (pruning unused directives is out
  *   of scope), and their argument types are treated as reachable.
+ * - `additionalRootTypeNames` seed the traversal as well, for types reached
+ *   from outside the root operation types (federation entities).
  * - No-op when the document has no root operation type: a types-only project
  *   has an empty reachable set, and pruning would empty the schema.
  *
@@ -209,16 +220,22 @@ function hasRootOperationType(index: DocumentIndex): boolean {
  * validation, and no restructuring of `extend type` blocks — so documents
  * whose types are all reachable pass through untouched.
  */
+export interface PruneDocumentNodeParams {
+  readonly documentNode: DocumentNode;
+  readonly additionalRootTypeNames: ReadonlyArray<string>;
+}
+
 export function pruneDocumentNode(
-  documentNode: DocumentNode,
+  params: PruneDocumentNodeParams,
 ): PruneDocumentNodeResult {
+  const { documentNode, additionalRootTypeNames } = params;
   const index = indexDocument(documentNode);
 
   if (!hasRootOperationType(index)) {
     return { documentNode, removedTypes: [] };
   }
 
-  const reachable = collectReachableTypeNames(index);
+  const reachable = collectReachableTypeNames(index, additionalRootTypeNames);
 
   const removedTypes: string[] = [];
   const keptDefinitions = documentNode.definitions.filter((definition) => {

@@ -1,0 +1,22 @@
+[
+  {
+    "code": "INVALID_DIRECTIVE_LOCATION",
+    "message": "Field 'User.id': Directive '@key' cannot be used on FIELD_DEFINITION (allowed: OBJECT)",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/user.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "INVALID_DIRECTIVE_LOCATION",
+    "message": "Argument 'Query.user(id:)': Directive '@shareable' cannot be used on ARGUMENT_DEFINITION (allowed: OBJECT, FIELD_DEFINITION)",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/user.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

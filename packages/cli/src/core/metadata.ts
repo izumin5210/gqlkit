@@ -25,11 +25,18 @@ export interface DirectiveArgument {
 }
 
 /**
+ * Federation directives that `@gqlkit-ts/runtime/federation` provides.
+ */
+export type FederationDirectiveKind = "key" | "shareable" | "inaccessible";
+
+/**
  * Represents a detected directive with its name and arguments.
  */
 export interface DirectiveInfo {
   readonly name: string;
   readonly args: ReadonlyArray<DirectiveArgument>;
+  /** Set when the directive comes from `@gqlkit-ts/runtime/federation`. */
+  readonly federation: FederationDirectiveKind | null;
 }
 
 export interface DeprecationInfo {

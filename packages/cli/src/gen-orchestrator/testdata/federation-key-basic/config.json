@@ -1,0 +1,6 @@
+{
+  "federation": {
+    "spec": "apollo-federation",
+    "url": "https://specs.apollo.dev/federation/v2.9"
+  }
+}

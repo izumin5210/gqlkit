@@ -15,6 +15,8 @@ import {
   type DirectiveArgument,
   type DirectiveArgumentValue,
   type DirectiveInfo,
+  type FederationDirectiveKind,
+  isFederationDirectiveKind,
   METADATA_PROPERTIES,
 } from "../core/index.js";
 import type { CheckerLoader } from "./checker-loader.js";
@@ -26,6 +28,32 @@ const TYPE_META_PROPERTY = METADATA_PROPERTIES.TYPE_META;
 const DIRECTIVE_NAME_PROPERTY = METADATA_PROPERTIES.DIRECTIVE_NAME;
 const DIRECTIVE_ARGS_PROPERTY = METADATA_PROPERTIES.DIRECTIVE_ARGS;
 const ORIGINAL_TYPE_PROPERTY = METADATA_PROPERTIES.ORIGINAL_TYPE;
+const FEDERATION_DIRECTIVE_PROPERTY = METADATA_PROPERTIES.FEDERATION_DIRECTIVE;
+
+/**
+ * Reads which federation directive a directive type stands for, from the
+ * marker that `@gqlkit-ts/runtime/federation` puts on its directive types.
+ */
+export async function detectFederationDirectiveKind(
+  type: Type,
+  checker: CheckerLoader,
+): Promise<FederationDirectiveKind | null> {
+  const markerProp = await checker.getPropertyOfType(
+    type,
+    FEDERATION_DIRECTIVE_PROPERTY,
+  );
+  if (!markerProp) {
+    return null;
+  }
+  const markerType = await checker.getTypeOfSymbol(markerProp);
+  if (
+    markerType.isStringLiteralType() &&
+    isFederationDirectiveKind(markerType.value)
+  ) {
+    return markerType.value;
+  }
+  return null;
+}
 
 /**
  * Gets the metadata property from a type, checking both field and type meta properties.
@@ -259,8 +287,10 @@ async function extractDirectiveFromType(
     }
   }
 
+  const federation = await detectFederationDirectiveKind(type, checker);
+
   return {
-    directive: { name: directiveName, args },
+    directive: { name: directiveName, args, federation },
     errors: argErrors,
   };
 }

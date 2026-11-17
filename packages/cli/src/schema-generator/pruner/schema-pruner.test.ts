@@ -14,9 +14,28 @@ function definitionNames(documentNode: DocumentNode): string[] {
   );
 }
 
+function prune(documentNode: DocumentNode) {
+  return pruneDocumentNode({ documentNode, additionalRootTypeNames: [] });
+}
+
 describe("pruneDocumentNode", () => {
+  it("keeps additional root types and the types they reach", () => {
+    const result = pruneDocumentNode({
+      documentNode: doc(`
+        type Query { user: User! }
+        type User { id: ID! }
+        type Product { upc: String! category: Category! }
+        type Category { name: String! }
+        type Orphan { id: ID! }
+      `),
+      additionalRootTypeNames: ["Product"],
+    });
+
+    expect(result.removedTypes).toEqual(["Orphan"]);
+  });
+
   it("removes types unreachable from Query", () => {
-    const result = pruneDocumentNode(
+    const result = prune(
       doc(`
         type Query { user: User! }
         type User { id: ID! }
@@ -29,7 +48,7 @@ describe("pruneDocumentNode", () => {
   });
 
   it("follows field, argument, input field, and union member references", () => {
-    const result = pruneDocumentNode(
+    const result = prune(
       doc(`
         type Query { search(filter: Filter!): Result! }
         input Filter { status: Status! }
@@ -46,7 +65,7 @@ describe("pruneDocumentNode", () => {
   });
 
   it("unwraps list and non-null wrappers", () => {
-    const result = pruneDocumentNode(
+    const result = prune(
       doc(`
         type Query { items(ids: [ID!]!): [Item!]! }
         type Item { id: ID! }
@@ -57,7 +76,7 @@ describe("pruneDocumentNode", () => {
   });
 
   it("keeps implementers of a reachable interface and their references", () => {
-    const result = pruneDocumentNode(
+    const result = prune(
       doc(`
         type Query { node: Node }
         interface Node { id: ID! }
@@ -73,7 +92,7 @@ describe("pruneDocumentNode", () => {
   });
 
   it("keeps `implements` interface references of reachable objects", () => {
-    const result = pruneDocumentNode(
+    const result = prune(
       doc(`
         type Query { post: Post! }
         interface Node { id: ID! }
@@ -85,7 +104,7 @@ describe("pruneDocumentNode", () => {
   });
 
   it("keeps extensions of kept types and follows their references", () => {
-    const result = pruneDocumentNode(
+    const result = prune(
       doc(`
         type Query
         type User { id: ID! }
@@ -104,7 +123,7 @@ describe("pruneDocumentNode", () => {
   });
 
   it("removes extensions whose target type is removed", () => {
-    const result = pruneDocumentNode(
+    const result = prune(
       doc(`
         type Query { ping: Boolean! }
         type Orphan { id: ID! }
@@ -122,7 +141,7 @@ describe("pruneDocumentNode", () => {
   });
 
   it("keeps directive definitions and types reachable only through them", () => {
-    const result = pruneDocumentNode(
+    const result = prune(
       doc(`
         type Query { ping: Boolean! }
         directive @access(role: Role!) on FIELD_DEFINITION
@@ -137,7 +156,7 @@ describe("pruneDocumentNode", () => {
   });
 
   it("treats Mutation and Subscription as roots", () => {
-    const result = pruneDocumentNode(
+    const result = prune(
       doc(`
         type Query
         type Mutation { create(input: CreateInput!): Created! }
@@ -153,7 +172,7 @@ describe("pruneDocumentNode", () => {
   });
 
   it("keeps empty root operation types", () => {
-    const result = pruneDocumentNode(
+    const result = prune(
       doc(`
         type Query
         type Mutation { ping: Boolean! }
@@ -169,7 +188,7 @@ describe("pruneDocumentNode", () => {
       type User { id: ID! }
       type Post { title: String! }
     `);
-    const result = pruneDocumentNode(documentNode);
+    const result = prune(documentNode);
 
     expect(result.removedTypes).toEqual([]);
     expect(result.documentNode).toBe(documentNode);
@@ -180,13 +199,13 @@ describe("pruneDocumentNode", () => {
       type Query { user: User! }
       type User { id: ID! }
     `);
-    const result = pruneDocumentNode(documentNode);
+    const result = prune(documentNode);
 
     expect(result.documentNode).toBe(documentNode);
   });
 
   it("returns removed type names sorted", () => {
-    const result = pruneDocumentNode(
+    const result = prune(
       doc(`
         type Query { ping: Boolean! }
         type Zebra { id: ID! }

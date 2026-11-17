@@ -35,6 +35,8 @@ export const METADATA_PROPERTIES = {
   ABSTRACT_RESOLVER: " $gqlkitAbstractResolver",
   /** Interface metadata */
   INTERFACE_META: " $gqlkitInterfaceMeta",
+  /** Which federation directive a directive type stands for */
+  FEDERATION_DIRECTIVE: " $gqlkitFederationDirective",
 } as const;
 
 // ============================================================

@@ -18,8 +18,13 @@ import {
   TypeFlags,
   type TypeReference,
 } from "typescript/async";
-import { type GraphQLFieldType, METADATA_PROPERTIES } from "../core/index.js";
+import {
+  type FederationDirectiveKind,
+  type GraphQLFieldType,
+  METADATA_PROPERTIES,
+} from "../core/index.js";
 import type { CheckerLoader } from "./checker-loader.js";
+import { detectFederationDirectiveKind } from "./directive-detector.js";
 import { getActualMetadataType } from "./metadata-detector.js";
 import {
   getNonNullableTypes,
@@ -67,6 +72,13 @@ export interface DirectiveDefinitionInfo {
   readonly sourceFile: string;
   readonly line: number;
   readonly description: string | null;
+  /**
+   * Set when the type alias names a directive from
+   * `@gqlkit-ts/runtime/federation` (e.g. `type UserKey = Key<"id">`). Such
+   * an alias defines no directive of its own; it is tracked only so that it
+   * does not become a schema type.
+   */
+  readonly federation: FederationDirectiveKind | null;
 }
 
 /**
@@ -552,6 +564,7 @@ async function extractDirectiveDefinition(
   );
 
   const description = await extractDescription(node, checker);
+  const federation = await detectFederationDirectiveKind(type, checker);
 
   return {
     definition: {
@@ -562,6 +575,7 @@ async function extractDirectiveDefinition(
       sourceFile: filePath,
       line: line + 1,
       description,
+      federation,
     },
     errors: argsResult.errors,
   };
