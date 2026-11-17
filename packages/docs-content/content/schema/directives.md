@@ -117,7 +117,7 @@ type Post @cache(maxAge: 60) {
 
 ## Attaching Directives to Query/Mutation Fields
 
-Add a third type parameter to `defineQuery`, `defineMutation`, or `defineField`:
+Add a third type parameter to `defineQuery`, `defineMutation`, or `defineSubscription`:
 
 ```typescript
 import { defineQuery } from "../gqlkit";
@@ -143,6 +143,8 @@ type Query {
 
 ## Attaching Directives to Field Resolvers
 
+Add a fourth type parameter to `defineField`:
+
 ```typescript
 import { defineField } from "../gqlkit";
 import type { NoArgs } from "@gqlkit-ts/runtime";
@@ -155,6 +157,42 @@ export const email = defineField<
   [AuthDirective<{ role: ["ADMIN"] }>]
 >((parent) => parent.email);
 ```
+
+## Attaching Directives to Arguments
+
+Wrap an argument type with `GqlField`, as with input type fields. This works for the arguments of `defineQuery`, `defineMutation`, `defineSubscription`, and `defineField`. The directive must include `ARGUMENT_DEFINITION` in its locations:
+
+```typescript
+import { type GqlDirective, type GqlField } from "@gqlkit-ts/runtime";
+import { defineQuery } from "../gqlkit";
+import type { User } from "./user.js";
+
+export type SensitiveDirective = GqlDirective<
+  "sensitive",
+  Record<string, never>,
+  ["ARGUMENT_DEFINITION", "INPUT_FIELD_DEFINITION"]
+>;
+
+export const login = defineQuery<
+  {
+    email: string;
+    password: GqlField<string, { directives: [SensitiveDirective] }>;
+  },
+  User | null
+>((_root, args, ctx) => ctx.auth.login(args.email, args.password));
+```
+
+Generates:
+
+```graphql
+directive @sensitive on ARGUMENT_DEFINITION | INPUT_FIELD_DEFINITION
+
+type Query {
+  login(email: String!, password: String! @sensitive): User
+}
+```
+
+When the arguments type is a named type, its fields become the arguments and keep their directives. A directive declared only for `INPUT_FIELD_DEFINITION` is then reported as `INVALID_DIRECTIVE_LOCATION`, so declare both locations for directives you use on such types.
 
 ## Multiple Directives
 
