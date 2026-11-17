@@ -9,12 +9,6 @@ type Post {
 type Query
 
 """Defined in: src/gqlkit/schema/query.ts"""
-enum SearchQuery$typeNameInput {
-  POST
-  USER
-}
-
-"""Defined in: src/gqlkit/schema/query.ts"""
 type SearchQueryPayload {
   query: String!
 }
@@ -30,5 +24,5 @@ type User {
 
 extend type Query {
   """Defined in: src/gqlkit/schema/query.ts"""
-  searchQuery($typeName: SearchQuery$typeNameInput!, id: String!): SearchQueryPayload!
+  searchQuery(id: String!): SearchQueryPayload!
 }

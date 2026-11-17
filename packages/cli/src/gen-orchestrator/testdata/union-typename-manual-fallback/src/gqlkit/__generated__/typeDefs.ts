@@ -186,23 +186,6 @@ export const typeDefs: DocumentNode = {
               "kind": "InputValueDefinition",
               "name": {
                 "kind": "Name",
-                "value": "__typename"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "String"
-                  }
-                }
-              }
-            },
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
                 "value": "id"
               },
               "type": {

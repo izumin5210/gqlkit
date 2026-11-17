@@ -62,34 +62,6 @@ export const typeDefs: DocumentNode = {
       "fields": []
     },
     {
-      "kind": "EnumTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "SearchQuery$typeNameInput"
-      },
-      "values": [
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "POST_FROM_PROTOBUF"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "USER_FROM_PROTOBUF"
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/query.ts",
-        "block": true
-      }
-    },
-    {
       "kind": "ObjectTypeDefinition",
       "name": {
         "kind": "Name",
@@ -111,34 +83,6 @@ export const typeDefs: DocumentNode = {
                 "value": "String"
               }
             }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/query.ts",
-        "block": true
-      }
-    },
-    {
-      "kind": "EnumTypeDefinition",
-      "name": {
-        "kind": "Name",
-        "value": "SearchQueryTypenameInput"
-      },
-      "values": [
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "POST"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "USER"
           }
         }
       ],
@@ -238,40 +182,6 @@ export const typeDefs: DocumentNode = {
             "value": "searchQuery"
           },
           "arguments": [
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "__typename"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "SearchQueryTypenameInput"
-                  }
-                }
-              }
-            },
-            {
-              "kind": "InputValueDefinition",
-              "name": {
-                "kind": "Name",
-                "value": "$typeName"
-              },
-              "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "SearchQuery$typeNameInput"
-                  }
-                }
-              }
-            },
             {
               "kind": "InputValueDefinition",
               "name": {

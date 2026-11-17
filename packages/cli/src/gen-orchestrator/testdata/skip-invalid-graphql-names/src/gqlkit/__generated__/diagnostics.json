@@ -118,5 +118,35 @@
       "line": 29,
       "column": 3
     }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field '0invalid' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/query.ts",
+      "line": 16,
+      "column": 5
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field '__reserved' starts with '__' which is reserved for GraphQL introspection",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/query.ts",
+      "line": 17,
+      "column": 5
+    }
+  },
+  {
+    "code": "SKIPPED_FIELD",
+    "message": "Input field 'hyphen-arg' is not a valid GraphQL identifier (must match /^[_A-Za-z][_0-9A-Za-z]*$/)",
+    "severity": "warning",
+    "location": {
+      "file": "src/gqlkit/schema/query.ts",
+      "line": 18,
+      "column": 5
+    }
   }
 ]
