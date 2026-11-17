@@ -470,10 +470,10 @@ importers:
     devDependencies:
       '@graphql-tools/schema':
         specifier: 10.0.30
-        version: 10.0.30(graphql@16.14.2)
+        version: 10.0.30(graphql@16.15.0)
       graphql:
         specifier: 'catalog:'
-        version: 16.14.2
+        version: 16.15.0
 
 packages:
 
