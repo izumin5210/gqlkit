@@ -111,6 +111,22 @@ function buildStringValueNode(value: string): StringValueNode {
 
 const DEFAULT_DEPRECATION_REASON = "No longer supported";
 
+/**
+ * GraphQL allows `@deprecated` only on fields, arguments, input fields, and
+ * enum values, so a deprecated type states its deprecation in its description
+ * and passes it to its members instead.
+ */
+function appendDeprecationNote(
+  description: string | null,
+  deprecated: DeprecationInfo | null,
+): string | null {
+  if (!deprecated) {
+    return description;
+  }
+  const note = `Deprecated: ${deprecated.reason ?? DEFAULT_DEPRECATION_REASON}`;
+  return description ? `${description}\n\n${note}` : note;
+}
+
 function buildDeprecatedDirective(
   deprecated: DeprecationInfo,
 ): ConstDirectiveNode {
@@ -330,13 +346,19 @@ function sortByName<T extends { name: string }>(items: ReadonlyArray<T>): T[] {
   return [...items].sort((a, b) => a.name.localeCompare(b.name));
 }
 
+interface BuildBaseFieldDefinitionNodeParams {
+  readonly field: FieldInfo;
+  readonly typeDeprecation: DeprecationInfo | null;
+  readonly directiveDefMap: Map<string, DirectiveDefinitionInfo> | null;
+}
+
 function buildBaseFieldDefinitionNode(
-  field: FieldInfo,
-  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
+  params: BuildBaseFieldDefinitionNodeParams,
 ): FieldDefinitionNode {
+  const { field, typeDeprecation, directiveDefMap } = params;
   const directives = buildDirectives({
     directives: field.directives,
-    deprecated: field.deprecated,
+    deprecated: field.deprecated ?? typeDeprecation,
     directiveDefMap,
   });
 
@@ -353,6 +375,7 @@ function buildBaseFieldDefinitionNode(
 
 interface BuildFieldDefinitionNodeParams {
   readonly field: ExtensionField;
+  readonly typeDeprecation: DeprecationInfo | null;
   readonly sourceRoot: string | null;
   readonly directiveDefMap: Map<string, DirectiveDefinitionInfo> | null;
 }
@@ -360,10 +383,10 @@ interface BuildFieldDefinitionNodeParams {
 function buildFieldDefinitionNode(
   params: BuildFieldDefinitionNodeParams,
 ): FieldDefinitionNode {
-  const { field, sourceRoot, directiveDefMap } = params;
+  const { field, typeDeprecation, sourceRoot, directiveDefMap } = params;
   const directives = buildDirectives({
     directives: field.directives,
-    deprecated: field.deprecated,
+    deprecated: field.deprecated ?? typeDeprecation,
     directiveDefMap,
   });
 
@@ -403,12 +426,15 @@ function buildTypeDefinitionNode(
   const sortedFields = baseType.fields ? sortByName(baseType.fields) : [];
   const directives = buildDirectives({
     directives: baseType.directives,
-    deprecated: baseType.deprecated,
+    deprecated: null,
     directiveDefMap,
   });
 
   const description = appendSourceLocation({
-    description: baseType.description,
+    description: appendDeprecationNote(
+      baseType.description,
+      baseType.deprecated,
+    ),
     sourceFile: baseType.sourceFile,
     sourceRoot,
   });
@@ -423,8 +449,12 @@ function buildTypeDefinitionNode(
   return {
     kind,
     name: buildNameNode(baseType.name),
-    fields: sortedFields.map((f) =>
-      buildBaseFieldDefinitionNode(f, directiveDefMap),
+    fields: sortedFields.map((field) =>
+      buildBaseFieldDefinitionNode({
+        field,
+        typeDeprecation: baseType.deprecated,
+        directiveDefMap,
+      }),
     ),
     ...(description ? { description: buildStringValueNode(description) } : {}),
     ...(directives.length > 0 ? { directives } : {}),
@@ -441,7 +471,10 @@ function buildUnionTypeDefinitionNode(
     : [];
 
   const description = appendSourceLocation({
-    description: baseType.description,
+    description: appendDeprecationNote(
+      baseType.description,
+      baseType.deprecated,
+    ),
     sourceFile: baseType.sourceFile,
     sourceRoot,
   });
@@ -456,10 +489,12 @@ function buildUnionTypeDefinitionNode(
 
 function buildEnumValueDefinitionNode(
   value: EnumValueInfo,
+  typeDeprecation: DeprecationInfo | null,
 ): EnumValueDefinitionNode {
   const directives: ConstDirectiveNode[] = [];
-  if (value.deprecated) {
-    directives.push(buildDeprecatedDirective(value.deprecated));
+  const deprecated = value.deprecated ?? typeDeprecation;
+  if (deprecated) {
+    directives.push(buildDeprecatedDirective(deprecated));
   }
 
   return {
@@ -486,12 +521,15 @@ function buildEnumTypeDefinitionNode(
 
   const directives = buildDirectives({
     directives: baseType.directives,
-    deprecated: baseType.deprecated,
+    deprecated: null,
     directiveDefMap,
   });
 
   const description = appendSourceLocation({
-    description: baseType.description,
+    description: appendDeprecationNote(
+      baseType.description,
+      baseType.deprecated,
+    ),
     sourceFile: baseType.sourceFile,
     sourceRoot,
   });
@@ -499,7 +537,9 @@ function buildEnumTypeDefinitionNode(
   return {
     kind: Kind.ENUM_TYPE_DEFINITION,
     name: buildNameNode(baseType.name),
-    values: enumValues.map(buildEnumValueDefinitionNode),
+    values: enumValues.map((value) =>
+      buildEnumValueDefinitionNode(value, baseType.deprecated),
+    ),
     ...(description ? { description: buildStringValueNode(description) } : {}),
     ...(directives.length > 0 ? { directives } : {}),
   };
@@ -516,13 +556,22 @@ function buildScalarTypeDefinitionNode(
   };
 }
 
+interface BuildInputFieldDefinitionNodeParams {
+  readonly field: FieldInfo;
+  readonly typeDeprecation: DeprecationInfo | null;
+  readonly directiveDefMap: Map<string, DirectiveDefinitionInfo> | null;
+}
+
 function buildInputFieldDefinitionNode(
-  field: FieldInfo,
-  directiveDefMap: Map<string, DirectiveDefinitionInfo> | null,
+  params: BuildInputFieldDefinitionNodeParams,
 ): InputValueDefinitionNode {
+  const { field, typeDeprecation, directiveDefMap } = params;
+  // GraphQL rejects deprecating a required input field, so only optional ones
+  // take the deprecation of their type.
+  const isRequired = !field.type.nullable && !field.defaultValue;
   const directives = buildDirectives({
     directives: field.directives,
-    deprecated: field.deprecated,
+    deprecated: field.deprecated ?? (isRequired ? null : typeDeprecation),
     directiveDefMap,
   });
 
@@ -553,15 +602,15 @@ function buildInputObjectTypeDefinitionNode(
   const sortedFields = sortByName(inputType.fields);
 
   const description = appendSourceLocation({
-    description: inputType.description,
+    description: appendDeprecationNote(
+      inputType.description,
+      inputType.deprecated,
+    ),
     sourceFile: inputType.sourceFile,
     sourceRoot,
   });
 
   const directives: ConstDirectiveNode[] = [];
-  if (inputType.deprecated) {
-    directives.push(buildDeprecatedDirective(inputType.deprecated));
-  }
   if (inputType.isOneOf) {
     directives.push(buildOneOfDirective());
   }
@@ -569,8 +618,12 @@ function buildInputObjectTypeDefinitionNode(
   return {
     kind: Kind.INPUT_OBJECT_TYPE_DEFINITION,
     name: buildNameNode(inputType.name),
-    fields: sortedFields.map((f) =>
-      buildInputFieldDefinitionNode(f, directiveDefMap),
+    fields: sortedFields.map((field) =>
+      buildInputFieldDefinitionNode({
+        field,
+        typeDeprecation: inputType.deprecated,
+        directiveDefMap,
+      }),
     ),
     ...(description ? { description: buildStringValueNode(description) } : {}),
     ...(directives.length > 0 ? { directives } : {}),
@@ -579,6 +632,7 @@ function buildInputObjectTypeDefinitionNode(
 
 interface BuildTypeExtensionNodeParams {
   readonly typeExtension: IntegratedTypeExtension;
+  readonly typeDeprecation: DeprecationInfo | null;
   readonly sourceRoot: string | null;
   readonly directiveDefMap: Map<string, DirectiveDefinitionInfo> | null;
 }
@@ -586,13 +640,19 @@ interface BuildTypeExtensionNodeParams {
 function buildObjectTypeExtensionNode(
   params: BuildTypeExtensionNodeParams,
 ): ObjectTypeExtensionNode {
-  const { typeExtension, sourceRoot, directiveDefMap } = params;
+  const { typeExtension, typeDeprecation, sourceRoot, directiveDefMap } =
+    params;
   const sortedFields = sortByName(typeExtension.fields);
   return {
     kind: Kind.OBJECT_TYPE_EXTENSION,
     name: buildNameNode(typeExtension.targetTypeName),
     fields: sortedFields.map((field) =>
-      buildFieldDefinitionNode({ field, sourceRoot, directiveDefMap }),
+      buildFieldDefinitionNode({
+        field,
+        typeDeprecation,
+        sourceRoot,
+        directiveDefMap,
+      }),
     ),
   };
 }
@@ -600,13 +660,19 @@ function buildObjectTypeExtensionNode(
 function buildInterfaceTypeExtensionNode(
   params: BuildTypeExtensionNodeParams,
 ): InterfaceTypeExtensionNode {
-  const { typeExtension, sourceRoot, directiveDefMap } = params;
+  const { typeExtension, typeDeprecation, sourceRoot, directiveDefMap } =
+    params;
   const sortedFields = sortByName(typeExtension.fields);
   return {
     kind: Kind.INTERFACE_TYPE_EXTENSION,
     name: buildNameNode(typeExtension.targetTypeName),
     fields: sortedFields.map((field) =>
-      buildFieldDefinitionNode({ field, sourceRoot, directiveDefMap }),
+      buildFieldDefinitionNode({
+        field,
+        typeDeprecation,
+        sourceRoot,
+        directiveDefMap,
+      }),
     ),
   };
 }
@@ -737,11 +803,20 @@ export function buildDocumentNode(
     a.targetTypeName.localeCompare(b.targetTypeName),
   );
 
+  const typeDeprecations = new Map<string, DeprecationInfo>();
+  for (const baseType of integratedResult.baseTypes) {
+    if (baseType.deprecated) {
+      typeDeprecations.set(baseType.name, baseType.deprecated);
+    }
+  }
+
   for (const ext of sortedExtensions) {
+    const typeDeprecation = typeDeprecations.get(ext.targetTypeName) ?? null;
     if (interfaceTypeNames.has(ext.targetTypeName)) {
       definitions.push(
         buildInterfaceTypeExtensionNode({
           typeExtension: ext,
+          typeDeprecation,
           sourceRoot,
           directiveDefMap,
         }),
@@ -750,6 +825,7 @@ export function buildDocumentNode(
       definitions.push(
         buildObjectTypeExtensionNode({
           typeExtension: ext,
+          typeDeprecation,
           sourceRoot,
           directiveDefMap,
         }),

@@ -58,7 +58,30 @@ export const typeDefs: DocumentNode = {
                 "value": "String"
               }
             }
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use the geocoded Location type instead.",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "kind": "FieldDefinition",
@@ -75,37 +98,37 @@ export const typeDefs: DocumentNode = {
                 "value": "String"
               }
             }
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use the geocoded Location type instead.",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
         }
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Physical address information.\n\nDefined in: src/gqlkit/schema/types.ts",
+        "value": "Physical address information.\n\nDeprecated: Use the geocoded Location type instead.\n\nDefined in: src/gqlkit/schema/types.ts",
         "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "deprecated"
-          },
-          "arguments": [
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "reason"
-              },
-              "value": {
-                "kind": "StringValue",
-                "value": "Use the geocoded Location type instead.",
-                "block": true
-              }
-            }
-          ]
-        }
-      ]
+      }
     },
     {
       "kind": "ObjectTypeDefinition",

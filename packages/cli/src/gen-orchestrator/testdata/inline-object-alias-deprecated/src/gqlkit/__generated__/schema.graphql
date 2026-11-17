@@ -8,11 +8,13 @@ type GetAddressPayload {
 """
 Physical address information.
 
+Deprecated: Use the geocoded Location type instead.
+
 Defined in: src/gqlkit/schema/types.ts
 """
-type GetAddressPayloadAddress @deprecated(reason: """Use the geocoded Location type instead.""") {
-  city: String!
-  street: String!
+type GetAddressPayloadAddress {
+  city: String! @deprecated(reason: """Use the geocoded Location type instead.""")
+  street: String! @deprecated(reason: """Use the geocoded Location type instead.""")
 }
 
 type Query

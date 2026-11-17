@@ -144,6 +144,35 @@ export const userByUsername = defineQuery<{ username: string }, User | null>(
 );
 ```
 
+### Deprecating Types
+
+GraphQL cannot mark a type itself as deprecated. When a type has the `@deprecated` tag, gqlkit adds the deprecation to the type's description and marks its fields (including those added with `defineField`) or enum values as deprecated. Members with their own `@deprecated` tag keep their own reason.
+
+```typescript
+/**
+ * @deprecated Use `Account` instead
+ */
+export type User = {
+  id: IDString;
+  /**
+   * @deprecated Use `displayName` instead
+   */
+  username: string;
+};
+```
+
+Generates:
+
+```graphql
+"""Deprecated: Use `Account` instead"""
+type User {
+  id: ID! @deprecated(reason: "Use `Account` instead")
+  username: String! @deprecated(reason: "Use `displayName` instead")
+}
+```
+
+GraphQL does not allow deprecating required input fields, so on a deprecated input type only nullable fields and fields with a default value are marked. Union types get the description only.
+
 ## Multi-line Descriptions
 
 Multi-line comments are preserved:

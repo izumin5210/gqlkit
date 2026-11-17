@@ -275,7 +275,30 @@ export const typeDefs: DocumentNode = {
             "kind": "StringValue",
             "value": "User is active and can log in",
             "block": true
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use AccountStatus instead for better granularity.",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "kind": "EnumValueDefinition",
@@ -287,7 +310,30 @@ export const typeDefs: DocumentNode = {
             "kind": "StringValue",
             "value": "User account is suspended",
             "block": true
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use AccountStatus instead for better granularity.",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "kind": "EnumValueDefinition",
@@ -327,32 +373,9 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Status of a user account.\n\nDefined in: src/gqlkit/schema/types.ts",
+        "value": "Status of a user account.\n\nDeprecated: Use AccountStatus instead for better granularity.\n\nDefined in: src/gqlkit/schema/types.ts",
         "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "deprecated"
-          },
-          "arguments": [
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "reason"
-              },
-              "value": {
-                "kind": "StringValue",
-                "value": "Use AccountStatus instead for better granularity.",
-                "block": true
-              }
-            }
-          ]
-        }
-      ]
+      }
     },
     {
       "kind": "ObjectTypeExtension",
