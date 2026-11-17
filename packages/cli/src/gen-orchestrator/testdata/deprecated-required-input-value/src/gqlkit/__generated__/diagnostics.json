@@ -1,0 +1,22 @@
+[
+  {
+    "code": "DEPRECATED_REQUIRED_ARGUMENT",
+    "message": "Required argument 'legacy' of 'Query.search' cannot be deprecated. Make it nullable or give it a default value to deprecate it.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 19,
+      "column": 14
+    }
+  },
+  {
+    "code": "DEPRECATED_REQUIRED_INPUT_FIELD",
+    "message": "Required input field 'query' of 'SearchInput' cannot be deprecated. Make it nullable or give it a default value to deprecate it.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 10,
+      "column": 3
+    }
+  }
+]

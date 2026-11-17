@@ -31,7 +31,7 @@ interface LegacyInfo {
    * Old identifier
    * @deprecated Use newId instead
    */
-  oldId: string;
+  oldId: string | null;
   /** New identifier */
   newId: string;
   /**
