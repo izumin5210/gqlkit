@@ -52,7 +52,10 @@ export type DefineApiResolverType =
   | "field"
   | "subscription";
 
-export type AbstractResolverKind = "resolveType" | "isTypeOf";
+export type AbstractResolverKind =
+  | "resolveType"
+  | "isTypeOf"
+  | "resolveReference";
 
 export interface ExportedInputType {
   readonly name: string;
@@ -186,7 +189,11 @@ async function detectAbstractResolverFromMetadataType(
   }
 
   const { kind, actualType } = result;
-  if (kind !== "resolveType" && kind !== "isTypeOf") {
+  if (
+    kind !== "resolveType" &&
+    kind !== "isTypeOf" &&
+    kind !== "resolveReference"
+  ) {
     return null;
   }
 

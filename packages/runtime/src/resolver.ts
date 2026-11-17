@@ -67,9 +67,13 @@ export type FieldResolverFn<TParent, TArgs, TResult, TContext = unknown> = (
 export type ResolverKind = "query" | "mutation" | "field" | "subscription";
 
 /**
- * The kind of abstract type resolver.
+ * The kind of type-level resolver: `__resolveType`, `__isTypeOf`, or the
+ * federation `__resolveReference` (see `@gqlkit-ts/runtime/federation`).
  */
-export type AbstractResolverKind = "resolveType" | "isTypeOf";
+export type AbstractResolverKind =
+  | "resolveType"
+  | "isTypeOf"
+  | "resolveReference";
 
 /**
  * Type for resolveType resolver functions.

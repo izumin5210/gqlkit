@@ -38,6 +38,7 @@ describe("emitResolversCode", () => {
         numericEnums: [],
         stringEnumMappings: [],
         importExtension: "js",
+        subgraph: null,
       });
 
       // Should contain a switch statement on obj.type
@@ -65,6 +66,7 @@ describe("emitResolversCode", () => {
         numericEnums: [],
         stringEnumMappings: [],
         importExtension: "js",
+        subgraph: null,
       });
 
       expect(result).toContain("default: return undefined;");
@@ -103,6 +105,7 @@ describe("emitResolversCode", () => {
         numericEnums: [],
         stringEnumMappings: [],
         importExtension: "js",
+        subgraph: null,
       });
 
       // Both resolve types should be present
@@ -152,6 +155,7 @@ describe("emitResolversCode", () => {
         numericEnums: [],
         stringEnumMappings: [],
         importExtension: "js",
+        subgraph: null,
       });
 
       const alphaIndex = result.indexOf("Alpha: {");

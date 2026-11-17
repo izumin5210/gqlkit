@@ -42,5 +42,17 @@
     "build": "tsc --build",
     "test": "pnpm -w vitest run --project=runtime --typecheck",
     "typecheck": "tsc --noEmit"
+  },
+  "peerDependencies": {
+    "graphql": "^16.9.0"
+  },
+  "peerDependenciesMeta": {
+    "graphql": {
+      "optional": true
+    }
+  },
+  "devDependencies": {
+    "@graphql-tools/schema": "10.0.30",
+    "graphql": "catalog:"
   }
 }

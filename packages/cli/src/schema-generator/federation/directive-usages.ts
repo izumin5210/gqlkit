@@ -13,6 +13,7 @@ import {
   type DirectiveInfo,
   type FederationDirectiveKind,
 } from "../../core/index.js";
+import type { AbstractResolverInfo } from "../../resolver-extractor/index.js";
 import type { IntegratedResult } from "../integrator/result-integrator.js";
 
 type UsageLocation =
@@ -283,6 +284,88 @@ function checkKeyFields(
   return problems;
 }
 
+function isResolvableKey(usage: FederationDirectiveUsage): boolean {
+  const value = usage.directive.args.find(
+    (arg) => arg.name === "resolvable",
+  )?.value;
+  return !(value?.kind === "boolean" && !value.value);
+}
+
+function topLevelKeyFields(fields: string): ReadonlySet<string> {
+  const operation = parse(`{${fields}}`, { noLocation: true }).definitions[0];
+  const names = new Set<string>();
+  if (operation?.kind === Kind.OPERATION_DEFINITION) {
+    for (const selection of operation.selectionSet.selections) {
+      if (selection.kind === Kind.FIELD) {
+        names.add(selection.name.value);
+      }
+    }
+  }
+  return names;
+}
+
+interface ValidateReferenceResolversParams {
+  readonly integratedResult: IntegratedResult;
+  readonly referenceResolvers: ReadonlyArray<AbstractResolverInfo>;
+  readonly resolvableKeys: ReadonlyMap<string, Array<ReadonlySet<string>>>;
+}
+
+/**
+ * Checks that reference resolvers target entities the gateway can resolve
+ * through this subgraph, and that an entity has one whenever the fields of
+ * its references cannot stand in for the entity.
+ */
+function validateReferenceResolvers(
+  params: ValidateReferenceResolversParams,
+): Diagnostic[] {
+  const { integratedResult, referenceResolvers, resolvableKeys } = params;
+  const diagnostics: Diagnostic[] = [];
+
+  const typeNames = new Set(integratedResult.baseTypes.map((t) => t.name));
+  for (const resolver of referenceResolvers) {
+    // An unknown target is reported as UNKNOWN_ABSTRACT_TYPE already.
+    if (
+      typeNames.has(resolver.targetTypeName) &&
+      !resolvableKeys.has(resolver.targetTypeName)
+    ) {
+      diagnostics.push({
+        code: "INVALID_REFERENCE_RESOLVER_TARGET",
+        message: `Reference resolver '${resolver.exportName}' targets '${resolver.targetTypeName}', which has no resolvable @key in this subgraph`,
+        severity: "error",
+        location: resolver.sourceLocation,
+      });
+    }
+  }
+
+  const typesWithResolver = new Set(
+    referenceResolvers.map((resolver) => resolver.targetTypeName),
+  );
+  for (const type of integratedResult.baseTypes) {
+    const keys = resolvableKeys.get(type.name);
+    if (keys === undefined || typesWithResolver.has(type.name)) {
+      continue;
+    }
+    // A reference carries the fields of any one of the keys, so only the
+    // fields every key has are certain to be there.
+    const missingFields = (type.fields ?? [])
+      .map((field) => field.name)
+      .filter((name) => !keys.every((key) => key.has(name)));
+    if (missingFields.length > 0) {
+      diagnostics.push({
+        code: "MISSING_REFERENCE_RESOLVER",
+        message: `Entity '${type.name}' has fields that its references do not carry (${missingFields.join(", ")}), but no reference resolver. Define one with defineResolveReference<${type.name}>.`,
+        severity: "error",
+        location:
+          type.sourceFile === null
+            ? null
+            : { file: type.sourceFile, line: 1, column: 1 },
+      });
+    }
+  }
+
+  return diagnostics;
+}
+
 function keyFieldsArgument(directive: DirectiveInfo): string | null {
   const value = directive.args.find((arg) => arg.name === "fields")?.value;
   return value?.kind === "string" || value?.kind === "enum"
@@ -321,6 +404,10 @@ export function analyzeFederationDirectives(
       ? null
       : { file: usage.sourceFile, line: 1, column: 1 };
 
+  const referenceResolvers = integratedResult.abstractTypeResolvers.filter(
+    (resolver) => resolver.kind === "resolveReference",
+  );
+
   if (federation === null) {
     for (const usage of usages) {
       diagnostics.push({
@@ -330,12 +417,22 @@ export function analyzeFederationDirectives(
         location: location(usage),
       });
     }
+    for (const resolver of referenceResolvers) {
+      diagnostics.push({
+        code: "FEDERATION_NOT_CONFIGURED",
+        message: `Reference resolver '${resolver.exportName}' for type '${resolver.targetTypeName}' requires the federation config`,
+        severity: "error",
+        location: resolver.sourceLocation,
+      });
+    }
     return { diagnostics, imports: [], entityTypeNames: [] };
   }
 
   const types = indexOutputTypes(integratedResult);
   const imports = new Set<ApolloFederationDirectiveName>();
   const entityTypeNames = new Set<string>();
+  /** Top-level fields of each resolvable key, by entity type. */
+  const resolvableKeys = new Map<string, Array<ReadonlySet<string>>>();
 
   for (const usage of usages) {
     const spec = APOLLO_FEDERATION_DIRECTIVES[usage.kind];
@@ -366,7 +463,20 @@ export function analyzeFederationDirectives(
         location: location(usage),
       });
     }
+    if (fields !== null && problems.length === 0 && isResolvableKey(usage)) {
+      const keys = resolvableKeys.get(usage.typeName) ?? [];
+      keys.push(topLevelKeyFields(fields));
+      resolvableKeys.set(usage.typeName, keys);
+    }
   }
+
+  diagnostics.push(
+    ...validateReferenceResolvers({
+      integratedResult,
+      referenceResolvers,
+      resolvableKeys,
+    }),
+  );
 
   if (federation.composeDirectives.length > 0) {
     imports.add("composeDirective");

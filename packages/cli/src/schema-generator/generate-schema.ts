@@ -1,3 +1,4 @@
+import { print } from "graphql";
 import {
   collectResolveTypes,
   collectTypenameExtractions,
@@ -395,6 +396,7 @@ export function generateSchema(
           documentNode,
           federation,
           imports: federationAnalysis.imports,
+          entityTypeNames: federationAnalysis.entityTypeNames,
         });
   const typeDefsCode = emitTypeDefsCode(typeDefsDocument);
   const sdlContent = emitSdlContent(sdlDocument);
@@ -414,6 +416,13 @@ export function generateSchema(
     numericEnums: resolverSource.numericEnums,
     stringEnumMappings: resolverSource.stringEnumMappings,
     importExtension,
+    subgraph:
+      federation === null
+        ? null
+        : {
+            sdl: print(sdlDocument),
+            entityTypeNames: federationAnalysis.entityTypeNames,
+          },
   });
 
   return {

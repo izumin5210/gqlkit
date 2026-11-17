@@ -3,7 +3,7 @@
 extend schema
   @link(
     url: "https://specs.apollo.dev/federation/v2.9"
-    import: ["@composeDirective"]
+    import: ["@composeDirective", "@key"]
   )
   @link(url: "https://example.com/redact/v1.0", import: ["@redact"])
   @composeDirective(name: "@redact")
@@ -18,12 +18,28 @@ directive @redact on ARGUMENT_DEFINITION | FIELD_DEFINITION
 Defined in: src/gqlkit/schema/post.ts
 """
 type Post {
-  authorId: ID!
   id: ID!
   title: String!
 }
 
 type Query
+
+"""
+Posts subgraph only references User by its key; the gateway fetches the
+other fields from the users subgraph.
+
+Defined in: src/gqlkit/schema/user.ts
+"""
+type User @key(fields: "id", resolvable: false) {
+  id: ID!
+}
+
+extend type Post {
+  """
+  Defined in: src/gqlkit/schema/post.ts
+  """
+  author: User!
+}
 
 extend type Query {
   """

@@ -1,1 +1,22 @@
-[]
+[
+  {
+    "code": "MISSING_REFERENCE_RESOLVER",
+    "message": "Entity 'User' has fields that its references do not carry (id, organization, name), but no reference resolver. Define one with defineResolveReference<User>.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/user.ts",
+      "line": 1,
+      "column": 1
+    }
+  },
+  {
+    "code": "MISSING_REFERENCE_RESOLVER",
+    "message": "Entity 'Product' has fields that its references do not carry (name), but no reference resolver. Define one with defineResolveReference<Product>.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/user.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

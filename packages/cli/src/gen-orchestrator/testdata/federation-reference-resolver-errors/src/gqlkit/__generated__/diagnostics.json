@@ -1,0 +1,42 @@
+[
+  {
+    "code": "DUPLICATE_RESOLVE_REFERENCE",
+    "message": "Multiple resolveReference definitions found for type 'Product':\n  - productReference at src/gqlkit/schema/duplicates.ts:10:14\n  - productReferenceAgain at src/gqlkit/schema/duplicates.ts:15:14",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/duplicates.ts",
+      "line": 10,
+      "column": 14
+    }
+  },
+  {
+    "code": "INVALID_REFERENCE_RESOLVER_TARGET",
+    "message": "Reference resolver 'organizationReference' targets 'Organization', which has no resolvable @key in this subgraph",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 19,
+      "column": 14
+    }
+  },
+  {
+    "code": "INVALID_REFERENCE_RESOLVER_TARGET",
+    "message": "Reference resolver 'teamReference' targets 'Team', which has no resolvable @key in this subgraph",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 23,
+      "column": 14
+    }
+  },
+  {
+    "code": "MISSING_REFERENCE_RESOLVER",
+    "message": "Entity 'User' has fields that its references do not carry (name), but no reference resolver. Define one with defineResolveReference<User>.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

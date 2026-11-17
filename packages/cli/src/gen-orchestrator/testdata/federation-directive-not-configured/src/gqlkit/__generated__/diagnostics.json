@@ -8,5 +8,15 @@
       "line": 1,
       "column": 1
     }
+  },
+  {
+    "code": "FEDERATION_NOT_CONFIGURED",
+    "message": "Reference resolver 'userReference' for type 'User' requires the federation config",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/user.ts",
+      "line": 8,
+      "column": 14
+    }
   }
 ]

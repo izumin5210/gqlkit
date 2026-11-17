@@ -58,6 +58,11 @@ export default defineConfig({
           name: "runtime",
           root: "./packages/runtime",
           include: ["src/**/*.test.ts"],
+          server: {
+            deps: {
+              inline: ["graphql", /@graphql-tools\//],
+            },
+          },
         },
       },
       {
