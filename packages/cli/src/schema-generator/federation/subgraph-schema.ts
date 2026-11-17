@@ -83,6 +83,9 @@ function buildSchemaExtension(
   );
   return {
     kind: Kind.SCHEMA_EXTENSION,
+    // graphql-js treats this list as optional, but the typeDefs merger of
+    // @graphql-tools/schema v10 reads it from every schema extension.
+    operationTypes: [],
     directives: [
       buildLinkDirective(federation.url, imports),
       ...composedLinks,

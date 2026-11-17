@@ -7,6 +7,7 @@ export const typeDefs: DocumentNode = {
   "definitions": [
     {
       "kind": "SchemaExtension",
+      "operationTypes": [],
       "directives": [
         {
           "kind": "Directive",
