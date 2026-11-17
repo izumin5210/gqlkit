@@ -1,6 +1,7 @@
 import type { ImportExtension } from "../config/types.js";
 import type { Diagnostic } from "../core/index.js";
 import { makeConfigDiagnostic } from "./diagnostic.js";
+import { resolveFederationConfig } from "./federation-validator.js";
 import {
   DEFAULT_IMPORT_EXTENSION,
   DEFAULT_RESOLVERS_PATH,
@@ -783,6 +784,12 @@ export function validateConfig(
   });
   diagnostics.push(...discriminatorFieldsResult.diagnostics);
 
+  const federationResult = resolveFederationConfig({
+    value: config["federation"],
+    configPath,
+  });
+  diagnostics.push(...federationResult.diagnostics);
+
   if (config["scalars"] !== undefined && !Array.isArray(config["scalars"])) {
     diagnostics.push(
       makeConfigDiagnostic({
@@ -866,6 +873,7 @@ export function validateConfig(
       tsconfigPath: tsconfigPathResult.resolved,
       hooks: hooksResult.resolved,
       discriminatorFields: discriminatorFieldsResult.resolved,
+      federation: federationResult.resolved,
     },
     diagnostics: [],
   };

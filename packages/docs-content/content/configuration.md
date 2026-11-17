@@ -210,6 +210,32 @@ Keys are GraphQL union type names, and values are either a single field name or 
 
 See [Union Types - Custom Discriminator Fields](./schema/unions.md#custom-discriminator-fields) for detailed usage and validation rules.
 
+## Federation
+
+Generate the schema as an Apollo Federation v2 subgraph:
+
+```ts
+export default defineConfig({
+  federation: {
+    spec: "apollo-federation",
+    // The federation version to link. Use one your composition and gateway support.
+    url: "https://specs.apollo.dev/federation/v2.9",
+    // Optional: custom directives to keep in the supergraph (federation v2.1 or later)
+    composeDirectives: [
+      { url: "https://example.com/redact/v1.0", import: ["@redact"] },
+    ],
+  },
+});
+```
+
+| Option | Description |
+|--------|-------------|
+| `spec` | `"apollo-federation"` |
+| `url` | Apollo Federation spec URL, `https://specs.apollo.dev/federation/v2.<minor>`. Required |
+| `composeDirectives` | Specs of your own whose directives are kept in the supergraph. Each directive must be defined with `GqlDirective` |
+
+Without `federation`, gqlkit generates a plain GraphQL schema. See [Apollo Federation](./integration/apollo-federation.md) for the generated output and how to compose subgraphs.
+
 ## Source Directory
 
 By default, gqlkit scans `src/gqlkit/schema` for types and resolvers.

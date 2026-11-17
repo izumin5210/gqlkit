@@ -75,6 +75,7 @@ async function loadAndAdaptConfig(
     tsconfigPath,
     discriminatorFields,
     hooks,
+    federation,
   } = configResult.config;
 
   const generationConfig: GenerationConfig = {
@@ -86,6 +87,7 @@ async function loadAndAdaptConfig(
     customScalars: scalars,
     tsconfigPath,
     discriminatorFields,
+    federation,
   };
 
   return { ok: true, value: { generationConfig, hooks } };

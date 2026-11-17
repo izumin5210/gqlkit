@@ -80,6 +80,7 @@ async function loadExampleWorkload(exampleName: string): Promise<Workload> {
       customScalars: config.scalars,
       tsconfigPath: config.tsconfigPath,
       discriminatorFields: config.discriminatorFields,
+      federation: config.federation,
     },
     check: async (result) => findErrorDiagnostics(result),
   };
@@ -106,6 +107,7 @@ function syntheticWorkload(domains: number): Workload {
       customScalars: null,
       tsconfigPath: join(SYNTHETIC_DIR, "tsconfig.json"),
       discriminatorFields: new Map(),
+      federation: null,
     },
     check: async (result) => findErrorDiagnostics(result),
   };

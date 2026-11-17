@@ -36,6 +36,7 @@ describe("ConfigLoader", () => {
           afterAllFileWrite: [],
         },
         discriminatorFields: new Map(),
+        federation: null,
       });
       expect(result.diagnostics.length).toBe(0);
     });
@@ -141,6 +142,7 @@ export default {};
           afterAllFileWrite: [],
         },
         discriminatorFields: new Map(),
+        federation: null,
       });
       expect(result.diagnostics.length).toBe(0);
     });

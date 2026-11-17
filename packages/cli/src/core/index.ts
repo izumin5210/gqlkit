@@ -54,3 +54,12 @@ export type {
   TSTypeReference,
   TSTypeReferenceKind,
 } from "./ts-types.js";
+export {
+  APOLLO_FEDERATION_DIRECTIVES,
+  type ApolloFederationVersion,
+  formatApolloFederationVersion,
+  isApolloFederationVersionAtLeast,
+  LINK_DIRECTIVE_NAME,
+  LINK_SPEC_DEFINITIONS,
+  parseApolloFederationUrl,
+} from "./federation.js";

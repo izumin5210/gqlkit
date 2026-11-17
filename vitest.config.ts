@@ -156,6 +156,30 @@ export default defineConfig({
           dedupe: ["graphql"],
         },
         test: {
+          name: "examples/with-apollo-federation",
+          root: "./examples/with-apollo-federation",
+          include: ["src/**/*.test.ts"],
+          server: {
+            deps: {
+              inline: [
+                "graphql",
+                /@graphql-tools\//,
+                "@theguild/federation-composition",
+                "graphql-yoga",
+                "@envelop/core",
+              ],
+            },
+          },
+        },
+      },
+      {
+        resolve: {
+          alias: {
+            graphql: graphqlPath,
+          },
+          dedupe: ["graphql"],
+        },
+        test: {
           name: "examples/with-ai-sdk",
           root: "./examples/with-ai-sdk",
           include: ["src/**/*.test.ts"],

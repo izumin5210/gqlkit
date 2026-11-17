@@ -1,4 +1,5 @@
 import type { ImportExtension } from "../config/types.js";
+import type { ApolloFederationVersion } from "../core/index.js";
 
 /**
  * Resolved scalar mapping. Field names differ from the user-facing
@@ -54,6 +55,24 @@ export type ResolvedDiscriminatorFieldsMap = ReadonlyMap<
   ReadonlyArray<string>
 >;
 
+/**
+ * A spec of the user's own whose directives are kept in the supergraph.
+ */
+export interface ResolvedComposeDirectiveLink {
+  readonly url: string;
+  /** Imported directive names, without the leading `@`. */
+  readonly directiveNames: ReadonlyArray<string>;
+}
+
+export interface ResolvedApolloFederationConfig {
+  readonly spec: "apollo-federation";
+  readonly url: string;
+  readonly version: ApolloFederationVersion;
+  readonly composeDirectives: ReadonlyArray<ResolvedComposeDirectiveLink>;
+}
+
+export type ResolvedFederationConfig = ResolvedApolloFederationConfig;
+
 export interface ResolvedConfig {
   readonly sourceDir: string;
   readonly sourceIgnoreGlobs: ReadonlyArray<string>;
@@ -62,4 +81,6 @@ export interface ResolvedConfig {
   readonly tsconfigPath: string | null;
   readonly hooks: ResolvedHooksConfig;
   readonly discriminatorFields: ResolvedDiscriminatorFieldsMap;
+  /** Null when the schema is not a federation subgraph. */
+  readonly federation: ResolvedFederationConfig | null;
 }

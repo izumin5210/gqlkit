@@ -622,5 +622,7 @@ async function extractDescription(
     return null;
   }
 
-  return documentation;
+  // Sources checked out with CRLF line endings (e.g. on Windows) would
+  // otherwise leak `\r` into the description.
+  return documentation.replace(/\r\n/g, "\n");
 }

@@ -5,6 +5,11 @@ export default {
   },
   yoga: "graphql-yoga",
   apollo: "Apollo Server",
+  "-- Federation": {
+    type: "separator",
+    title: "Federation",
+  },
+  "apollo-federation": "Apollo Federation",
   "-- External Models": {
     type: "separator",
     title: "External Models",
