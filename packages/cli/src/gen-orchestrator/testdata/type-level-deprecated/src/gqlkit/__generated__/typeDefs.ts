@@ -27,37 +27,37 @@ export const typeDefs: DocumentNode = {
                 "value": "ID"
               }
             }
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "No longer supported",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
         }
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "value": "Deprecated: No longer supported\n\nDefined in: src/gqlkit/schema/types.ts",
         "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "deprecated"
-          },
-          "arguments": [
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "reason"
-              },
-              "value": {
-                "kind": "StringValue",
-                "value": "No longer supported",
-                "block": true
-              }
-            }
-          ]
-        }
-      ]
+      }
     },
     {
       "kind": "ObjectTypeDefinition",
@@ -127,44 +127,67 @@ export const typeDefs: DocumentNode = {
           "name": {
             "kind": "Name",
             "value": "ADMIN"
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use AccountRole instead.",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
             "value": "MEMBER"
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use AccountRole instead.",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
         }
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "value": "Deprecated: Use AccountRole instead.\n\nDefined in: src/gqlkit/schema/types.ts",
         "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "deprecated"
-          },
-          "arguments": [
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "reason"
-              },
-              "value": {
-                "kind": "StringValue",
-                "value": "Use AccountRole instead.",
-                "block": true
-              }
-            }
-          ]
-        }
-      ]
+      }
     },
     {
       "kind": "UnionTypeDefinition",
@@ -190,7 +213,7 @@ export const typeDefs: DocumentNode = {
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "value": "Deprecated: Use AccountSearchResult instead.\n\nDefined in: src/gqlkit/schema/types.ts",
         "block": true
       }
     },
@@ -253,7 +276,30 @@ export const typeDefs: DocumentNode = {
                 "value": "ID"
               }
             }
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use Account instead.",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "kind": "FieldDefinition",
@@ -270,7 +316,30 @@ export const typeDefs: DocumentNode = {
                 "value": "String"
               }
             }
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use Account instead.",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "kind": "FieldDefinition",
@@ -287,7 +356,30 @@ export const typeDefs: DocumentNode = {
                 "value": "Role"
               }
             }
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use Account instead.",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "kind": "FieldDefinition",
@@ -304,37 +396,37 @@ export const typeDefs: DocumentNode = {
                 "value": "UserStatus"
               }
             }
-          }
-        }
-      ],
-      "description": {
-        "kind": "StringValue",
-        "value": "A user in the system.\n\nDefined in: src/gqlkit/schema/types.ts",
-        "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "deprecated"
           },
-          "arguments": [
+          "directives": [
             {
-              "kind": "Argument",
+              "kind": "Directive",
               "name": {
                 "kind": "Name",
-                "value": "reason"
+                "value": "deprecated"
               },
-              "value": {
-                "kind": "StringValue",
-                "value": "Use Account instead.",
-                "block": true
-              }
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use Account instead.",
+                    "block": true
+                  }
+                }
+              ]
             }
           ]
         }
       ],
+      "description": {
+        "kind": "StringValue",
+        "value": "A user in the system.\n\nDeprecated: Use Account instead.\n\nDefined in: src/gqlkit/schema/types.ts",
+        "block": true
+      },
       "interfaces": [
         {
           "kind": "NamedType",
@@ -357,51 +449,67 @@ export const typeDefs: DocumentNode = {
           "name": {
             "kind": "Name",
             "value": "ACTIVE"
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use AccountStatus instead.",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
         },
         {
           "kind": "EnumValueDefinition",
           "name": {
             "kind": "Name",
             "value": "INACTIVE"
-          }
-        },
-        {
-          "kind": "EnumValueDefinition",
-          "name": {
-            "kind": "Name",
-            "value": "PENDING"
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use AccountStatus instead.",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
         }
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "value": "Deprecated: Use AccountStatus instead.\n\nDefined in: src/gqlkit/schema/types.ts",
         "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "deprecated"
-          },
-          "arguments": [
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "reason"
-              },
-              "value": {
-                "kind": "StringValue",
-                "value": "Use AccountStatus instead.",
-                "block": true
-              }
-            }
-          ]
-        }
-      ]
+      }
     },
     {
       "kind": "InputObjectTypeDefinition",
@@ -439,37 +547,37 @@ export const typeDefs: DocumentNode = {
               "kind": "Name",
               "value": "String"
             }
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use AccountInput instead.",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
         }
       ],
       "description": {
         "kind": "StringValue",
-        "value": "Defined in: src/gqlkit/schema/types.ts",
+        "value": "Deprecated: Use AccountInput instead.\n\nDefined in: src/gqlkit/schema/types.ts",
         "block": true
-      },
-      "directives": [
-        {
-          "kind": "Directive",
-          "name": {
-            "kind": "Name",
-            "value": "deprecated"
-          },
-          "arguments": [
-            {
-              "kind": "Argument",
-              "name": {
-                "kind": "Name",
-                "value": "reason"
-              },
-              "value": {
-                "kind": "StringValue",
-                "value": "Use AccountInput instead.",
-                "block": true
-              }
-            }
-          ]
-        }
-      ]
+      }
     },
     {
       "kind": "ObjectTypeExtension",
@@ -598,7 +706,30 @@ export const typeDefs: DocumentNode = {
             "kind": "StringValue",
             "value": "Defined in: src/gqlkit/schema/types.ts",
             "block": true
-          }
+          },
+          "directives": [
+            {
+              "kind": "Directive",
+              "name": {
+                "kind": "Name",
+                "value": "deprecated"
+              },
+              "arguments": [
+                {
+                  "kind": "Argument",
+                  "name": {
+                    "kind": "Name",
+                    "value": "reason"
+                  },
+                  "value": {
+                    "kind": "StringValue",
+                    "value": "Use Account instead.",
+                    "block": true
+                  }
+                }
+              ]
+            }
+          ]
         }
       ]
     }

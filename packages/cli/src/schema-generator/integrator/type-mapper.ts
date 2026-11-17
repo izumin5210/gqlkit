@@ -198,7 +198,7 @@ function mapType(input: TypeMappingInput): MappedType {
           needsStringEnumMapping: false,
           implementedInterfaces: null,
           description: input.description,
-          deprecated: null,
+          deprecated: input.deprecated,
           sourceFile: input.sourceFile,
           directives: input.directives,
         },

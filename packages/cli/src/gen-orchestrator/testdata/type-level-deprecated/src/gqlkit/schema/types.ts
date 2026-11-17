@@ -44,10 +44,7 @@ export const posts = defineField<User, NoArgs, Post[]>(() => []);
 /**
  * @deprecated Use AccountStatus instead.
  */
-export type UserStatus =
-  | "ACTIVE"
-  | /** @deprecated Use ACTIVE instead. */ "PENDING"
-  | "INACTIVE";
+export type UserStatus = "ACTIVE" | "INACTIVE";
 
 /**
  * @deprecated Use AccountRole instead.

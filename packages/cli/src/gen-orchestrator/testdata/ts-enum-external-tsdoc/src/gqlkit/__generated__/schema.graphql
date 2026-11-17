@@ -41,13 +41,15 @@ type User {
 """
 Status of a user account.
 
+Deprecated: Use AccountStatus instead for better granularity.
+
 Defined in: src/gqlkit/schema/types.ts
 """
-enum UserStatus @deprecated(reason: """Use AccountStatus instead for better granularity.""") {
+enum UserStatus {
   """User is active and can log in"""
-  ACTIVE
+  ACTIVE @deprecated(reason: """Use AccountStatus instead for better granularity.""")
   """User account is suspended"""
-  SUSPENDED
+  SUSPENDED @deprecated(reason: """Use AccountStatus instead for better granularity.""")
   """User account is pending verification"""
   PENDING @deprecated(reason: """Use Unverified instead""")
 }

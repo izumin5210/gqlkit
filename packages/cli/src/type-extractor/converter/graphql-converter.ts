@@ -452,7 +452,7 @@ export function convertToGraphQL(
           implementedInterfaces: null,
           sourceFile: metadata.sourceFile,
           description: metadata.description,
-          deprecated: null,
+          deprecated: metadata.deprecated,
           directives: metadata.directives,
         });
       }
