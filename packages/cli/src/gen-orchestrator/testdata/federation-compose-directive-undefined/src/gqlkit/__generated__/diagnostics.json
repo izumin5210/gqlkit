@@ -1,0 +1,8 @@
+[
+  {
+    "code": "UNDEFINED_COMPOSE_DIRECTIVE",
+    "message": "federation.composeDirectives imports '@redact', but no exported GqlDirective defines it",
+    "severity": "error",
+    "location": null
+  }
+]

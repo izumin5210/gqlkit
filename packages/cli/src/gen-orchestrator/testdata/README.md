@@ -25,6 +25,7 @@ Case names are `<feature>-<scenario>`, grouped by feature-area prefix. The large
 | `subscription-*` | `defineSubscription` |
 | `directive*` | Custom directive definitions and usage |
 | `pruning-*`, `output-*`, `source-ignore-globs-*` | Config-level generation behavior (see below) |
+| `federation-*` | `federation` config — federation subgraph output (`@link`, composed directives, federation directives) |
 
 Everything else is a smaller, self-contained scenario named after the specific behavior it pins (e.g. `self-referential-type`, `template-literal-type`, `schema-typename-conflict`).
 
@@ -66,6 +67,7 @@ MECE reminder (see root `CLAUDE.md`): before adding a case, check whether an exi
 | `output.resolversPath` / `.typeDefsPath` / `.schemaPath` | `src/gqlkit/__generated__/{resolvers.ts,typeDefs.ts,schema.graphql}` |
 | `output.importExtension` | `"js"` |
 | `output.pruning` | `true` |
+| `federation` | none (resolved with the same validation as `gqlkit.config.ts`, so an invalid value fails the case) |
 
 When `output.*Path` is set, the corresponding golden file lives at that path (relative to the case directory) instead of the default `src/gqlkit/__generated__/` location — `diagnostics.json` is the one exception, always at the fixed default-`__generated__` path regardless of `output` config, since it's a test-only artifact with no config-driven equivalent.
 

@@ -6,7 +6,10 @@
 
 import { readdir, readFile } from "node:fs/promises";
 import { basename, join } from "node:path";
-import type { ResolvedScalarMapping } from "../config-loader/index.js";
+import {
+  type ResolvedScalarMapping,
+  resolveFederationConfig,
+} from "../config-loader/index.js";
 import {
   DEFAULT_RESOLVERS_PATH,
   DEFAULT_SCHEMA_PATH,
@@ -91,6 +94,18 @@ export async function loadGoldenCase(
     }
   }
 
+  // config.json skips config-loader's validation, but the federation version
+  // is resolved from its spec URL, so a case must pass the same resolution.
+  const federation = resolveFederationConfig({
+    value: config?.federation,
+    configPath: join(caseDir, "config.json"),
+  });
+  if (federation.diagnostics.length > 0) {
+    throw new Error(
+      `invalid federation in ${name}/config.json: ${federation.diagnostics.map((d) => d.message).join("; ")}`,
+    );
+  }
+
   const output = {
     resolversPath: resolveOutputPath(
       config?.output?.resolversPath,
@@ -120,6 +135,7 @@ export async function loadGoldenCase(
       customScalars,
       tsconfigPath: join(caseDir, "tsconfig.json"),
       discriminatorFields,
+      federation: federation.resolved,
     },
     diagnosticsPath: join(caseDir, "src/gqlkit/__generated__/diagnostics.json"),
   };

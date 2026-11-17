@@ -8,7 +8,10 @@ import {
   validateSchemaTypenames,
   validateTypenames,
 } from "../auto-type-generator/index.js";
-import type { ResolvedDiscriminatorFieldsMap } from "../config-loader/index.js";
+import type {
+  ResolvedDiscriminatorFieldsMap,
+  ResolvedFederationConfig,
+} from "../config-loader/index.js";
 import type { ImportExtension } from "../config/types.js";
 import type { Diagnostic } from "../core/index.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
@@ -22,6 +25,10 @@ import {
 import { buildDocumentNode } from "./builder/ast-builder.js";
 import { emitResolversCode, emitTypeDefsCode } from "./emitter/code-emitter.js";
 import { emitSdlContent } from "./emitter/sdl-emitter.js";
+import {
+  buildSubgraphDocuments,
+  validateFederationDirectives,
+} from "./federation/subgraph-schema.js";
 import {
   type IntegratedResult,
   integrate,
@@ -42,6 +49,7 @@ export interface GenerateSchemaInput {
   readonly knownTypeNames: ReadonlySet<string> | null;
   readonly importExtension: ImportExtension;
   readonly discriminatorFields: ResolvedDiscriminatorFieldsMap;
+  readonly federation: ResolvedFederationConfig | null;
 }
 
 export interface GenerateSchemaResult {
@@ -109,6 +117,7 @@ export function generateSchema(
     sourceRoot,
     knownTypeNames,
     importExtension,
+    federation,
   } = input;
 
   const autoTypeResult = generateAutoTypes({
@@ -345,19 +354,35 @@ export function generateSchema(
     tsAliasToGraphQLNameMap: autoTypeResult.tsAliasToGraphQLNameMap,
   });
 
+  const federationDiagnostics =
+    federation === null
+      ? []
+      : validateFederationDirectives({ federation, directiveDefinitions });
+  const diagnostics = [
+    ...integratedResult.diagnostics,
+    ...federationDiagnostics,
+  ];
+  const hasErrors = diagnostics.some((d) => d.severity === "error");
+
   let documentNode = buildDocumentNode(integratedResult, { sourceRoot });
   let prunedTypes: ReadonlyArray<string> = [];
 
   // Prune only on the success path: an errored result is never written, and
   // its document may be arbitrarily incomplete.
-  if (enablePruning && !integratedResult.hasErrors) {
+  if (enablePruning && !hasErrors) {
     const pruneResult = pruneDocumentNode(documentNode);
     documentNode = pruneResult.documentNode;
     prunedTypes = pruneResult.removedTypes;
   }
 
-  const typeDefsCode = emitTypeDefsCode(documentNode);
-  const sdlContent = emitSdlContent(documentNode);
+  // Federation additions come after pruning, which would otherwise remove
+  // the link spec's types that no root operation type reaches.
+  const { sdlDocument, typeDefsDocument } =
+    federation === null
+      ? { sdlDocument: documentNode, typeDefsDocument: documentNode }
+      : buildSubgraphDocuments({ documentNode, federation });
+  const typeDefsCode = emitTypeDefsCode(typeDefsDocument);
+  const sdlContent = emitSdlContent(sdlDocument);
 
   // The resolver map must mirror the (possibly pruned) schema: resolver
   // entries for types absent from typeDefs are rejected by
@@ -380,8 +405,8 @@ export function generateSchema(
     typeDefsCode,
     sdlContent,
     resolversCode,
-    diagnostics: integratedResult.diagnostics,
-    hasErrors: integratedResult.hasErrors,
+    diagnostics,
+    hasErrors,
     prunedTypes,
   };
 }
