@@ -199,16 +199,7 @@ export const typeDefs: DocumentNode = {
                 "value": "Money"
               }
             }
-          },
-          "directives": [
-            {
-              "kind": "Directive",
-              "name": {
-                "kind": "Name",
-                "value": "shareable"
-              }
-            }
-          ]
+          }
         }
       ],
       "description": {

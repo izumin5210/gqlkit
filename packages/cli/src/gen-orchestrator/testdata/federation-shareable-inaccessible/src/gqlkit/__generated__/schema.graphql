@@ -17,7 +17,7 @@ type Product {
   id: ID!
   internalCode: String! @inaccessible
   name: String! @shareable
-  price: Money! @shareable
+  price: Money!
 }
 
 type Query
