@@ -62,7 +62,7 @@ async function detectCodexEnvironment(dir: string): Promise<boolean> {
 function generateSkillMd(): string {
   return `---
 name: ${SKILL_NAME}
-description: Use when the user asks about "gqlkit", "gqlkit usage", "gqlkit schema definition", "gqlkit configuration", "gqlkit resolvers", "GraphQL code generation with gqlkit", or needs guidance on gqlkit conventions, type definitions, or integration with GraphQL servers or ORMs.
+description: Use when the user asks about "gqlkit", "gqlkit usage", "gqlkit schema definition", "gqlkit configuration", "gqlkit resolvers", "GraphQL code generation with gqlkit", or needs guidance on gqlkit conventions, type definitions, directives, Apollo Federation subgraphs, or integration with GraphQL servers or ORMs.
 ---
 
 # gqlkit Guide
