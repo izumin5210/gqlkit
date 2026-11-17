@@ -1,7 +1,7 @@
 import { access, unlink } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-import { buildASTSchema, parse } from "graphql";
+import { buildASTSchema, type DocumentNode, parse } from "graphql";
 import { describe, expect, it } from "vitest";
 import {
   findGeneratedFile,
@@ -45,6 +45,13 @@ async function assertFileNotExists(
  * yet. Each stays here only while it still fails to build, so a fix has to
  * remove it.
  */
+/** Reads the DocumentNode literal out of a generated typeDefs.ts. */
+function parseTypeDefsCode(code: string): DocumentNode {
+  const start = code.indexOf("= {") + 2;
+  const end = code.lastIndexOf("} as DocumentNode") + 1;
+  return JSON.parse(code.slice(start, end)) as DocumentNode;
+}
+
 const casesWithKnownInvalidSchema: ReadonlySet<string> = new Set([
   // Object types used as argument or input field types (#411).
   "default-value-complex",
@@ -88,8 +95,17 @@ describe("Golden File Tests", async () => {
             resolve(caseDir, output.schemaPath),
           );
           // Golden snapshots only compare text, so check that the output also
-          // forms a schema that graphql-js accepts.
-          const buildSchema = () => buildASTSchema(parse(schemaGraphql ?? ""));
+          // forms a schema that graphql-js accepts. A federation subgraph's
+          // SDL leaves out the federation directive definitions, which
+          // composition knows from the linked specs; typeDefs is the
+          // document the subgraph executes.
+          const typeDefsTs = findGeneratedFile(result.files, "typeDefs.ts");
+          const buildSchema = () =>
+            buildASTSchema(
+              goldenCase.generationConfig.federation === null
+                ? parse(schemaGraphql ?? "")
+                : parseTypeDefsCode(typeDefsTs ?? ""),
+            );
           if (casesWithKnownInvalidSchema.has(caseName)) {
             expect(
               buildSchema,
