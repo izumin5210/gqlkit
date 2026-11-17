@@ -1,6 +1,7 @@
 import { access, unlink } from "node:fs/promises";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
+import { parse } from "graphql";
 import { describe, expect, it } from "vitest";
 import {
   findGeneratedFile,
@@ -71,6 +72,7 @@ describe("Golden File Tests", async () => {
             "schema.graphql",
           );
           expect(schemaGraphql).toBeDefined();
+          expect(() => parse(schemaGraphql!)).not.toThrow();
           await expect(schemaGraphql).toMatchFileSnapshot(
             resolve(caseDir, output.schemaPath),
           );
