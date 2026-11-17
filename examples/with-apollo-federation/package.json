@@ -1,0 +1,24 @@
+{
+  "name": "@gqlkit-examples/with-apollo-federation",
+  "type": "module",
+  "private": true,
+  "scripts": {
+    "gen": "pnpm gen:users && pnpm gen:posts",
+    "gen:users": "cd subgraphs/users && node --import tsx ../../../../packages/cli/src/cli.ts gen",
+    "gen:posts": "cd subgraphs/posts && node --import tsx ../../../../packages/cli/src/cli.ts gen",
+    "start": "node --import tsx src/server.ts",
+    "dev": "pnpm gen && pnpm start",
+    "typecheck": "tsc --noEmit"
+  },
+  "dependencies": {
+    "@gqlkit-ts/runtime": "workspace:*",
+    "@graphql-tools/federation": "4.6.5",
+    "@graphql-tools/schema": "^10.0.0",
+    "@theguild/federation-composition": "0.27.0",
+    "graphql": "catalog:",
+    "graphql-yoga": "^5.0.0"
+  },
+  "devDependencies": {
+    "@gqlkit-ts/cli": "workspace:*"
+  }
+}
