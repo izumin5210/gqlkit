@@ -1,17 +1,27 @@
-import type { GqlField, IDString } from "@gqlkit-ts/runtime";
-import { defineQuery } from "../gqlkit.js";
+import type { GqlField, GqlObject, IDString } from "@gqlkit-ts/runtime";
+import type { Key } from "@gqlkit-ts/runtime/federation";
+import { defineQuery, defineResolveReference } from "../gqlkit.js";
 import type { RedactDirective } from "./directives.js";
 
-export type User = {
-  id: IDString;
-  name: string;
-  email: GqlField<string, { directives: [RedactDirective] }>;
-};
+/** Users subgraph owns User and resolves it for other subgraphs. */
+export type User = GqlObject<
+  {
+    id: IDString;
+    name: string;
+    email: GqlField<string, { directives: [RedactDirective] }>;
+  },
+  { directives: [Key<"id">] }
+>;
 
 const allUsers: User[] = [
   { id: "u1" as IDString, name: "Alice", email: "alice@example.com" },
   { id: "u2" as IDString, name: "Bob", email: "bob@example.com" },
 ];
+
+export const userReference = defineResolveReference<User>((ref, ctx) => {
+  ctx.onResolveReference?.(ref);
+  return allUsers.find((u) => u.id === ref.id) ?? null;
+});
 
 export const user = defineQuery<
   {

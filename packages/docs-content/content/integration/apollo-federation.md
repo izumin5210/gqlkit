@@ -32,8 +32,8 @@ With `federation`, the generated files differ in what they contain:
 | File | Contents |
 |------|----------|
 | `schema.graphql` | The subgraph SDL to pass to composition. It starts with `extend schema @link(...)` and has no definitions of the federation directives, which composition knows from the linked spec |
-| `typeDefs.ts` | The same document plus the definitions of the federation directives, so that `makeExecutableSchema` can build the subgraph |
-| `resolvers.ts` | Unchanged |
+| `typeDefs.ts` | The same document plus the definitions of the federation directives, so that `makeExecutableSchema` can build the subgraph, and the fields the gateway queries: `_service`, and `_entities` with `_Entity` and `_Any` when the subgraph has entities |
+| `resolvers.ts` | The resolver map, wrapped with `withSubgraphResolvers` from `@gqlkit-ts/runtime/federation`, which adds the resolvers of `_service` and `_entities`. `_service { sdl }` returns the SDL of `schema.graphql` |
 
 ```graphql
 # schema.graphql
@@ -126,6 +126,56 @@ gqlkit checks each key against the type and reports `INVALID_KEY_FIELDS` when th
 - selects a field of a union or interface type
 
 Pruning keeps types with `Key` even when no root field reaches them, because the gateway reaches entities through the subgraph's entity resolution.
+
+### Resolving Entities
+
+When another subgraph references an entity, the gateway asks this subgraph for it through `_entities`, passing a reference: `__typename` and the fields of one of the entity's keys. Define how to turn a reference into the entity with `defineResolveReference` from `createFederationApis`:
+
+```typescript
+// src/gqlkit/gqlkit.ts
+import { createGqlkitApis } from "@gqlkit-ts/runtime";
+import { createFederationApis } from "@gqlkit-ts/runtime/federation";
+import type { Context } from "./context.js";
+
+export const { defineQuery, defineField } = createGqlkitApis<Context>();
+export const { defineResolveReference } = createFederationApis<Context>();
+```
+
+```typescript
+// src/gqlkit/schema/user.ts
+export type User = GqlObject<
+  { id: IDString; name: string },
+  { directives: [Key<"id">] }
+>;
+
+export const userReference = defineResolveReference<User>((ref, ctx) =>
+  ctx.users.load(ref.id),
+);
+```
+
+Pass the entity type explicitly. The type of `ref` follows the entity's resolvable keys: here it is `{ readonly __typename: string } & { id: IDString }`, and an entity with several keys gets a union of one such type per key. Values in `ref` are converted as arguments are, so enum values and custom scalars arrive as your resolvers return them.
+
+gqlkit reports:
+
+- `INVALID_REFERENCE_RESOLVER_TARGET` when the type has no resolvable `Key` in this subgraph
+- `DUPLICATE_RESOLVE_REFERENCE` when a type has more than one reference resolver
+- `MISSING_REFERENCE_RESOLVER` when an entity has fields that not every key carries but no reference resolver. Without one, `_entities` returns the reference itself, which is enough only when the key fields and `defineField` resolvers cover the type
+
+A subgraph that only references an entity declares it with its key fields and `Key<..., { resolvable: false }>`, and returns references from its fields:
+
+```typescript
+// posts subgraph
+export type User = GqlObject<
+  { id: IDString },
+  { directives: [Key<"id", { resolvable: false }>] }
+>;
+
+export const author = defineField<Post, NoArgs, User>((post) => ({
+  id: post.authorId,
+}));
+```
+
+`defineResolveReference` is specific to Apollo Federation.
 
 ### Sharing and Hiding Fields
 

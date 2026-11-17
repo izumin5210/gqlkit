@@ -12,8 +12,9 @@ export interface RunningServer {
 export async function serve(
   schema: GraphQLSchema,
   port: number,
+  context: Record<string, unknown>,
 ): Promise<RunningServer> {
-  const yoga = createYoga({ schema, logging: false });
+  const yoga = createYoga({ schema, logging: false, context });
   const server = createServer(yoga);
   await new Promise<void>((resolve) => server.listen(port, resolve));
   const address = server.address() as AddressInfo;

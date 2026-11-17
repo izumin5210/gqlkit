@@ -40,6 +40,10 @@ export const typeDefs: DocumentNode = {
                     kind: "StringValue",
                     value: "@composeDirective",
                   },
+                  {
+                    kind: "StringValue",
+                    value: "@key",
+                  },
                 ],
               },
             },
@@ -138,23 +142,6 @@ export const typeDefs: DocumentNode = {
           kind: "FieldDefinition",
           name: {
             kind: "Name",
-            value: "authorId",
-          },
-          type: {
-            kind: "NonNullType",
-            type: {
-              kind: "NamedType",
-              name: {
-                kind: "Name",
-                value: "ID",
-              },
-            },
-          },
-        },
-        {
-          kind: "FieldDefinition",
-          name: {
-            kind: "Name",
             value: "id",
           },
           type: {
@@ -199,6 +186,102 @@ export const typeDefs: DocumentNode = {
         value: "Query",
       },
       fields: [],
+    },
+    {
+      kind: "ObjectTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "User",
+      },
+      fields: [
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "id",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "ID",
+              },
+            },
+          },
+        },
+      ],
+      description: {
+        kind: "StringValue",
+        value:
+          "Posts subgraph only references User by its key; the gateway fetches the\nother fields from the users subgraph.\n\nDefined in: src/gqlkit/schema/user.ts",
+        block: true,
+      },
+      directives: [
+        {
+          kind: "Directive",
+          name: {
+            kind: "Name",
+            value: "key",
+          },
+          arguments: [
+            {
+              kind: "Argument",
+              name: {
+                kind: "Name",
+                value: "fields",
+              },
+              value: {
+                kind: "StringValue",
+                value: "id",
+              },
+            },
+            {
+              kind: "Argument",
+              name: {
+                kind: "Name",
+                value: "resolvable",
+              },
+              value: {
+                kind: "BooleanValue",
+                value: false,
+              },
+            },
+          ],
+        },
+      ],
+    },
+    {
+      kind: "ObjectTypeExtension",
+      name: {
+        kind: "Name",
+        value: "Post",
+      },
+      fields: [
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "author",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "User",
+              },
+            },
+          },
+          description: {
+            kind: "StringValue",
+            value: "Defined in: src/gqlkit/schema/post.ts",
+            block: true,
+          },
+        },
+      ],
     },
     {
       kind: "ObjectTypeExtension",
@@ -399,6 +482,188 @@ export const typeDefs: DocumentNode = {
         {
           kind: "Name",
           value: "SCHEMA",
+        },
+      ],
+    },
+    {
+      kind: "DirectiveDefinition",
+      name: {
+        kind: "Name",
+        value: "key",
+      },
+      arguments: [
+        {
+          kind: "InputValueDefinition",
+          name: {
+            kind: "Name",
+            value: "fields",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "federation__FieldSet",
+              },
+            },
+          },
+        },
+        {
+          kind: "InputValueDefinition",
+          name: {
+            kind: "Name",
+            value: "resolvable",
+          },
+          type: {
+            kind: "NamedType",
+            name: {
+              kind: "Name",
+              value: "Boolean",
+            },
+          },
+          defaultValue: {
+            kind: "BooleanValue",
+            value: true,
+          },
+        },
+      ],
+      repeatable: true,
+      locations: [
+        {
+          kind: "Name",
+          value: "OBJECT",
+        },
+        {
+          kind: "Name",
+          value: "INTERFACE",
+        },
+      ],
+    },
+    {
+      kind: "ScalarTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "federation__FieldSet",
+      },
+    },
+    {
+      kind: "ScalarTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "_Any",
+      },
+    },
+    {
+      kind: "UnionTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "_Entity",
+      },
+      types: [
+        {
+          kind: "NamedType",
+          name: {
+            kind: "Name",
+            value: "User",
+          },
+        },
+      ],
+    },
+    {
+      kind: "ObjectTypeDefinition",
+      name: {
+        kind: "Name",
+        value: "_Service",
+      },
+      fields: [
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "sdl",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "String",
+              },
+            },
+          },
+        },
+      ],
+    },
+    {
+      kind: "ObjectTypeExtension",
+      name: {
+        kind: "Name",
+        value: "Query",
+      },
+      fields: [
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "_entities",
+          },
+          arguments: [
+            {
+              kind: "InputValueDefinition",
+              name: {
+                kind: "Name",
+                value: "representations",
+              },
+              type: {
+                kind: "NonNullType",
+                type: {
+                  kind: "ListType",
+                  type: {
+                    kind: "NonNullType",
+                    type: {
+                      kind: "NamedType",
+                      name: {
+                        kind: "Name",
+                        value: "_Any",
+                      },
+                    },
+                  },
+                },
+              },
+            },
+          ],
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "ListType",
+              type: {
+                kind: "NamedType",
+                name: {
+                  kind: "Name",
+                  value: "_Entity",
+                },
+              },
+            },
+          },
+        },
+        {
+          kind: "FieldDefinition",
+          name: {
+            kind: "Name",
+            value: "_service",
+          },
+          type: {
+            kind: "NonNullType",
+            type: {
+              kind: "NamedType",
+              name: {
+                kind: "Name",
+                value: "_Service",
+              },
+            },
+          },
         },
       ],
     },

@@ -3,7 +3,7 @@
 extend schema
   @link(
     url: "https://specs.apollo.dev/federation/v2.9"
-    import: ["@composeDirective"]
+    import: ["@composeDirective", "@key"]
   )
   @link(url: "https://example.com/redact/v1.0", import: ["@redact"])
   @composeDirective(name: "@redact")
@@ -17,9 +17,11 @@ directive @redact on ARGUMENT_DEFINITION | FIELD_DEFINITION
 type Query
 
 """
+Users subgraph owns User and resolves it for other subgraphs.
+
 Defined in: src/gqlkit/schema/user.ts
 """
-type User {
+type User @key(fields: "id") {
   email: String! @redact
   id: ID!
   name: String!
