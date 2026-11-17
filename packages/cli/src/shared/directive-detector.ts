@@ -265,21 +265,10 @@ async function extractDirectiveFromType(
   };
 }
 
-/**
- * Detects directive metadata from a TypeScript type.
- *
- * This function analyzes TypeScript types to detect directive metadata:
- * - Intersection types with " $gqlkitFieldMeta" or " $gqlkitTypeMeta" property indicate directives
- * - Each directive has a name and optional arguments
- * - Arguments are resolved from TypeScript literal types
- *
- * @param type - The TypeScript type to analyze
- * @param checker - The TypeScript type checker
- * @returns Detection result with directives and any errors
- */
-export async function detectDirectiveMetadata(
+async function detectDirectiveMetadataOn(
   type: Type,
   checker: CheckerLoader,
+  propertyNames: ReadonlyArray<string>,
 ): Promise<DirectiveDetectionResult> {
   // Own + intersection tiers: stop at the first metadata property found,
   // regardless of what it extracts to (matches the pre-unification behavior
@@ -287,7 +276,7 @@ export async function detectDirectiveMetadata(
   const metaProp = await findMetadataProperty({
     checker,
     type,
-    propertyNames: [FIELD_META_PROPERTY, TYPE_META_PROPERTY],
+    propertyNames,
     recurseUnion: false,
   });
   if (metaProp) {
@@ -304,13 +293,64 @@ export async function detectDirectiveMetadata(
       if (isNullOrUndefined(member)) {
         continue;
       }
-      const result = await detectDirectiveMetadata(member, checker);
+      const result = await detectDirectiveMetadataOn(
+        member,
+        checker,
+        propertyNames,
+      );
       if (result.directives.length > 0) {
         return result;
       }
     }
   }
   return createEmptyResult();
+}
+
+/**
+ * Detects the directives of a type declaration: those of `GqlObject` (or of
+ * `GqlField` when the declaration itself is one).
+ *
+ * @param type - The TypeScript type to analyze
+ * @param checker - The TypeScript type checker
+ * @returns Detection result with directives and any errors
+ */
+export async function detectDirectiveMetadata(
+  type: Type,
+  checker: CheckerLoader,
+): Promise<DirectiveDetectionResult> {
+  return detectDirectiveMetadataOn(type, checker, [
+    FIELD_META_PROPERTY,
+    TYPE_META_PROPERTY,
+  ]);
+}
+
+/**
+ * Detects the directives of a field from its own `GqlField`. A field whose
+ * type is a `GqlObject` does not take that type's directives.
+ */
+export async function detectFieldDirectiveMetadata(
+  type: Type,
+  checker: CheckerLoader,
+): Promise<DirectiveDetectionResult> {
+  return detectDirectiveMetadataOn(type, checker, [FIELD_META_PROPERTY]);
+}
+
+/**
+ * Checks whether a field type is wrapped with `GqlField`. A `GqlObject`
+ * type carries metadata as well, but it is the field's type, not a wrapper
+ * to unwrap.
+ */
+export async function hasFieldMetadata(
+  type: Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
+  const metaProp = await findMetadataProperty({
+    checker,
+    type,
+    propertyNames: [FIELD_META_PROPERTY],
+    recurseUnion: true,
+  });
+  return metaProp !== undefined;
 }
 
 async function detectDirectiveMetadataFromProperty(
@@ -456,107 +496,98 @@ export async function hasDirectiveMetadata(
 }
 
 /**
- * Unwraps a GqlField or GqlObject type and returns the base type.
- * For GqlField<T, Meta> which is T & { " $gqlkitFieldMeta"?: ...; " $gqlkitOriginalType"?: T },
- * this extracts and returns T from the $gqlkitOriginalType property.
+ * Reads `T` from the `$gqlkitOriginalType` of a `GqlField` marker, which
+ * keeps the nullability that TypeScript drops when it normalizes
+ * `(T | null) & Marker` to `(T & Marker) | null`.
+ */
+async function readFieldOriginalType(
+  marker: Type,
+  checker: CheckerLoader,
+): Promise<Type | null> {
+  const originalTypeProp = await checker.getPropertyOfType(
+    marker,
+    ORIGINAL_TYPE_PROPERTY,
+  );
+  if (!originalTypeProp) {
+    return null;
+  }
+  const rawOriginalType = await checker.getTypeOfSymbol(originalTypeProp);
+  return (await getActualMetadataType(rawOriginalType, checker)) ?? null;
+}
+
+async function hasOwnFieldMeta(
+  type: Type,
+  checker: CheckerLoader,
+): Promise<boolean> {
+  return (
+    (await checker.getPropertyOfType(type, FIELD_META_PROPERTY)) !== undefined
+  );
+}
+
+/**
+ * Unwraps a `GqlField<T, Meta>` field type and returns `T`.
  *
- * The $gqlkitOriginalType property preserves nullability information that would otherwise
- * be lost due to TypeScript's union type normalization.
+ * Only the `GqlField` wrapper is removed. A `GqlObject` type carries an
+ * original type as well, but there it is the field's type and must keep its
+ * name, so its markers are never mistaken for the `GqlField` ones.
  *
- * If the type is not wrapped with GqlField or GqlObject, returns the original type.
+ * If the type is not wrapped with GqlField, returns the original type.
  */
 export async function unwrapDirectiveType(
   type: Type,
   checker: CheckerLoader,
 ): Promise<Type> {
-  // 1. Check aliasTypeArguments first (most reliable)
-  //    Get T directly from GqlField<T, Meta> or GqlObject<T, Meta>
-  //    This works when the type alias hasn't been expanded by TypeScript
-  //    We detect GqlField/GqlObject by checking for metadata properties, not by type name.
+  // 1. The GqlField alias itself: its first type argument is T.
+  const aliasArgs = await checker.getAliasTypeArgumentsOfType(type);
   if (
-    (await checker.getAliasTypeArgumentsOfType(type)) &&
-    (await checker.getAliasTypeArgumentsOfType(type)).length > 0
+    aliasArgs &&
+    aliasArgs.length > 0 &&
+    (await hasOwnFieldMeta(type, checker))
   ) {
-    const metaProp = await getMetaProperty(type, checker);
-    const originalTypeProp = await checker.getPropertyOfType(
-      type,
-      ORIGINAL_TYPE_PROPERTY,
-    );
-    if (metaProp || originalTypeProp) {
-      return (await checker.getAliasTypeArgumentsOfType(type))[0]!;
-    }
+    return aliasArgs[0]!;
   }
 
-  // 2. Check intersection members' aliasTypeArguments
-  //    When TypeScript expands the type alias to an intersection,
-  //    one of the intersection members might still have aliasTypeArguments
   if (type.isIntersectionType()) {
-    for (const member of await checker.getTypesOfType(type)) {
+    const members = await checker.getTypesOfType(type);
+
+    // 2. A member that is still the GqlField alias.
+    for (const member of members) {
+      const memberAliasArgs = await checker.getAliasTypeArgumentsOfType(member);
       if (
-        (await checker.getAliasTypeArgumentsOfType(member)) &&
-        (await checker.getAliasTypeArgumentsOfType(member)).length > 0
+        memberAliasArgs &&
+        memberAliasArgs.length > 0 &&
+        (await hasOwnFieldMeta(member, checker))
       ) {
-        const memberMetaProp = await getMetaProperty(member, checker);
-        const memberOriginalTypeProp = await checker.getPropertyOfType(
-          member,
-          ORIGINAL_TYPE_PROPERTY,
-        );
-        if (memberMetaProp || memberOriginalTypeProp) {
-          return (await checker.getAliasTypeArgumentsOfType(member))[0]!;
-        }
+        return memberAliasArgs[0]!;
       }
     }
-  }
 
-  // 3. Fall back to $gqlkitOriginalType property
-  // This property preserves the original type information including array types.
-  // The type's symbol name may be __type (internal TypeScript symbol), but that's
-  // handled by the caller using checker.typeToString() for correct type name resolution.
-  const originalTypeProp = await checker.getPropertyOfType(
-    type,
-    ORIGINAL_TYPE_PROPERTY,
-  );
-  if (originalTypeProp) {
-    const rawOriginalType = await checker.getTypeOfSymbol(originalTypeProp);
-    const originalType = await getActualMetadataType(rawOriginalType, checker);
-    if (originalType) {
-      return originalType;
-    }
-  }
-
-  // Check intersection members for $gqlkitOriginalType
-  if (type.isIntersectionType()) {
-    for (const member of await checker.getTypesOfType(type)) {
-      const originalProp = await checker.getPropertyOfType(
-        member,
-        ORIGINAL_TYPE_PROPERTY,
-      );
-      if (originalProp) {
-        const rawOriginalType = await checker.getTypeOfSymbol(originalProp);
-        const originalType = await getActualMetadataType(
-          rawOriginalType,
-          checker,
-        );
+    // 3. The GqlField marker member, whose original type is T. Other
+    //    members may be the markers of a GqlObject T, whose original type
+    //    is T's unnamed object shape instead.
+    for (const member of members) {
+      if (await hasOwnFieldMeta(member, checker)) {
+        const originalType = await readFieldOriginalType(member, checker);
         if (originalType) {
           return originalType;
         }
       }
     }
 
-    // Fallback: filter out metadata members
-    const nonDirectiveMembers: Type[] = [];
-    for (const member of await checker.getTypesOfType(type)) {
-      const metaProp = await getMetaProperty(member, checker);
-      const originalTypeProp = await checker.getPropertyOfType(
-        member,
-        ORIGINAL_TYPE_PROPERTY,
-      );
-      if (!metaProp && !originalTypeProp) {
-        nonDirectiveMembers.push(member);
+    // 4. Fallback: the only member that is not the GqlField marker.
+    const nonMarkerMembers: Type[] = [];
+    for (const member of members) {
+      if (!(await hasOwnFieldMeta(member, checker))) {
+        nonMarkerMembers.push(member);
       }
     }
-    if (nonDirectiveMembers.length === 1 && nonDirectiveMembers[0]) {
-      return nonDirectiveMembers[0];
+    if (nonMarkerMembers.length === 1 && nonMarkerMembers[0]) {
+      return nonMarkerMembers[0];
+    }
+  } else if (await hasOwnFieldMeta(type, checker)) {
+    const originalType = await readFieldOriginalType(type, checker);
+    if (originalType) {
+      return originalType;
     }
   }
 
@@ -565,11 +596,9 @@ export async function unwrapDirectiveType(
   // Nullability is handled separately in the type-extractor.
   if (type.isUnionType()) {
     for (const member of await checker.getTypesOfType(type)) {
-      // Skip null/undefined members
       if (isNullOrUndefined(member)) {
         continue;
       }
-      // Recursively unwrap if this member has metadata
       const unwrapped = await unwrapDirectiveType(member, checker);
       if (unwrapped !== member) {
         return unwrapped;

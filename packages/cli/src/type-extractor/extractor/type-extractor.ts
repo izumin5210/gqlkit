@@ -49,7 +49,9 @@ import { prefetchPropertyFacts } from "../../shared/checker-prefetch.js";
 import { detectDefaultValueMetadata } from "../../shared/default-value-detector.js";
 import {
   detectDirectiveMetadata,
+  detectFieldDirectiveMetadata,
   hasDirectiveMetadata,
+  hasFieldMetadata,
   unwrapDirectiveType,
 } from "../../shared/directive-detector.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
@@ -240,8 +242,11 @@ export async function extractFieldsFromType(
     let directiveNullable = false;
     let defaultValue: DirectiveArgumentValue | null = null;
 
-    if (await hasDirectiveMetadata(propType, checker)) {
-      const directiveResult = await detectDirectiveMetadata(propType, checker);
+    if (await hasFieldMetadata(propType, checker)) {
+      const directiveResult = await detectFieldDirectiveMetadata(
+        propType,
+        checker,
+      );
       if (directiveResult.directives.length > 0) {
         directives = directiveResult.directives;
       }
