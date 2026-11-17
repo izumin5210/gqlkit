@@ -99,8 +99,10 @@ export function completeResolverExtraction(
   };
 }
 
-export interface ExtractResolversParams
-  extends Omit<ExtractResolverDefinitionsParams, "files"> {
+export interface ExtractResolversParams extends Omit<
+  ExtractResolverDefinitionsParams,
+  "files"
+> {
   /** Names of types already extracted from `GqlObject`/`GqlInterface`/etc. declarations (type-extractor's stage). */
   readonly declaredTypeNames: ReadonlyArray<string>;
   /** Custom scalar names, both config-declared and auto-detected. */
