@@ -521,13 +521,10 @@ export const typeDefs: DocumentNode = {
             "value": "legacyFlag"
           },
           "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "Boolean"
-              }
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
             }
           },
           "directives": [
@@ -580,13 +577,10 @@ export const typeDefs: DocumentNode = {
             "value": "notifications"
           },
           "type": {
-            "kind": "NonNullType",
-            "type": {
-              "kind": "NamedType",
-              "name": {
-                "kind": "Name",
-                "value": "Boolean"
-              }
+            "kind": "NamedType",
+            "name": {
+              "kind": "Name",
+              "value": "Boolean"
             }
           },
           "description": {
@@ -1378,13 +1372,10 @@ export const typeDefs: DocumentNode = {
                 "value": "notifications"
               },
               "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "Boolean"
-                  }
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Boolean"
                 }
               },
               "description": {
@@ -1423,13 +1414,10 @@ export const typeDefs: DocumentNode = {
                 "value": "legacyFlag"
               },
               "type": {
-                "kind": "NonNullType",
-                "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "Boolean"
-                  }
+                "kind": "NamedType",
+                "name": {
+                  "kind": "Name",
+                  "value": "Boolean"
                 }
               },
               "directives": [

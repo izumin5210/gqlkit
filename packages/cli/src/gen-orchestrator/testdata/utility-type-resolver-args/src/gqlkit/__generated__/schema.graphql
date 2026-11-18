@@ -70,11 +70,11 @@ input UpdateProfileWithPartialInput {
 
 """Defined in: src/gqlkit/schema/types.ts"""
 input UpdateSettingsWithDeprecatedInput {
-  legacyFlag: Boolean! @deprecated(reason: """No longer supported""")
+  legacyFlag: Boolean @deprecated(reason: """No longer supported""")
   """New notification preferences"""
   notificationPreferences: String
   """Legacy notification setting"""
-  notifications: Boolean! @deprecated(reason: """Use notificationPreferences instead""")
+  notifications: Boolean @deprecated(reason: """Use notificationPreferences instead""")
 }
 
 extend type Mutation {
@@ -208,8 +208,8 @@ extend type Mutation {
   """
   updateSettingsDirectDeprecated(
     """Legacy notification setting"""
-    notifications: Boolean! @deprecated(reason: """Use notificationPreferences instead""")
-    legacyFlag: Boolean! @deprecated(reason: """No longer supported""")
+    notifications: Boolean @deprecated(reason: """Use notificationPreferences instead""")
+    legacyFlag: Boolean @deprecated(reason: """No longer supported""")
   ): User!
   """
   Update settings using Omit to test deprecated fields inheritance.

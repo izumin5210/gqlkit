@@ -49,11 +49,11 @@ export type SettingsInput = {
    * Legacy notification setting
    * @deprecated Use notificationPreferences instead
    */
-  notifications: boolean;
+  notifications: boolean | null;
   /**
    * @deprecated
    */
-  legacyFlag: boolean;
+  legacyFlag: boolean | null;
   /** New notification preferences */
   notificationPreferences: string | null;
 };

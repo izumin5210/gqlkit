@@ -74,7 +74,7 @@ type MemberLegacyProfile {
   bio: String!
   legacyField: Boolean! @deprecated(reason: """No longer supported""")
   """Old identifier"""
-  oldId: String! @deprecated(reason: """Use newId instead""")
+  oldId: String @deprecated(reason: """Use newId instead""")
 }
 
 type Mutation
@@ -210,7 +210,7 @@ extend type Mutation {
   """
   updateMemberWithDeprecated(
     """Old identifier"""
-    oldId: String! @deprecated(reason: """Use newId instead""")
+    oldId: String @deprecated(reason: """Use newId instead""")
     """New identifier"""
     newId: String!
     """User's biography"""
