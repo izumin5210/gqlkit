@@ -27,7 +27,7 @@
     "@vitest/coverage-v8": "5.1.0",
     "dependency-cruiser": "18.7.2",
     "graphql": "catalog:",
-    "knip": "6.15.0",
+    "knip": "6.45.1",
     "lefthook": "2.2.2",
     "oxfmt": "0.77.0",
     "oxlint": "1.92.0",
