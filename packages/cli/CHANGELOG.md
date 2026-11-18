@@ -1,5 +1,67 @@
 # @gqlkit-ts/cli
 
+## 0.8.0
+
+### Minor Changes
+
+- [#409](https://github.com/izumin5210/gqlkit/pull/409) [`4a52012`](https://github.com/izumin5210/gqlkit/commit/4a5201228adaf8e4d98230541c0383d8211f4d73) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: generate Apollo Federation v2 subgraphs with the `federation` config
+
+- [#413](https://github.com/izumin5210/gqlkit/pull/413) [`ff6afd5`](https://github.com/izumin5210/gqlkit/commit/ff6afd5de1240e8a161487daeae91ce7adb0a375) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: add Apollo Federation directives `Key`, `Shareable`, and `Inaccessible`
+
+- [#414](https://github.com/izumin5210/gqlkit/pull/414) [`dcfbfaa`](https://github.com/izumin5210/gqlkit/commit/dcfbfaad6e03581719f7592b7d0fd7eb0e8f67cc) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: resolve Apollo Federation entities with `defineResolveReference`
+
+- [#342](https://github.com/izumin5210/gqlkit/pull/342) [`ad59e30`](https://github.com/izumin5210/gqlkit/commit/ad59e30e4d1660c0996afc5cf8c924f1383c2aa6) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: prune types unreachable from root operation types by default
+
+  **BREAKING CHANGE**: generated schema/typeDefs now omit types not reachable from Query/Mutation/Subscription. Set `output.pruning: false` in gqlkit.config.ts to keep the previous output.
+
+- [#347](https://github.com/izumin5210/gqlkit/pull/347) [`31f62f4`](https://github.com/izumin5210/gqlkit/commit/31f62f4137de6513598f91e88b740052e29bc39c) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: remove legacy scalar mapping config format
+
+  **BREAKING CHANGE**: the undocumented `{ graphqlName, type }` scalar mapping shape is no longer accepted; use `{ name, tsType }` (see configuration docs). The validator now explains the migration inline.
+
+- [#381](https://github.com/izumin5210/gqlkit/pull/381) [`490775c`](https://github.com/izumin5210/gqlkit/commit/490775c3ae42fbab929500b1cee6045ebe3b6e94) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: analyze sources with the TypeScript 7 native API
+
+  **BREAKING CHANGE**: `@gqlkit-ts/cli` now requires `typescript` 7.1 or later; TypeScript 5.x and 6.x are no longer supported. Values of enums generated from string literal unions follow TypeScript 7's union ordering, which can differ from declaration order.
+
+- [#347](https://github.com/izumin5210/gqlkit/pull/347) [`31f62f4`](https://github.com/izumin5210/gqlkit/commit/31f62f4137de6513598f91e88b740052e29bc39c) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: validate type references in resolver arguments and return types
+
+  **BREAKING CHANGE**: resolvers referencing unknown type names now fail generation with UNSUPPORTED_RETURN_TYPE/UNKNOWN_ARGUMENT_TYPE instead of emitting dangling references.
+
+### Patch Changes
+
+- [#262](https://github.com/izumin5210/gqlkit/pull/262) [`5b7a4b3`](https://github.com/izumin5210/gqlkit/commit/5b7a4b362a040cd02fc8d6d8dfdd164fd33206f2) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: preserve re-exported inline union members
+
+- [#433](https://github.com/izumin5210/gqlkit/pull/433) [`10d0616`](https://github.com/izumin5210/gqlkit/commit/10d0616d57264c686e0344e85f04d29be94d4aca) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: report a diagnostic for @deprecated on required arguments and input fields
+
+- [#341](https://github.com/izumin5210/gqlkit/pull/341) [`25a12a2`](https://github.com/izumin5210/gqlkit/commit/25a12a295a971cf714786318ca1a7be2b20e3451) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: emit directives on resolver arguments
+
+- [#347](https://github.com/izumin5210/gqlkit/pull/347) [`31f62f4`](https://github.com/izumin5210/gqlkit/commit/31f62f4137de6513598f91e88b740052e29bc39c) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: express type-level deprecation in the description and on members instead of an invalid `@deprecated` on the type
+
+- [#418](https://github.com/izumin5210/gqlkit/pull/418) [`6a0709c`](https://github.com/izumin5210/gqlkit/commit/6a0709c6bda3a37774bf8d659f3469ea699077dd) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: emit non-exported types referenced from resolvers, as input types where they are used as inputs
+
+- [#340](https://github.com/izumin5210/gqlkit/pull/340) [`6cd2d50`](https://github.com/izumin5210/gqlkit/commit/6cd2d5033d0f5b1173689f73e134c788e7f7a0a9) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: fail generation when directive definitions are invalid
+
+- [#340](https://github.com/izumin5210/gqlkit/pull/340) [`6cd2d50`](https://github.com/izumin5210/gqlkit/commit/6cd2d5033d0f5b1173689f73e134c788e7f7a0a9) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: point duplicate-typename diagnostics at the first type by name
+
+- [#340](https://github.com/izumin5210/gqlkit/pull/340) [`6cd2d50`](https://github.com/izumin5210/gqlkit/commit/6cd2d5033d0f5b1173689f73e134c788e7f7a0a9) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: handle string error codes from hook spawn failures
+
+- [#340](https://github.com/izumin5210/gqlkit/pull/340) [`6cd2d50`](https://github.com/izumin5210/gqlkit/commit/6cd2d5033d0f5b1173689f73e134c788e7f7a0a9) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: classify re-exported GqlInterface types as GraphQL interfaces
+
+- [#340](https://github.com/izumin5210/gqlkit/pull/340) [`6cd2d50`](https://github.com/izumin5210/gqlkit/commit/6cd2d5033d0f5b1173689f73e134c788e7f7a0a9) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: report cycle diagnostics for resolver argument and return types
+
+- [#405](https://github.com/izumin5210/gqlkit/pull/405) [`b47aa3d`](https://github.com/izumin5210/gqlkit/commit/b47aa3df56220ff953706c3f4bd25f043017a96d) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: accept graphql 16.9 and later as a peer dependency
+
+- [#400](https://github.com/izumin5210/gqlkit/pull/400) [`055a5cc`](https://github.com/izumin5210/gqlkit/commit/055a5cc1252f86d218b2169a4cf5a9eeaf62b4a0) Thanks [@izumin5210](https://github.com/izumin5210)! - perf: generate large schemas faster
+
+  Projects with enough source extract types and resolvers in parallel ranges of files, on worker threads with their own `tsc` process each (up to four, depending on the available cores). Generated output is the same as before.
+
+- [#417](https://github.com/izumin5210/gqlkit/pull/417) [`f33ef64`](https://github.com/izumin5210/gqlkit/commit/f33ef64b1e362824d632b0ae4e59e527e4b486ac) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: skip resolver arguments whose names are not valid GraphQL identifiers, and exclude `__typename`/`$typeName` arguments, instead of emitting invalid SDL
+
+- [#347](https://github.com/izumin5210/gqlkit/pull/347) [`31f62f4`](https://github.com/izumin5210/gqlkit/commit/31f62f4137de6513598f91e88b740052e29bc39c) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: report unresolvable default values on resolver arguments
+
+- [#340](https://github.com/izumin5210/gqlkit/pull/340) [`6cd2d50`](https://github.com/izumin5210/gqlkit/commit/6cd2d5033d0f5b1173689f73e134c788e7f7a0a9) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: surface file-write error details
+
+- [#410](https://github.com/izumin5210/gqlkit/pull/410) [`341fd5a`](https://github.com/izumin5210/gqlkit/commit/341fd5a38a7a922347eecfc7568bacedc3b059ce) Thanks [@izumin5210](https://github.com/izumin5210)! - fix: keep a GqlObject type's directives off the fields that return it
+
 ## 0.7.2
 
 ### Patch Changes
