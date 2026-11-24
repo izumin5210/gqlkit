@@ -122,6 +122,20 @@ export const typeDefs: DocumentNode = {
             "kind": "Name",
             "value": "Entity"
           }
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Node"
+          }
+        },
+        {
+          "kind": "NamedType",
+          "name": {
+            "kind": "Name",
+            "value": "Timestamped"
+          }
         }
       ]
     },

@@ -1,3 +1,4 @@
+import { collectTransitiveInterfaces } from "../core/index.js";
 import type { ExtractedTypeInfo } from "../type-extractor/index.js";
 import {
   extractTypenameValue,
@@ -153,10 +154,32 @@ function extractTypenames(
   }
 
   if (abstractType.metadata.kind === "graphqlInterface") {
+    const interfaceParents = new Map<string, ReadonlyArray<string>>();
+    for (const typeInfo of typeMap.values()) {
+      if (
+        typeInfo.metadata.kind === "graphqlInterface" &&
+        typeInfo.implementedInterfaces
+      ) {
+        interfaceParents.set(
+          typeInfo.metadata.name,
+          typeInfo.implementedInterfaces,
+        );
+      }
+    }
+
+    // Only concrete types can be resolved to, and they count for every
+    // interface they implement transitively, matching the schema's
+    // possible types.
     const implementers: ExtractedTypeInfo[] = [];
     for (const typeInfo of typeMap.values()) {
       if (
-        typeInfo.implementedInterfaces?.includes(abstractType.metadata.name)
+        typeInfo.metadata.kind !== "graphqlInterface" &&
+        typeInfo.implementedInterfaces &&
+        collectTransitiveInterfaces({
+          typeName: typeInfo.metadata.name,
+          declaredInterfaces: typeInfo.implementedInterfaces,
+          interfaceParents,
+        }).includes(abstractType.metadata.name)
       ) {
         implementers.push(typeInfo);
       }

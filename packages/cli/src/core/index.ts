@@ -19,6 +19,10 @@ export type {
   GraphQLTypeInfo,
   GraphQLTypeKind,
 } from "./graphql-types.js";
+export {
+  type CollectTransitiveInterfacesParams,
+  collectTransitiveInterfaces,
+} from "./interface-hierarchy.js";
 export type {
   DeprecationInfo,
   DirectiveArgument,
