@@ -1,0 +1,22 @@
+[
+  {
+    "code": "INPUT_TYPE_IN_OUTPUT",
+    "message": "Field 'action' of 'Task' uses input type 'ActionInput' as its type. Input types can only be used in input positions.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 10,
+      "column": 3
+    }
+  },
+  {
+    "code": "INPUT_TYPE_IN_OUTPUT",
+    "message": "Field 'action' of 'Query' returns input type 'ActionInput'. Input types can only be used in input positions.",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/types.ts",
+      "line": 24,
+      "column": 14
+    }
+  }
+]

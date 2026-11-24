@@ -2,7 +2,6 @@
 
 """Defined in: src/gqlkit/schema/types.ts"""
 type Task {
-  action: PendingActionInput
   id: String!
 }
 
