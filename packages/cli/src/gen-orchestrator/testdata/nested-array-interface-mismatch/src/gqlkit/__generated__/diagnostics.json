@@ -1,0 +1,12 @@
+[
+  {
+    "code": "INTERFACE_FIELD_TYPE_MISMATCH",
+    "message": "Type 'Polygon' field 'points' has incompatible type with interface 'Shape'",
+    "severity": "error",
+    "location": {
+      "file": "src/gqlkit/schema/shape.ts",
+      "line": 1,
+      "column": 1
+    }
+  }
+]

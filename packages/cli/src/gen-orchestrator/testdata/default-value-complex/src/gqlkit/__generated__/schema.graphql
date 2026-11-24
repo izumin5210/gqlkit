@@ -31,7 +31,7 @@ type Task {
 """Defined in: src/gqlkit/schema/types.ts"""
 input AdvancedInput {
   enumList: [Status!]! = [ACTIVE, PENDING]
-  nestedArray: [String!]! = [["a", "b"], ["c", "d"]]
+  nestedArray: [[String!]!]! = [["a", "b"], ["c", "d"]]
 }
 
 """Defined in: src/gqlkit/schema/types.ts"""
@@ -49,7 +49,7 @@ input SettingsInput {
 
 extend type Query {
   """Defined in: src/gqlkit/schema/types.ts"""
-  advanced(nestedArray: [String!]! = [["a", "b"], ["c", "d"]], enumList: [Status!]! = [ACTIVE, PENDING]): String!
+  advanced(nestedArray: [[String!]!]! = [["a", "b"], ["c", "d"]], enumList: [Status!]! = [ACTIVE, PENDING]): String!
   """Defined in: src/gqlkit/schema/types.ts"""
   settings(config: NestedConfig! = {enabled: true, value: 100}, limits: [Int!]! = [10, 20, 30]): NestedConfig!
   """Defined in: src/gqlkit/schema/types.ts"""

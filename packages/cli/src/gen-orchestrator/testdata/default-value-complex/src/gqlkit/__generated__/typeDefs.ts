@@ -235,10 +235,16 @@ export const typeDefs: DocumentNode = {
               "type": {
                 "kind": "NonNullType",
                 "type": {
-                  "kind": "NamedType",
-                  "name": {
-                    "kind": "Name",
-                    "value": "String"
+                  "kind": "ListType",
+                  "type": {
+                    "kind": "NonNullType",
+                    "type": {
+                      "kind": "NamedType",
+                      "name": {
+                        "kind": "Name",
+                        "value": "String"
+                      }
+                    }
                   }
                 }
               }
@@ -511,10 +517,16 @@ export const typeDefs: DocumentNode = {
                   "type": {
                     "kind": "NonNullType",
                     "type": {
-                      "kind": "NamedType",
-                      "name": {
-                        "kind": "Name",
-                        "value": "String"
+                      "kind": "ListType",
+                      "type": {
+                        "kind": "NonNullType",
+                        "type": {
+                          "kind": "NamedType",
+                          "name": {
+                            "kind": "Name",
+                            "value": "String"
+                          }
+                        }
                       }
                     }
                   }

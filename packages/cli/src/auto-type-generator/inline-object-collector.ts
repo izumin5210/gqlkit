@@ -1,8 +1,9 @@
-import type {
-  DeprecationInfo,
-  PropertyDef,
-  SourceLocation,
-  TSTypeReference,
+import {
+  getInnermostElementType,
+  type DeprecationInfo,
+  type PropertyDef,
+  type SourceLocation,
+  type TSTypeReference,
 } from "../core/index.js";
 import type {
   ExtractResolversResult,
@@ -64,16 +65,17 @@ function getInlineObjectTypeInfo(
     };
   }
 
+  const elementType =
+    tsType.kind === "array" ? getInnermostElementType(tsType) : null;
   if (
-    tsType.kind === "array" &&
-    tsType.elementType?.kind === "inlineObject" &&
-    tsType.elementType.inlineObjectProperties
+    elementType?.kind === "inlineObject" &&
+    elementType.inlineObjectProperties
   ) {
     return {
-      properties: tsType.elementType.inlineObjectProperties,
-      nullable: tsType.elementType.nullable,
-      description: tsType.elementType.inlineObjectDescription,
-      deprecated: tsType.elementType.inlineObjectDeprecated,
+      properties: elementType.inlineObjectProperties,
+      nullable: elementType.nullable,
+      description: elementType.inlineObjectDescription,
+      deprecated: elementType.inlineObjectDeprecated,
     };
   }
 

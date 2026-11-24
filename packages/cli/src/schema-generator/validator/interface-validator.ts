@@ -104,6 +104,7 @@ interface FieldType {
   readonly nullable: boolean;
   readonly list: boolean;
   readonly listItemNullable: boolean | null;
+  readonly innerListNullables: ReadonlyArray<boolean>;
 }
 
 function isTypeCompatible(
@@ -123,6 +124,22 @@ function isTypeCompatible(
   }
 
   if (implementingType.list) {
+    if (
+      implementingType.innerListNullables.length !==
+      interfaceType.innerListNullables.length
+    ) {
+      return false;
+    }
+
+    // As with the outermost list, an implementation may make a nullable
+    // inner list non-null, but not the reverse.
+    const narrowsEveryInnerList = implementingType.innerListNullables.every(
+      (nullable, i) => !nullable || interfaceType.innerListNullables[i],
+    );
+    if (!narrowsEveryInnerList) {
+      return false;
+    }
+
     if (implementingType.listItemNullable && !interfaceType.listItemNullable) {
       return false;
     }

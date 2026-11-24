@@ -65,6 +65,49 @@ export function createArrayType(elementType: TSTypeReference): TSTypeReference {
   return createTSTypeReference({ kind: "array", overrides: { elementType } });
 }
 
+/**
+ * The non-array type at the bottom of any number of nested arrays, or the
+ * type itself when it is not an array. Null when an array has no known
+ * element type.
+ */
+export function getInnermostElementType(
+  tsType: TSTypeReference,
+): TSTypeReference | null {
+  let current: TSTypeReference | null = tsType;
+  while (current?.kind === "array") {
+    current = current.elementType;
+  }
+  return current;
+}
+
+interface ReplaceInnermostElementTypeParams {
+  readonly tsType: TSTypeReference;
+  readonly replace: (element: TSTypeReference) => TSTypeReference;
+}
+
+/**
+ * Rebuilds `tsType` with the type returned by `replace` in place of its
+ * innermost element type, keeping every array level around it.
+ */
+export function replaceInnermostElementType(
+  params: ReplaceInnermostElementTypeParams,
+): TSTypeReference {
+  const { tsType, replace } = params;
+  if (tsType.kind !== "array") {
+    return replace(tsType);
+  }
+  if (tsType.elementType === null) {
+    return tsType;
+  }
+  return {
+    ...tsType,
+    elementType: replaceInnermostElementType({
+      tsType: tsType.elementType,
+      replace,
+    }),
+  };
+}
+
 interface CreateUnionTypeParams {
   readonly members: ReadonlyArray<TSTypeReference>;
   readonly nullable: boolean;

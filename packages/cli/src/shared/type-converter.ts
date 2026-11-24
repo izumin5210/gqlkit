@@ -57,106 +57,27 @@ export function convertTsTypeToGraphQLType(
   const nullable = tsType.nullable || optional;
 
   if (tsType.kind === "array") {
-    const elementType = tsType.elementType;
-    const elementTypeName = elementType
-      ? convertElementTypeName(elementType)
-      : "String";
-    const listItemNullable = elementType?.nullable ?? false;
+    const innerListNullables: boolean[] = [];
+    let elementType = tsType.elementType;
+    while (elementType?.kind === "array") {
+      innerListNullables.push(elementType.nullable);
+      elementType = elementType.elementType;
+    }
 
     return {
-      typeName: elementTypeName,
+      typeName: elementType ? convertElementTypeName(elementType) : "String",
       nullable,
       list: true,
-      listItemNullable,
-    };
-  }
-
-  if (tsType.kind === "scalar") {
-    return {
-      typeName: tsType.scalarInfo?.scalarName ?? tsType.name ?? "String",
-      nullable,
-      list: false,
-      listItemNullable: null,
-    };
-  }
-
-  if (tsType.kind === "primitive") {
-    const graphqlType = PRIMITIVE_TYPE_MAP[tsType.name ?? ""] ?? "String";
-    return {
-      typeName: graphqlType,
-      nullable,
-      list: false,
-      listItemNullable: null,
-    };
-  }
-
-  if (tsType.kind === "reference") {
-    return {
-      typeName: tsType.name ?? "Unknown",
-      nullable,
-      list: false,
-      listItemNullable: null,
-    };
-  }
-
-  if (tsType.kind === "inlineObject") {
-    return {
-      typeName: "__INLINE_OBJECT__",
-      nullable,
-      list: false,
-      listItemNullable: null,
-    };
-  }
-
-  if (tsType.kind === "inlineEnum") {
-    return {
-      typeName: "__INLINE_ENUM__",
-      nullable,
-      list: false,
-      listItemNullable: null,
-    };
-  }
-
-  if (tsType.kind === "union") {
-    return {
-      typeName: "__INLINE_UNION__",
-      nullable,
-      list: false,
-      listItemNullable: null,
-    };
-  }
-
-  if (tsType.kind === "stringLiteral") {
-    return {
-      typeName: "String",
-      nullable,
-      list: false,
-      listItemNullable: null,
-    };
-  }
-
-  if (tsType.kind === "numericLiteral") {
-    return {
-      typeName: numericLiteralToGraphQLScalar(tsType.name),
-      nullable,
-      list: false,
-      listItemNullable: null,
-    };
-  }
-
-  if (tsType.kind === "never") {
-    return {
-      typeName: "__NEVER__",
-      nullable,
-      list: false,
-      listItemNullable: null,
+      listItemNullable: elementType?.nullable ?? false,
+      innerListNullables,
     };
   }
 
   return {
-    typeName: tsType.name ?? "String",
+    typeName: convertElementTypeName(tsType),
     nullable,
     list: false,
     listItemNullable: null,
+    innerListNullables: [],
   };
 }

@@ -6,7 +6,11 @@
  * the generated GraphQL name.
  */
 
-import { createReferenceType, type PropertyDef } from "../core/index.js";
+import {
+  createReferenceType,
+  type PropertyDef,
+  replaceInnermostElementType,
+} from "../core/index.js";
 import type {
   ExtractResolversResult,
   GraphQLFieldDefinition,
@@ -84,24 +88,15 @@ function updateField(updateFieldParams: UpdateFieldParams): PropertyDef {
     return field;
   }
 
-  if (field.tsType.kind === "array" && field.tsType.elementType) {
-    return {
-      ...field,
-      tsType: {
-        ...field.tsType,
-        elementType: createReferenceType({
-          name: resolved.name,
-          nullable: field.tsType.elementType.nullable,
-        }),
-      },
-    };
-  }
-
   return {
     ...field,
-    tsType: createReferenceType({
-      name: resolved.name,
-      nullable: field.tsType.nullable,
+    tsType: replaceInnermostElementType({
+      tsType: field.tsType,
+      replace: (element) =>
+        createReferenceType({
+          name: resolved.name,
+          nullable: element.nullable,
+        }),
     }),
   };
 }

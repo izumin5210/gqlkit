@@ -155,13 +155,19 @@ function convertUnionMemberPropertyType(
   let typeName: string;
   let list = false;
   let listItemNullable: boolean | null = null;
+  const innerListNullables: boolean[] = [];
 
   if (tsType.kind === "array" && tsType.elementType) {
     list = true;
-    listItemNullable = tsType.elementType.nullable;
-    const elementName = tsType.elementType.name ?? "String";
+    let elementType = tsType.elementType;
+    while (elementType.kind === "array" && elementType.elementType) {
+      innerListNullables.push(elementType.nullable);
+      elementType = elementType.elementType;
+    }
+    listItemNullable = elementType.nullable;
+    const elementName = elementType.name ?? "String";
     typeName =
-      tsType.elementType.kind === "primitive"
+      elementType.kind === "primitive"
         ? primitiveToGraphQLScalar(elementName)
         : elementName;
   } else if (tsType.kind === "reference" && tsType.name) {
@@ -174,7 +180,7 @@ function convertUnionMemberPropertyType(
     typeName = "String";
   }
 
-  return { typeName, nullable, list, listItemNullable };
+  return { typeName, nullable, list, listItemNullable, innerListNullables };
 }
 
 /**
