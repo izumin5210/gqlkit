@@ -97,6 +97,47 @@ describe("gen command", () => {
       expect(result.exitCode).toBe(0);
     });
 
+    it("should accept a relative cwd when the directory has a config file", async () => {
+      const projectDir = join(testDir, "proj");
+      const sourceDir = join(projectDir, "src/gqlkit/schema");
+
+      await mkdir(sourceDir, { recursive: true });
+
+      await writeFile(
+        join(sourceDir, "types.ts"),
+        "export interface User { id: string; name: string; }",
+        "utf-8",
+      );
+
+      await writeFile(
+        join(sourceDir, "resolvers.ts"),
+        `
+          import { createGqlkitApis, type NoArgs } from "@gqlkit-ts/runtime";
+          import type { User } from "./types.js";
+          type Context = unknown;
+          const { defineQuery } = createGqlkitApis<Context>();
+          export const users = defineQuery<NoArgs, User[]>(() => []);
+        `,
+        "utf-8",
+      );
+
+      await writeFile(
+        join(projectDir, "gqlkit.config.ts"),
+        "export default { scalars: [] };",
+        "utf-8",
+      );
+
+      const originalCwd = process.cwd();
+      process.chdir(testDir);
+      try {
+        const result = await runGenCommand({ cwd: "proj", configPath: null });
+
+        expect(result.exitCode).toBe(0);
+      } finally {
+        process.chdir(originalCwd);
+      }
+    });
+
     it("should return exit code 1 when config file has syntax error", async () => {
       await setupProjectWithConfig(`
         export default {

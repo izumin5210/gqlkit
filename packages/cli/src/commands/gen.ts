@@ -1,4 +1,4 @@
-import { dirname } from "node:path";
+import { dirname, resolve } from "node:path";
 import { define } from "gunshi";
 import {
   loadConfig,
@@ -234,6 +234,11 @@ function reportOutcome(params: ReportOutcomeParams): RunGenCommandResult {
 export async function runGenCommand(
   options: RunGenCommandOptions,
 ): Promise<RunGenCommandResult> {
+  // Resolve once so that the config loader (which hands the path to
+  // createRequire via jiti), the orchestrator, and the hooks all receive
+  // an absolute path even when --cwd is relative.
+  const cwd = resolve(options.cwd);
+
   const writer = {
     stdout: (msg: string) => console.log(msg),
     stderr: (msg: string) => console.error(msg),
@@ -243,7 +248,7 @@ export async function runGenCommand(
   const diagnosticReporter = createDiagnosticReporter(writer);
 
   const configStep = await loadAndAdaptConfig({
-    cwd: options.cwd,
+    cwd,
     configPath: options.configPath,
     diagnosticReporter,
   });
@@ -278,7 +283,7 @@ export async function runGenCommand(
   const { hookFailed } = await runAfterWriteHooks({
     hooks,
     filesWritten: writeStep.value.filesWritten,
-    cwd: options.cwd,
+    cwd,
     progressReporter,
   });
 
