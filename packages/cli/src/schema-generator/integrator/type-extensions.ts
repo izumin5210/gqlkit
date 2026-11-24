@@ -139,3 +139,97 @@ export function buildTypeExtensions(
 
   return { typeExtensions, diagnostics };
 }
+
+export interface InheritInterfaceExtensionFieldsParams {
+  readonly typeExtensions: ReadonlyArray<IntegratedTypeExtension>;
+  readonly baseTypes: ReadonlyArray<BaseType>;
+}
+
+/**
+ * Lists the interfaces a type implements, directly or through other
+ * interfaces, nearest first.
+ */
+function collectAncestorInterfaces(
+  baseType: BaseType,
+  baseTypeMap: ReadonlyMap<string, BaseType>,
+): string[] {
+  const ancestors: string[] = [];
+  // Seeding with the type itself keeps circular interface references (which
+  // are reported separately) from looping.
+  const visited = new Set<string>([baseType.name]);
+  const queue = [...(baseType.implementedInterfaces ?? [])];
+  while (queue.length > 0) {
+    const name = queue.shift()!;
+    if (visited.has(name)) {
+      continue;
+    }
+    visited.add(name);
+    ancestors.push(name);
+    queue.push(...(baseTypeMap.get(name)?.implementedInterfaces ?? []));
+  }
+  return ancestors;
+}
+
+/**
+ * Copies the resolver fields defined on an interface into every type that
+ * implements it, directly or transitively.
+ *
+ * GraphQL requires implementing types to declare every interface field, and
+ * resolver maps built with graphql-tools only consult interface field
+ * resolvers when `inheritResolversFromInterfaces` is enabled, so each
+ * implementing type gets the field and its own resolver map entry.
+ *
+ * A field the implementing type already declares, as a property or through
+ * its own resolver, is not inherited; among interfaces defining the same
+ * field, the nearest one wins.
+ */
+export function inheritInterfaceExtensionFields(
+  params: InheritInterfaceExtensionFieldsParams,
+): IntegratedTypeExtension[] {
+  const { typeExtensions, baseTypes } = params;
+
+  const baseTypeMap = new Map(baseTypes.map((t) => [t.name, t]));
+  const extensionMap = new Map(
+    typeExtensions.map((ext) => [ext.targetTypeName, ext]),
+  );
+
+  const inheritedFieldsMap = new Map<string, ExtensionField[]>();
+  for (const baseType of baseTypes) {
+    if (baseType.kind !== "Object" && baseType.kind !== "Interface") {
+      continue;
+    }
+    const declaredFieldNames = new Set([
+      ...(baseType.fields ?? []).map((f) => f.name),
+      ...(extensionMap.get(baseType.name)?.fields ?? []).map((f) => f.name),
+    ]);
+    const inheritedFields: ExtensionField[] = [];
+    for (const interfaceName of collectAncestorInterfaces(
+      baseType,
+      baseTypeMap,
+    )) {
+      for (const field of extensionMap.get(interfaceName)?.fields ?? []) {
+        if (declaredFieldNames.has(field.name)) {
+          continue;
+        }
+        declaredFieldNames.add(field.name);
+        inheritedFields.push(field);
+      }
+    }
+    if (inheritedFields.length > 0) {
+      inheritedFieldsMap.set(baseType.name, inheritedFields);
+    }
+  }
+
+  const result = typeExtensions.map((ext) => {
+    const inheritedFields = inheritedFieldsMap.get(ext.targetTypeName);
+    return inheritedFields
+      ? { ...ext, fields: [...ext.fields, ...inheritedFields] }
+      : ext;
+  });
+  for (const [targetTypeName, fields] of inheritedFieldsMap) {
+    if (!extensionMap.has(targetTypeName)) {
+      result.push({ targetTypeName, fields });
+    }
+  }
+  return result;
+}

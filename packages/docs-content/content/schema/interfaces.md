@@ -164,6 +164,8 @@ export const __typename = defineField<Node, NoArgs, string>(
 );
 ```
 
+Every type that implements the interface, directly or through another interface, also gets the field in the schema and the resolver in its resolver map entry. A type that declares a field with the same name, as a property or with its own `defineField`, keeps its own field instead.
+
 See [Object Types](./objects.md) for more details on implementing interfaces.
 
 ## Runtime Type Resolution
