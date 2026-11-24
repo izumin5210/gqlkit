@@ -34,4 +34,10 @@ export type Entity = GqlInterface<
   { implements: [Node, Timestamped] }
 >;
 
+export const nodeResolveType = defineResolveType<Node>(() => "Article");
+
+export const timestampedResolveType = defineResolveType<Timestamped>(
+  () => "Article",
+);
+
 export const entityResolveType = defineResolveType<Entity>(() => "Article");

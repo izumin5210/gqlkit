@@ -5,7 +5,7 @@ An article implementing the re-exported Entity interface.
 
 Defined in: src/gqlkit/schema/article.ts
 """
-type Article implements Entity {
+type Article implements Entity & Node {
   id: ID!
   title: String!
   updatedAt: String!

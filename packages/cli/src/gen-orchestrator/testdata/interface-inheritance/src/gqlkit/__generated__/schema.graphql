@@ -8,7 +8,7 @@ An article implementing the Entity interface.
 
 Defined in: src/gqlkit/schema/article.ts
 """
-type Article implements Entity {
+type Article implements Entity & Node & Timestamped {
   body: String!
   createdAt: DateTime!
   id: ID!
