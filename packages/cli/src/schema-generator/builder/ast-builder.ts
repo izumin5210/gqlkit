@@ -610,7 +610,11 @@ function buildInputObjectTypeDefinitionNode(
     sourceRoot,
   });
 
-  const directives: ConstDirectiveNode[] = [];
+  const directives: ConstDirectiveNode[] = buildDirectives({
+    directives: inputType.directives,
+    deprecated: null,
+    directiveDefMap,
+  });
   if (inputType.isOneOf) {
     directives.push(buildOneOfDirective());
   }
