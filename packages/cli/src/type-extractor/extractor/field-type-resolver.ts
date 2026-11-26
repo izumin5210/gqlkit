@@ -37,7 +37,10 @@ import {
 import type { CheckerLoader } from "../../shared/checker-loader.js";
 import { isInternalTypeSymbol } from "../../shared/constants.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
-import { extractTsDocFromSymbol } from "../../shared/tsdoc-parser.js";
+import {
+  extractStringLiteralUnionMemberTsDoc,
+  extractTsDocFromSymbol,
+} from "../../shared/tsdoc-parser.js";
 import {
   filterNonNullTypeNodes,
   findEnumParentSymbol,
@@ -449,7 +452,10 @@ async function resolveFieldTypeInternal(
     }
 
     // Check if all non-null types are string literals (inline enum)
-    const inlineEnumResult = tryExtractAsInlineEnum(nonNullTypes);
+    const inlineEnumResult = tryExtractAsInlineEnum({
+      types: nonNullTypes,
+      typeNode: typeNode ?? null,
+    });
     if (inlineEnumResult) {
       return createInlineEnumType({
         members: inlineEnumResult,
@@ -957,18 +963,25 @@ async function tryExtractAsInlineObject(
   });
 }
 
+interface TryExtractAsInlineEnumParams {
+  readonly types: ReadonlyArray<Type>;
+  readonly typeNode: TypeNode | null;
+}
+
 /**
  * Checks if all types are string literals and extracts them as inline enum members.
  * Returns null if any type is not a string literal.
  */
 function tryExtractAsInlineEnum(
-  types: ReadonlyArray<Type>,
+  params: TryExtractAsInlineEnumParams,
 ): ReadonlyArray<InlineEnumMemberInfo> | null {
+  const { types, typeNode } = params;
   if (types.length === 0) {
     return null;
   }
 
   const members: InlineEnumMemberInfo[] = [];
+  const memberTsDoc = extractStringLiteralUnionMemberTsDoc(typeNode);
 
   for (const type of types) {
     if (!(type.flags & TypeFlags.StringLiteral)) {
@@ -977,11 +990,12 @@ function tryExtractAsInlineEnum(
 
     const literalType = type as StringLiteralType;
     const value = literalType.value;
+    const tsdocInfo = memberTsDoc.get(value);
 
     members.push({
       value,
-      description: null,
-      deprecated: null,
+      description: tsdocInfo?.description ?? null,
+      deprecated: tsdocInfo?.deprecated ?? null,
     });
   }
 
