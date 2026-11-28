@@ -1,5 +1,17 @@
 # @gqlkit-ts/runtime
 
+## 0.4.0
+
+### Minor Changes
+
+- [#413](https://github.com/izumin5210/gqlkit/pull/413) [`ff6afd5`](https://github.com/izumin5210/gqlkit/commit/ff6afd5de1240e8a161487daeae91ce7adb0a375) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: add Apollo Federation directives `Key`, `Shareable`, and `Inaccessible`
+
+- [#414](https://github.com/izumin5210/gqlkit/pull/414) [`dcfbfaa`](https://github.com/izumin5210/gqlkit/commit/dcfbfaad6e03581719f7592b7d0fd7eb0e8f67cc) Thanks [@izumin5210](https://github.com/izumin5210)! - feat: resolve Apollo Federation entities with `defineResolveReference`
+
+- [#347](https://github.com/izumin5210/gqlkit/pull/347) [`31f62f4`](https://github.com/izumin5210/gqlkit/commit/31f62f4137de6513598f91e88b740052e29bc39c) Thanks [@izumin5210](https://github.com/izumin5210)! - refactor: remove the unused inner marker from GqlInterfaceMetaShape
+  
+  **BREAKING CHANGE**: the never-functional `" $gqlkitInterface"` property was removed from `GqlInterfaceMetaShape`; code that referenced it structurally (unlikely) must drop it.
+
 ## 0.3.0
 
 ### Minor Changes
