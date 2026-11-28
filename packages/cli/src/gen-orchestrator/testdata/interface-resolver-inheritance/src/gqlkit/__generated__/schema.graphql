@@ -16,7 +16,7 @@ Implements Node only through Entity.
 
 Defined in: src/gqlkit/schema/post.ts
 """
-type Post implements Entity {
+type Post implements Entity & Node {
   createdAt: String!
   id: ID!
   title: String!
