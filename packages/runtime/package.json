@@ -52,7 +52,7 @@
     }
   },
   "devDependencies": {
-    "@graphql-tools/schema": "10.0.30",
+    "@graphql-tools/schema": "10.0.38",
     "graphql": "catalog:"
   }
 }
