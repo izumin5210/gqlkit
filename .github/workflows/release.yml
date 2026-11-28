@@ -26,10 +26,9 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Create Release Pull Request or Publish
         id: changesets
-        uses: changesets/action@c8bada60c408975afd1a20b3db81d6eee6789308 # v1
+        uses: changesets/action@v2.1.2
         with:
-          version: pnpm changeset:version
-          publish: pnpm changeset:release
+          version-script: pnpm changeset:version
+          publish-script: pnpm changeset:release
         env:
-          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
           NPM_CONFIG_PROVENANCE: true
