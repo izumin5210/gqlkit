@@ -58,6 +58,7 @@ import {
 } from "../../shared/directive-detector.js";
 import { getSourceLocationFromNode } from "../../shared/source-location.js";
 import {
+  extractStringLiteralUnionMemberTsDoc,
   extractTsDocFromSymbol,
   extractTsDocInfo,
 } from "../../shared/tsdoc-parser.js";
@@ -499,13 +500,20 @@ function validateNumericEnumMembers(
   return diagnostics;
 }
 
+interface ExtractStringLiteralUnionMembersParams {
+  readonly type: Type;
+  readonly typeNode: TypeNode | null;
+  readonly checker: CheckerLoader;
+}
+
 async function extractStringLiteralUnionMembers(
-  type: Type,
-  checker: CheckerLoader,
+  params: ExtractStringLiteralUnionMembersParams,
 ): Promise<ReadonlyArray<EnumMemberInfo>> {
+  const { type, typeNode, checker } = params;
   if (!type.isUnionType()) return [];
 
   const members: EnumMemberInfo[] = [];
+  const memberTsDoc = extractStringLiteralUnionMemberTsDoc(typeNode);
 
   for (const t of await checker.getTypesOfType(type)) {
     if (isNullOrUndefined(t)) {
@@ -513,12 +521,13 @@ async function extractStringLiteralUnionMembers(
     }
     if (t.flags & TypeFlags.StringLiteral) {
       const value = (await checker.typeToString(t)).replace(/^"|"$/g, "");
+      const tsdocInfo = memberTsDoc.get(value);
       members.push({
         name: value,
         value: value,
         numericValue: null,
-        description: null,
-        deprecated: null,
+        description: tsdocInfo?.description ?? null,
+        deprecated: tsdocInfo?.deprecated ?? null,
         sourceLocation: null,
       });
     }
@@ -820,7 +829,14 @@ async function processDeclaredType(
     const enumMembers =
       declaration && isEnumDeclaration(declaration)
         ? await extractEnumMembers(declaration, checker)
-        : await extractStringLiteralUnionMembers(type, checker);
+        : await extractStringLiteralUnionMembers({
+            type,
+            typeNode:
+              declaration && isTypeAliasDeclaration(declaration)
+                ? declaration.type
+                : null,
+            checker,
+          });
     return {
       typeInfo: {
         metadata,
