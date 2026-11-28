@@ -220,6 +220,37 @@ export const typeDefs: DocumentNode = {
           }
         }
       ]
+    },
+    {
+      "kind": "ObjectTypeExtension",
+      "name": {
+        "kind": "Name",
+        "value": "User"
+      },
+      "fields": [
+        {
+          "kind": "FieldDefinition",
+          "name": {
+            "kind": "Name",
+            "value": "globalId"
+          },
+          "type": {
+            "kind": "NonNullType",
+            "type": {
+              "kind": "NamedType",
+              "name": {
+                "kind": "Name",
+                "value": "String"
+              }
+            }
+          },
+          "description": {
+            "kind": "StringValue",
+            "value": "Computed globalId field for Node interface.\n\nDefined in: src/gqlkit/schema/node.ts",
+            "block": true
+          }
+        }
+      ]
     }
   ]
 } as DocumentNode;

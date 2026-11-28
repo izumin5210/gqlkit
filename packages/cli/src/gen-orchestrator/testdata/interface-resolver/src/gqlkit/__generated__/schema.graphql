@@ -37,3 +37,12 @@ extend type Query {
   """Defined in: src/gqlkit/schema/query.ts"""
   users: [User!]!
 }
+
+extend type User {
+  """
+  Computed globalId field for Node interface.
+  
+  Defined in: src/gqlkit/schema/node.ts
+  """
+  globalId: String!
+}
