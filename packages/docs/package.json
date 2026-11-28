@@ -21,7 +21,7 @@
     "yaml": "2.9.1"
   },
   "devDependencies": {
-    "@types/node": "24.19.2",
+    "@types/node": "24.19.3",
     "@types/react": "19.3.2",
     "@types/react-dom": "19.3.0",
     "typescript": "5.9.3"
