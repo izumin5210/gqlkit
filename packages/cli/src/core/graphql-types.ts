@@ -16,7 +16,14 @@ export interface GraphQLFieldType {
   readonly typeName: string;
   readonly nullable: boolean;
   readonly list: boolean;
+  /** Nullability of the `typeName` elements, at the innermost list level */
   readonly listItemNullable: boolean | null;
+  /**
+   * Nullability of each list nested inside the outermost one, outermost
+   * first: `[[[T]]!]!` is `[false, true]`. Empty unless this is a list of
+   * lists.
+   */
+  readonly innerListNullables: ReadonlyArray<boolean>;
 }
 
 export interface FieldInfo {

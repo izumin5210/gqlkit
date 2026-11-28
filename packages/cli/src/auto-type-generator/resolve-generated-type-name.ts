@@ -1,4 +1,7 @@
-import type { TSTypeReference } from "../core/index.js";
+import {
+  getInnermostElementType,
+  type TSTypeReference,
+} from "../core/index.js";
 
 /**
  * Which of the three per-context generated-name maps a `TSTypeReference`'s
@@ -21,7 +24,7 @@ export type GeneratedNameMapKind = "object" | "enum" | "union";
 export function classifyInlineTypeReference(
   tsType: TSTypeReference,
 ): GeneratedNameMapKind | null {
-  const target = tsType.kind === "array" ? tsType.elementType : tsType;
+  const target = getInnermostElementType(tsType);
   if (!target) return null;
 
   if (target.kind === "inlineObject" && target.inlineObjectProperties) {

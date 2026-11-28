@@ -278,7 +278,7 @@ function buildNamedTypeNode(typeName: string): NamedTypeNode {
 }
 
 function buildListTypeNode(
-  innerType: NamedTypeNode | NonNullTypeNode,
+  innerType: NamedTypeNode | NonNullTypeNode | ListTypeNode,
 ): ListTypeNode {
   return {
     kind: Kind.LIST_TYPE,
@@ -296,13 +296,22 @@ function buildNonNullTypeNode(
 }
 
 function buildFieldTypeNode(fieldType: GraphQLFieldType): TypeNode {
-  const { typeName, nullable, list, listItemNullable } = fieldType;
+  const { typeName, nullable, list, listItemNullable, innerListNullables } =
+    fieldType;
 
   if (list) {
     const namedType = buildNamedTypeNode(typeName);
 
-    const itemType =
+    let itemType: NamedTypeNode | NonNullTypeNode | ListTypeNode =
       listItemNullable === true ? namedType : buildNonNullTypeNode(namedType);
+
+    // Wraps from the innermost list outwards.
+    for (let i = innerListNullables.length - 1; i >= 0; i--) {
+      const innerListType = buildListTypeNode(itemType);
+      itemType = innerListNullables[i]
+        ? innerListType
+        : buildNonNullTypeNode(innerListType);
+    }
 
     const listType = buildListTypeNode(itemType);
 

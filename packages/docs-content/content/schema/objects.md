@@ -71,6 +71,16 @@ export type User = {
 };
 ```
 
+Nested arrays become nested lists, keeping the nullability of each level:
+
+```typescript
+export type Board = {
+  cells: Cell[][];                     // [[Cell!]!]!
+  rows: (string | null)[][] | null;    // [[String]!]
+  layers: (number[] | null)[];         // [[Float!]]!
+};
+```
+
 ## Inline Objects
 
 Object type fields can use inline object literals for nested structures. gqlkit automatically generates Object types with the naming convention `{ParentTypeName}{PascalCaseFieldName}`:

@@ -41,6 +41,8 @@ export {
 } from "./metadata-contract.js";
 export {
   createArrayType,
+  getInnermostElementType,
+  replaceInnermostElementType,
   createInlineEnumType,
   createInlineObjectType,
   createNeverType,

@@ -1,8 +1,9 @@
-import type {
-  DeprecationInfo,
-  InlineEnumMemberInfo,
-  PropertyDef,
-  SourceLocation,
+import {
+  getInnermostElementType,
+  type DeprecationInfo,
+  type InlineEnumMemberInfo,
+  type PropertyDef,
+  type SourceLocation,
 } from "../core/index.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import { getSourceLocationOrDefault } from "../shared/source-location.js";
@@ -115,22 +116,20 @@ function collectInlineEnumsFromField(
     });
   }
 
-  if (
-    tsType.kind === "array" &&
-    tsType.elementType?.kind === "inlineEnum" &&
-    tsType.elementType.inlineEnumMembers
-  ) {
+  const elementType =
+    tsType.kind === "array" ? getInnermostElementType(tsType) : null;
+  if (elementType?.kind === "inlineEnum" && elementType.inlineEnumMembers) {
     results.push({
-      members: tsType.elementType.inlineEnumMembers,
+      members: elementType.inlineEnumMembers,
       context: buildFieldContext({ parentTypeName, fieldPath, isInput }),
       sourceLocation: getSourceLocationOrDefault(
         field.sourceLocation,
         sourceFile,
       ),
-      nullable: tsType.elementType.nullable,
-      externalEnumKey: tsType.elementType.externalEnumKey,
-      externalEnumDescription: tsType.elementType.externalEnumDescription,
-      externalEnumDeprecated: tsType.elementType.externalEnumDeprecated,
+      nullable: elementType.nullable,
+      externalEnumKey: elementType.externalEnumKey,
+      externalEnumDescription: elementType.externalEnumDescription,
+      externalEnumDeprecated: elementType.externalEnumDeprecated,
     });
   }
 

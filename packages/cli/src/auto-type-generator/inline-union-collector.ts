@@ -1,7 +1,8 @@
-import type {
-  PropertyDef,
-  SourceLocation,
-  TSTypeReference,
+import {
+  getInnermostElementType,
+  type PropertyDef,
+  type SourceLocation,
+  type TSTypeReference,
 } from "../core/index.js";
 import type { ExtractResolversResult } from "../resolver-extractor/index.js";
 import { getSourceLocationOrDefault } from "../shared/source-location.js";
@@ -135,12 +136,10 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
     });
   }
 
-  if (
-    tsType.kind === "array" &&
-    tsType.elementType?.kind === "union" &&
-    tsType.elementType.members
-  ) {
-    const members = tsType.elementType.members.map((m) =>
+  const elementType =
+    tsType.kind === "array" ? getInnermostElementType(tsType) : null;
+  if (elementType?.kind === "union" && elementType.members) {
+    const members = elementType.members.map((m) =>
       createMemberInfo(m, knownTypeNames),
     );
 
@@ -151,9 +150,9 @@ function collectInlineUnionsFromField(params: CollectFromFieldParams): void {
         field.sourceLocation,
         sourceFile,
       ),
-      nullable: tsType.elementType.nullable,
+      nullable: elementType.nullable,
       isInputContext: isInput,
-      unionAliasName: tsType.elementType.name,
+      unionAliasName: elementType.name,
     });
   }
 

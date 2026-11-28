@@ -1,7 +1,8 @@
-import type {
-  PropertyDef,
-  SourceLocation,
-  TSTypeReference,
+import {
+  getInnermostElementType,
+  type PropertyDef,
+  type SourceLocation,
+  type TSTypeReference,
 } from "../core/index.js";
 import { appendFieldPath } from "./naming-convention.js";
 
@@ -35,12 +36,13 @@ export function getInlineObjectPropertiesFromType(
     return tsType.inlineObjectProperties;
   }
 
+  const elementType =
+    tsType.kind === "array" ? getInnermostElementType(tsType) : null;
   if (
-    tsType.kind === "array" &&
-    tsType.elementType?.kind === "inlineObject" &&
-    tsType.elementType.inlineObjectProperties
+    elementType?.kind === "inlineObject" &&
+    elementType.inlineObjectProperties
   ) {
-    return tsType.elementType.inlineObjectProperties;
+    return elementType.inlineObjectProperties;
   }
 
   return null;

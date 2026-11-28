@@ -8,15 +8,16 @@
  * resolveMemberNames. `processInlineUnions` is the module's entry point.
  */
 
-import type {
-  Diagnostic,
-  FieldInfo,
-  GraphQLFieldType,
-  InlineEnumMemberInfo,
-  PropertyDef,
-  SourceLocation,
-  TSTypeReference,
-  TypenameFieldName,
+import {
+  getInnermostElementType,
+  type Diagnostic,
+  type FieldInfo,
+  type GraphQLFieldType,
+  type InlineEnumMemberInfo,
+  type PropertyDef,
+  type SourceLocation,
+  type TSTypeReference,
+  type TypenameFieldName,
 } from "../core/index.js";
 import { convertTsTypeToGraphQLType } from "../shared/type-converter.js";
 import type { ExtractedTypeInfo } from "../type-extractor/index.js";
@@ -323,6 +324,7 @@ function generateOneOfFields(params: GenerateOneOfFieldsParams): FieldInfo[] {
             nullable: true,
             list: false,
             listItemNullable: null,
+            innerListNullables: [],
           },
           description: null,
           deprecated: null,
@@ -420,8 +422,7 @@ function resolveInlineTypeInMember(
 ): string | null {
   const { prop, fieldType, parentTypeName, siblingFieldNames, ctx } = params;
   // Determine the inline TS type (direct or array element)
-  const inlineTsType =
-    prop.tsType.kind === "array" ? prop.tsType.elementType : prop.tsType;
+  const inlineTsType = getInnermostElementType(prop.tsType);
   const singularizeArrayFieldName = prop.tsType.kind === "array";
   if (!inlineTsType) return null;
 
@@ -1041,5 +1042,10 @@ function areGraphQLTypesEqual(
   if (type1.listItemNullable !== type2.listItemNullable) {
     return false;
   }
-  return true;
+  if (type1.innerListNullables.length !== type2.innerListNullables.length) {
+    return false;
+  }
+  return type1.innerListNullables.every(
+    (nullable, i) => nullable === type2.innerListNullables[i],
+  );
 }

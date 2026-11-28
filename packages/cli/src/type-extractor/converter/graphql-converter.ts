@@ -296,6 +296,7 @@ function validateAndConvertInlineObjectMembers(
         nullable: true,
         list: graphqlType.list,
         listItemNullable: graphqlType.listItemNullable,
+        innerListNullables: graphqlType.innerListNullables,
       },
       description: prop.description,
       deprecated: prop.deprecated,

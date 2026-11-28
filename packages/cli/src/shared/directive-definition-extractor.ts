@@ -267,6 +267,31 @@ function isValidLocation(value: string): value is DirectiveLocation {
 /**
  * Converts a TypeScript type to a GraphQL field type.
  */
+interface WrapInListParams {
+  readonly itemType: GraphQLFieldType;
+  readonly itemNullable: boolean;
+}
+
+function wrapInList(params: WrapInListParams): GraphQLFieldType {
+  const { itemType, itemNullable } = params;
+  if (itemType.list) {
+    return {
+      typeName: itemType.typeName,
+      nullable: false,
+      list: true,
+      listItemNullable: itemType.listItemNullable,
+      innerListNullables: [itemNullable, ...itemType.innerListNullables],
+    };
+  }
+  return {
+    typeName: itemType.typeName,
+    nullable: false,
+    list: true,
+    listItemNullable: itemNullable,
+    innerListNullables: [],
+  };
+}
+
 async function convertToGraphQLType(
   type: Type,
   checker: CheckerLoader,
@@ -289,6 +314,7 @@ async function convertToGraphQLType(
         nullable: false,
         list: false,
         listItemNullable: null,
+        innerListNullables: [],
       };
     }
   }
@@ -299,6 +325,7 @@ async function convertToGraphQLType(
       nullable: false,
       list: false,
       listItemNullable: null,
+      innerListNullables: [],
     };
   }
 
@@ -308,6 +335,7 @@ async function convertToGraphQLType(
       nullable: false,
       list: false,
       listItemNullable: null,
+      innerListNullables: [],
     };
   }
 
@@ -317,6 +345,7 @@ async function convertToGraphQLType(
       nullable: false,
       list: false,
       listItemNullable: null,
+      innerListNullables: [],
     };
   }
 
@@ -340,6 +369,7 @@ async function convertToGraphQLType(
         nullable,
         list: false,
         listItemNullable: null,
+        innerListNullables: [],
       };
     }
   }
@@ -367,6 +397,7 @@ async function convertToGraphQLType(
             nullable: false,
             list: true,
             listItemNullable: false,
+            innerListNullables: [],
           };
         }
       }
@@ -382,6 +413,7 @@ async function convertToGraphQLType(
             nullable: false,
             list: true,
             listItemNullable: false,
+            innerListNullables: [],
           };
         }
 
@@ -392,25 +424,18 @@ async function convertToGraphQLType(
             nonNullMembers[0],
             checker,
           );
-          if (innerType && !innerType.list) {
-            return {
-              typeName: innerType.typeName,
-              nullable: false,
-              list: true,
-              listItemNullable: hasNull,
-            };
+          if (innerType) {
+            return wrapInList({ itemType: innerType, itemNullable: hasNull });
           }
         }
       }
 
       const innerType = await convertToGraphQLType(elementType, checker);
-      if (innerType && !innerType.list) {
-        return {
-          typeName: innerType.typeName,
-          nullable: false,
-          list: true,
-          listItemNullable: innerType.nullable,
-        };
+      if (innerType) {
+        return wrapInList({
+          itemType: innerType,
+          itemNullable: innerType.nullable,
+        });
       }
     }
 
@@ -419,6 +444,7 @@ async function convertToGraphQLType(
       nullable: false,
       list: true,
       listItemNullable: false,
+      innerListNullables: [],
     };
   }
 
@@ -431,6 +457,7 @@ async function convertToGraphQLType(
         nullable: false,
         list: false,
         listItemNullable: null,
+        innerListNullables: [],
       };
     }
   }
