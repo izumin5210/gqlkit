@@ -1,0 +1,8 @@
+[
+  {
+    "code": "MISSING_QUERY_FIELD",
+    "message": "The schema has no query fields, but GraphQL requires the Query root type to define one or more fields. Add at least one defineQuery resolver.",
+    "severity": "warning",
+    "location": null
+  }
+]

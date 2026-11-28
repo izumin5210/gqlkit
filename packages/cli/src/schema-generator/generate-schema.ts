@@ -38,6 +38,7 @@ import {
 import { pruneDocumentNode } from "./pruner/schema-pruner.js";
 import { collectResolverInfo } from "./resolver-collector/resolver-collector.js";
 import { validateDeprecatedInputValues } from "./validator/deprecated-input-value-validator.js";
+import { validateMissingQueryField } from "./validator/missing-query-field-validator.js";
 
 export interface GenerateSchemaInput {
   readonly typesResult: CollectedTypesResult;
@@ -384,6 +385,11 @@ export function generateSchema(
   const diagnostics = [
     ...integratedResult.diagnostics,
     ...federationAnalysis.diagnostics,
+    ...validateMissingQueryField({
+      resolversResult: autoTypeResult.updatedResolversResult,
+      typeExtensions: integratedResult.typeExtensions,
+      federationEnabled: federation !== null,
+    }).diagnostics,
     ...(federation === null
       ? []
       : validateFederationDirectives({
