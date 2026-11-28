@@ -31,7 +31,7 @@
     "lefthook": "2.2.2",
     "oxfmt": "0.77.0",
     "oxlint": "1.92.0",
-    "oxlint-tsgolint": "7.0.2007",
+    "oxlint-tsgolint": "7.0.2008",
     "tsx": "4.23.15",
     "typescript": "5.9.3",
     "vitest": "5.1.0"
